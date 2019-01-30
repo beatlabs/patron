@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/mantzas/patron"
+	"github.com/thebeatapp/patron"
 	"github.com/thebeatapp/patron/async"
 	"github.com/thebeatapp/patron/async/kafka"
 	"github.com/thebeatapp/patron/encoding/json"

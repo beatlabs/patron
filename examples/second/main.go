@@ -7,7 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/mantzas/patron"
+	"github.com/pkg/errors"
+	"github.com/thebeatapp/patron"
 	"github.com/thebeatapp/patron/examples"
 	"github.com/thebeatapp/patron/log"
 	"github.com/thebeatapp/patron/sync"
@@ -15,7 +16,6 @@ import (
 	"github.com/thebeatapp/patron/sync/http/auth/apikey"
 	tracehttp "github.com/thebeatapp/patron/trace/http"
 	"github.com/thebeatapp/patron/trace/kafka"
-	"github.com/pkg/errors"
 )
 
 const (

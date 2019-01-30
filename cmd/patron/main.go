@@ -16,7 +16,7 @@ const (
 )
 
 func main() {
-	module := flag.String("m", "", `define the module name ("github.com/mantzas/patron")`)
+	module := flag.String("m", "", `define the module name ("github.com/thebeatapp/patron")`)
 	path := flag.String("p", "", "define the project folder (defaults to current)")
 	vendor := flag.Bool("d", true, "define vendoring behavior")
 	flag.Parse()
@@ -184,7 +184,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mantzas/patron"
+	"github.com/thebeatapp/patron"
 	"github.com/thebeatapp/patron/log"
 )
 

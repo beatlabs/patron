@@ -23,6 +23,6 @@ Patron provides abstractions for the following functionality of the framework:
   - configuration management
 
 Patron provides same defaults for making the usage as simple as possible.
-For more details please check out github repository https://github.com/mantzas/patron.
+For more details please check out github repository https://github.com/thebeatapp/patron.
 */
 package patron

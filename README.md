@@ -127,6 +127,7 @@ The `Request` model contains the following properties (which are provided when c
 
 - Fields, which may contain any fields associated with the request
 - Raw, the raw request data (if any) in the form of a `io.Reader`
+- Headers, the request headers in the form of `map[string]string`
 - decode, which is a function of type `encoding.Decode` that decodes the raw reader
 
 A exported function exists for decoding the raw io.Reader in the form of

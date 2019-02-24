@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/thebeatapp/patron"
 	"github.com/thebeatapp/patron/errors"
 )
 
@@ -94,16 +95,10 @@ func TestRun_Process_Error_NackStrategy(t *testing.T) {
 	proc := mockProcessor{retError: true}
 	cmp, err := New("test", proc.Process, &mockConsumerFactory{c: &cnr}, FailureStrategy(NackStrategy))
 	assert.NoError(t, err)
-	ctx, cnl := context.WithCancel(context.Background())
+	ctx := context.Background()
 	cnr.chMsg <- &mockMessage{ctx: ctx}
-	ch := make(chan bool)
-	go func() {
-		assert.NoError(t, cmp.Run(ctx))
-		ch <- true
-	}()
-	time.Sleep(10 * time.Millisecond)
-	cnl()
-	assert.True(t, <-ch)
+	err1 := runComponentFor(cmp, 10*time.Millisecond)
+	assert.NoError(t, err1)
 }
 
 func TestRun_Process_Error_AckStrategy(t *testing.T) {
@@ -114,16 +109,10 @@ func TestRun_Process_Error_AckStrategy(t *testing.T) {
 	proc := mockProcessor{retError: true}
 	cmp, err := New("test", proc.Process, &mockConsumerFactory{c: &cnr}, FailureStrategy(AckStrategy))
 	assert.NoError(t, err)
-	ctx, cnl := context.WithCancel(context.Background())
+	ctx := context.Background()
 	cnr.chMsg <- &mockMessage{ctx: ctx}
-	ch := make(chan bool)
-	go func() {
-		assert.NoError(t, cmp.Run(ctx))
-		ch <- true
-	}()
-	time.Sleep(10 * time.Millisecond)
-	cnl()
-	assert.True(t, <-ch)
+	err1 := runComponentFor(cmp, 10*time.Millisecond)
+	assert.NoError(t, err1)
 }
 
 func TestRun_Process_Error_InvalidStrategy(t *testing.T) {
@@ -173,16 +162,9 @@ func TestRun_Process_Shutdown(t *testing.T) {
 	cmp, err := New("test", proc.Process, &mockConsumerFactory{c: &cnr})
 	assert.NoError(t, err)
 	cnr.chMsg <- &mockMessage{ctx: context.Background()}
-	ch := make(chan bool)
-	ctx, cnl := context.WithCancel(context.Background())
-	go func() {
-		err1 := cmp.Run(ctx)
-		assert.NoError(t, err1)
-		ch <- true
-	}()
-	time.Sleep(10 * time.Millisecond)
-	cnl()
-	assert.True(t, <-ch)
+
+	err1 := runComponentFor(cmp, 10*time.Millisecond)
+	assert.NoError(t, err1)
 }
 
 func TestInfo(t *testing.T) {
@@ -200,16 +182,10 @@ func TestInfo(t *testing.T) {
 	)
 	assert.NoError(t, err)
 	cnr.chMsg <- &mockMessage{ctx: context.Background()}
-	ch := make(chan bool)
-	ctx, cnl := context.WithCancel(context.Background())
-	go func() {
-		err1 := cmp.Run(ctx)
-		assert.NoError(t, err1)
-		ch <- true
-	}()
-	time.Sleep(10 * time.Millisecond)
-	cnl()
-	assert.True(t, <-ch)
+
+	err1 := runComponentFor(cmp, 10*time.Millisecond)
+	assert.NoError(t, err1)
+
 	cnsInfo := map[string]interface{}{"key": "value"}
 	expected := make(map[string]interface{})
 	expected["type"] = "async"
@@ -285,4 +261,25 @@ func (mc *mockConsumer) Close() error {
 
 func (mc *mockConsumer) Info() map[string]interface{} {
 	return map[string]interface{}{"key": "value"}
+}
+
+// runComponentFor runs cmp.Run the specified amount of time
+// In case cmp.Run returns an error, it returns immediately
+func runComponentFor(cmp patron.Component, d time.Duration) error {
+	ch := make(chan error)
+	ctx, cnl := context.WithCancel(context.Background())
+	go func() {
+		err := cmp.Run(ctx)
+		ch <- err
+	}()
+
+	select {
+	case err := <-ch:
+		cnl()
+		return err
+	default:
+		time.Sleep(10 * time.Millisecond)
+		cnl()
+		return <-ch
+	}
 }

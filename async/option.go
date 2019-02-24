@@ -64,3 +64,12 @@ func ConsumerRetry(retries int, retryWait time.Duration) OptionFunc {
 		return nil
 	}
 }
+
+// ReadinessHandler option set's a func to be called when an async component is consider ready.
+func ReadinessHandler(handler func()) OptionFunc {
+	return func(c *Component) error {
+		c.readiness = handler
+		log.Info("readiness handler set")
+		return nil
+	}
+}

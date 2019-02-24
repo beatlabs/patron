@@ -167,6 +167,61 @@ func TestRun_Process_Shutdown(t *testing.T) {
 	assert.NoError(t, err1)
 }
 
+func TestRun_ReadinessHandler(t *testing.T) {
+	tests := []struct {
+		name         string
+		consumeError bool
+		wantErr      bool
+		shouldCall   bool
+	}{
+		{
+			name:         "consumer starts as expected, readiness should be called",
+			consumeError: false,
+			shouldCall:   true,
+		},
+		{
+			name:         "consumer fails and never starts, don't call readiness",
+			consumeError: true,
+			shouldCall:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			called := false
+			handler := func() {
+				called = true
+			}
+
+			cnr := mockConsumer{
+				consumeError: tt.consumeError,
+				chMsg:        make(chan Message, 10),
+				chErr:        make(chan error, 10),
+			}
+
+			proc := mockProcessor{retError: false}
+
+			cmp, err := New(
+				"test",
+				proc.Process,
+				&mockConsumerFactory{c: &cnr},
+				ReadinessHandler(handler),
+			)
+			assert.NoError(t, err)
+
+			err1 := runComponentFor(cmp, 10*time.Millisecond)
+			if tt.consumeError {
+				assert.Error(t, err1)
+			} else {
+				assert.NoError(t, err1)
+			}
+
+			assert.Equal(t, tt.shouldCall, called, "readiness handler called")
+		})
+	}
+}
+
 func TestInfo(t *testing.T) {
 	cnr := mockConsumer{
 		chMsg: make(chan Message, 10),

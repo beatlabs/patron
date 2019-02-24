@@ -17,6 +17,7 @@ type Component struct {
 	name         string
 	proc         ProcessorFunc
 	failStrategy FailStrategy
+	readiness    func()
 	cf           ConsumerFactory
 	retries      int
 	retryWait    time.Duration
@@ -44,6 +45,7 @@ func New(name string, p ProcessorFunc, cf ConsumerFactory, oo ...OptionFunc) (*C
 		proc:         p,
 		cf:           cf,
 		failStrategy: NackExitStrategy,
+		readiness:    func() {},
 		retries:      0,
 		retryWait:    0,
 		info:         make(map[string]interface{}),
@@ -124,6 +126,9 @@ func (c *Component) processing(ctx context.Context) error {
 			}
 		}
 	}()
+
+	c.readiness()
+
 	return <-failCh
 }
 

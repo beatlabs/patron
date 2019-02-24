@@ -81,3 +81,11 @@ func TestConsumerRetry(t *testing.T) {
 		})
 	}
 }
+
+func TestReadinessHandler(t *testing.T) {
+	proc := mockProcessor{}
+	c, err := New("test", proc.Process, &mockConsumerFactory{})
+	assert.NoError(t, err)
+	err = ReadinessHandler(func() {})(c)
+	assert.NoError(t, err)
+}

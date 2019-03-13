@@ -147,8 +147,7 @@ func handleError(w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
 			return
 		}
 		w.WriteHeader(err.code)
-		_, err := w.Write(p)
-		if err != nil {
+		if _, err := w.Write(p); err != nil {
 			log.Errorf("failed to write response: %v", err)
 		}
 		return

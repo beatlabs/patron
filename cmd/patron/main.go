@@ -31,8 +31,19 @@ const (
 )
 
 var patronPackages = map[string]component{
+	"http": component{
+		Import: "\"github.com/thebeatapp/patron/sync\"\n\tsync_http \"github.com/thebeatapp/patron/sync/http\"\n\t\"context\"\n\t\"net/http\"",
+		Code: `// Set up HTTP routes
+		routes := make([]sync_http.Route, 0)
+		// Append a GET route
+		routes = append(routes, sync_http.NewRoute("/", http.MethodGet, func(ctx context.Context, req *sync.Request) (*sync.Response, error) {
+		  return sync.NewResponse("Get data"), nil
+		}, true, nil))
+		
+		oo = append(oo, patron.Routes(routes))`,
+	},
 	"kafka": component{
-		Import: "github.com/thebeatapp/patron/async/kafka",
+		Import: "\"github.com/thebeatapp/patron/async\"\n\t\"github.com/thebeatapp/patron/async/kafka\"",
 		Code: `kafkaCf, err := kafka.New(name, "json.Type", "TOPIC", []string{"BROKER"})
 		if err != nil {
 			log.Fatalf("failed to create kafka consumer factory: %v", err)
@@ -46,7 +57,7 @@ var patronPackages = map[string]component{
 		oo = append(oo, patron.Components(kafkaCmp))`,
 	},
 	"amqp": component{
-		Import: "github.com/thebeatapp/patron/async/amqp",
+		Import: "\"github.com/thebeatapp/patron/async\"\n\t\"github.com/thebeatapp/patron/async/amqp\"",
 		Code: `amqpCf, err := amqp.New("URL", "QUEUE", "EXCHANGE")
 		if err != nil {
 			log.Fatalf("failed to create amqp consumer factory: %v", err)
@@ -65,7 +76,7 @@ func main() {
 	module := flag.String("m", "", `define the module name ("github.com/thebeatapp/patron")`)
 	path := flag.String("p", "", "define the project folder (defaults to current)")
 	vendor := flag.Bool("d", true, "define vendoring behavior (default true)")
-	packages := flag.String("r", "", "define additional packages comma separated (kafka,amqp)")
+	packages := flag.String("r", "", "define additional packages comma separated (kafka,amqp,http)")
 	flag.Parse()
 
 	gd, err := getGenData(path, module, packages, vendor)
@@ -290,10 +301,9 @@ import (
 	"os"
 	
 	"github.com/thebeatapp/patron"
-	{{if .Components}}"github.com/thebeatapp/patron/async"{{end}}	
 	"github.com/thebeatapp/patron/log"
 	{{ range .Components -}}
-	"{{ .Import -}}"
+	{{- .Import }}
 	{{ end }}
 )
 

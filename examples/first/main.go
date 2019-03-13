@@ -46,10 +46,16 @@ func main() {
 		patronhttp.NewPostRoute("/", first, true),
 	}
 
+	sig := patron.SIGHUP(func() {
+		fmt.Println("exit gracefully...")
+		os.Exit(0)
+	})
+
 	srv, err := patron.New(
 		name,
 		version,
 		patron.Routes(routes),
+		sig,
 	)
 	if err != nil {
 		log.Fatalf("failed to create service %v", err)

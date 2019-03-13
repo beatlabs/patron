@@ -115,27 +115,14 @@ The following component implementations are available:
 
 Adding to the above list is as easy as implementing a `Component` and a `Processor` for that component.
 
-## Example
+## Examples
 
-Setting up a new service with a HTTP `Component` is as easy as the following code:
+Detailed examples can be found in the [examples](/examples) folder with the following components involved:
 
-```go
-  // Set up HTTP routes
-  routes := make([]sync_http.Route, 0)
-  routes = append(routes, sync_http.NewRoute("/", http.MethodGet, processor, true))
-  
-  srv, err := patron.New("test", patron.Routes(routes))
-  if err != nil {
-    log.Fatalf("failed to create service %v", err)
-  }
-
-  err = srv.Run()
-  if err != nil {
-    log.Fatalf("failed to create service %v", err)
-  }
-```
-
-The above is pretty much self-explanatory. The processor follows the sync pattern.
+- [HTTP Component, HTTP Tracing](/examples/first/main.go)
+- [Kafka Component, HTTP Component, HTTP Authentication, Kafka Tracing](/examples/second/main.go)
+- [Kafka Component, AMQP Tracing](/examples/third/main.go)
+- [AMQP Component](/examples/third/main.go)
 
 ## Processors
 

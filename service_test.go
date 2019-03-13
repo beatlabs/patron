@@ -3,7 +3,6 @@ package patron
 import (
 	"context"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,22 +41,21 @@ func TestNewServer(t *testing.T) {
 
 func TestServer_Run_Shutdown(t *testing.T) {
 	tests := []struct {
-		name       string
-		cp         Component
-		port       int64
-		wantRunErr bool
+		name    string
+		cp      Component
+		port    string
+		wantErr bool
 	}{
-		{name: "success", cp: &testComponent{}, port: 50000, wantRunErr: false},
-		{name: "failed to run", cp: &testComponent{errorRunning: true}, port: 50001, wantRunErr: true},
+		{name: "success", cp: &testComponent{}, port: "50000", wantErr: false},
+		{name: "failed to run", cp: &testComponent{errorRunning: true}, port: "50001", wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", strconv.FormatInt(tt.port, 10))
-			assert.NoError(t, err)
+			os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
 			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
 			assert.NoError(t, err)
 			err = s.Run()
-			if tt.wantRunErr {
+			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)

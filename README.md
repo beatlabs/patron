@@ -52,6 +52,7 @@ The `Service` has the role of glueing all of the above together, which are:
   - health check
   - info endpoint for returning information about the service
 - setting up termination by os signal
+- setting up SIGHUP custom hook if provided by a option
 - starting and stopping components
 - handling component errors
 - setting up metrics and tracing

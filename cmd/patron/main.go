@@ -26,10 +26,6 @@ type genData struct {
 	Vendor     bool
 }
 
-const (
-	nameTemplate = "{{name}}"
-)
-
 var patronPackages = map[string]component{
 	"http": component{
 		Import: "\"github.com/thebeatapp/patron/sync\"\n\tsync_http \"github.com/thebeatapp/patron/sync/http\"\n\t\"context\"\n\t\"net/http\"",

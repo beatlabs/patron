@@ -1,6 +1,8 @@
 package patron
 
 import (
+	"strconv"
+	"math/rand"
 	"context"
 	"os"
 	"testing"
@@ -43,15 +45,14 @@ func TestServer_Run_Shutdown(t *testing.T) {
 	tests := []struct {
 		name    string
 		cp      Component
-		port    string
 		wantErr bool
 	}{
-		{name: "success", cp: &testComponent{}, port: "50000", wantErr: false},
-		{name: "failed to run", cp: &testComponent{errorRunning: true}, port: "50001", wantErr: true},
+		{name: "success", cp: &testComponent{}, wantErr: false},
+		{name: "failed to run", cp: &testComponent{errorRunning: true}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
+			os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
 			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
 			assert.NoError(t, err)
 			err = s.Run()
@@ -62,6 +63,11 @@ func TestServer_Run_Shutdown(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getRandomPort() string {
+	rnd:= 50000+rand.Int63n(10000);
+	return strconv.FormatInt(rnd, 10) 
 }
 
 type testComponent struct {

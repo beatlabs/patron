@@ -57,7 +57,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 
 func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
 	rr := []Route{NewRoute("/", "GET", nil, true, nil)}
-	s, err := New(Routes(rr), Secure("testdata/server.pem", "testdata/server.key"), Port(50001))
+	s, err := New(Routes(rr), Secure("testdata/server.pem", "testdata/server.key"), Port(50003))
 	assert.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())

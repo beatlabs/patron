@@ -1,10 +1,10 @@
 package patron
 
 import (
-	"strconv"
-	"math/rand"
 	"context"
+	"math/rand"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,7 +52,8 @@ func TestServer_Run_Shutdown(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
+			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
+			assert.NoError(t, err)
 			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
 			assert.NoError(t, err)
 			err = s.Run()
@@ -66,8 +67,8 @@ func TestServer_Run_Shutdown(t *testing.T) {
 }
 
 func getRandomPort() string {
-	rnd:= 50000+rand.Int63n(10000);
-	return strconv.FormatInt(rnd, 10) 
+	rnd := 50000 + rand.Int63n(10000)
+	return strconv.FormatInt(rnd, 10)
 }
 
 type testComponent struct {

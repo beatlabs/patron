@@ -110,7 +110,12 @@ func (c *Component) processing(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create consumer")
 	}
-	defer cns.Close()
+	defer func() {
+		err = cns.Close()
+		if err != nil {
+			log.Warnf("failed to close consumer: %v", err)
+		}
+	}()
 	c.info["consumer"] = cns.Info()
 
 	chMsg, chErr, err := cns.Consume(ctx)

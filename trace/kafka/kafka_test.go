@@ -71,7 +71,7 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	err = ap.Send(ctx, msg)
 	assert.NoError(t, err)
 	assert.Error(t, <-ap.Error())
-	ap.Close()
+	assert.NoError(t, ap.Close())
 }
 
 func createKafkaBroker(t *testing.T, retError bool) *sarama.MockBroker {

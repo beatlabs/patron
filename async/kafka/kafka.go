@@ -180,7 +180,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	}(c.cg)
 
 	// Iterate over consumer sessions.
-	go func(topic string, consumer sarama.ConsumerGroup) {
+	go func(consumer sarama.ConsumerGroup) {
 		topics := []string{c.topic}
 		handler := handler{consumer: c, messages: chMsg}
 		for {
@@ -189,7 +189,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				chErr <- err
 			}
 		}
-	}(c.topic, c.cg)
+	}(c.cg)
 
 	return chMsg, chErr, nil
 }

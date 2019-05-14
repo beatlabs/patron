@@ -121,6 +121,31 @@ func TestNewAuthDeleteRoute(t *testing.T) {
 	assert.True(t, r.Trace)
 	assert.NotNil(t, r.Auth)
 }
+
+func TestNewAuthPatchRoute(t *testing.T) {
+	r := NewAuthPatchRoute("/index", nil, true, &MockAuthenticator{})
+	assert.Equal(t, "/index", r.Pattern)
+	assert.Equal(t, http.MethodPatch, r.Method)
+	assert.True(t, r.Trace)
+	assert.NotNil(t, r.Auth)
+}
+
+func TestNewAuthHeadRoute(t *testing.T) {
+	r := NewAuthHeadRoute("/index", nil, true, &MockAuthenticator{})
+	assert.Equal(t, "/index", r.Pattern)
+	assert.Equal(t, http.MethodHead, r.Method)
+	assert.True(t, r.Trace)
+	assert.NotNil(t, r.Auth)
+}
+
+func TestNewAuthOptionsRoute(t *testing.T) {
+	r := NewAuthOptionsRoute("/index", nil, true, &MockAuthenticator{})
+	assert.Equal(t, "/index", r.Pattern)
+	assert.Equal(t, http.MethodOptions, r.Method)
+	assert.True(t, r.Trace)
+	assert.NotNil(t, r.Auth)
+}
+
 func TestNewAuthRouteRaw(t *testing.T) {
 	r := NewAuthRouteRaw("/index", http.MethodGet, nil, false, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)

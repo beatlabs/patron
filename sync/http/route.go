@@ -51,7 +51,7 @@ func NewOptionsRoute(p string, pr sync.ProcessorFunc, trace bool) Route {
 	return NewRoute(p, http.MethodOptions, pr, trace, nil)
 }
 
-// NewRoute creates a new route from a generic handler.
+// NewRoute creates a new route from a generic handler with auth capability.
 func NewRoute(p string, m string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator) Route {
 	return Route{Pattern: p, Method: m, Handler: handler(pr), Trace: trace, Auth: auth}
 }
@@ -61,27 +61,42 @@ func NewRouteRaw(p string, m string, h http.HandlerFunc, trace bool) Route {
 	return Route{Pattern: p, Method: m, Handler: h, Trace: trace}
 }
 
-// NewAuthGetRoute creates a new GET route from a generic handler.
+// NewAuthGetRoute creates a new GET route from a generic handler with auth capability.
 func NewAuthGetRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator) Route {
 	return NewRoute(p, http.MethodGet, pr, trace, auth)
 }
 
-// NewAuthPostRoute creates a new POST route from a generic handler.
+// NewAuthPostRoute creates a new POST route from a generic handler with auth capability.
 func NewAuthPostRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator) Route {
 	return NewRoute(p, http.MethodPost, pr, trace, auth)
 }
 
-// NewAuthPutRoute creates a new PUT route from a generic handler.
+// NewAuthPutRoute creates a new PUT route from a generic handler with auth capability.
 func NewAuthPutRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator) Route {
 	return NewRoute(p, http.MethodPut, pr, trace, auth)
 }
 
-// NewAuthDeleteRoute creates a new DELETE route from a generic handler.
+// NewAuthDeleteRoute creates a new DELETE route from a generic handler with auth capability.
 func NewAuthDeleteRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator) Route {
 	return NewRoute(p, http.MethodDelete, pr, trace, auth)
 }
 
-// NewAuthRouteRaw creates a new route from a HTTP handler.
+// NewAuthPatchRoute creates a new PATCH route from a generic handler with auth capability.
+func NewAuthPatchRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator) Route {
+	return NewRoute(p, http.MethodPatch, pr, trace, auth)
+}
+
+// NewAuthHeadRoute creates a new HEAD route from a generic handler with auth capability.
+func NewAuthHeadRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator) Route {
+	return NewRoute(p, http.MethodHead, pr, trace, auth)
+}
+
+// NewAuthOptionsRoute creates a new OPTIONS route from a generic handler with auth capability.
+func NewAuthOptionsRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator) Route {
+	return NewRoute(p, http.MethodOptions, pr, trace, auth)
+}
+
+// NewAuthRouteRaw creates a new route from a HTTP handler with auth capability.
 func NewAuthRouteRaw(p string, m string, h http.HandlerFunc, trace bool, auth auth.Authenticator) Route {
 	return Route{Pattern: p, Method: m, Handler: h, Trace: trace, Auth: auth}
 }

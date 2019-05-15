@@ -77,8 +77,13 @@ func Close() error {
 // HTTPSpan starts a new HTTP span.
 func HTTPSpan(path string, r *http.Request) (opentracing.Span, *http.Request) {
 	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	if err != nil && err != opentracing.ErrSpanContextNotFound {
-		log.Errorf("failed to extract HTTP span: %v", err)
+	if err != nil {
+		if err == opentracing.ErrSpanContextNotFound {
+			// Do not trace
+			opentracing.setGlobalTracer(opentracing.NoopTracer)
+		} else {
+			log.Errorf("failed to extract HTTP span: %v", err)
+		}
 	}
 	sp := opentracing.StartSpan(HTTPOpName(r.Method, path), ext.RPCServerOption(ctx))
 	ext.HTTPMethod.Set(sp, r.Method)

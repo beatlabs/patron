@@ -1,4 +1,4 @@
-module github.com/thebeatapp/patron
+module github.com/beatlabs/patron
 
 require (
 	github.com/Shopify/sarama v1.21.0

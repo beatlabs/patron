@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/encoding/protobuf"
+	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/sync"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/thebeatapp/patron/encoding"
-	"github.com/thebeatapp/patron/encoding/json"
-	"github.com/thebeatapp/patron/encoding/protobuf"
-	"github.com/thebeatapp/patron/errors"
-	"github.com/thebeatapp/patron/log"
-	"github.com/thebeatapp/patron/sync"
 )
 
 func handler(hnd sync.ProcessorFunc) http.HandlerFunc {

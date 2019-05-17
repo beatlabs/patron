@@ -5,13 +5,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/thebeatapp/patron"
-	"github.com/thebeatapp/patron/async"
-	"github.com/thebeatapp/patron/async/kafka"
-	"github.com/thebeatapp/patron/encoding/json"
-	"github.com/thebeatapp/patron/examples"
-	"github.com/thebeatapp/patron/log"
-	"github.com/thebeatapp/patron/trace/amqp"
+	"github.com/beatlabs/patron"
+	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/async/kafka"
+	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/trace/amqp"
 )
 
 const (

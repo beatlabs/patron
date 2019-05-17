@@ -2,16 +2,16 @@ package kafka
 
 import (
 	"context"
-	"github.com/thebeatapp/patron/async"
+	"github.com/beatlabs/patron/async"
 	"testing"
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
-	"github.com/thebeatapp/patron/encoding"
-	"github.com/thebeatapp/patron/encoding/json"
 )
 
 func TestNew(t *testing.T) {

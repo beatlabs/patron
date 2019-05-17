@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/stretchr/testify/assert"
-	"github.com/thebeatapp/patron/encoding/json"
 )
 
 func TestNewRequest(t *testing.T) {

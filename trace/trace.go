@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/log"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/thebeatapp/patron/errors"
-	"github.com/thebeatapp/patron/log"
 	"github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-client-go/rpcmetrics"
 	"github.com/uber/jaeger-lib/metrics/prometheus"

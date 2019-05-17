@@ -3,8 +3,8 @@ package async
 import (
 	"time"
 
-	"github.com/thebeatapp/patron/errors"
-	"github.com/thebeatapp/patron/log"
+	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/log"
 )
 
 // FailStrategy type definition.

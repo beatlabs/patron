@@ -3,7 +3,7 @@ package http
 import (
 	"time"
 
-	"github.com/thebeatapp/patron/errors"
+	"github.com/beatlabs/patron/errors"
 )
 
 // OptionFunc defines a option func for the HTTP component.

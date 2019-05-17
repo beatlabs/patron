@@ -6,7 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thebeatapp/patron/errors"
+
+	"github.com/beatlabs/patron/errors"
 )
 
 // A middleware generator that tags resp for assertions

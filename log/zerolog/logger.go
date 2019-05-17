@@ -3,8 +3,8 @@ package zerolog
 import (
 	"fmt"
 
+	"github.com/beatlabs/patron/log"
 	"github.com/rs/zerolog"
-	"github.com/thebeatapp/patron/log"
 )
 
 var levelMap = map[log.Level]zerolog.Level{

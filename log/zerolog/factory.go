@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/beatlabs/patron/log"
 	"github.com/rs/zerolog"
-	"github.com/thebeatapp/patron/log"
 )
 
 // Create creates a zerolog factory with default settings.

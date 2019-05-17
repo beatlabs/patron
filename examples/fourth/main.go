@@ -5,11 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/thebeatapp/patron"
-	"github.com/thebeatapp/patron/async"
-	"github.com/thebeatapp/patron/async/amqp"
-	"github.com/thebeatapp/patron/examples"
-	"github.com/thebeatapp/patron/log"
+	"github.com/beatlabs/patron"
+	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/async/amqp"
+	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/log"
 )
 
 const (

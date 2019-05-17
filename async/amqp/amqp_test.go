@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
-	"github.com/thebeatapp/patron/encoding/json"
 )
 
 func Test_message(t *testing.T) {

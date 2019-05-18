@@ -40,6 +40,17 @@ func Routes(rr []Route) OptionFunc {
 	}
 }
 
+// Middlewares option for setting the routes middlewares of the HTTP component.
+func Middlewares(mm ...MiddlewareFunc) OptionFunc {
+	return func(s *Component) error {
+		if len(mm) == 0 {
+			return errors.New("middlewares are empty")
+		}
+		s.middlewares = append(s.middlewares, mm...)
+		return nil
+	}
+}
+
 // HealthCheck option for setting the health check function of the HTTP component.
 func HealthCheck(hcf HealthCheckFunc) OptionFunc {
 	return func(s *Component) error {

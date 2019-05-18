@@ -52,19 +52,28 @@ func (w *responseWriter) WriteHeader(code int) {
 	w.statusHeaderWritten = true
 }
 
-// Middleware which returns all selected middlewares.
-func Middleware(trace bool, auth auth.Authenticator, path string, next http.HandlerFunc) http.HandlerFunc {
-	if trace {
-		if auth == nil {
-			return tracingMiddleware(path, recoveryMiddleware(next))
-		}
-		return tracingMiddleware(path, authMiddleware(auth, recoveryMiddleware(next)))
+// ChainMiddlewares chains middlewares to a handler func.
+func ChainMiddlewares(f http.HandlerFunc, mm ...MiddlewareFunc) http.HandlerFunc {
+	for i:=len(mm)-1; i>=0; i-- {
+		f = mm[i](f)
 	}
-	if auth == nil {
-		return recoveryMiddleware(next)
-	}
-	return authMiddleware(auth, recoveryMiddleware(next))
+	return f
 }
+
+// DefaultMiddlewares chains all default middlewares handler function and returns the handler func.
+func DefaultMiddlewares(trace bool, auth auth.Authenticator, path string, next http.HandlerFunc) http.HandlerFunc {
+	next = recoveryMiddleware(next)
+	if auth != nil {
+		next = authMiddleware(auth, next)
+	}
+	if trace {
+		next = tracingMiddleware(path, next)
+	}
+	return next
+}
+
+// MiddlewareFunc type declaration of middleware func.
+type MiddlewareFunc func(next http.HandlerFunc) http.HandlerFunc
 
 func tracingMiddleware(path string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

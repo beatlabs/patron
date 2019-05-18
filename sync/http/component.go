@@ -31,9 +31,10 @@ type Component struct {
 	httpWriteTimeout time.Duration
 	info             map[string]interface{}
 	sync.Mutex
-	routes   []Route
-	certFile string
-	keyFile  string
+	routes      []Route
+	middlewares []MiddlewareFunc
+	certFile    string
+	keyFile     string
 }
 
 // New returns a new component.
@@ -44,6 +45,7 @@ func New(oo ...OptionFunc) (*Component, error) {
 		httpReadTimeout:  httpReadTimeout,
 		httpWriteTimeout: httpWriteTimeout,
 		routes:           []Route{},
+		middlewares:      []MiddlewareFunc{},
 		info:             make(map[string]interface{}),
 	}
 
@@ -73,7 +75,8 @@ func (c *Component) Run(ctx context.Context) error {
 	c.Lock()
 	log.Debug("applying tracing to routes")
 	for i := 0; i < len(c.routes); i++ {
-		c.routes[i].Handler = Middleware(c.routes[i].Trace, c.routes[i].Auth, c.routes[i].Pattern, c.routes[i].Handler)
+		c.routes[i].Handler = DefaultMiddlewares(c.routes[i].Trace, c.routes[i].Auth, c.routes[i].Pattern, c.routes[i].Handler)
+		c.routes[i].Handler = ChainMiddlewares(c.routes[i].Handler, c.middlewares...)
 	}
 	chFail := make(chan error)
 	srv := c.createHTTPServer()

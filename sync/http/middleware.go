@@ -52,16 +52,16 @@ func (w *responseWriter) WriteHeader(code int) {
 	w.statusHeaderWritten = true
 }
 
-// ChainMiddlewares chains middlewares to a handler func.
-func ChainMiddlewares(f http.HandlerFunc, mm ...MiddlewareFunc) http.HandlerFunc {
-	for i:=len(mm)-1; i>=0; i-- {
+// MiddlewareChain chains middlewares to a handler func.
+func MiddlewareChain(f http.HandlerFunc, mm ...MiddlewareFunc) http.HandlerFunc {
+	for i := len(mm) - 1; i >= 0; i-- {
 		f = mm[i](f)
 	}
 	return f
 }
 
-// DefaultMiddlewares chains all default middlewares handler function and returns the handler func.
-func DefaultMiddlewares(trace bool, auth auth.Authenticator, path string, next http.HandlerFunc) http.HandlerFunc {
+// MiddlewareDefaults chains all default middlewares to handler function and returns the handler func.
+func MiddlewareDefaults(trace bool, auth auth.Authenticator, path string, next http.HandlerFunc) http.HandlerFunc {
 	next = recoveryMiddleware(next)
 	if auth != nil {
 		next = authMiddleware(auth, next)

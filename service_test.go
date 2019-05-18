@@ -3,6 +3,7 @@ package patron
 import (
 	"context"
 	"math/rand"
+	http2 "net/http"
 	"os"
 	"strconv"
 	"testing"
@@ -14,22 +15,28 @@ import (
 
 func TestNewServer(t *testing.T) {
 	route := http.NewRoute("/", "GET", nil, true, nil)
+	middleware := func(h http2.HandlerFunc) http2.HandlerFunc {
+		return func(w http2.ResponseWriter, r *http2.Request) {
+			h(w, r)
+		}
+	}
 	type args struct {
 		name string
-		opt  OptionFunc
+		opt  []OptionFunc
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{"success", args{name: "test", opt: Routes([]http.Route{route})}, false},
-		{"failed missing name", args{name: "", opt: Routes([]http.Route{route})}, true},
-		{"failed missing routes", args{name: "test", opt: Routes([]http.Route{})}, true},
+		{"success", args{name: "test", opt: []OptionFunc{Routes([]http.Route{route}), Middlewares([]http.MiddlewareFunc{middleware})}}, false},
+		{"success empty middlewares", args{name: "test", opt: []OptionFunc{Routes([]http.Route{route}), Middlewares([]http.MiddlewareFunc{})}}, false},
+		{"failed missing name", args{name: "", opt: []OptionFunc{Routes([]http.Route{route})}}, true},
+		{"failed missing routes", args{name: "test", opt: []OptionFunc{Routes([]http.Route{})}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, "", tt.args.opt)
+			got, err := New(tt.args.name, "", tt.args.opt...)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)

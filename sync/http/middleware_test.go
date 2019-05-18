@@ -26,7 +26,17 @@ func testPanicHandleInt(w http.ResponseWriter, r *http.Request) {
 	panic(1000)
 }
 
-func TestMiddleware(t *testing.T) {
+// A middleware generator that tags resp for assertions
+func tagMiddleware(tag string) MiddlewareFunc {
+	return func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(tag))
+			h(w, r)
+		}
+	}
+}
+
+func TestMiddlewareDefaults(t *testing.T) {
 	r, err := http.NewRequest("POST", "/test", nil)
 	assert.NoError(t, err)
 
@@ -51,8 +61,42 @@ func TestMiddleware(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp := httptest.NewRecorder()
-			DefaultMiddlewares(tt.args.trace, tt.args.auth, "path", tt.args.next)(resp, r)
+			MiddlewareDefaults(tt.args.trace, tt.args.auth, "path", tt.args.next)(resp, r)
 			assert.Equal(t, tt.expectedCode, resp.Code)
+		})
+	}
+}
+
+func TestMiddlewareChain(t *testing.T) {
+	r, err := http.NewRequest("POST", "/test", nil)
+	assert.NoError(t, err)
+
+	t1 := tagMiddleware("t1\n")
+	t2 := tagMiddleware("t2\n")
+	t3 := tagMiddleware("t3\n")
+
+	type args struct {
+		next http.HandlerFunc
+		mws  []MiddlewareFunc
+	}
+	tests := []struct {
+		name         string
+		args         args
+		expectedCode int
+		expectedBody string
+	}{
+		{"middleware 1,2,3 and finish", args{next: testHandle, mws: []MiddlewareFunc{t1, t2, t3}}, 202, "t1\nt2\nt3\n"},
+		{"middleware 1,2 and finish", args{next: testHandle, mws: []MiddlewareFunc{t1, t2}}, 202, "t1\nt2\n"},
+		{"no middleware and finish", args{next: testHandle, mws: []MiddlewareFunc{}}, 202, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rc := httptest.NewRecorder()
+			rw := newResponseWriter(rc)
+			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
+			tt.args.next(rw, r)
+			assert.Equal(t, tt.expectedCode, rw.Status())
+			assert.Equal(t, tt.expectedBody, rc.Body.String())
 		})
 	}
 }

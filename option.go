@@ -22,6 +22,18 @@ func Routes(rr []http.Route) OptionFunc {
 	}
 }
 
+// Middlewares option for adding generic middlewares to the default HTTP component.
+func Middlewares(mm []http.MiddlewareFunc) OptionFunc {
+	return func(s *Service) error {
+		if len(mm) == 0 {
+			return nil
+		}
+		s.middlewares = mm
+		log.Info("middleware options are set")
+		return nil
+	}
+}
+
 // HealthCheck option for overriding the default health check of the default HTTP component.
 func HealthCheck(hcf http.HealthCheckFunc) OptionFunc {
 	return func(s *Service) error {

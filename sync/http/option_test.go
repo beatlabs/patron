@@ -1,6 +1,7 @@
 package http
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -49,6 +50,30 @@ func TestSetRoutes(t *testing.T) {
 				assert.Len(t, s.routes, 1)
 				assert.Equal(t, tt.rr[0].Method, s.routes[0].Method)
 				assert.Equal(t, tt.rr[0].Pattern, s.routes[0].Pattern)
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestSetMiddlewares(t *testing.T) {
+	tests := []struct {
+		name    string
+		mm      []MiddlewareFunc
+		wantErr bool
+	}{
+		{"success", []MiddlewareFunc{func(next http.HandlerFunc) http.HandlerFunc { return next }}, false},
+		{"error for empty middlewares", []MiddlewareFunc{}, true},
+		{"error for nil middlewares", nil, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Component{}
+			err := Middlewares(tt.mm...)(&s)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.Len(t, s.middlewares, 1)
 				assert.NoError(t, err)
 			}
 		})

@@ -1,6 +1,7 @@
 package patron
 
 import (
+	http2 "net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,8 +17,8 @@ func TestRoutes(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		//{"failure due to empty routes", args{rr: []http.Route{}}, true},
-		//{"failure due to nil routes", args{rr: nil}, true},
+		{"failure due to empty routes", args{rr: []http.Route{}}, true},
+		{"failure due to nil routes", args{rr: nil}, true},
 		{"success", args{rr: []http.Route{http.NewRoute("/", "GET", nil, true, nil)}}, false},
 	}
 	for _, tt := range tests {
@@ -25,6 +26,37 @@ func TestRoutes(t *testing.T) {
 			s, err := New("test", "1.0.0")
 			assert.NoError(t, err)
 			err = Routes(tt.args.rr)(s)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMiddlewares(t *testing.T) {
+	middleware := func(h http2.HandlerFunc) http2.HandlerFunc {
+		return func(w http2.ResponseWriter, r *http2.Request) {
+			h(w, r)
+		}
+	}
+	type args struct {
+		mm []http.MiddlewareFunc
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"success", args{mm: []http.MiddlewareFunc{middleware}}, false},
+		{"success", args{mm: []http.MiddlewareFunc{}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s, err := New("test", "1.0.0")
+			assert.NoError(t, err)
+			err = Middlewares(tt.args.mm)(s)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

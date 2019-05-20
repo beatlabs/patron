@@ -46,6 +46,16 @@ func main() {
 		patronhttp.NewPostRoute("/", first, true),
 	}
 
+	// Setup a simple CORS middleware
+	middlewareCors := func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Access-Control-Allow-Origin", "*")
+			w.Header().Add("Access-Control-Allow-Methods", "GET, POST")
+			w.Header().Add("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
+			w.Header().Add("Access-Control-Allow-Credentials", "Allow")
+			h(w, r)
+		}
+	}
 	sig := patron.SIGHUP(func() {
 		fmt.Println("exit gracefully...")
 		os.Exit(0)
@@ -55,6 +65,7 @@ func main() {
 		name,
 		version,
 		patron.Routes(routes),
+		patron.Middlewares(middlewareCors),
 		sig,
 	)
 	if err != nil {

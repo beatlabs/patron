@@ -4,7 +4,7 @@ Patron is a framework for creating microservices, originally created by Sotiris 
 
 `Patron` is french for `template` or `pattern`, but it means also `boss` which we found out later (no pun intended).
 
-The entry point of the framework is the `Service`. The `Service` uses `Components` to handle the processing of sync and async requests. The `Service` starts by default a `HTTP Component` which hosts the debug, health and metric endpoints. Any other endpoints will be added to the default `HTTP Component` as `Routes`. The service set's up by default logging with `zerolog`, tracing and metrics with `jaeger` and `prometheus`.
+The entry point of the framework is the `Service`. The `Service` uses `Components` to handle the processing of sync and async requests. The `Service` starts by default a `HTTP Component` which hosts the debug, health and metric endpoints. Any other endpoints will be added to the default `HTTP Component` as `Routes`. Alongside `Routes` one can specify middleware functions to be applied ordered to all routes as `MiddlewareFunc`. The service set's up by default logging with `zerolog`, tracing and metrics with `jaeger` and `prometheus`.
 
 `Patron` provides abstractions for the following functionality of the framework:
 
@@ -116,11 +116,29 @@ The following component implementations are available:
 
 Adding to the above list is as easy as implementing a `Component` and a `Processor` for that component.
 
+### Middleware
+
+A `MiddlewareFunc` preserves the default net/http middleware pattern.
+You can create new middleware functions and pass them to Service to be chained on all routes in the default Http Component.
+
+```go
+type MiddlewareFunc func(next http.HandlerFunc) http.HandlerFunc
+
+// Setup a simple middleware for CORS
+newMiddleware := func(h http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Add("Access-Control-Allow-Origin", "*")
+        // Next
+        h(w, r)
+    }
+}
+```
+
 ## Examples
 
 Detailed examples can be found in the [examples](/examples) folder with the following components involved:
 
-- [HTTP Component, HTTP Tracing](/examples/first/main.go)
+- [HTTP Component, HTTP Tracing, HTTP middleware](/examples/first/main.go)
 - [Kafka Component, HTTP Component, HTTP Authentication, Kafka Tracing](/examples/second/main.go)
 - [Kafka Component, AMQP Tracing](/examples/third/main.go)
 - [AMQP Component](/examples/fourth/main.go)

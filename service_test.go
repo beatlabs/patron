@@ -15,10 +15,10 @@ import (
 
 func TestNewServer(t *testing.T) {
 	route := phttp.NewRoute("/", "GET", nil, true, nil)
-	middleware := func(h http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			h(w, r)
-		}
+	middleware := func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		})
 	}
 	type args struct {
 		name string

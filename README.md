@@ -122,15 +122,15 @@ A `MiddlewareFunc` preserves the default net/http middleware pattern.
 You can create new middleware functions and pass them to Service to be chained on all routes in the default Http Component.
 
 ```go
-type MiddlewareFunc func(next http.HandlerFunc) http.HandlerFunc
+type MiddlewareFunc func(next http.Handler) http.Handler
 
 // Setup a simple middleware for CORS
-newMiddleware := func(h http.HandlerFunc) http.HandlerFunc {
-    return func(w http.ResponseWriter, r *http.Request) {
+newMiddleware := func(h http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         w.Header().Add("Access-Control-Allow-Origin", "*")
         // Next
-        h(w, r)
-    }
+        h.ServeHTTP(w, r)
+    })
 }
 ```
 

@@ -28,11 +28,14 @@ func TestNewRoute(t *testing.T) {
 }
 
 func TestNewGetRoute(t *testing.T) {
-	r := NewGetRoute("/index", nil, true)
+	t1 := tagMiddleware("t1\n")
+	t2 := tagMiddleware("t2\n")
+	r := NewGetRoute("/index", nil, true, t1, t2)
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodGet, r.Method)
 	assert.True(t, r.Trace)
 	assert.Nil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 3)
 }
 
 func TestNewPostRoute(t *testing.T) {
@@ -41,6 +44,7 @@ func TestNewPostRoute(t *testing.T) {
 	assert.Equal(t, http.MethodPost, r.Method)
 	assert.True(t, r.Trace)
 	assert.Nil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 1)
 }
 
 func TestNewPutRoute(t *testing.T) {
@@ -49,6 +53,7 @@ func TestNewPutRoute(t *testing.T) {
 	assert.Equal(t, http.MethodPut, r.Method)
 	assert.True(t, r.Trace)
 	assert.Nil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 1)
 }
 
 func TestNewDeleteRoute(t *testing.T) {
@@ -57,6 +62,7 @@ func TestNewDeleteRoute(t *testing.T) {
 	assert.Equal(t, http.MethodDelete, r.Method)
 	assert.True(t, r.Trace)
 	assert.Nil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 1)
 }
 
 func TestNewPatchRoute(t *testing.T) {
@@ -65,6 +71,7 @@ func TestNewPatchRoute(t *testing.T) {
 	assert.Equal(t, http.MethodPatch, r.Method)
 	assert.True(t, r.Trace)
 	assert.Nil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 1)
 }
 
 func TestNewHeadRoute(t *testing.T) {
@@ -73,6 +80,7 @@ func TestNewHeadRoute(t *testing.T) {
 	assert.Equal(t, http.MethodHead, r.Method)
 	assert.True(t, r.Trace)
 	assert.Nil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 1)
 }
 
 func TestNewOptionsRoute(t *testing.T) {
@@ -81,6 +89,7 @@ func TestNewOptionsRoute(t *testing.T) {
 	assert.Equal(t, http.MethodOptions, r.Method)
 	assert.True(t, r.Trace)
 	assert.Nil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 1)
 }
 func TestNewRouteRaw(t *testing.T) {
 	r := NewRouteRaw("/index", http.MethodGet, nil, false)
@@ -88,6 +97,14 @@ func TestNewRouteRaw(t *testing.T) {
 	assert.Equal(t, "GET", r.Method)
 	assert.False(t, r.Trace)
 	assert.Nil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 0)
+
+	r = NewRouteRaw("/index", http.MethodGet, nil, true, tagMiddleware("t1"))
+	assert.Equal(t, "/index", r.Pattern)
+	assert.Equal(t, "GET", r.Method)
+	assert.True(t, r.Trace)
+	assert.Nil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 2)
 }
 
 func TestNewAuthGetRoute(t *testing.T) {
@@ -96,6 +113,7 @@ func TestNewAuthGetRoute(t *testing.T) {
 	assert.Equal(t, http.MethodGet, r.Method)
 	assert.True(t, r.Trace)
 	assert.NotNil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 2)
 }
 
 func TestNewAuthPostRoute(t *testing.T) {
@@ -104,6 +122,7 @@ func TestNewAuthPostRoute(t *testing.T) {
 	assert.Equal(t, http.MethodPost, r.Method)
 	assert.True(t, r.Trace)
 	assert.NotNil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 2)
 }
 
 func TestNewAuthPutRoute(t *testing.T) {
@@ -112,6 +131,7 @@ func TestNewAuthPutRoute(t *testing.T) {
 	assert.Equal(t, http.MethodPut, r.Method)
 	assert.True(t, r.Trace)
 	assert.NotNil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 2)
 }
 
 func TestNewAuthDeleteRoute(t *testing.T) {
@@ -120,6 +140,7 @@ func TestNewAuthDeleteRoute(t *testing.T) {
 	assert.Equal(t, http.MethodDelete, r.Method)
 	assert.True(t, r.Trace)
 	assert.NotNil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 2)
 }
 
 func TestNewAuthPatchRoute(t *testing.T) {
@@ -128,6 +149,7 @@ func TestNewAuthPatchRoute(t *testing.T) {
 	assert.Equal(t, http.MethodPatch, r.Method)
 	assert.True(t, r.Trace)
 	assert.NotNil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 2)
 }
 
 func TestNewAuthHeadRoute(t *testing.T) {
@@ -136,6 +158,7 @@ func TestNewAuthHeadRoute(t *testing.T) {
 	assert.Equal(t, http.MethodHead, r.Method)
 	assert.True(t, r.Trace)
 	assert.NotNil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 2)
 }
 
 func TestNewAuthOptionsRoute(t *testing.T) {
@@ -144,6 +167,7 @@ func TestNewAuthOptionsRoute(t *testing.T) {
 	assert.Equal(t, http.MethodOptions, r.Method)
 	assert.True(t, r.Trace)
 	assert.NotNil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 2)
 }
 
 func TestNewAuthRouteRaw(t *testing.T) {
@@ -152,4 +176,12 @@ func TestNewAuthRouteRaw(t *testing.T) {
 	assert.Equal(t, "GET", r.Method)
 	assert.False(t, r.Trace)
 	assert.NotNil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 1)
+
+	r = NewAuthRouteRaw("/index", http.MethodGet, nil, true, &MockAuthenticator{}, tagMiddleware("tag1"))
+	assert.Equal(t, "/index", r.Pattern)
+	assert.Equal(t, "GET", r.Method)
+	assert.True(t, r.Trace)
+	assert.NotNil(t, r.Auth)
+	assert.Len(t, r.Middlewares, 3)
 }

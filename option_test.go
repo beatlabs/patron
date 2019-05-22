@@ -8,6 +8,12 @@ import (
 	phttp "github.com/thebeatapp/patron/sync/http"
 )
 
+func middleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h.ServeHTTP(w, r)
+	})
+}
+
 func TestRoutes(t *testing.T) {
 	type args struct {
 		rr []phttp.Route
@@ -36,11 +42,6 @@ func TestRoutes(t *testing.T) {
 }
 
 func TestMiddlewares(t *testing.T) {
-	middleware := func(h http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			h(w, r)
-		}
-	}
 	type args struct {
 		mm []phttp.MiddlewareFunc
 	}

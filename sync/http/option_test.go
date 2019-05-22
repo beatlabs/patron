@@ -62,7 +62,7 @@ func TestSetMiddlewares(t *testing.T) {
 		mm      []MiddlewareFunc
 		wantErr bool
 	}{
-		{"success", []MiddlewareFunc{func(next http.HandlerFunc) http.HandlerFunc { return next }}, false},
+		{"success", []MiddlewareFunc{func(next http.Handler) http.Handler { return next }}, false},
 		{"error for empty middlewares", []MiddlewareFunc{}, true},
 		{"error for nil middlewares", nil, true},
 	}

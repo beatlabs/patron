@@ -47,14 +47,14 @@ func main() {
 	}
 
 	// Setup a simple CORS middleware
-	middlewareCors := func(h http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
+	middlewareCors := func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Access-Control-Allow-Origin", "*")
 			w.Header().Add("Access-Control-Allow-Methods", "GET, POST")
 			w.Header().Add("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
 			w.Header().Add("Access-Control-Allow-Credentials", "Allow")
-			h(w, r)
-		}
+			h.ServeHTTP(w, r)
+		})
 	}
 	sig := patron.SIGHUP(func() {
 		fmt.Println("exit gracefully...")

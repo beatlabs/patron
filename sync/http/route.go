@@ -55,7 +55,7 @@ func NewOptionsRoute(p string, pr sync.ProcessorFunc, trace bool, mm ...Middlewa
 // NewRoute creates a new route from a generic handler with auth capability.
 func NewRoute(p string, m string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
 	var middlewares []MiddlewareFunc
-	if trace == true {
+	if trace {
 		middlewares = append(middlewares, NewTracingMiddleware(p))
 	}
 	if auth != nil {
@@ -70,7 +70,7 @@ func NewRoute(p string, m string, pr sync.ProcessorFunc, trace bool, auth auth.A
 // NewRouteRaw creates a new route from a HTTP handler.
 func NewRouteRaw(p string, m string, h http.HandlerFunc, trace bool, mm ...MiddlewareFunc) Route {
 	var middlewares []MiddlewareFunc
-	if trace == true {
+	if trace {
 		middlewares = append(middlewares, NewTracingMiddleware(p))
 	}
 	if len(mm) > 0 {
@@ -117,7 +117,7 @@ func NewAuthOptionsRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.
 // NewAuthRouteRaw creates a new route from a HTTP handler with auth capability.
 func NewAuthRouteRaw(p string, m string, h http.HandlerFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
 	var middlewares []MiddlewareFunc
-	if trace == true {
+	if trace {
 		middlewares = append(middlewares, NewTracingMiddleware(p))
 	}
 	if auth != nil {

@@ -172,6 +172,18 @@ The `Response` model contains the following properties (which are provided when 
 
 - Payload, which may hold a struct of type `interface{}`
 
+### Middlewares per Route
+
+Middlewares can also run per routes using the processor as Handler.
+So using the `Route` helpers:
+
+```go
+// A route with ...MiddlewareFunc that will run for this route only + tracing
+route := NewRoute("/index", "GET" ProcessorFunc, true, ...MiddlewareFunc)
+// A route with ...MiddlewareFunc that will run for this route only + auth + tracing
+routeWithAuth := NewAuthRoute("/index", "GET" ProcessorFunc, true, Authendicator, ...MiddlewareFunc)
+```
+
 ### Asynchronous
 
 The implementation of the async processor follows exactly the same principle as the sync processor.

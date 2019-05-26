@@ -14,6 +14,7 @@ jobs:
       - run:
           name: Running with test coverage and send to codecov
           command: |
+            export CODECOV_TOKEN="90085daa-03f9-4ada-82e4-c24c50706e6f"
             go get -u github.com/jstemmer/go-junit-report
             mkdir -p $TEST_RESULTS
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT

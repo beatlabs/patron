@@ -20,7 +20,7 @@ const (
 
 var (
 	amqpExchange = amqp.Exchange{Name: "patron", Kind: oamqp.ExchangeDirect}
-	amqpBinding  = []string{"bind.me"}
+	amqpBindings = []string{"bind.me"}
 )
 
 func init() {
@@ -51,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	amqpCmp, err := newAmqpComponent(amqpURL, amqpQueue, amqpExchange, amqpBinding)
+	amqpCmp, err := newAmqpComponent(amqpURL, amqpQueue, amqpExchange, amqpBindings)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}

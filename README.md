@@ -111,7 +111,8 @@ The above API gives the `Service` the ability to start and gracefully shutdown a
 The following component implementations are available:
 
 - HTTP (sync)
-- RabbitMQ consumer (async)
+- RabbitMQ consumer (async) <br/>
+  You can configure the exchange and bindings in the New function of [amqp.go](/async/amqp/amqp.go)
 - Kafka consumer (async)
 
 Adding to the above list is as easy as implementing a `Component` and a `Processor` for that component.

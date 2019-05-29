@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	oamqp "github.com/streadway/amqp"
 	"github.com/thebeatapp/patron"
 	"github.com/thebeatapp/patron/async"
 	"github.com/thebeatapp/patron/async/amqp"
@@ -13,9 +14,13 @@ import (
 )
 
 const (
-	amqpURL      = "amqp://guest:guest@localhost:5672/"
-	amqpExchange = "patron"
-	amqpQueue    = "patron"
+	amqpURL   = "amqp://guest:guest@localhost:5672/"
+	amqpQueue = "patron"
+)
+
+var (
+	amqpExchange = amqp.Exchange{Name: "patron", Kind: oamqp.ExchangeDirect}
+	amqpBinding  = []string{"bind.me"}
 )
 
 func init() {
@@ -46,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	amqpCmp, err := newAmqpComponent(amqpURL, amqpQueue, amqpExchange)
+	amqpCmp, err := newAmqpComponent(amqpURL, amqpQueue, amqpExchange, amqpBinding)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
@@ -70,11 +75,11 @@ type amqpComponent struct {
 	cmp patron.Component
 }
 
-func newAmqpComponent(url, queue, exchange string) (*amqpComponent, error) {
+func newAmqpComponent(url, queue string, exchange amqp.Exchange, bindings []string) (*amqpComponent, error) {
 
 	amqpCmp := amqpComponent{}
 
-	cf, err := amqp.New(url, queue, exchange)
+	cf, err := amqp.New(url, queue, exchange, bindings)
 	if err != nil {
 		return nil, err
 	}

@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/thebeatapp/patron/errors"
-	"github.com/thebeatapp/patron/log"
+	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/log"
 )
 
 // OptionFunc definition for configuring the async producer in a functional way.

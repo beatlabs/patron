@@ -3,8 +3,8 @@ package http
 import (
 	"net/http"
 
-	"github.com/thebeatapp/patron/sync"
-	"github.com/thebeatapp/patron/sync/http/auth"
+	"github.com/beatlabs/patron/sync"
+	"github.com/beatlabs/patron/sync/http/auth"
 )
 
 // Route definition of a HTTP route.

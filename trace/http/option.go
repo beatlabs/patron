@@ -3,8 +3,8 @@ package http
 import (
 	"time"
 
-	"github.com/thebeatapp/patron/errors"
-	"github.com/thebeatapp/patron/reliability/circuitbreaker"
+	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/reliability/circuitbreaker"
 )
 
 // OptionFunc definition for configuring the client in a functional way.

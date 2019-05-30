@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
-	"github.com/thebeatapp/patron/log"
 )
 
 const (

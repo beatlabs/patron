@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/beatlabs/patron/log"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
-	"github.com/thebeatapp/patron/log"
 )
 
 var f = map[string]interface{}{"key": "value"}

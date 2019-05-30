@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/thebeatapp/patron/errors"
 )
 
 func ErrorOption() OptionFunc {

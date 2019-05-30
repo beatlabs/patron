@@ -6,10 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/info"
 	"github.com/stretchr/testify/assert"
-	"github.com/thebeatapp/patron/encoding"
-	"github.com/thebeatapp/patron/encoding/json"
-	"github.com/thebeatapp/patron/info"
 )
 
 func Test_Route(t *testing.T) {

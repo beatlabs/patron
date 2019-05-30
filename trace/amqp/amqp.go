@@ -5,13 +5,13 @@ import (
 	"net"
 	"time"
 
+	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/encoding/protobuf"
+	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/streadway/amqp"
-	"github.com/thebeatapp/patron/encoding/json"
-	"github.com/thebeatapp/patron/encoding/protobuf"
-	"github.com/thebeatapp/patron/errors"
-	"github.com/thebeatapp/patron/trace"
 )
 
 // Message abstraction for publishing.

@@ -28,7 +28,7 @@ type genData struct {
 
 var patronPackages = map[string]component{
 	"http": component{
-		Import: "\"github.com/thebeatapp/patron/sync\"\n\tsync_http \"github.com/thebeatapp/patron/sync/http\"\n\t\"context\"\n\t\"net/http\"",
+		Import: "\"github.com/beatlabs/patron/sync\"\n\tsync_http \"github.com/beatlabs/patron/sync/http\"\n\t\"context\"\n\t\"net/http\"",
 		Code: `// Set up HTTP routes
 		routes := make([]sync_http.Route, 0)
 		// Append a GET route
@@ -39,7 +39,7 @@ var patronPackages = map[string]component{
 		oo = append(oo, patron.Routes(routes))`,
 	},
 	"kafka": component{
-		Import: "\"github.com/thebeatapp/patron/async\"\n\t\"github.com/thebeatapp/patron/async/kafka\"",
+		Import: "\"github.com/beatlabs/patron/async\"\n\t\"github.com/beatlabs/patron/async/kafka\"",
 		Code: `kafkaCf, err := kafka.New(name, "json.Type", "TOPIC", []string{"BROKER"})
 		if err != nil {
 			log.Fatalf("failed to create kafka consumer factory: %v", err)
@@ -53,7 +53,7 @@ var patronPackages = map[string]component{
 		oo = append(oo, patron.Components(kafkaCmp))`,
 	},
 	"amqp": component{
-		Import: "\"github.com/thebeatapp/patron/async\"\n\t\"github.com/thebeatapp/patron/async/amqp\"",
+		Import: "\"github.com/beatlabs/patron/async\"\n\t\"github.com/beatlabs/patron/async/amqp\"",
 		Code: `amqpCf, err := amqp.New("URL", "QUEUE", "EXCHANGE")
 		if err != nil {
 			log.Fatalf("failed to create amqp consumer factory: %v", err)
@@ -69,7 +69,7 @@ var patronPackages = map[string]component{
 }
 
 func main() {
-	module := flag.String("m", "", `define the module name ("github.com/thebeatapp/patron")`)
+	module := flag.String("m", "", `define the module name ("github.com/beatlabs/patron")`)
 	path := flag.String("p", "", "define the project folder (defaults to current)")
 	vendor := flag.Bool("d", true, "define vendoring behavior (default true)")
 	packages := flag.String("r", "", "define additional packages comma separated (kafka,amqp,http)")
@@ -296,8 +296,8 @@ import (
 	"fmt"
 	"os"
 	
-	"github.com/thebeatapp/patron"
-	"github.com/thebeatapp/patron/log"
+	"github.com/beatlabs/patron"
+	"github.com/beatlabs/patron/log"
 	{{ range .Components -}}
 	{{- .Import }}
 	{{ end }}

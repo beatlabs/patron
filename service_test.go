@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/beatlabs/patron/errors"
+	phttp "github.com/beatlabs/patron/sync/http"
 	"github.com/stretchr/testify/assert"
-	"github.com/thebeatapp/patron/errors"
-	phttp "github.com/thebeatapp/patron/sync/http"
 )
 
 func TestNewServer(t *testing.T) {

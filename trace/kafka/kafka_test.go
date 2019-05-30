@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/trace"
 	"github.com/stretchr/testify/assert"
-	"github.com/thebeatapp/patron/trace"
 	jaeger "github.com/uber/jaeger-client-go"
 )
 

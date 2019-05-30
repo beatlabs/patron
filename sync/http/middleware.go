@@ -3,10 +3,10 @@ package http
 import (
 	"net/http"
 
-	"github.com/thebeatapp/patron/errors"
-	"github.com/thebeatapp/patron/log"
-	"github.com/thebeatapp/patron/sync/http/auth"
-	"github.com/thebeatapp/patron/trace"
+	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/sync/http/auth"
+	"github.com/beatlabs/patron/trace"
 )
 
 type responseWriter struct {

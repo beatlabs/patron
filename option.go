@@ -1,10 +1,10 @@
 package patron
 
 import (
-	"github.com/thebeatapp/patron/errors"
-	"github.com/thebeatapp/patron/info"
-	"github.com/thebeatapp/patron/log"
-	"github.com/thebeatapp/patron/sync/http"
+	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/info"
+	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/sync/http"
 )
 
 // OptionFunc definition for configuring the service in a functional way.

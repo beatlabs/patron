@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	phttp "github.com/thebeatapp/patron/sync/http"
+
+	phttp "github.com/beatlabs/patron/sync/http"
 )
 
 func middleware(h http.Handler) http.Handler {

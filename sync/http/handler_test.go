@@ -6,14 +6,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/encoding/protobuf"
+	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/sync"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/thebeatapp/patron/encoding"
-	"github.com/thebeatapp/patron/encoding/json"
-	"github.com/thebeatapp/patron/encoding/protobuf"
-	"github.com/thebeatapp/patron/errors"
-	"github.com/thebeatapp/patron/sync"
 )
 
 func Test_extractFields(t *testing.T) {

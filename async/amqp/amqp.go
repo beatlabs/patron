@@ -61,7 +61,7 @@ type Exchange struct {
 }
 
 // NewExchange validates its input and creates a new Exchange
-// name should be a non empty string, kind should be one of: direct, fanout, direct, topic, headers
+// name should be a non empty string, kind should be one of: direct, fanout, topic, headers
 func NewExchange(name, kind string) (*Exchange, error) {
 	if name == "" {
 		return nil, errors.New("AMQP Exchange name is required")

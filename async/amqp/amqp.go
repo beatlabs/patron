@@ -54,34 +54,36 @@ func (m *message) Nack() error {
 	return err
 }
 
-// Exchange describes the Name and Kind of a RabbitMQ exchange
+// Exchange represents an AMQP exchange
 type Exchange struct {
-	Name string
-	Kind string
+	name string
+	kind string
 }
 
-func (ex Exchange) validate() error {
-	if ex.Name == "" {
-		return errors.New("RabbitMQ exchange Name is required")
+// NewExchange validates its input and creates a new Exchange
+// name should be a non empty string, kind should be one of: direct, fanout, direct, topic, headers
+func NewExchange(name, kind string) (*Exchange, error) {
+	if name == "" {
+		return nil, errors.New("AMQP Exchange name is required")
 	}
 
-	if ex.Kind == "" {
-		return errors.New("RabbitMQ exchange type is required")
+	if kind == "" {
+		return nil, errors.New("AMQP Exchange type is required")
 	}
 
-	if ex.Kind != amqp.ExchangeDirect &&
-		ex.Kind != amqp.ExchangeFanout &&
-		ex.Kind != amqp.ExchangeTopic &&
-		ex.Kind != amqp.ExchangeHeaders {
+	if kind != amqp.ExchangeDirect &&
+		kind != amqp.ExchangeFanout &&
+		kind != amqp.ExchangeTopic &&
+		kind != amqp.ExchangeHeaders {
 
-		return errors.New(fmt.Sprintf("RabbitMQ exchange type is invalid, one of [%s, %s, %s, %s] is required",
+		return nil, fmt.Errorf("AMQP Exchange type is invalid, one of [%s, %s, %s, %s] is required",
 			amqp.ExchangeDirect,
 			amqp.ExchangeFanout,
 			amqp.ExchangeTopic,
-			amqp.ExchangeHeaders))
+			amqp.ExchangeHeaders)
 	}
 
-	return nil
+	return &Exchange{name: name, kind: kind}, nil
 }
 
 // Factory of an AMQP consumer
@@ -95,16 +97,16 @@ type Factory struct {
 
 // New constructor.
 func New(url, queue string, exchange Exchange, bindings []string, oo ...OptionFunc) (*Factory, error) {
+	if len(bindings) == 0 {
+		bindings = []string{""}
+	}
+
 	if url == "" {
-		return nil, errors.New("RabbitMQ url is required")
+		return nil, errors.New("AMQP url is required")
 	}
 
 	if queue == "" {
-		return nil, errors.New("RabbitMQ queue name is required")
-	}
-
-	if err := exchange.validate(); err != nil {
-		return nil, err
+		return nil, errors.New("AMQP queue name is required")
 	}
 
 	return &Factory{url: url, queue: queue, exchange: exchange, bindings: bindings, oo: oo}, nil
@@ -232,7 +234,7 @@ func (c *consumer) consume() (<-chan amqp.Delivery, error) {
 	c.tag = uuid.New().String()
 	log.Infof("consuming messages for tag %s", c.tag)
 
-	err = ch.ExchangeDeclare(c.exchange.Name, c.exchange.Kind, true, false, false, false, nil)
+	err = ch.ExchangeDeclare(c.exchange.name, c.exchange.kind, true, false, false, false, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to declare exchange")
 	}
@@ -243,8 +245,7 @@ func (c *consumer) consume() (<-chan amqp.Delivery, error) {
 	}
 
 	for _, binding := range c.bindings {
-
-		if err := ch.QueueBind(q.Name, binding, c.exchange.Name, false, nil); err != nil {
+		if err := ch.QueueBind(q.Name, binding, c.exchange.name, false, nil); err != nil {
 			return nil, errors.Wrap(err, "failed to bind queue to exchange queue")
 		}
 	}

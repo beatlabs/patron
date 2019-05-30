@@ -74,7 +74,6 @@ func TestNew(t *testing.T) {
 		url      string
 		queue    string
 		exchange Exchange
-		bindings []string
 		opt      OptionFunc
 	}
 	tests := []struct {
@@ -82,13 +81,13 @@ func TestNew(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"success", args{url: "amqp://guest:guest@localhost:5672/", queue: "q", exchange: *validExch, bindings: []string{}, opt: Buffer(100)}, false},
-		{"fail, invalid url", args{url: "", queue: "q", exchange: *validExch, bindings: []string{}, opt: Buffer(100)}, true},
-		{"fail, invalid queue name", args{url: "url", queue: "", exchange: *validExch, bindings: []string{}, opt: Buffer(100)}, true},
+		{"success", args{url: "amqp://guest:guest@localhost:5672/", queue: "q", exchange: *validExch, opt: Buffer(100)}, false},
+		{"fail, invalid url", args{url: "", queue: "q", exchange: *validExch, opt: Buffer(100)}, true},
+		{"fail, invalid queue name", args{url: "url", queue: "", exchange: *validExch, opt: Buffer(100)}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.url, tt.args.queue, tt.args.exchange, tt.args.bindings, tt.args.opt)
+			got, err := New(tt.args.url, tt.args.queue, tt.args.exchange, tt.args.opt)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)
@@ -140,7 +139,7 @@ func Test_mapHeader(t *testing.T) {
 }
 
 func TestConsumer_Info(t *testing.T) {
-	f, err := New("url", "queue", *validExch, []string{})
+	f, err := New("url", "queue", *validExch)
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)

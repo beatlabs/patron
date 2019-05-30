@@ -44,3 +44,25 @@ func TestTimeout(t *testing.T) {
 	err := Timeout(time.Second)(&c)
 	assert.NoError(t, err)
 }
+
+func TestBindings(t *testing.T) {
+	type args struct {
+		bindings []string
+	}
+	tests := []struct {
+		name     string
+		args     args
+		expected []string
+	}{
+		{name: "multiple bindings", args: args{bindings: []string{"abc", "def"}}, expected: []string{"abc", "def"}},
+		{name: "no bindings", args: args{bindings: []string{}}, expected: []string{""}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := consumer{}
+			err := Bindings(tt.args.bindings...)(&c)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, c.bindings)
+		})
+	}
+}

@@ -96,11 +96,7 @@ type Factory struct {
 }
 
 // New constructor.
-func New(url, queue string, exchange Exchange, bindings []string, oo ...OptionFunc) (*Factory, error) {
-	if len(bindings) == 0 {
-		bindings = []string{""}
-	}
-
+func New(url, queue string, exchange Exchange, oo ...OptionFunc) (*Factory, error) {
 	if url == "" {
 		return nil, errors.New("AMQP url is required")
 	}
@@ -109,7 +105,7 @@ func New(url, queue string, exchange Exchange, bindings []string, oo ...OptionFu
 		return nil, errors.New("AMQP queue name is required")
 	}
 
-	return &Factory{url: url, queue: queue, exchange: exchange, bindings: bindings, oo: oo}, nil
+	return &Factory{url: url, queue: queue, exchange: exchange, bindings: []string{""}, oo: oo}, nil
 }
 
 // Create a new consumer.

@@ -41,3 +41,14 @@ func Requeue(requeue bool) OptionFunc {
 		return nil
 	}
 }
+
+func Bindings(bindings ...string) OptionFunc {
+	return func(c *consumer) error {
+		if len(bindings) == 0 {
+			c.bindings = []string{""}
+		} else {
+			c.bindings = bindings
+		}
+		return nil
+	}
+}

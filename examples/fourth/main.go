@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	amqpBindings = []string{"bind.me"}
+	amqpBindings = []string{"bind.one.*", "bind.two.*"}
 )
 
 func init() {
@@ -86,7 +86,7 @@ func newAmqpComponent(url, queue, exchangeName, exchangeType string, bindings []
 		return nil, err
 	}
 
-	cf, err := amqp.New(url, queue, *exchange, bindings)
+	cf, err := amqp.New(url, queue, *exchange, amqp.Bindings(bindings...))
 	if err != nil {
 		return nil, err
 	}

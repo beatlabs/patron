@@ -45,10 +45,10 @@ func Requeue(requeue bool) OptionFunc {
 func Bindings(bindings ...string) OptionFunc {
 	return func(c *consumer) error {
 		if len(bindings) == 0 {
-			c.bindings = []string{""}
-		} else {
-			c.bindings = bindings
+			return errors.New("Provided bindings cannot be empty")
 		}
+
+		c.bindings = bindings
 		return nil
 	}
 }

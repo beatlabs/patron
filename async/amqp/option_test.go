@@ -53,16 +53,21 @@ func TestBindings(t *testing.T) {
 		name     string
 		args     args
 		expected []string
+		wantErr  bool
 	}{
-		{name: "multiple bindings", args: args{bindings: []string{"abc", "def"}}, expected: []string{"abc", "def"}},
-		{name: "no bindings", args: args{bindings: []string{}}, expected: []string{""}},
+		{name: "multiple bindings", args: args{bindings: []string{"abc", "def"}}, expected: []string{"abc", "def"}, wantErr: false},
+		{name: "no bindings", args: args{bindings: []string{}}, expected: []string{""}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := consumer{}
 			err := Bindings(tt.args.bindings...)(&c)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.expected, c.bindings)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, c.bindings)
+			}
 		})
 	}
 }

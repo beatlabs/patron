@@ -73,6 +73,36 @@ func TestServer_Run_Shutdown(t *testing.T) {
 	}
 }
 
+func TestServer_SetupTracing(t *testing.T) {
+	tests := []struct {
+		name    string
+		cp      Component
+		host    string
+		port    string
+	}{
+		{name: "success w/ empty tracing vars", cp: &testComponent{}},
+		{name: "success w/ empty tracing host", cp: &testComponent{}, port: "6831"},
+		{name: "success w/ empty tracing port", cp: &testComponent{}, host: "127.0.0.1"},
+		{name: "success", cp: &testComponent{}, host: "127.0.0.1", port:"6831"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.host != "" {
+				err := os.Setenv("PATRON_JAEGER_AGENT_HOST", tt.host)
+				assert.NoError(t, err)
+			}
+			if tt.port != "" {
+				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", tt.port)
+				assert.NoError(t, err)
+			}
+			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
+			assert.NoError(t, err)
+			err = s.Run()
+			assert.NoError(t, err)
+		})
+	}
+}
+
 func getRandomPort() string {
 	rnd := 50000 + rand.Int63n(10000)
 	return strconv.FormatInt(rnd, 10)

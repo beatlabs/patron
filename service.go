@@ -158,10 +158,15 @@ func Setup(name, version string) error {
 func (s *Service) setupDefaultTracing(name, version string) error {
 	var err error
 
-	agent, ok := os.LookupEnv("PATRON_JAEGER_AGENT")
+	host, ok := os.LookupEnv("PATRON_JAEGER_AGENT_HOST")
 	if !ok {
-		agent = "0.0.0.0:6831"
+		host = "0.0.0.0"
 	}
+	port, ok := os.LookupEnv("PATRON_JAEGER_AGENT_PORT")
+	if !ok {
+		port = "6831"
+	}
+	agent := host + ":" + port
 	info.UpsertConfig("jaeger-agent", agent)
 	tp, ok := os.LookupEnv("PATRON_JAEGER_SAMPLER_TYPE")
 	if !ok {

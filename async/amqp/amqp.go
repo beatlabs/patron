@@ -54,14 +54,14 @@ func (m *message) Nack() error {
 	return err
 }
 
-// Exchange represents an AMQP exchange
+// Exchange represents an AMQP exchange.
 type Exchange struct {
 	name string
 	kind string
 }
 
-// NewExchange validates its input and creates a new Exchange
-// name should be a non empty string, kind should be one of: direct, fanout, topic, headers
+// NewExchange validates its input and creates a new Exchange.
+// name should be a non empty string, kind should be one of: direct, fanout, topic, headers.
 func NewExchange(name, kind string) (*Exchange, error) {
 	if name == "" {
 		return nil, errors.New("AMQP Exchange name is required")
@@ -86,7 +86,7 @@ func NewExchange(name, kind string) (*Exchange, error) {
 	return &Exchange{name: name, kind: kind}, nil
 }
 
-// Factory of an AMQP consumer
+// Factory of an AMQP consumer.
 type Factory struct {
 	url      string
 	queue    string

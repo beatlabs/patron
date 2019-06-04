@@ -42,6 +42,7 @@ func Requeue(requeue bool) OptionFunc {
 	}
 }
 
+// Bindings option for providing custom exchange-queue bindings.
 func Bindings(bindings ...string) OptionFunc {
 	return func(c *consumer) error {
 		if len(bindings) == 0 {

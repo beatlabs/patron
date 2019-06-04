@@ -14,7 +14,7 @@ import (
 	"github.com/beatlabs/patron/log/zerolog"
 	"github.com/beatlabs/patron/sync/http"
 	"github.com/beatlabs/patron/trace"
-	jaeger "github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go"
 )
 
 var logSetupOnce sync.Once

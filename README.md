@@ -89,7 +89,7 @@ The service has some default settings which can be changed via environment varia
 - Log level, for setting zerolog with `INFO` log level with `PATRON_LOG_LEVEL`
 - Tracing, for setting up jaeger tracing with
   - agent host `0.0.0.0` with `PATRON_JAEGER_AGENT_HOST`
-  - agent port `6831` with `PATRON_JAEGER_AGENT_POST`
+  - agent port `6831` with `PATRON_JAEGER_AGENT_PORT`
   - sampler type `probabilistic`with `PATRON_JAEGER_SAMPLER_TYPE`
   - sampler param `0.1` with `PATRON_JAEGER_SAMPLER_PARAM`
 

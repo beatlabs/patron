@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var validExch, _ = NewExchange("e", amqp.ExchangeDirect)
+
 func Test_message(t *testing.T) {
 	b, err := json.Encode("test")
 	assert.NoError(t, err)
@@ -35,12 +37,43 @@ func Test_message(t *testing.T) {
 	assert.Error(t, m.Nack())
 }
 
-func TestNew(t *testing.T) {
+func TestNewExchange(t *testing.T) {
+	type args struct {
+		name string
+		kind string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"success, kind fanout", args{name: "abc", kind: amqp.ExchangeFanout}, false},
+		{"success, kind headers", args{name: "abc", kind: amqp.ExchangeHeaders}, false},
+		{"success, kind topic", args{name: "abc", kind: amqp.ExchangeTopic}, false},
+		{"success, kind direct", args{name: "abc", kind: amqp.ExchangeDirect}, false},
+		{"fail, empty name", args{name: "", kind: amqp.ExchangeTopic}, true},
+		{"fail, empty kind", args{name: "abc", kind: ""}, true},
+		{"fail, invalid kind", args{name: "abc", kind: "def"}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exc, err := NewExchange(tt.args.name, tt.args.kind)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, exc)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, exc)
+			}
+		})
+	}
+}
 
+func TestNew(t *testing.T) {
 	type args struct {
 		url      string
 		queue    string
-		exchange string
+		exchange Exchange
 		opt      OptionFunc
 	}
 	tests := []struct {
@@ -48,10 +81,9 @@ func TestNew(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"success", args{url: "amqp://guest:guest@localhost:5672/", queue: "q", exchange: "e", opt: Buffer(100)}, false},
-		{"fail, invalid url", args{url: "", queue: "q", exchange: "e", opt: Buffer(100)}, true},
-		{"fail, invalid queue name", args{url: "url", queue: "", exchange: "e", opt: Buffer(100)}, true},
-		{"fail, invalid exchange name", args{url: "url", queue: "queue", exchange: "", opt: Buffer(100)}, true},
+		{"success", args{url: "amqp://guest:guest@localhost:5672/", queue: "q", exchange: *validExch, opt: Buffer(100)}, false},
+		{"fail, invalid url", args{url: "", queue: "q", exchange: *validExch, opt: Buffer(100)}, true},
+		{"fail, invalid queue name", args{url: "url", queue: "", exchange: *validExch, opt: Buffer(100)}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -84,7 +116,8 @@ func TestFactory_Create(t *testing.T) {
 			f := &Factory{
 				url:      "url",
 				queue:    "queue",
-				exchange: "exchange",
+				exchange: *validExch,
+				bindings: []string{},
 				oo:       tt.fields.oo,
 			}
 			got, err := f.Create()
@@ -106,14 +139,14 @@ func Test_mapHeader(t *testing.T) {
 }
 
 func TestConsumer_Info(t *testing.T) {
-	f, err := New("url", "queue", "exchange")
+	f, err := New("url", "queue", *validExch)
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)
 	expected := make(map[string]interface{})
 	expected["type"] = "amqp-consumer"
 	expected["queue"] = "queue"
-	expected["exchange"] = "exchange"
+	expected["exchange"] = *validExch
 	expected["requeue"] = true
 	expected["buffer"] = 1000
 	expected["url"] = "url"

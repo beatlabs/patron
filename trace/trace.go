@@ -57,7 +57,7 @@ func Setup(name, ver, agent, typ string, prm float64) error {
 	metricsFactory := prometheus.New()
 	tr, clsTemp, err := cfg.NewTracer(
 		config.Logger(jaegerLoggerAdapter{}),
-		config.Observer(rpcmetrics.NewObserver(metricsFactory.Namespace("sync", nil), rpcmetrics.DefaultNameNormalizer)),
+		config.Observer(rpcmetrics.NewObserver(metricsFactory.Namespace(name, nil), rpcmetrics.DefaultNameNormalizer)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "cannot initialize jaeger tracer")

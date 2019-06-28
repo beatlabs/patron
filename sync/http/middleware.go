@@ -105,7 +105,7 @@ func NewTracingMiddleware(path string) MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			sp, r := trace.HTTPSpan(path, r)
 			lw := newResponseWriter(w)
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(lw, r)
 			trace.FinishHTTPSpan(sp, lw.Status())
 		})
 	}

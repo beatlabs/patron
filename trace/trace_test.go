@@ -94,6 +94,7 @@ func TestHTTPStartFinishSpan(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{
 		"span.kind":        ext.SpanKindRPCServerEnum,
 		"component":        "http",
+		"error":            false,
 		"http.method":      "GET",
 		"http.status_code": uint16(200),
 		"http.url":         "/",

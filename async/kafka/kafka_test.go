@@ -300,19 +300,20 @@ func TestConsumer_ConsumeWithGroup(t *testing.T) {
 
 func TestConsumer_ConsumeWithoutGroup(t *testing.T) {
 	broker := sarama.NewMockBroker(t, 0)
+	topic := "foo_topic"
 	broker.SetHandlerByMap(map[string]sarama.MockResponse{
 		"MetadataRequest": sarama.NewMockMetadataResponse(t).
 			SetBroker(broker.Addr(), broker.BrokerID()).
-			SetLeader("TOPIC", 0, broker.BrokerID()),
+			SetLeader(topic, 0, broker.BrokerID()),
 		"OffsetRequest": sarama.NewMockOffsetResponse(t).
-			SetOffset("TOPIC", 0, sarama.OffsetNewest, 10).
-			SetOffset("TOPIC", 0, sarama.OffsetOldest, 7),
+			SetVersion(1).
+			SetOffset(topic, 0, sarama.OffsetNewest, 10).
+			SetOffset(topic, 0, sarama.OffsetOldest, 0),
 		"FetchRequest": sarama.NewMockFetchResponse(t, 1).
-			SetMessage("TOPIC", 0, 9, sarama.StringEncoder("{}")).
-			SetHighWaterMark("TOPIC", 0, 14),
+			SetMessage(topic, 0, 9, sarama.StringEncoder("Foo")),
 	})
 
-	f, err := New("name", "application/json", "TOPIC", "", []string{broker.Addr()})
+	f, err := New("name", "application/json", topic, "", []string{broker.Addr()})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)

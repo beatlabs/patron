@@ -110,16 +110,17 @@ func (f *Factory) Create() (async.Consumer, error) {
 	c := &consumer{
 		brokers:     f.brokers,
 		topic:       f.topic,
-		traceTag:    opentracing.Tag{Key: "group", Value: f.group},
 		cfg:         config,
 		contentType: f.ct,
-		buffer:      0,
+		buffer:      1000,
 		start:       sarama.OffsetNewest,
 		info:        make(map[string]interface{}),
 	}
 
 	if f.group != "" {
 		c.group = f.group
+		c.traceTag = opentracing.Tag{Key: "group", Value: f.group}
+		c.buffer = 0
 	}
 
 	for _, o := range f.oo {
@@ -241,6 +242,7 @@ func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan err
 						msg, err := claimMessage(ctx, c, m)
 						if err != nil {
 							chErr <- err
+							return
 						}
 						chMsg <- msg
 					}()
@@ -351,10 +353,10 @@ func (h handler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Con
 	for msg := range claim.Messages() {
 		topicPartitionOffsetDiffGaugeSet(h.consumer.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
 		m, err := claimMessage(ctx, h.consumer, msg)
-		m.sess = sess
 		if err != nil {
 			return err
 		}
+		m.sess = sess
 		h.messages <- m
 	}
 	return nil

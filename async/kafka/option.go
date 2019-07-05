@@ -45,3 +45,11 @@ func Timeout(timeout time.Duration) OptionFunc {
 		return nil
 	}
 }
+
+// Start option for adjusting the the starting offset
+func Start(offset int64) OptionFunc {
+	return func(c *consumer) error {
+		c.cfg.Consumer.Offsets.Initial = offset
+		return nil
+	}
+}

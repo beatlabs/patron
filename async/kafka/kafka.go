@@ -113,7 +113,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 		cfg:         config,
 		contentType: f.ct,
 		buffer:      1000,
-		start:       sarama.OffsetNewest,
 		info:        make(map[string]interface{}),
 	}
 
@@ -139,7 +138,6 @@ type consumer struct {
 	topic       string
 	group       string
 	buffer      int
-	start       int64
 	traceTag    opentracing.Tag
 	cfg         *sarama.Config
 	contentType string
@@ -272,14 +270,14 @@ func claimMessage(ctx context.Context, c *consumer, msg *sarama.ConsumerMessage)
 		ct, err = determineContentType(msg.Headers)
 		if err != nil {
 			trace.SpanError(sp)
-			return &message{}, errors.Wrap(err, "failed to determine content type")
+			return nil, errors.Wrap(err, "failed to determine content type")
 		}
 	}
 
 	dec, err := async.DetermineDecoder(ct)
 	if err != nil {
 		trace.SpanError(sp)
-		return &message{}, errors.Wrapf(err, "failed to determine decoder for %s", ct)
+		return nil, errors.Wrapf(err, "failed to determine decoder for %s", ct)
 	}
 
 	chCtx = log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": uuid.New().String()}))
@@ -322,7 +320,7 @@ func (c *consumer) partitions() ([]sarama.PartitionConsumer, error) {
 
 	for i, partition := range partitions {
 
-		pc, err := c.ms.ConsumePartition(c.topic, partition, int64(c.start))
+		pc, err := c.ms.ConsumePartition(c.topic, partition, c.cfg.Consumer.Offsets.Initial)
 		if nil != err {
 			return nil, errors.Wrap(err, "failed to get partition consumer")
 		}

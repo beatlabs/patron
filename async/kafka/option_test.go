@@ -67,3 +67,9 @@ func TestVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestStart(t *testing.T) {
+	c := consumer{cfg: sarama.NewConfig()}
+	err := Start(sarama.OffsetOldest)(&c)
+	assert.NoError(t, err)
+}

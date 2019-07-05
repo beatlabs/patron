@@ -2,7 +2,6 @@ package patron
 
 import (
 	"github.com/beatlabs/patron/errors"
-	"github.com/beatlabs/patron/info"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync/http"
 )
@@ -54,18 +53,6 @@ func Components(cc ...Component) OptionFunc {
 		}
 		s.cps = append(s.cps, cc...)
 		log.Info("component options are set")
-		return nil
-	}
-}
-
-// Docs option for adding additional documentation to the service info response.
-func Docs(file string) OptionFunc {
-	return func(s *Service) error {
-		err := info.ImportDoc(file)
-		if err != nil {
-			return err
-		}
-		log.Info("documentation is set")
 		return nil
 	}
 }

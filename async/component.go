@@ -36,7 +36,6 @@ type Component struct {
 	cf           ConsumerFactory
 	retries      int
 	retryWait    time.Duration
-	info         map[string]interface{}
 }
 
 // New returns a new async component. The default behavior is to return a error of failure.
@@ -62,7 +61,6 @@ func New(name string, p ProcessorFunc, cf ConsumerFactory, oo ...OptionFunc) (*C
 		failStrategy: NackExitStrategy,
 		retries:      0,
 		retryWait:    0,
-		info:         make(map[string]interface{}),
 	}
 
 	for _, o := range oo {
@@ -72,13 +70,7 @@ func New(name string, p ProcessorFunc, cf ConsumerFactory, oo ...OptionFunc) (*C
 		}
 	}
 
-	c.setupInfo()
 	return c, nil
-}
-
-// Info return information of the component.
-func (c *Component) Info() map[string]interface{} {
-	return c.info
 }
 
 // Run starts the consumer processing loop messages.
@@ -116,7 +108,6 @@ func (c *Component) processing(ctx context.Context) error {
 			log.Warnf("failed to close consumer: %v", err)
 		}
 	}()
-	c.info["consumer"] = cns.Info()
 
 	chMsg, chErr, err := cns.Consume(ctx)
 	if err != nil {
@@ -176,11 +167,4 @@ func (c *Component) executeFailureStrategy(msg Message, err error) error {
 		return errors.New("invalid failure strategy")
 	}
 	return nil
-}
-
-func (c *Component) setupInfo() {
-	c.info["type"] = "async"
-	c.info["fail-strategy"] = c.failStrategy.String()
-	c.info["consumer-retries"] = c.retries
-	c.info["consumer-timeout"] = c.retryWait.String()
 }

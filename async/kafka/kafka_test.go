@@ -2,9 +2,10 @@ package kafka
 
 import (
 	"context"
-	"github.com/beatlabs/patron/async"
 	"testing"
 	"time"
+
+	"github.com/beatlabs/patron/async"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
@@ -132,21 +133,6 @@ func Test_determineContentType(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestConsumer_Info(t *testing.T) {
-	f, err := New("name", "application/json", "topic", "group", []string{"1", "2"})
-	assert.NoError(t, err)
-	c, err := f.Create()
-	assert.NoError(t, err)
-	expected := make(map[string]interface{})
-	expected["type"] = "kafka-consumer"
-	expected["brokers"] = "1,2"
-	expected["topic"] = "topic"
-	expected["group"] = "group"
-	expected["buffer"] = 0
-	expected["default-content-type"] = "application/json"
-	assert.Equal(t, expected, c.Info())
 }
 
 func Test_message(t *testing.T) {

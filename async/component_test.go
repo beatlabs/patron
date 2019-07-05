@@ -185,41 +185,6 @@ func TestRun_Process_Shutdown(t *testing.T) {
 	assert.True(t, <-ch)
 }
 
-func TestInfo(t *testing.T) {
-	cnr := mockConsumer{
-		chMsg: make(chan Message, 10),
-		chErr: make(chan error, 10),
-	}
-	proc := mockProcessor{retError: false}
-	cmp, err := New(
-		"test",
-		proc.Process,
-		&mockConsumerFactory{c: &cnr},
-		FailureStrategy(AckStrategy),
-		ConsumerRetry(5, 2*time.Second),
-	)
-	assert.NoError(t, err)
-	cnr.chMsg <- &mockMessage{ctx: context.Background()}
-	ch := make(chan bool)
-	ctx, cnl := context.WithCancel(context.Background())
-	go func() {
-		err1 := cmp.Run(ctx)
-		assert.NoError(t, err1)
-		ch <- true
-	}()
-	time.Sleep(10 * time.Millisecond)
-	cnl()
-	assert.True(t, <-ch)
-	cnsInfo := map[string]interface{}{"key": "value"}
-	expected := make(map[string]interface{})
-	expected["type"] = "async"
-	expected["fail-strategy"] = AckStrategy.String()
-	expected["consumer"] = cnsInfo
-	expected["consumer-retries"] = 5
-	expected["consumer-timeout"] = "2s"
-	assert.Equal(t, expected, cmp.Info())
-}
-
 type mockMessage struct {
 	ctx context.Context
 }
@@ -281,8 +246,4 @@ func (mc *mockConsumer) Consume(context.Context) (<-chan Message, <-chan error, 
 
 func (mc *mockConsumer) Close() error {
 	return nil
-}
-
-func (mc *mockConsumer) Info() map[string]interface{} {
-	return map[string]interface{}{"key": "value"}
 }

@@ -9,7 +9,6 @@ import (
 	"syscall"
 
 	"github.com/beatlabs/patron/errors"
-	"github.com/beatlabs/patron/info"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/zerolog"
 	"github.com/beatlabs/patron/sync/http"
@@ -22,7 +21,6 @@ var logSetupOnce sync.Once
 // Component interface for implementing service components.
 type Component interface {
 	Run(ctx context.Context) error
-	Info() map[string]interface{}
 }
 
 // Service is responsible for managing and setting up everything.
@@ -45,8 +43,6 @@ func New(name, version string, oo ...OptionFunc) (*Service, error) {
 	if version == "" {
 		version = "dev"
 	}
-	info.UpdateName(name)
-	info.UpdateVersion(version)
 
 	s := Service{
 		cps:           []Component{},
@@ -79,19 +75,12 @@ func New(name, version string, oo ...OptionFunc) (*Service, error) {
 	}
 
 	s.cps = append(s.cps, httpCp)
-	s.setupInfo()
 	s.setupOSSignal()
 	return &s, nil
 }
 
 func (s *Service) setupOSSignal() {
 	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
-}
-
-func (s *Service) setupInfo() {
-	for _, c := range s.cps {
-		info.AppendComponent(c.Info())
-	}
 }
 
 // Run starts up all service components and monitors for errors.
@@ -136,12 +125,10 @@ func Setup(name, version string) error {
 		lvl = string(log.InfoLevel)
 	}
 
-	info.UpsertConfig("log_level", lvl)
 	hostname, err := os.Hostname()
 	if err != nil {
 		return errors.Wrap(err, "failed to get hostname")
 	}
-	info.UpdateHost(hostname)
 
 	f := map[string]interface{}{
 		"srv":  name,
@@ -167,12 +154,10 @@ func (s *Service) setupDefaultTracing(name, version string) error {
 		port = "6831"
 	}
 	agent := host + ":" + port
-	info.UpsertConfig("jaeger-agent", agent)
 	tp, ok := os.LookupEnv("PATRON_JAEGER_SAMPLER_TYPE")
 	if !ok {
 		tp = jaeger.SamplerTypeProbabilistic
 	}
-	info.UpsertConfig("jaeger-agent-sampler-type", tp)
 	var prmVal = 0.0
 	var prm = "0.0"
 
@@ -183,7 +168,6 @@ func (s *Service) setupDefaultTracing(name, version string) error {
 		}
 	}
 
-	info.UpsertConfig("jaeger-agent-sampler-param", prm)
 	log.Infof("setting up default tracing %s, %s with param %s", agent, tp, prm)
 	return trace.Setup(name, version, agent, tp, prmVal)
 }

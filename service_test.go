@@ -75,15 +75,15 @@ func TestServer_Run_Shutdown(t *testing.T) {
 
 func TestServer_SetupTracing(t *testing.T) {
 	tests := []struct {
-		name    string
-		cp      Component
-		host    string
-		port    string
+		name string
+		cp   Component
+		host string
+		port string
 	}{
 		{name: "success w/ empty tracing vars", cp: &testComponent{}},
 		{name: "success w/ empty tracing host", cp: &testComponent{}, port: "6831"},
 		{name: "success w/ empty tracing port", cp: &testComponent{}, host: "127.0.0.1"},
-		{name: "success", cp: &testComponent{}, host: "127.0.0.1", port:"6831"},
+		{name: "success", cp: &testComponent{}, host: "127.0.0.1", port: "6831"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -117,8 +117,4 @@ func (ts testComponent) Run(ctx context.Context) error {
 		return errors.New("failed to run component")
 	}
 	return nil
-}
-
-func (ts testComponent) Info() map[string]interface{} {
-	return map[string]interface{}{"type": "mock"}
 }

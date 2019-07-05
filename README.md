@@ -76,7 +76,6 @@ The `Service` has the role of glueing all of the above together, which are:
 - setting up default HTTP component with the following endpoints configured:
   - profiling via pprof
   - health check
-  - info endpoint for returning information about the service
 - setting up termination by os signal
 - setting up SIGHUP custom hook if provided by a option
 - starting and stopping components
@@ -100,7 +99,6 @@ A `Component` is a interface that exposes the following API:
 ```go
 type Component interface {
   Run(ctx context.Context) error  
-  Info() map[string]interface{}
 }
 ```
 

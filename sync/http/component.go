@@ -59,15 +59,8 @@ func New(oo ...OptionFunc) (*Component, error) {
 	c.routes = append(c.routes, healthCheckRoute(c.hc))
 	c.routes = append(c.routes, profilingRoutes()...)
 	c.routes = append(c.routes, metricRoute())
-	c.routes = append(c.routes, infoRoute())
 
-	c.createInfo()
 	return &c, nil
-}
-
-// Info return information of the component.
-func (c *Component) Info() map[string]interface{} {
-	return c.info
 }
 
 // Run starts the HTTP server.
@@ -121,18 +114,5 @@ func (c *Component) createHTTPServer() *http.Server {
 		WriteTimeout: c.httpWriteTimeout,
 		IdleTimeout:  httpIdleTimeout,
 		Handler:      routerAfterMiddleware,
-	}
-}
-
-func (c *Component) createInfo() {
-	c.info["type"] = "http"
-	c.info["port"] = c.httpPort
-	c.info["read-timeout"] = c.httpReadTimeout.String()
-	c.info["write-timeout"] = c.httpWriteTimeout.String()
-	c.info["idle-timeout"] = httpIdleTimeout.String()
-	if c.keyFile != "" && c.certFile != "" {
-		c.info["type"] = "https"
-		c.info["key-file"] = c.keyFile
-		c.info["cert-file"] = c.certFile
 	}
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
@@ -117,7 +116,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 		cfg:         config,
 		contentType: f.ct,
 		buffer:      0,
-		info:        make(map[string]interface{}),
 	}
 
 	for _, o := range f.oo {
@@ -127,7 +125,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 		}
 	}
 
-	c.createInfo()
 	return c, nil
 }
 
@@ -141,12 +138,6 @@ type consumer struct {
 	contentType string
 	cnl         context.CancelFunc
 	cg          sarama.ConsumerGroup
-	info        map[string]interface{}
-}
-
-// Info return the information of the consumer.
-func (c *consumer) Info() map[string]interface{} {
-	return c.info
 }
 
 // Consume starts consuming messages from a Kafka topic.
@@ -205,15 +196,6 @@ func (c *consumer) Close() error {
 	}
 
 	return errors.Wrap(c.cg.Close(), "failed to close consumer")
-}
-
-func (c *consumer) createInfo() {
-	c.info["type"] = "kafka-consumer"
-	c.info["brokers"] = strings.Join(c.brokers, ",")
-	c.info["group"] = c.group
-	c.info["topic"] = c.topic
-	c.info["buffer"] = c.buffer
-	c.info["default-content-type"] = c.contentType
 }
 
 type handler struct {

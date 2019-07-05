@@ -50,7 +50,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 		done <- true
 	}()
 	time.Sleep(100 * time.Millisecond)
-	assert.Len(t, s.routes, 15)
+	assert.Len(t, s.routes, 14)
 	cnl()
 	assert.True(t, <-done)
 }
@@ -66,24 +66,9 @@ func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
 		done <- true
 	}()
 	time.Sleep(100 * time.Millisecond)
-	assert.Len(t, s.routes, 15)
+	assert.Len(t, s.routes, 14)
 	cnl()
 	assert.True(t, <-done)
-}
-
-func TestInfo(t *testing.T) {
-	rr := []Route{NewRoute("/", "GET", nil, true, nil)}
-	s, err := New(Routes(rr), Secure("testdata/server.pem", "testdata/server.key"), Port(50005))
-	assert.NoError(t, err)
-	expected := make(map[string]interface{})
-	expected["type"] = "https"
-	expected["port"] = 50005
-	expected["read-timeout"] = httpReadTimeout.String()
-	expected["write-timeout"] = httpWriteTimeout.String()
-	expected["idle-timeout"] = httpIdleTimeout.String()
-	expected["key-file"] = "testdata/server.key"
-	expected["cert-file"] = "testdata/server.pem"
-	assert.Equal(t, expected, s.Info())
 }
 
 func TestComponent_ListenAndServeTLS_FailsInvalidCerts(t *testing.T) {

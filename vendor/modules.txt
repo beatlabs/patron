@@ -58,8 +58,6 @@ github.com/rcrowley/go-metrics
 # github.com/rs/zerolog v1.5.0
 github.com/rs/zerolog
 github.com/rs/zerolog/internal/json
-# github.com/shurcooL/sanitized_anchor_name v1.0.0
-github.com/shurcooL/sanitized_anchor_name
 # github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
 github.com/streadway/amqp
 # github.com/stretchr/testify v1.2.2
@@ -85,5 +83,3 @@ github.com/uber/jaeger-client-go/thrift-gen/baggage
 # github.com/uber/jaeger-lib v1.5.0
 github.com/uber/jaeger-lib/metrics/prometheus
 github.com/uber/jaeger-lib/metrics
-# gopkg.in/russross/blackfriday.v2 v2.0.0
-gopkg.in/russross/blackfriday.v2

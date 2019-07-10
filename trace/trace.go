@@ -91,6 +91,7 @@ func HTTPSpan(path string, r *http.Request) (opentracing.Span, *http.Request) {
 // FinishHTTPSpan finishes a HTTP span by providing a HTTP status code.
 func FinishHTTPSpan(sp opentracing.Span, code int) {
 	ext.HTTPStatusCode.Set(sp, uint16(code))
+	ext.Error.Set(sp, code >= http.StatusInternalServerError)
 	sp.Finish()
 }
 

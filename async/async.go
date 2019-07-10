@@ -29,7 +29,6 @@ type ConsumerFactory interface {
 type Consumer interface {
 	Consume(context.Context) (<-chan Message, <-chan error, error)
 	Close() error
-	Info() map[string]interface{}
 }
 
 // DetermineDecoder determines the decoder based on the content type.

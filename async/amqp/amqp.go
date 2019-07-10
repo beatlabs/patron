@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/beatlabs/patron/async"
@@ -119,7 +117,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 		cfg:      defaultCfg,
 		buffer:   1000,
 		traceTag: opentracing.Tag{Key: "queue", Value: f.queue},
-		info:     make(map[string]interface{}),
 	}
 
 	for _, o := range f.oo {
@@ -129,7 +126,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 		}
 	}
 
-	c.createInfo()
 	return c, nil
 }
 
@@ -145,12 +141,6 @@ type consumer struct {
 	cfg      amqp.Config
 	ch       *amqp.Channel
 	conn     *amqp.Connection
-	info     map[string]interface{}
-}
-
-// Info return the information of the consumer.
-func (c *consumer) Info() map[string]interface{} {
-	return c.info
 }
 
 // Consume starts of consuming a AMQP queue.
@@ -252,23 +242,6 @@ func (c *consumer) consume() (<-chan amqp.Delivery, error) {
 	}
 
 	return deliveries, nil
-}
-
-func (c *consumer) createInfo() {
-	c.info["type"] = "amqp-consumer"
-	c.info["queue"] = c.queue
-	c.info["exchange"] = c.exchange
-	c.info["requeue"] = c.requeue
-	c.info["buffer"] = c.buffer
-
-	var re = regexp.MustCompile(`(?m)amqp:\/\/\w*:\w*@\w*:\d*\/`)
-	match := re.FindAllString(c.url, -1)
-	if len(match) > 0 {
-		lst := strings.LastIndex(c.url, "@")
-		c.info["url"] = "amqp://xxx:xxx" + c.url[lst:]
-		return
-	}
-	c.info["url"] = c.url
 }
 
 func mapHeader(hh amqp.Table) map[string]string {

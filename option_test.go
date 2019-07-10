@@ -122,32 +122,6 @@ func TestComponents(t *testing.T) {
 	}
 }
 
-func TestDocs(t *testing.T) {
-	type args struct {
-		file string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{name: "success", args: args{file: "testdata/test.md"}, wantErr: false},
-		{name: "doc file missing", args: args{file: ""}, wantErr: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s, err := New("test", "1.0.0")
-			assert.NoError(t, err)
-			err = Docs(tt.args.file)(s)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
 func TestSIGHUP(t *testing.T) {
 	type args struct {
 		handler func()

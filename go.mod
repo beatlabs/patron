@@ -2,6 +2,7 @@ module github.com/beatlabs/patron
 
 require (
 	github.com/Shopify/sarama v1.21.0
+	github.com/aws/aws-sdk-go v1.21.8
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/golang/protobuf v1.2.0
 	github.com/google/uuid v1.1.0
@@ -20,4 +21,5 @@ require (
 	github.com/uber/jaeger-client-go v2.14.0+incompatible
 	github.com/uber/jaeger-lib v1.5.0
 	go.uber.org/atomic v1.3.2 // indirect
+	golang.org/x/text v0.3.2 // indirect
 )

@@ -2,11 +2,14 @@ package sqs
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/log"
+	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
 type message struct {
+	msg *sqs.Message
 }
 
 // Context of the message.
@@ -44,14 +47,48 @@ func (f *Factory) Create() (async.Consumer, error) {
 }
 
 type consumer struct {
+	queueURL string
+	maxMessages int64
+	pollWaitSeconds int64
+	buffer      int
+  	sqs sqs.SQS
+	cnl context.CancelFunc
 }
 
+
 // Consume messages from SQS and send them to the channel.
-func (c *consumer) Consume(context.Context) (<-chan async.Message, <-chan error, error) {
-	panic("implement me")
+func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan error, error) {
+	chMsg := make(chan async.Message, c.buffer)
+	chErr := make(chan error, c.buffer)
+	sqsCtx,cnl:=context.WithCancel(ctx)
+	c.cnl = cnl
+	go func() {
+		for {
+			if sqsCtx.Err() != nil {
+				return
+			}
+			output, err := c.sqs.ReceiveMessageWithContext(sqsCtx ,&sqs.ReceiveMessageInput{
+				QueueUrl:            &c.queueURL,
+				MaxNumberOfMessages: aws.Int64(c.maxMessages),
+				WaitTimeSeconds:     aws.Int64(c.pollWaitSeconds),
+			})
+			if err != nil {
+				chErr <-err
+				continue
+			}
+			if sqsCtx.Err() != nil {
+				return
+			}
+			for _, msg := range output.Messages {
+				chMsg <- &message{msg:msg}
+			}
+		}
+	}()
+	return chMsg,chErr,nil
 }
 
 // Close the consumer.
 func (c *consumer) Close() error {
-	panic("implement me")
+	c.cnl()
+	return nil
 }

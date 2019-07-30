@@ -5,6 +5,7 @@ require (
 	github.com/aws/aws-sdk-go v1.21.8
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/golang/protobuf v1.2.0
+	github.com/google/pprof v0.0.0-20190723021845-34ac40c74b70 // indirect
 	github.com/google/uuid v1.1.0
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20180313041242-367231351874
@@ -21,5 +22,6 @@ require (
 	github.com/uber/jaeger-client-go v2.14.0+incompatible
 	github.com/uber/jaeger-lib v1.5.0
 	go.uber.org/atomic v1.3.2 // indirect
+	golang.org/x/arch v0.0.0-20190312162104-788fe5ffcd8c // indirect
 	golang.org/x/text v0.3.2 // indirect
 )

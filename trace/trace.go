@@ -28,7 +28,9 @@ const (
 	HTTPComponent = "http"
 	// HTTPClientComponent definition.
 	HTTPClientComponent = "http-client"
-	versionTag          = "version"
+	// SQSConsumerComponent definition.
+	SQSConsumerComponent = "sqs-consumer"
+	versionTag           = "version"
 )
 
 var (

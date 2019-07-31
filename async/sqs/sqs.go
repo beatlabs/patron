@@ -2,24 +2,57 @@ package sqs
 
 import (
 	"context"
+	"strconv"
+	"time"
 
-	"github.com/beatlabs/patron/errors"
+	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/beatlabs/patron/trace"
+	"github.com/beatlabs/patron/encoding/json"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
+var messageAge *prometheus.GaugeVec
+var messageCounter *prometheus.CounterVec
+
+func init() {
+	messageAge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "component",
+			Subsystem: "sqs_consumer",
+			Name:      "message_age",
+			Help:      "Message age based on the SentTimestamp SQS attribute",
+		},
+		[]string{"queue"},
+	)
+	prometheus.MustRegister(messageAge)
+	messageCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "component",
+			Subsystem: "sqs_consumer",
+			Name:      "message_age",
+			Help:      "Message age based on the SentTimestamp SQS attribute",
+		},
+		[]string{"queue", "state", "hasError"},
+	)
+	prometheus.MustRegister(messageCounter)
+}
+
 type message struct {
-	queueURL string
+	queue    string
+	queueURL *string
 	sqs      *sqs.SQS
 	ctx      context.Context
 	msg      *sqs.Message
 	span     opentracing.Span
+	dec      encoding.DecodeRawFunc
 }
 
 // Context of the message.
@@ -29,21 +62,20 @@ func (m *message) Context() context.Context {
 
 // Decode the message to the provided argument.
 func (m *message) Decode(v interface{}) error {
-	panic("implement me")
+	return m.dec([]byte(*m.msg.Body), v)
 }
 
 // Ack the message.
 func (m *message) Ack() error {
-	output, err := m.sqs.DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(m.queueURL),
+	_, err := m.sqs.DeleteMessage(&sqs.DeleteMessageInput{
+		QueueUrl:      m.queueURL,
 		ReceiptHandle: m.msg.ReceiptHandle,
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to delete message %s from queue %s", *m.msg.MessageId)
+		messageCountErrorInc(m.queue, "ACK", 1)
+		return nil
 	}
-	log.Debugf("message %s deleted with output: %s", m.msg.MessageId, output.String())
-
-	// TODO: metrics
+	messageCountInc(m.queue, "ACK", 1)
 	trace.SpanSuccess(m.span)
 	return nil
 }
@@ -52,33 +84,31 @@ func (m *message) Ack() error {
 // We could investigate to support ChangeMessageVisibility which could be used to make the message visible again sooner
 // than the visibility timeout.
 func (m *message) Nack() error {
-
-	// TODO: metrics
+	messageCountInc(m.queue, "NACK", 1)
 	trace.SpanError(m.span)
-	log.Debugf("message %s not deleted, will be available after visibility timeout passes", *m.msg.MessageId)
 	return nil
 }
 
 // Factory for creating SQS consumers.
 type Factory struct {
-	queueURL          string
+	queue             string
 	maxMessages       int64
 	pollWaitSeconds   int64
 	visibilityTimeout int64
 	buffer            int
 }
 
-func NewFactory(queueURL string, oo ...OptionFunc) (*Factory, error) {
-	if queueURL == "" {
-		return nil, errors.New("queue url is empty")
+func NewFactory(queue string, oo ...OptionFunc) (*Factory, error) {
+	if queue == "" {
+		return nil, errors.New("queue name is empty")
 	}
 
 	f := &Factory{
-		queueURL:          queueURL,
-		maxMessages:       10, // maximum 10 messages per request
-		pollWaitSeconds:   20, // poll wait time for long polling in seconds
-		visibilityTimeout: 30, // the time in seconds after a message gets visible again after fetching it from the queue
-		buffer:            0,  // this means that a message will be processed only if the previous has been processed
+		queue:             queue,
+		maxMessages:       10,
+		pollWaitSeconds:   20,
+		visibilityTimeout: 30,
+		buffer:            0,
 	}
 
 	for _, o := range oo {
@@ -97,7 +127,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 	var sqs *sqs.SQS
 
 	return &consumer{
-		queueURL:          f.queueURL,
+		queue:             f.queue,
 		maxMessages:       f.maxMessages,
 		pollWaitSeconds:   f.pollWaitSeconds,
 		buffer:            f.buffer,
@@ -107,7 +137,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 }
 
 type consumer struct {
-	queueURL          string
+	queue             string
 	maxMessages       int64
 	pollWaitSeconds   int64
 	visibilityTimeout int64
@@ -122,17 +152,30 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	chErr := make(chan error, c.buffer)
 	sqsCtx, cnl := context.WithCancel(ctx)
 	c.cnl = cnl
+
+	queueURL, err := c.sqs.GetQueueUrl(&sqs.GetQueueUrlInput{
+		QueueName: aws.String(c.queue),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
 	go func() {
 		for {
 			if sqsCtx.Err() != nil {
 				return
 			}
 			output, err := c.sqs.ReceiveMessageWithContext(sqsCtx, &sqs.ReceiveMessageInput{
-				QueueUrl:            &c.queueURL,
+				QueueUrl:            queueURL.QueueUrl,
 				MaxNumberOfMessages: aws.Int64(c.maxMessages),
 				WaitTimeSeconds:     aws.Int64(c.pollWaitSeconds),
 				VisibilityTimeout:   aws.Int64(c.visibilityTimeout),
-				// TODO: Use attributes to fetch the process time of a message...
+				AttributeNames: aws.StringSlice([]string{
+					"SentTimestamp",
+				}),
+				MessageAttributeNames: aws.StringSlice([]string{
+					"All",
+				}),
 			})
 			if err != nil {
 				chErr <- err
@@ -141,21 +184,39 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			if sqsCtx.Err() != nil {
 				return
 			}
-			for _, msg := range output.Messages {
 
-				sp, chCtx := trace.ConsumerSpan(
-					sqsCtx,
-					trace.ComponentOpName(trace.SQSConsumerComponent, c.queueURL),
-					trace.SQSConsumerComponent,
-					mapHeader(msg.MessageAttributes),
-				)
+			messageCountInc(c.queue, "FETCHED", len(output.Messages))
+
+			for _, msg := range output.Messages {
+				observerMessageAge(c.queue, msg.Attributes)
+
+				sp, chCtx := trace.ConsumerSpan(sqsCtx, trace.ComponentOpName(trace.SQSConsumerComponent, c.queue),
+					trace.SQSConsumerComponent, mapHeader(msg.MessageAttributes))
+
+				ct, err := determineContentType(msg.MessageAttributes)
+				if err != nil {
+					messageCountErrorInc(c.queue, "FETCHED", 1)
+					trace.SpanError(sp)
+					log.Errorf("failed to determine content type: %v", err)
+					continue
+				}
+
+				dec, err := async.DetermineDecoder(ct)
+				if err != nil {
+					messageCountErrorInc(c.queue, "FETCHED", 1)
+					trace.SpanError(sp)
+					log.Errorf("failed to determine decoder: %v", err)
+					continue
+				}
 
 				chMsg <- &message{
-					queueURL: c.queueURL,
+					queue:    c.queue,
+					queueURL: queueURL.QueueUrl,
 					span:     sp,
 					msg:      msg,
-					ctx:      chCtx,
+					ctx:      log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": *msg.MessageId})),
 					sqs:      c.sqs,
+					dec:      dec,
 				}
 			}
 		}
@@ -169,10 +230,44 @@ func (c *consumer) Close() error {
 	return nil
 }
 
+func determineContentType(ma map[string]*sqs.MessageAttributeValue) (string, error) {
+	for key, value := range ma {
+		if key == encoding.ContentTypeHeader {
+			if value.StringValue != nil {
+				return *value.StringValue, nil
+			}
+			return "", errors.New("content type header is nil")
+		}
+	}
+	return json.Type, nil
+}
+
 func mapHeader(ma map[string]*sqs.MessageAttributeValue) map[string]string {
 	mp := make(map[string]string)
 	for key, value := range ma {
-		mp[key] = *value.StringValue
+		if value.StringValue != nil {
+			mp[key] = *value.StringValue
+		}
 	}
 	return mp
+}
+
+func observerMessageAge(queue string, attributes map[string]*string) {
+	attribute, ok := attributes["SentTimestamp"]
+	if !ok || attribute == nil {
+		return
+	}
+	timestamp, err := strconv.ParseInt(*attribute, 10, 64)
+	if err != nil {
+		return
+	}
+	messageAge.WithLabelValues(queue).Set(time.Now().UTC().Sub(time.Unix(timestamp, 0)).Seconds())
+}
+
+func messageCountInc(queue, state string, count int) {
+	messageCounter.WithLabelValues(queue, state, "false").Add(float64(count))
+}
+
+func messageCountErrorInc(queue, state string, count int) {
+	messageCounter.WithLabelValues(queue, state, "true").Add(float64(count))
 }

@@ -5,18 +5,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/beatlabs/patron/encoding/json"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var messageAge *prometheus.GaugeVec
@@ -89,6 +89,31 @@ func (m *message) Nack() error {
 	return nil
 }
 
+type Config struct {
+	region string
+	id     string
+	secret string
+	token  string
+}
+
+func NewConfig(region, id, secret, token string) (*Config, error) {
+	if region == "" {
+		return nil, errors.New("AWS region not provided")
+	}
+	if id == "" {
+		return nil, errors.New("AWS id not provided")
+	}
+	if secret == "" {
+		return nil, errors.New("AWS secret not provided")
+	}
+	return &Config{
+		region: region,
+		id:     id,
+		secret: secret,
+		token:  token,
+	}, nil
+}
+
 // Factory for creating SQS consumers.
 type Factory struct {
 	queue             string
@@ -96,11 +121,19 @@ type Factory struct {
 	pollWaitSeconds   int64
 	visibilityTimeout int64
 	buffer            int
+	ses               *session.Session
 }
 
-func NewFactory(queue string, oo ...OptionFunc) (*Factory, error) {
+func NewFactory(cfg Config, queue string, oo ...OptionFunc) (*Factory, error) {
 	if queue == "" {
 		return nil, errors.New("queue name is empty")
+	}
+	ses, err := session.NewSession(&aws.Config{
+		Region:      aws.String(cfg.region),
+		Credentials: credentials.NewStaticCredentials(cfg.id, cfg.secret, cfg.token),
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	f := &Factory{
@@ -109,6 +142,7 @@ func NewFactory(queue string, oo ...OptionFunc) (*Factory, error) {
 		pollWaitSeconds:   20,
 		visibilityTimeout: 30,
 		buffer:            0,
+		ses:               ses,
 	}
 
 	for _, o := range oo {
@@ -123,16 +157,13 @@ func NewFactory(queue string, oo ...OptionFunc) (*Factory, error) {
 
 // Create a new SQS consumer.
 func (f *Factory) Create() (async.Consumer, error) {
-	//TODO: create sqs
-	var sqs *sqs.SQS
-
 	return &consumer{
 		queue:             f.queue,
 		maxMessages:       f.maxMessages,
 		pollWaitSeconds:   f.pollWaitSeconds,
 		buffer:            f.buffer,
 		visibilityTimeout: f.visibilityTimeout,
-		sqs:               sqs,
+		sqs:               sqs.New(f.ses),
 	}, nil
 }
 

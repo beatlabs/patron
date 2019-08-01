@@ -37,8 +37,8 @@ func init() {
 		prometheus.CounterOpts{
 			Namespace: "component",
 			Subsystem: "sqs_consumer",
-			Name:      "message_age",
-			Help:      "Message age based on the SentTimestamp SQS attribute",
+			Name:      "message_counter",
+			Help:      "Message counter",
 		},
 		[]string{"queue", "state", "hasError"},
 	)

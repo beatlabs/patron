@@ -89,6 +89,7 @@ func (m *message) Nack() error {
 	return nil
 }
 
+// Config values for the AWS session.
 type Config struct {
 	region string
 	id     string
@@ -96,6 +97,7 @@ type Config struct {
 	token  string
 }
 
+// NewConfig creates a new config for AWS session.
 func NewConfig(region, id, secret, token string) (*Config, error) {
 	if region == "" {
 		return nil, errors.New("AWS region not provided")
@@ -124,6 +126,7 @@ type Factory struct {
 	ses               *session.Session
 }
 
+// NewFactory creates a new consumer factory.
 func NewFactory(cfg Config, queue string, oo ...OptionFunc) (*Factory, error) {
 	if queue == "" {
 		return nil, errors.New("queue name is empty")

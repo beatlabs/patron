@@ -14,6 +14,7 @@ jobs:
       - run:
           name: Running aws cli
           command: |
+            pip3 install awscli --upgrade --user
             aws --endpoint-url=http://localhost:4576 sqs list-queues
 
       - run:

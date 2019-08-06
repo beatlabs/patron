@@ -1,27 +1,16 @@
 version: 2.1
 
-orbs:
-  aws-cli: circleci/aws-cli@0.1.13
-
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.12
 
     environment:
       TEST_RESULTS: /tmp/test-results
 
     steps:
 
-      - aws-cli:
-          configure-default-region: true
-
       - checkout
-
-      - run:
-          name: Running aws cli
-          command: |
-            aws --endpoint-url=http://localhost:4576 sqs list-queues
 
       - run:
           name: Running with test coverage and send to codecov

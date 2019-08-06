@@ -12,6 +12,11 @@ jobs:
       - checkout
 
       - run:
+          name: Running aws cli
+          command: |
+            aws --endpoint-url=http://localhost:4576 sqs list-queues
+
+      - run:
           name: Running with test coverage and send to codecov
           command: |
             export CODECOV_TOKEN="b10270e6-8609-4707-88f1-57c904378989"

@@ -8,14 +8,12 @@ jobs:
     environment:
       TEST_RESULTS: /tmp/test-results
 
+    aws-cli:
+      configure-default-region: true
+
     steps:
       
       - checkout
-
-      - run:
-          name: Install aws-cli
-          command: |
-            sudo apt-get update && sudo apt-get install -y awscli
 
       - run:
           name: Running aws cli

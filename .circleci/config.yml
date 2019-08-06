@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  aws-cli: circleci/aws-cli@0.1.13
-
 jobs:
   build:
     docker:
@@ -11,17 +8,14 @@ jobs:
     environment:
       TEST_RESULTS: /tmp/test-results
 
-    aws-cli:
-      executor: aws-cli/default
-      steps:
-        - checkout
-        - aws-cli/install
-        - aws-cli/configure:
-            profile-name: circle-ci
-
     steps:
       
       - checkout
+
+      - run:
+          name: Install aws-cli
+          command: |
+            apt-get update && apt-get install -y awscli
 
       - run:
           name: Running aws cli

@@ -11,6 +11,14 @@ jobs:
     environment:
       TEST_RESULTS: /tmp/test-results
 
+    aws-cli:
+      executor: aws-cli/default
+      steps:
+        - checkout
+        - aws-cli/install
+        - aws-cli/configure:
+            profile-name: circle-ci
+
     steps:
       
       - checkout

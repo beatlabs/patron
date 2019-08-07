@@ -7,21 +7,18 @@ import (
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
-	"github.com/beatlabs/patron/async/amqp"
+	"github.com/beatlabs/patron/async/sqs"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
-	oamqp "github.com/streadway/amqp"
 )
 
 const (
-	amqpURL          = "amqp://guest:guest@localhost:5672/"
-	amqpQueue        = "patron"
-	amqpExchangeName = "patron"
-	amqpExchangeType = oamqp.ExchangeDirect
-)
-
-var (
-	amqpBindings = []string{"bind.one.*", "bind.two.*"}
+	awsRegion   = "eu-west-1"
+	awsID       = "test"
+	awsSecret   = "test"
+	awsToken    = "token"
+	awsEndpoint = "http://localhost:4576"
+	awsQueue    = "patron"
 )
 
 func init() {
@@ -35,7 +32,7 @@ func init() {
 		fmt.Printf("failed to set sampler env vars: %v", err)
 		os.Exit(1)
 	}
-	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50003")
+	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50004")
 	if err != nil {
 		fmt.Printf("failed to set default patron port env vars: %v", err)
 		os.Exit(1)
@@ -52,51 +49,50 @@ func main() {
 		os.Exit(1)
 	}
 
-	amqpCmp, err := newAmqpComponent(amqpURL, amqpQueue, amqpExchangeName, amqpExchangeType, amqpBindings)
+	cfg, err := sqs.NewConfig(awsRegion, awsID, awsSecret, awsToken, awsEndpoint)
 	if err != nil {
-		log.Fatalf("failed to create processor %v", err)
+		log.Fatalf("failed to create sqs component: %v", err)
 	}
 
-	srv, err := patron.New(name, version, patron.Components(amqpCmp.cmp))
+	sqsCmp, err := newSQSComponent(*cfg, awsQueue)
 	if err != nil {
-		log.Fatalf("failed to create service %v", err)
+		log.Fatalf("failed to create sqs component: %v", err)
+	}
+
+	srv, err := patron.New(name, version, patron.Components(sqsCmp.cmp))
+	if err != nil {
+		log.Fatalf("failed to create service: %v", err)
 	}
 
 	err = srv.Run()
 	if err != nil {
-		log.Fatalf("failed to run service %v", err)
+		log.Fatalf("failed to run service: %v", err)
 	}
 }
 
-type amqpComponent struct {
+type sqsComponent struct {
 	cmp patron.Component
 }
 
-func newAmqpComponent(url, queue, exchangeName, exchangeType string, bindings []string) (*amqpComponent, error) {
+func newSQSComponent(cfg sqs.Config, queue string) (*sqsComponent, error) {
 
-	amqpCmp := amqpComponent{}
+	sqsCmp := sqsComponent{}
 
-	exchange, err := amqp.NewExchange(exchangeName, exchangeType)
-
+	cf, err := sqs.NewFactory(cfg, queue)
 	if err != nil {
 		return nil, err
 	}
 
-	cf, err := amqp.New(url, queue, *exchange, amqp.Bindings(bindings...))
+	cmp, err := async.New("sqs-cmp", sqsCmp.Process, cf, async.ConsumerRetry(10, 10*time.Second))
 	if err != nil {
 		return nil, err
 	}
+	sqsCmp.cmp = cmp
 
-	cmp, err := async.New("amqp-cmp", amqpCmp.Process, cf, async.ConsumerRetry(10, 10*time.Second))
-	if err != nil {
-		return nil, err
-	}
-	amqpCmp.cmp = cmp
-
-	return &amqpCmp, nil
+	return &sqsCmp, nil
 }
 
-func (ac *amqpComponent) Process(msg async.Message) error {
+func (ac *sqsComponent) Process(msg async.Message) error {
 	var u examples.User
 
 	err := msg.Decode(&u)

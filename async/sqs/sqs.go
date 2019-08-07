@@ -91,14 +91,15 @@ func (m *message) Nack() error {
 
 // Config values for the AWS session.
 type Config struct {
-	region string
-	id     string
-	secret string
-	token  string
+	region   string
+	id       string
+	secret   string
+	token    string
+	endpoint string
 }
 
 // NewConfig creates a new config for AWS session.
-func NewConfig(region, id, secret, token string) (*Config, error) {
+func NewConfig(region, id, secret, token, endpoint string) (*Config, error) {
 	if region == "" {
 		return nil, errors.New("AWS region not provided")
 	}
@@ -109,10 +110,11 @@ func NewConfig(region, id, secret, token string) (*Config, error) {
 		return nil, errors.New("AWS secret not provided")
 	}
 	return &Config{
-		region: region,
-		id:     id,
-		secret: secret,
-		token:  token,
+		region:   region,
+		id:       id,
+		secret:   secret,
+		token:    token,
+		endpoint: endpoint,
 	}, nil
 }
 
@@ -131,9 +133,14 @@ func NewFactory(cfg Config, queue string, oo ...OptionFunc) (*Factory, error) {
 	if queue == "" {
 		return nil, errors.New("queue name is empty")
 	}
+	var endpoint *string
+	if cfg.endpoint != "" {
+		endpoint = &cfg.endpoint
+	}
 	ses, err := session.NewSession(&aws.Config{
 		Region:      aws.String(cfg.region),
 		Credentials: credentials.NewStaticCredentials(cfg.id, cfg.secret, cfg.token),
+		Endpoint:    endpoint,
 	})
 	if err != nil {
 		return nil, err

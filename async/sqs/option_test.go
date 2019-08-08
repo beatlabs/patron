@@ -2,6 +2,7 @@ package sqs
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -138,6 +139,37 @@ func TestBuffer(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, f.buffer, tt.args.buffer)
+			}
+		})
+	}
+}
+
+func TestQueueStatsInterval(t *testing.T) {
+	type args struct {
+		interval time.Duration
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success": {
+			args: args{interval: 5 * time.Second},
+		},
+		"zero interval duration": {
+			args:        args{interval: 0},
+			expectedErr: "queue stats interval should be a positive value",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			f, err := NewFactory(Config{}, "queue")
+			require.NoError(t, err)
+			err = QueueStatsInterval(tt.args.interval)(f)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, f.statsInterval, tt.args.interval)
 			}
 		})
 	}

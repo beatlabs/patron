@@ -2,6 +2,7 @@ package sqs
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/beatlabs/patron/errors"
 )
@@ -55,6 +56,17 @@ func Buffer(buffer int) OptionFunc {
 			return errors.New("buffer should be greater or equal to zero")
 		}
 		f.buffer = buffer
+		return nil
+	}
+}
+
+// QueueStatsInterval set's the interval at which we retrieve queue stats.
+func QueueStatsInterval(interval time.Duration) OptionFunc {
+	return func(f *Factory) error {
+		if interval == 0 {
+			return errors.New("queue stats interval should be a positive value")
+		}
+		f.statsInterval = interval
 		return nil
 	}
 }

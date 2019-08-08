@@ -21,6 +21,7 @@ import (
 
 var messageAge *prometheus.GaugeVec
 var messageCounter *prometheus.CounterVec
+var queueSize *prometheus.GaugeVec
 
 func init() {
 	messageAge = prometheus.NewGaugeVec(
@@ -43,6 +44,16 @@ func init() {
 		[]string{"queue", "state", "hasError"},
 	)
 	prometheus.MustRegister(messageCounter)
+	queueSize = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "component",
+			Subsystem: "sqs_consumer",
+			Name:      "queue_size",
+			Help:      "Queue size reported by AWS",
+		},
+		[]string{"state"},
+	)
+	prometheus.MustRegister(queueSize)
 }
 
 type message struct {
@@ -125,6 +136,7 @@ type Factory struct {
 	pollWaitSeconds   int64
 	visibilityTimeout int64
 	buffer            int
+	statsInterval     time.Duration
 	ses               *session.Session
 }
 
@@ -133,6 +145,7 @@ func NewFactory(cfg Config, queue string, oo ...OptionFunc) (*Factory, error) {
 	if queue == "" {
 		return nil, errors.New("queue name is empty")
 	}
+
 	var endpoint *string
 	if cfg.endpoint != "" {
 		endpoint = &cfg.endpoint
@@ -152,6 +165,7 @@ func NewFactory(cfg Config, queue string, oo ...OptionFunc) (*Factory, error) {
 		pollWaitSeconds:   20,
 		visibilityTimeout: 30,
 		buffer:            0,
+		statsInterval:     10 * time.Second,
 		ses:               ses,
 	}
 
@@ -183,6 +197,7 @@ type consumer struct {
 	pollWaitSeconds   int64
 	visibilityTimeout int64
 	buffer            int
+	statsInterval     time.Duration
 	sqs               *sqs.SQS
 	cnl               context.CancelFunc
 }
@@ -262,6 +277,21 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			}
 		}
 	}()
+	go func() {
+		tickerStats := time.NewTicker(c.statsInterval)
+		defer tickerStats.Stop()
+		for {
+			select {
+			case <-sqsCtx.Done():
+				return
+			case <-tickerStats.C:
+				err := c.reportQueueStats(sqsCtx, *queueURL.QueueUrl)
+				if err != nil {
+					log.Errorf("failed to report queue stats: %v", err)
+				}
+			}
+		}
+	}()
 	return chMsg, chErr, nil
 }
 
@@ -269,6 +299,50 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 func (c *consumer) Close() error {
 	c.cnl()
 	return nil
+}
+
+func (c *consumer) reportQueueStats(ctx context.Context, queueURL string) error {
+	rsp, err := c.sqs.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
+		AttributeNames: []*string{
+			aws.String("ApproximateNumberOfMessages"),
+			aws.String("ApproximateNumberOfMessagesDelayed"),
+			aws.String("ApproximateNumberOfMessagesNotVisible")},
+		QueueUrl: aws.String(queueURL),
+	})
+	if err != nil {
+		return err
+	}
+
+	size, err := getAttributeFloat64(rsp.Attributes, "ApproximateNumberOfMessages")
+	if err != nil {
+		return err
+	}
+	queueSize.WithLabelValues("available").Set(size)
+
+	size, err = getAttributeFloat64(rsp.Attributes, "ApproximateNumberOfMessagesDelayed")
+	if err != nil {
+		return err
+	}
+	queueSize.WithLabelValues("delayed").Set(size)
+
+	size, err = getAttributeFloat64(rsp.Attributes, "ApproximateNumberOfMessagesNotVisible")
+	if err != nil {
+		return err
+	}
+	queueSize.WithLabelValues("invisible").Set(size)
+	return nil
+}
+
+func getAttributeFloat64(attr map[string]*string, key string) (float64, error) {
+	valueString := attr[key]
+	if valueString == nil {
+		return 0.0, errors.Errorf("value of %s does not exist", key)
+	}
+	value, err := strconv.ParseFloat(*valueString, 64)
+	if err != nil {
+		return 0.0, errors.Errorf("could not convert %s to float64", *valueString)
+	}
+	return value, nil
 }
 
 func determineContentType(ma map[string]*sqs.MessageAttributeValue) (string, error) {

@@ -2,7 +2,6 @@ package sqs
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -57,10 +56,9 @@ func TestNewFactory(t *testing.T) {
 	cfg, err := NewConfig("region", "id", "secret", "token", "")
 	require.NoError(t, err)
 	type args struct {
-		cfg           Config
-		queue         string
-		statsInterval time.Duration
-		oo            []OptionFunc
+		cfg   Config
+		queue string
+		oo    []OptionFunc
 	}
 	tests := map[string]struct {
 		args        args

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
-
+	"github.com/beatlabs/patron/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,6 +44,14 @@ func TestNewFactory(t *testing.T) {
 			},
 			expectedErr: "queue name is empty",
 		},
+		"failed to get queue URL": {
+			args: args{
+				queue:     &stubQueue{getQueueUrlErr: errors.New("getQueueUrlErr")},
+				queueName: "queue",
+				oo:        []OptionFunc{MaxMessages(1)},
+			},
+			expectedErr: "getQueueUrlErr",
+		},
 		"invalid option": {
 			args: args{
 				queue:     &stubQueue{},
@@ -68,6 +76,7 @@ func TestNewFactory(t *testing.T) {
 }
 
 type stubQueue struct {
+	getQueueUrlErr error
 }
 
 func (s stubQueue) AddPermission(*sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {
@@ -167,6 +176,9 @@ func (s stubQueue) GetQueueAttributesRequest(*sqs.GetQueueAttributesInput) (*req
 }
 
 func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, error) {
+	if s.getQueueUrlErr != nil {
+		return nil, s.getQueueUrlErr
+	}
 	return &sqs.GetQueueUrlOutput{
 		QueueUrl: aws.String("URL"),
 	}, nil

@@ -30,7 +30,7 @@ func TestMaxMessages(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			f, err := NewFactory(Config{}, "queue")
+			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
 			err = MaxMessages(tt.args.maxMessages)(f)
 			if tt.expectedErr != "" {
@@ -65,7 +65,7 @@ func TestPollWaitSeconds(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			f, err := NewFactory(Config{}, "queue")
+			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
 			err = PollWaitSeconds(tt.args.waitSeconds)(f)
 			if tt.expectedErr != "" {
@@ -100,7 +100,7 @@ func TestVisibilityTimeout(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			f, err := NewFactory(Config{}, "queue")
+			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
 			err = VisibilityTimeout(tt.args.timeout)(f)
 			if tt.expectedErr != "" {
@@ -131,7 +131,7 @@ func TestBuffer(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			f, err := NewFactory(Config{}, "queue")
+			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
 			err = Buffer(tt.args.buffer)(f)
 			if tt.expectedErr != "" {
@@ -162,7 +162,7 @@ func TestQueueStatsInterval(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			f, err := NewFactory(Config{}, "queue")
+			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
 			err = QueueStatsInterval(tt.args.interval)(f)
 			if tt.expectedErr != "" {

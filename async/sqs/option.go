@@ -24,7 +24,7 @@ func MaxMessages(maxMessages int64) OptionFunc {
 	}
 }
 
-// PollWaitSeconds set's the wait time for the long polling mechanism in seconds.
+// PollWaitSeconds sets the wait time for the long polling mechanism in seconds.
 // Allowed values are between 0 and 20. 0 enables short polling.
 func PollWaitSeconds(pollWaitSeconds int64) OptionFunc {
 	return func(f *Factory) error {
@@ -36,7 +36,7 @@ func PollWaitSeconds(pollWaitSeconds int64) OptionFunc {
 	}
 }
 
-// VisibilityTimeout set's the time a message is invisible after it has been requested.
+// VisibilityTimeout sets the time a message is invisible after it has been requested.
 // Allowed values are between 0 and and 12 hours in seconds.
 func VisibilityTimeout(visibilityTimeout int64) OptionFunc {
 	return func(f *Factory) error {
@@ -48,7 +48,7 @@ func VisibilityTimeout(visibilityTimeout int64) OptionFunc {
 	}
 }
 
-// Buffer set's the concurrency of the messages processing.
+// Buffer sets the concurrency of the messages processing.
 // 0 means wait for the previous messages to be processed.
 func Buffer(buffer int) OptionFunc {
 	return func(f *Factory) error {
@@ -60,7 +60,7 @@ func Buffer(buffer int) OptionFunc {
 	}
 }
 
-// QueueStatsInterval set's the interval at which we retrieve queue stats.
+// QueueStatsInterval sets the interval at which we retrieve queue stats.
 func QueueStatsInterval(interval time.Duration) OptionFunc {
 	return func(f *Factory) error {
 		if interval == 0 {

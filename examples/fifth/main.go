@@ -5,9 +5,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
-	"github.com/beatlabs/patron/async/sqs"
+	patronsqs "github.com/beatlabs/patron/async/sqs"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 )
@@ -49,12 +53,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cfg, err := sqs.NewConfig(awsRegion, awsID, awsSecret, awsToken, awsEndpoint)
-	if err != nil {
-		log.Fatalf("failed to create sqs component: %v", err)
-	}
-
-	sqsCmp, err := newSQSComponent(*cfg, awsQueue)
+	sqsCmp, err := newSQSComponent()
 	if err != nil {
 		log.Fatalf("failed to create sqs component: %v", err)
 	}
@@ -74,11 +73,20 @@ type sqsComponent struct {
 	cmp patron.Component
 }
 
-func newSQSComponent(cfg sqs.Config, queue string) (*sqsComponent, error) {
+func newSQSComponent() (*sqsComponent, error) {
 
 	sqsCmp := sqsComponent{}
 
-	cf, err := sqs.NewFactory(cfg, queue)
+	ses, err := session.NewSession(&aws.Config{
+		Region:      aws.String(awsRegion),
+		Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
+		Endpoint:    aws.String(awsEndpoint),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	cf, err := patronsqs.NewFactory(sqs.New(ses), awsQueue)
 	if err != nil {
 		return nil, err
 	}

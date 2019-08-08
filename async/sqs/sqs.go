@@ -6,9 +6,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
@@ -58,8 +57,8 @@ func init() {
 
 type message struct {
 	queue    string
-	queueURL *string
-	sqs      *sqs.SQS
+	queueURL string
+	sqs      sqsiface.SQSAPI
 	ctx      context.Context
 	msg      *sqs.Message
 	span     opentracing.Span
@@ -79,7 +78,7 @@ func (m *message) Decode(v interface{}) error {
 // Ack the message.
 func (m *message) Ack() error {
 	_, err := m.sqs.DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      m.queueURL,
+		QueueUrl:      aws.String(m.queueURL),
 		ReceiptHandle: m.msg.ReceiptHandle,
 	})
 	if err != nil {
@@ -100,73 +99,44 @@ func (m *message) Nack() error {
 	return nil
 }
 
-// Config values for the AWS session.
-type Config struct {
-	region   string
-	id       string
-	secret   string
-	token    string
-	endpoint string
-}
-
-// NewConfig creates a new config for AWS session.
-func NewConfig(region, id, secret, token, endpoint string) (*Config, error) {
-	if region == "" {
-		return nil, errors.New("AWS region not provided")
-	}
-	if id == "" {
-		return nil, errors.New("AWS id not provided")
-	}
-	if secret == "" {
-		return nil, errors.New("AWS secret not provided")
-	}
-	return &Config{
-		region:   region,
-		id:       id,
-		secret:   secret,
-		token:    token,
-		endpoint: endpoint,
-	}, nil
-}
-
 // Factory for creating SQS consumers.
 type Factory struct {
-	queue             string
+	queueName         string
+	queueUrl          string
 	maxMessages       int64
 	pollWaitSeconds   int64
 	visibilityTimeout int64
 	buffer            int
 	statsInterval     time.Duration
-	ses               *session.Session
+	queue             sqsiface.SQSAPI
 }
 
 // NewFactory creates a new consumer factory.
-func NewFactory(cfg Config, queue string, oo ...OptionFunc) (*Factory, error) {
-	if queue == "" {
+func NewFactory(queue sqsiface.SQSAPI, queueName string, oo ...OptionFunc) (*Factory, error) {
+	if queue == nil {
+		return nil, errors.New("queue is nil")
+	}
+
+	if queueName == "" {
 		return nil, errors.New("queue name is empty")
 	}
 
-	var endpoint *string
-	if cfg.endpoint != "" {
-		endpoint = &cfg.endpoint
-	}
-	ses, err := session.NewSession(&aws.Config{
-		Region:      aws.String(cfg.region),
-		Credentials: credentials.NewStaticCredentials(cfg.id, cfg.secret, cfg.token),
-		Endpoint:    endpoint,
+	url, err := queue.GetQueueUrl(&sqs.GetQueueUrlInput{
+		QueueName: aws.String(queueName),
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	f := &Factory{
+		queueName:         queueName,
+		queueUrl:          *url.QueueUrl,
 		queue:             queue,
 		maxMessages:       10,
 		pollWaitSeconds:   20,
 		visibilityTimeout: 30,
 		buffer:            0,
 		statsInterval:     10 * time.Second,
-		ses:               ses,
 	}
 
 	for _, o := range oo {
@@ -182,25 +152,27 @@ func NewFactory(cfg Config, queue string, oo ...OptionFunc) (*Factory, error) {
 // Create a new SQS consumer.
 func (f *Factory) Create() (async.Consumer, error) {
 	return &consumer{
-		queue:             f.queue,
+		queueName:         f.queueName,
 		maxMessages:       f.maxMessages,
 		pollWaitSeconds:   f.pollWaitSeconds,
 		buffer:            f.buffer,
 		visibilityTimeout: f.visibilityTimeout,
 		statsInterval:     f.statsInterval,
-		sqs:               sqs.New(f.ses),
+		queue:             f.queue,
 	}, nil
 }
 
 type consumer struct {
-	queue             string
+	queueName         string
+	queueUrl          string
+	queue             sqsiface.SQSAPI
 	maxMessages       int64
 	pollWaitSeconds   int64
 	visibilityTimeout int64
 	buffer            int
 	statsInterval     time.Duration
-	sqs               *sqs.SQS
-	cnl               context.CancelFunc
+
+	cnl context.CancelFunc
 }
 
 // Consume messages from SQS and send them to the channel.
@@ -210,21 +182,14 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	sqsCtx, cnl := context.WithCancel(ctx)
 	c.cnl = cnl
 
-	queueURL, err := c.sqs.GetQueueUrl(&sqs.GetQueueUrlInput{
-		QueueName: aws.String(c.queue),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
 	go func() {
 		for {
 			if sqsCtx.Err() != nil {
 				return
 			}
 			log.Debugf("polling SQS queue %s for messages", c.queue)
-			output, err := c.sqs.ReceiveMessageWithContext(sqsCtx, &sqs.ReceiveMessageInput{
-				QueueUrl:            queueURL.QueueUrl,
+			output, err := c.queue.ReceiveMessageWithContext(sqsCtx, &sqs.ReceiveMessageInput{
+				QueueUrl:            aws.String(c.queueUrl),
 				MaxNumberOfMessages: aws.Int64(c.maxMessages),
 				WaitTimeSeconds:     aws.Int64(c.pollWaitSeconds),
 				VisibilityTimeout:   aws.Int64(c.visibilityTimeout),
@@ -243,17 +208,17 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				return
 			}
 
-			messageCountInc(c.queue, "FETCHED", len(output.Messages))
+			messageCountInc(c.queueName, "FETCHED", len(output.Messages))
 
 			for _, msg := range output.Messages {
-				observerMessageAge(c.queue, msg.Attributes)
+				observerMessageAge(c.queueName, msg.Attributes)
 
-				sp, chCtx := trace.ConsumerSpan(sqsCtx, trace.ComponentOpName(trace.SQSConsumerComponent, c.queue),
+				sp, chCtx := trace.ConsumerSpan(sqsCtx, trace.ComponentOpName(trace.SQSConsumerComponent, c.queueName),
 					trace.SQSConsumerComponent, mapHeader(msg.MessageAttributes))
 
 				ct, err := determineContentType(msg.MessageAttributes)
 				if err != nil {
-					messageCountErrorInc(c.queue, "FETCHED", 1)
+					messageCountErrorInc(c.queueName, "FETCHED", 1)
 					trace.SpanError(sp)
 					log.Errorf("failed to determine content type: %v", err)
 					continue
@@ -261,19 +226,19 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 
 				dec, err := async.DetermineDecoder(ct)
 				if err != nil {
-					messageCountErrorInc(c.queue, "FETCHED", 1)
+					messageCountErrorInc(c.queueName, "FETCHED", 1)
 					trace.SpanError(sp)
 					log.Errorf("failed to determine decoder: %v", err)
 					continue
 				}
 
 				chMsg <- &message{
-					queue:    c.queue,
-					queueURL: queueURL.QueueUrl,
+					queue:    c.queueName,
+					queueURL: c.queueUrl,
 					span:     sp,
 					msg:      msg,
 					ctx:      log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": *msg.MessageId})),
-					sqs:      c.sqs,
+					sqs:      c.queue,
 					dec:      dec,
 				}
 			}
@@ -287,7 +252,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			case <-sqsCtx.Done():
 				return
 			case <-tickerStats.C:
-				err := c.reportQueueStats(sqsCtx, *queueURL.QueueUrl)
+				err := c.reportQueueStats(sqsCtx, c.queueUrl)
 				if err != nil {
 					log.Errorf("failed to report queue stats: %v", err)
 				}
@@ -305,7 +270,7 @@ func (c *consumer) Close() error {
 
 func (c *consumer) reportQueueStats(ctx context.Context, queueURL string) error {
 	log.Debugf("retrieve stats for SQS %s", c.queue)
-	rsp, err := c.sqs.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
+	rsp, err := c.queue.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
 		AttributeNames: []*string{
 			aws.String("ApproximateNumberOfMessages"),
 			aws.String("ApproximateNumberOfMessagesDelayed"),

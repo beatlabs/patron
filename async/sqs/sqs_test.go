@@ -3,62 +3,19 @@ package sqs
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewConfig(t *testing.T) {
-	type args struct {
-		region string
-		id     string
-		secret string
-	}
-	tests := map[string]struct {
-		args        args
-		expectedErr string
-	}{
-		"success": {
-			args: args{region: "region", id: "id", secret: "secret"},
-		},
-		"missing region": {
-			args:        args{region: "", id: "id", secret: "secret"},
-			expectedErr: "AWS region not provided",
-		},
-		"missing id": {
-			args:        args{region: "region", id: "", secret: "secret"},
-			expectedErr: "AWS id not provided",
-		},
-		"missing secret": {
-			args:        args{region: "region", id: "id", secret: ""},
-			expectedErr: "AWS secret not provided",
-		},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := NewConfig(tt.args.region, tt.args.id, tt.args.secret, "token", "endpoint")
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
-				assert.Nil(t, got)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.args.region, got.region)
-				assert.Equal(t, tt.args.id, got.id)
-				assert.Equal(t, tt.args.secret, got.secret)
-				assert.Equal(t, "token", got.token)
-				assert.Equal(t, "endpoint", got.endpoint)
-			}
-		})
-	}
-}
-
 func TestNewFactory(t *testing.T) {
-	cfg, err := NewConfig("region", "id", "secret", "token", "")
-	require.NoError(t, err)
 	type args struct {
-		cfg   Config
-		queue string
-		oo    []OptionFunc
+		queue     sqsiface.SQSAPI
+		queueName string
+		oo        []OptionFunc
 	}
 	tests := map[string]struct {
 		args        args
@@ -66,31 +23,39 @@ func TestNewFactory(t *testing.T) {
 	}{
 		"success": {
 			args: args{
-				cfg:   *cfg,
-				queue: "queue",
-				oo:    []OptionFunc{MaxMessages(1)},
+				queue:     &stubQueue{},
+				queueName: "queue",
+				oo:        []OptionFunc{MaxMessages(1)},
 			},
 		},
 		"missing queue": {
 			args: args{
-				cfg:   *cfg,
-				queue: "",
-				oo:    []OptionFunc{MaxMessages(1)},
+				queue:     nil,
+				queueName: "queue",
+				oo:        []OptionFunc{MaxMessages(1)},
+			},
+			expectedErr: "queue is nil",
+		},
+		"missing queue name": {
+			args: args{
+				queue:     &stubQueue{},
+				queueName: "",
+				oo:        []OptionFunc{MaxMessages(1)},
 			},
 			expectedErr: "queue name is empty",
 		},
 		"invalid option": {
 			args: args{
-				cfg:   *cfg,
-				queue: "queue",
-				oo:    []OptionFunc{MaxMessages(-1)},
+				queue:     &stubQueue{},
+				queueName: "queue",
+				oo:        []OptionFunc{MaxMessages(-1)},
 			},
 			expectedErr: "max messages should be between 1 and 10",
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := NewFactory(tt.args.cfg, tt.args.queue, tt.args.oo...)
+			got, err := NewFactory(tt.args.queue, tt.args.queueName, tt.args.oo...)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
@@ -100,4 +65,249 @@ func TestNewFactory(t *testing.T) {
 			}
 		})
 	}
+}
+
+type stubQueue struct {
+}
+
+func (s stubQueue) AddPermission(*sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) AddPermissionWithContext(aws.Context, *sqs.AddPermissionInput, ...request.Option) (*sqs.AddPermissionOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) AddPermissionRequest(*sqs.AddPermissionInput) (*request.Request, *sqs.AddPermissionOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) ChangeMessageVisibility(*sqs.ChangeMessageVisibilityInput) (*sqs.ChangeMessageVisibilityOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ChangeMessageVisibilityWithContext(aws.Context, *sqs.ChangeMessageVisibilityInput, ...request.Option) (*sqs.ChangeMessageVisibilityOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ChangeMessageVisibilityRequest(*sqs.ChangeMessageVisibilityInput) (*request.Request, *sqs.ChangeMessageVisibilityOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) ChangeMessageVisibilityBatch(*sqs.ChangeMessageVisibilityBatchInput) (*sqs.ChangeMessageVisibilityBatchOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ChangeMessageVisibilityBatchWithContext(aws.Context, *sqs.ChangeMessageVisibilityBatchInput, ...request.Option) (*sqs.ChangeMessageVisibilityBatchOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ChangeMessageVisibilityBatchRequest(*sqs.ChangeMessageVisibilityBatchInput) (*request.Request, *sqs.ChangeMessageVisibilityBatchOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) CreateQueue(*sqs.CreateQueueInput) (*sqs.CreateQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) CreateQueueWithContext(aws.Context, *sqs.CreateQueueInput, ...request.Option) (*sqs.CreateQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) CreateQueueRequest(*sqs.CreateQueueInput) (*request.Request, *sqs.CreateQueueOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) DeleteMessage(*sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) DeleteMessageWithContext(aws.Context, *sqs.DeleteMessageInput, ...request.Option) (*sqs.DeleteMessageOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) DeleteMessageRequest(*sqs.DeleteMessageInput) (*request.Request, *sqs.DeleteMessageOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) DeleteMessageBatch(*sqs.DeleteMessageBatchInput) (*sqs.DeleteMessageBatchOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) DeleteMessageBatchWithContext(aws.Context, *sqs.DeleteMessageBatchInput, ...request.Option) (*sqs.DeleteMessageBatchOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) DeleteMessageBatchRequest(*sqs.DeleteMessageBatchInput) (*request.Request, *sqs.DeleteMessageBatchOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) DeleteQueue(*sqs.DeleteQueueInput) (*sqs.DeleteQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) DeleteQueueWithContext(aws.Context, *sqs.DeleteQueueInput, ...request.Option) (*sqs.DeleteQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) DeleteQueueRequest(*sqs.DeleteQueueInput) (*request.Request, *sqs.DeleteQueueOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) GetQueueAttributes(*sqs.GetQueueAttributesInput) (*sqs.GetQueueAttributesOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) GetQueueAttributesWithContext(aws.Context, *sqs.GetQueueAttributesInput, ...request.Option) (*sqs.GetQueueAttributesOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) GetQueueAttributesRequest(*sqs.GetQueueAttributesInput) (*request.Request, *sqs.GetQueueAttributesOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, error) {
+	return &sqs.GetQueueUrlOutput{
+		QueueUrl: aws.String("URL"),
+	}, nil
+}
+
+func (s stubQueue) GetQueueUrlWithContext(aws.Context, *sqs.GetQueueUrlInput, ...request.Option) (*sqs.GetQueueUrlOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) GetQueueUrlRequest(*sqs.GetQueueUrlInput) (*request.Request, *sqs.GetQueueUrlOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) ListDeadLetterSourceQueues(*sqs.ListDeadLetterSourceQueuesInput) (*sqs.ListDeadLetterSourceQueuesOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ListDeadLetterSourceQueuesWithContext(aws.Context, *sqs.ListDeadLetterSourceQueuesInput, ...request.Option) (*sqs.ListDeadLetterSourceQueuesOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ListDeadLetterSourceQueuesRequest(*sqs.ListDeadLetterSourceQueuesInput) (*request.Request, *sqs.ListDeadLetterSourceQueuesOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) ListQueueTags(*sqs.ListQueueTagsInput) (*sqs.ListQueueTagsOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ListQueueTagsWithContext(aws.Context, *sqs.ListQueueTagsInput, ...request.Option) (*sqs.ListQueueTagsOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ListQueueTagsRequest(*sqs.ListQueueTagsInput) (*request.Request, *sqs.ListQueueTagsOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) ListQueues(*sqs.ListQueuesInput) (*sqs.ListQueuesOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ListQueuesWithContext(aws.Context, *sqs.ListQueuesInput, ...request.Option) (*sqs.ListQueuesOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ListQueuesRequest(*sqs.ListQueuesInput) (*request.Request, *sqs.ListQueuesOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) PurgeQueue(*sqs.PurgeQueueInput) (*sqs.PurgeQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) PurgeQueueWithContext(aws.Context, *sqs.PurgeQueueInput, ...request.Option) (*sqs.PurgeQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) PurgeQueueRequest(*sqs.PurgeQueueInput) (*request.Request, *sqs.PurgeQueueOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) ReceiveMessage(*sqs.ReceiveMessageInput) (*sqs.ReceiveMessageOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ReceiveMessageWithContext(aws.Context, *sqs.ReceiveMessageInput, ...request.Option) (*sqs.ReceiveMessageOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) ReceiveMessageRequest(*sqs.ReceiveMessageInput) (*request.Request, *sqs.ReceiveMessageOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) RemovePermission(*sqs.RemovePermissionInput) (*sqs.RemovePermissionOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) RemovePermissionWithContext(aws.Context, *sqs.RemovePermissionInput, ...request.Option) (*sqs.RemovePermissionOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) RemovePermissionRequest(*sqs.RemovePermissionInput) (*request.Request, *sqs.RemovePermissionOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) SendMessage(*sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) SendMessageWithContext(aws.Context, *sqs.SendMessageInput, ...request.Option) (*sqs.SendMessageOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) SendMessageRequest(*sqs.SendMessageInput) (*request.Request, *sqs.SendMessageOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) SendMessageBatch(*sqs.SendMessageBatchInput) (*sqs.SendMessageBatchOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) SendMessageBatchWithContext(aws.Context, *sqs.SendMessageBatchInput, ...request.Option) (*sqs.SendMessageBatchOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) SendMessageBatchRequest(*sqs.SendMessageBatchInput) (*request.Request, *sqs.SendMessageBatchOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) SetQueueAttributes(*sqs.SetQueueAttributesInput) (*sqs.SetQueueAttributesOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) SetQueueAttributesWithContext(aws.Context, *sqs.SetQueueAttributesInput, ...request.Option) (*sqs.SetQueueAttributesOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) SetQueueAttributesRequest(*sqs.SetQueueAttributesInput) (*request.Request, *sqs.SetQueueAttributesOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) TagQueue(*sqs.TagQueueInput) (*sqs.TagQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) TagQueueWithContext(aws.Context, *sqs.TagQueueInput, ...request.Option) (*sqs.TagQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) TagQueueRequest(*sqs.TagQueueInput) (*request.Request, *sqs.TagQueueOutput) {
+	panic("implement me")
+}
+
+func (s stubQueue) UntagQueue(*sqs.UntagQueueInput) (*sqs.UntagQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) UntagQueueWithContext(aws.Context, *sqs.UntagQueueInput, ...request.Option) (*sqs.UntagQueueOutput, error) {
+	panic("implement me")
+}
+
+func (s stubQueue) UntagQueueRequest(*sqs.UntagQueueInput) (*request.Request, *sqs.UntagQueueOutput) {
+	panic("implement me")
 }

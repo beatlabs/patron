@@ -71,13 +71,13 @@ func init() {
 }
 
 type message struct {
-	queue    string
-	queueURL string
-	sqs      sqsiface.SQSAPI
-	ctx      context.Context
-	msg      *sqs.Message
-	span     opentracing.Span
-	dec      encoding.DecodeRawFunc
+	queueName string
+	queueURL  string
+	queue     sqsiface.SQSAPI
+	ctx       context.Context
+	msg       *sqs.Message
+	span      opentracing.Span
+	dec       encoding.DecodeRawFunc
 }
 
 // Context of the message.
@@ -92,15 +92,15 @@ func (m *message) Decode(v interface{}) error {
 
 // Ack the message.
 func (m *message) Ack() error {
-	_, err := m.sqs.DeleteMessage(&sqs.DeleteMessageInput{
+	_, err := m.queue.DeleteMessageWithContext(m.ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(m.queueURL),
 		ReceiptHandle: m.msg.ReceiptHandle,
 	})
 	if err != nil {
-		messageCountErrorInc(m.queue, ackMessageState, 1)
+		messageCountErrorInc(m.queueName, ackMessageState, 1)
 		return nil
 	}
-	messageCountInc(m.queue, ackMessageState, 1)
+	messageCountInc(m.queueName, ackMessageState, 1)
 	trace.SpanSuccess(m.span)
 	return nil
 }
@@ -109,7 +109,7 @@ func (m *message) Ack() error {
 // We could investigate to support ChangeMessageVisibility which could be used to make the message visible again sooner
 // than the visibility timeout.
 func (m *message) Nack() error {
-	messageCountInc(m.queue, nackMessageState, 1)
+	messageCountInc(m.queueName, nackMessageState, 1)
 	trace.SpanError(m.span)
 	return nil
 }
@@ -248,13 +248,13 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				}
 
 				chMsg <- &message{
-					queue:    c.queueName,
-					queueURL: c.queueUrl,
-					span:     sp,
-					msg:      msg,
-					ctx:      log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": *msg.MessageId})),
-					sqs:      c.queue,
-					dec:      dec,
+					queueName: c.queueName,
+					queueURL:  c.queueUrl,
+					span:      sp,
+					msg:       msg,
+					ctx:       log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": *msg.MessageId})),
+					queue:     c.queue,
+					dec:       dec,
 				}
 			}
 		}

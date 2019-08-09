@@ -54,7 +54,7 @@ func TestNewFactory(t *testing.T) {
 		},
 		"failed to get queue URL": {
 			args: args{
-				queue:     &stubQueue{getQueueUrlErr: errors.New("getQueueUrlErr")},
+				queue:     &stubQueue{getQueueURLErr: errors.New("getQueueURLErr")},
 				queueName: "queue",
 				oo:        []OptionFunc{MaxMessages(1)},
 			},
@@ -92,7 +92,7 @@ func TestFactory_Create(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, cons.queue)
 	assert.Equal(t, "queueName", cons.queueName)
-	assert.Equal(t, "URL", cons.queueUrl)
+	assert.Equal(t, "URL", cons.queueURL)
 	assert.Equal(t, int64(10), cons.maxMessages)
 	assert.Equal(t, int64(20), cons.pollWaitSeconds)
 	assert.Equal(t, int64(30), cons.visibilityTimeout)
@@ -152,7 +152,7 @@ func Test_message(t *testing.T) {
 }
 
 type stubQueue struct {
-	getQueueUrlErr                   error
+	getQueueURLErr                   error
 	receiveMessageWithContextErr     error
 	getQueueAttributesWithContextErr error
 	deleteMessageWithContextErr      error
@@ -267,8 +267,8 @@ func (s stubQueue) GetQueueAttributesRequest(*sqs.GetQueueAttributesInput) (*req
 }
 
 func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, error) {
-	if s.getQueueUrlErr != nil {
-		return nil, s.getQueueUrlErr
+	if s.getQueueURLErr != nil {
+		return nil, s.getQueueURLErr
 	}
 	return &sqs.GetQueueUrlOutput{
 		QueueUrl: aws.String("URL"),

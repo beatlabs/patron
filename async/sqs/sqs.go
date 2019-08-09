@@ -118,7 +118,7 @@ func (m *message) Nack() error {
 type Factory struct {
 	queueName         string
 	queue             sqsiface.SQSAPI
-	queueUrl          string
+	queueURL          string
 	maxMessages       int64
 	pollWaitSeconds   int64
 	visibilityTimeout int64
@@ -145,7 +145,7 @@ func NewFactory(queue sqsiface.SQSAPI, queueName string, oo ...OptionFunc) (*Fac
 
 	f := &Factory{
 		queueName:         queueName,
-		queueUrl:          *url.QueueUrl,
+		queueURL:          *url.QueueUrl,
 		queue:             queue,
 		maxMessages:       10,
 		pollWaitSeconds:   20,
@@ -169,7 +169,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 	return &consumer{
 		queueName:         f.queueName,
 		queue:             f.queue,
-		queueUrl:          f.queueUrl,
+		queueURL:          f.queueURL,
 		maxMessages:       f.maxMessages,
 		pollWaitSeconds:   f.pollWaitSeconds,
 		buffer:            f.buffer,
@@ -180,7 +180,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 
 type consumer struct {
 	queueName         string
-	queueUrl          string
+	queueURL          string
 	queue             sqsiface.SQSAPI
 	maxMessages       int64
 	pollWaitSeconds   int64
@@ -204,7 +204,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			}
 			log.Debugf("polling SQS queue %s for messages", c.queue)
 			output, err := c.queue.ReceiveMessageWithContext(sqsCtx, &sqs.ReceiveMessageInput{
-				QueueUrl:            aws.String(c.queueUrl),
+				QueueUrl:            aws.String(c.queueURL),
 				MaxNumberOfMessages: aws.Int64(c.maxMessages),
 				WaitTimeSeconds:     aws.Int64(c.pollWaitSeconds),
 				VisibilityTimeout:   aws.Int64(c.visibilityTimeout),
@@ -249,7 +249,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 
 				chMsg <- &message{
 					queueName: c.queueName,
-					queueURL:  c.queueUrl,
+					queueURL:  c.queueURL,
 					span:      sp,
 					msg:       msg,
 					ctx:       log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": *msg.MessageId})),
@@ -267,7 +267,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			case <-sqsCtx.Done():
 				return
 			case <-tickerStats.C:
-				err := c.reportQueueStats(sqsCtx, c.queueUrl)
+				err := c.reportQueueStats(sqsCtx, c.queueURL)
 				if err != nil {
 					log.Errorf("failed to report queue stats: %v", err)
 				}

@@ -351,7 +351,7 @@ func mapHeader(ma map[string]*sqs.MessageAttributeValue) map[string]string {
 }
 
 func observerMessageAge(queue string, attributes map[string]*string) {
-	attribute, ok := attributes["SentTimestamp"]
+	attribute, ok := attributes[sqsAttributeSentTimestamp]
 	if !ok || attribute == nil {
 		return
 	}

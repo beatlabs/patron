@@ -1,7 +1,10 @@
 package sqs
 
 import (
+	"context"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -9,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewFactory(t *testing.T) {
@@ -75,8 +79,43 @@ func TestNewFactory(t *testing.T) {
 	}
 }
 
+func TestFactory_Create(t *testing.T) {
+	f, err := NewFactory(&stubQueue{}, "queueName")
+	require.NoError(t, err)
+	got, err := f.Create()
+	assert.NoError(t, err)
+	cons, ok := got.(*consumer)
+	assert.True(t, ok)
+	assert.NotNil(t, cons.queue)
+	assert.Equal(t, "queueName", cons.queueName)
+	assert.Equal(t, "URL", cons.queueUrl)
+	assert.Equal(t, int64(10), cons.maxMessages)
+	assert.Equal(t, int64(20), cons.pollWaitSeconds)
+	assert.Equal(t, int64(30), cons.visibilityTimeout)
+	assert.Equal(t, 0, cons.buffer)
+	assert.Equal(t, 10*time.Second, cons.statsInterval)
+	assert.Nil(t, cons.cnl)
+}
+
+func Test_consumer_Consume(t *testing.T) {
+	f, err := NewFactory(&stubQueue{}, "queueName", QueueStatsInterval(10*time.Millisecond))
+	require.NoError(t, err)
+	cns, err := f.Create()
+	require.NoError(t, err)
+	chMsg, chErr, err := cns.Consume(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, chMsg)
+	assert.NotNil(t, chErr)
+	msg := <-chMsg
+	assert.NotNil(t, msg)
+	time.Sleep(20 * time.Millisecond)
+	require.NoError(t, cns.Close())
+}
+
 type stubQueue struct {
-	getQueueUrlErr error
+	getQueueUrlErr                   error
+	receiveMessageWithContextErr     error
+	getQueueAttributesWithContextErr error
 }
 
 func (s stubQueue) AddPermission(*sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {
@@ -168,7 +207,16 @@ func (s stubQueue) GetQueueAttributes(*sqs.GetQueueAttributesInput) (*sqs.GetQue
 }
 
 func (s stubQueue) GetQueueAttributesWithContext(aws.Context, *sqs.GetQueueAttributesInput, ...request.Option) (*sqs.GetQueueAttributesOutput, error) {
-	panic("implement me")
+	if s.getQueueAttributesWithContextErr != nil {
+		return nil, s.getQueueAttributesWithContextErr
+	}
+	return &sqs.GetQueueAttributesOutput{
+		Attributes: map[string]*string{
+			sqsAttributeApproximateNumberOfMessages:           aws.String("1"),
+			sqsAttributeApproximateNumberOfMessagesDelayed:    aws.String("2"),
+			sqsAttributeApproximateNumberOfMessagesNotVisible: aws.String("3"),
+		},
+	}, nil
 }
 
 func (s stubQueue) GetQueueAttributesRequest(*sqs.GetQueueAttributesInput) (*request.Request, *sqs.GetQueueAttributesOutput) {
@@ -245,7 +293,21 @@ func (s stubQueue) ReceiveMessage(*sqs.ReceiveMessageInput) (*sqs.ReceiveMessage
 }
 
 func (s stubQueue) ReceiveMessageWithContext(aws.Context, *sqs.ReceiveMessageInput, ...request.Option) (*sqs.ReceiveMessageOutput, error) {
-	panic("implement me")
+	if s.receiveMessageWithContextErr != nil {
+		return nil, s.receiveMessageWithContextErr
+	}
+	return &sqs.ReceiveMessageOutput{
+		Messages: []*sqs.Message{
+			{
+				Attributes: map[string]*string{
+					sqsAttributeSentTimestamp: aws.String(strconv.FormatInt(time.Now().Unix(), 10)),
+				},
+				Body:          aws.String(`{"key":"value"}`),
+				MessageId:     aws.String("123"),
+				ReceiptHandle: aws.String("123-123"),
+			},
+		},
+	}, nil
 }
 
 func (s stubQueue) ReceiveMessageRequest(*sqs.ReceiveMessageInput) (*request.Request, *sqs.ReceiveMessageOutput) {

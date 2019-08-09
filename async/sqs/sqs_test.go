@@ -58,7 +58,7 @@ func TestNewFactory(t *testing.T) {
 				queueName: "queue",
 				oo:        []OptionFunc{MaxMessages(1)},
 			},
-			expectedErr: "getQueueUrlErr",
+			expectedErr: "getQueueURLErr",
 		},
 		"invalid option": {
 			args: args{

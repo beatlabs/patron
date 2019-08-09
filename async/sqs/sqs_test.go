@@ -6,6 +6,10 @@ import (
 	"testing"
 	"time"
 
+	opentracing "github.com/opentracing/opentracing-go"
+
+	"github.com/beatlabs/patron/encoding/json"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -112,10 +116,46 @@ func Test_consumer_Consume(t *testing.T) {
 	require.NoError(t, cns.Close())
 }
 
+func Test_message(t *testing.T) {
+	type fields struct {
+		queue sqsiface.SQSAPI
+	}
+	tests := map[string]struct {
+		fields fields
+	}{
+		"success, with delete": {
+			fields: fields{queue: &stubQueue{}},
+		},
+		"success, with failed delete": {
+			fields: fields{queue: &stubQueue{deleteMessageWithContextErr: errors.New("ERROR")}},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			m := &message{
+				queue:     tt.fields.queue,
+				queueURL:  "queueURL",
+				queueName: "queueName",
+				ctx:       context.Background(),
+				msg:       &sqs.Message{Body: aws.String(`{"key":"value"}`)},
+				span:      opentracing.StartSpan("test"),
+				dec:       json.DecodeRaw,
+			}
+			assert.NoError(t, m.Ack())
+			assert.NoError(t, m.Nack())
+			assert.Equal(t, context.Background(), m.Context())
+			var mp map[string]string
+			assert.NoError(t, m.Decode(&mp))
+			assert.Equal(t, map[string]string{"key": "value"}, mp)
+		})
+	}
+}
+
 type stubQueue struct {
 	getQueueUrlErr                   error
 	receiveMessageWithContextErr     error
 	getQueueAttributesWithContextErr error
+	deleteMessageWithContextErr      error
 }
 
 func (s stubQueue) AddPermission(*sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {
@@ -171,7 +211,10 @@ func (s stubQueue) DeleteMessage(*sqs.DeleteMessageInput) (*sqs.DeleteMessageOut
 }
 
 func (s stubQueue) DeleteMessageWithContext(aws.Context, *sqs.DeleteMessageInput, ...request.Option) (*sqs.DeleteMessageOutput, error) {
-	panic("implement me")
+	if s.deleteMessageWithContextErr != nil {
+		return nil, s.deleteMessageWithContextErr
+	}
+	return &sqs.DeleteMessageOutput{}, nil
 }
 
 func (s stubQueue) DeleteMessageRequest(*sqs.DeleteMessageInput) (*request.Request, *sqs.DeleteMessageOutput) {

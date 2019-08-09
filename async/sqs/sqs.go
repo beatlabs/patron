@@ -202,7 +202,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			if sqsCtx.Err() != nil {
 				return
 			}
-			log.Debugf("polling SQS queue %s for messages", c.queue)
+			log.Debugf("polling SQS queue %s for messages", c.queueName)
 			output, err := c.queue.ReceiveMessageWithContext(sqsCtx, &sqs.ReceiveMessageInput{
 				QueueUrl:            aws.String(c.queueURL),
 				MaxNumberOfMessages: aws.Int64(c.maxMessages),
@@ -284,7 +284,7 @@ func (c *consumer) Close() error {
 }
 
 func (c *consumer) reportQueueStats(ctx context.Context, queueURL string) error {
-	log.Debugf("retrieve stats for SQS %s", c.queue)
+	log.Debugf("retrieve stats for SQS %s", c.queueName)
 	rsp, err := c.queue.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
 		AttributeNames: []*string{
 			aws.String(sqsAttributeApproximateNumberOfMessages),

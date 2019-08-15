@@ -1,10 +1,9 @@
 package sns
 
 import (
-	"errors"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/beatlabs/patron/errors"
 )
 
 // Config struct for the SNS publisher.

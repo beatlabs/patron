@@ -2,11 +2,11 @@ package sns
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
+	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -28,14 +28,14 @@ type TracedPublisher struct {
 }
 
 // NewPublisher creates a new SNS publisher.
-func NewPublisher(cfg Config) (*TracedPublisher, error) {
+func NewPublisher(cfg Config) *TracedPublisher {
 	sns := sns.New(cfg.sess, cfg.cfgs...)
 
 	return &TracedPublisher{
 		sns:       sns,
 		component: trace.SNSPublisherComponent,
 		tag:       ext.SpanKindProducer,
-	}, nil
+	}
 }
 
 // Publish tries to publish a new message to SNS, with an added tracing capability.
@@ -45,14 +45,11 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 
 	if err != nil {
 		trace.SpanError(span)
-		fmt.Println(err) // TODO: delete
-		return "", errors.New("message could not be published")
+		return "", errors.Wrap(err, "failed to publish message")
 	}
 
 	if out.MessageId == nil {
-		trace.SpanError(span)
-		fmt.Println(err) // TODO: delete
-		return "", errors.New("no message ID TODO: fix this error message")
+		return "", errors.Wrap(err, "tried to publish a message but no message ID returned")
 	}
 
 	return *out.MessageId, nil

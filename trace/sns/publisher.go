@@ -49,7 +49,7 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 	}
 
 	if out.MessageId == nil {
-		return "", errors.Wrap(err, "tried to publish a message but no message ID returned")
+		return "", errors.New("tried to publish a message but no message ID returned")
 	}
 
 	return *out.MessageId, nil

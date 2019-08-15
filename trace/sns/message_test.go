@@ -6,6 +6,7 @@ import (
 
 	sns "github.com/aws/aws-sdk-go/service/sns"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_MessageBuilder_Build(t *testing.T) {
@@ -138,6 +139,53 @@ func Test_MessageBuilder_formatStringArrayAttributeValues(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestMessage_tracingTarget(t *testing.T) {
+	msgWithTopicArn, err := NewMessageBuilder().WithTopicARN("topic-arn").Build()
+	require.NoError(t, err)
+
+	msgWithTargetArn, err := NewMessageBuilder().WithTargetARN("target-arn").Build()
+	require.NoError(t, err)
+
+	msgWithPhoneNumber, err := NewMessageBuilder().WithPhoneNumber("my-phone-number").Build()
+	require.NoError(t, err)
+
+	blankMsg, err := NewMessageBuilder().Build()
+	require.NoError(t, err)
+
+	testCases := []struct {
+		desc                  string
+		msg                   *Message
+		expectedTracingTarget string
+	}{
+		{
+			desc:                  "Topic ARN",
+			msg:                   msgWithTopicArn,
+			expectedTracingTarget: "topic-arn:topic-arn",
+		},
+		{
+			desc:                  "Target ARN",
+			msg:                   msgWithTargetArn,
+			expectedTracingTarget: "target-arn:target-arn",
+		},
+		{
+			desc:                  "Phone number",
+			msg:                   msgWithPhoneNumber,
+			expectedTracingTarget: "phone-number",
+		},
+		{
+			desc:                  "Unknown",
+			msg:                   blankMsg,
+			expectedTracingTarget: "unknown",
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			got := tC.msg.tracingTarget()
+			assert.Equal(t, tC.expectedTracingTarget, got)
 		})
 	}
 }

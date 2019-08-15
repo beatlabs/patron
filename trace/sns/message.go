@@ -14,11 +14,35 @@ const (
 	attributeDataTypeStringArray attributeDataType = "StringArray"
 	attributeDataTypeNumber      attributeDataType = "Number"
 	attributeDataTypeBinary      attributeDataType = "Binary"
+
+	tracingTargetTopicArn    string = "topic-arn"
+	tracingTargetTargetArn          = "target-arn"
+	tracingTargetPhoneNumber        = "phone-number"
+	tracingTargetUnknown            = "unknown"
 )
 
 // Message stores information about messages that are published to SNS thanks to the SNS publisher.
 type Message struct {
 	input *sns.PublishInput
+}
+
+// tracingTarget returns a string used for tracing operations. As a message can only define one TopicArn,
+// TargetArn or PhoneNumber, we set a different tracing topic for each case.
+func (m Message) tracingTarget() string {
+	if m.input.TopicArn != nil {
+		return fmt.Sprintf("%s:%s", tracingTargetTopicArn, *m.input.TopicArn)
+	}
+
+	if m.input.TargetArn != nil {
+		return fmt.Sprintf("%s:%s", tracingTargetTargetArn, *m.input.TargetArn)
+	}
+
+	if m.input.PhoneNumber != nil {
+		// We don't append the phone number so that we don't end with 1 target per phone number.
+		return tracingTargetPhoneNumber
+	}
+
+	return tracingTargetUnknown
 }
 
 // MessageBuilder helps building messages.

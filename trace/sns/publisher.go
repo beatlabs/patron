@@ -1,10 +1,15 @@
 package sns
 
 import (
+	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
+	"github.com/beatlabs/patron/trace"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 )
 
 // Publisher is the interface defining an SNS publisher.
@@ -15,6 +20,11 @@ type Publisher interface {
 // TracedPublisher is the SNS publisher component.
 type TracedPublisher struct {
 	sns snsiface.SNSAPI
+
+	// component is the name of the component used in tracing operations
+	component string
+	// tag is the base tag used during tracing operations
+	tag opentracing.Tag
 }
 
 // NewPublisher creates a new SNS publisher.
@@ -22,25 +32,36 @@ func NewPublisher(cfg Config) (*TracedPublisher, error) {
 	sns := sns.New(cfg.sess, cfg.cfgs...)
 
 	return &TracedPublisher{
-		sns: sns,
+		sns:       sns,
+		component: trace.SNSPublisherComponent,
+		tag:       ext.SpanKindProducer,
 	}, nil
 }
 
-// Publish tries to publish a new message to SNS.
-func (p TracedPublisher) Publish(msg Message) (messageID string, err error) {
-	out, err := p.sns.Publish(
-		msg.input,
-		// Subject:  aws.String("my test subject"),
-		// Message:  aws.String("my test message"),
-		// TopicArn: aws.String("my test topic"),
-	)
+// Publish tries to publish a new message to SNS, with an added tracing capability.
+func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID string, err error) {
+	span, _ := trace.ChildSpan(ctx, p.publishOpName(msg), p.component, p.tag)
+	out, err := p.sns.Publish(msg.input)
+
 	if err != nil {
-		// TODO: log it
-		return "", errors.New("could not publish the message")
+		trace.SpanError(span)
+		fmt.Println(err) // TODO: delete
+		return "", errors.New("message could not be published")
 	}
+
 	if out.MessageId == nil {
-		// TODO: log it
+		trace.SpanError(span)
+		fmt.Println(err) // TODO: delete
 		return "", errors.New("no message ID TODO: fix this error message")
 	}
+
 	return *out.MessageId, nil
+}
+
+// publishOpName returns the publish operation name based on the message.
+func (p TracedPublisher) publishOpName(msg Message) string {
+	return trace.ComponentOpName(
+		p.component,
+		fmt.Sprintf("publish:%s", msg.tracingTarget()),
+	)
 }

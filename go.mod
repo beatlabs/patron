@@ -2,6 +2,7 @@ module github.com/beatlabs/patron
 
 require (
 	github.com/Shopify/sarama v1.21.0
+	github.com/aws/aws-sdk-go v1.21.8
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/golang/protobuf v1.2.0
 	github.com/google/uuid v1.1.0

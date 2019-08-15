@@ -28,7 +28,9 @@ const (
 	HTTPComponent = "http"
 	// HTTPClientComponent definition.
 	HTTPClientComponent = "http-client"
-	versionTag          = "version"
+	// AWSSNSPublisherComponent definition.
+	AWSSNSPublisherComponent = "aws-sns-publisher"
+	versionTag               = "version"
 )
 
 var (

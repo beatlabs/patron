@@ -5,9 +5,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/amqp"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 	oamqp "github.com/streadway/amqp"
@@ -17,7 +22,13 @@ const (
 	amqpURL          = "amqp://guest:guest@localhost:5672/"
 	amqpQueue        = "patron"
 	amqpExchangeName = "patron"
-	amqpExchangeType = oamqp.ExchangeDirect
+	amqpExchangeType = oamqp.ExchangeFanout
+	awsRegion        = "eu-west-1"
+	awsID            = "test"
+	awsSecret        = "test"
+	awsToken         = "token"
+	awsEndpoint      = "http://localhost:4576"
+	awsQueue         = "patron"
 )
 
 var (
@@ -104,6 +115,37 @@ func (ac *amqpComponent) Process(msg async.Message) error {
 	var u examples.User
 
 	err := msg.Decode(&u)
+	if err != nil {
+		return err
+	}
+
+	ses, err := session.NewSession(&aws.Config{
+		Region:      aws.String(awsRegion),
+		Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
+		Endpoint:    aws.String(awsEndpoint),
+	})
+	if err != nil {
+		return err
+	}
+
+	q := sqs.New(ses)
+
+	qURL, err := q.GetQueueUrl(&sqs.GetQueueUrlInput{
+		QueueName: aws.String(awsQueue),
+	})
+	if err != nil {
+		return err
+	}
+
+	b, err := json.Encode(u)
+	if err != nil {
+		return err
+	}
+
+	_, err = q.SendMessage(&sqs.SendMessageInput{
+		MessageBody: aws.String(string(b)),
+		QueueUrl:    qURL.QueueUrl,
+	})
 	if err != nil {
 		return err
 	}

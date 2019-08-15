@@ -91,7 +91,23 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=test123    
+      - POSTGRES_PASSWORD=test123
+  localstack:
+    image: localstack/localstack
+    hostname: localstack
+    networks:
+      examplenw:
+        aliases:
+          - localstack
+    ports:
+      - "4567-4584:4567-4584"
+      - "8090:8080"
+    environment:
+      - LOCALSTACK_SERVICES=sqs,sns
+      - LOCALSTACK_DEBUG=1
+      - LOCALSTACK_DATA_DIR=/tmp/localstack/data
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
 
 networks:
   examplenw: {}

@@ -28,6 +28,10 @@ To tear down the above just:
 docker-compose down
 ```
 
+## setting up AWS SQS localstack queue
+
+aws --endpoint-url=http://localhost:4576 sqs create-queue --queue-name=patron
+
 ## running the example
 
 Start first service:
@@ -58,10 +62,17 @@ go run examples/fourth/main.go
 
 ```
 
+Start fifth service:
+
+```shell
+go run examples/fifth/main.go
+
+```
+
 and the use curl to send a request:
 
 ```shell
-curl -i -X POST http://localhost:50000
+curl -d '{"Firstname":"John", "Lastname": "Doe"}' -H "Content-Type: application/json" -X POST http://localhost:50000
 ```
 
 After that head over to [jaeger](http://localhost:16686/search) and [prometheus](http://localhost:9090/graph).

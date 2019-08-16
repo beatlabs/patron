@@ -1,6 +1,3 @@
-// Package sns provides a set of common interfaces and structs for publishing messages to AWS SNS. Implementations
-// in this package also include tracing capabilities by default.
-
 package sns
 
 import (

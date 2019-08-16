@@ -1,3 +1,5 @@
+// Package sns provides a set of common interfaces and structs for publishing messages to AWS SNS. Implementations
+// in this package also include distributed tracing capabilities by default.
 package sns
 
 import (
@@ -16,7 +18,7 @@ type Publisher interface {
 	Publish(ctx context.Context, msg Message) (messageID string, err error)
 }
 
-// TracedPublisher is an implementation of the Publisher interface with added tracing capabilities.
+// TracedPublisher is an implementation of the Publisher interface with added distributed tracing capabilities.
 type TracedPublisher struct {
 	api snsiface.SNSAPI
 

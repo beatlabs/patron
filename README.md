@@ -10,8 +10,8 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 
 - service, which orchestrates everything
 - components and processors, which provide a abstraction of adding processing functionality to the service
-  - asynchronous message processing (RabbitMQ, Kafka)
-  - synchronous processing (HTTP)
+  - asynchronous message processing (RabbitMQ, Kafka, AWS SQS)
+  - synchronous processing (HTTP, AWS SNS)
 - metrics and tracing
 - logging
 
@@ -141,6 +141,7 @@ Detailed examples can be found in the [examples](/examples) folder with the foll
 - [Kafka Component, HTTP Component, HTTP Authentication, Kafka Tracing](/examples/second/main.go)
 - [Kafka Component, AMQP Tracing](/examples/third/main.go)
 - [AMQP Component](/examples/fourth/main.go)
+- [AWS SNS, AWS SQS](/examples/fifth/main.go)
 
 ## Processors
 

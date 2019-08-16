@@ -89,7 +89,7 @@ func main() {
 
 	// Initialise SQS
 	sqsAPI := sqs.New(awsSQSSession)
-	sqsQueueArn, err := createSQSQueue(sqsAPI)
+	sqsQueueArn, err := createSQSQueue(sqsAPI) // Programatically create a queue for the sake of the example
 	if err != nil {
 		log.Fatalf("failed to create sqs queue: %v", err)
 	}
@@ -101,7 +101,7 @@ func main() {
 
 	// Initialise SNS
 	snsAPI := sns.New(awsSNSSession)
-	topicArn, err := createSNSTopic(snsAPI)
+	topicArn, err := createSNSTopic(snsAPI) // Programatically create a topic for the sake of the example
 	if err != nil {
 		log.Fatalf("failed to create sns topic: %v", err)
 	}

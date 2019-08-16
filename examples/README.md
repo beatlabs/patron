@@ -6,6 +6,7 @@ The processing will be kicked of by sending a request to the HTTP component. The
 - HTTP -> RabbitMQ publish
 - RabbitMQ consumer -> kafka publish
 - Kafka consumer -> log to stdout
+- Publish message to AWS SNS -> Consume it with AWS SQS
 
 Since tracing instrumentation is in place we can observer the flow in jaeger.
 
@@ -14,7 +15,7 @@ Since tracing instrumentation is in place we can observer the flow in jaeger.
 - Docker
 - Docker compose
 
-## setting up environment
+## Setting up environment
 
 To run the full example we need to start [jaeger](https://www.jaegertracing.io/) and [prometheus](https://prometheus.io/). We can startup both of them using docker-compose with the following command.
 
@@ -28,17 +29,12 @@ To tear down the above just:
 docker-compose down
 ```
 
-## setting up AWS SQS localstack queue
-
-aws --endpoint-url=http://localhost:4576 sqs create-queue --queue-name=patron
-
-## running the example
+## Running the examples
 
 Start first service:
 
 ```shell
 go run examples/first/main.go
-
 ```
 
 Start second service:
@@ -52,21 +48,18 @@ Start third service:
 
 ```shell
 go run examples/third/main.go
-
 ```
 
 Start fourth service:
 
 ```shell
 go run examples/fourth/main.go
-
 ```
 
 Start fifth service:
 
 ```shell
 go run examples/fifth/main.go
-
 ```
 
 and the use curl to send a request:

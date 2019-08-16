@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
@@ -130,13 +131,19 @@ func (s *stubSNSAPI) Publish(input *sns.PublishInput) (*sns.PublishOutput, error
 
 func ExamplePublisher() {
 	// Create the SNS API with the required config, credentials, etc.
-	var sess = session.Must(session.NewSession(
-		aws.NewConfig().WithEndpoint("http://localhost:4575"),
-	))
-	cfg := &aws.Config{
-		Region: aws.String("eu-west-1"),
+	sess, err := session.NewSession(
+		aws.NewConfig().
+			WithEndpoint("http://localhost:4575").
+			WithRegion("eu-west-1").
+			WithCredentials(
+				credentials.NewStaticCredentials("aws-id", "aws-secret", "aws-token"),
+			),
+	)
+	if err != nil {
+		panic(err)
 	}
-	api := sns.New(sess, cfg)
+
+	api := sns.New(sess)
 
 	// Create the publisher
 	pub, err := NewPublisher(api)

@@ -32,9 +32,13 @@ func Test_Publish_Message(t *testing.T) {
 }
 
 func createApi(t *testing.T) snsiface.SNSAPI {
-	var sess = session.Must(session.NewSession(
-		aws.NewConfig().WithEndpoint(testSnsEndpoint),
-	))
+	sess, err := session.NewSession(
+		aws.NewConfig().
+			WithEndpoint(testSnsEndpoint).
+			WithRegion(testSnsRegion),
+	)
+	require.NoError(t, err)
+
 	cfg := &aws.Config{
 		Region: aws.String(testSnsRegion),
 	}

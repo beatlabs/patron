@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
 	"github.com/beatlabs/patron/errors"
@@ -15,13 +14,36 @@ import (
 )
 
 func Test_NewPublisher(t *testing.T) {
-	cfg, err := NewConfig(session.New())
-	require.NoError(t, err)
+	testCases := []struct {
+		desc        string
+		api         snsiface.SNSAPI
+		expectedErr error
+	}{
+		{
+			desc:        "Missing API",
+			api:         nil,
+			expectedErr: errors.New("missing api"),
+		},
+		{
+			desc:        "Success",
+			api:         newStubSNSAPI(nil, nil),
+			expectedErr: nil,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			p, err := NewPublisher(tC.api)
 
-	p := NewPublisher(*cfg)
-	assert.IsType(t, &sns.SNS{}, p.sns)
-	assert.Equal(t, p.component, trace.SNSPublisherComponent)
-	assert.Equal(t, p.tag, ext.SpanKindProducer)
+			if tC.expectedErr != nil {
+				assert.Nil(t, p)
+				assert.EqualError(t, err, tC.expectedErr.Error())
+			} else {
+				assert.Equal(t, tC.api, p.api)
+				assert.Equal(t, p.component, trace.SNSPublisherComponent)
+				assert.Equal(t, p.tag, ext.SpanKindProducer)
+			}
+		})
+	}
 }
 
 func Test_Publisher_Publish(t *testing.T) {
@@ -57,7 +79,9 @@ func Test_Publisher_Publish(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			p := TracedPublisher{sns: tC.sns}
+			p, err := NewPublisher(tC.sns)
+			require.NoError(t, err)
+
 			msgID, err := p.Publish(ctx, *msg)
 
 			assert.Equal(t, msgID, tC.expectedMsgID)

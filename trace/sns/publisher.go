@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
@@ -19,7 +18,7 @@ type Publisher interface {
 
 // TracedPublisher is the SNS publisher component.
 type TracedPublisher struct {
-	sns snsiface.SNSAPI
+	api snsiface.SNSAPI
 
 	// component is the name of the component used in tracing operations
 	component string
@@ -28,20 +27,22 @@ type TracedPublisher struct {
 }
 
 // NewPublisher creates a new SNS publisher.
-func NewPublisher(cfg Config) *TracedPublisher {
-	sns := sns.New(cfg.sess, cfg.cfgs...)
+func NewPublisher(api snsiface.SNSAPI) (*TracedPublisher, error) {
+	if api == nil {
+		return nil, errors.New("missing api")
+	}
 
 	return &TracedPublisher{
-		sns:       sns,
+		api:       api,
 		component: trace.SNSPublisherComponent,
 		tag:       ext.SpanKindProducer,
-	}
+	}, nil
 }
 
 // Publish tries to publish a new message to SNS, with an added tracing capability.
 func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID string, err error) {
 	span, _ := trace.ChildSpan(ctx, p.publishOpName(msg), p.component, p.tag)
-	out, err := p.sns.Publish(msg.input)
+	out, err := p.api.Publish(msg.input)
 
 	if err != nil {
 		trace.SpanError(span)

@@ -1,9 +1,15 @@
+// Package sns provides a set of common interfaces and structs for publishing messages to AWS SNS. Implementations
+// in this package also include tracing capabilities by default.
+
 package sns
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
 	"github.com/beatlabs/patron/errors"
@@ -120,4 +126,38 @@ func newStubSNSAPI(expectedOutput *sns.PublishOutput, expectedErr error) *stubSN
 
 func (s *stubSNSAPI) Publish(input *sns.PublishInput) (*sns.PublishOutput, error) {
 	return s.output, s.err
+}
+
+func ExamplePublisher() {
+	// Create the SNS API with the required config, credentials, etc.
+	var sess = session.Must(session.NewSession(
+		aws.NewConfig().WithEndpoint("http://localhost:4575"),
+	))
+	cfg := &aws.Config{
+		Region: aws.String("eu-west-1"),
+	}
+	api := sns.New(sess, cfg)
+
+	// Create the publisher
+	pub, err := NewPublisher(api)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create a message
+	msg, err := NewMessageBuilder().
+		WithMessage("my message").
+		WithTopicARN("arn:aws:sns:eu-west-1:123456789012:MyTopic").
+		Build()
+	if err != nil {
+		panic(err)
+	}
+
+	// Publish it
+	msgID, err := pub.Publish(context.Background(), *msg)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(msgID)
 }

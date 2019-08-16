@@ -11,12 +11,12 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 )
 
-// Publisher is the interface defining an SNS publisher.
+// Publisher is the interface defining an SNS publisher, used to publish messages to SNS.
 type Publisher interface {
-	Publish(msg Message) (messageID string, err error)
+	Publish(ctx context.Context, msg Message) (messageID string, err error)
 }
 
-// TracedPublisher is the SNS publisher component.
+// TracedPublisher is an implementation of the Publisher interface with added tracing capabilities.
 type TracedPublisher struct {
 	api snsiface.SNSAPI
 
@@ -39,7 +39,7 @@ func NewPublisher(api snsiface.SNSAPI) (*TracedPublisher, error) {
 	}, nil
 }
 
-// Publish tries to publish a new message to SNS, with an added tracing capability.
+// Publish tries to publish a new message to SNS. It also stores tracing information.
 func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID string, err error) {
 	span, _ := trace.ChildSpan(ctx, p.publishOpName(msg), p.component, p.tag)
 	out, err := p.api.Publish(msg.input)

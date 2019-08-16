@@ -22,7 +22,23 @@ const (
 	tracingTargetUnknown            = "unknown"
 )
 
-// Message stores information about messages that are published to SNS thanks to the SNS publisher.
+// MessageBuilder is a builder that helps building messages to be sent to SNS.
+type MessageBuilder struct {
+	err   error
+	input *sns.PublishInput
+}
+
+// NewMessageBuilder creates a new MessageBuilder that helps creating messages.
+func NewMessageBuilder() *MessageBuilder {
+	return &MessageBuilder{
+		input: &sns.PublishInput{
+			MessageAttributes: map[string]*sns.MessageAttributeValue{},
+		},
+	}
+}
+
+// Message is a struct embedding information about messages that will
+// be later published to SNS thanks to the SNS publisher.
 type Message struct {
 	input *sns.PublishInput
 }
@@ -44,21 +60,6 @@ func (m Message) tracingTarget() string {
 	}
 
 	return tracingTargetUnknown
-}
-
-// MessageBuilder helps building messages.
-type MessageBuilder struct {
-	err   error
-	input *sns.PublishInput
-}
-
-// NewMessageBuilder creates a new MessageBuilder that helps creating messages.
-func NewMessageBuilder() *MessageBuilder {
-	return &MessageBuilder{
-		input: &sns.PublishInput{
-			MessageAttributes: map[string]*sns.MessageAttributeValue{},
-		},
-	}
 }
 
 // WithMessage attaches a message to the message struct.
@@ -105,7 +106,8 @@ func (b *MessageBuilder) WithStringAttribute(name string, value string) *Message
 }
 
 // WithStringArrayAttribute attaches an array of strings attribute to the message.
-// Accepted values types: string, numbers, booleans and nil. Any other type will throw an error.
+//
+// The accepted values types are string, number, boolean and nil. Any other type will throw an error.
 func (b *MessageBuilder) WithStringArrayAttribute(name string, values []interface{}) *MessageBuilder {
 	attributeValue := b.addAttributeValue(name, attributeDataTypeStringArray)
 

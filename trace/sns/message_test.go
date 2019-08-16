@@ -26,8 +26,8 @@ func Test_MessageBuilder_Build(t *testing.T) {
 	got, err := b.
 		WithMessage(msg).
 		WithSubject(subject).
-		WithTopicARN(topicArn).
-		WithTargetARN(targetArn).
+		WithTopicArn(topicArn).
+		WithTargetArn(targetArn).
 		WithPhoneNumber(phoneNumber).
 		WithMessageStructure(msgStructure).
 		WithStringAttribute("string", stringAttribute).
@@ -144,10 +144,10 @@ func Test_MessageBuilder_formatStringArrayAttributeValues(t *testing.T) {
 }
 
 func TestMessage_tracingTarget(t *testing.T) {
-	msgWithTopicArn, err := NewMessageBuilder().WithTopicARN("topic-arn").Build()
+	msgWithTopicArn, err := NewMessageBuilder().WithTopicArn("topic-arn").Build()
 	require.NoError(t, err)
 
-	msgWithTargetArn, err := NewMessageBuilder().WithTargetARN("target-arn").Build()
+	msgWithTargetArn, err := NewMessageBuilder().WithTargetArn("target-arn").Build()
 	require.NoError(t, err)
 
 	msgWithPhoneNumber, err := NewMessageBuilder().WithPhoneNumber("my-phone-number").Build()

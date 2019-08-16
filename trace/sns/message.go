@@ -74,15 +74,15 @@ func (b *MessageBuilder) WithSubject(subject string) *MessageBuilder {
 	return b
 }
 
-// WithTopicARN sets the topic ARN where the message will be sent.
-func (b *MessageBuilder) WithTopicARN(topicARN string) *MessageBuilder {
-	b.input.SetTopicArn(topicARN)
+// WithTopicArn sets the topic ARN where the message will be sent.
+func (b *MessageBuilder) WithTopicArn(topicArn string) *MessageBuilder {
+	b.input.SetTopicArn(topicArn)
 	return b
 }
 
-// WithTargetARN sets the target ARN where the message will be sent.
-func (b *MessageBuilder) WithTargetARN(targetARN string) *MessageBuilder {
-	b.input.SetTargetArn(targetARN)
+// WithTargetArn sets the target ARN where the message will be sent.
+func (b *MessageBuilder) WithTargetArn(targetArn string) *MessageBuilder {
+	b.input.SetTargetArn(targetArn)
 	return b
 }
 

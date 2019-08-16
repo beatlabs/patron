@@ -151,7 +151,7 @@ func ExamplePublisher() {
 	// Create a message
 	msg, err := NewMessageBuilder().
 		WithMessage("my message").
-		WithTopicARN("arn:aws:sns:eu-west-1:123456789012:MyTopic").
+		WithTopicArn("arn:aws:sns:eu-west-1:123456789012:MyTopic").
 		Build()
 	if err != nil {
 		panic(err)

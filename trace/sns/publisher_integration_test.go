@@ -67,7 +67,7 @@ func createMsg(t *testing.T, topicArn string) Message {
 
 	msg, err := b.
 		WithMessage("test msg").
-		WithTopicARN(topicArn).
+		WithTopicArn(topicArn).
 		Build()
 	require.NoError(t, err)
 

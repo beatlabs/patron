@@ -123,7 +123,7 @@ func Test_MessageBuilder_formatStringArrayAttributeValues(t *testing.T) {
 		},
 		{
 			desc:        "Invalid - chan",
-			values:      []interface{}{make(chan int, 0)},
+			values:      []interface{}{make(chan int)},
 			expectedErr: errors.New("invalid string array attribute data type chan int"),
 		},
 	}

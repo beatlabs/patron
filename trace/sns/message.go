@@ -16,10 +16,10 @@ const (
 	attributeDataTypeNumber      attributeDataType = "Number"
 	attributeDataTypeBinary      attributeDataType = "Binary"
 
-	tracingTargetTopicArn    string = "topic-arn"
-	tracingTargetTargetArn          = "target-arn"
-	tracingTargetPhoneNumber        = "phone-number"
-	tracingTargetUnknown            = "unknown"
+	tracingTargetTopicArn    = "topic-arn"
+	tracingTargetTargetArn   = "target-arn"
+	tracingTargetPhoneNumber = "phone-number"
+	tracingTargetUnknown     = "unknown"
 )
 
 // MessageBuilder is a builder that helps building messages to be sent to SNS.

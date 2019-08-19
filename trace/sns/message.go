@@ -22,7 +22,7 @@ const (
 	tracingTargetUnknown     = "unknown"
 )
 
-// MessageBuilder is a builder that helps building messages to be sent to SNS.
+// MessageBuilder helps building messages to be sent to SNS.
 type MessageBuilder struct {
 	err   error
 	input *sns.PublishInput

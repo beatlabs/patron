@@ -24,12 +24,12 @@ func Test_MessageBuilder_Build(t *testing.T) {
 	binaryAttribute := []byte("binary attribute")
 
 	got, err := b.
-		WithMessage(msg).
+		Message(msg).
 		WithSubject(subject).
-		WithTopicArn(topicArn).
-		WithTargetArn(targetArn).
-		WithPhoneNumber(phoneNumber).
-		WithMessageStructure(msgStructure).
+		TopicArn(topicArn).
+		TargetArn(targetArn).
+		PhoneNumber(phoneNumber).
+		MessageStructure(msgStructure).
 		WithStringAttribute("string", stringAttribute).
 		WithStringArrayAttribute("string_array", stringArrayAttribute).
 		WithNumberAttribute("number", numberAttribute).
@@ -144,13 +144,13 @@ func Test_MessageBuilder_formatStringArrayAttributeValues(t *testing.T) {
 }
 
 func TestMessage_tracingTarget(t *testing.T) {
-	msgWithTopicArn, err := NewMessageBuilder().WithTopicArn("topic-arn").Build()
+	msgWithTopicArn, err := NewMessageBuilder().TopicArn("topic-arn").Build()
 	require.NoError(t, err)
 
-	msgWithTargetArn, err := NewMessageBuilder().WithTargetArn("target-arn").Build()
+	msgWithTargetArn, err := NewMessageBuilder().TargetArn("target-arn").Build()
 	require.NoError(t, err)
 
-	msgWithPhoneNumber, err := NewMessageBuilder().WithPhoneNumber("my-phone-number").Build()
+	msgWithPhoneNumber, err := NewMessageBuilder().PhoneNumber("my-phone-number").Build()
 	require.NoError(t, err)
 
 	blankMsg, err := NewMessageBuilder().Build()

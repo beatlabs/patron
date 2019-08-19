@@ -62,8 +62,8 @@ func (m Message) tracingTarget() string {
 	return tracingTargetUnknown
 }
 
-// WithMessage attaches a message to the message struct.
-func (b *MessageBuilder) WithMessage(msg string) *MessageBuilder {
+// Message attaches a message to the message struct.
+func (b *MessageBuilder) Message(msg string) *MessageBuilder {
 	b.input.SetMessage(msg)
 	return b
 }
@@ -74,26 +74,26 @@ func (b *MessageBuilder) WithSubject(subject string) *MessageBuilder {
 	return b
 }
 
-// WithTopicArn sets the topic ARN where the message will be sent.
-func (b *MessageBuilder) WithTopicArn(topicArn string) *MessageBuilder {
+// TopicArn sets the topic ARN where the message will be sent.
+func (b *MessageBuilder) TopicArn(topicArn string) *MessageBuilder {
 	b.input.SetTopicArn(topicArn)
 	return b
 }
 
-// WithTargetArn sets the target ARN where the message will be sent.
-func (b *MessageBuilder) WithTargetArn(targetArn string) *MessageBuilder {
+// TargetArn sets the target ARN where the message will be sent.
+func (b *MessageBuilder) TargetArn(targetArn string) *MessageBuilder {
 	b.input.SetTargetArn(targetArn)
 	return b
 }
 
-// WithPhoneNumber sets the phone number to whom the message will be sent.
-func (b *MessageBuilder) WithPhoneNumber(phoneNumber string) *MessageBuilder {
+// PhoneNumber sets the phone number to whom the message will be sent.
+func (b *MessageBuilder) PhoneNumber(phoneNumber string) *MessageBuilder {
 	b.input.SetPhoneNumber(phoneNumber)
 	return b
 }
 
-// WithMessageStructure sets the message structure of the message.
-func (b *MessageBuilder) WithMessageStructure(msgStructure string) *MessageBuilder {
+// MessageStructure sets the message structure of the message.
+func (b *MessageBuilder) MessageStructure(msgStructure string) *MessageBuilder {
 	b.input.SetMessageStructure(msgStructure)
 	return b
 }

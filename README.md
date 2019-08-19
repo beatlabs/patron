@@ -11,7 +11,7 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 - service, which orchestrates everything
 - components and processors, which provide a abstraction of adding processing functionality to the service
   - asynchronous message processing (RabbitMQ, Kafka, AWS SQS)
-  - synchronous processing (HTTP, AWS SNS)
+  - synchronous processing (HTTP)
 - metrics and tracing
 - logging
 

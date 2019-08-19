@@ -118,6 +118,6 @@ func (ac *sqsComponent) Process(msg async.Message) error {
 		return err
 	}
 
-	log.FromContext(msg.Context()).Infof("request processed: %s - %s", *got.Subject, *got.Message)
+	log.FromContext(msg.Context()).Infof("request processed: %s", *got.Message)
 	return nil
 }

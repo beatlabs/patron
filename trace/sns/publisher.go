@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/beatlabs/patron/trace"
 	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
@@ -44,6 +44,12 @@ func NewPublisher(api snsiface.SNSAPI) (*TracedPublisher, error) {
 // Publish tries to publish a new message to SNS. It also stores tracing information.
 func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID string, err error) {
 	span, _ := trace.ChildSpan(ctx, p.publishOpName(msg), p.component, p.tag)
+
+	err = span.Tracer().Inject(span.Context(), opentracing.TextMap, &snsHeadersCarrier{})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to inject tracing headers")
+	}
+
 	out, err := p.api.Publish(msg.input)
 
 	if err != nil {
@@ -55,6 +61,8 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 		return "", errors.New("tried to publish a message but no message ID returned")
 	}
 
+	trace.SpanSuccess(span)
+
 	return *out.MessageId, nil
 }
 
@@ -64,4 +72,11 @@ func (p TracedPublisher) publishOpName(msg Message) string {
 		p.component,
 		fmt.Sprintf("publish:%s", msg.tracingTarget()),
 	)
+}
+
+type snsHeadersCarrier map[string]interface{}
+
+// Set implements Set() of opentracing.TextMapWriter.
+func (c snsHeadersCarrier) Set(key, val string) {
+	c[key] = val
 }

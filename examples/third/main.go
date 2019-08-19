@@ -17,7 +17,6 @@ import (
 const (
 	amqpURL      = "amqp://guest:guest@localhost:5672/"
 	amqpExchange = "patron"
-	amqpQueue    = "patron"
 	kafkaTopic   = "patron-topic"
 	kafkaGroup   = "patron-group"
 	kafkaBroker  = "localhost:9092"

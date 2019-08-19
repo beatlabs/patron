@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
+	"github.com/beatlabs/patron/errors"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )

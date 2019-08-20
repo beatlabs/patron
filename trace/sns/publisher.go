@@ -4,7 +4,6 @@ package sns
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
 	"github.com/beatlabs/patron/errors"
@@ -43,14 +42,17 @@ func NewPublisher(api snsiface.SNSAPI) (*TracedPublisher, error) {
 
 // Publish tries to publish a new message to SNS. It also stores tracing information.
 func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID string, err error) {
-	span, _ := trace.ChildSpan(ctx, p.publishOpName(msg), p.component, p.tag)
+	span, _ := trace.ChildSpan(ctx, p.publishOpName(msg), p.component, ext.SpanKindProducer, p.tag)
 
-	err = span.Tracer().Inject(span.Context(), opentracing.TextMap, &snsHeadersCarrier{})
+	carrier := snsHeadersCarrier{}
+	err = span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to inject tracing headers")
 	}
 
-	out, err := p.api.Publish(msg.input)
+	msg.injectHeaders(carrier)
+
+	out, err := p.api.PublishWithContext(ctx, msg.input)
 
 	if err != nil {
 		trace.SpanError(span)
@@ -70,7 +72,7 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 func (p TracedPublisher) publishOpName(msg Message) string {
 	return trace.ComponentOpName(
 		p.component,
-		fmt.Sprintf("publish:%s", msg.tracingTarget()),
+		msg.tracingTarget(),
 	)
 }
 

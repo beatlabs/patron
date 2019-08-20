@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/beatlabs/patron/errors"
 )
@@ -179,4 +180,14 @@ func (b *MessageBuilder) Build() (*Message, error) {
 	}
 
 	return &Message{input: b.input}, nil
+}
+
+// injectHeaders injects the SNS headers carrier's headers into the message's attributes.
+func (m *Message) injectHeaders(carrier snsHeadersCarrier) {
+	for k, v := range carrier {
+		m.input.MessageAttributes[k] = &sns.MessageAttributeValue{
+			DataType:    aws.String(string(attributeDataTypeString)),
+			StringValue: aws.String(v.(string)),
+		}
+	}
 }

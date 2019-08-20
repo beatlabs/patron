@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
@@ -13,13 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
-	"github.com/beatlabs/patron/encoding/json"
-	patronsns "github.com/beatlabs/patron/trace/sns"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/amqp"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
+	patronsns "github.com/beatlabs/patron/trace/sns"
 	oamqp "github.com/streadway/amqp"
 )
 
@@ -169,6 +168,12 @@ func routeSNSTOpicToSQSQueue(snsAPI snsiface.SNSAPI, sqsQueueArn, topicArn strin
 		Protocol: aws.String("sqs"),
 		TopicArn: aws.String(topicArn),
 		Endpoint: aws.String(sqsQueueArn),
+		Attributes: map[string]*string{
+			// Set the RawMessageDelivery to "true" in order to be able to pass the MessageAttributes from SNS
+			// to SQS, and therefore to propagate the trace.
+			// See https://docs.aws.amazon.com/sns/latest/dg/sns-message-attributes.html for more information.
+			"RawMessageDelivery": aws.String("true"),
+		},
 	})
 
 	return err
@@ -227,7 +232,7 @@ func (ac *amqpComponent) Process(msg async.Message) error {
 		return fmt.Errorf("failed to create message: %v", err)
 	}
 
-	_, err = ac.snsPub.Publish(context.Background(), *snsMsg)
+	_, err = ac.snsPub.Publish(msg.Context(), *snsMsg)
 	if err != nil {
 		return fmt.Errorf("failed to publish message: %v", err)
 	}

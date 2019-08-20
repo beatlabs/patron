@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
@@ -108,7 +109,14 @@ func Test_Publisher_publishOpName(t *testing.T) {
 	msg, err := NewMessageBuilder().Build()
 	require.NoError(t, err)
 
-	assert.Equal(t, "component publish:unknown", p.publishOpName(*msg))
+	assert.Equal(t, "component unknown", p.publishOpName(*msg))
+}
+
+func Test_snsHeadersCarrier_Set(t *testing.T) {
+	carrier := snsHeadersCarrier{}
+	carrier.Set("foo", "bar")
+
+	assert.Equal(t, "bar", carrier["foo"])
 }
 
 type stubSNSAPI struct {
@@ -122,7 +130,7 @@ func newStubSNSAPI(expectedOutput *sns.PublishOutput, expectedErr error) *stubSN
 	return &stubSNSAPI{output: expectedOutput, err: expectedErr}
 }
 
-func (s *stubSNSAPI) Publish(input *sns.PublishInput) (*sns.PublishOutput, error) {
+func (s *stubSNSAPI) PublishWithContext(ctx context.Context, input *sns.PublishInput, options ...request.Option) (*sns.PublishOutput, error) {
 	return s.output, s.err
 }
 

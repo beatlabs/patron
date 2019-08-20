@@ -143,7 +143,7 @@ func Test_MessageBuilder_formatStringArrayAttributeValues(t *testing.T) {
 	}
 }
 
-func TestMessage_tracingTarget(t *testing.T) {
+func Test_Message_tracingTarget(t *testing.T) {
 	msgWithTopicArn, err := NewMessageBuilder().TopicArn("topic-arn").Build()
 	require.NoError(t, err)
 
@@ -188,4 +188,18 @@ func TestMessage_tracingTarget(t *testing.T) {
 			assert.Equal(t, tC.expectedTracingTarget, got)
 		})
 	}
+}
+
+func TestMessage_injectHeaders(t *testing.T) {
+	msg, err := NewMessageBuilder().Build()
+	require.NoError(t, err)
+
+	carrier := snsHeadersCarrier{
+		"foo": "bar",
+		"bar": "baz",
+	}
+	msg.injectHeaders(carrier)
+
+	assert.Equal(t, "bar", *msg.input.MessageAttributes["foo"].StringValue)
+	assert.Equal(t, "baz", *msg.input.MessageAttributes["bar"].StringValue)
 }

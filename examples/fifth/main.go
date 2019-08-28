@@ -26,8 +26,6 @@ const (
 	awsSQSQueue    = "patron"
 )
 
-var awsSQSSession *session.Session
-
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
@@ -44,16 +42,6 @@ func init() {
 		fmt.Printf("failed to set default patron port env vars: %v", err)
 		os.Exit(1)
 	}
-
-	awsSQSSession = session.Must(
-		session.NewSession(
-			&aws.Config{
-				Region:      aws.String(awsRegion),
-				Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
-			},
-			&aws.Config{Endpoint: aws.String(awsSQSEndpoint)},
-		),
-	)
 }
 
 func main() {
@@ -67,11 +55,17 @@ func main() {
 	}
 
 	// Initialise SQS
-	sqsAPI := sqs.New(awsSQSSession)
-	if err != nil {
-		log.Fatalf("failed to create sqs queue: %v", err)
-	}
-
+	sqsAPI := sqs.New(
+		session.Must(
+			session.NewSession(
+				&aws.Config{
+					Region:      aws.String(awsRegion),
+					Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
+				},
+				&aws.Config{Endpoint: aws.String(awsSQSEndpoint)},
+			),
+		),
+	)
 	sqsCmp, err := createSQSComponent(sqsAPI)
 	if err != nil {
 		log.Fatalf("failed to create sqs component: %v", err)

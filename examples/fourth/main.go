@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -43,13 +44,6 @@ const (
 	awsSNSTopic    = "patron-topic"
 )
 
-var (
-	awsSQSSession *session.Session
-	awsSNSSession *session.Session
-
-	amqpBindings = []string{"bind.one.*", "bind.two.*"}
-)
-
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
@@ -66,25 +60,6 @@ func init() {
 		fmt.Printf("failed to set default patron port env vars: %v", err)
 		os.Exit(1)
 	}
-
-	baseConfig := &aws.Config{
-		Region:      aws.String(awsRegion),
-		Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
-	}
-
-	awsSNSSession = session.Must(
-		session.NewSession(
-			baseConfig,
-			&aws.Config{Endpoint: aws.String(awsSNSEndpoint)},
-		),
-	)
-
-	awsSQSSession = session.Must(
-		session.NewSession(
-			baseConfig,
-			&aws.Config{Endpoint: aws.String(awsSQSEndpoint)},
-		),
-	)
 }
 
 func main() {
@@ -98,14 +73,14 @@ func main() {
 	}
 
 	// Programmatically create an empty SQS queue for the sake of the example
-	sqsAPI := sqs.New(awsSQSSession)
+	sqsAPI := sqs.New(getAWSSession(awsSQSEndpoint))
 	sqsQueueArn, err := createSQSQueue(sqsAPI)
 	if err != nil {
 		log.Fatalf("failed to create sqs queue: %v", err)
 	}
 
 	// Programmatically create an SNS topic for the sake of the example
-	snsAPI := sns.New(awsSNSSession)
+	snsAPI := sns.New(getAWSSession(awsSNSEndpoint))
 	snsTopicArn, err := createSNSTopic(snsAPI)
 	if err != nil {
 		log.Fatalf("failed to create sns topic: %v", err)
@@ -125,7 +100,15 @@ func main() {
 	}
 
 	// Initialise the AMQP component
-	amqpCmp, err := newAmqpComponent(amqpURL, amqpQueue, amqpExchangeName, amqpExchangeType, amqpBindings, snsTopicArn, snsPub)
+	amqpCmp, err := newAmqpComponent(
+		amqpURL,
+		amqpQueue,
+		amqpExchangeName,
+		amqpExchangeType,
+		[]string{"bind.one.*", "bind.two.*"},
+		snsTopicArn,
+		snsPub,
+	)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
@@ -145,10 +128,25 @@ func main() {
 	}
 }
 
+func getAWSSession(endpoint string) *session.Session {
+	return session.Must(
+		session.NewSession(
+			&aws.Config{
+				Region:      aws.String(awsRegion),
+				Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
+			},
+			&aws.Config{Endpoint: aws.String(endpoint)},
+		),
+	)
+}
+
 func createSQSQueue(api sqsiface.SQSAPI) (string, error) {
 	out, err := api.CreateQueue(&sqs.CreateQueueInput{
 		QueueName: aws.String(awsSQSQueue),
 	})
+	if out.QueueUrl == nil {
+		return "", errors.New("could not create the queue")
+	}
 	return *out.QueueUrl, err
 }
 
@@ -159,7 +157,6 @@ func createSNSTopic(snsAPI snsiface.SNSAPI) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return *out.TopicArn, nil
 }
 

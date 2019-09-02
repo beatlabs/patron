@@ -53,3 +53,21 @@ func Start(offset int64) OptionFunc {
 		return nil
 	}
 }
+
+// RequiredAcksPolicy option for adjusting how many replica acknowledgements
+// broker must see before responding.
+// 0 doesn't send any response, the TCP ACK is all you get.
+// 1 waits for only the local commit to succeed before responding.
+// -1  waits for all in-sync replicas to commit before responding.
+func RequiredAcksPolicy(ack int16) OptionFunc {
+	return func(c *consumer) error {
+		if ack < -1 {
+			return errors.New("required acks policy must be greater or equal than -1")
+		}
+		if ack > 1 {
+			return errors.New("required acks policy must be lesser or equal than 1")
+		}
+		c.cfg.Producer.RequiredAcks = sarama.RequiredAcks(ack)
+		return nil
+	}
+}

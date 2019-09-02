@@ -38,3 +38,22 @@ func Timeouts(dial time.Duration) OptionFunc {
 		return nil
 	}
 }
+
+// RequiredAcksPolicy option for adjusting how many replica acknowledgements
+// broker must see before responding.
+// 0 doesn't send any response, the TCP ACK is all you get.
+// 1 waits for only the local commit to succeed before responding.
+// -1  waits for all in-sync replicas to commit before responding.
+func RequiredAcksPolicy(ack int) OptionFunc {
+	return func(ap *AsyncProducer) error {
+		switch ack {
+		case -1:
+		case 0:
+		case 1:
+			ap.cfg.Producer.RequiredAcks = sarama.RequiredAcks(ack)
+		default:
+			return errors.New("invalid required acks policy provided")
+		}
+		return nil
+	}
+}

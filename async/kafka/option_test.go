@@ -73,29 +73,3 @@ func TestStart(t *testing.T) {
 	err := Start(sarama.OffsetOldest)(&c)
 	assert.NoError(t, err)
 }
-
-func TestRequiredAcksPolicy(t *testing.T) {
-	type args struct {
-		requiredAcks int16
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{name: "success", args: args{requiredAcks: 1}, wantErr: false},
-		{name: "invalid required acks", args: args{requiredAcks: -2}, wantErr: true},
-		{name: "invalid required acks", args: args{requiredAcks: +2}, wantErr: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := consumer{cfg: sarama.NewConfig()}
-			err := RequiredAcksPolicy(tt.args.requiredAcks)(&c)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}

@@ -67,17 +67,16 @@ func TestTimeouts(t *testing.T) {
 
 func TestRequiredAcksPolicy(t *testing.T) {
 	type args struct {
-		requiredAcks int
+		requiredAcks RequiredAcks
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{name: "success", args: args{requiredAcks: -1}, wantErr: false},
-		{name: "success", args: args{requiredAcks: 0}, wantErr: false},
-		{name: "success", args: args{requiredAcks: 1}, wantErr: false},
-		{name: "invalid required acks policy", args: args{requiredAcks: 2}, wantErr: true},
+		{name: "success", args: args{requiredAcks: NoResponse}, wantErr: false},
+		{name: "success", args: args{requiredAcks: WaitForAll}, wantErr: false},
+		{name: "success", args: args{requiredAcks: WaitForLocal}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

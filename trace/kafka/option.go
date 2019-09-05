@@ -8,6 +8,19 @@ import (
 	"github.com/beatlabs/patron/log"
 )
 
+// RequiredAcks is used in Produce Requests to tell the broker how many replica acknowledgements
+// it must see before responding.
+type RequiredAcks int16
+
+const (
+	// NoResponse doesn't send any response, the TCP ACK is all you get.
+	NoResponse RequiredAcks = 0
+	// WaitForLocal waits for only the local commit to succeed before responding.
+	WaitForLocal RequiredAcks = 1
+	// WaitForAll waits for all in-sync replicas to commit before responding.
+	WaitForAll RequiredAcks = -1
+)
+
 // OptionFunc definition for configuring the async producer in a functional way.
 type OptionFunc func(*AsyncProducer) error
 
@@ -41,19 +54,9 @@ func Timeouts(dial time.Duration) OptionFunc {
 
 // RequiredAcksPolicy option for adjusting how many replica acknowledgements
 // broker must see before responding.
-// 0 doesn't send any response, the TCP ACK is all you get.
-// 1 waits for only the local commit to succeed before responding.
-// -1  waits for all in-sync replicas to commit before responding.
-func RequiredAcksPolicy(ack int) OptionFunc {
+func RequiredAcksPolicy(ack RequiredAcks) OptionFunc {
 	return func(ap *AsyncProducer) error {
-		switch ack {
-		case -1:
-		case 0:
-		case 1:
-			ap.cfg.Producer.RequiredAcks = sarama.RequiredAcks(ack)
-		default:
-			return errors.New("invalid required acks policy provided")
-		}
+		ap.cfg.Producer.RequiredAcks = sarama.RequiredAcks(ack)
 		return nil
 	}
 }

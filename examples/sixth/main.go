@@ -13,7 +13,6 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync"
 	patronhttp "github.com/beatlabs/patron/sync/http"
-	"github.com/beatlabs/patron/sync/http/auth/apikey"
 	tracehttp "github.com/beatlabs/patron/trace/http"
 	"github.com/pkg/errors"
 )
@@ -43,7 +42,7 @@ func init() {
 }
 
 func main() {
-	name := "second"
+	name := "sixth"
 	version := "1.0.0"
 
 	err := patron.Setup(name, version)
@@ -52,19 +51,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	httpCmp, err := newHTTPComponent(kafkaBroker, kafkaTopic, "http://localhost:50000/second")
+	httpCmp, err := newHTTPComponent(kafkaBroker, kafkaTopic, "http://localhost:50000/sixth")
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
 
-	auth, err := apikey.New(&apiKeyValidator{validKey: "123456"})
-	if err != nil {
-		log.Fatalf("failed to create authenticator %v", err)
-	}
-
 	// Set up routes
 	routes := []patronhttp.Route{
-		patronhttp.NewAuthGetRoute("/", httpCmp.second, true, auth),
+		patronhttp.NewAuthGetRoute("/", httpCmp.sixth, true, nil),
 	}
 
 	srv, err := patron.New(
@@ -83,19 +77,19 @@ func main() {
 }
 
 type httpComponent struct {
-	prd   sync2.Producer
+	prd   kafka.Producer
 	topic string
 }
 
 func newHTTPComponent(kafkaBroker, topic, url string) (*httpComponent, error) {
-	prd, err := sync2.NewAsyncProducer([]string{kafkaBroker})
+	prd, err := kafka.NewSyncProducer([]string{kafkaBroker})
 	if err != nil {
 		return nil, err
 	}
 	return &httpComponent{prd: prd, topic: topic}, nil
 }
 
-func (hc *httpComponent) second(ctx context.Context, req *sync.Request) (*sync.Response, error) {
+func (hc *httpComponent) sixth(ctx context.Context, req *sync.Request) (*sync.Response, error) {
 
 	var u examples.User
 	err := req.Decode(&u)
@@ -116,27 +110,16 @@ func (hc *httpComponent) second(ctx context.Context, req *sync.Request) (*sync.R
 		return nil, errors.Wrap(err, "failed to get www.google.com")
 	}
 
-	kafkaMsg, err := sync2.NewJSONMessage(hc.topic, &u)
+	kafkaMsg, err := kafka.NewJSONMessage(hc.topic, &u)
 	if err != nil {
 		return nil, err
 	}
 
-	err = hc.prd.Send(ctx, kafkaMsg)
+	_, _, err = hc.prd.Send(ctx, kafkaMsg)
 	if err != nil {
 		return nil, err
 	}
 
 	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
 	return nil, nil
-}
-
-type apiKeyValidator struct {
-	validKey string
-}
-
-func (av apiKeyValidator) Validate(key string) (bool, error) {
-	if key == av.validKey {
-		return true, nil
-	}
-	return false, nil
 }

@@ -2,12 +2,12 @@ package kafka
 
 import (
 	"context"
+	"github.com/beatlabs/patron/trace"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/errors"
-	"github.com/beatlabs/patron/trace"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 
@@ -33,77 +33,73 @@ func NewJSONMessage(t string, d interface{}) (*Message, error) {
 
 // Producer interface for Kafka.
 type Producer interface {
-	Send(ctx context.Context, msg *Message) error
-	Error() <-chan error
+	Send(ctx context.Context, msg *Message) (int32, int64, error)
 	Close() error
 }
 
-// AsyncProducer defines a async Kafka producer.
-type AsyncProducer struct {
-	cfg   *sarama.Config
-	prod  sarama.AsyncProducer
-	chErr chan error
-	tag   opentracing.Tag
+// SyncProducer defines a sync Kafka producer.
+type SyncProducer struct {
+	cfg  *sarama.Config
+	prod sarama.SyncProducer
+	tag  opentracing.Tag
 }
 
-// NewAsyncProducer creates a new async producer with default configuration.
-func NewAsyncProducer(brokers []string, oo ...OptionFunc) (*AsyncProducer, error) {
+// NewSyncProducer creates a new sync producer with default configuration.
+// Minimum supported KafkaVersion is 11.0.0, and can be updated with an
+// OptionFunc.
+func NewSyncProducer(brokers []string, oo ...OptionFunc) (*SyncProducer, error) {
 
 	cfg := sarama.NewConfig()
 	cfg.Version = sarama.V0_11_0_0
+	cfg.Producer.Return.Successes = true
 
-	ap := AsyncProducer{cfg: cfg, chErr: make(chan error), tag: opentracing.Tag{Key: "type", Value: "async"}}
+	sp := SyncProducer{cfg: cfg, tag: opentracing.Tag{Key: "type", Value: "sync"}}
 
 	for _, o := range oo {
-		err := o(&ap)
+		err := o(&sp)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	prod, err := sarama.NewAsyncProducer(brokers, ap.cfg)
+	prod, err := sarama.NewSyncProducer(brokers, sp.cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create sync producer")
 	}
-	ap.prod = prod
-	go ap.propagateError()
-	return &ap, nil
+	sp.prod = prod
+	return &sp, nil
 }
 
-// Send a message to a topic.
-func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
-	sp, _ := trace.ChildSpan(
+// Send a message to a topic. It will return the partition and the offset of the
+// produced message, or an error if the message failed to produce.
+func (sp *SyncProducer) Send(ctx context.Context, msg *Message) (partition int32, offset int64, err error) {
+	ts, _ := trace.ChildSpan(
 		ctx,
-		trace.ComponentOpName(trace.KafkaAsyncProducerComponent, msg.topic),
-		trace.KafkaAsyncProducerComponent,
+		trace.ComponentOpName(trace.KafkaSyncProducerComponent, msg.topic),
+		trace.KafkaSyncProducerComponent,
 		ext.SpanKindProducer,
-		ap.tag,
+		sp.tag,
 		opentracing.Tag{Key: "topic", Value: msg.topic},
 	)
-	pm, err := createProducerMessage(msg, sp)
+	pm, err := createProducerMessage(msg, ts)
 	if err != nil {
-		trace.SpanError(sp)
-		return err
+		trace.SpanError(ts)
+		return -1, -1, err
 	}
-	ap.prod.Input() <- pm
-	trace.SpanSuccess(sp)
-	return nil
-}
 
-// Error returns a chanel to monitor for errors.
-func (ap *AsyncProducer) Error() <-chan error {
-	return ap.chErr
+	partition, offset, err = sp.prod.SendMessage(pm)
+	switch err {
+	case nil:
+		trace.SpanSuccess(ts)
+	default:
+		trace.SpanError(ts)
+	}
+	return partition, offset, err
 }
 
 // Close gracefully the producer.
-func (ap *AsyncProducer) Close() error {
-	return errors.Wrap(ap.prod.Close(), "failed to close sync producer")
-}
-
-func (ap *AsyncProducer) propagateError() {
-	for pe := range ap.prod.Errors() {
-		ap.chErr <- errors.Wrap(pe, "failed to send message")
-	}
+func (sp *SyncProducer) Close() error {
+	return errors.Wrap(sp.prod.Close(), "failed to close sync producer")
 }
 
 func createProducerMessage(msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {

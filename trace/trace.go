@@ -20,6 +20,8 @@ const (
 	KafkaConsumerComponent = "kafka-consumer"
 	// KafkaAsyncProducerComponent definition.
 	KafkaAsyncProducerComponent = "kafka-async-producer"
+	// KafkaSyncProducerComponent definition.
+	KafkaSyncProducerComponent = "kafka-sync-producer"
 	// AMQPConsumerComponent definition.
 	AMQPConsumerComponent = "amqp-consumer"
 	// AMQPPublisherComponent definition.

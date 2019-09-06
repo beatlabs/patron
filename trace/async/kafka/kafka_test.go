@@ -7,7 +7,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/trace"
 	"github.com/stretchr/testify/assert"
-	jaeger "github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go"
 )
 
 func TestNewMessage(t *testing.T) {

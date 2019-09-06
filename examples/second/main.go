@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/beatlabs/patron/trace/sync/kafka"
+	"github.com/beatlabs/patron/trace/async/kafka"
 	"net/http"
 	"os"
 	"time"
@@ -83,12 +83,12 @@ func main() {
 }
 
 type httpComponent struct {
-	prd   sync2.Producer
+	prd   kafka.Producer
 	topic string
 }
 
 func newHTTPComponent(kafkaBroker, topic, url string) (*httpComponent, error) {
-	prd, err := sync2.NewAsyncProducer([]string{kafkaBroker})
+	prd, err := kafka.NewAsyncProducer([]string{kafkaBroker})
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (hc *httpComponent) second(ctx context.Context, req *sync.Request) (*sync.R
 		return nil, errors.Wrap(err, "failed to get www.google.com")
 	}
 
-	kafkaMsg, err := sync2.NewJSONMessage(hc.topic, &u)
+	kafkaMsg, err := kafka.NewJSONMessage(hc.topic, &u)
 	if err != nil {
 		return nil, err
 	}

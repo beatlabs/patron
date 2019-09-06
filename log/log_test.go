@@ -221,3 +221,7 @@ func (t *testLogger) Debug(args ...interface{}) {
 func (t *testLogger) Debugf(msg string, args ...interface{}) {
 	t.debugCount++
 }
+
+func (t *testLogger) Level() Level {
+	return DebugLevel
+}

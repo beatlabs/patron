@@ -2,6 +2,7 @@
 github.com/DataDog/zstd
 # github.com/Shopify/sarama v1.21.0
 github.com/Shopify/sarama
+github.com/Shopify/sarama/mocks
 # github.com/aws/aws-sdk-go v1.21.8
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/service/sqs

@@ -49,22 +49,6 @@ type ctxKey struct{}
 // FactoryFunc function type for creating loggers.
 type FactoryFunc func(map[string]interface{}) Logger
 
-var levelPriorities = map[Level]int{
-	DebugLevel: 6,
-	// InfoLevel level.
-	InfoLevel: 5,
-	// WarnLevel level.
-	WarnLevel: 4,
-	// ErrorLevel level.
-	ErrorLevel: 3,
-	// FatalLevel level.
-	FatalLevel: 2,
-	// PanicLevel level.
-	PanicLevel: 1,
-	// NoLevel level.
-	NoLevel: 0,
-}
-
 var logger Logger = &nilLogger{}
 
 // Setup logging by providing a logger factory.
@@ -159,8 +143,18 @@ func Debugf(msg string, args ...interface{}) {
 	logger.Debugf(msg, args...)
 }
 
+var levelPriorities = map[Level]int{
+	NoLevel:    0,
+	PanicLevel: 1,
+	FatalLevel: 2,
+	ErrorLevel: 3,
+	WarnLevel:  4,
+	InfoLevel:  5,
+	DebugLevel: 6,
+}
+
 func Enabled(l Level) bool {
-	return levelPriorities[logger.Level()] <= levelPriorities[l]
+	return levelPriorities[logger.Level()] >= levelPriorities[l]
 }
 
 type nilLogger struct{}

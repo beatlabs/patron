@@ -144,17 +144,17 @@ func Debugf(msg string, args ...interface{}) {
 }
 
 var levelPriorities = map[Level]int{
-	NoLevel:    0,
-	PanicLevel: 1,
-	FatalLevel: 2,
+	DebugLevel: 0,
+	InfoLevel:  1,
+	WarnLevel:  2,
 	ErrorLevel: 3,
-	WarnLevel:  4,
-	InfoLevel:  5,
-	DebugLevel: 6,
+	FatalLevel: 4,
+	PanicLevel: 5,
+	NoLevel:    6,
 }
 
 func Enabled(l Level) bool {
-	return levelPriorities[logger.Level()] >= levelPriorities[l]
+	return levelPriorities[logger.Level()] <= levelPriorities[l]
 }
 
 type nilLogger struct{}

@@ -64,3 +64,29 @@ func TestTimeouts(t *testing.T) {
 		})
 	}
 }
+
+func TestRequiredAcksPolicy(t *testing.T) {
+	type args struct {
+		requiredAcks RequiredAcks
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success", args: args{requiredAcks: NoResponse}, wantErr: false},
+		{name: "success", args: args{requiredAcks: WaitForAll}, wantErr: false},
+		{name: "success", args: args{requiredAcks: WaitForLocal}, wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ap := AsyncProducer{cfg: sarama.NewConfig()}
+			err := RequiredAcksPolicy(tt.args.requiredAcks)(&ap)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

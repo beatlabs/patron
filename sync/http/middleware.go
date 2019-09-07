@@ -120,7 +120,7 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 						"method":         r.Method,
 						"url":            r.URL,
 						"proto":          r.Proto,
-						"status":         lw.status,
+						"status":         lw.Status(),
 						"referer":        r.Referer(),
 						"user-agent":     r.UserAgent(),
 					},

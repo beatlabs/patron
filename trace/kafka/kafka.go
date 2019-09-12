@@ -7,7 +7,7 @@ import (
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 
@@ -15,6 +15,13 @@ import (
 type Message struct {
 	topic string
 	body  []byte
+	key   *string
+}
+
+// SetKey sets the key of the message
+func (m *Message) SetKey(k *string) *Message {
+	m.key = k
+	return m
 }
 
 // NewMessage creates a new message.
@@ -112,9 +119,13 @@ func createProducerMessage(msg *Message, sp opentracing.Span) (*sarama.ProducerM
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to inject tracing headers")
 	}
+	var saramaKey sarama.Encoder
+	if msg.key != nil {
+		saramaKey = sarama.ByteEncoder(*msg.key)
+	}
 	return &sarama.ProducerMessage{
 		Topic:   msg.topic,
-		Key:     nil,
+		Key:     saramaKey,
 		Value:   sarama.ByteEncoder(msg.body),
 		Headers: c,
 	}, nil

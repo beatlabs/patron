@@ -7,7 +7,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/trace"
 	"github.com/stretchr/testify/assert"
-	jaeger "github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go"
 )
 
 func TestNewMessage(t *testing.T) {
@@ -60,6 +60,25 @@ func TestNewSyncProducer_Success(t *testing.T) {
 
 func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	msg, err := NewJSONMessage("TOPIC", "TEST")
+	assert.NoError(t, err)
+	seed := createKafkaBroker(t, true)
+	ap, err := NewAsyncProducer([]string{seed.Addr()}, Version(sarama.V0_8_2_0.String()))
+	assert.NoError(t, err)
+	assert.NotNil(t, ap)
+	err = trace.Setup("test", "1.0.0", "0.0.0.0:6831", jaeger.SamplerTypeProbabilistic, 0.1)
+	assert.NoError(t, err)
+	_, ctx := trace.ChildSpan(context.Background(), "123", "cmp")
+	err = ap.Send(ctx, msg)
+	assert.NoError(t, err)
+	assert.Error(t, <-ap.Error())
+	assert.NoError(t, ap.Close())
+}
+
+func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
+	testKey := "TEST"
+	msg, err := NewJSONMessage("TOPIC", "TEST")
+	msg.SetKey(&testKey)
+	assert.Equal(t, testKey, *msg.key)
 	assert.NoError(t, err)
 	seed := createKafkaBroker(t, true)
 	ap, err := NewAsyncProducer([]string{seed.Addr()}, Version(sarama.V0_8_2_0.String()))

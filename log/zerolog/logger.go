@@ -101,6 +101,7 @@ func (l *Logger) Debugf(msg string, args ...interface{}) {
 	l.logger.Debug().Msgf(msg, args...)
 }
 
+// Level return the logging level.
 func (l *Logger) Level() log.Level {
 	return l.level
 }

@@ -153,6 +153,7 @@ var levelPriorities = map[Level]int{
 	NoLevel:    6,
 }
 
+// Enabled shows if the logger logs for the given level.
 func Enabled(l Level) bool {
 	return levelPriorities[logger.Level()] <= levelPriorities[l]
 }

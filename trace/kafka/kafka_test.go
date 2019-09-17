@@ -16,6 +16,13 @@ func TestNewMessage(t *testing.T) {
 	assert.Equal(t, []byte("TEST"), m.body)
 }
 
+func TestNewMessageWithKey(t *testing.T) {
+	key:="TEST"
+	m := NewMessageWithKey("TOPIC", []byte("TEST"),&key)
+	assert.Equal(t, "TOPIC", m.topic)
+	assert.Equal(t, []byte("TEST"), m.body)
+	assert.Equal(t,key,*m.key)
+}
 func TestNewJSONMessage(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -38,6 +45,32 @@ func TestNewJSONMessage(t *testing.T) {
 		})
 	}
 }
+func TestNewJSONMessageWithKey(t *testing.T){
+	key:="TEST"
+	tests := []struct {
+		name    string
+		data    interface{}
+		key     *string
+		wantErr bool
+	}{
+		{name: "failure due to invalid data", data: make(chan bool),key:&key, wantErr: true},
+		{name: "success", data: "TEST",key:&key},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewJSONMessageWithKey("TOPIC", tt.data,tt.key)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, got)
+			}
+		})
+	}
+}
+
+
 
 func TestNewSyncProducer_Failure(t *testing.T) {
 	got, err := NewAsyncProducer([]string{})
@@ -76,7 +109,7 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 
 func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
 	testKey := "TEST"
-	msg, err := NewJSONMessage("TOPIC", "TEST")
+	msg, err := NewJSONMessageWithKey("TOPIC", "TEST",&testKey)
 	msg.SetKey(&testKey)
 	assert.Equal(t, testKey, *msg.key)
 	assert.NoError(t, err)

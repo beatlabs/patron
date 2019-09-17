@@ -29,6 +29,10 @@ func NewMessage(t string, b []byte) *Message {
 	return &Message{topic: t, body: b}
 }
 
+func NewMessageWithKey(t string, b []byte, k *string) *Message {
+	return &Message{topic: t, body: b, key: k}
+}
+
 // NewJSONMessage creates a new message with a JSON encoded body.
 func NewJSONMessage(t string, d interface{}) (*Message, error) {
 	b, err := json.Encode(d)
@@ -36,6 +40,15 @@ func NewJSONMessage(t string, d interface{}) (*Message, error) {
 		return nil, errors.Wrap(err, "failed to JSON encode")
 	}
 	return &Message{topic: t, body: b}, nil
+}
+
+// NewJSONMessageWithKey creates a new message with a JSON encoded body and a message key
+func NewJSONMessageWithKey(t string, d interface{}, k *string) (*Message, error) {
+	b, err := json.Encode(d)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to JSON encode")
+	}
+	return &Message{topic: t, body: b, key: k}, nil
 }
 
 // Producer interface for Kafka.

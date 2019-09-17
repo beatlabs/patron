@@ -110,7 +110,6 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
 	testKey := "TEST"
 	msg, err := NewJSONMessageWithKey("TOPIC", "TEST",&testKey)
-	msg.SetKey(&testKey)
 	assert.Equal(t, testKey, *msg.key)
 	assert.NoError(t, err)
 	seed := createKafkaBroker(t, true)

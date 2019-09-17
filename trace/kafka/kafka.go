@@ -18,12 +18,6 @@ type Message struct {
 	key   *string
 }
 
-// SetKey sets the key of the message
-func (m *Message) SetKey(k *string) *Message {
-	m.key = k
-	return m
-}
-
 // NewMessage creates a new message.
 func NewMessage(t string, b []byte) *Message {
 	return &Message{topic: t, body: b}

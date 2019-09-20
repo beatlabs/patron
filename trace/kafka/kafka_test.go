@@ -17,11 +17,27 @@ func TestNewMessage(t *testing.T) {
 }
 
 func TestNewMessageWithKey(t *testing.T) {
-	key := "TEST"
-	m := NewMessageWithKey("TOPIC", []byte("TEST"), &key)
-	assert.Equal(t, "TOPIC", m.topic)
-	assert.Equal(t, []byte("TEST"), m.body)
-	assert.Equal(t, key, *m.key)
+	tests := []struct {
+		name    string
+		data    []byte
+		key     string
+		wantErr bool
+	}{
+		{name: "success", data: []byte("TEST"), key: "TEST"},
+		{name: "failure due to empty message key", data: []byte("TEST"), key: "", wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewMessageWithKey("TOPIC", tt.data, tt.key)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, got)
+			}
+		})
+	}
 }
 func TestNewJSONMessage(t *testing.T) {
 	tests := []struct {
@@ -46,15 +62,15 @@ func TestNewJSONMessage(t *testing.T) {
 	}
 }
 func TestNewJSONMessageWithKey(t *testing.T) {
-	key := "TEST"
 	tests := []struct {
 		name    string
 		data    interface{}
-		key     *string
+		key     string
 		wantErr bool
 	}{
-		{name: "failure due to invalid data", data: make(chan bool), key: &key, wantErr: true},
-		{name: "success", data: "TEST", key: &key},
+		{name: "failure due to invalid data", data: make(chan bool), key: "TEST", wantErr: true},
+		{name: "success", data: "TEST", key: "TEST"},
+		{name: "failure due to empty message key", data: "TEST", key: "", wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -107,7 +123,7 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 
 func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
 	testKey := "TEST"
-	msg, err := NewJSONMessageWithKey("TOPIC", "TEST", &testKey)
+	msg, err := NewJSONMessageWithKey("TOPIC", "TEST", testKey)
 	assert.Equal(t, testKey, *msg.key)
 	assert.NoError(t, err)
 	seed := createKafkaBroker(t, true)

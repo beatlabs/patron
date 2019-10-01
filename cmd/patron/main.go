@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -97,6 +98,11 @@ func main() {
 		log.Fatalf("failed to create main: %v", err)
 	}
 
+	err = createGitIgnore()
+	if err != nil {
+		log.Fatalf("failed to create .gitignore: %v", err)
+	}
+
 	err = createDockerfile(gd)
 	if err != nil {
 		log.Fatalf("failed to create Dockerfile: %v", err)
@@ -182,6 +188,13 @@ func packagesFromFlag(packages *string) ([]component, error) {
 func setupGit() error {
 	log.Printf("creating git repository")
 	return exec.Command("git", "init").Run()
+}
+
+func createGitIgnore() error {
+	log.Printf("copying .gitignore")
+	_, err := copyFile("../assets/template.gitignore", ".gitignore")
+
+	return err
 }
 
 func createDockerfile(gd *genData) error {
@@ -346,4 +359,38 @@ func main() {
 
 func readmeContent(gd *genData) []byte {
 	return []byte(fmt.Sprintf("# %s", gd.Name))
+}
+
+func copyFile(src, dst string) (result int64, rerr error) {
+	type funcWithErr func() error
+	withErrorHandling := func(f funcWithErr) {
+		err := f()
+		if err != nil {
+			rerr = err
+		}
+	}
+
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer withErrorHandling(source.Close)
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer withErrorHandling(destination.Close)
+
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
 }

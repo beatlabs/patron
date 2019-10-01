@@ -194,10 +194,7 @@ func createGitIgnore() error {
 	log.Printf("copying .gitignore")
 	_, err := copyFile("../assets/template.gitignore", ".gitignore")
 
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func createDockerfile(gd *genData) error {

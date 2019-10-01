@@ -364,7 +364,15 @@ func readmeContent(gd *genData) []byte {
 	return []byte(fmt.Sprintf("# %s", gd.Name))
 }
 
-func copyFile(src, dst string) (int64, error) {
+func copyFile(src, dst string) (result int64, rerr error) {
+	type funcWithErr func() error
+	withErrorHandling := func(f funcWithErr) {
+		err := f()
+		if err != nil {
+			rerr = err
+		}
+	}
+
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
 		return 0, err
@@ -378,13 +386,14 @@ func copyFile(src, dst string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer source.Close()
+	defer withErrorHandling(source.Close)
 
 	destination, err := os.Create(dst)
 	if err != nil {
 		return 0, err
 	}
-	defer destination.Close()
+	defer withErrorHandling(destination.Close)
+
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
 }

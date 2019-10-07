@@ -41,7 +41,7 @@ var patronPackages = map[string]component{
 	},
 	"kafka": component{
 		Import: "\"github.com/beatlabs/patron/async\"\n\t\"github.com/beatlabs/patron/async/kafka\"",
-		Code: `kafkaCf, err := kafka.New(name, "json.Type", "TOPIC", []string{"BROKER"})
+		Code: `kafkaCf, err := kafka.New(name, "json.Type", "TOPIC", "GROUP", []string{"BROKER"})
 		if err != nil {
 			log.Fatalf("failed to create kafka consumer factory: %v", err)
 		}

@@ -124,7 +124,7 @@ func (c *Component) processing(ctx context.Context) error {
 				failCh <- cns.Close()
 			case msg := <-chMsg:
 				log.Debug("New message from consumer arrived")
-				go c.processMessage(msg, failCh)
+				c.processMessage(msg, failCh)
 			case errMsg := <-chErr:
 				failCh <- errors.Wrap(errMsg, "an error occurred during message consumption")
 				return

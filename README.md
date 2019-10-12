@@ -4,7 +4,7 @@ Patron is a framework for creating microservices, originally created by Sotiris 
 
 `Patron` is french for `template` or `pattern`, but it means also `boss` which we found out later (no pun intended).
 
-The entry point of the framework is the `Service`. The `Service` uses `Components` to handle the processing of sync and async requests. The `Service` starts by default an `HTTP Component` which hosts the debug, health and metric endpoints. Any other endpoints will be added to the default `HTTP Component` as `Routes`. Alongside `Routes` one can specify middleware functions to be applied ordered to all routes as `MiddlewareFunc`. The service set's up by default logging with `zerolog`, tracing and metrics with `jaeger` and `prometheus`.
+The entry point of the framework is the `Service`. The `Service` uses `Components` to handle the processing of sync and async requests. The `Service` starts by default an `HTTP Component` which hosts the debug, alive, ready and metric endpoints. Any other endpoints will be added to the default `HTTP Component` as `Routes`. Alongside `Routes` one can specify middleware functions to be applied ordered to all routes as `MiddlewareFunc`. The service set's up by default logging with `zerolog`, tracing and metrics with `jaeger` and `prometheus`.
 
 `Patron` provides abstractions for the following functionality of the framework:
 
@@ -75,7 +75,8 @@ The `Service` has the role of glueing all of the above together, which are:
 - setting up logging
 - setting up default HTTP component with the following endpoints configured:
   - profiling via pprof
-  - health check
+  - liveness check
+  - readiness check
 - setting up termination by os signal
 - setting up SIGHUP custom hook if provided by an option
 - starting and stopping components

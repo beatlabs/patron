@@ -19,13 +19,15 @@ const (
 )
 
 var (
-	// DefaultHealthCheck returns always healthy.
-	DefaultHealthCheck = func() HealthStatus { return Healthy }
+	// DefaultAliveCheck return always live.
+	DefaultAliveCheck = func() AliveStatus { return Alive }
+	DefaultReadyCheck = func() ReadyStatus { return Ready }
 )
 
 // Component implementation of HTTP.
 type Component struct {
-	hc               HealthCheckFunc
+	ac               AliveCheckFunc
+	rc               ReadyCheckFunc
 	httpPort         int
 	httpReadTimeout  time.Duration
 	httpWriteTimeout time.Duration
@@ -40,7 +42,8 @@ type Component struct {
 // New returns a new component.
 func New(oo ...OptionFunc) (*Component, error) {
 	c := Component{
-		hc:               DefaultHealthCheck,
+		ac:               DefaultAliveCheck,
+		rc:               DefaultReadyCheck,
 		httpPort:         httpPort,
 		httpReadTimeout:  httpReadTimeout,
 		httpWriteTimeout: httpWriteTimeout,
@@ -56,7 +59,8 @@ func New(oo ...OptionFunc) (*Component, error) {
 		}
 	}
 
-	c.routes = append(c.routes, healthCheckRoute(c.hc))
+	c.routes = append(c.routes, aliveCheckRoute(c.ac))
+	c.routes = append(c.routes, readyCheckRoute(c.rc))
 	c.routes = append(c.routes, profilingRoutes()...)
 	c.routes = append(c.routes, metricRoute())
 

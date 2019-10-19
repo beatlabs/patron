@@ -90,7 +90,7 @@ The service has some default settings which can be changed via environment varia
   - agent host `0.0.0.0` with `PATRON_JAEGER_AGENT_HOST`
   - agent port `6831` with `PATRON_JAEGER_AGENT_PORT`
   - sampler type `probabilistic`with `PATRON_JAEGER_SAMPLER_TYPE`
-  - sampler param `0.1` with `PATRON_JAEGER_SAMPLER_PARAM`
+  - sampler param `0.0` with `PATRON_JAEGER_SAMPLER_PARAM`, which means that traces are not initiated here.
 
 ### Component
 

@@ -29,7 +29,8 @@ type Service struct {
 	cps           []Component
 	routes        []http.Route
 	middlewares   []http.MiddlewareFunc
-	hcf           http.HealthCheckFunc
+	acf           http.AliveCheckFunc
+	rcf           http.ReadyCheckFunc
 	termSig       chan os.Signal
 	sighupHandler func()
 }
@@ -46,7 +47,8 @@ func New(name, version string, oo ...OptionFunc) (*Service, error) {
 
 	s := Service{
 		cps:           []Component{},
-		hcf:           http.DefaultHealthCheck,
+		acf:           http.DefaultAliveCheck,
+		rcf:           http.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),
 		sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
 		middlewares:   []http.MiddlewareFunc{},
@@ -189,8 +191,12 @@ func (s *Service) createHTTPComponent() (Component, error) {
 		http.Port(int(portVal)),
 	}
 
-	if s.hcf != nil {
-		options = append(options, http.HealthCheck(s.hcf))
+	if s.acf != nil {
+		options = append(options, http.AliveCheck(s.acf))
+	}
+
+	if s.rcf != nil {
+		options = append(options, http.ReadyCheck(s.rcf))
 	}
 
 	if s.routes != nil {

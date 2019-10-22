@@ -80,25 +80,49 @@ func TestSetMiddlewares(t *testing.T) {
 	}
 }
 
-func TestSetHealthCheck(t *testing.T) {
+func TestSetLivenessCheck(t *testing.T) {
 	tests := []struct {
 		name    string
-		hcf     HealthCheckFunc
+		acf     AliveCheckFunc
 		wantErr bool
 	}{
-		{"success", func() HealthStatus { return Healthy }, false},
+		{"success", func() AliveStatus { return Alive }, false},
 		{"error for no routes", nil, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := Component{}
-			err := HealthCheck(tt.hcf)(&s)
+			err := AliveCheck(tt.acf)(&s)
 			if tt.wantErr {
 				assert.Error(t, err)
-				assert.Nil(t, s.hc)
+				assert.Nil(t, s.ac)
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, s.hc)
+				assert.NotNil(t, s.ac)
+			}
+		})
+	}
+}
+
+func TestSetReadinessCheck(t *testing.T) {
+	tests := []struct {
+		name    string
+		rcf     ReadyCheckFunc
+		wantErr bool
+	}{
+		{"success", func() ReadyStatus { return Ready }, false},
+		{"error for no routes", nil, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Component{}
+			err := ReadyCheck(tt.rcf)(&s)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, s.rc)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, s.rc)
 			}
 		})
 	}

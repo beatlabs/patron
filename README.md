@@ -340,3 +340,19 @@ This authenticator can then be used to set up routes with authentication.
 The following authenticator is available:
 
 - API key authenticator, see examples
+
+## HTTP lifecycle endpoints
+
+When creating a new HTTP component, Patron will automatically create a liveness and readiness route, which can be used to know the lifecycle of the application:
+
+```
+# liveness
+GET /alive
+
+# readiness
+GET /ready
+```
+
+Both can return either a `200 OK` or a `503 Service Unavailable` status code (default: `200 OK`).
+
+It is possible to customize their behaviour by injecting an `http.AliveCheck` and/or an `http.ReadyCheck` `OptionFunc` to the HTTP component constructor.

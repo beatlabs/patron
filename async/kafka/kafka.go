@@ -13,7 +13,7 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -112,6 +112,8 @@ func (f *Factory) Create() (async.Consumer, error) {
 		cfg:         config,
 		contentType: f.ct,
 		buffer:      1000,
+		// make sure we always use a default decoder
+		dec: async.DetermineDecoder,
 	}
 
 	if f.group != "" {
@@ -123,13 +125,14 @@ func (f *Factory) Create() (async.Consumer, error) {
 	for _, o := range f.oo {
 		err = o(c)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Could not apply OptionFunc '%v' to consumer : %w", o, err)
 		}
 	}
 
 	return c, nil
 }
 
+// consumer members can be injected or overwritten with the usage of OptionFunc arguments
 type consumer struct {
 	brokers     []string
 	topic       string
@@ -141,6 +144,7 @@ type consumer struct {
 	cnl         context.CancelFunc
 	cg          sarama.ConsumerGroup
 	ms          sarama.Consumer
+	dec         func(contentType string) (encoding.DecodeRawFunc, error)
 }
 
 // Consume starts consuming messages from a Kafka topic.
@@ -207,7 +211,7 @@ func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan err
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get partitions")
 	}
-	// When kafka cluster is not fully initialized, we may get 0 partions.
+	// When kafka cluster is not fully initialized, we may get 0 partitions.
 	if len(pcs) == 0 {
 		return nil, nil, errors.New("got 0 partitions")
 	}
@@ -253,22 +257,12 @@ func claimMessage(ctx context.Context, c *consumer, msg *sarama.ConsumerMessage)
 		trace.KafkaConsumerComponent,
 		mapHeader(msg.Headers),
 	)
-	var ct string
-	var err error
-	if c.contentType != "" {
-		ct = c.contentType
-	} else {
-		ct, err = determineContentType(msg.Headers)
-		if err != nil {
-			trace.SpanError(sp)
-			return nil, errors.Wrap(err, "failed to determine content type")
-		}
-	}
 
-	dec, err := async.DetermineDecoder(ct)
+	dec, err := determineDecoder(c, msg, sp)
+
 	if err != nil {
 		trace.SpanError(sp)
-		return nil, errors.Wrapf(err, "failed to determine decoder for %s", ct)
+		return nil, errors.Wrapf(err, "failed to determine decoder for %v with consumer %v", msg, c)
 	}
 
 	chCtx = log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": uuid.New().String()}))
@@ -279,6 +273,22 @@ func claimMessage(ctx context.Context, c *consumer, msg *sarama.ConsumerMessage)
 		span: sp,
 		msg:  msg,
 	}, nil
+}
+
+func determineDecoder(c *consumer, msg *sarama.ConsumerMessage, sp opentracing.Span) (encoding.DecodeRawFunc, error) {
+
+	var ct string
+	var err error
+	if c.contentType != "" {
+		ct = c.contentType
+	} else {
+		ct, err = determineContentType(msg.Headers)
+		if err != nil {
+			log.Debugf("failed to determine content type from  %v", msg.Headers)
+		}
+	}
+
+	return c.dec(ct)
 }
 
 // Close handles closing consumer.

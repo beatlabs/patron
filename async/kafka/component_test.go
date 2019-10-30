@@ -203,7 +203,7 @@ func testMessageClaim(t *testing.T, data testingData) {
 	factory, err := NewComponentBuilder(context.Background(), "name", "topic", "0.0.0.0:9092").
 		SetValueDecoder(data.decoder).
 		SetContentType(data.consumerContentType).
-		CreateFactory()
+		New()
 
 	if err != nil {
 		t.Fatalf("Could not create factory %v", err)

@@ -82,7 +82,7 @@ func (cc *consumerFactoryBuilder) checkValues() error {
 
 }
 
-func (cc *consumerFactoryBuilder) CreateFactory() (*Factory, error) {
+func (cc *consumerFactoryBuilder) New() (*Factory, error) {
 	if err := cc.checkValues(); err != nil {
 		return nil, fmt.Errorf("Could not build consumer from %v ,\n %w", cc, err)
 	}

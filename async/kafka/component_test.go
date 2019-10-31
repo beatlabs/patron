@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	go_json "encoding/json"
-	"errors"
 	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
@@ -205,15 +204,11 @@ func testMessageClaim(t *testing.T, data testingData) {
 		SetContentType(data.consumerContentType).
 		New()
 
-	if err != nil {
-		t.Fatalf("Could not create factory %v", err)
-	}
+	assert.NoError(t, err, "Could not create factory")
 
 	c, err := factory.Create()
 
-	if err != nil {
-		t.Fatalf("Could not create component %v", err)
-	}
+	assert.NoError(t, err, "Could not create component")
 
 	// do a dirty cast for the sake of facilitating the test
 	kc := reflect.ValueOf(c).Elem().Interface().(consumer)
@@ -242,7 +237,7 @@ func testMessageClaim(t *testing.T, data testingData) {
 
 func erroringDecoder(contentType string) (encoding.DecodeRawFunc, error) {
 	return func(data []byte, v interface{}) error {
-		return errors.New("Predefined Decoder Error")
+		return fmt.Errorf("Predefined Decoder Error for %s", contentType)
 	}, nil
 }
 
@@ -259,7 +254,7 @@ func stringToSliceDecoder(contentType string) (encoding.DecodeRawFunc, error) {
 				*arr = append(*arr, j)
 			}
 		} else {
-			return errors.New(fmt.Sprintf("Provided object is not valid for splitting data into a slice '%v'", v))
+			return fmt.Errorf("Provided object is not valid for splitting data into a slice '%v'", v)
 		}
 		return nil
 	}, nil
@@ -298,7 +293,7 @@ var process = func(counter *counter, data *testingData) func(message async.Messa
 		}
 		if !reflect.DeepEqual(values, data.dmsgs[counter.messageCount]) {
 			counter.resultErr++
-			return errors.New(fmt.Sprintf("Could not verify equality for '%v' and '%v' at index '%d'", values, data.dmsgs[counter.messageCount], counter.messageCount))
+			return fmt.Errorf("Could not verify equality for '%v' and '%v' at index '%d'", values, data.dmsgs[counter.messageCount], counter.messageCount)
 		}
 		counter.messageCount++
 		return nil

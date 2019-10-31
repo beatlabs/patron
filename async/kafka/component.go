@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/log"
@@ -20,7 +19,6 @@ type consumerFactoryBuilder struct {
 	ct      string
 	topic   string
 	brokers string
-	cfg     sarama.Config
 	process func(message async.Message) error
 	dec     func(contentType string) (encoding.DecodeRawFunc, error)
 }

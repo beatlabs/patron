@@ -292,7 +292,11 @@ func determineDecoder(c *consumer, msg *sarama.ConsumerMessage, sp opentracing.S
 		}
 	}
 
-	return c.dec(ct)
+	if c.dec != nil {
+		return c.dec(ct)
+	}
+
+	return async.DetermineDecoder(ct)
 }
 
 // Close handles closing consumer.

@@ -250,9 +250,7 @@ func voidDecoder(contentType string) (encoding.DecodeRawFunc, error) {
 func stringToSliceDecoder(contentType string) (encoding.DecodeRawFunc, error) {
 	return func(data []byte, v interface{}) error {
 		if arr, ok := v.(*[]string); ok {
-			for _, j := range strings.Split(string(data), " ") {
-				*arr = append(*arr, j)
-			}
+			*arr = append(*arr, strings.Split(string(data), " ")...)
 		} else {
 			return fmt.Errorf("Provided object is not valid for splitting data into a slice '%v'", v)
 		}

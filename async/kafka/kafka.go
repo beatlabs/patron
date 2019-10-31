@@ -44,14 +44,17 @@ type message struct {
 	dec  encoding.DecodeRawFunc
 }
 
+// Context returns the context encapsulated in the message
 func (m *message) Context() context.Context {
 	return m.ctx
 }
 
+// Decode will implement the decoding logic in order to transform the message bytes to a business entity
 func (m *message) Decode(v interface{}) error {
 	return m.dec(m.msg.Value, v)
 }
 
+// Ack sends aknowledges the message has been processed
 func (m *message) Ack() error {
 	if m.sess != nil {
 		m.sess.MarkMessage(m.msg, "")
@@ -60,6 +63,7 @@ func (m *message) Ack() error {
 	return nil
 }
 
+// Nack signals the producing side an erroring condition or inconsistency
 func (m *message) Nack() error {
 	trace.SpanError(m.span)
 	return nil

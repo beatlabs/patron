@@ -17,14 +17,14 @@ import (
 )
 
 type testingData struct {
-	counter             Counter
+	counter             counter
 	msgs                []*sarama.ConsumerMessage
 	decoder             func(contentType string) (encoding.DecodeRawFunc, error)
 	consumerContentType string
 	dmsgs               [][]string
 }
 
-type Counter struct {
+type counter struct {
 	messageCount int
 	decodingErr  int
 	resultErr    int
@@ -36,7 +36,7 @@ func Test_DecodingMessage(t *testing.T) {
 	testingdata := []testingData{
 		// expect a decoding error , as we are injecting an erroring decoder implementation
 		{
-			counter: Counter{
+			counter: counter{
 				decodingErr: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
@@ -47,7 +47,7 @@ func Test_DecodingMessage(t *testing.T) {
 		// we expect one error during the claimMessage step ,
 		// because our test jsonDecoder expects a contentType in the header or the consumer
 		{
-			counter: Counter{
+			counter: counter{
 				claimErr: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
@@ -57,7 +57,7 @@ func Test_DecodingMessage(t *testing.T) {
 		},
 		// correctly set up content type for the test jsonDecoder with message header
 		{
-			counter: Counter{
+			counter: counter{
 				messageCount: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
@@ -71,7 +71,7 @@ func Test_DecodingMessage(t *testing.T) {
 		},
 		// correctly set up content type for the test jsonDecoder with consumer contentType
 		{
-			counter: Counter{
+			counter: counter{
 				messageCount: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
@@ -84,7 +84,7 @@ func Test_DecodingMessage(t *testing.T) {
 		// wrongly set up content type for the hardcoded json decoder
 		// with consumer contentType overriding message header contentType
 		{
-			counter: Counter{
+			counter: counter{
 				claimErr: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
@@ -99,7 +99,7 @@ func Test_DecodingMessage(t *testing.T) {
 		// correctly set up content type for the hardcoded json decoder
 		// with consumer contentType overriding message header contentType
 		{
-			counter: Counter{
+			counter: counter{
 				messageCount: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
@@ -113,7 +113,7 @@ func Test_DecodingMessage(t *testing.T) {
 		},
 		// correctly set up content type for the hardcoded json decoder with message header contentType
 		{
-			counter: Counter{
+			counter: counter{
 				messageCount: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
@@ -126,7 +126,7 @@ func Test_DecodingMessage(t *testing.T) {
 		},
 		// correctly set up custom decoder
 		{
-			counter: Counter{
+			counter: counter{
 				messageCount: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
@@ -136,7 +136,7 @@ func Test_DecodingMessage(t *testing.T) {
 			decoder: stringToSliceDecoder,
 		},
 		{
-			counter: Counter{
+			counter: counter{
 				messageCount: 3,
 				resultErr:    1,
 				decodingErr:  2,
@@ -198,7 +198,7 @@ func testMessageClaim(t *testing.T, data testingData) {
 
 	ctx := context.Background()
 
-	counter := Counter{}
+	counter := counter{}
 
 	factory, err := NewComponentBuilder(context.Background(), "name", "topic", "0.0.0.0:9092").
 		SetValueDecoder(data.decoder).
@@ -287,7 +287,7 @@ func combinedDecoder(contentType string) (encoding.DecodeRawFunc, error) {
 	}
 }
 
-var process = func(counter *Counter, data *testingData) func(message async.Message) error {
+var process = func(counter *counter, data *testingData) func(message async.Message) error {
 	return func(message async.Message) error {
 		// we always assume we will decode to a slice of strings
 		values := []string{}

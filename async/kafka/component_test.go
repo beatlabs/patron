@@ -1,7 +1,9 @@
 package kafka
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	go_json "encoding/json"
 	"fmt"
 	"github.com/Shopify/sarama"
@@ -16,11 +18,11 @@ import (
 )
 
 type testingData struct {
-	counter             counter
-	msgs                []*sarama.ConsumerMessage
-	decoder             func(contentType string) (encoding.DecodeRawFunc, error)
-	consumerContentType string
-	dmsgs               [][]string
+	counter                counter
+	msgs                   []*sarama.ConsumerMessage
+	decoder                encoding.DecodeRawFunc
+	dmsgs                  [][]string
+	combinedDecoderVersion int32
 }
 
 type counter struct {
@@ -43,32 +45,17 @@ func Test_DecodingMessage(t *testing.T) {
 			},
 			decoder: erroringDecoder,
 		},
-		// we expect one error during the claimMessage step ,
-		// because our test jsonDecoder expects a contentType in the header or the consumer
+		// the json decoder is not compatible with the message raw string format
 		{
 			counter: counter{
-				claimErr: 1,
+				decodingErr: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{}),
+				saramaConsumerMessage("value", &sarama.RecordHeader{}),
 			},
-			decoder: jsonDecoder,
+			decoder: go_json.Unmarshal,
 		},
-		// correctly set up content type for the test jsonDecoder with message header
-		{
-			counter: counter{
-				messageCount: 1,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte("json"),
-				}),
-			},
-			dmsgs:   [][]string{{"value"}},
-			decoder: jsonDecoder,
-		},
-		// correctly set up content type for the test jsonDecoder with consumer contentType
+		// correctly set up value for the jsonDecoder
 		{
 			counter: counter{
 				messageCount: 1,
@@ -76,39 +63,41 @@ func Test_DecodingMessage(t *testing.T) {
 			msgs: []*sarama.ConsumerMessage{
 				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{}),
 			},
-			dmsgs:               [][]string{{"value", "key"}},
-			decoder:             jsonDecoder,
-			consumerContentType: "json",
+			dmsgs:   [][]string{{"value", "key"}},
+			decoder: go_json.Unmarshal,
 		},
-		// wrongly set up content type for the hardcoded json decoder
-		// with consumer contentType overriding message header contentType
-		{
-			counter: counter{
-				claimErr: 1,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte(json.Type),
-				}),
-			},
-			dmsgs:               [][]string{{"value", "key"}},
-			consumerContentType: "json",
-		},
-		// correctly set up content type for the hardcoded json decoder
-		// with consumer contentType overriding message header contentType
+		// verify positive use of the json as a default decoder
 		{
 			counter: counter{
 				messageCount: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte("json"),
-				}),
+				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{}),
 			},
-			dmsgs:               [][]string{{"value", "key"}},
-			consumerContentType: json.Type,
+			dmsgs: [][]string{{"value", "key"}},
+		},
+		// verify negative use of the json as a default decoder
+		{
+			counter: counter{
+				decodingErr: 1,
+			},
+			msgs: []*sarama.ConsumerMessage{
+				saramaConsumerMessage("key value", &sarama.RecordHeader{}),
+			},
+		},
+		// use of the jsonDecoder with multiple messages
+		{
+			counter: counter{
+				decodingErr:  1,
+				messageCount: 2,
+			},
+			msgs: []*sarama.ConsumerMessage{
+				saramaConsumerMessage("[\"key\"]", &sarama.RecordHeader{}),
+				saramaConsumerMessage("wrong json", &sarama.RecordHeader{}),
+				saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{}),
+			},
+			dmsgs:   [][]string{{"key"}, {"value"}},
+			decoder: go_json.Unmarshal,
 		},
 		// correctly set up content type for the hardcoded json decoder with message header contentType
 		{
@@ -123,7 +112,7 @@ func Test_DecodingMessage(t *testing.T) {
 			},
 			dmsgs: [][]string{{"value", "key"}},
 		},
-		// correctly set up custom decoder
+		// correctly set up custom string decoder
 		{
 			counter: counter{
 				messageCount: 1,
@@ -134,6 +123,8 @@ func Test_DecodingMessage(t *testing.T) {
 			dmsgs:   [][]string{{"key", "value"}},
 			decoder: stringToSliceDecoder,
 		},
+		// exotic decoder implementation as an example of consuming messages with different schema
+		// the approach is an avro like one, where the first byte will point to the right decoder implementation
 		{
 			counter: counter{
 				messageCount: 3,
@@ -142,32 +133,17 @@ func Test_DecodingMessage(t *testing.T) {
 			},
 			msgs: []*sarama.ConsumerMessage{
 				// will use json decoder based on the message header but fail due to bad json
-				saramaConsumerMessage("\"key\" \"value\"]", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte("json"),
-				}),
+				versionedConsumerMessage("\"key\" \"value\"]", &sarama.RecordHeader{}, 1),
 				// will use json decoder based on the message header
-				saramaConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte("json"),
-				}),
+				versionedConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{}, 1),
 				// will fail at the result level due to the wrong message header, string instead of json
-				saramaConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte("string"),
-				}),
+				versionedConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{}, 2),
 				// will use void decoder because there is no message header
-				saramaConsumerMessage("any string ... ", &sarama.RecordHeader{}),
+				versionedConsumerMessage("any string ... ", &sarama.RecordHeader{}, 99),
 				// will produce error due to the content type invoking the erroringDecoder
-				saramaConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte("error"),
-				}),
+				versionedConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{}, 9),
 				// will use string decoder based on the message header
-				saramaConsumerMessage("key value", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte("string"),
-				}),
+				versionedConsumerMessage("key value", &sarama.RecordHeader{}, 2),
 			},
 			dmsgs:   [][]string{{"key", "value"}, {}, {"key", "value"}},
 			decoder: combinedDecoder,
@@ -181,11 +157,22 @@ func Test_DecodingMessage(t *testing.T) {
 }
 
 func saramaConsumerMessage(value string, header *sarama.RecordHeader) *sarama.ConsumerMessage {
+	return versionedConsumerMessage(value, header, 0)
+}
+
+func versionedConsumerMessage(value string, header *sarama.RecordHeader, version uint8) *sarama.ConsumerMessage {
+
+	bytes := []byte(value)
+
+	if version > 0 {
+		bytes = append([]byte{version}, bytes...)
+	}
+
 	return &sarama.ConsumerMessage{
 		Topic:          "TEST_TOPIC",
 		Partition:      0,
 		Key:            []byte("key"),
-		Value:          []byte(value),
+		Value:          bytes,
 		Offset:         0,
 		Timestamp:      time.Now(),
 		BlockTimestamp: time.Now(),
@@ -201,7 +188,6 @@ func testMessageClaim(t *testing.T, data testingData) {
 
 	factory, err := NewComponentBuilder(context.Background(), "name", "topic", "0.0.0.0:9092").
 		SetValueDecoder(data.decoder).
-		SetContentType(data.consumerContentType).
 		New()
 
 	assert.NoError(t, err, "Could not create factory")
@@ -215,11 +201,16 @@ func testMessageClaim(t *testing.T, data testingData) {
 
 	// claim and process the messages and update the counters accordingly
 	for _, km := range data.msgs {
+
+		if data.combinedDecoderVersion != 0 {
+			km.Value = append([]byte{byte(data.combinedDecoderVersion)}, km.Value...)
+
+		}
+
 		msg, err := claimMessage(ctx, &kc, km)
 
 		if err != nil {
 			counter.claimErr++
-			println(fmt.Sprintf("Could not claim message %v : %v", msg, err))
 			continue
 		}
 
@@ -229,54 +220,42 @@ func testMessageClaim(t *testing.T, data testingData) {
 		}
 	}
 
-	assert.Equal(t, counter, data.counter)
+	assert.Equal(t, data.counter, counter)
 
 }
 
 // some naive decoder implementations for testing
 
-func erroringDecoder(contentType string) (encoding.DecodeRawFunc, error) {
-	return func(data []byte, v interface{}) error {
-		return fmt.Errorf("Predefined Decoder Error for %s", contentType)
-	}, nil
+func erroringDecoder(data []byte, v interface{}) error {
+	return fmt.Errorf("Predefined Decoder Error for message %s", string(data))
 }
 
-func voidDecoder(contentType string) (encoding.DecodeRawFunc, error) {
-	return func(data []byte, v interface{}) error {
-		return nil
-	}, nil
+func VoidDecoder(data []byte, v interface{}) error {
+	return nil
 }
 
-func stringToSliceDecoder(contentType string) (encoding.DecodeRawFunc, error) {
-	return func(data []byte, v interface{}) error {
-		if arr, ok := v.(*[]string); ok {
-			*arr = append(*arr, strings.Split(string(data), " ")...)
-		} else {
-			return fmt.Errorf("Provided object is not valid for splitting data into a slice '%v'", v)
-		}
-		return nil
-	}, nil
-}
-
-func jsonDecoder(contentType string) (encoding.DecodeRawFunc, error) {
-	switch contentType {
-	case "json":
-		return go_json.Unmarshal, nil
-	default:
-		return nil, fmt.Errorf("Cannot use json decoder for '%s'", contentType)
+func stringToSliceDecoder(data []byte, v interface{}) error {
+	if arr, ok := v.(*[]string); ok {
+		*arr = append(*arr, strings.Split(string(data), " ")...)
+	} else {
+		return fmt.Errorf("Provided object is not valid for splitting data into a slice '%v'", v)
 	}
+	return nil
 }
 
-func combinedDecoder(contentType string) (encoding.DecodeRawFunc, error) {
-	switch contentType {
-	case "json":
-		return go_json.Unmarshal, nil
-	case "string":
-		return stringToSliceDecoder(contentType)
-	case "error":
-		return erroringDecoder(contentType)
+func combinedDecoder(data []byte, v interface{}) error {
+
+	version, _ := binary.ReadUvarint(bytes.NewBuffer(data[:1]))
+
+	switch version {
+	case 1:
+		return go_json.Unmarshal(data[1:], v)
+	case 2:
+		return stringToSliceDecoder(data[1:], v)
+	case 9:
+		return erroringDecoder(data[1:], v)
 	default:
-		return voidDecoder(contentType)
+		return VoidDecoder(data[1:], v)
 	}
 }
 
@@ -289,7 +268,7 @@ var process = func(counter *counter, data *testingData) func(message async.Messa
 			counter.decodingErr++
 			return fmt.Errorf("Error encountered while decoding message from source [%v] : %v", message, err)
 		}
-		if !reflect.DeepEqual(values, data.dmsgs[counter.messageCount]) {
+		if !reflect.DeepEqual(data.dmsgs[counter.messageCount], values) {
 			counter.resultErr++
 			return fmt.Errorf("Could not verify equality for '%v' and '%v' at index '%d'", values, data.dmsgs[counter.messageCount], counter.messageCount)
 		}

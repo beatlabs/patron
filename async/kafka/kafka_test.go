@@ -2,10 +2,8 @@ package kafka
 
 import (
 	"context"
-	"testing"
-	"time"
-
 	"github.com/beatlabs/patron/async"
+	"testing"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
@@ -57,7 +55,7 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, "", tt.args.topic, tt.args.group, tt.args.brokers, tt.args.options...)
+			got, err := New(tt.args.name, tt.args.topic, tt.args.group, tt.args.brokers, tt.args.options...)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)
@@ -85,7 +83,6 @@ func TestFactory_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			f := &Factory{
 				name:    "test",
-				ct:      "",
 				topic:   "topic",
 				brokers: []string{"192.168.1.1"},
 				oo:      tt.fields.oo,
@@ -201,34 +198,23 @@ func (m *mockConsumerSession) MarkMessage(msg *sarama.ConsumerMessage, metadata 
 func (m *mockConsumerSession) Context() context.Context                                 { return nil }
 
 func TestHandler_ConsumeClaim(t *testing.T) {
-	msgs := []*sarama.ConsumerMessage{
-		{
-			Topic:          "TEST_TOPIC",
-			Partition:      0,
-			Key:            []byte("key"),
-			Value:          []byte("value"),
-			Offset:         0,
-			Timestamp:      time.Now(),
-			BlockTimestamp: time.Now(),
-		},
-	}
 
 	tests := []struct {
-		name        string
-		msgs        []*sarama.ConsumerMessage
-		contentType string
-		error       string
-		wantErr     bool
+		name    string
+		msgs    []*sarama.ConsumerMessage
+		error   string
+		wantErr bool
 	}{
-		{"success", msgs, json.Type, "", false},
-		{"failure decoding", msgs, "mock", "failed to determine decoder for mock", true},
-		{"failure content", msgs, "", "failed to determine content type", true},
+		{"success", saramaConsumerMessages(json.Type), "", false},
+		{"failure decoding", saramaConsumerMessages("mock"), "failed to determine decoder for mock", true},
+		{"failure content", saramaConsumerMessages(""), "failed to determine content type", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			chMsg := make(chan async.Message, 1)
-			h := handler{messages: chMsg, consumer: &consumer{contentType: tt.contentType}}
+			h := handler{messages: chMsg, consumer: &consumer{}}
+
 			err := h.ConsumeClaim(&mockConsumerSession{}, &mockConsumerClaim{tt.msgs})
 
 			if tt.wantErr {
@@ -242,8 +228,17 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 	}
 }
 
+func saramaConsumerMessages(ct string) []*sarama.ConsumerMessage {
+	return []*sarama.ConsumerMessage{
+		saramaConsumerMessage("value", &sarama.RecordHeader{
+			Key:   []byte(encoding.ContentTypeHeader),
+			Value: []byte(ct),
+		}),
+	}
+}
+
 func TestConsumer_ConsumeFailedBroker(t *testing.T) {
-	f, err := New("name", "application/json", "topic", "group", []string{"1", "2"})
+	f, err := New("name", "topic", "group", []string{"1", "2"})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)
@@ -267,7 +262,7 @@ func TestConsumer_ConsumeWithGroup(t *testing.T) {
 			SetHighWaterMark("TOPIC", 0, 14),
 	})
 
-	f, err := New("name", "application/json", "TOPIC", "group", []string{broker.Addr()})
+	f, err := New("name", "TOPIC", "group", []string{broker.Addr()})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)
@@ -299,7 +294,7 @@ func TestConsumer_ConsumeWithoutGroup(t *testing.T) {
 			SetMessage(topic, 0, 9, sarama.StringEncoder("Foo")),
 	})
 
-	f, err := New("name", "application/json", topic, "", []string{broker.Addr()})
+	f, err := New("name", topic, "", []string{broker.Addr()})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)

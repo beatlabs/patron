@@ -16,11 +16,10 @@ type consumerFactoryBuilder struct {
 	ctx     context.Context
 	name    string
 	group   string
-	ct      string
 	topic   string
 	brokers string
 	process func(message async.Message) error
-	dec     func(contentType string) (encoding.DecodeRawFunc, error)
+	dec     encoding.DecodeRawFunc
 }
 
 // NewConsumerConfig will create a new basic configuration struct
@@ -39,12 +38,6 @@ func (cc *consumerFactoryBuilder) SetGroup(group string) *consumerFactoryBuilder
 	return cc
 }
 
-// SetContentType will set the content type for the kafka consumer
-func (cc *consumerFactoryBuilder) SetContentType(ct string) *consumerFactoryBuilder {
-	cc.ct = ct
-	return cc
-}
-
 // ProcessWith will set the processor for the incoming kafka messages
 func (cc *consumerFactoryBuilder) ProcessWith(process func(message async.Message) error) *consumerFactoryBuilder {
 	cc.process = process
@@ -53,7 +46,7 @@ func (cc *consumerFactoryBuilder) ProcessWith(process func(message async.Message
 
 // SetValueDecoder will provide a decoder for the value part of the kafka message
 // it should be expected to decode according to the processor
-func (cc *consumerFactoryBuilder) SetValueDecoder(dec func(contentType string) (encoding.DecodeRawFunc, error)) *consumerFactoryBuilder {
+func (cc *consumerFactoryBuilder) SetValueDecoder(dec encoding.DecodeRawFunc) *consumerFactoryBuilder {
 	cc.dec = dec
 	return cc
 }
@@ -86,7 +79,7 @@ func (cc *consumerFactoryBuilder) New() (*Factory, error) {
 	}
 
 	// Create Factory
-	return New(cc.name, cc.ct, cc.topic, cc.group, strings.Split(cc.brokers, ","),
+	return New(cc.name, cc.topic, cc.group, strings.Split(cc.brokers, ","),
 		// inject the decoder
 		func(c *consumer) error {
 			// apply the decoder only if it s not nil,

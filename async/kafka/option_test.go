@@ -54,7 +54,7 @@ func TestVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f, err := New("test", "", "topic", "group", []string{"test"})
+			f, err := New("test", "topic", "group", []string{"test"})
 			assert.NoError(t, err)
 			c, err := f.Create()
 			assert.NoError(t, err)

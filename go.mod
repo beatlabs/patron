@@ -1,7 +1,5 @@
 module github.com/beatlabs/patron
 
-go 1.13
-
 require (
 	github.com/Shopify/sarama v1.21.0
 	github.com/aws/aws-sdk-go v1.21.8
@@ -28,3 +26,5 @@ require (
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
 	golang.org/x/text v0.3.2 // indirect
 )
+
+go 1.13

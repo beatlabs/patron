@@ -284,7 +284,7 @@ func determineDecoder(c *consumer, msg *sarama.ConsumerMessage, sp opentracing.S
 	ct, err := determineContentType(msg.Headers)
 	if err != nil {
 		trace.SpanError(sp)
-		return nil, fmt.Errorf("failed to determine content type from message headers %v : %w", msg.Headers, err)
+		return nil, fmt.Errorf("failed to determine content type from message headers %v : %v", msg.Headers, err)
 	}
 
 	dec, err := async.DetermineDecoder(ct)

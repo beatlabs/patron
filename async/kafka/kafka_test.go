@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	go_json "encoding/json"
+	"encoding/json"
 	"fmt"
 	"github.com/beatlabs/patron/async"
 	"reflect"
@@ -14,7 +14,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/encoding/json"
+	patron_json "github.com/beatlabs/patron/encoding/json"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -62,7 +62,7 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, tt.args.topic, tt.args.group, tt.args.brokers, nil, tt.args.options...)
+			got, err := New(tt.args.name, tt.args.topic, tt.args.group, tt.args.brokers, tt.args.options...)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)
@@ -151,7 +151,7 @@ func Test_message(t *testing.T) {
 	msg := message{
 		sess: sess,
 		ctx:  ctx,
-		dec:  json.DecodeRaw,
+		dec:  patron_json.DecodeRaw,
 		span: sp,
 		msg:  cm,
 	}
@@ -212,7 +212,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		error   string
 		wantErr bool
 	}{
-		{"success", saramaConsumerMessages(json.Type), "", false},
+		{"success", saramaConsumerMessages(patron_json.Type), "", false},
 		{"failure decoding", saramaConsumerMessages("mock"), "failed to determine decoder for mock", true},
 		{"failure content", saramaConsumerMessages(""), "failed to determine content type", true},
 	}
@@ -245,7 +245,7 @@ func saramaConsumerMessages(ct string) []*sarama.ConsumerMessage {
 }
 
 func TestConsumer_ConsumeFailedBroker(t *testing.T) {
-	f, err := New("name", "topic", "group", []string{"1", "2"}, nil)
+	f, err := New("name", "topic", "group", []string{"1", "2"})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)
@@ -269,7 +269,7 @@ func TestConsumer_ConsumeWithGroup(t *testing.T) {
 			SetHighWaterMark("TOPIC", 0, 14),
 	})
 
-	f, err := New("name", "TOPIC", "group", []string{broker.Addr()}, nil)
+	f, err := New("name", "TOPIC", "group", []string{broker.Addr()})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)
@@ -301,7 +301,7 @@ func TestConsumer_ConsumeWithoutGroup(t *testing.T) {
 			SetMessage(topic, 0, 9, sarama.StringEncoder("Foo")),
 	})
 
-	f, err := New("name", topic, "", []string{broker.Addr()}, nil)
+	f, err := New("name", topic, "", []string{broker.Addr()})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)
@@ -354,7 +354,7 @@ func Test_DecodingMessage(t *testing.T) {
 			msgs: []*sarama.ConsumerMessage{
 				saramaConsumerMessage("value", &sarama.RecordHeader{}),
 			},
-			decoder: go_json.Unmarshal,
+			decoder: json.Unmarshal,
 		},
 		// correctly set up value for the jsonDecoder
 		{
@@ -365,26 +365,17 @@ func Test_DecodingMessage(t *testing.T) {
 				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{}),
 			},
 			dmsgs:   [][]string{{"value", "key"}},
-			decoder: go_json.Unmarshal,
+			decoder: json.Unmarshal,
 		},
-		// verify positive use of the json as a default decoder
+		// verify no decoder and no valid contentType
 		{
 			counter: eventCounter{
-				messageCount: 1,
+				claimErr: 1,
 			},
 			msgs: []*sarama.ConsumerMessage{
 				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{}),
 			},
 			dmsgs: [][]string{{"value", "key"}},
-		},
-		// verify negative use of the json as a default decoder
-		{
-			counter: eventCounter{
-				decodingErr: 1,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("key value", &sarama.RecordHeader{}),
-			},
 		},
 		// use of the jsonDecoder with multiple messages
 		{
@@ -398,7 +389,7 @@ func Test_DecodingMessage(t *testing.T) {
 				saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{}),
 			},
 			dmsgs:   [][]string{{"key"}, {"value"}},
-			decoder: go_json.Unmarshal,
+			decoder: json.Unmarshal,
 		},
 		// correctly set up content type for the hardcoded json decoder with message header contentType
 		{
@@ -408,7 +399,7 @@ func Test_DecodingMessage(t *testing.T) {
 			msgs: []*sarama.ConsumerMessage{
 				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{
 					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte(json.Type),
+					Value: []byte(patron_json.Type),
 				}),
 			},
 			dmsgs: [][]string{{"value", "key"}},
@@ -487,7 +478,7 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 
 	counter := eventCounter{}
 
-	factory, err := New("name", "topic", "group", []string{"0.0.0.0:9092"}, data.decoder)
+	factory, err := New("name", "topic", "group", []string{"0.0.0.0:9092"}, Decoder(data.decoder))
 
 	assert.NoError(t, err, "Could not create factory")
 
@@ -529,7 +520,7 @@ func erroringDecoder(data []byte, v interface{}) error {
 	return fmt.Errorf("Predefined Decoder Error for message %s", string(data))
 }
 
-func VoidDecoder(data []byte, v interface{}) error {
+func voidDecoder(data []byte, v interface{}) error {
 	return nil
 }
 
@@ -548,13 +539,13 @@ func combinedDecoder(data []byte, v interface{}) error {
 
 	switch version {
 	case 1:
-		return go_json.Unmarshal(data[1:], v)
+		return json.Unmarshal(data[1:], v)
 	case 2:
 		return stringToSliceDecoder(data[1:], v)
 	case 9:
 		return erroringDecoder(data[1:], v)
 	default:
-		return VoidDecoder(data[1:], v)
+		return voidDecoder(data[1:], v)
 	}
 }
 

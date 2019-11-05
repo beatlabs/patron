@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"github.com/beatlabs/patron/encoding"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -50,6 +51,14 @@ func Timeout(timeout time.Duration) OptionFunc {
 func Start(offset int64) OptionFunc {
 	return func(c *consumer) error {
 		c.cfg.Consumer.Offsets.Initial = offset
+		return nil
+	}
+}
+
+// Decoder option for injecting a specific decoder implementation
+func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
+	return func(c *consumer) error {
+		c.dec = dec
 		return nil
 	}
 }

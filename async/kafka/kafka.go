@@ -76,11 +76,14 @@ type Factory struct {
 	topic   string
 	group   string
 	brokers []string
+	dec     encoding.DecodeRawFunc
 	oo      []OptionFunc
 }
 
 // New constructor.
-func New(name, topic, group string, brokers []string, oo ...OptionFunc) (*Factory, error) {
+// if a nil dec is used, it will be replaced by a contentType aware decoder logic
+// Not very nice to handle nil arguments, a builder would be nicer, but leaving this for later as part of another issue
+func New(name, topic, group string, brokers []string, dec encoding.DecodeRawFunc, oo ...OptionFunc) (*Factory, error) {
 
 	if name == "" {
 		return nil, errors.New("name is required")
@@ -94,7 +97,7 @@ func New(name, topic, group string, brokers []string, oo ...OptionFunc) (*Factor
 		return nil, errors.New("topic is required")
 	}
 
-	return &Factory{name: name, topic: topic, group: group, brokers: brokers, oo: oo}, nil
+	return &Factory{name: name, topic: topic, group: group, brokers: brokers, dec: dec, oo: oo}, nil
 }
 
 // Create a new consumer.
@@ -115,6 +118,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 		topic:   f.topic,
 		cfg:     config,
 		buffer:  1000,
+		dec:     f.dec,
 	}
 
 	if f.group != "" {

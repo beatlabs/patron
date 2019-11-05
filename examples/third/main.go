@@ -78,7 +78,7 @@ func newKafkaComponent(name, broker, topic, group, amqpURL, amqpExc string) (*ka
 
 	kafkaCmp := kafkaComponent{}
 
-	cf, err := kafka.New(name, topic, group, []string{broker})
+	cf, err := kafka.New(name, topic, group, []string{broker}, nil)
 	if err != nil {
 		return nil, err
 	}

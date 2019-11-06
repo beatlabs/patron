@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/beatlabs/patron/encoding/json"
 	"os"
 	"time"
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/kafka"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace/amqp"

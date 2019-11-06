@@ -6,13 +6,13 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/beatlabs/patron/async"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/encoding"
 	patron_json "github.com/beatlabs/patron/encoding/json"
 	"github.com/opentracing/opentracing-go"
@@ -333,119 +333,147 @@ type eventCounter struct {
 	claimErr     int
 }
 
-func Test_DecodingMessage(t *testing.T) {
+func TestDecodingError(t *testing.T) {
 
-	testingdata := []decodingTestData{
-		// expect a decoding error , as we are injecting an erroring decoder implementation
-		{
-			counter: eventCounter{
-				decodingErr: 1,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{}),
-			},
-			decoder: erroringDecoder,
+	testData := decodingTestData{
+		counter: eventCounter{
+			decodingErr: 1,
 		},
-		// the json decoder is not compatible with the message raw string format
-		{
-			counter: eventCounter{
-				decodingErr: 1,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("value", &sarama.RecordHeader{}),
-			},
-			decoder: json.Unmarshal,
+		msgs: []*sarama.ConsumerMessage{
+			saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{}),
 		},
-		// correctly set up value for the jsonDecoder
-		{
-			counter: eventCounter{
-				messageCount: 1,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{}),
-			},
-			dmsgs:   [][]string{{"value", "key"}},
-			decoder: json.Unmarshal,
-		},
-		// verify no decoder and no valid contentType
-		{
-			counter: eventCounter{
-				claimErr: 1,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{}),
-			},
-			dmsgs: [][]string{{"value", "key"}},
-		},
-		// use of the jsonDecoder with multiple messages
-		{
-			counter: eventCounter{
-				decodingErr:  1,
-				messageCount: 2,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("[\"key\"]", &sarama.RecordHeader{}),
-				saramaConsumerMessage("wrong json", &sarama.RecordHeader{}),
-				saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{}),
-			},
-			dmsgs:   [][]string{{"key"}, {"value"}},
-			decoder: json.Unmarshal,
-		},
-		// correctly set up content type for the hardcoded json decoder with message header contentType
-		{
-			counter: eventCounter{
-				messageCount: 1,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte(patron_json.Type),
-				}),
-			},
-			dmsgs: [][]string{{"value", "key"}},
-		},
-		// correctly set up custom string decoder
-		{
-			counter: eventCounter{
-				messageCount: 1,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("key value", &sarama.RecordHeader{}),
-			},
-			dmsgs:   [][]string{{"key", "value"}},
-			decoder: stringToSliceDecoder,
-		},
-		// exotic decoder implementation as an example of consuming messages with different schema
-		// the approach is an avro like one, where the first byte will point to the right decoder implementation
-		{
-			counter: eventCounter{
-				messageCount: 3,
-				resultErr:    1,
-				decodingErr:  2,
-			},
-			msgs: []*sarama.ConsumerMessage{
-				// will use json decoder based on the message header but fail due to bad json
-				versionedConsumerMessage("\"key\" \"value\"]", &sarama.RecordHeader{}, 1),
-				// will use json decoder based on the message header
-				versionedConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{}, 1),
-				// will fail at the result level due to the wrong message header, string instead of json
-				versionedConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{}, 2),
-				// will use void decoder because there is no message header
-				versionedConsumerMessage("any string ... ", &sarama.RecordHeader{}, 99),
-				// will produce error due to the content type invoking the erroringDecoder
-				versionedConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{}, 9),
-				// will use string decoder based on the message header
-				versionedConsumerMessage("key value", &sarama.RecordHeader{}, 2),
-			},
-			dmsgs:   [][]string{{"key", "value"}, {}, {"key", "value"}},
-			decoder: combinedDecoder,
-		},
+		decoder: erroringDecoder,
 	}
 
-	for _, testdata := range testingdata {
-		testMessageClaim(t, testdata)
+	testMessageClaim(t, testData)
+}
+
+func TestIncompatibleDecoder(t *testing.T) {
+
+	testData := decodingTestData{
+		counter: eventCounter{
+			decodingErr: 1,
+		},
+		msgs: []*sarama.ConsumerMessage{
+			saramaConsumerMessage("value", &sarama.RecordHeader{}),
+		},
+		decoder: json.Unmarshal,
 	}
 
+	testMessageClaim(t, testData)
+}
+
+func TestJsonDecoder(t *testing.T) {
+
+	testData := decodingTestData{
+		counter: eventCounter{
+			messageCount: 1,
+		},
+		msgs: []*sarama.ConsumerMessage{
+			saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{}),
+		},
+		dmsgs:   [][]string{{"value", "key"}},
+		decoder: json.Unmarshal,
+	}
+
+	testMessageClaim(t, testData)
+}
+
+func TestNoDecoderNoContentType(t *testing.T) {
+
+	testData := decodingTestData{
+		counter: eventCounter{
+			claimErr: 1,
+		},
+		msgs: []*sarama.ConsumerMessage{
+			saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{}),
+		},
+		dmsgs: [][]string{{"value", "key"}},
+	}
+
+	testMessageClaim(t, testData)
+}
+
+func TestMultipleMessagesJsonDecoder(t *testing.T) {
+
+	testData := decodingTestData{
+		counter: eventCounter{
+			decodingErr:  1,
+			messageCount: 2,
+		},
+		msgs: []*sarama.ConsumerMessage{
+			saramaConsumerMessage("[\"key\"]", &sarama.RecordHeader{}),
+			saramaConsumerMessage("wrong json", &sarama.RecordHeader{}),
+			saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{}),
+		},
+		dmsgs:   [][]string{{"key"}, {"value"}},
+		decoder: json.Unmarshal,
+	}
+
+	testMessageClaim(t, testData)
+}
+
+func TestDefaultDecoder(t *testing.T) {
+
+	testData := decodingTestData{
+		counter: eventCounter{
+			messageCount: 1,
+		},
+		msgs: []*sarama.ConsumerMessage{
+			saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{
+				Key:   []byte(encoding.ContentTypeHeader),
+				Value: []byte(patron_json.Type),
+			}),
+		},
+		dmsgs: [][]string{{"value", "key"}},
+	}
+
+	testMessageClaim(t, testData)
+}
+
+func TestStringDecoder(t *testing.T) {
+
+	testData := decodingTestData{
+		counter: eventCounter{
+			messageCount: 1,
+		},
+		msgs: []*sarama.ConsumerMessage{
+			saramaConsumerMessage("key value", &sarama.RecordHeader{}),
+		},
+		dmsgs:   [][]string{{"key", "value"}},
+		decoder: stringToSliceDecoder,
+	}
+
+	testMessageClaim(t, testData)
+}
+
+func TestExoticDecoder(t *testing.T) {
+
+	testData := decodingTestData{
+		counter: eventCounter{
+			messageCount: 3,
+			resultErr:    1,
+			decodingErr:  2,
+		},
+		msgs: []*sarama.ConsumerMessage{
+			// will use json decoder based on the message header but fail due to bad json
+			versionedConsumerMessage("\"key\" \"value\"]", &sarama.RecordHeader{}, 1),
+			// will use json decoder based on the message header
+			versionedConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{}, 1),
+			// will fail at the result level due to the wrong message header, string instead of json
+			versionedConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{}, 2),
+			// will use void decoder because there is no message header
+			versionedConsumerMessage("any string ... ", &sarama.RecordHeader{}, 99),
+			// will produce error due to the content type invoking the erroringDecoder
+			versionedConsumerMessage("[\"key\",\"value\"]", &sarama.RecordHeader{}, 9),
+			// will use string decoder based on the message header
+			versionedConsumerMessage("key value", &sarama.RecordHeader{}, 2),
+		},
+		dmsgs:   [][]string{{"key", "value"}, {}, {"key", "value"}},
+		decoder: combinedDecoder,
+	}
+
+	testMessageClaim(t, testData)
 }
 
 func saramaConsumerMessage(value string, header *sarama.RecordHeader) *sarama.ConsumerMessage {

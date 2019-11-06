@@ -1,10 +1,11 @@
 package kafka
 
 import (
-	"github.com/beatlabs/patron/encoding"
 	"time"
 
 	"github.com/Shopify/sarama"
+
+	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/errors"
 )
 

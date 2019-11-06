@@ -79,8 +79,6 @@ type Factory struct {
 }
 
 // New constructor.
-// if a nil dec is used, it will be replaced by a contentType aware decoder logic
-// Not very nice to handle nil arguments, a builder would be nicer, but leaving this for later as part of another issue
 func New(name, topic, group string, brokers []string, oo ...OptionFunc) (*Factory, error) {
 
 	if name == "" {

@@ -73,3 +73,17 @@ func TestStart(t *testing.T) {
 	err := Start(sarama.OffsetOldest)(&c)
 	assert.NoError(t, err)
 }
+
+func TestDecoder(t *testing.T) {
+	c := consumer{cfg: sarama.NewConfig()}
+	err := Decoder(func(data []byte, v interface{}) error {
+		return nil
+	})(&c)
+	assert.NoError(t, err)
+}
+
+func TestNilDecoder(t *testing.T) {
+	c := consumer{cfg: sarama.NewConfig()}
+	err := Decoder(nil)(&c)
+	assert.Error(t, err)
+}

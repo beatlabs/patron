@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
+	"runtime"
 	"strconv"
 
 	"github.com/Shopify/sarama"
@@ -125,7 +127,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 	for _, o := range f.oo {
 		err = o(c)
 		if err != nil {
-			return nil, fmt.Errorf("Could not apply OptionFunc '%v' to consumer : %v", o, err)
+			return nil, fmt.Errorf("Could not apply OptionFunc '%v' to consumer : %v", runtime.FuncForPC(reflect.ValueOf(o).Pointer()).Name(), err)
 		}
 	}
 

@@ -333,6 +333,21 @@ type eventCounter struct {
 	claimErr     int
 }
 
+func TestNilDecoderError(t *testing.T) {
+
+	testData := decodingTestData{
+		counter: eventCounter{
+			decodingErr: 1,
+		},
+		msgs: []*sarama.ConsumerMessage{
+			saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{}),
+		},
+		decoder: nil,
+	}
+
+	testMessageClaim(t, testData)
+}
+
 func TestDecodingError(t *testing.T) {
 
 	testData := decodingTestData{
@@ -511,6 +526,11 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 	assert.NoError(t, err, "Could not create factory")
 
 	c, err := factory.Create()
+
+	if data.decoder == nil {
+		assert.Error(t, err)
+		return
+	}
 
 	assert.NoError(t, err, "Could not create component")
 

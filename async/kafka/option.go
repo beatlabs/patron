@@ -58,12 +58,10 @@ func Start(offset int64) OptionFunc {
 
 // Decoder option for injecting a specific decoder implementation
 func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
-	if dec == nil {
-		return func(c *consumer) error {
-			return errors.New("Decoder provided in OptionFunc is 'nil'")
-		}
-	}
 	return func(c *consumer) error {
+		if dec == nil {
+			return errors.New("decoder is nil")
+		}
 		c.dec = dec
 		return nil
 	}

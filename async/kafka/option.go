@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+
+	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/errors"
 )
 
@@ -50,6 +52,17 @@ func Timeout(timeout time.Duration) OptionFunc {
 func Start(offset int64) OptionFunc {
 	return func(c *consumer) error {
 		c.cfg.Consumer.Offsets.Initial = offset
+		return nil
+	}
+}
+
+// Decoder option for injecting a specific decoder implementation
+func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
+	return func(c *consumer) error {
+		if dec == nil {
+			return errors.New("decoder is nil")
+		}
+		c.dec = dec
 		return nil
 	}
 }

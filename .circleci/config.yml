@@ -25,7 +25,8 @@ jobs:
             go get -u github.com/jstemmer/go-junit-report
             mkdir -p $TEST_RESULTS
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
-            go test ./... -cover -race -mod=vendor -coverprofile=coverage.txt -covermode=atomic | tee ${TEST_RESULTS}/go-test.out
+            # go test ./... -cover -race -mod=vendor -coverprofile=coverage.txt -covermode=atomic | tee ${TEST_RESULTS}/go-test.out
+            gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- ./... -cover -race -mod=vendor -coverprofile=coverage.txt -covermode=atomic
             bash <(curl -s https://codecov.io/bash)
 
       - store_artifacts:
@@ -33,4 +34,4 @@ jobs:
           destination: raw-test-output
 
       - store_test_results:
-          path: $TEST_RESULTS
+          path: /tmp/test-results

@@ -26,7 +26,7 @@ lint: fmtcheck
 deeplint: fmtcheck
 	golangci-lint run --enable-all --exclude-use-default=false -D dupl --build-tags integration
 
-ci: fmtcheck coverci
+ci: fmtcheck lint coverci
 
 modsync: fmtcheck
 	go mod tidy && \

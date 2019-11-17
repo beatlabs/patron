@@ -24,7 +24,7 @@ func TestRoutes(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"failure due to empty routes", args{rr: []phttp.Route{}}, false},
+		{"failure due to empty routes", args{rr: []phttp.Route{}}, true},
 		{"failure due to nil routes", args{rr: nil}, true},
 		{"success", args{rr: []phttp.Route{phttp.NewRoute("/", "GET", nil, true, nil)}}, false},
 	}

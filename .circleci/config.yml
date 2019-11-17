@@ -21,7 +21,9 @@ jobs:
       - run:
           name: Running with test coverage and send to codecov
           command: |
-            gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- ./... -cover -race -mod=vendor -coverprofile=coverage.txt -covermode=atomic
+            mkdir -p $TEST_RESULTS
+            gotestsum --junitfile gotestsum-report.xml -- ./... -cover -race -mod=vendor -coverprofile=coverage.txt -covermode=atomic
+            mv gotestsum-report.xml ${TEST_RESULTS}
             export CODECOV_TOKEN="b10270e6-8609-4707-88f1-57c904378989"
             bash <(curl -s https://codecov.io/bash)
 

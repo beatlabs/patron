@@ -12,24 +12,23 @@ jobs:
       - checkout
 
       - run:
-          name: Running linter
-          command: |
-            sudo chown circleci:circleci /go/bin
-            curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.18.0            
-            make lint
-
-      - run:
-          name: Running with test coverage and send to codecov
+          name: Prerequisites
           command: |
             mkdir -p $TEST_RESULTS
-            gotestsum --junitfile gotestsum-report.xml -- ./... -cover -race -mod=vendor -coverprofile=coverage.txt -covermode=atomic
+            sudo chown circleci:circleci /go/bin
+            curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.18.0
+
+      - run:
+          name: Running `make ci`
+          command: |
+            make ci
+
+      - run:
+          name: Upload test results and code coverage
+          command: |
             mv gotestsum-report.xml ${TEST_RESULTS}
             export CODECOV_TOKEN="b10270e6-8609-4707-88f1-57c904378989"
             bash <(curl -s https://codecov.io/bash)
-
-      - store_artifacts:
-          path: /tmp/test-results
-          destination: raw-test-output
 
       - store_test_results:
           path: /tmp/test-results

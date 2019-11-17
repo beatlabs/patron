@@ -3,13 +3,20 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
 
     environment:
       TEST_RESULTS: /tmp/test-results
 
     steps:
       - checkout
+
+      - run:
+          name: Running linter
+          command: |
+            sudo chown circleci:circleci /go/bin
+            curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.18.0            
+            make lint
 
       - run:
           name: Running with test coverage and send to codecov
@@ -20,13 +27,6 @@ jobs:
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
             go test ./... -cover -race -mod=vendor -coverprofile=coverage.txt -covermode=atomic | tee ${TEST_RESULTS}/go-test.out
             bash <(curl -s https://codecov.io/bash)
-
-      - run:
-          name: Running linter
-          command: |
-            sudo chown circleci:circleci /go/bin
-            curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.18.0            
-            make lint
 
       - store_artifacts:
           path: /tmp/test-results

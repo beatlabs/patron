@@ -9,7 +9,6 @@ jobs:
       TEST_RESULTS: /tmp/test-results
 
     steps:
-
       - checkout
 
       - run:
@@ -26,7 +25,7 @@ jobs:
           name: Running linter
           command: |
             sudo chown circleci:circleci /go/bin
-            curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.14.0
+            curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.18.0            
             golangci-lint run --exclude-use-default=false
 
       - store_artifacts:

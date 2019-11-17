@@ -23,6 +23,7 @@ func NewMessage(t string, b []byte) *Message {
 	return &Message{topic: t, body: b}
 }
 
+// NewMessageWithKey creates a new message with an associated key.
 func NewMessageWithKey(t string, b []byte, k string) (*Message, error) {
 	if k == "" {
 		return nil, errors.New("key string can not be null")
@@ -39,7 +40,7 @@ func NewJSONMessage(t string, d interface{}) (*Message, error) {
 	return &Message{topic: t, body: b}, nil
 }
 
-// NewJSONMessageWithKey creates a new message with a JSON encoded body and a message key
+// NewJSONMessageWithKey creates a new message with a JSON encoded body and a message key.
 func NewJSONMessageWithKey(t string, d interface{}, k string) (*Message, error) {
 	if k == "" {
 		return nil, errors.New("key string can not be null")

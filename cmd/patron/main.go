@@ -28,7 +28,7 @@ type genData struct {
 }
 
 var patronPackages = map[string]component{
-	"http": component{
+	"http": {
 		Import: "\"github.com/beatlabs/patron/sync\"\n\tsync_http \"github.com/beatlabs/patron/sync/http\"\n\t\"context\"\n\t\"net/http\"",
 		Code: `// Set up HTTP routes
 		routes := make([]sync_http.Route, 0)
@@ -39,7 +39,7 @@ var patronPackages = map[string]component{
 		
 		oo = append(oo, patron.Routes(routes))`,
 	},
-	"kafka": component{
+	"kafka": {
 		Import: "\"github.com/beatlabs/patron/async\"\n\t\"github.com/beatlabs/patron/async/kafka\"",
 		Code: `kafkaCf, err := kafka.New(name, "json.Type", "TOPIC", "GROUP", []string{"BROKER"})
 		if err != nil {
@@ -53,7 +53,7 @@ var patronPackages = map[string]component{
 		
 		oo = append(oo, patron.Components(kafkaCmp))`,
 	},
-	"amqp": component{
+	"amqp": {
 		Import: "\"github.com/beatlabs/patron/async\"\n\t\"github.com/beatlabs/patron/async/amqp\"",
 		Code: `amqpCf, err := amqp.New("URL", "QUEUE", "EXCHANGE")
 		if err != nil {
@@ -166,13 +166,14 @@ func nameFromModule(module string) string {
 }
 
 func packagesFromFlag(packages *string) ([]component, error) {
-	var cs []component
 
 	if packages == nil || *packages == "" {
-		return cs, nil
+		return []component{}, nil
 	}
 
 	ss := strings.Split(*packages, ",")
+
+	cs := make([]component, 0, len(ss))
 
 	for _, s := range ss {
 		cmp, ok := patronPackages[s]

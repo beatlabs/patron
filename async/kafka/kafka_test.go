@@ -166,7 +166,7 @@ func Test_message(t *testing.T) {
 
 func TestMapHeader(t *testing.T) {
 	hh := []*sarama.RecordHeader{
-		&sarama.RecordHeader{
+		{
 			Key:   []byte("key"),
 			Value: []byte("value"),
 		},

@@ -169,7 +169,7 @@ func (c *Component) processing(ctx context.Context) error {
 
 	cns, err := c.cf.Create()
 	if err != nil {
-		return fmt.Errorf("failed to create consumer : %w", err)
+		return errors.Wrap(err, "failed to create consumer")
 	}
 	defer func() {
 		err = cns.Close()
@@ -180,7 +180,7 @@ func (c *Component) processing(ctx context.Context) error {
 
 	chMsg, chErr, err := cns.Consume(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get consumer channels : %w", err)
+		return errors.Wrap(err, "failed to get consumer channels")
 	}
 
 	failCh := make(chan error)
@@ -195,7 +195,7 @@ func (c *Component) processing(ctx context.Context) error {
 				log.Debug("New message from consumer arrived")
 				c.processMessage(msg, failCh)
 			case errMsg := <-chErr:
-				failCh <- fmt.Errorf("an error occurred during message consumption : %w", errMsg)
+				failCh <- errors.Wrap(errMsg, "an error occurred during message consumption")
 				return
 			}
 		}
@@ -218,22 +218,22 @@ func (c *Component) processMessage(msg Message, ch chan error) {
 }
 
 var invalidFSError = errors.New("invalid failure strategy")
-var failureStrategyErrorMSG = "%s failed when executing failure strategy : %w"
+var failureStrategyErrorMSG = "%s failed when executing failure strategy"
 
 func (c *Component) executeFailureStrategy(msg Message, err error) error {
 	log.Errorf("failed to process message, failure strategy executed: %v", err)
 	switch c.failStrategy {
 	case NackExitStrategy:
-		return errors.Aggregate(err, fmt.Errorf("failed to NACK message %w", msg.Nack()))
+		return errors.Aggregate(err, errors.Wrap(msg.Nack(), "failed to NACK message"))
 	case NackStrategy:
 		err := msg.Nack()
 		if err != nil {
-			return fmt.Errorf(failureStrategyErrorMSG, "nack", err)
+			return errors.Wrap(err, fmt.Sprintf(failureStrategyErrorMSG, "nack"))
 		}
 	case AckStrategy:
 		err := msg.Ack()
 		if err != nil {
-			return fmt.Errorf(failureStrategyErrorMSG, "ack", err)
+			return errors.Wrap(err, fmt.Sprintf(failureStrategyErrorMSG, "ack"))
 		}
 	default:
 		return invalidFSError

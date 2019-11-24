@@ -111,7 +111,7 @@ func TestRun_ReturnsError(t *testing.T) {
 	err := run(t, context.Background(), &builder)
 
 	assert.Error(t, err)
-	assert.Equal(t, consumerError, errors.Unwrap(err))
+	assert.True(t, strings.Contains(err.Error(), consumerError.Error()))
 	assert.Equal(t, 0, builder.proc.execs)
 
 }
@@ -216,7 +216,7 @@ func TestRun_ProcessError_WithNackError(t *testing.T) {
 	err := run(t, ctx, &builder)
 
 	assert.Error(t, err)
-	assert.Equal(t, nackError, errors.Unwrap(err))
+	assert.True(t, strings.Contains(err.Error(), nackError.Error()))
 	assert.Equal(t, 1, builder.proc.execs)
 
 }
@@ -278,9 +278,7 @@ func TestRun_ProcessError_WithAckError(t *testing.T) {
 	err := run(t, ctx, &builder)
 
 	assert.Error(t, err)
-
 	assert.True(t, strings.Contains(err.Error(), ackError.Error()))
-	assert.Equal(t, ackError, errors.Unwrap(err))
 	assert.Equal(t, 1, builder.proc.execs)
 
 }
@@ -323,7 +321,7 @@ func TestRun_ConsumeError(t *testing.T) {
 	err := run(t, ctx, &builder)
 
 	assert.Error(t, err)
-	assert.Equal(t, consumerError, errors.Unwrap(err))
+	assert.True(t, strings.Contains(err.Error(), consumerError.Error()))
 	assert.Equal(t, 0, builder.proc.execs)
 
 }

@@ -410,8 +410,8 @@ func TestRun_Process_Error_InvalidStrategy(t *testing.T) {
 		WithProcessor(proc.Process).
 		WithConsumerFactory(&mockConsumerFactory{c: &cnr}).
 		Create()
-	cmp.failStrategy = 4
 	assert.NoError(t, err)
+	cmp.failStrategy = 4
 	ctx := context.Background()
 	cnr.chMsg <- &mockMessage{ctx: ctx}
 	err = cmp.Run(ctx)

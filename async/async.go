@@ -9,6 +9,28 @@ import (
 	"github.com/beatlabs/patron/errors"
 )
 
+// FailStrategy type definition.
+type FailStrategy int
+
+const (
+	// NackExitStrategy does not acknowledge the message and exits the application on error.
+	NackExitStrategy FailStrategy = iota
+	// NackStrategy does not acknowledge the message, leaving it for reprocessing, and continues.
+	NackStrategy
+	// AckStrategy acknowledges message and continues.
+	AckStrategy
+)
+
+var failStrategyValues = map[FailStrategy]string{NackExitStrategy: "NackExitStrategy", NackStrategy: "NackStrategy", AckStrategy: "AckStrategy"}
+
+// String converts the FailStrategy type to its appropriate string representation
+func (t FailStrategy) String() string {
+	if value, ok := failStrategyValues[t]; ok {
+		return value
+	}
+	return "N/A"
+}
+
 // ProcessorFunc definition of a async processor.
 type ProcessorFunc func(Message) error
 

@@ -9,6 +9,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+var propSetMSG = "property '%s' set for '%s'"
+
 var consumerErrors *prometheus.CounterVec
 
 func init() {
@@ -38,36 +40,102 @@ type Component struct {
 	retryWait    time.Duration
 }
 
-// New returns a new async component. The default behavior is to return a error of failure.
-// Use options to change the default behavior.
-func New(name string, p ProcessorFunc, cf ConsumerFactory, oo ...OptionFunc) (*Component, error) {
+// Builder gathers all required properties in order to construct a component
+type Builder struct {
+	errors       []error
+	name         string
+	proc         ProcessorFunc
+	failStrategy FailStrategy
+	cf           ConsumerFactory
+	retries      uint
+	retryWait    time.Duration
+}
 
+// New initializes a new builder for a component with the given name
+// by default the failStrategy will be NackExitStrategy
+func New(name string) *Builder {
+	var errs []error
 	if name == "" {
-		return nil, errors.New("name is required")
+		errs = append(errs, errors.New("name is required"))
 	}
-
-	if p == nil {
-		return nil, errors.New("work processor is required")
+	return &Builder{
+		name:   name,
+		errors: errs,
 	}
+}
 
+// WithProcessor sets the processing logic for the component
+// it will append an error to the builder if the processor is nil
+func (cb *Builder) WithProcessor(proc ProcessorFunc) *Builder {
+	if proc == nil {
+		cb.errors = append(cb.errors, errors.New("work processor is required"))
+	} else {
+		log.Infof(propSetMSG, "processor func", cb.name)
+		cb.proc = proc
+	}
+	return cb
+}
+
+// WithConsumerFactory defines the consumer factory to be used in order to create the appropriate consumer
+// it will append an error to the builder if the factory is nil
+func (cb *Builder) WithConsumerFactory(cf ConsumerFactory) *Builder {
 	if cf == nil {
-		return nil, errors.New("consumer is required")
+		cb.errors = append(cb.errors, errors.New("consumer is required"))
+	} else {
+		log.Infof(propSetMSG, "consumer factory", cb.name)
+		cb.cf = cf
+	}
+	return cb
+}
+
+// WithFailureStrategy defines the failure strategy to be used
+// default value is NackExitStrategy
+// it will append an error to the builder if the strategy is not one of the pre-defined ones
+func (cb *Builder) WithFailureStrategy(fs FailStrategy) *Builder {
+	if _, ok := failStrategyValues[fs]; ok {
+		log.Infof(propSetMSG, "failure strategy", cb.name)
+		cb.failStrategy = fs
+	} else {
+		cb.errors = append(cb.errors, errors.New("invalid strategy provided"))
+	}
+	return cb
+}
+
+// WithRetries specifies the retry events number for the component
+// default value is '0'
+func (cb *Builder) WithRetries(retries uint) *Builder {
+	log.Infof(propSetMSG, "retries", cb.name)
+	cb.retries = retries
+	return cb
+}
+
+// WithRetryWait specifies the duration for the component to wait between retries
+// default value is '0'
+// it will append an error to the builder if the value is smaller than '0'
+func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
+	if retryWait < 0 {
+		cb.errors = append(cb.errors, errors.New("invalid retry wait provided"))
+	} else {
+		log.Infof(propSetMSG, "retryWait", cb.name)
+		cb.retryWait = retryWait
+	}
+	return cb
+}
+
+// Create constructs the Component applying
+func (cb *Builder) Create() (*Component, error) {
+
+	if len(cb.errors) > 0 {
+		return nil, errors.Aggregate(cb.errors...)
 	}
 
 	c := &Component{
-		name:         name,
-		proc:         p,
-		cf:           cf,
-		failStrategy: NackExitStrategy,
-		retries:      0,
-		retryWait:    0,
-	}
-
-	for _, o := range oo {
-		err := o(c)
-		if err != nil {
-			return nil, err
-		}
+		name:         cb.name,
+		proc:         cb.proc,
+		cf:           cb.cf,
+		failStrategy: cb.failStrategy,
+		retries:      int(cb.retries),
+		retryWait:    cb.retryWait,
 	}
 
 	return c, nil

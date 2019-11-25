@@ -88,21 +88,21 @@ func (s *Service) setupOSSignal() {
 // Run starts up all service components and monitors for errors.
 // If a component returns a error the service is responsible for shutting down
 // all components and terminate itself.
-func (s *Service) Run() error {
+func (s *Service) Run(ctx context.Context) error {
 	defer func() {
 		err := trace.Close()
 		if err != nil {
 			log.Errorf("failed to close trace %v", err)
 		}
 	}()
-	ctx, cnl := context.WithCancel(context.Background())
+	cctx, cnl := context.WithCancel(ctx)
 	chErr := make(chan error, len(s.cps))
 	wg := sync.WaitGroup{}
 	wg.Add(len(s.cps))
 	for _, cp := range s.cps {
 		go func(c Component) {
 			defer wg.Done()
-			chErr <- c.Run(ctx)
+			chErr <- c.Run(cctx)
 		}(cp)
 	}
 

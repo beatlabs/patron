@@ -13,6 +13,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	patron_json "github.com/beatlabs/patron/encoding/json"
 	"github.com/opentracing/opentracing-go"
@@ -173,6 +174,27 @@ func TestMapHeader(t *testing.T) {
 	}
 	hdr := mapHeader(hh)
 	assert.Equal(t, "value", hdr["key"])
+}
+
+func Test_getCorrelationID(t *testing.T) {
+	withID := []*sarama.RecordHeader{&sarama.RecordHeader{Key: []byte(correlation.HeaderID), Value: []byte("123")}}
+	withoutID := []*sarama.RecordHeader{&sarama.RecordHeader{Key: []byte(correlation.HeaderID), Value: []byte("")}}
+	missingHeader := []*sarama.RecordHeader{}
+	type args struct {
+		hh []*sarama.RecordHeader
+	}
+	tests := map[string]struct {
+		args args
+	}{
+		"with id":        {args: args{hh: withID}},
+		"without id":     {args: args{hh: withoutID}},
+		"missing header": {args: args{hh: missingHeader}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.NotEmpty(t, getCorrelationID(tt.args.hh))
+		})
+	}
 }
 
 type mockConsumerClaim struct{ msgs []*sarama.ConsumerMessage }

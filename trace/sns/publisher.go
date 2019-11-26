@@ -6,6 +6,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
@@ -51,6 +52,7 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 	}
 
 	msg.injectHeaders(carrier)
+	msg.setMessageAttribute(correlation.HeaderID, correlation.IDFromContext(ctx))
 
 	out, err := p.api.PublishWithContext(ctx, msg.input)
 

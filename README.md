@@ -213,6 +213,11 @@ downstream systems. The tracing information is added to each implementations hea
 - Kafka
 - SQL
 
+## Correlation ID propagation
+
+Patron receives and propagates a correlation ID. Much like the distributed tracing id, the correlation id is receiver on the entry points of the service e.g. HTTP, Kafka, etc. and is propagated via the provided clients. In case no correlation ID has been received, a new one is created.  
+The ID is usually received and sent via a header with key `X-Correlation-Id`.
+
 ## Reliability
 
 The reliability package contains the following implementations:

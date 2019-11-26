@@ -6,15 +6,14 @@ import (
 	"testing"
 	"time"
 
-	opentracing "github.com/opentracing/opentracing-go"
-
-	"github.com/beatlabs/patron/encoding/json"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/errors"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -147,6 +146,27 @@ func Test_message(t *testing.T) {
 			var mp map[string]string
 			assert.NoError(t, m.Decode(&mp))
 			assert.Equal(t, map[string]string{"key": "value"}, mp)
+		})
+	}
+}
+
+func Test_getCorrelationID(t *testing.T) {
+	withID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: &sqs.MessageAttributeValue{StringValue: aws.String("123")}}
+	withoutID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: &sqs.MessageAttributeValue{}}
+	missingHeader := map[string]*sqs.MessageAttributeValue{}
+	type args struct {
+		ma map[string]*sqs.MessageAttributeValue
+	}
+	tests := map[string]struct {
+		args args
+	}{
+		"with id":        {args: args{ma: withID}},
+		"without id":     {args: args{ma: withoutID}},
+		"missing header": {args: args{ma: missingHeader}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.NotEmpty(t, getCorrelationID(tt.args.ma))
 		})
 	}
 }

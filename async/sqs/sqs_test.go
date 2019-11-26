@@ -151,8 +151,8 @@ func Test_message(t *testing.T) {
 }
 
 func Test_getCorrelationID(t *testing.T) {
-	withID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: &sqs.MessageAttributeValue{StringValue: aws.String("123")}}
-	withoutID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: &sqs.MessageAttributeValue{}}
+	withID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: {StringValue: aws.String("123")}}
+	withoutID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: {}}
 	missingHeader := map[string]*sqs.MessageAttributeValue{}
 	type args struct {
 		ma map[string]*sqs.MessageAttributeValue

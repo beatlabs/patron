@@ -177,8 +177,8 @@ func TestMapHeader(t *testing.T) {
 }
 
 func Test_getCorrelationID(t *testing.T) {
-	withID := []*sarama.RecordHeader{&sarama.RecordHeader{Key: []byte(correlation.HeaderID), Value: []byte("123")}}
-	withoutID := []*sarama.RecordHeader{&sarama.RecordHeader{Key: []byte(correlation.HeaderID), Value: []byte("")}}
+	withID := []*sarama.RecordHeader{{Key: []byte(correlation.HeaderID), Value: []byte("123")}}
+	withoutID := []*sarama.RecordHeader{{Key: []byte(correlation.HeaderID), Value: []byte("")}}
 	missingHeader := []*sarama.RecordHeader{}
 	type args struct {
 		hh []*sarama.RecordHeader

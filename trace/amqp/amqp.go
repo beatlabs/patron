@@ -5,6 +5,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/errors"
@@ -114,13 +115,8 @@ func NewPublisher(url, exc string, oo ...OptionFunc) (*TracedPublisher, error) {
 
 // Publish a message to a exchange.
 func (tc *TracedPublisher) Publish(ctx context.Context, msg *Message) error {
-	sp, _ := trace.ChildSpan(
-		ctx,
-		trace.ComponentOpName(trace.AMQPPublisherComponent, tc.exc),
-		trace.AMQPPublisherComponent,
-		ext.SpanKindProducer,
-		tc.tag,
-	)
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(trace.AMQPPublisherComponent, tc.exc),
+		trace.AMQPPublisherComponent, ext.SpanKindProducer, tc.tag)
 
 	p := amqp.Publishing{
 		Headers:     amqp.Table{},
@@ -133,6 +129,7 @@ func (tc *TracedPublisher) Publish(ctx context.Context, msg *Message) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to inject tracing headers")
 	}
+	p.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 
 	err = tc.ch.Publish(tc.exc, "", false, false, p)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
@@ -161,7 +162,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				return
 			case d := <-deliveries:
 				log.Debugf("processing message %d", d.DeliveryTag)
-				sp, chCtx := trace.ConsumerSpan(
+				sp, ctxCh := trace.ConsumerSpan(
 					ctx,
 					trace.ComponentOpName(trace.AMQPConsumerComponent, c.queue),
 					trace.AMQPConsumerComponent,
@@ -175,9 +176,15 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					chErr <- err
 					return
 				}
-				chCtx = log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": uuid.New().String()}))
+				corID := getCorrelationID(d.Headers)
+				ctxCh = correlation.ContextWithID(ctxCh, corID)
+				ff := map[string]interface{}{
+					"correlationID": corID,
+				}
+				ctxCh = log.WithContext(ctxCh, log.Sub(ff))
+
 				chMsg <- &message{
-					ctx:     chCtx,
+					ctx:     ctxCh,
 					dec:     dec,
 					del:     &d,
 					span:    sp,
@@ -250,4 +257,17 @@ func mapHeader(hh amqp.Table) map[string]string {
 		mp[k] = fmt.Sprint(v)
 	}
 	return mp
+}
+
+func getCorrelationID(hh amqp.Table) string {
+	for key, value := range hh {
+		if key == correlation.HeaderID {
+			val, ok := value.(string)
+			if ok && val != "" {
+				return val
+			}
+			break
+		}
+	}
+	return uuid.New().String()
 }

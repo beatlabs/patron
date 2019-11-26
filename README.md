@@ -91,7 +91,7 @@ The service has some default settings which can be changed via environment varia
   - agent host `0.0.0.0` with `PATRON_JAEGER_AGENT_HOST`
   - agent port `6831` with `PATRON_JAEGER_AGENT_PORT`
   - sampler type `probabilistic`with `PATRON_JAEGER_SAMPLER_TYPE`
-  - sampler param `0.1` with `PATRON_JAEGER_SAMPLER_PARAM`
+  - sampler param `0.0` with `PATRON_JAEGER_SAMPLER_PARAM`, which means that traces are not initiated here.
 
 ### Component
 
@@ -212,6 +212,11 @@ downstream systems. The tracing information is added to each implementations hea
 - AMQP
 - Kafka
 - SQL
+
+## Correlation ID propagation
+
+Patron receives and propagates a correlation ID. Much like the distributed tracing id, the correlation id is receiver on the entry points of the service e.g. HTTP, Kafka, etc. and is propagated via the provided clients. In case no correlation ID has been received, a new one is created.  
+The ID is usually received and sent via a header with key `X-Correlation-Id`.
 
 ## Reliability
 
@@ -340,3 +345,19 @@ This authenticator can then be used to set up routes with authentication.
 The following authenticator is available:
 
 - API key authenticator, see examples
+
+## HTTP lifecycle endpoints
+
+When creating a new HTTP component, Patron will automatically create a liveness and readiness route, which can be used to know the lifecycle of the application:
+
+```
+# liveness
+GET /alive
+
+# readiness
+GET /ready
+```
+
+Both can return either a `200 OK` or a `503 Service Unavailable` status code (default: `200 OK`).
+
+It is possible to customize their behaviour by injecting an `http.AliveCheck` and/or an `http.ReadyCheck` `OptionFunc` to the HTTP component constructor.

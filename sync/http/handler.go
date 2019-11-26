@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
@@ -32,7 +33,13 @@ func handler(hnd sync.ProcessorFunc) http.HandlerFunc {
 
 		h := extractHeaders(r)
 
-		ctx := log.WithContext(r.Context(), log.Sub(map[string]interface{}{"requestID": uuid.New().String()}))
+		corID := getCorrelationID(r.Header)
+		ctx := correlation.ContextWithID(r.Context(), corID)
+		ff := map[string]interface{}{
+			"correlationID": corID,
+		}
+		ctx = log.WithContext(ctx, log.Sub(ff))
+
 		req := sync.NewRequest(f, r.Body, h, dec)
 		rsp, err := hnd(ctx, req)
 		if err != nil {
@@ -117,6 +124,20 @@ func extractHeaders(r *http.Request) map[string]string {
 		}
 	}
 	return h
+}
+
+func getCorrelationID(h http.Header) string {
+	cor, ok := h[correlation.HeaderID]
+	if !ok {
+		return uuid.New().String()
+	}
+	if len(cor) == 0 {
+		return uuid.New().String()
+	}
+	if cor[0] == "" {
+		return uuid.New().String()
+	}
+	return cor[0]
 }
 
 func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *sync.Response, enc encoding.EncodeFunc) error {

@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-// AliveStatus type representing the liveness of the service via HTTP component.
+// ReadyStatus type.
 type ReadyStatus int
 
 const (
@@ -14,7 +14,7 @@ const (
 	NotReady ReadyStatus = 2
 )
 
-// AliveCheckFunc defines a function type for implementing a readiness check.
+// ReadyCheckFunc defines a function type for implementing a readiness check.
 type ReadyCheckFunc func() ReadyStatus
 
 func readyCheckRoute(rcf ReadyCheckFunc) Route {

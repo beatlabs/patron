@@ -17,11 +17,11 @@ import (
 const (
 	// These values are taken from examples/docker-compose.yml
 	testSnsEndpoint string = "http://localhost:4575"
-	testSnsRegion          = "eu-west-1"
+	testSnsRegion   string = "eu-west-1"
 )
 
 func Test_Publish_Message(t *testing.T) {
-	api := createApi(t)
+	api := createAPI(t)
 	topicArn := createTopic(t, api)
 	pub := createPublisher(t, api)
 	msg := createMsg(t, topicArn)
@@ -31,7 +31,7 @@ func Test_Publish_Message(t *testing.T) {
 	assert.IsType(t, "string", msgID)
 }
 
-func createApi(t *testing.T) snsiface.SNSAPI {
+func createAPI(t *testing.T) snsiface.SNSAPI {
 	sess, err := session.NewSession(
 		aws.NewConfig().
 			WithEndpoint(testSnsEndpoint).

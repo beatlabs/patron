@@ -67,9 +67,12 @@ func Setup(f FactoryFunc, fls map[string]interface{}) error {
 // FromContext returns the logger in the context or a nil logger.
 func FromContext(ctx context.Context) Logger {
 	if l, ok := ctx.Value(ctxKey{}).(Logger); ok {
+		if l == nil {
+			return logger
+		}
 		return l
 	}
-	return &nilLogger{}
+	return logger
 }
 
 // WithContext associates a logger with a context for later reuse.

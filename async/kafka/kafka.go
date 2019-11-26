@@ -10,6 +10,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
@@ -252,23 +253,27 @@ func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan err
 func claimMessage(ctx context.Context, c *consumer, msg *sarama.ConsumerMessage) (*message, error) {
 	log.Debugf("data received from topic %s", msg.Topic)
 
-	sp, chCtx := trace.ConsumerSpan(
+	sp, ctxCh := trace.ConsumerSpan(
 		ctx,
 		trace.ComponentOpName(trace.KafkaConsumerComponent, msg.Topic),
 		trace.KafkaConsumerComponent,
 		mapHeader(msg.Headers),
 	)
 
-	chCtx = log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": uuid.New().String()}))
-
 	dec, err := determineDecoder(c, msg, sp)
-
 	if err != nil {
 		return nil, fmt.Errorf("Could not determine decoder  %v", err)
 	}
 
+	corID := getCorrelationID(msg.Headers)
+	ctxCh = correlation.ContextWithID(ctxCh, corID)
+	ff := map[string]interface{}{
+		"correlationID": corID,
+	}
+	ctxCh = log.WithContext(ctxCh, log.Sub(ff))
+
 	return &message{
-		ctx:  chCtx,
+		ctx:  ctxCh,
 		dec:  dec,
 		span: sp,
 		msg:  msg,
@@ -295,6 +300,18 @@ func determineDecoder(c *consumer, msg *sarama.ConsumerMessage, sp opentracing.S
 	}
 
 	return dec, nil
+}
+
+func getCorrelationID(hh []*sarama.RecordHeader) string {
+	for _, h := range hh {
+		if string(h.Key) == correlation.HeaderID {
+			if len(h.Value) > 0 {
+				return string(h.Value)
+			}
+			break
+		}
+	}
+	return uuid.New().String()
 }
 
 // Close handles closing consumer.

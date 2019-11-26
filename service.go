@@ -106,7 +106,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}(cp)
 	}
 
-	var ee []error
+	ee := make([]error, 0, len(s.cps))
 	ee = append(ee, s.waitTermination(chErr))
 	cnl()
 

@@ -6,15 +6,14 @@ import (
 	"testing"
 	"time"
 
-	opentracing "github.com/opentracing/opentracing-go"
-
-	"github.com/beatlabs/patron/encoding/json"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/errors"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -151,6 +150,27 @@ func Test_message(t *testing.T) {
 	}
 }
 
+func Test_getCorrelationID(t *testing.T) {
+	withID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: {StringValue: aws.String("123")}}
+	withoutID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: {}}
+	missingHeader := map[string]*sqs.MessageAttributeValue{}
+	type args struct {
+		ma map[string]*sqs.MessageAttributeValue
+	}
+	tests := map[string]struct {
+		args args
+	}{
+		"with id":        {args: args{ma: withID}},
+		"without id":     {args: args{ma: withoutID}},
+		"missing header": {args: args{ma: missingHeader}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.NotEmpty(t, getCorrelationID(tt.args.ma))
+		})
+	}
+}
+
 type stubQueue struct {
 	getQueueURLErr                   error
 	receiveMessageWithContextErr     error
@@ -266,6 +286,7 @@ func (s stubQueue) GetQueueAttributesRequest(*sqs.GetQueueAttributesInput) (*req
 	panic("implement me")
 }
 
+//nolint:golint
 func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, error) {
 	if s.getQueueURLErr != nil {
 		return nil, s.getQueueURLErr
@@ -275,10 +296,12 @@ func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, e
 	}, nil
 }
 
+//nolint:golint
 func (s stubQueue) GetQueueUrlWithContext(aws.Context, *sqs.GetQueueUrlInput, ...request.Option) (*sqs.GetQueueUrlOutput, error) {
 	panic("implement me")
 }
 
+//nolint:golint
 func (s stubQueue) GetQueueUrlRequest(*sqs.GetQueueUrlInput) (*request.Request, *sqs.GetQueueUrlOutput) {
 	panic("implement me")
 }

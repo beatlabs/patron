@@ -52,10 +52,11 @@ func TestServer_Run_Shutdown(t *testing.T) {
 	tests := []struct {
 		name    string
 		cp      Component
+		ctx     context.Context
 		wantErr bool
 	}{
-		{name: "success", cp: &testComponent{}, wantErr: false},
-		{name: "failed to run", cp: &testComponent{errorRunning: true}, wantErr: true},
+		{name: "success", cp: &testComponent{}, ctx: context.Background(), wantErr: false},
+		{name: "failed to run", cp: &testComponent{errorRunning: true}, ctx: context.Background(), wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -63,7 +64,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 			assert.NoError(t, err)
 			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
 			assert.NoError(t, err)
-			err = s.Run()
+			err = s.Run(tt.ctx)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -77,13 +78,14 @@ func TestServer_SetupTracing(t *testing.T) {
 	tests := []struct {
 		name string
 		cp   Component
+		ctx  context.Context
 		host string
 		port string
 	}{
-		{name: "success w/ empty tracing vars", cp: &testComponent{}},
-		{name: "success w/ empty tracing host", cp: &testComponent{}, port: "6831"},
-		{name: "success w/ empty tracing port", cp: &testComponent{}, host: "127.0.0.1"},
-		{name: "success", cp: &testComponent{}, host: "127.0.0.1", port: "6831"},
+		{name: "success w/ empty tracing vars", cp: &testComponent{}, ctx: context.Background()},
+		{name: "success w/ empty tracing host", cp: &testComponent{}, ctx: context.Background(), port: "6831"},
+		{name: "success w/ empty tracing port", cp: &testComponent{}, ctx: context.Background(), host: "127.0.0.1"},
+		{name: "success", cp: &testComponent{}, ctx: context.Background(), host: "127.0.0.1", port: "6831"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -97,7 +99,7 @@ func TestServer_SetupTracing(t *testing.T) {
 			}
 			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
 			assert.NoError(t, err)
-			err = s.Run()
+			err = s.Run(tt.ctx)
 			assert.NoError(t, err)
 		})
 	}

@@ -21,6 +21,7 @@ const (
 var (
 	// DefaultAliveCheck return always live.
 	DefaultAliveCheck = func() AliveStatus { return Alive }
+	// DefaultReadyCheck return always ready.
 	DefaultReadyCheck = func() ReadyStatus { return Ready }
 )
 

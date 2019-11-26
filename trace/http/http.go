@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -46,13 +47,12 @@ func New(oo ...OptionFunc) (*TracedClient, error) {
 // Do executes a HTTP request with integrated tracing and tracing propagation downstream.
 func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
 	req = req.WithContext(ctx)
-	req, ht := nethttp.TraceRequest(
-		opentracing.GlobalTracer(),
-		req,
+	req, ht := nethttp.TraceRequest(opentracing.GlobalTracer(), req,
 		nethttp.OperationName(trace.HTTPOpName(req.Method, req.URL.String())),
 		nethttp.ComponentName(trace.HTTPClientComponent))
-
 	defer ht.Finish()
+
+	req.Header.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 
 	rsp, err := tc.do(req)
 	if err != nil {

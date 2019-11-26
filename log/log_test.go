@@ -8,16 +8,15 @@ import (
 )
 
 func TestSetup(t *testing.T) {
-	tests := []struct {
-		name    string
+	tests := map[string]struct {
 		f       FactoryFunc
 		wantErr bool
 	}{
-		{"failure with nil factory", nil, true},
-		{"success", func(map[string]interface{}) Logger { return nil }, false},
+		"failure with nil factory": {nil, true},
+		"success":                  {func(map[string]interface{}) Logger { return nil }, false},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			err := Setup(tt.f, nil)
 			if tt.wantErr {
 				assert.Error(t, err, "expected error")
@@ -28,21 +27,28 @@ func TestSetup(t *testing.T) {
 	}
 }
 
-func TestLog_Context_NilLogger(t *testing.T) {
-	ctx := context.Background()
-	ctx = WithContext(ctx, nil)
-	slc := FromContext(ctx)
-	assert.NotNil(t, slc)
-}
-
-func TestLog_Context(t *testing.T) {
-	l := testLogger{}
-	logger = &l
-	sl := Sub(map[string]interface{}{})
-	ctx := context.Background()
-	ctx = WithContext(ctx, sl)
-	slc := FromContext(ctx)
-	assert.NotNil(t, slc)
+func TestFromContext(t *testing.T) {
+	logger = &nilLogger{}
+	lg := &nilLogger{}
+	ctxWith := WithContext(context.Background(), logger)
+	ctxWithNil := WithContext(context.Background(), nil)
+	type args struct {
+		ctx context.Context
+	}
+	tests := map[string]struct {
+		args args
+		want Logger
+	}{
+		"with context logger":     {args: args{ctx: ctxWith}, want: logger},
+		"without context logger":  {args: args{ctx: context.Background()}, want: lg},
+		"with context nil logger": {args: args{ctx: ctxWithNil}, want: logger},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := FromContext(tt.args.ctx)
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }
 
 func TestLog_Sub(t *testing.T) {

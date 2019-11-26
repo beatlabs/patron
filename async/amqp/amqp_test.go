@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -136,4 +137,25 @@ func Test_mapHeader(t *testing.T) {
 	hh := amqp.Table{"test1": 10, "test2": 0.11}
 	mm := map[string]string{"test1": "10", "test2": "0.11"}
 	assert.Equal(t, mm, mapHeader(hh))
+}
+
+func Test_getCorrelationID(t *testing.T) {
+	withID := amqp.Table{correlation.HeaderID: "123"}
+	withoutID := amqp.Table{correlation.HeaderID: ""}
+	missingHeader := amqp.Table{}
+	type args struct {
+		hh amqp.Table
+	}
+	tests := map[string]struct {
+		args args
+	}{
+		"with id":        {args: args{hh: withID}},
+		"without id":     {args: args{hh: withoutID}},
+		"missing header": {args: args{hh: missingHeader}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.NotEmpty(t, getCorrelationID(tt.args.hh))
+		})
+	}
 }

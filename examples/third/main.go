@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -64,7 +65,8 @@ func main() {
 		log.Fatalf("failed to create service %v", err)
 	}
 
-	err = srv.Run()
+	ctx := context.Background()
+	err = srv.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to run service %v", err)
 	}
@@ -79,7 +81,7 @@ func newKafkaComponent(name, broker, topic, group, amqpURL, amqpExc string) (*ka
 
 	kafkaCmp := kafkaComponent{}
 
-	cf, err := kafka.New(name, json.Type, topic, group, []string{broker})
+	cf, err := kafka.New(name, topic, group, []string{broker}, kafka.Decoder(json.DecodeRaw))
 	if err != nil {
 		return nil, err
 	}

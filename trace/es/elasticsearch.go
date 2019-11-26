@@ -140,7 +140,7 @@ func NewClient(cfg Config) (*Client, error) {
 }
 
 func addrsToURLs(addrs []string) ([]*url.URL, error) {
-	var urls []*url.URL
+	urls := make([]*url.URL, 0, len(addrs))
 	for _, addr := range addrs {
 		u, err := url.Parse(strings.TrimRight(addr, "/"))
 		if err != nil {

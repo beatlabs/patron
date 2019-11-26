@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/encoding"
+
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
 )
@@ -54,7 +56,7 @@ func TestVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f, err := New("test", "", "topic", "group", []string{"test"})
+			f, err := New("test", "topic", "group", []string{"test"})
 			assert.NoError(t, err)
 			c, err := f.Create()
 			assert.NoError(t, err)
@@ -72,4 +74,37 @@ func TestStart(t *testing.T) {
 	c := consumer{cfg: sarama.NewConfig()}
 	err := Start(sarama.OffsetOldest)(&c)
 	assert.NoError(t, err)
+}
+
+func TestDecoder1(t *testing.T) {
+
+	tests := []struct {
+		name string
+		dec  encoding.DecodeRawFunc
+		err  bool
+	}{
+		{
+			name: "test simple decoder",
+			dec: func(data []byte, v interface{}) error {
+				return nil
+			},
+			err: false,
+		},
+		{
+			name: "test nil decoder",
+			dec:  nil,
+			err:  true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := consumer{cfg: sarama.NewConfig()}
+			err := Decoder(tt.dec)(&c)
+			if tt.err {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }

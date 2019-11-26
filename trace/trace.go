@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/beatlabs/patron/errors"
@@ -33,6 +34,7 @@ const (
 	// SNSPublisherComponent definition.
 	SNSPublisherComponent = "sns-publisher"
 	versionTag            = "version"
+	hostsTag              = "hosts"
 )
 
 var (
@@ -163,6 +165,24 @@ func SQLSpan(
 	}
 	sp.SetTag(versionTag, version)
 	return sp, ctx
+}
+
+// EsSpan starts a new elasticsearch child span with specified tags
+func EsSpan(ctx context.Context, opName, cmp, user, uri, method, body string, hostPool []string) opentracing.Span {
+	sp, _ := opentracing.StartSpanFromContext(ctx, opName)
+	ext.Component.Set(sp, cmp)
+	ext.DBType.Set(sp, "elasticsearch")
+	ext.DBUser.Set(sp, user)
+
+	ext.HTTPUrl.Set(sp, uri)
+	ext.HTTPMethod.Set(sp, method)
+	ext.DBStatement.Set(sp, body)
+
+	hostsFmt := "[" + strings.Join(hostPool, ", ") + "]"
+	sp.SetTag(hostsTag, hostsFmt)
+	sp.SetTag(versionTag, version)
+
+	return sp
 }
 
 // HTTPOpName return a string representation of the HTTP request operation.

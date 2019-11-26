@@ -2,9 +2,11 @@
 *.exe
 *.dll
 *.so
+*.DS_Store
 *.dylib
 debug
 .idea/*
+*.vscode
 
 # Test binary, build with `go test -c`
 *.test

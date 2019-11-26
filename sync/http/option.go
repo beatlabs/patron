@@ -51,13 +51,24 @@ func Middlewares(mm ...MiddlewareFunc) OptionFunc {
 	}
 }
 
-// HealthCheck option for setting the health check function of the HTTP component.
-func HealthCheck(hcf HealthCheckFunc) OptionFunc {
+// AliveCheck option for setting the liveness check function of the HTTP component.
+func AliveCheck(acf AliveCheckFunc) OptionFunc {
 	return func(s *Component) error {
-		if hcf == nil {
-			return errors.New("health check function is not defined")
+		if acf == nil {
+			return errors.New("alive check function is not defined")
 		}
-		s.hc = hcf
+		s.ac = acf
+		return nil
+	}
+}
+
+// ReadyCheck option for setting the readiness check function of the HTTP component.
+func ReadyCheck(rcf ReadyCheckFunc) OptionFunc {
+	return func(s *Component) error {
+		if rcf == nil {
+			return errors.New("alive check function is not defined")
+		}
+		s.rc = rcf
 		return nil
 	}
 }

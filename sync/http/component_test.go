@@ -50,7 +50,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 		done <- true
 	}()
 	time.Sleep(100 * time.Millisecond)
-	assert.Len(t, s.routes, 14)
+	assert.Len(t, s.routes, 15)
 	cnl()
 	assert.True(t, <-done)
 }
@@ -66,7 +66,7 @@ func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
 		done <- true
 	}()
 	time.Sleep(100 * time.Millisecond)
-	assert.Len(t, s.routes, 14)
+	assert.Len(t, s.routes, 15)
 	cnl()
 	assert.True(t, <-done)
 }

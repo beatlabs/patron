@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
@@ -92,6 +93,29 @@ func request(t *testing.T, contentType, accept string) *http.Request {
 		req.Header.Set(encoding.AcceptHeader, accept)
 	}
 	return req
+}
+
+func Test_getCorrelationID(t *testing.T) {
+	withID := http.Header{correlation.HeaderID: []string{"123"}}
+	withoutID := http.Header{correlation.HeaderID: []string{}}
+	withEmptyID := http.Header{correlation.HeaderID: []string{""}}
+	missingHeader := http.Header{}
+	type args struct {
+		h http.Header
+	}
+	tests := map[string]struct {
+		args args
+	}{
+		"with id":        {args: args{h: withID}},
+		"without id":     {args: args{h: withoutID}},
+		"with empty id":  {args: args{h: withEmptyID}},
+		"missing header": {args: args{h: missingHeader}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.NotEmpty(t, getCorrelationID(tt.args.h))
+		})
+	}
 }
 
 func Test_handleSuccess(t *testing.T) {

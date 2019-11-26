@@ -29,7 +29,8 @@ type Service struct {
 	cps           []Component
 	routes        []http.Route
 	middlewares   []http.MiddlewareFunc
-	hcf           http.HealthCheckFunc
+	acf           http.AliveCheckFunc
+	rcf           http.ReadyCheckFunc
 	termSig       chan os.Signal
 	sighupHandler func()
 }
@@ -46,7 +47,8 @@ func New(name, version string, oo ...OptionFunc) (*Service, error) {
 
 	s := Service{
 		cps:           []Component{},
-		hcf:           http.DefaultHealthCheck,
+		acf:           http.DefaultAliveCheck,
+		rcf:           http.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),
 		sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
 		middlewares:   []http.MiddlewareFunc{},
@@ -86,25 +88,25 @@ func (s *Service) setupOSSignal() {
 // Run starts up all service components and monitors for errors.
 // If a component returns a error the service is responsible for shutting down
 // all components and terminate itself.
-func (s *Service) Run() error {
+func (s *Service) Run(ctx context.Context) error {
 	defer func() {
 		err := trace.Close()
 		if err != nil {
 			log.Errorf("failed to close trace %v", err)
 		}
 	}()
-	ctx, cnl := context.WithCancel(context.Background())
+	cctx, cnl := context.WithCancel(ctx)
 	chErr := make(chan error, len(s.cps))
 	wg := sync.WaitGroup{}
 	wg.Add(len(s.cps))
 	for _, cp := range s.cps {
 		go func(c Component) {
 			defer wg.Done()
-			chErr <- c.Run(ctx)
+			chErr <- c.Run(cctx)
 		}(cp)
 	}
 
-	var ee []error
+	ee := make([]error, 0, len(s.cps))
 	ee = append(ee, s.waitTermination(chErr))
 	cnl()
 
@@ -189,8 +191,12 @@ func (s *Service) createHTTPComponent() (Component, error) {
 		http.Port(int(portVal)),
 	}
 
-	if s.hcf != nil {
-		options = append(options, http.HealthCheck(s.hcf))
+	if s.acf != nil {
+		options = append(options, http.AliveCheck(s.acf))
+	}
+
+	if s.rcf != nil {
+		options = append(options, http.ReadyCheck(s.rcf))
 	}
 
 	if s.routes != nil {

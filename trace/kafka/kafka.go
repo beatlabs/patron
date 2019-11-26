@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 
@@ -15,11 +16,20 @@ import (
 type Message struct {
 	topic string
 	body  []byte
+	key   *string
 }
 
 // NewMessage creates a new message.
 func NewMessage(t string, b []byte) *Message {
 	return &Message{topic: t, body: b}
+}
+
+// NewMessageWithKey creates a new message with an associated key.
+func NewMessageWithKey(t string, b []byte, k string) (*Message, error) {
+	if k == "" {
+		return nil, errors.New("key string can not be null")
+	}
+	return &Message{topic: t, body: b, key: &k}, nil
 }
 
 // NewJSONMessage creates a new message with a JSON encoded body.
@@ -29,6 +39,18 @@ func NewJSONMessage(t string, d interface{}) (*Message, error) {
 		return nil, errors.Wrap(err, "failed to JSON encode")
 	}
 	return &Message{topic: t, body: b}, nil
+}
+
+// NewJSONMessageWithKey creates a new message with a JSON encoded body and a message key.
+func NewJSONMessageWithKey(t string, d interface{}, k string) (*Message, error) {
+	if k == "" {
+		return nil, errors.New("key string can not be null")
+	}
+	b, err := json.Encode(d)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to JSON encode")
+	}
+	return &Message{topic: t, body: b, key: &k}, nil
 }
 
 // Producer interface for Kafka.
@@ -72,15 +94,10 @@ func NewAsyncProducer(brokers []string, oo ...OptionFunc) (*AsyncProducer, error
 
 // Send a message to a topic.
 func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
-	sp, _ := trace.ChildSpan(
-		ctx,
-		trace.ComponentOpName(trace.KafkaAsyncProducerComponent, msg.topic),
-		trace.KafkaAsyncProducerComponent,
-		ext.SpanKindProducer,
-		ap.tag,
-		opentracing.Tag{Key: "topic", Value: msg.topic},
-	)
-	pm, err := createProducerMessage(msg, sp)
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(trace.KafkaAsyncProducerComponent, msg.topic),
+		trace.KafkaAsyncProducerComponent, ext.SpanKindProducer, ap.tag,
+		opentracing.Tag{Key: "topic", Value: msg.topic})
+	pm, err := createProducerMessage(ctx, msg, sp)
 	if err != nil {
 		trace.SpanError(sp)
 		return err
@@ -106,15 +123,20 @@ func (ap *AsyncProducer) propagateError() {
 	}
 }
 
-func createProducerMessage(msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
+func createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
 	c := kafkaHeadersCarrier{}
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to inject tracing headers")
 	}
+	var saramaKey sarama.Encoder
+	if msg.key != nil {
+		saramaKey = sarama.ByteEncoder(*msg.key)
+	}
+	c.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 	return &sarama.ProducerMessage{
 		Topic:   msg.topic,
-		Key:     nil,
+		Key:     saramaKey,
 		Value:   sarama.ByteEncoder(msg.body),
 		Headers: c,
 	}, nil

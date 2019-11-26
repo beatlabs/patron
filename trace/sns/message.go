@@ -185,9 +185,13 @@ func (b *MessageBuilder) Build() (*Message, error) {
 // injectHeaders injects the SNS headers carrier's headers into the message's attributes.
 func (m *Message) injectHeaders(carrier snsHeadersCarrier) {
 	for k, v := range carrier {
-		m.input.MessageAttributes[k] = &sns.MessageAttributeValue{
-			DataType:    aws.String(string(attributeDataTypeString)),
-			StringValue: aws.String(v.(string)),
-		}
+		m.setMessageAttribute(k, v.(string))
+	}
+}
+
+func (m *Message) setMessageAttribute(key, value string) {
+	m.input.MessageAttributes[key] = &sns.MessageAttributeValue{
+		DataType:    aws.String(string(attributeDataTypeString)),
+		StringValue: aws.String(value),
 	}
 }

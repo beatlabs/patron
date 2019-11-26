@@ -9,11 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
+	"github.com/google/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -228,7 +230,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			for _, msg := range output.Messages {
 				observerMessageAge(c.queueName, msg.Attributes)
 
-				sp, chCtx := trace.ConsumerSpan(sqsCtx, trace.ComponentOpName(trace.SQSConsumerComponent, c.queueName),
+				sp, ctxCh := trace.ConsumerSpan(sqsCtx, trace.ComponentOpName(trace.SQSConsumerComponent, c.queueName),
 					trace.SQSConsumerComponent, mapHeader(msg.MessageAttributes))
 
 				ct, err := determineContentType(msg.MessageAttributes)
@@ -247,12 +249,20 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					continue
 				}
 
+				corID := getCorrelationID(msg.MessageAttributes)
+				ctxCh = correlation.ContextWithID(ctxCh, corID)
+				ff := map[string]interface{}{
+					"messageID":     *msg.MessageId,
+					"correlationID": corID,
+				}
+				ctxCh = log.WithContext(ctxCh, log.Sub(ff))
+
 				chMsg <- &message{
 					queueName: c.queueName,
 					queueURL:  c.queueURL,
 					span:      sp,
 					msg:       msg,
-					ctx:       log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": *msg.MessageId})),
+					ctx:       ctxCh,
 					queue:     c.queue,
 					dec:       dec,
 				}
@@ -338,6 +348,18 @@ func determineContentType(ma map[string]*sqs.MessageAttributeValue) (string, err
 		}
 	}
 	return json.Type, nil
+}
+
+func getCorrelationID(ma map[string]*sqs.MessageAttributeValue) string {
+	for key, value := range ma {
+		if key == correlation.HeaderID {
+			if value.StringValue != nil {
+				return *value.StringValue
+			}
+			break
+		}
+	}
+	return uuid.New().String()
 }
 
 func mapHeader(ma map[string]*sqs.MessageAttributeValue) map[string]string {

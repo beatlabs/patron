@@ -33,14 +33,26 @@ func Middlewares(mm ...http.MiddlewareFunc) OptionFunc {
 	}
 }
 
-// HealthCheck option for overriding the default health check of the default HTTP component.
-func HealthCheck(hcf http.HealthCheckFunc) OptionFunc {
+// AliveCheck option for overriding the default liveness check of the default HTTP component.
+func AliveCheck(acf http.AliveCheckFunc) OptionFunc {
 	return func(s *Service) error {
-		if hcf == nil {
-			return errors.New("health check func is required")
+		if acf == nil {
+			return errors.New("alive check func is required")
 		}
-		s.hcf = hcf
-		log.Info("health check func is set")
+		s.acf = acf
+		log.Info("alive check func is set")
+		return nil
+	}
+}
+
+// ReadyCheck option for overriding the default readiness check of the default HTTP component.
+func ReadyCheck(rcf http.ReadyCheckFunc) OptionFunc {
+	return func(s *Service) error {
+		if rcf == nil {
+			return errors.New("ready check func is required")
+		}
+		s.rcf = rcf
+		log.Info("ready check func is set")
 		return nil
 	}
 }

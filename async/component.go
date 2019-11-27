@@ -217,7 +217,7 @@ func (c *Component) processMessage(msg Message, ch chan error) {
 	}
 }
 
-var invalidFSError = errors.New("invalid failure strategy")
+var errInvalidFS = errors.New("invalid failure strategy")
 var failureStrategyErrorMSG = "%s failed when executing failure strategy"
 
 func (c *Component) executeFailureStrategy(msg Message, err error) error {
@@ -236,7 +236,7 @@ func (c *Component) executeFailureStrategy(msg Message, err error) error {
 			return errors.Wrap(err, fmt.Sprintf(failureStrategyErrorMSG, "ack"))
 		}
 	default:
-		return invalidFSError
+		return errInvalidFS
 	}
 	return nil
 }

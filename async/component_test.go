@@ -85,7 +85,7 @@ type proxyBuilder struct {
 	retryWait time.Duration
 }
 
-func run(t *testing.T, ctx context.Context, builder *proxyBuilder) error {
+func run(ctx context.Context, t *testing.T, builder *proxyBuilder) error {
 
 	if builder.cf == nil {
 		builder.cf = &mockConsumerFactory{c: &builder.cnr}
@@ -108,10 +108,10 @@ func TestRun_ReturnsError(t *testing.T) {
 	builder := proxyBuilder{
 		cnr: mockConsumer{consumeError: true},
 	}
-	err := run(t, context.Background(), &builder)
+	err := run(context.Background(), t, &builder)
 
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), consumerError.Error()))
+	assert.True(t, strings.Contains(err.Error(), errConsumer.Error()))
 	assert.Equal(t, 0, builder.proc.execs)
 
 }
@@ -126,10 +126,10 @@ func TestRun_WithCancel_CloseError(t *testing.T) {
 	ctx, cnl := context.WithCancel(context.Background())
 	cnl()
 
-	err := run(t, ctx, &builder)
+	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
-	assert.Equal(t, consumerCloseError, err)
+	assert.Equal(t, errConsumerClose, err)
 	assert.Equal(t, 0, builder.proc.execs)
 
 }
@@ -141,7 +141,7 @@ func TestRun_WithCancel_CloseError(t *testing.T) {
 func TestRun_Process_Error_NackExitStrategy(t *testing.T) {
 
 	builder := proxyBuilder{
-		proc: mockProcessor{retError: true},
+		proc: mockProcessor{errReturn: true},
 		cnr: mockConsumer{
 			chMsg: make(chan Message, 10),
 			chErr: make(chan error, 10),
@@ -151,10 +151,10 @@ func TestRun_Process_Error_NackExitStrategy(t *testing.T) {
 	ctx := context.Background()
 	builder.cnr.chMsg <- &mockMessage{ctx: ctx}
 
-	err := run(t, ctx, &builder)
+	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), processError.Error()))
+	assert.True(t, strings.Contains(err.Error(), errProcess.Error()))
 	assert.Equal(t, 1, builder.proc.execs)
 
 }
@@ -165,7 +165,7 @@ func TestRun_Process_Error_NackExitStrategy(t *testing.T) {
 func TestRun_Process_Error_NackStrategy(t *testing.T) {
 
 	builder := proxyBuilder{
-		proc: mockProcessor{retError: true},
+		proc: mockProcessor{errReturn: true},
 		cnr: mockConsumer{
 			chMsg: make(chan Message, 10),
 			chErr: make(chan error, 10),
@@ -177,7 +177,7 @@ func TestRun_Process_Error_NackStrategy(t *testing.T) {
 	builder.cnr.chMsg <- &mockMessage{ctx: ctx}
 	ch := make(chan bool)
 	go func() {
-		assert.NoError(t, run(t, ctx, &builder))
+		assert.NoError(t, run(ctx, t, &builder))
 		ch <- true
 	}()
 	time.Sleep(10 * time.Millisecond)
@@ -202,7 +202,7 @@ func TestRun_Process_Error_NackStrategy(t *testing.T) {
 func TestRun_ProcessError_WithNackError(t *testing.T) {
 
 	builder := proxyBuilder{
-		proc: mockProcessor{retError: true},
+		proc: mockProcessor{errReturn: true},
 		cnr: mockConsumer{
 			chMsg: make(chan Message, 10),
 			chErr: make(chan error, 10),
@@ -213,10 +213,10 @@ func TestRun_ProcessError_WithNackError(t *testing.T) {
 	ctx := context.Background()
 	builder.cnr.chMsg <- &mockMessage{ctx: ctx, nackError: true}
 
-	err := run(t, ctx, &builder)
+	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), nackError.Error()))
+	assert.True(t, strings.Contains(err.Error(), errNack.Error()))
 	assert.Equal(t, 1, builder.proc.execs)
 
 }
@@ -227,7 +227,7 @@ func TestRun_ProcessError_WithNackError(t *testing.T) {
 func TestRun_Process_Error_AckStrategy(t *testing.T) {
 
 	builder := proxyBuilder{
-		proc: mockProcessor{retError: true},
+		proc: mockProcessor{errReturn: true},
 		cnr: mockConsumer{
 			chMsg: make(chan Message, 10),
 			chErr: make(chan error, 10),
@@ -239,7 +239,7 @@ func TestRun_Process_Error_AckStrategy(t *testing.T) {
 	builder.cnr.chMsg <- &mockMessage{ctx: ctx}
 	ch := make(chan bool)
 	go func() {
-		assert.NoError(t, run(t, ctx, &builder))
+		assert.NoError(t, run(ctx, t, &builder))
 		ch <- true
 	}()
 	time.Sleep(10 * time.Millisecond)
@@ -264,7 +264,7 @@ func TestRun_Process_Error_AckStrategy(t *testing.T) {
 func TestRun_ProcessError_WithAckError(t *testing.T) {
 
 	builder := proxyBuilder{
-		proc: mockProcessor{retError: true},
+		proc: mockProcessor{errReturn: true},
 		cnr: mockConsumer{
 			chMsg: make(chan Message, 10),
 			chErr: make(chan error, 10),
@@ -275,10 +275,10 @@ func TestRun_ProcessError_WithAckError(t *testing.T) {
 	ctx := context.Background()
 	builder.cnr.chMsg <- &mockMessage{ctx: ctx, ackError: true}
 
-	err := run(t, ctx, &builder)
+	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), ackError.Error()))
+	assert.True(t, strings.Contains(err.Error(), errAck.Error()))
 	assert.Equal(t, 1, builder.proc.execs)
 
 }
@@ -296,10 +296,10 @@ func TestRun_MessageAckError(t *testing.T) {
 
 	ctx := context.Background()
 	builder.cnr.chMsg <- &mockMessage{ctx: ctx, ackError: true}
-	err := run(t, ctx, &builder)
+	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
-	assert.Equal(t, ackError, err)
+	assert.Equal(t, errAck, err)
 	assert.Equal(t, 1, builder.proc.execs)
 
 }
@@ -317,11 +317,11 @@ func TestRun_ConsumeError(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	builder.cnr.chErr <- consumerError
-	err := run(t, ctx, &builder)
+	builder.cnr.chErr <- errConsumer
+	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), consumerError.Error()))
+	assert.True(t, strings.Contains(err.Error(), errConsumer.Error()))
 	assert.Equal(t, 0, builder.proc.execs)
 
 }
@@ -331,14 +331,14 @@ func TestRun_ConsumeError(t *testing.T) {
 func TestRun_ConsumeError_WithRetry(t *testing.T) {
 
 	retries := 3
-	cf := &mockConsumerFactory{retErr: true}
+	cf := &mockConsumerFactory{errRet: true}
 	builder := proxyBuilder{
 		cf:        cf,
 		retries:   retries,
 		retryWait: 2 * time.Millisecond,
 	}
 
-	err := run(t, context.Background(), &builder)
+	err := run(context.Background(), t, &builder)
 
 	assert.Error(t, err)
 	assert.True(t, retries <= cf.execs)
@@ -351,7 +351,7 @@ func TestRun_ConsumeError_WithRetry(t *testing.T) {
 func TestRun_ConsumeError_WithRetry_AndContextCancel(t *testing.T) {
 
 	retries := 33
-	cf := &mockConsumerFactory{retErr: true}
+	cf := &mockConsumerFactory{errRet: true}
 	builder := proxyBuilder{
 		cf:        cf,
 		retries:   retries,
@@ -360,7 +360,7 @@ func TestRun_ConsumeError_WithRetry_AndContextCancel(t *testing.T) {
 
 	ctx, cnl := context.WithCancel(context.Background())
 	cnl()
-	err := run(t, ctx, &builder)
+	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
 	assert.Equal(t, ctx.Err(), context.Canceled)
@@ -383,7 +383,7 @@ func TestRun_Process_Shutdown(t *testing.T) {
 	ch := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())
 	go func() {
-		err1 := run(t, ctx, &builder)
+		err1 := run(ctx, t, &builder)
 		assert.NoError(t, err1)
 		ch <- true
 	}()
@@ -403,7 +403,7 @@ func TestRun_Process_Error_InvalidStrategy(t *testing.T) {
 		chMsg: make(chan Message, 10),
 		chErr: make(chan error, 10),
 	}
-	proc := mockProcessor{retError: true}
+	proc := mockProcessor{errReturn: true}
 	cmp, err := New("test").
 		WithProcessor(proc.Process).
 		WithConsumerFactory(&mockConsumerFactory{c: &cnr}).
@@ -414,7 +414,7 @@ func TestRun_Process_Error_InvalidStrategy(t *testing.T) {
 	cnr.chMsg <- &mockMessage{ctx: ctx}
 	err = cmp.Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, invalidFSError, err)
+	assert.Equal(t, errInvalidFS, err)
 	assert.Equal(t, 1, proc.execs)
 
 }
@@ -434,51 +434,51 @@ func (mm *mockMessage) Decode(v interface{}) error {
 	return nil
 }
 
-var ackError = errors.New("MESSAGE ACK ERROR")
+var errAck = errors.New("MESSAGE ACK ERROR")
 
 func (mm *mockMessage) Ack() error {
 	if mm.ackError {
-		return ackError
+		return errAck
 	}
 	return nil
 }
 
-var nackError = errors.New("MESSAGE NACK ERROR")
+var errNack = errors.New("MESSAGE NACK ERROR")
 
 func (mm *mockMessage) Nack() error {
 	if mm.nackError {
-		return nackError
+		return errNack
 	}
 	return nil
 }
 
 type mockProcessor struct {
-	retError bool
-	execs    int
+	errReturn bool
+	execs     int
 }
 
-var processError = errors.New("PROC ERROR")
+var errProcess = errors.New("PROC ERROR")
 
 func (mp *mockProcessor) Process(msg Message) error {
 	mp.execs++
-	if mp.retError {
-		return processError
+	if mp.errReturn {
+		return errProcess
 	}
 	return nil
 }
 
 type mockConsumerFactory struct {
 	c      Consumer
-	retErr bool
+	errRet bool
 	execs  int
 }
 
-var factoryError = errors.New("FACTORY ERROR")
+var errFactory = errors.New("FACTORY ERROR")
 
 func (mcf *mockConsumerFactory) Create() (Consumer, error) {
 	mcf.execs++
-	if mcf.retErr {
-		return nil, factoryError
+	if mcf.errRet {
+		return nil, errFactory
 	}
 	return mcf.c, nil
 }
@@ -493,20 +493,20 @@ type mockConsumer struct {
 func (mc *mockConsumer) SetTimeout(timeout time.Duration) {
 }
 
-var consumerError = errors.New("CONSUMER ERROR")
+var errConsumer = errors.New("CONSUMER ERROR")
 
 func (mc *mockConsumer) Consume(context.Context) (<-chan Message, <-chan error, error) {
 	if mc.consumeError {
-		return nil, nil, consumerError
+		return nil, nil, errConsumer
 	}
 	return mc.chMsg, mc.chErr, nil
 }
 
-var consumerCloseError = errors.New("CONSUMER CLOSE ERROR")
+var errConsumerClose = errors.New("CONSUMER CLOSE ERROR")
 
 func (mc *mockConsumer) Close() error {
 	if mc.clsError {
-		return consumerCloseError
+		return errConsumerClose
 	}
 	return nil
 }

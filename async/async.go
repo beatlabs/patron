@@ -21,20 +21,6 @@ const (
 	AckStrategy
 )
 
-// String converts the FailStrategy type to its appropriate string representation
-func (fs FailStrategy) String() string {
-	switch fs {
-	case NackExitStrategy:
-		return "NackExitStrategy"
-	case NackStrategy:
-		return "NackStrategy"
-	case AckStrategy:
-		return "AckStrategy"
-	default:
-		return "N/A"
-	}
-}
-
 // ProcessorFunc definition of a async processor.
 type ProcessorFunc func(Message) error
 

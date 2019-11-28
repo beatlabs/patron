@@ -97,9 +97,7 @@ func createSQSComponent(api sqsiface.SQSAPI) (*sqsComponent, error) {
 		return nil, err
 	}
 
-	cmp, err := async.New("sqs-cmp").
-		WithProcessor(sqsCmp.Process).
-		WithConsumerFactory(cf).
+	cmp, err := async.New("sqs-cmp", cf, sqsCmp.Process).
 		WithRetries(10).
 		WithRetryWait(10 * time.Second).
 		Create()

@@ -58,9 +58,7 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name).
-				WithProcessor(tt.args.p).
-				WithConsumerFactory(tt.args.cf).
+			got, err := New(tt.args.name, tt.args.cf, tt.args.p).
 				WithFailureStrategy(tt.args.fs).
 				WithRetries(tt.args.retries).
 				WithRetryWait(tt.args.retryWait).
@@ -91,9 +89,7 @@ func run(ctx context.Context, t *testing.T, builder *proxyBuilder) error {
 		builder.cf = &mockConsumerFactory{c: &builder.cnr}
 	}
 
-	cmp, err := New("test").
-		WithProcessor(builder.proc.Process).
-		WithConsumerFactory(builder.cf).
+	cmp, err := New("test", builder.cf, builder.proc.Process).
 		WithFailureStrategy(builder.fs).
 		WithRetries(uint(builder.retries)).
 		WithRetryWait(builder.retryWait).
@@ -404,9 +400,7 @@ func TestRun_Process_Error_InvalidStrategy(t *testing.T) {
 		chErr: make(chan error, 10),
 	}
 	proc := mockProcessor{errReturn: true}
-	cmp, err := New("test").
-		WithProcessor(proc.Process).
-		WithConsumerFactory(&mockConsumerFactory{c: &cnr}).
+	cmp, err := New("test", &mockConsumerFactory{c: &cnr}, proc.Process).
 		Create()
 	assert.NoError(t, err)
 	cmp.failStrategy = 4

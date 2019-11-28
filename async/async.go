@@ -21,14 +21,18 @@ const (
 	AckStrategy
 )
 
-var failStrategyValues = map[FailStrategy]string{NackExitStrategy: "NackExitStrategy", NackStrategy: "NackStrategy", AckStrategy: "AckStrategy"}
-
 // String converts the FailStrategy type to its appropriate string representation
-func (t FailStrategy) String() string {
-	if value, ok := failStrategyValues[t]; ok {
-		return value
+func (fs FailStrategy) String() string {
+	switch fs {
+	case NackExitStrategy:
+		return "NackExitStrategy"
+	case NackStrategy:
+		return "NackStrategy"
+	case AckStrategy:
+		return "AckStrategy"
+	default:
+		return "N/A"
 	}
-	return "N/A"
 }
 
 // ProcessorFunc definition of a async processor.

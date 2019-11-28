@@ -10,7 +10,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var propSetMSG = "property '%s' set for '%s'"
+const propSetMSG = "property '%s' set for '%s'"
+const failureStrategyErrorMSG = "%s failed when executing failure strategy"
 
 var consumerErrors *prometheus.CounterVec
 
@@ -53,57 +54,41 @@ type Builder struct {
 }
 
 // New initializes a new builder for a component with the given name
-// by default the failStrategy will be NackExitStrategy
-func New(name string) *Builder {
+// by default the failStrategy will be NackExitStrategy.
+func New(name string, cf ConsumerFactory, proc ProcessorFunc) *Builder {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
 	}
+	if cf == nil {
+		errs = append(errs, errors.New("consumer is required"))
+	}
+	if proc == nil {
+		errs = append(errs, errors.New("work processor is required"))
+	}
 	return &Builder{
 		name:   name,
+		cf:     cf,
+		proc:   proc,
 		errors: errs,
 	}
 }
 
-// WithProcessor sets the processing logic for the component
-// it will append an error to the builder if the processor is nil
-func (cb *Builder) WithProcessor(proc ProcessorFunc) *Builder {
-	if proc == nil {
-		cb.errors = append(cb.errors, errors.New("work processor is required"))
-	} else {
-		log.Infof(propSetMSG, "processor func", cb.name)
-		cb.proc = proc
-	}
-	return cb
-}
-
-// WithConsumerFactory defines the consumer factory to be used in order to create the appropriate consumer
-// it will append an error to the builder if the factory is nil
-func (cb *Builder) WithConsumerFactory(cf ConsumerFactory) *Builder {
-	if cf == nil {
-		cb.errors = append(cb.errors, errors.New("consumer is required"))
-	} else {
-		log.Infof(propSetMSG, "consumer factory", cb.name)
-		cb.cf = cf
-	}
-	return cb
-}
-
 // WithFailureStrategy defines the failure strategy to be used
 // default value is NackExitStrategy
-// it will append an error to the builder if the strategy is not one of the pre-defined ones
+// it will append an error to the builder if the strategy is not one of the pre-defined ones.
 func (cb *Builder) WithFailureStrategy(fs FailStrategy) *Builder {
-	if _, ok := failStrategyValues[fs]; ok {
+	if fs > AckStrategy || fs < NackExitStrategy {
+		cb.errors = append(cb.errors, errors.New("invalid strategy provided"))
+	} else {
 		log.Infof(propSetMSG, "failure strategy", cb.name)
 		cb.failStrategy = fs
-	} else {
-		cb.errors = append(cb.errors, errors.New("invalid strategy provided"))
 	}
 	return cb
 }
 
 // WithRetries specifies the retry events number for the component
-// default value is '0'
+// default value is '0'.
 func (cb *Builder) WithRetries(retries uint) *Builder {
 	log.Infof(propSetMSG, "retries", cb.name)
 	cb.retries = retries
@@ -112,7 +97,7 @@ func (cb *Builder) WithRetries(retries uint) *Builder {
 
 // WithRetryWait specifies the duration for the component to wait between retries
 // default value is '0'
-// it will append an error to the builder if the value is smaller than '0'
+// it will append an error to the builder if the value is smaller than '0'.
 func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 	if retryWait < 0 {
 		cb.errors = append(cb.errors, errors.New("invalid retry wait provided"))
@@ -218,7 +203,6 @@ func (c *Component) processMessage(msg Message, ch chan error) {
 }
 
 var errInvalidFS = errors.New("invalid failure strategy")
-var failureStrategyErrorMSG = "%s failed when executing failure strategy"
 
 func (c *Component) executeFailureStrategy(msg Message, err error) error {
 	log.Errorf("failed to process message, failure strategy executed: %v", err)

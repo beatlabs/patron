@@ -109,24 +109,7 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 			lw := newResponseWriter(w)
 			next.ServeHTTP(lw, r)
 			trace.FinishHTTPSpan(sp, lw.Status())
-			if log.Enabled(log.DebugLevel) {
-				remoteAddr := r.RemoteAddr
-				if i := strings.LastIndex(remoteAddr, ":"); i != -1 {
-					remoteAddr = remoteAddr[:i]
-				}
-				info := map[string]interface{}{
-					"request": map[string]interface{}{
-						"remote-address": remoteAddr,
-						"method":         r.Method,
-						"url":            r.URL,
-						"proto":          r.Proto,
-						"status":         lw.Status(),
-						"referer":        r.Referer(),
-						"user-agent":     r.UserAgent(),
-					},
-				}
-				log.Sub(info).Debug()
-			}
+			logRequestResponse(lw, r)
 		})
 	}
 }
@@ -137,4 +120,28 @@ func MiddlewareChain(f http.Handler, mm ...MiddlewareFunc) http.Handler {
 		f = mm[i](f)
 	}
 	return f
+}
+
+func logRequestResponse(w *responseWriter, r *http.Request) {
+	if !log.Enabled(log.DebugLevel) {
+		return
+	}
+
+	remoteAddr := r.RemoteAddr
+	if i := strings.LastIndex(remoteAddr, ":"); i != -1 {
+		remoteAddr = remoteAddr[:i]
+	}
+
+	info := map[string]interface{}{
+		"request": map[string]interface{}{
+			"remote-address": remoteAddr,
+			"method":         r.Method,
+			"url":            r.URL,
+			"proto":          r.Proto,
+			"status":         w.Status(),
+			"referer":        r.Referer(),
+			"user-agent":     r.UserAgent(),
+		},
+	}
+	log.Sub(info).Debug()
 }

@@ -163,46 +163,60 @@ func Enabled(l Level) bool {
 
 type nilLogger struct{}
 
+// Sub returns a sub logger with new fields attached.
 func (nl *nilLogger) Sub(map[string]interface{}) Logger {
 	return nl
 }
 
+// Panic logging.
 func (nl *nilLogger) Panic(args ...interface{}) {
 }
 
+// Panicf logging.
 func (nl *nilLogger) Panicf(msg string, args ...interface{}) {
 }
 
+// Fatal logging.
 func (nl *nilLogger) Fatal(args ...interface{}) {
 }
 
+// Fatalf logging.
 func (nl *nilLogger) Fatalf(msg string, args ...interface{}) {
 }
 
+// Error logging.
 func (nl *nilLogger) Error(args ...interface{}) {
 }
 
+// Errorf logging.
 func (nl *nilLogger) Errorf(msg string, args ...interface{}) {
 }
 
+// Warn logging.
 func (nl *nilLogger) Warn(args ...interface{}) {
 }
 
+// Warnf logging.
 func (nl *nilLogger) Warnf(msg string, args ...interface{}) {
 }
 
+// Info logging.
 func (nl *nilLogger) Info(args ...interface{}) {
 }
 
+// Infof logging.
 func (nl *nilLogger) Infof(msg string, args ...interface{}) {
 }
 
+// Debug logging.
 func (nl *nilLogger) Debug(args ...interface{}) {
 }
 
+// Debugf logging.
 func (nl *nilLogger) Debugf(msg string, args ...interface{}) {
 }
 
+// Level returns the debug level of the nil logger.
 func (nl *nilLogger) Level() Level {
 	return DebugLevel
 }

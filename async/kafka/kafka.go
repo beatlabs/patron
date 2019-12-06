@@ -253,19 +253,16 @@ func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan err
 func claimMessage(ctx context.Context, c *consumer, msg *sarama.ConsumerMessage) (*message, error) {
 	log.Debugf("data received from topic %s", msg.Topic)
 
-	sp, ctxCh := trace.ConsumerSpan(
-		ctx,
-		trace.ComponentOpName(trace.KafkaConsumerComponent, msg.Topic),
-		trace.KafkaConsumerComponent,
-		mapHeader(msg.Headers),
-	)
+	corID := getCorrelationID(msg.Headers)
+
+	sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(trace.KafkaConsumerComponent, msg.Topic),
+		trace.KafkaConsumerComponent, corID, mapHeader(msg.Headers))
 
 	dec, err := determineDecoder(c, msg, sp)
 	if err != nil {
 		return nil, fmt.Errorf("Could not determine decoder  %v", err)
 	}
 
-	corID := getCorrelationID(msg.Headers)
 	ctxCh = correlation.ContextWithID(ctxCh, corID)
 	ff := map[string]interface{}{
 		"correlationID": corID,

@@ -34,6 +34,7 @@ const (
 	// SNSPublisherComponent definition.
 	SNSPublisherComponent = "sns-publisher"
 	versionTag            = "version"
+	correlationID         = "correlationID"
 	hostsTag              = "hosts"
 )
 
@@ -102,18 +103,15 @@ func FinishHTTPSpan(sp opentracing.Span, code int) {
 }
 
 // ConsumerSpan starts a new consumer span.
-func ConsumerSpan(
-	ctx context.Context,
-	opName, cmp string,
-	hdr map[string]string,
-	tags ...opentracing.Tag,
-) (opentracing.Span, context.Context) {
+func ConsumerSpan(ctx context.Context, opName, cmp, corID string, hdr map[string]string,
+	tags ...opentracing.Tag) (opentracing.Span, context.Context) {
 	spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.TextMapCarrier(hdr))
 	if err != nil && err != opentracing.ErrSpanContextNotFound {
 		log.Errorf("failed to extract consumer span: %v", err)
 	}
 	sp := opentracing.StartSpan(opName, consumerOption{ctx: spCtx})
 	ext.Component.Set(sp, cmp)
+	sp.SetTag(correlationID, corID)
 	sp.SetTag(versionTag, version)
 	for _, t := range tags {
 		sp.SetTag(t.Key, t.Value)
@@ -134,11 +132,7 @@ func SpanError(sp opentracing.Span) {
 }
 
 // ChildSpan starts a new child span with specified tags.
-func ChildSpan(
-	ctx context.Context,
-	opName, cmp string,
-	tags ...opentracing.Tag,
-) (opentracing.Span, context.Context) {
+func ChildSpan(ctx context.Context, opName, cmp string, tags ...opentracing.Tag) (opentracing.Span, context.Context) {
 	sp, ctx := opentracing.StartSpanFromContext(ctx, opName)
 	ext.Component.Set(sp, cmp)
 	for _, t := range tags {
@@ -149,11 +143,9 @@ func ChildSpan(
 }
 
 // SQLSpan starts a new SQL child span with specified tags.
-func SQLSpan(
-	ctx context.Context,
-	opName, cmp, sqlType, instance, user, stmt string,
-	tags ...opentracing.Tag,
-) (opentracing.Span, context.Context) {
+func SQLSpan(ctx context.Context, opName, cmp, sqlType, instance, user, stmt string,
+	tags ...opentracing.Tag) (opentracing.Span, context.Context) {
+
 	sp, ctx := opentracing.StartSpanFromContext(ctx, opName)
 	ext.Component.Set(sp, cmp)
 	ext.DBType.Set(sp, sqlType)
@@ -169,6 +161,7 @@ func SQLSpan(
 
 // EsSpan starts a new elasticsearch child span with specified tags
 func EsSpan(ctx context.Context, opName, cmp, user, uri, method, body string, hostPool []string) opentracing.Span {
+
 	sp, _ := opentracing.StartSpanFromContext(ctx, opName)
 	ext.Component.Set(sp, cmp)
 	ext.DBType.Set(sp, "elasticsearch")

@@ -38,12 +38,13 @@ func handler(hnd sync.ProcessorFunc) http.HandlerFunc {
 		ff := map[string]interface{}{
 			"correlationID": corID,
 		}
-		ctx = log.WithContext(ctx, log.Sub(ff))
+		logger := log.Sub(ff)
+		ctx = log.WithContext(ctx, logger)
 
 		req := sync.NewRequest(f, r.Body, h, dec)
 		rsp, err := hnd(ctx, req)
 		if err != nil {
-			handleError(w, enc, err)
+			handleError(logger, w, enc, err)
 			return
 		}
 
@@ -159,7 +160,7 @@ func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *sync.Response, e
 	return err
 }
 
-func handleError(w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
+func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
 	// Assert error to type Error in order to leverage the code and payload values that such errors contain.
 	if err, ok := err.(*Error); ok {
 		p, encErr := enc(err.payload)
@@ -169,7 +170,7 @@ func handleError(w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
 		}
 		w.WriteHeader(err.code)
 		if _, err := w.Write(p); err != nil {
-			log.Errorf("failed to write response: %v", err)
+			logger.Errorf("failed to write response: %v", err)
 		}
 		return
 	}

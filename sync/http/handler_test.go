@@ -11,6 +11,7 @@ import (
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -187,7 +188,7 @@ func Test_handleError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rsp := httptest.NewRecorder()
-			handleError(rsp, tt.args.enc, tt.args.err)
+			handleError(log.Sub(nil), rsp, tt.args.enc, tt.args.err)
 			assert.Equal(t, tt.expectedCode, rsp.Code)
 		})
 	}

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -34,7 +35,6 @@ const (
 	// SNSPublisherComponent definition.
 	SNSPublisherComponent = "sns-publisher"
 	versionTag            = "version"
-	correlationID         = "correlationID"
 	hostsTag              = "hosts"
 )
 
@@ -111,7 +111,7 @@ func ConsumerSpan(ctx context.Context, opName, cmp, corID string, hdr map[string
 	}
 	sp := opentracing.StartSpan(opName, consumerOption{ctx: spCtx})
 	ext.Component.Set(sp, cmp)
-	sp.SetTag(correlationID, corID)
+	sp.SetTag(correlation.ID, corID)
 	sp.SetTag(versionTag, version)
 	for _, t := range tags {
 		sp.SetTag(t.Key, t.Value)

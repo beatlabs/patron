@@ -236,11 +236,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					trace.SQSConsumerComponent, corID, mapHeader(msg.MessageAttributes))
 
 				ctxCh = correlation.ContextWithID(ctxCh, corID)
-				ff := map[string]interface{}{
-					"messageID":     *msg.MessageId,
-					"correlationID": corID,
-				}
-				logger := log.Sub(ff)
+				logger := log.Sub(map[string]interface{}{"correlationID": corID})
 				ctxCh = log.WithContext(ctxCh, logger)
 
 				ct, err := determineContentType(msg.MessageAttributes)

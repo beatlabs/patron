@@ -11,7 +11,6 @@ import (
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync"
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -31,15 +30,12 @@ func handler(hnd sync.ProcessorFunc) http.HandlerFunc {
 			f[k] = v
 		}
 
-		h := extractHeaders(r)
-
-		corID := getCorrelationID(r.Header)
+		corID := getOrSetCorrelationID(r.Header)
 		ctx := correlation.ContextWithID(r.Context(), corID)
-		ff := map[string]interface{}{
-			"correlationID": corID,
-		}
-		logger := log.Sub(ff)
+		logger := log.Sub(map[string]interface{}{"correlationID": corID})
 		ctx = log.WithContext(ctx, logger)
+
+		h := extractHeaders(r)
 
 		req := sync.NewRequest(f, r.Body, h, dec)
 		rsp, err := hnd(ctx, req)
@@ -125,20 +121,6 @@ func extractHeaders(r *http.Request) map[string]string {
 		}
 	}
 	return h
-}
-
-func getCorrelationID(h http.Header) string {
-	cor, ok := h[correlation.HeaderID]
-	if !ok {
-		return uuid.New().String()
-	}
-	if len(cor) == 0 {
-		return uuid.New().String()
-	}
-	if cor[0] == "" {
-		return uuid.New().String()
-	}
-	return cor[0]
 }
 
 func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *sync.Response, enc encoding.EncodeFunc) error {

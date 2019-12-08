@@ -83,7 +83,7 @@ func TestHTTPStartFinishSpan(t *testing.T) {
 	opentracing.SetGlobalTracer(mtr)
 	req, err := http.NewRequest("GET", "/", nil)
 	assert.NoError(t, err)
-	sp, req := HTTPSpan("/", req)
+	sp, req := HTTPSpan("/", "corID", req)
 	assert.NotNil(t, sp)
 	assert.NotNil(t, req)
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
@@ -101,6 +101,7 @@ func TestHTTPStartFinishSpan(t *testing.T) {
 		"http.status_code": uint16(200),
 		"http.url":         "/",
 		"version":          "dev",
+		"correlationID":    "corID",
 	}, rawSpan.Tags())
 }
 

@@ -4,10 +4,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync/http/auth"
 	"github.com/beatlabs/patron/trace"
+	"github.com/google/uuid"
 )
 
 type responseWriter struct {
@@ -105,7 +107,8 @@ func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
 func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			sp, r := trace.HTTPSpan(path, r)
+			corID := getOrSetCorrelationID(r.Header)
+			sp, r := trace.HTTPSpan(path, corID, r)
 			lw := newResponseWriter(w)
 			next.ServeHTTP(lw, r)
 			trace.FinishHTTPSpan(sp, lw.Status())
@@ -144,4 +147,24 @@ func logRequestResponse(w *responseWriter, r *http.Request) {
 		},
 	}
 	log.Sub(info).Debug()
+}
+
+func getOrSetCorrelationID(h http.Header) string {
+	cor, ok := h[correlation.HeaderID]
+	if !ok {
+		corID := uuid.New().String()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	if len(cor) == 0 {
+		corID := uuid.New().String()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	if cor[0] == "" {
+		corID := uuid.New().String()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	return cor[0]
 }

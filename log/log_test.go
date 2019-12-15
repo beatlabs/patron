@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -142,6 +143,27 @@ func TestLog_Debugf(t *testing.T) {
 	assert.Equal(t, 1, l.debugCount)
 }
 
+func TestLog_Level(t *testing.T) {
+	testCases := []struct {
+		level   Level
+		against Level
+		enabled bool
+	}{
+		{DebugLevel, DebugLevel, true},
+		{DebugLevel, InfoLevel, true},
+		{InfoLevel, DebugLevel, false},
+		{InfoLevel, InfoLevel, true},
+		{InfoLevel, WarnLevel, true},
+		{WarnLevel, InfoLevel, false},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%s against %s", tc.level, tc.against), func(t *testing.T) {
+			logger = &testLogger{level: tc.level}
+			assert.Equal(t, tc.enabled, Enabled(tc.against))
+		})
+	}
+}
+
 var bCtx context.Context
 
 func Benchmark_WithContext(b *testing.B) {
@@ -174,6 +196,7 @@ type testLogger struct {
 	errorCount int
 	fatalCount int
 	panicCount int
+	level      Level
 }
 
 func (t *testLogger) Sub(map[string]interface{}) Logger {
@@ -226,4 +249,8 @@ func (t *testLogger) Debug(args ...interface{}) {
 
 func (t *testLogger) Debugf(msg string, args ...interface{}) {
 	t.debugCount++
+}
+
+func (t *testLogger) Level() Level {
+	return t.level
 }

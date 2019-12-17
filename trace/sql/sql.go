@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"regexp"
 	"time"
 
 	"github.com/beatlabs/patron/trace"
@@ -22,6 +23,16 @@ func (c *connInfo) startSpan(ctx context.Context, opName, stmt string) (opentrac
 type Conn struct {
 	connInfo
 	conn *sql.Conn
+}
+
+// DSNInfo contains information extracted from a valid
+// connection string. Additional parameters provided are discarded
+type DSNInfo struct {
+	Driver   string
+	DBName   string
+	Address  string
+	User     string
+	Protocol string
 }
 
 // BeginTx starts a transaction.
@@ -116,7 +127,9 @@ func Open(driverName, dataSourceName string) (*DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &DB{db: db}, nil
+	info := parseDSN(dataSourceName)
+
+	return &DB{connInfo: connInfo{info.DBName, info.User}, db: db}, nil
 }
 
 // OpenDB opens a database.
@@ -372,4 +385,34 @@ func (tx *Tx) Stmt(ctx context.Context, stmt *Stmt) *Stmt {
 	sp, _ := tx.startSpan(ctx, "tx.Stmt", "")
 	defer trace.SpanSuccess(sp)
 	return &Stmt{stmt: tx.tx.StmtContext(ctx, stmt.stmt)}
+}
+
+func parseDSN(dsn string) DSNInfo {
+	res := DSNInfo{}
+
+	dsnPattern := regexp.MustCompile(
+		`^(?P<driver>.*:\/\/)?(?:(?P<username>.*?)(?::(.*))?@)?` + // [driver://][user[:password]@]
+			`(?:(?P<protocol>[^\(]*)(?:\((?P<address>[^\)]*)\))?)?` + // [net[(addr)]]
+			`\/(?P<dbname>.*?)` + // /dbname
+			`(?:\?(?P<params>[^\?]*))?$`) // [?param1=value1&paramN=valueN]
+
+	matches := dsnPattern.FindStringSubmatch(dsn)
+	fields := dsnPattern.SubexpNames()
+
+	for i, match := range matches {
+		switch fields[i] {
+		case "driver":
+			res.Driver = match
+		case "username":
+			res.User = match
+		case "protocol":
+			res.Protocol = match
+		case "address":
+			res.Address = match
+		case "dbname":
+			res.DBName = match
+		}
+	}
+
+	return res
 }

@@ -78,8 +78,8 @@ func (b *Builder) WithOptions(oo ...grpc.ServerOption) *Builder {
 	return b
 }
 
-// WithDefinition allows
-func (b *Builder) WithDefinition(description *grpc.ServiceDesc, service interface{}) *Builder {
+// WithService  allows setting up a service.
+func (b *Builder) WithService(description *grpc.ServiceDesc, service interface{}) *Builder {
 	if len(b.errors) != 0 {
 		return b
 	}

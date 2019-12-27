@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net"
 
@@ -24,11 +25,9 @@ func (c *Component) Run(ctx context.Context) error {
 	//s.RegisterService(sd *grpc.ServiceDesc, ss interface{})
 
 	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				s.GracefulStop()
-			}
+		for range ctx.Done() {
+			s.GracefulStop()
+			break
 		}
 	}()
 
@@ -37,5 +36,16 @@ func (c *Component) Run(ctx context.Context) error {
 
 // Builder pattern for our gRPC service.
 type Builder struct {
-	port string
+	port   string
+	errors []error
+}
+
+// New builder.
+func New(port string) *Builder {
+	b := &Builder{}
+	if port == "" {
+		b.errors = append(b.errors, errors.New("port is empty"))
+	}
+	b.port = port
+	return b
 }

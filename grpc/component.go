@@ -122,7 +122,7 @@ func (b *Builder) appendDefinition(description *grpc.ServiceDesc, service interf
 func tracingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		md = metadata.New(make(map[string]string, 0))
+		md = metadata.New(make(map[string]string))
 	}
 	corID := getCorrelationID(md)
 	sp, newCtx := trace.ConsumerSpan(ctx, trace.ComponentOpName(componentName, info.FullMethod), componentName,

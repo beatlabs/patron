@@ -37,4 +37,5 @@ func (c *Component) Run(ctx context.Context) error {
 
 // Builder pattern for our gRPC service.
 type Builder struct {
+	port string
 }

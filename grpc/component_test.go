@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 func TestCreate(t *testing.T) {
@@ -66,7 +65,6 @@ func TestComponent_Run(t *testing.T) {
 
 	type args struct {
 		requestName string
-		md          metadata.MD
 	}
 	tests := map[string]struct {
 		args   args

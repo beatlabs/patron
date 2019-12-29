@@ -37,13 +37,8 @@ func (c *Component) Run(ctx context.Context) error {
 	}
 
 	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				c.srv.GracefulStop()
-				return
-			}
-		}
+		<-ctx.Done()
+		c.srv.GracefulStop()
 	}()
 
 	return c.srv.Serve(lis)

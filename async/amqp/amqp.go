@@ -190,7 +190,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				}
 
 				ctxCh = correlation.ContextWithID(ctxCh, corID)
-				ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{"correlationID": corID}))
+				ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{correlation.ID: corID}))
 
 				chMsg <- &message{
 					ctx:     ctxCh,

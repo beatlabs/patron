@@ -5,17 +5,13 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/beatlabs/patron/log"
-
-	"google.golang.org/grpc/metadata"
-
 	"github.com/beatlabs/patron/correlation"
-	"github.com/google/uuid"
-
-	"github.com/beatlabs/patron/trace"
-
 	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/trace"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -28,6 +24,7 @@ type Component struct {
 	srv  *grpc.Server
 }
 
+// Server returns the gRPC sever.
 func (c *Component) Server() *grpc.Server {
 	return c.srv
 }

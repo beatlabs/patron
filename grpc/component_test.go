@@ -4,9 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 func TestCreate(t *testing.T) {

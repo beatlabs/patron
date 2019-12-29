@@ -244,7 +244,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					consumerComponent, corID, mapHeader(msg.MessageAttributes))
 
 				ctxCh = correlation.ContextWithID(ctxCh, corID)
-				logger := log.Sub(map[string]interface{}{"correlationID": corID})
+				logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 				ctxCh = log.WithContext(ctxCh, logger)
 
 				ct, err := determineContentType(msg.MessageAttributes)

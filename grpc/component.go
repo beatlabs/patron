@@ -96,7 +96,7 @@ func tracingInterceptor(ctx context.Context, req interface{}, info *grpc.UnarySe
 	corID := getCorrelationID(md)
 	sp, newCtx := trace.ConsumerSpan(ctx, trace.ComponentOpName(componentName, info.FullMethod), componentName,
 		corID, mapHeader(md))
-	logger := log.Sub(map[string]interface{}{"correlationID": corID})
+	logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 	newCtx = log.WithContext(newCtx, logger)
 
 	resp, err = handler(newCtx, req)

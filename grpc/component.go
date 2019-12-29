@@ -28,6 +28,10 @@ type Component struct {
 	srv  *grpc.Server
 }
 
+func (c *Component) Server() *grpc.Server {
+	return c.srv
+}
+
 // Run the gRPC service.
 func (c *Component) Run(ctx context.Context) error {
 	lis, err := net.Listen("tcp", c.port)
@@ -45,27 +49,20 @@ func (c *Component) Run(ctx context.Context) error {
 	return c.srv.Serve(lis)
 }
 
-type definition struct {
-	description *grpc.ServiceDesc
-	service     interface{}
-}
-
 // Builder pattern for our gRPC service.
 type Builder struct {
 	port          string
 	serverOptions []grpc.ServerOption
-	definitions   []definition
 	errors        []error
 }
 
 // New builder.
-func New(port string, description *grpc.ServiceDesc, service interface{}) *Builder {
+func New(port string) *Builder {
 	b := &Builder{}
 	if port == "" {
 		b.errors = append(b.errors, errors.New("port is empty"))
 	}
 	b.port = port
-	b.appendDefinition(description, service)
 	return b
 }
 
@@ -75,15 +72,6 @@ func (b *Builder) WithOptions(oo ...grpc.ServerOption) *Builder {
 		return b
 	}
 	b.serverOptions = append(b.serverOptions, oo...)
-	return b
-}
-
-// WithService  allows setting up a service.
-func (b *Builder) WithService(description *grpc.ServiceDesc, service interface{}) *Builder {
-	if len(b.errors) != 0 {
-		return b
-	}
-	b.appendDefinition(description, service)
 	return b
 }
 
@@ -97,26 +85,10 @@ func (b *Builder) Create() (*Component, error) {
 
 	srv := grpc.NewServer(b.serverOptions...)
 
-	for _, def := range b.definitions {
-		srv.RegisterService(def.description, def.service)
-	}
-
 	return &Component{
 		port: b.port,
 		srv:  srv,
 	}, nil
-}
-
-func (b *Builder) appendDefinition(description *grpc.ServiceDesc, service interface{}) {
-	if description == nil {
-		b.errors = append(b.errors, errors.New("service description is nil"))
-		return
-	}
-	if service == nil {
-		b.errors = append(b.errors, errors.New("service implementation is nil"))
-		return
-	}
-	b.definitions = append(b.definitions, definition{description: description, service: service})
 }
 
 func tracingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {

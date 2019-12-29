@@ -29,15 +29,14 @@ func TestComponent_Run(t *testing.T) {
 	require.NoError(t, err)
 	helloworld.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())
+	chDone := make(chan struct{})
 	go func() {
 		assert.NoError(t, cmp.Run(ctx))
+		chDone <- struct{}{}
 	}()
-	defer cnl()
 	conn, err := grpc.Dial("localhost:60000", grpc.WithInsecure(), grpc.WithBlock())
 	require.NoError(t, err)
-	defer func() {
-		require.NoError(t, conn.Close())
-	}()
+
 	c := helloworld.NewGreeterClient(conn)
 
 	type args struct {
@@ -62,4 +61,7 @@ func TestComponent_Run(t *testing.T) {
 			}
 		})
 	}
+	cnl()
+	require.NoError(t, conn.Close())
+	<-chDone
 }

@@ -37,9 +37,12 @@ func (c *Component) Run(ctx context.Context) error {
 	}
 
 	go func() {
-		for range ctx.Done() {
-			c.srv.GracefulStop()
-			break
+		for {
+			select {
+			case <-ctx.Done():
+				c.srv.GracefulStop()
+				return
+			}
 		}
 	}()
 

@@ -1,14 +1,21 @@
 package kafka
 
 import (
+	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/encoding"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-
-	"github.com/beatlabs/patron/encoding"
-
-	"github.com/Shopify/sarama"
-	"github.com/stretchr/testify/assert"
 )
+
+type consumer struct {
+	Consumer
+	consumerCnf ConsumerConfig
+	saramaCnf   *sarama.Config
+}
+
+func (c *consumer) consumerConfig() *ConsumerConfig { return &c.consumerCnf }
+func (c *consumer) saramaConfig() *sarama.Config    { return c.saramaCnf }
 
 func TestBuffer(t *testing.T) {
 	type args struct {
@@ -36,7 +43,7 @@ func TestBuffer(t *testing.T) {
 }
 
 func TestTimeout(t *testing.T) {
-	c := consumer{cfg: sarama.NewConfig()}
+	c := consumer{saramaCnf: sarama.NewConfig()}
 	err := Timeout(time.Second)(&c)
 	assert.NoError(t, err)
 }
@@ -46,34 +53,34 @@ func TestVersion(t *testing.T) {
 		version string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name     string
+		args     args
+		wantErr  bool
+		expected sarama.KafkaVersion
 	}{
-		{name: "success", args: args{version: "1.0.0"}, wantErr: false},
+		{name: "success", args: args{version: "1.0.0"}, wantErr: false, expected: sarama.V1_0_0_0},
 		{name: "failed due to empty", args: args{version: ""}, wantErr: true},
 		{name: "failed due to invalid", args: args{version: "1.0.0.0"}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f, err := New("test", "topic", "group", []string{"test"})
-			assert.NoError(t, err)
-			c, err := f.Create()
-			assert.NoError(t, err)
-			err = Version(tt.args.version)(c.(*consumer))
+			c := consumer{saramaCnf: sarama.NewConfig()}
+			err := Version(tt.args.version)(&c)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, c.saramaCnf.Version)
 			}
 		})
 	}
 }
 
 func TestStart(t *testing.T) {
-	c := consumer{cfg: sarama.NewConfig()}
+	c := consumer{saramaCnf: sarama.NewConfig()}
 	err := Start(sarama.OffsetOldest)(&c)
 	assert.NoError(t, err)
+	assert.Equal(t, sarama.OffsetOldest, c.saramaCnf.Consumer.Offsets.Initial)
 }
 
 func TestDecoder1(t *testing.T) {
@@ -98,7 +105,7 @@ func TestDecoder1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := consumer{cfg: sarama.NewConfig()}
+			c := consumer{saramaCnf: sarama.NewConfig()}
 			err := Decoder(tt.dec)(&c)
 			if tt.err {
 				assert.Error(t, err)

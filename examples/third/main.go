@@ -9,6 +9,7 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/kafka"
+	kafka_group "github.com/beatlabs/patron/async/kafka/group"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
@@ -81,7 +82,7 @@ func newKafkaComponent(name, broker, topic, group, amqpURL, amqpExc string) (*ka
 
 	kafkaCmp := kafkaComponent{}
 
-	cf, err := kafka.New(name, topic, group, []string{broker}, kafka.Decoder(json.DecodeRaw))
+	cf, err := kafka_group.New(name, group, topic, []string{broker}, kafka.Decoder(json.DecodeRaw))
 	if err != nil {
 		return nil, err
 	}

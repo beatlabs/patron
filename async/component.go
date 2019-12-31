@@ -205,7 +205,7 @@ var errInvalidFS = errors.New("invalid failure strategy")
 
 func (c *Component) executeFailureStrategy(msg Message, err error) error {
 	const failureStrategyErrorMSG = "%s failed when executing failure strategy"
-	log.Errorf("failed to process message, failure strategy executed: %v", err)
+	log.FromContext(msg.Context()).Errorf("failed to process message, failure strategy executed: %v", err)
 	switch c.failStrategy {
 	case NackExitStrategy:
 		return errors.Aggregate(err, errors.Wrap(msg.Nack(), "failed to NACK message"))

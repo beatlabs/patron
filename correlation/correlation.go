@@ -6,8 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// HeaderID constant.
-const HeaderID string = "X-Correlation-Id"
+const (
+	// HeaderID constant.
+	HeaderID string = "X-Correlation-Id"
+	// ID constant.
+	ID string = "correlationID"
+)
 
 type idContextKey struct{}
 

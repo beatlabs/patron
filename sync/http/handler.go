@@ -11,7 +11,6 @@ import (
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync"
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -31,19 +30,17 @@ func handler(hnd sync.ProcessorFunc) http.HandlerFunc {
 			f[k] = v
 		}
 
-		h := extractHeaders(r)
-
-		corID := getCorrelationID(r.Header)
+		corID := getOrSetCorrelationID(r.Header)
 		ctx := correlation.ContextWithID(r.Context(), corID)
-		ff := map[string]interface{}{
-			"correlationID": corID,
-		}
-		ctx = log.WithContext(ctx, log.Sub(ff))
+		logger := log.Sub(map[string]interface{}{"correlationID": corID})
+		ctx = log.WithContext(ctx, logger)
+
+		h := extractHeaders(r)
 
 		req := sync.NewRequest(f, r.Body, h, dec)
 		rsp, err := hnd(ctx, req)
 		if err != nil {
-			handleError(w, enc, err)
+			handleError(logger, w, enc, err)
 			return
 		}
 
@@ -126,20 +123,6 @@ func extractHeaders(r *http.Request) map[string]string {
 	return h
 }
 
-func getCorrelationID(h http.Header) string {
-	cor, ok := h[correlation.HeaderID]
-	if !ok {
-		return uuid.New().String()
-	}
-	if len(cor) == 0 {
-		return uuid.New().String()
-	}
-	if cor[0] == "" {
-		return uuid.New().String()
-	}
-	return cor[0]
-}
-
 func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *sync.Response, enc encoding.EncodeFunc) error {
 	if rsp == nil {
 		w.WriteHeader(http.StatusNoContent)
@@ -159,7 +142,7 @@ func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *sync.Response, e
 	return err
 }
 
-func handleError(w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
+func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
 	// Assert error to type Error in order to leverage the code and payload values that such errors contain.
 	if err, ok := err.(*Error); ok {
 		p, encErr := enc(err.payload)
@@ -169,7 +152,7 @@ func handleError(w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
 		}
 		w.WriteHeader(err.code)
 		if _, err := w.Write(p); err != nil {
-			log.Errorf("failed to write response: %v", err)
+			logger.Errorf("failed to write response: %v", err)
 		}
 		return
 	}

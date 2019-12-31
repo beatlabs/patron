@@ -162,13 +162,11 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				return
 			case d := <-deliveries:
 				log.Debugf("processing message %d", d.DeliveryTag)
-				sp, ctxCh := trace.ConsumerSpan(
-					ctx,
-					trace.ComponentOpName(trace.AMQPConsumerComponent, c.queue),
-					trace.AMQPConsumerComponent,
-					mapHeader(d.Headers),
-					c.traceTag,
-				)
+				corID := getCorrelationID(d.Headers)
+
+				sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(trace.AMQPConsumerComponent, c.queue),
+					trace.AMQPConsumerComponent, corID, mapHeader(d.Headers), c.traceTag)
+
 				dec, err := async.DetermineDecoder(d.ContentType)
 				if err != nil {
 					err := errors.Aggregate(err, errors.Wrap(d.Nack(false, c.requeue), "failed to NACK message"))
@@ -176,12 +174,9 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					chErr <- err
 					return
 				}
-				corID := getCorrelationID(d.Headers)
+
 				ctxCh = correlation.ContextWithID(ctxCh, corID)
-				ff := map[string]interface{}{
-					"correlationID": corID,
-				}
-				ctxCh = log.WithContext(ctxCh, log.Sub(ff))
+				ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{"correlationID": corID}))
 
 				chMsg <- &message{
 					ctx:     ctxCh,

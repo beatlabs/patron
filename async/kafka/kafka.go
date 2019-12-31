@@ -47,17 +47,17 @@ type message struct {
 	dec  encoding.DecodeRawFunc
 }
 
-// Context returns the context encapsulated in the message
+// Context returns the context encapsulated in the message.
 func (m *message) Context() context.Context {
 	return m.ctx
 }
 
-// Decode will implement the decoding logic in order to transform the message bytes to a business entity
+// Decode will implement the decoding logic in order to transform the message bytes to a business entity.
 func (m *message) Decode(v interface{}) error {
 	return m.dec(m.msg.Value, v)
 }
 
-// Ack sends aknowledges the message has been processed
+// Ack sends acknowledgment that the message has been processed.
 func (m *message) Ack() error {
 	if m.sess != nil {
 		m.sess.MarkMessage(m.msg, "")
@@ -66,7 +66,7 @@ func (m *message) Ack() error {
 	return nil
 }
 
-// Nack signals the producing side an erroring condition or inconsistency
+// Nack signals the producing side an erroring condition or inconsistency.
 func (m *message) Nack() error {
 	trace.SpanError(m.span)
 	return nil
@@ -135,7 +135,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 	return c, nil
 }
 
-// consumer members can be injected or overwritten with the usage of OptionFunc arguments
+// consumer members can be injected or overwritten with the usage of OptionFunc arguments.
 type consumer struct {
 	brokers  []string
 	topic    string
@@ -253,24 +253,18 @@ func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan err
 func claimMessage(ctx context.Context, c *consumer, msg *sarama.ConsumerMessage) (*message, error) {
 	log.Debugf("data received from topic %s", msg.Topic)
 
-	sp, ctxCh := trace.ConsumerSpan(
-		ctx,
-		trace.ComponentOpName(trace.KafkaConsumerComponent, msg.Topic),
-		trace.KafkaConsumerComponent,
-		mapHeader(msg.Headers),
-	)
+	corID := getCorrelationID(msg.Headers)
+
+	sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(trace.KafkaConsumerComponent, msg.Topic),
+		trace.KafkaConsumerComponent, corID, mapHeader(msg.Headers))
 
 	dec, err := determineDecoder(c, msg, sp)
 	if err != nil {
 		return nil, fmt.Errorf("Could not determine decoder  %v", err)
 	}
 
-	corID := getCorrelationID(msg.Headers)
 	ctxCh = correlation.ContextWithID(ctxCh, corID)
-	ff := map[string]interface{}{
-		"correlationID": corID,
-	}
-	ctxCh = log.WithContext(ctxCh, log.Sub(ff))
+	ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{"correlationID": corID}))
 
 	return &message{
 		ctx:  ctxCh,

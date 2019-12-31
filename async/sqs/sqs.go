@@ -230,14 +230,20 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			for _, msg := range output.Messages {
 				observerMessageAge(c.queueName, msg.Attributes)
 
+				corID := getCorrelationID(msg.MessageAttributes)
+
 				sp, ctxCh := trace.ConsumerSpan(sqsCtx, trace.ComponentOpName(trace.SQSConsumerComponent, c.queueName),
-					trace.SQSConsumerComponent, mapHeader(msg.MessageAttributes))
+					trace.SQSConsumerComponent, corID, mapHeader(msg.MessageAttributes))
+
+				ctxCh = correlation.ContextWithID(ctxCh, corID)
+				logger := log.Sub(map[string]interface{}{"correlationID": corID})
+				ctxCh = log.WithContext(ctxCh, logger)
 
 				ct, err := determineContentType(msg.MessageAttributes)
 				if err != nil {
 					messageCountErrorInc(c.queueName, fetchedMessageState, 1)
 					trace.SpanError(sp)
-					log.Errorf("failed to determine content type: %v", err)
+					logger.Errorf("failed to determine content type: %v", err)
 					continue
 				}
 
@@ -245,17 +251,9 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				if err != nil {
 					messageCountErrorInc(c.queueName, fetchedMessageState, 1)
 					trace.SpanError(sp)
-					log.Errorf("failed to determine decoder: %v", err)
+					logger.Errorf("failed to determine decoder: %v", err)
 					continue
 				}
-
-				corID := getCorrelationID(msg.MessageAttributes)
-				ctxCh = correlation.ContextWithID(ctxCh, corID)
-				ff := map[string]interface{}{
-					"messageID":     *msg.MessageId,
-					"correlationID": corID,
-				}
-				ctxCh = log.WithContext(ctxCh, log.Sub(ff))
 
 				chMsg <- &message{
 					queueName: c.queueName,

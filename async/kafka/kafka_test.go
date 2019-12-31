@@ -125,6 +125,21 @@ type eventCounter struct {
 	claimErr     int
 }
 
+func TestWrongContentTypeError(t *testing.T) {
+
+	testData := decodingTestData{
+		counter: eventCounter{
+			claimErr: 1,
+		},
+		msgs: []*sarama.ConsumerMessage{
+			saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{Key: []byte(encoding.ContentTypeHeader), Value: []byte(`something`)}),
+		},
+		decoder: nil,
+	}
+
+	testMessageClaim(t, testData)
+}
+
 func TestDecodingError(t *testing.T) {
 
 	testData := decodingTestData{

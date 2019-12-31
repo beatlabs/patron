@@ -45,7 +45,7 @@ type ConsumerConfig struct {
 	DecoderFunc encoding.DecodeRawFunc
 }
 
-//Consumer interface
+//Consumer interface exports internaly in package the two confic objects in order to be modified by option functions.
 type Consumer interface {
 	saramaConfig() *sarama.Config
 	consumerConfig() *ConsumerConfig
@@ -84,7 +84,7 @@ func (m *message) Nack() error {
 	return nil
 }
 
-//SaramaConfig function
+//SaramaConfig function creates a sarama config object with the default configuration
 func SaramaConfig(name string) (*sarama.Config, error) {
 
 	host, err := os.Hostname()
@@ -92,17 +92,15 @@ func SaramaConfig(name string) (*sarama.Config, error) {
 		return nil, errors.New("failed to get hostname")
 	}
 
-	ci := fmt.Sprintf("%s-%s", host, name)
-
 	config := sarama.NewConfig()
-	config.ClientID = ci
+	config.ClientID = fmt.Sprintf("%s-%s", host, name)
 	config.Consumer.Return.Errors = true
 	config.Version = sarama.V0_11_0_0
 
 	return config, nil
 }
 
-//ClaimMessage function
+//ClaimMessage function transforms a sarama.ConsumerMessage to async.Message
 func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.DecodeRawFunc, sess sarama.ConsumerGroupSession) (async.Message, error) {
 	log.Debugf("data received from topic %s", msg.Topic)
 

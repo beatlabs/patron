@@ -111,15 +111,15 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 
 func consumeWithGroup(ctx context.Context, c *consumer) (<-chan async.Message, <-chan error, error) {
 
-	cg, err := sarama.NewConsumerGroup(c.consumerCnf.Brokers, c.group, c.saramaCnf)
+	cg, err := sarama.NewConsumerGroup(c.consumerConfig().Brokers, c.group, c.saramaConfig())
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create consumer")
 	}
 	c.cg = cg
 	log.Infof("consuming messages from topic '%s' using group '%s'", c.topic, c.group)
 
-	chMsg := make(chan async.Message, c.consumerCnf.Buffer)
-	chErr := make(chan error, c.consumerCnf.Buffer)
+	chMsg := make(chan async.Message, c.consumerConfig().Buffer)
+	chErr := make(chan error, c.consumerConfig().Buffer)
 
 	go func(consumer sarama.ConsumerGroup) {
 		for {
@@ -171,7 +171,7 @@ func (h handler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Con
 	ctx := sess.Context()
 	for msg := range claim.Messages() {
 		kafka.TopicPartitionOffsetDiffGaugeSet(h.consumer.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-		m, err := kafka.ClaimMessage(ctx, h.consumer.consumerCnf.DecoderFunc, msg, sess)
+		m, err := kafka.ClaimMessage(ctx, h.consumer.consumerConfig().DecoderFunc, msg, sess)
 		if err != nil {
 			return err
 		}

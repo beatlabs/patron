@@ -171,7 +171,7 @@ func (h handler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Con
 	ctx := sess.Context()
 	for msg := range claim.Messages() {
 		kafka.TopicPartitionOffsetDiffGaugeSet(h.consumer.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-		m, err := kafka.ClaimMessage(ctx, h.consumer.consumerConfig().DecoderFunc, msg, sess)
+		m, err := kafka.ClaimMessage(ctx, msg, h.consumer.consumerConfig().DecoderFunc, sess)
 		if err != nil {
 			return err
 		}

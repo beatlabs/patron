@@ -103,7 +103,7 @@ func SaramaConfig(name string) (*sarama.Config, error) {
 }
 
 //ClaimMessage function
-func ClaimMessage(ctx context.Context, d encoding.DecodeRawFunc, msg *sarama.ConsumerMessage, sess sarama.ConsumerGroupSession) (async.Message, error) {
+func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.DecodeRawFunc, sess sarama.ConsumerGroupSession) (async.Message, error) {
 	log.Debugf("data received from topic %s", msg.Topic)
 
 	corID := getCorrelationID(msg.Headers)

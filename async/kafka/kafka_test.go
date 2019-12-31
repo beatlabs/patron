@@ -306,7 +306,7 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 
 		}
 
-		msg, err := ClaimMessage(ctx, data.decoder, km, nil)
+		msg, err := ClaimMessage(ctx, km, data.decoder, nil)
 
 		if err != nil {
 			counter.claimErr++

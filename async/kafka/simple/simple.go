@@ -127,7 +127,7 @@ func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan err
 					kafka.TopicPartitionOffsetDiffGaugeSet("", m.Topic, m.Partition, consumer.HighWaterMarkOffset(), m.Offset)
 
 					go func() {
-						msg, err := kafka.ClaimMessage(ctx, c.consumerConfig().DecoderFunc, m, nil)
+						msg, err := kafka.ClaimMessage(ctx, m, c.consumerConfig().DecoderFunc, nil)
 						if err != nil {
 							chErr <- err
 							return

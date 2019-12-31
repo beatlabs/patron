@@ -56,6 +56,7 @@ func New(port string) *Builder {
 	b := &Builder{}
 	if port == "" {
 		b.errors = append(b.errors, errors.New("port is empty"))
+		return b
 	}
 	b.port = port
 	return b

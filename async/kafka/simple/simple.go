@@ -8,7 +8,6 @@ import (
 	"github.com/beatlabs/patron/async/kafka"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
-	"github.com/opentracing/opentracing-go"
 )
 
 // Factory definition of a consumer factory.
@@ -71,7 +70,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 type consumer struct {
 	kafka.Consumer
 	topic       string
-	traceTag    opentracing.Tag
 	cnl         context.CancelFunc
 	ms          sarama.Consumer
 	consumerCnf *kafka.ConsumerConfig

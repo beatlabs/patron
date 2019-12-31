@@ -38,14 +38,14 @@ func init() {
 	prometheus.MustRegister(topicPartitionOffsetDiff)
 }
 
-// ConsumerConfig is the common configuration of kafka consumers
+// ConsumerConfig is the common configuration of patron kafka consumers
 type ConsumerConfig struct {
 	Brokers     []string
 	Buffer      int
 	DecoderFunc encoding.DecodeRawFunc
 }
 
-//Consumer interface exports internaly in package the two confic objects in order to be modified by option functions.
+//Consumer interface exports internally in package the two config objects in order to be modified by option functions.
 type Consumer interface {
 	saramaConfig() *sarama.Config
 	consumerConfig() *ConsumerConfig

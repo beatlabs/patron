@@ -1,11 +1,13 @@
 package kafka
 
 import (
+	"reflect"
+	"testing"
+	"time"
+
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 type consumer struct {
@@ -37,6 +39,7 @@ func TestBuffer(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+				assert.Equal(t, tt.args.buf, c.consumerConfig().Buffer)
 			}
 		})
 	}
@@ -58,7 +61,7 @@ func TestVersion(t *testing.T) {
 		wantErr  bool
 		expected sarama.KafkaVersion
 	}{
-		{name: "success", args: args{version: "1.0.0"}, wantErr: false, expected: sarama.V1_0_0_0},
+		{name: "success", args: args{version: "2.1.0"}, wantErr: false, expected: sarama.V2_1_0_0},
 		{name: "failed due to empty", args: args{version: ""}, wantErr: true},
 		{name: "failed due to invalid", args: args{version: "1.0.0.0"}, wantErr: true},
 	}
@@ -111,6 +114,11 @@ func TestDecoder1(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
+				assert.NotNil(t, c.consumerConfig().DecoderFunc)
+				assert.Equal(t,
+					reflect.ValueOf(tt.dec).Pointer(),
+					reflect.ValueOf(c.consumerConfig().DecoderFunc).Pointer(),
+				)
 			}
 		})
 	}

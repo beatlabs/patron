@@ -47,7 +47,7 @@ func unaryInterceptor(ctx context.Context, method string, req, reply interface{}
 	span, ctx := trace.ChildSpan(ctx, trace.ComponentOpName(componentName, method), componentName, ext.SpanKindProducer,
 		ext.SpanKindProducer)
 
-	carrier := headersCarrier{}
+	carrier := headersCarrier{Ctx: ctx}
 	err := span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier)
 	if err != nil {
 		return errors.Wrap(err, "failed to inject tracing headers")

@@ -2,10 +2,11 @@ package async
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/beatlabs/patron/errors"
+	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -153,7 +154,7 @@ func (c *Component) processing(ctx context.Context) error {
 
 	cns, err := c.cf.Create()
 	if err != nil {
-		return errors.Wrap(err, "failed to create consumer")
+		return fmt.Errorf("failed to create consumer: %w", err)
 	}
 	defer func() {
 		err = cns.Close()
@@ -164,7 +165,7 @@ func (c *Component) processing(ctx context.Context) error {
 
 	chMsg, chErr, err := cns.Consume(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get consumer channels")
+		return fmt.Errorf("failed to get consumer channels: %w", err)
 	}
 
 	failCh := make(chan error)
@@ -179,7 +180,7 @@ func (c *Component) processing(ctx context.Context) error {
 				log.Debug("New message from consumer arrived")
 				c.processMessage(msg, failCh)
 			case errMsg := <-chErr:
-				failCh <- errors.Wrap(errMsg, "an error occurred during message consumption")
+				failCh <- fmt.Errorf("an error occurred during message consumption: %w", errMsg)
 				return
 			}
 		}
@@ -208,16 +209,20 @@ func (c *Component) executeFailureStrategy(msg Message, err error) error {
 	log.FromContext(msg.Context()).Errorf("failed to process message, failure strategy executed: %v", err)
 	switch c.failStrategy {
 	case NackExitStrategy:
-		return errors.Aggregate(err, errors.Wrap(msg.Nack(), "failed to NACK message"))
+		err1 := msg.Nack()
+		if err1 != nil {
+			return patronErrors.Aggregate(err, fmt.Errorf("failed to NACK message: %w", err1))
+		}
+		return err
 	case NackStrategy:
 		err := msg.Nack()
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf(failureStrategyErrorMSG, "nack"))
+			return fmt.Errorf("nack failed when executing failure strategy: %w", err)
 		}
 	case AckStrategy:
 		err := msg.Ack()
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf(failureStrategyErrorMSG, "ack"))
+			return fmt.Errorf("ack failed when executing failure strategy: %w", err)
 		}
 	default:
 		return errInvalidFS

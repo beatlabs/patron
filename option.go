@@ -1,7 +1,8 @@
 package patron
 
 import (
-	"github.com/beatlabs/patron/errors"
+	"errors"
+
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync/http"
 )

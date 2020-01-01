@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -12,7 +13,6 @@ import (
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
@@ -165,7 +165,7 @@ func consumeWithGroup(ctx context.Context, c *consumer) (<-chan async.Message, <
 
 	cg, err := sarama.NewConsumerGroup(c.brokers, c.group, c.cfg)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to create consumer")
+		return nil, nil, fmt.Errorf("failed to create consumer: %w", err)
 	}
 	c.cg = cg
 	log.Infof("consuming messages from topic '%s' using group '%s'", c.topic, c.group)
@@ -211,7 +211,7 @@ func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan err
 	log.Infof("consuming messages from topic '%s' without using consumer group", c.topic)
 	pcs, err := c.partitions()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get partitions")
+		return nil, nil, fmt.Errorf("failed to get partitions: %w", err)
 	}
 	// When kafka cluster is not fully initialized, we may get 0 partitions.
 	if len(pcs) == 0 {
@@ -318,20 +318,25 @@ func (c *consumer) Close() error {
 		return nil
 	}
 
-	return errors.Wrap(c.cg.Close(), "failed to close consumer")
+	err := c.cg.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close consumer: %w", err)
+	}
+
+	return nil
 }
 
 func (c *consumer) partitions() ([]sarama.PartitionConsumer, error) {
 
 	ms, err := sarama.NewConsumer(c.brokers, c.cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create consumer")
+		return nil, fmt.Errorf("failed to create consumer: %w", err)
 	}
 	c.ms = ms
 
 	partitions, err := c.ms.Partitions(c.topic)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get partitions")
+		return nil, fmt.Errorf("failed to get partitions: %w", err)
 	}
 
 	pcs := make([]sarama.PartitionConsumer, len(partitions))
@@ -340,7 +345,7 @@ func (c *consumer) partitions() ([]sarama.PartitionConsumer, error) {
 
 		pc, err := c.ms.ConsumePartition(c.topic, partition, c.cfg.Consumer.Offsets.Initial)
 		if nil != err {
-			return nil, errors.Wrap(err, "failed to get partition consumer")
+			return nil, fmt.Errorf("failed to get partition consumer: %w", err)
 		}
 		pcs[i] = pc
 	}

@@ -1,11 +1,11 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync/http/auth"
 	"github.com/beatlabs/patron/trace"

@@ -2,13 +2,13 @@ package patron
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
 	"testing"
 
-	"github.com/beatlabs/patron/errors"
 	phttp "github.com/beatlabs/patron/sync/http"
 	"github.com/stretchr/testify/assert"
 )

@@ -1,10 +1,9 @@
 package sqs
 
 import (
+	"errors"
 	"fmt"
 	"time"
-
-	"github.com/beatlabs/patron/errors"
 )
 
 const twelveHoursInSeconds = 43200

@@ -2,13 +2,15 @@ package patron
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"strconv"
 	"sync"
 	"syscall"
 
-	"github.com/beatlabs/patron/errors"
+	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/zerolog"
 	"github.com/beatlabs/patron/sync/http"
@@ -116,7 +118,7 @@ func (s *Service) Run(ctx context.Context) error {
 	for err := range chErr {
 		ee = append(ee, err)
 	}
-	return errors.Aggregate(ee...)
+	return patronErrors.Aggregate(ee...)
 }
 
 // Setup set's up metrics and default logging.
@@ -129,7 +131,7 @@ func Setup(name, version string) error {
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		return errors.Wrap(err, "failed to get hostname")
+		return fmt.Errorf("failed to get hostname: %w", err)
 	}
 
 	f := map[string]interface{}{
@@ -166,7 +168,7 @@ func (s *Service) setupDefaultTracing(name, version string) error {
 	if prm, ok := os.LookupEnv("PATRON_JAEGER_SAMPLER_PARAM"); ok {
 		prmVal, err = strconv.ParseFloat(prm, 64)
 		if err != nil {
-			return errors.Wrap(err, "env var for jaeger sampler param is not valid")
+			return fmt.Errorf("env var for jaeger sampler param is not valid: %w", err)
 		}
 	}
 
@@ -181,7 +183,7 @@ func (s *Service) createHTTPComponent() (Component, error) {
 	if ok {
 		portVal, err = strconv.ParseInt(port, 10, 64)
 		if err != nil {
-			return nil, errors.Wrap(err, "env var for HTTP default port is not valid")
+			return nil, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
 		}
 	}
 	port = strconv.FormatInt(portVal, 10)
@@ -207,7 +209,7 @@ func (s *Service) createHTTPComponent() (Component, error) {
 
 	cp, err := b.Create()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create default HTTP component")
+		return nil, fmt.Errorf("failed to create default HTTP component: %w", err)
 	}
 
 	return cp, nil

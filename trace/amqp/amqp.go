@@ -2,13 +2,15 @@ package amqp
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
-	"github.com/beatlabs/patron/errors"
+	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -30,7 +32,7 @@ func NewMessage(ct string, body []byte) *Message {
 func NewJSONMessage(d interface{}) (*Message, error) {
 	body, err := json.Encode(d)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to marshal to JSON")
+		return nil, fmt.Errorf("failed to marshal to JSON: %w", err)
 	}
 	return &Message{contentType: json.Type, body: body}, nil
 }
@@ -39,7 +41,7 @@ func NewJSONMessage(d interface{}) (*Message, error) {
 func NewProtobufMessage(d interface{}) (*Message, error) {
 	body, err := protobuf.Encode(d)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to marshal to protobuf")
+		return nil, fmt.Errorf("failed to marshal to protobuf: %w", err)
 	}
 	return &Message{contentType: protobuf.Type, body: body}, nil
 }
@@ -95,19 +97,19 @@ func NewPublisher(url, exc string, oo ...OptionFunc) (*TracedPublisher, error) {
 
 	conn, err := amqp.DialConfig(url, p.cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to open RabbitMq connection")
+		return nil, fmt.Errorf("failed to open RabbitMq connection: %w", err)
 	}
 	p.cn = conn
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to open RabbitMq channel")
+		return nil, fmt.Errorf("failed to open RabbitMq channel: %w", err)
 	}
 	p.ch = ch
 
 	err = ch.ExchangeDeclare(exc, amqp.ExchangeFanout, true, false, false, false, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to declare exchange")
+		return nil, fmt.Errorf("failed to declare exchange: %w", err)
 	}
 
 	return &p, nil
@@ -127,14 +129,14 @@ func (tc *TracedPublisher) Publish(ctx context.Context, msg *Message) error {
 	c := amqpHeadersCarrier(p.Headers)
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, c)
 	if err != nil {
-		return errors.Wrap(err, "failed to inject tracing headers")
+		return fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 	p.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 
 	err = tc.ch.Publish(tc.exc, "", false, false, p)
 	if err != nil {
 		trace.SpanError(sp)
-		return errors.Wrap(err, "failed to publish message")
+		return fmt.Errorf("failed to publish message: %w", err)
 	}
 	trace.SpanSuccess(sp)
 	return nil
@@ -142,7 +144,7 @@ func (tc *TracedPublisher) Publish(ctx context.Context, msg *Message) error {
 
 // Close the connection and channel of the publisher.
 func (tc *TracedPublisher) Close(_ context.Context) error {
-	return errors.Aggregate(tc.ch.Close(), tc.cn.Close())
+	return patronErrors.Aggregate(tc.ch.Close(), tc.cn.Close())
 }
 
 type amqpHeadersCarrier map[string]interface{}

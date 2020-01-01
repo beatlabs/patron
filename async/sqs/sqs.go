@@ -2,6 +2,8 @@ package sqs
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -12,7 +14,6 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
@@ -327,11 +328,11 @@ func (c *consumer) reportQueueStats(ctx context.Context, queueURL string) error 
 func getAttributeFloat64(attr map[string]*string, key string) (float64, error) {
 	valueString := attr[key]
 	if valueString == nil {
-		return 0.0, errors.Errorf("value of %s does not exist", key)
+		return 0.0, fmt.Errorf("value of %s does not exist", key)
 	}
 	value, err := strconv.ParseFloat(*valueString, 64)
 	if err != nil {
-		return 0.0, errors.Errorf("could not convert %s to float64", *valueString)
+		return 0.0, fmt.Errorf("could not convert %s to float64", *valueString)
 	}
 	return value, nil
 }

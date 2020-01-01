@@ -2,6 +2,7 @@ package sns
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/stretchr/testify/assert"

@@ -1,12 +1,12 @@
 package kafka
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Shopify/sarama"
-
 	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/errors"
 )
 
 // OptionFunc definition for configuring the consumer in a functional way.
@@ -21,7 +21,7 @@ func Version(version string) OptionFunc {
 
 		v, err := sarama.ParseKafkaVersion(version)
 		if err != nil {
-			return errors.Wrap(err, "invalid kafka version provided")
+			return fmt.Errorf("invalid kafka version provided: %w", err)
 		}
 
 		c.cfg.Version = v

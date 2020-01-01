@@ -15,7 +15,6 @@ import (
 	"github.com/beatlabs/patron/sync/http/auth/apikey"
 	tracehttp "github.com/beatlabs/patron/trace/http"
 	"github.com/beatlabs/patron/trace/kafka"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -101,12 +100,12 @@ func (hc *httpComponent) second(ctx context.Context, req *sync.Request) (*sync.R
 	var u examples.User
 	err := req.Decode(&u)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode message")
+		return nil, fmt.Errorf("failed to decode message: %w", err)
 	}
 
 	googleReq, err := http.NewRequest("GET", "https://www.google.com", nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create request for www.google.com")
+		return nil, fmt.Errorf("failed to create request for www.google.com: %w", err)
 	}
 	cl, err := tracehttp.New(tracehttp.Timeout(5 * time.Second))
 	if err != nil {
@@ -114,7 +113,7 @@ func (hc *httpComponent) second(ctx context.Context, req *sync.Request) (*sync.R
 	}
 	_, err = cl.Do(ctx, googleReq)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get www.google.com")
+		return nil, fmt.Errorf("failed to get www.google.com: %w", err)
 	}
 
 	kafkaMsg, err := kafka.NewJSONMessage(hc.topic, &u)

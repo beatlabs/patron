@@ -15,7 +15,6 @@ import (
 	"github.com/beatlabs/patron/sync"
 	patronhttp "github.com/beatlabs/patron/sync/http"
 	tracehttp "github.com/beatlabs/patron/trace/http"
-	"github.com/pkg/errors"
 )
 
 func init() {
@@ -85,17 +84,17 @@ func first(ctx context.Context, req *sync.Request) (*sync.Response, error) {
 
 	err := req.Decode(&u)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode request")
+		return nil, fmt.Errorf("failed to decode request: %w", err)
 	}
 
 	b, err := protobuf.Encode(&u)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed create request")
+		return nil, fmt.Errorf("failed create request: %w", err)
 	}
 
 	secondRouteReq, err := http.NewRequest("GET", "http://localhost:50001", bytes.NewReader(b))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed create request")
+		return nil, fmt.Errorf("failed create request: %w", err)
 	}
 	secondRouteReq.Header.Add("Content-Type", protobuf.Type)
 	secondRouteReq.Header.Add("Accept", protobuf.Type)
@@ -106,7 +105,7 @@ func first(ctx context.Context, req *sync.Request) (*sync.Response, error) {
 	}
 	rsp, err := cl.Do(ctx, secondRouteReq)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to post to second service")
+		return nil, fmt.Errorf("failed to post to second service: %w", err)
 	}
 
 	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())

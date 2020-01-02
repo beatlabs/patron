@@ -24,7 +24,7 @@ func Version(version string) OptionFunc {
 		if err != nil {
 			return errors.Wrap(err, "invalid kafka version provided")
 		}
-		c.saramaConfig().Version = v
+		c.ConsumerConfig().SaramaConfig.Version = v
 		return nil
 	}
 }
@@ -35,7 +35,7 @@ func Buffer(buf int) OptionFunc {
 		if buf < 0 {
 			return errors.New("buffer must greater or equal than 0")
 		}
-		c.consumerConfig().Buffer = buf
+		c.ConsumerConfig().Buffer = buf
 		return nil
 	}
 }
@@ -43,7 +43,7 @@ func Buffer(buf int) OptionFunc {
 // Timeout option for adjusting the timeout of the connection.
 func Timeout(timeout time.Duration) OptionFunc {
 	return func(c Consumer) error {
-		c.saramaConfig().Net.DialTimeout = timeout
+		c.ConsumerConfig().SaramaConfig.Net.DialTimeout = timeout
 		return nil
 	}
 }
@@ -51,7 +51,7 @@ func Timeout(timeout time.Duration) OptionFunc {
 // Start option for adjusting the the starting offset
 func Start(offset int64) OptionFunc {
 	return func(c Consumer) error {
-		c.saramaConfig().Consumer.Offsets.Initial = offset
+		c.ConsumerConfig().SaramaConfig.Consumer.Offsets.Initial = offset
 		return nil
 	}
 }
@@ -59,7 +59,7 @@ func Start(offset int64) OptionFunc {
 // StartFromOldest option for adjusting the the starting offset to oldest
 func StartFromOldest() OptionFunc {
 	return func(c Consumer) error {
-		c.saramaConfig().Consumer.Offsets.Initial = sarama.OffsetOldest
+		c.ConsumerConfig().SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
 		return nil
 	}
 }
@@ -67,7 +67,7 @@ func StartFromOldest() OptionFunc {
 // StartFromNewest option for adjusting the the starting offset to newest
 func StartFromNewest() OptionFunc {
 	return func(c Consumer) error {
-		c.saramaConfig().Consumer.Offsets.Initial = sarama.OffsetNewest
+		c.ConsumerConfig().SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetNewest
 		return nil
 	}
 }
@@ -78,7 +78,7 @@ func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
 		if dec == nil {
 			return errors.New("decoder is nil")
 		}
-		c.consumerConfig().DecoderFunc = dec
+		c.ConsumerConfig().DecoderFunc = dec
 		return nil
 	}
 }
@@ -86,7 +86,7 @@ func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
 // DecoderJSON option for injecting json decoder
 func DecoderJSON() OptionFunc {
 	return func(c Consumer) error {
-		c.consumerConfig().DecoderFunc = json.DecodeRaw
+		c.ConsumerConfig().DecoderFunc = json.DecodeRaw
 		return nil
 	}
 }

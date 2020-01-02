@@ -55,15 +55,15 @@ func (f *Factory) Create() (async.Consumer, error) {
 	}
 
 	cc := kafka.ConsumerConfig{
-		Brokers: f.brokers,
-		Buffer:  0,
+		Brokers:      f.brokers,
+		Buffer:       0,
+		SaramaConfig: config,
 	}
 
 	c := &consumer{
 		topic:       f.topic,
 		group:       f.group,
 		traceTag:    opentracing.Tag{Key: "group", Value: f.group},
-		saramaCnf:   config,
 		consumerCnf: cc,
 	}
 
@@ -86,11 +86,9 @@ type consumer struct {
 	cnl         context.CancelFunc
 	cg          sarama.ConsumerGroup
 	consumerCnf kafka.ConsumerConfig
-	saramaCnf   *sarama.Config
 }
 
-func (c *consumer) consumerConfig() *kafka.ConsumerConfig { return &c.consumerCnf }
-func (c *consumer) saramaConfig() *sarama.Config          { return c.saramaCnf }
+func (c *consumer) ConsumerConfig() *kafka.ConsumerConfig { return &c.consumerCnf }
 
 // Close handles closing consumer.
 func (c *consumer) Close() error {
@@ -111,15 +109,15 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 
 func consumeWithGroup(ctx context.Context, c *consumer) (<-chan async.Message, <-chan error, error) {
 
-	cg, err := sarama.NewConsumerGroup(c.consumerConfig().Brokers, c.group, c.saramaConfig())
+	cg, err := sarama.NewConsumerGroup(c.ConsumerConfig().Brokers, c.group, c.ConsumerConfig().SaramaConfig)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create consumer")
 	}
 	c.cg = cg
 	log.Infof("consuming messages from topic '%s' using group '%s'", c.topic, c.group)
 
-	chMsg := make(chan async.Message, c.consumerConfig().Buffer)
-	chErr := make(chan error, c.consumerConfig().Buffer)
+	chMsg := make(chan async.Message, c.ConsumerConfig().Buffer)
+	chErr := make(chan error, c.ConsumerConfig().Buffer)
 
 	go func(consumer sarama.ConsumerGroup) {
 		for {
@@ -171,7 +169,7 @@ func (h handler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Con
 	ctx := sess.Context()
 	for msg := range claim.Messages() {
 		kafka.TopicPartitionOffsetDiffGaugeSet(h.consumer.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-		m, err := kafka.ClaimMessage(ctx, msg, h.consumer.consumerConfig().DecoderFunc, sess)
+		m, err := kafka.ClaimMessage(ctx, msg, h.consumer.ConsumerConfig().DecoderFunc, sess)
 		if err != nil {
 			return err
 		}

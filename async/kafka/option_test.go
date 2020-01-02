@@ -13,11 +13,9 @@ import (
 type consumer struct {
 	Consumer
 	consumerCnf ConsumerConfig
-	saramaCnf   *sarama.Config
 }
 
-func (c *consumer) consumerConfig() *ConsumerConfig { return &c.consumerCnf }
-func (c *consumer) saramaConfig() *sarama.Config    { return c.saramaCnf }
+func (c *consumer) ConsumerConfig() *ConsumerConfig { return &c.consumerCnf }
 
 func TestBuffer(t *testing.T) {
 	type args struct {
@@ -39,14 +37,15 @@ func TestBuffer(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.args.buf, c.consumerConfig().Buffer)
+				assert.Equal(t, tt.args.buf, c.ConsumerConfig().Buffer)
 			}
 		})
 	}
 }
 
 func TestTimeout(t *testing.T) {
-	c := consumer{saramaCnf: sarama.NewConfig()}
+	c := consumer{}
+	c.ConsumerConfig().SaramaConfig = sarama.NewConfig()
 	err := Timeout(time.Second)(&c)
 	assert.NoError(t, err)
 }
@@ -67,23 +66,25 @@ func TestVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := consumer{saramaCnf: sarama.NewConfig()}
+			c := consumer{}
+			c.ConsumerConfig().SaramaConfig = sarama.NewConfig()
 			err := Version(tt.args.version)(&c)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, c.saramaCnf.Version)
+				assert.Equal(t, tt.expected, c.ConsumerConfig().SaramaConfig.Version)
 			}
 		})
 	}
 }
 
 func TestStart(t *testing.T) {
-	c := consumer{saramaCnf: sarama.NewConfig()}
+	c := consumer{}
+	c.ConsumerConfig().SaramaConfig = sarama.NewConfig()
 	err := Start(sarama.OffsetOldest)(&c)
 	assert.NoError(t, err)
-	assert.Equal(t, sarama.OffsetOldest, c.saramaCnf.Consumer.Offsets.Initial)
+	assert.Equal(t, sarama.OffsetOldest, c.ConsumerConfig().SaramaConfig.Consumer.Offsets.Initial)
 }
 
 func TestDecoder1(t *testing.T) {
@@ -108,16 +109,16 @@ func TestDecoder1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := consumer{saramaCnf: sarama.NewConfig()}
+			c := consumer{}
 			err := Decoder(tt.dec)(&c)
 			if tt.err {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, c.consumerConfig().DecoderFunc)
+				assert.NotNil(t, c.ConsumerConfig().DecoderFunc)
 				assert.Equal(t,
 					reflect.ValueOf(tt.dec).Pointer(),
-					reflect.ValueOf(c.consumerConfig().DecoderFunc).Pointer(),
+					reflect.ValueOf(c.ConsumerConfig().DecoderFunc).Pointer(),
 				)
 			}
 		})

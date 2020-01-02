@@ -40,15 +40,15 @@ func init() {
 
 // ConsumerConfig is the common configuration of patron kafka consumers
 type ConsumerConfig struct {
-	Brokers     []string
-	Buffer      int
-	DecoderFunc encoding.DecodeRawFunc
+	Brokers      []string
+	Buffer       int
+	DecoderFunc  encoding.DecodeRawFunc
+	SaramaConfig *sarama.Config
 }
 
-//Consumer interface exports internally in package the two config objects in order to be modified by option functions.
+//Consumer interface exports the two config objects in order to be modified by option functions.
 type Consumer interface {
-	saramaConfig() *sarama.Config
-	consumerConfig() *ConsumerConfig
+	ConsumerConfig() *ConsumerConfig
 }
 
 type message struct {

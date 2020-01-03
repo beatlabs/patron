@@ -52,12 +52,12 @@ func (f *Factory) Create() (async.Consumer, error) {
 	}
 
 	c := &consumer{
-		topic:       f.topic,
-		consumerCnf: cc,
+		topic:  f.topic,
+		config: cc,
 	}
 
 	for _, o := range f.oo {
-		err = o(c)
+		err = o(&c.config)
 		if err != nil {
 			return nil, err
 		}
@@ -68,14 +68,11 @@ func (f *Factory) Create() (async.Consumer, error) {
 
 // consumer members can be injected or overwritten with the usage of OptionFunc arguments.
 type consumer struct {
-	kafka.Consumer
-	topic       string
-	cnl         context.CancelFunc
-	ms          sarama.Consumer
-	consumerCnf kafka.ConsumerConfig
+	topic  string
+	cnl    context.CancelFunc
+	ms     sarama.Consumer
+	config kafka.ConsumerConfig
 }
-
-func (c *consumer) ConsumerConfig() *kafka.ConsumerConfig { return &c.consumerCnf }
 
 // Close handles closing consumer.
 func (c *consumer) Close() error {
@@ -96,8 +93,8 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 
 func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan error, error) {
 
-	chMsg := make(chan async.Message, c.ConsumerConfig().Buffer)
-	chErr := make(chan error, c.ConsumerConfig().Buffer)
+	chMsg := make(chan async.Message, c.config.Buffer)
+	chErr := make(chan error, c.config.Buffer)
 
 	log.Infof("consuming messages from topic '%s' without using consumer group", c.topic)
 	pcs, err := c.partitions()
@@ -125,7 +122,7 @@ func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan err
 					kafka.TopicPartitionOffsetDiffGaugeSet("", m.Topic, m.Partition, consumer.HighWaterMarkOffset(), m.Offset)
 
 					go func(message *sarama.ConsumerMessage) {
-						msg, err := kafka.ClaimMessage(ctx, message, c.ConsumerConfig().DecoderFunc, nil)
+						msg, err := kafka.ClaimMessage(ctx, message, c.config.DecoderFunc, nil)
 						if err != nil {
 							chErr <- err
 							return
@@ -142,7 +139,7 @@ func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan err
 
 func (c *consumer) partitions() ([]sarama.PartitionConsumer, error) {
 
-	ms, err := sarama.NewConsumer(c.ConsumerConfig().Brokers, c.ConsumerConfig().SaramaConfig)
+	ms, err := sarama.NewConsumer(c.config.Brokers, c.config.SaramaConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create consumer")
 	}
@@ -157,7 +154,7 @@ func (c *consumer) partitions() ([]sarama.PartitionConsumer, error) {
 
 	for i, partition := range partitions {
 
-		pc, err := c.ms.ConsumePartition(c.topic, partition, c.ConsumerConfig().SaramaConfig.Consumer.Offsets.Initial)
+		pc, err := c.ms.ConsumePartition(c.topic, partition, c.config.SaramaConfig.Consumer.Offsets.Initial)
 		if nil != err {
 			return nil, errors.Wrap(err, "failed to get partition consumer")
 		}

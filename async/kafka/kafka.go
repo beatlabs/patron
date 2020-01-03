@@ -46,11 +46,6 @@ type ConsumerConfig struct {
 	SaramaConfig *sarama.Config
 }
 
-// Consumer interface exports the two config objects in order to be modified by option functions.
-type Consumer interface {
-	ConsumerConfig() *ConsumerConfig
-}
-
 type message struct {
 	span opentracing.Span
 	ctx  context.Context

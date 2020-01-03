@@ -7,15 +7,9 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/stretchr/testify/assert"
 )
-
-type consumer struct {
-	Consumer
-	consumerCnf ConsumerConfig
-}
-
-func (c *consumer) ConsumerConfig() *ConsumerConfig { return &c.consumerCnf }
 
 func TestBuffer(t *testing.T) {
 	type args struct {
@@ -31,21 +25,21 @@ func TestBuffer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := consumer{}
+			c := ConsumerConfig{}
 			err := Buffer(tt.args.buf)(&c)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.args.buf, c.ConsumerConfig().Buffer)
+				assert.Equal(t, tt.args.buf, c.Buffer)
 			}
 		})
 	}
 }
 
 func TestTimeout(t *testing.T) {
-	c := consumer{}
-	c.ConsumerConfig().SaramaConfig = sarama.NewConfig()
+	c := ConsumerConfig{}
+	c.SaramaConfig = sarama.NewConfig()
 	err := Timeout(time.Second)(&c)
 	assert.NoError(t, err)
 }
@@ -66,25 +60,47 @@ func TestVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := consumer{}
-			c.ConsumerConfig().SaramaConfig = sarama.NewConfig()
+			c := ConsumerConfig{}
+			c.SaramaConfig = sarama.NewConfig()
 			err := Version(tt.args.version)(&c)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, c.ConsumerConfig().SaramaConfig.Version)
+				assert.Equal(t, tt.expected, c.SaramaConfig.Version)
 			}
 		})
 	}
 }
 
 func TestStart(t *testing.T) {
-	c := consumer{}
-	c.ConsumerConfig().SaramaConfig = sarama.NewConfig()
-	err := Start(sarama.OffsetOldest)(&c)
-	assert.NoError(t, err)
-	assert.Equal(t, sarama.OffsetOldest, c.ConsumerConfig().SaramaConfig.Consumer.Offsets.Initial)
+	tests := map[string]struct {
+		optionFunc      OptionFunc
+		expectedOffsets int64
+	}{
+		"Start": {
+			Start(5),
+			int64(5),
+		},
+		"StartFromNewest": {
+			StartFromNewest(),
+			sarama.OffsetNewest,
+		},
+		"StartFromOldest": {
+			StartFromOldest(),
+			sarama.OffsetOldest,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			c := ConsumerConfig{}
+			c.SaramaConfig = sarama.NewConfig()
+			err := tt.optionFunc(&c)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedOffsets, c.SaramaConfig.Consumer.Offsets.Initial)
+		})
+	}
 }
 
 func TestDecoder1(t *testing.T) {
@@ -109,18 +125,28 @@ func TestDecoder1(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := consumer{}
+			c := ConsumerConfig{}
 			err := Decoder(tt.dec)(&c)
 			if tt.err {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, c.ConsumerConfig().DecoderFunc)
+				assert.NotNil(t, c.DecoderFunc)
 				assert.Equal(t,
 					reflect.ValueOf(tt.dec).Pointer(),
-					reflect.ValueOf(c.ConsumerConfig().DecoderFunc).Pointer(),
+					reflect.ValueOf(c.DecoderFunc).Pointer(),
 				)
 			}
 		})
 	}
+}
+
+func TestDecoderJSON(t *testing.T) {
+	c := ConsumerConfig{}
+	err := DecoderJSON()(&c)
+	assert.NoError(t, err)
+	assert.Equal(t,
+		reflect.ValueOf(json.DecodeRaw).Pointer(),
+		reflect.ValueOf(c.DecoderFunc).Pointer(),
+	)
 }

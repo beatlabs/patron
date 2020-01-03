@@ -59,14 +59,14 @@ func (f *Factory) Create() (async.Consumer, error) {
 	}
 
 	c := &consumer{
-		topic:       f.topic,
-		group:       f.group,
-		traceTag:    opentracing.Tag{Key: "group", Value: f.group},
-		consumerCnf: cc,
+		topic:    f.topic,
+		group:    f.group,
+		traceTag: opentracing.Tag{Key: "group", Value: f.group},
+		config:   cc,
 	}
 
 	for _, o := range f.oo {
-		err = o(c)
+		err = o(&c.config)
 		if err != nil {
 			return nil, fmt.Errorf("Could not apply OptionFunc to consumer : %v", err)
 		}
@@ -77,16 +77,13 @@ func (f *Factory) Create() (async.Consumer, error) {
 
 // consumer members can be injected or overwritten with the usage of OptionFunc arguments.
 type consumer struct {
-	kafka.Consumer
-	topic       string
-	group       string
-	traceTag    opentracing.Tag
-	cnl         context.CancelFunc
-	cg          sarama.ConsumerGroup
-	consumerCnf kafka.ConsumerConfig
+	topic    string
+	group    string
+	traceTag opentracing.Tag
+	cnl      context.CancelFunc
+	cg       sarama.ConsumerGroup
+	config   kafka.ConsumerConfig
 }
-
-func (c *consumer) ConsumerConfig() *kafka.ConsumerConfig { return &c.consumerCnf }
 
 // Close handles closing consumer.
 func (c *consumer) Close() error {
@@ -102,15 +99,15 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	ctx, cnl := context.WithCancel(ctx)
 	c.cnl = cnl
 
-	cg, err := sarama.NewConsumerGroup(c.ConsumerConfig().Brokers, c.group, c.ConsumerConfig().SaramaConfig)
+	cg, err := sarama.NewConsumerGroup(c.config.Brokers, c.group, c.config.SaramaConfig)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create consumer")
 	}
 	c.cg = cg
 	log.Infof("consuming messages from topic '%s' using group '%s'", c.topic, c.group)
 
-	chMsg := make(chan async.Message, c.ConsumerConfig().Buffer)
-	chErr := make(chan error, c.ConsumerConfig().Buffer)
+	chMsg := make(chan async.Message, c.config.Buffer)
+	chErr := make(chan error, c.config.Buffer)
 
 	go func() {
 		for {
@@ -162,7 +159,7 @@ func (h handler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Con
 	ctx := sess.Context()
 	for msg := range claim.Messages() {
 		kafka.TopicPartitionOffsetDiffGaugeSet(h.consumer.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-		m, err := kafka.ClaimMessage(ctx, msg, h.consumer.ConsumerConfig().DecoderFunc, sess)
+		m, err := kafka.ClaimMessage(ctx, msg, h.consumer.config.DecoderFunc, sess)
 		if err != nil {
 			return err
 		}

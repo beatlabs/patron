@@ -100,7 +100,7 @@ func SaramaConfig(name string) (*sarama.Config, error) {
 	return config, nil
 }
 
-//ClaimMessage function transforms a sarama.ConsumerMessage to async.Message
+// ClaimMessage transforms a sarama.ConsumerMessage to an async.Message.
 func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.DecodeRawFunc, sess sarama.ConsumerGroupSession) (async.Message, error) {
 	log.Debugf("data received from topic %s", msg.Topic)
 

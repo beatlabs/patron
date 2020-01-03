@@ -41,6 +41,7 @@ go run examples/second/main.go
 go run examples/third/main.go
 go run examples/fourth/main.go
 go run examples/fifth/main.go
+go run examples/sixth/main.go examples/sixth/greeter.pb.go
 ```
 
 and then send a sample request:

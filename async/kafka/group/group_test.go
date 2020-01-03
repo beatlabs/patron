@@ -9,7 +9,7 @@ import (
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/kafka"
 	"github.com/beatlabs/patron/encoding"
-	patron_json "github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -136,7 +136,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		error   string
 		wantErr bool
 	}{
-		{"success", saramaConsumerMessages(patron_json.Type), "", false},
+		{"success", saramaConsumerMessages(json.Type), "", false},
 		{"failure decoding", saramaConsumerMessages("mock"), "failed to determine decoder for mock", true},
 		{"failure content", saramaConsumerMessages(""), "failed to determine content type", true},
 	}

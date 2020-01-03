@@ -104,11 +104,6 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	ctx, cnl := context.WithCancel(ctx)
 	c.cnl = cnl
 
-	return consumeWithGroup(ctx, c)
-}
-
-func consumeWithGroup(ctx context.Context, c *consumer) (<-chan async.Message, <-chan error, error) {
-
 	cg, err := sarama.NewConsumerGroup(c.ConsumerConfig().Brokers, c.group, c.ConsumerConfig().SaramaConfig)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create consumer")
@@ -119,31 +114,31 @@ func consumeWithGroup(ctx context.Context, c *consumer) (<-chan async.Message, <
 	chMsg := make(chan async.Message, c.ConsumerConfig().Buffer)
 	chErr := make(chan error, c.ConsumerConfig().Buffer)
 
-	go func(consumer sarama.ConsumerGroup) {
+	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Info("canceling consuming messages requested")
-				closeConsumer(consumer)
+				closeConsumer(c.cg)
 				return
-			case consumerError := <-consumer.Errors():
-				closeConsumer(consumer)
+			case consumerError := <-c.cg.Errors():
+				closeConsumer(c.cg)
 				chErr <- consumerError
 				return
 			}
 		}
-	}(c.cg)
+	}()
 
 	// Iterate over consumer sessions.
-	go func(consumer sarama.ConsumerGroup) {
+	go func() {
 		hnd := handler{consumer: c, messages: chMsg}
 		for {
-			err := consumer.Consume(ctx, []string{c.topic}, hnd)
+			err := c.cg.Consume(ctx, []string{c.topic}, hnd)
 			if err != nil {
 				chErr <- err
 			}
 		}
-	}(c.cg)
+	}()
 
 	return chMsg, chErr, nil
 }

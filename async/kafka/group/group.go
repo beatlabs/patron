@@ -3,8 +3,6 @@ package group
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"runtime"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
@@ -70,7 +68,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 	for _, o := range f.oo {
 		err = o(c)
 		if err != nil {
-			return nil, fmt.Errorf("Could not apply OptionFunc '%v' to consumer : %v", runtime.FuncForPC(reflect.ValueOf(o).Pointer()).Name(), err)
+			return nil, fmt.Errorf("Could not apply OptionFunc to consumer : %v", err)
 		}
 	}
 

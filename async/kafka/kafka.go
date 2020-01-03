@@ -38,7 +38,7 @@ func init() {
 	prometheus.MustRegister(topicPartitionOffsetDiff)
 }
 
-// ConsumerConfig is the common configuration of patron kafka consumers
+// ConsumerConfig is the common configuration of patron kafka consumers.
 type ConsumerConfig struct {
 	Brokers      []string
 	Buffer       int

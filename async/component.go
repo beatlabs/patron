@@ -209,9 +209,9 @@ func (c *Component) executeFailureStrategy(msg Message, err error) error {
 	log.FromContext(msg.Context()).Errorf("failed to process message, failure strategy executed: %v", err)
 	switch c.failStrategy {
 	case NackExitStrategy:
-		err1 := msg.Nack()
-		if err1 != nil {
-			return patronErrors.Aggregate(err, fmt.Errorf("failed to NACK message: %w", err1))
+		nackErr := msg.Nack()
+		if nackErr != nil {
+			return patronErrors.Aggregate(err, fmt.Errorf("failed to NACK message: %w", nackErr))
 		}
 		return err
 	case NackStrategy:

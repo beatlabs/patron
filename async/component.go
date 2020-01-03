@@ -112,7 +112,7 @@ func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 func (cb *Builder) Create() (*Component, error) {
 
 	if len(cb.errors) > 0 {
-		return nil, errors.Aggregate(cb.errors...)
+		return nil, patronErrors.Aggregate(cb.errors...)
 	}
 
 	c := &Component{

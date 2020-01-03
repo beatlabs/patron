@@ -3,10 +3,7 @@ package async
 import (
 	"context"
 	"errors"
-<<<<<<< HEAD
 	"strings"
-=======
->>>>>>> Removed errors.Wrap
 	"testing"
 	"time"
 

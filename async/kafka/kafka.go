@@ -20,7 +20,7 @@ import (
 
 var topicPartitionOffsetDiff *prometheus.GaugeVec
 
-//TopicPartitionOffsetDiffGaugeSet creates a new Gauge with labels
+// TopicPartitionOffsetDiffGaugeSet creates a new Gauge that measures partition offsets.
 func TopicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high, offset int64) {
 	topicPartitionOffsetDiff.WithLabelValues(group, topic, strconv.FormatInt(int64(partition), 10)).Set(float64(high - offset))
 }

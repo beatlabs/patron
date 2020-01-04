@@ -68,7 +68,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 	for _, o := range f.oo {
 		err = o(&c.config)
 		if err != nil {
-			return nil, fmt.Errorf("Could not apply OptionFunc to consumer : %v", err)
+			return nil, fmt.Errorf("could not apply OptionFunc to consumer : %v", err)
 		}
 	}
 

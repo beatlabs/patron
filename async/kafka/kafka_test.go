@@ -21,8 +21,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSaramaConfig(t *testing.T) {
-	sc, err := SaramaConfig("name")
+func TestDefaultSaramaConfig(t *testing.T) {
+	sc, err := DefaultSaramaConfig("name")
 	assert.NoError(t, err)
 	assert.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
 }

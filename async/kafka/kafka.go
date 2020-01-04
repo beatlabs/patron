@@ -79,8 +79,8 @@ func (m *message) Nack() error {
 	return nil
 }
 
-// SaramaConfig function creates a sarama config object with the default configuration set up.
-func SaramaConfig(name string) (*sarama.Config, error) {
+// DefaultSaramaConfig function creates a sarama config object with the default configuration set up.
+func DefaultSaramaConfig(name string) (*sarama.Config, error) {
 
 	host, err := os.Hostname()
 	if err != nil {

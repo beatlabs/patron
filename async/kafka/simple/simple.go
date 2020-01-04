@@ -87,11 +87,6 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	ctx, cnl := context.WithCancel(ctx)
 	c.cnl = cnl
 
-	return consume(ctx, c)
-}
-
-func consume(ctx context.Context, c *consumer) (<-chan async.Message, <-chan error, error) {
-
 	chMsg := make(chan async.Message, c.config.Buffer)
 	chErr := make(chan error, c.config.Buffer)
 

@@ -2,6 +2,7 @@ package group
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -69,22 +70,39 @@ func TestNew(t *testing.T) {
 
 func TestFactory_Create(t *testing.T) {
 	type fields struct {
-		oo []kafka.OptionFunc
+		clientName string
+		topic      string
+		brokers    []string
+		oo         []kafka.OptionFunc
 	}
-	tests := []struct {
-		name    string
+	tests := map[string]struct {
 		fields  fields
 		wantErr bool
 	}{
-		{name: "success", wantErr: false},
-		{name: "failed with invalid option", fields: fields{oo: []kafka.OptionFunc{kafka.Buffer(-100)}}, wantErr: true},
+		"success": {
+			fields: fields{
+				clientName: "clientA",
+				topic:      "topicA",
+				brokers:    []string{"192.168.1.1"},
+			},
+			wantErr: false,
+		},
+		"failed with invalid option": {
+			fields: fields{
+				clientName: "clientB",
+				topic:      "topicA",
+				brokers:    []string{"192.168.1.1"},
+				oo:         []kafka.OptionFunc{kafka.Buffer(-100)},
+			},
+			wantErr: true,
+		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for testName, tt := range tests {
+		t.Run(testName, func(t *testing.T) {
 			f := &Factory{
-				name:    "test",
-				topic:   "topic",
-				brokers: []string{"192.168.1.1"},
+				name:    tt.fields.clientName,
+				topic:   tt.fields.topic,
+				brokers: tt.fields.brokers,
 				oo:      tt.fields.oo,
 			}
 			got, err := f.Create()
@@ -94,6 +112,11 @@ func TestFactory_Create(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, got)
+				consumer, ok := got.(*consumer)
+				assert.True(t, ok, "consumer is not of type group.consumer")
+				assert.Equal(t, tt.fields.brokers, consumer.config.Brokers)
+				assert.Equal(t, tt.fields.topic, consumer.topic)
+				assert.True(t, strings.HasSuffix(consumer.config.SaramaConfig.ClientID, tt.fields.clientName))
 			}
 		})
 	}

@@ -40,7 +40,6 @@ func New(name, topic string, brokers []string, oo ...kafka.OptionFunc) (*Factory
 func (f *Factory) Create() (async.Consumer, error) {
 
 	config, err := kafka.DefaultSaramaConfig(f.name)
-
 	if err != nil {
 		return nil, err
 	}

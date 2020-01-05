@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const fooTopic = "foo_topic"
+
 func TestNew(t *testing.T) {
 	brokers := []string{"192.168.1.1"}
 	type args struct {
@@ -121,10 +123,10 @@ func consume(t *testing.T, f *Factory) (context.Context, async.Consumer, <-chan 
 }
 
 func TestConsumer_ConsumeFromOldest(t *testing.T) {
-	topic := "foo_topic"
-	broker := newBroker(t, topic)
+	broker := newBroker(t, fooTopic)
 
-	f, err := New("name", topic, []string{broker.Addr()}, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+	f, err := New("name", fooTopic, []string{broker.Addr()}, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+	assert.NoError(t, err)
 
 	ctx, c, chMsg, chErr := consume(t, f)
 
@@ -146,10 +148,9 @@ func TestConsumer_ConsumeFromOldest(t *testing.T) {
 }
 
 func TestConsumer_ClaimMessageError(t *testing.T) {
-	topic := "foo_topic"
-	broker := newBroker(t, topic)
+	broker := newBroker(t, fooTopic)
 
-	f, err := New("name", topic, []string{broker.Addr()}, kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+	f, err := New("name", fooTopic, []string{broker.Addr()}, kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
 	assert.NoError(t, err)
 
 	ctx, c, chMsg, chErr := consume(t, f)
@@ -169,22 +170,22 @@ func TestConsumer_ClaimMessageError(t *testing.T) {
 }
 
 func TestConsumer_ConsumerError(t *testing.T) {
-	topic := "foo_topic"
 	broker := sarama.NewMockBroker(t, 0)
 	broker.SetHandlerByMap(map[string]sarama.MockResponse{
 		"MetadataRequest": sarama.NewMockMetadataResponse(t).
 			SetBroker(broker.Addr(), broker.BrokerID()).
-			SetLeader(topic, 0, broker.BrokerID()),
+			SetLeader(fooTopic, 0, broker.BrokerID()),
 		"OffsetRequest": sarama.NewMockOffsetResponse(t).
 			SetVersion(1).
-			SetOffset(topic, 0, sarama.OffsetNewest, 10).
-			SetOffset(topic, 0, sarama.OffsetOldest, 0),
+			SetOffset(fooTopic, 0, sarama.OffsetNewest, 10).
+			SetOffset(fooTopic, 0, sarama.OffsetOldest, 0),
 		"FetchRequest": sarama.NewMockFetchResponse(t, 1).
 			SetVersion(0).
-			SetMessage(topic, 0, 10, sarama.StringEncoder(`"Foo"`)),
+			SetMessage(fooTopic, 0, 10, sarama.StringEncoder(`"Foo"`)),
 	})
 
-	f, err := New("name", topic, []string{broker.Addr()}, kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+	f, err := New("name", fooTopic, []string{broker.Addr()}, kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+	assert.NoError(t, err)
 
 	ctx, c, chMsg, chErr := consume(t, f)
 
@@ -203,15 +204,14 @@ func TestConsumer_ConsumerError(t *testing.T) {
 }
 
 func TestConsumer_LeaderNotAvailableError(t *testing.T) {
-	topic := "foo_topic"
 	broker := sarama.NewMockBroker(t, 0)
 	broker.SetHandlerByMap(map[string]sarama.MockResponse{
 		"MetadataRequest": sarama.NewMockMetadataResponse(t).
 			SetBroker(broker.Addr(), broker.BrokerID()).
-			SetLeader(topic, 0, 123),
+			SetLeader(fooTopic, 0, 123),
 	})
 
-	f, err := New("name", topic, []string{broker.Addr()}, kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+	f, err := New("name", fooTopic, []string{broker.Addr()}, kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
 	assert.NoError(t, err)
 
 	c, err := f.Create()
@@ -221,20 +221,19 @@ func TestConsumer_LeaderNotAvailableError(t *testing.T) {
 	_, _, err = c.Consume(ctx)
 	assert.Error(t, err)
 
-	c.Close()
-
+	err = c.Close()
+	assert.NoError(t, err)
 	broker.Close()
 }
 
 func TestConsumer_NoLeaderError(t *testing.T) {
-	topic := "foo_topic"
 	broker := sarama.NewMockBroker(t, 0)
 	broker.SetHandlerByMap(map[string]sarama.MockResponse{
 		"MetadataRequest": sarama.NewMockMetadataResponse(t).
 			SetBroker(broker.Addr(), broker.BrokerID()),
 	})
 
-	f, err := New("name", topic, []string{broker.Addr()}, kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+	f, err := New("name", fooTopic, []string{broker.Addr()}, kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
 	assert.NoError(t, err)
 
 	c, err := f.Create()
@@ -244,7 +243,7 @@ func TestConsumer_NoLeaderError(t *testing.T) {
 	_, _, err = c.Consume(ctx)
 	assert.Error(t, err)
 
-	c.Close()
-
+	err = c.Close()
+	assert.NoError(t, err)
 	broker.Close()
 }

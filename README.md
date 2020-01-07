@@ -16,6 +16,7 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 - logging
 
 `Patron` provides the same defaults for making the usage as simple as possible.
+`Patron` needs Go 1.13 as a minimum.
 
 ## How to Contribute
 

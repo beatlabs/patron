@@ -1,10 +1,11 @@
 package kafka
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 )
 
@@ -32,7 +33,7 @@ func Version(version string) OptionFunc {
 		}
 		v, err := sarama.ParseKafkaVersion(version)
 		if err != nil {
-			return errors.Wrap(err, "failed to parse kafka version")
+			return fmt.Errorf("failed to parse kafka version: %w", err)
 		}
 		ap.cfg.Version = v
 		log.Infof("version %s set", version)

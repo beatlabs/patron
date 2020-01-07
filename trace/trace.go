@@ -2,13 +2,13 @@ package trace
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -67,7 +67,7 @@ func Setup(name, ver, agent, typ string, prm float64) error {
 		config.Observer(rpcmetrics.NewObserver(metricsFactory.Namespace(name, nil), rpcmetrics.DefaultNameNormalizer)),
 	)
 	if err != nil {
-		return errors.Wrap(err, "cannot initialize jaeger tracer")
+		return fmt.Errorf("cannot initialize jaeger tracer: %w", err)
 	}
 	cls = clsTemp
 	opentracing.SetGlobalTracer(tr)

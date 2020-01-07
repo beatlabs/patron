@@ -2,12 +2,13 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/beatlabs/patron/errors"
+	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
 )
@@ -226,7 +227,7 @@ func (cb *Builder) WithReadyCheckFunc(rcf ReadyCheckFunc) *Builder {
 // Create constructs the HTTP component by applying the gathered properties.
 func (cb *Builder) Create() (*Component, error) {
 	if len(cb.errors) > 0 {
-		return nil, errors.Aggregate(cb.errors...)
+		return nil, patronErrors.Aggregate(cb.errors...)
 	}
 
 	c := &Component{

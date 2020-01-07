@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/beatlabs/patron/errors"
 )
 
 type attributeDataType string
@@ -175,7 +174,7 @@ func (b *MessageBuilder) Build() (*Message, error) {
 
 	for name, attributeValue := range b.input.MessageAttributes {
 		if err := attributeValue.Validate(); err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid attribute %s", name))
+			return nil, fmt.Errorf("invalid attribute %s: %w", name, err)
 		}
 	}
 

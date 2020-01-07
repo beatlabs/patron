@@ -2,12 +2,12 @@ package group
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/kafka"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"
 )
@@ -68,7 +68,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 	for _, o := range f.oo {
 		err = o(&c.config)
 		if err != nil {
-			return nil, fmt.Errorf("could not apply OptionFunc to consumer : %v", err)
+			return nil, fmt.Errorf("could not apply OptionFunc to consumer : %w", err)
 		}
 	}
 
@@ -91,7 +91,12 @@ func (c *consumer) Close() error {
 		c.cnl()
 	}
 
-	return errors.Wrap(c.cg.Close(), "failed to close consumer")
+	err := c.cg.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close consumer: %w", err)
+	}
+
+	return nil
 }
 
 // Consume starts consuming messages from a Kafka topic.
@@ -101,7 +106,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 
 	cg, err := sarama.NewConsumerGroup(c.config.Brokers, c.group, c.config.SaramaConfig)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to create consumer")
+		return nil, nil, fmt.Errorf("failed to create consumer: %w", err)
 	}
 	c.cg = cg
 	log.Infof("consuming messages from topic '%s' using group '%s'", c.topic, c.group)

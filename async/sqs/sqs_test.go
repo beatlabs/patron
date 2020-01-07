@@ -2,6 +2,7 @@ package sqs
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"testing"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/errors"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

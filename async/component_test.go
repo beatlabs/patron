@@ -182,7 +182,7 @@ func TestRun_Process_Error_NackStrategy(t *testing.T) {
 	select {
 	case _, ok := <-builder.cnr.chErr:
 		if ok {
-			assert.Fail(t, "we dont expect an error , given our nack failure strategy setup")
+			assert.Fail(t, "we don't expect an error , given our nack failure strategy setup")
 		}
 	default:
 		assert.True(t, <-ch)
@@ -244,7 +244,7 @@ func TestRun_Process_Error_AckStrategy(t *testing.T) {
 	select {
 	case _, ok := <-builder.cnr.chErr:
 		if ok {
-			assert.Fail(t, "we dont expect an error , given our ack failure strategy setup")
+			assert.Fail(t, "we don't expect an error , given our ack failure strategy setup")
 		}
 	default:
 		assert.True(t, <-ch)

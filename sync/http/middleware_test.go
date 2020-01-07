@@ -1,13 +1,12 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beatlabs/patron/errors"
 )
 
 // A middleware generator that tags resp for assertions

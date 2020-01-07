@@ -2,10 +2,10 @@ package http
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
-	"github.com/beatlabs/patron/errors"
 	"github.com/stretchr/testify/assert"
 )
 

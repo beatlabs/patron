@@ -2,6 +2,7 @@ package amqp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/errors"
+	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
@@ -148,7 +149,7 @@ type consumer struct {
 func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan error, error) {
 	deliveries, err := c.consume()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed initialize consumer")
+		return nil, nil, fmt.Errorf("failed initialize consumer: %w", err)
 	}
 
 	chMsg := make(chan async.Message, c.buffer)
@@ -169,7 +170,10 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 
 				dec, err := async.DetermineDecoder(d.ContentType)
 				if err != nil {
-					err := errors.Aggregate(err, errors.Wrap(d.Nack(false, c.requeue), "failed to NACK message"))
+					errNack := d.Nack(false, c.requeue)
+					if errNack != nil {
+						err = patronErrors.Aggregate(err, fmt.Errorf("failed to NACK message: %w", errNack))
+					}
 					trace.SpanError(sp)
 					chErr <- err
 					return
@@ -198,24 +202,31 @@ func (c *consumer) Close() error {
 	var errConn error
 
 	if c.ch != nil {
-		errChan = errors.Wrapf(c.ch.Cancel(c.tag, true), "failed to cancel channel of consumer %s", c.tag)
+		err := c.ch.Cancel(c.tag, true)
+		if err != nil {
+			errChan = fmt.Errorf("failed to cancel channel of consumer %s: %w", c.tag, err)
+		}
+
 	}
 	if c.conn != nil {
-		errConn = errors.Wrap(c.conn.Close(), "failed to close connection")
+		err := c.conn.Close()
+		if err != nil {
+			errConn = fmt.Errorf("failed to close connection: %w", err)
+		}
 	}
-	return errors.Aggregate(errChan, errConn)
+	return patronErrors.Aggregate(errChan, errConn)
 }
 
 func (c *consumer) consume() (<-chan amqp.Delivery, error) {
 	conn, err := amqp.DialConfig(c.url, c.cfg)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to dial @ %s", c.url)
+		return nil, fmt.Errorf("failed to dial @ %s: %w", c.url, err)
 	}
 	c.conn = conn
 
 	ch, err := c.conn.Channel()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed get channel")
+		return nil, fmt.Errorf("failed get channel: %w", err)
 	}
 	c.ch = ch
 
@@ -224,23 +235,23 @@ func (c *consumer) consume() (<-chan amqp.Delivery, error) {
 
 	err = ch.ExchangeDeclare(c.exchange.name, c.exchange.kind, true, false, false, false, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to declare exchange")
+		return nil, fmt.Errorf("failed to declare exchange: %w", err)
 	}
 
 	q, err := ch.QueueDeclare(c.queue, true, false, false, false, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to declare queue")
+		return nil, fmt.Errorf("failed to declare queue: %w", err)
 	}
 
 	for _, binding := range c.bindings {
 		if err := ch.QueueBind(q.Name, binding, c.exchange.name, false, nil); err != nil {
-			return nil, errors.Wrap(err, "failed to bind queue to exchange queue")
+			return nil, fmt.Errorf("failed to bind queue to exchange queue: %w", err)
 		}
 	}
 
 	deliveries, err := ch.Consume(c.queue, c.tag, false, false, false, false, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed initialize consumer")
+		return nil, fmt.Errorf("failed initialize consumer: %w", err)
 	}
 
 	return deliveries, nil

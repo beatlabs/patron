@@ -2,8 +2,7 @@ package log
 
 import (
 	"context"
-
-	"github.com/beatlabs/patron/errors"
+	"errors"
 )
 
 // The Level type definition.

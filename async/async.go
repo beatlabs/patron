@@ -2,11 +2,11 @@ package async
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
-	"github.com/beatlabs/patron/errors"
 )
 
 // FailStrategy type definition.
@@ -51,5 +51,5 @@ func DetermineDecoder(contentType string) (encoding.DecodeRawFunc, error) {
 	case protobuf.Type, protobuf.TypeGoogle:
 		return protobuf.DecodeRaw, nil
 	}
-	return nil, errors.Errorf("content header %s is unsupported", contentType)
+	return nil, fmt.Errorf("content header %s is unsupported", contentType)
 }

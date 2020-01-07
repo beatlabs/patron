@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,7 +11,6 @@ import (
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
@@ -108,7 +108,7 @@ func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.D
 
 	dec, err := determineDecoder(d, msg, sp)
 	if err != nil {
-		return nil, fmt.Errorf("Could not determine decoder  %v", err)
+		return nil, fmt.Errorf("Could not determine decoder  %w", err)
 	}
 
 	return &message{
@@ -129,14 +129,14 @@ func determineDecoder(d encoding.DecodeRawFunc, msg *sarama.ConsumerMessage, sp 
 	ct, err := determineContentType(msg.Headers)
 	if err != nil {
 		trace.SpanError(sp)
-		return nil, fmt.Errorf("failed to determine content type from message headers %v : %v", msg.Headers, err)
+		return nil, fmt.Errorf("failed to determine content type from message headers %v : %w", msg.Headers, err)
 	}
 
 	dec, err := async.DetermineDecoder(ct)
 
 	if err != nil {
 		trace.SpanError(sp)
-		return nil, fmt.Errorf("failed to determine decoder from message content type %v %v", ct, err)
+		return nil, fmt.Errorf("failed to determine decoder from message content type %v %w", ct, err)
 	}
 
 	return dec, nil

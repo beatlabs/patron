@@ -2,11 +2,12 @@ package kafka
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -36,7 +37,7 @@ func NewMessageWithKey(t string, b []byte, k string) (*Message, error) {
 func NewJSONMessage(t string, d interface{}) (*Message, error) {
 	b, err := json.Encode(d)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to JSON encode")
+		return nil, fmt.Errorf("failed to JSON encode: %w", err)
 	}
 	return &Message{topic: t, body: b}, nil
 }
@@ -48,7 +49,7 @@ func NewJSONMessageWithKey(t string, d interface{}, k string) (*Message, error) 
 	}
 	b, err := json.Encode(d)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to JSON encode")
+		return nil, fmt.Errorf("failed to JSON encode: %w", err)
 	}
 	return &Message{topic: t, body: b, key: &k}, nil
 }
@@ -85,7 +86,7 @@ func NewAsyncProducer(brokers []string, oo ...OptionFunc) (*AsyncProducer, error
 
 	prod, err := sarama.NewAsyncProducer(brokers, ap.cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create sync producer")
+		return nil, fmt.Errorf("failed to create sync producer: %w", err)
 	}
 	ap.prod = prod
 	go ap.propagateError()
@@ -114,12 +115,16 @@ func (ap *AsyncProducer) Error() <-chan error {
 
 // Close gracefully the producer.
 func (ap *AsyncProducer) Close() error {
-	return errors.Wrap(ap.prod.Close(), "failed to close sync producer")
+	err := ap.prod.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close sync producer: %w", err)
+	}
+	return nil
 }
 
 func (ap *AsyncProducer) propagateError() {
 	for pe := range ap.prod.Errors() {
-		ap.chErr <- errors.Wrap(pe, "failed to send message")
+		ap.chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
 }
 
@@ -127,7 +132,7 @@ func createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Spa
 	c := kafkaHeadersCarrier{}
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to inject tracing headers")
+		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 	var saramaKey sarama.Encoder
 	if msg.key != nil {

@@ -2,11 +2,12 @@ package simple
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/kafka"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 )
 
@@ -93,7 +94,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	log.Infof("consuming messages from topic '%s' without using consumer group", c.topic)
 	pcs, err := c.partitions()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get partitions")
+		return nil, nil, fmt.Errorf("failed to get partitions: %w", err)
 	}
 	// When kafka cluster is not fully initialized, we may get 0 partitions.
 	if len(pcs) == 0 {
@@ -135,13 +136,13 @@ func (c *consumer) partitions() ([]sarama.PartitionConsumer, error) {
 
 	ms, err := sarama.NewConsumer(c.config.Brokers, c.config.SaramaConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create consumer")
+		return nil, fmt.Errorf("failed to create simple consumer: %w", err)
 	}
 	c.ms = ms
 
 	partitions, err := c.ms.Partitions(c.topic)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get partitions")
+		return nil, fmt.Errorf("failed to get partitions: %w", err)
 	}
 
 	pcs := make([]sarama.PartitionConsumer, len(partitions))
@@ -150,7 +151,7 @@ func (c *consumer) partitions() ([]sarama.PartitionConsumer, error) {
 
 		pc, err := c.ms.ConsumePartition(c.topic, partition, c.config.SaramaConfig.Consumer.Offsets.Initial)
 		if nil != err {
-			return nil, errors.Wrap(err, "failed to get partition consumer")
+			return nil, fmt.Errorf("failed to get partition consumer: %w", err)
 		}
 		pcs[i] = pc
 	}

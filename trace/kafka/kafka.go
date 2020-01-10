@@ -100,11 +100,11 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
 		opentracing.Tag{Key: "topic", Value: msg.topic})
 	pm, err := createProducerMessage(ctx, msg, sp)
 	if err != nil {
-		trace.SpanError(sp)
+		trace.SpanComplete(sp, err)
 		return err
 	}
 	ap.prod.Input() <- pm
-	trace.SpanSuccess(sp)
+	trace.SpanComplete(sp, nil)
 	return nil
 }
 

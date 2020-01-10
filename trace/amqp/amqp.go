@@ -134,11 +134,11 @@ func (tc *TracedPublisher) Publish(ctx context.Context, msg *Message) error {
 	p.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 
 	err = tc.ch.Publish(tc.exc, "", false, false, p)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
-	trace.SpanSuccess(sp)
+
 	return nil
 }
 

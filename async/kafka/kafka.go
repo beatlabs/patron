@@ -62,13 +62,13 @@ func (m *message) Ack() error {
 	if m.sess != nil {
 		m.sess.MarkMessage(m.msg, "")
 	}
-	trace.SpanSuccess(m.span)
+	defer trace.SpanComplete(m.span, nil)
 	return nil
 }
 
 // Nack signals the producing side an erroring condition or inconsistency.
 func (m *message) Nack() error {
-	trace.SpanError(m.span)
+	defer trace.SpanComplete(m.span, errors.New("nack error"))
 	return nil
 }
 
@@ -282,14 +282,14 @@ func determineDecoder(c *consumer, msg *sarama.ConsumerMessage, sp opentracing.S
 
 	ct, err := determineContentType(msg.Headers)
 	if err != nil {
-		trace.SpanError(sp)
+		trace.SpanComplete(sp, err)
 		return nil, fmt.Errorf("failed to determine content type from message headers %v : %v", msg.Headers, err)
 	}
 
 	dec, err := async.DetermineDecoder(ct)
 
 	if err != nil {
-		trace.SpanError(sp)
+		trace.SpanComplete(sp, err)
 		return nil, fmt.Errorf("failed to determine decoder from message content type %v %v", ct, err)
 	}
 

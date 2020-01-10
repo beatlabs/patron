@@ -39,12 +39,11 @@ type DSNInfo struct {
 func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	sp, _ := c.startSpan(ctx, "conn.BeginTx", "")
 	tx, err := c.conn.BeginTx(ctx, opts)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
 
-	trace.SpanSuccess(sp)
 	return &Tx{tx: tx}, nil
 }
 
@@ -52,11 +51,11 @@ func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 func (c *Conn) Close(ctx context.Context) error {
 	sp, _ := c.startSpan(ctx, "conn.Close", "")
 	err := c.conn.Close()
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return err
 	}
-	trace.SpanSuccess(sp)
+
 	return nil
 }
 
@@ -64,11 +63,11 @@ func (c *Conn) Close(ctx context.Context) error {
 func (c *Conn) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	sp, _ := c.startSpan(ctx, "conn.Exec", query)
 	res, err := c.conn.ExecContext(ctx, query, args...)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return res, nil
 }
 
@@ -76,11 +75,11 @@ func (c *Conn) Exec(ctx context.Context, query string, args ...interface{}) (sql
 func (c *Conn) Ping(ctx context.Context) error {
 	sp, _ := c.startSpan(ctx, "conn.Ping", "")
 	err := c.conn.PingContext(ctx)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return err
 	}
-	trace.SpanSuccess(sp)
+
 	return nil
 }
 
@@ -88,11 +87,10 @@ func (c *Conn) Ping(ctx context.Context) error {
 func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	sp, _ := c.startSpan(ctx, "conn.Prepare", query)
 	stmt, err := c.conn.PrepareContext(ctx, query)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
 	return &Stmt{stmt: stmt}, nil
 }
 
@@ -100,18 +98,18 @@ func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 func (c *Conn) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	sp, _ := c.startSpan(ctx, "conn.Query", query)
 	rows, err := c.conn.QueryContext(ctx, query, args...)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return rows, nil
 }
 
 // QueryRow executes a query that is expected to return at most one row.
 func (c *Conn) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	sp, _ := c.startSpan(ctx, "conn.QueryRow", query)
-	defer trace.SpanSuccess(sp)
+	defer trace.SpanComplete(sp, nil)
 	return c.conn.QueryRowContext(ctx, query, args...)
 }
 
@@ -142,11 +140,11 @@ func OpenDB(c driver.Connector) *DB {
 func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	sp, _ := db.startSpan(ctx, "db.BeginTx", "")
 	tx, err := db.db.BeginTx(ctx, opts)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return &Tx{tx: tx}, nil
 }
 
@@ -154,11 +152,11 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 func (db *DB) Close(ctx context.Context) error {
 	sp, _ := db.startSpan(ctx, "db.Close", "")
 	err := db.db.Close()
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return err
 	}
-	trace.SpanSuccess(sp)
+
 	return nil
 }
 
@@ -166,18 +164,18 @@ func (db *DB) Close(ctx context.Context) error {
 func (db *DB) Conn(ctx context.Context) (*Conn, error) {
 	sp, _ := db.startSpan(ctx, "db.Conn", "")
 	conn, err := db.db.Conn(ctx)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return &Conn{conn: conn, connInfo: db.connInfo}, nil
 }
 
 // Driver returns the database's underlying driver.
 func (db *DB) Driver(ctx context.Context) driver.Driver {
 	sp, _ := db.startSpan(ctx, "db.Driver", "")
-	defer trace.SpanSuccess(sp)
+	defer trace.SpanComplete(sp, nil)
 	return db.db.Driver()
 }
 
@@ -185,11 +183,11 @@ func (db *DB) Driver(ctx context.Context) driver.Driver {
 func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	sp, _ := db.startSpan(ctx, "db.Exec", query)
 	res, err := db.db.ExecContext(ctx, query, args...)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return res, nil
 }
 
@@ -197,11 +195,11 @@ func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 func (db *DB) Ping(ctx context.Context) error {
 	sp, _ := db.startSpan(ctx, "db.Ping", "")
 	err := db.db.PingContext(ctx)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return err
 	}
-	trace.SpanSuccess(sp)
+
 	return nil
 }
 
@@ -209,11 +207,11 @@ func (db *DB) Ping(ctx context.Context) error {
 func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	sp, _ := db.startSpan(ctx, "db.Prepare", query)
 	stmt, err := db.db.PrepareContext(ctx, query)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return &Stmt{stmt: stmt}, nil
 }
 
@@ -221,18 +219,18 @@ func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	sp, _ := db.startSpan(ctx, "db.Query", query)
 	rows, err := db.db.QueryContext(ctx, query, args...)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return rows, err
 }
 
 // QueryRow executes a query that is expected to return at most one row.
 func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	sp, _ := db.startSpan(ctx, "db.QueryRow", query)
-	trace.SpanSuccess(sp)
+	defer trace.SpanComplete(sp, nil)
 	return db.db.QueryRowContext(ctx, query, args...)
 }
 
@@ -254,7 +252,7 @@ func (db *DB) SetMaxOpenConns(n int) {
 // Stats returns database statistics.
 func (db *DB) Stats(ctx context.Context) sql.DBStats {
 	sp, _ := db.startSpan(ctx, "db.Stats", "")
-	defer trace.SpanSuccess(sp)
+	defer trace.SpanComplete(sp, nil)
 	return db.db.Stats()
 }
 
@@ -268,11 +266,11 @@ type Stmt struct {
 func (s *Stmt) Close(ctx context.Context) error {
 	sp, _ := s.startSpan(ctx, "stmt.Close", "")
 	err := s.stmt.Close()
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return err
 	}
-	trace.SpanSuccess(sp)
+
 	return nil
 }
 
@@ -280,11 +278,11 @@ func (s *Stmt) Close(ctx context.Context) error {
 func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error) {
 	sp, _ := s.startSpan(ctx, "stmt.Exec", "")
 	res, err := s.stmt.ExecContext(ctx, args...)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return res, nil
 }
 
@@ -292,18 +290,18 @@ func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error
 func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
 	sp, _ := s.startSpan(ctx, "stmt.Query", "")
 	rows, err := s.stmt.QueryContext(ctx, args...)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return rows, nil
 }
 
 // QueryRow executes a prepared query statement.
 func (s *Stmt) QueryRow(ctx context.Context, args ...interface{}) *sql.Row {
 	sp, _ := s.startSpan(ctx, "stmt.QueryRow", "")
-	defer trace.SpanSuccess(sp)
+	defer trace.SpanComplete(sp, nil)
 	return s.stmt.QueryRowContext(ctx, args...)
 }
 
@@ -317,11 +315,11 @@ type Tx struct {
 func (tx *Tx) Commit(ctx context.Context) error {
 	sp, _ := tx.startSpan(ctx, "tx.Commit", "")
 	err := tx.tx.Commit()
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return err
 	}
-	trace.SpanSuccess(sp)
+
 	return nil
 }
 
@@ -329,11 +327,11 @@ func (tx *Tx) Commit(ctx context.Context) error {
 func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	sp, _ := tx.startSpan(ctx, "tx.Exec", query)
 	res, err := tx.tx.ExecContext(ctx, query, args...)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return res, nil
 }
 
@@ -341,11 +339,11 @@ func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	sp, _ := tx.startSpan(ctx, "tx.Prepare", query)
 	stmt, err := tx.tx.PrepareContext(ctx, query)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return &Stmt{stmt: stmt}, nil
 }
 
@@ -353,18 +351,17 @@ func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	sp, _ := tx.startSpan(ctx, "tx.Query", query)
 	rows, err := tx.tx.QueryContext(ctx, query, args...)
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
 	return rows, nil
 }
 
 // QueryRow executes a query that is expected to return at most one row.
 func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	sp, _ := tx.startSpan(ctx, "tx.QueryRow", query)
-	defer trace.SpanSuccess(sp)
+	defer trace.SpanComplete(sp, nil)
 	return tx.tx.QueryRowContext(ctx, query, args...)
 }
 
@@ -372,18 +369,18 @@ func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *
 func (tx *Tx) Rollback(ctx context.Context) error {
 	sp, _ := tx.startSpan(ctx, "tx.Rollback", "")
 	err := tx.tx.Rollback()
+	defer trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return err
 	}
-	trace.SpanSuccess(sp)
+
 	return nil
 }
 
 // Stmt returns a transaction-specific prepared statement from an existing statement.
 func (tx *Tx) Stmt(ctx context.Context, stmt *Stmt) *Stmt {
 	sp, _ := tx.startSpan(ctx, "tx.Stmt", "")
-	defer trace.SpanSuccess(sp)
+	defer trace.SpanComplete(sp, nil)
 	return &Stmt{stmt: tx.tx.StmtContext(ctx, stmt.stmt)}
 }
 

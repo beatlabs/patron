@@ -57,16 +57,14 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 
 	out, err := p.api.PublishWithContext(ctx, msg.input)
 
+	defer trace.SpanComplete(span, err)
 	if err != nil {
-		trace.SpanError(span)
 		return "", fmt.Errorf("failed to publish message: %w", err)
 	}
 
 	if out.MessageId == nil {
 		return "", errors.New("tried to publish a message but no message ID returned")
 	}
-
-	trace.SpanSuccess(span)
 
 	return *out.MessageId, nil
 }

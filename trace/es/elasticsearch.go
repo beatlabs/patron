@@ -2,6 +2,7 @@ package es
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -74,7 +75,10 @@ func (c *transportClient) Perform(req *http.Request) (*http.Response, error) {
 	}
 	rsp, err := c.client.Perform(req)
 	if err != nil || rsp == nil {
-		trace.SpanError(sp)
+		if rsp == nil {
+			err = errors.New("response empty error")
+		}
+		trace.SpanComplete(sp, err)
 		return rsp, err
 	}
 	endSpan(sp, rsp)

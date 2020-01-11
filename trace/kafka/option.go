@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/log"
 )
 
@@ -58,6 +59,21 @@ func Timeouts(dial time.Duration) OptionFunc {
 func RequiredAcksPolicy(ack RequiredAcks) OptionFunc {
 	return func(ap *AsyncProducer) error {
 		ap.cfg.Producer.RequiredAcks = sarama.RequiredAcks(ack)
+		return nil
+	}
+}
+
+// Encoder option for injecting a specific encoder implementation.
+func Encoder(enc encoding.EncodeFunc, contentType string) OptionFunc {
+	return func(ap *AsyncProducer) error {
+		if enc == nil {
+			return errors.New("encoder is nil")
+		}
+		if contentType == "" {
+			return errors.New("content type is empty")
+		}
+		ap.enc = enc
+		ap.contentType = contentType
 		return nil
 	}
 }

@@ -5,6 +5,10 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/encoding/protobuf"
+	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/uber/jaeger-client-go"
@@ -159,4 +163,52 @@ func createKafkaBroker(t *testing.T, retError bool) *sarama.MockBroker {
 	seed := sarama.NewMockBroker(t, 1)
 	seed.Returns(metadataResponse)
 	return seed
+}
+
+func TestSendWithCustomEncoder(t *testing.T) {
+	var u examples.User
+	firstname, lastname := "John", "Doe"
+	u.Firstname = &firstname
+	u.Lastname = &lastname
+	tests := []struct {
+		name        string
+		data        interface{}
+		key         string
+		enc         encoding.EncodeFunc
+		ct          string
+		wantSendErr bool
+	}{
+		{name: "json success", data: "testdata1", key: "testkey1", enc: json.Encode, ct: json.Type, wantSendErr: false},
+		{name: "protobuf success", data: &u, key: "testkey2", enc: protobuf.Encode, ct: protobuf.Type, wantSendErr: false},
+		{name: "failure due to invalid data", data: make(chan bool), key: "testkey3", wantSendErr: true},
+		{name: "nil message data", data: nil, key: "testkey4", wantSendErr: false},
+		{name: "nil encoder", data: "somedata", key: "testkey5", ct: json.Type, wantSendErr: false},
+		{name: "empty data", data: "", key: "testkey6", enc: json.Encode, ct: json.Type, wantSendErr: false},
+		{name: "empty data two", data: "", key: "🚖", enc: json.Encode, ct: json.Type, wantSendErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg, _ := NewMessageWithKey("TOPIC", tt.data, tt.key)
+
+			seed := createKafkaBroker(t, true)
+			ap, _ := NewAsyncProducer([]string{seed.Addr()}, Version(sarama.V0_8_2_0.String()))
+			err := Encoder(tt.enc, tt.ct)(ap)
+			if tt.enc != nil {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+			assert.NotNil(t, ap)
+
+			err = trace.Setup("test", "1.0.0", "0.0.0.0:6831", jaeger.SamplerTypeProbabilistic, 0.1)
+			assert.NoError(t, err)
+			_, ctx := trace.ChildSpan(context.Background(), "123", "cmp")
+			err = ap.Send(ctx, msg)
+			if tt.wantSendErr == false {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
 }

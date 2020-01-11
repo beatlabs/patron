@@ -21,90 +21,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNew(t *testing.T) {
-	brokers := []string{"192.168.1.1"}
-	type args struct {
-		name    string
-		brokers []string
-		topic   string
-		group   string
-		options []OptionFunc
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name:    "fails with missing name",
-			args:    args{name: "", brokers: brokers, topic: "topic1", group: "group1"},
-			wantErr: true,
-		},
-		{
-			name:    "fails with missing brokers",
-			args:    args{name: "test", brokers: []string{}, topic: "topic1", group: "group1"},
-			wantErr: true,
-		},
-		{
-			name:    "fails with missing topics",
-			args:    args{name: "test", brokers: brokers, topic: "", group: "group1"},
-			wantErr: true,
-		},
-		{
-			name:    "does not fail with missing group",
-			args:    args{name: "test", brokers: brokers, topic: "topic1", group: ""},
-			wantErr: false,
-		},
-		{
-			name:    "success",
-			args:    args{name: "test", brokers: brokers, topic: "topic1", group: "group1"},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, tt.args.topic, tt.args.group, tt.args.brokers, tt.args.options...)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, got)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, got)
-			}
-		})
-	}
-}
-
-func TestFactory_Create(t *testing.T) {
-	type fields struct {
-		oo []OptionFunc
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		{name: "success", wantErr: false},
-		{name: "failed with invalid option", fields: fields{oo: []OptionFunc{Buffer(-100)}}, wantErr: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			f := &Factory{
-				name:    "test",
-				topic:   "topic",
-				brokers: []string{"192.168.1.1"},
-				oo:      tt.fields.oo,
-			}
-			got, err := f.Create()
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, got)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, got)
-			}
-		})
-	}
+func TestDefaultSaramaConfig(t *testing.T) {
+	sc, err := DefaultSaramaConfig("name")
+	assert.NoError(t, err)
+	assert.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
 }
 
 func Test_determineContentType(t *testing.T) {
@@ -148,9 +68,8 @@ func Test_message(t *testing.T) {
 	cm := &sarama.ConsumerMessage{
 		Value: []byte(`{"key":"value"}`),
 	}
-	sess := &mockConsumerSession{}
 	msg := message{
-		sess: sess,
+		sess: nil,
 		ctx:  ctx,
 		dec:  patron_json.DecodeRaw,
 		span: sp,
@@ -197,149 +116,6 @@ func Test_getCorrelationID(t *testing.T) {
 	}
 }
 
-type mockConsumerClaim struct{ msgs []*sarama.ConsumerMessage }
-
-func (m *mockConsumerClaim) Messages() <-chan *sarama.ConsumerMessage {
-	ch := make(chan *sarama.ConsumerMessage, len(m.msgs))
-	for _, m := range m.msgs {
-		ch <- m
-	}
-	go func() {
-		close(ch)
-	}()
-	return ch
-}
-func (m *mockConsumerClaim) Topic() string              { return "" }
-func (m *mockConsumerClaim) Partition() int32           { return 0 }
-func (m *mockConsumerClaim) InitialOffset() int64       { return 0 }
-func (m *mockConsumerClaim) HighWaterMarkOffset() int64 { return 1 }
-
-type mockConsumerSession struct{}
-
-func (m *mockConsumerSession) Claims() map[string][]int32 { return nil }
-func (m *mockConsumerSession) MemberID() string           { return "" }
-func (m *mockConsumerSession) GenerationID() int32        { return 0 }
-func (m *mockConsumerSession) MarkOffset(topic string, partition int32, offset int64, metadata string) {
-}
-func (m *mockConsumerSession) ResetOffset(topic string, partition int32, offset int64, metadata string) {
-}
-func (m *mockConsumerSession) MarkMessage(msg *sarama.ConsumerMessage, metadata string) {}
-func (m *mockConsumerSession) Context() context.Context                                 { return nil }
-
-func TestHandler_ConsumeClaim(t *testing.T) {
-
-	tests := []struct {
-		name    string
-		msgs    []*sarama.ConsumerMessage
-		error   string
-		wantErr bool
-	}{
-		{"success", saramaConsumerMessages(patron_json.Type), "", false},
-		{"failure decoding", saramaConsumerMessages("mock"), "failed to determine decoder for mock", true},
-		{"failure content", saramaConsumerMessages(""), "failed to determine content type", true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			chMsg := make(chan async.Message, 1)
-			h := handler{messages: chMsg, consumer: &consumer{}}
-
-			err := h.ConsumeClaim(&mockConsumerSession{}, &mockConsumerClaim{tt.msgs})
-
-			if tt.wantErr {
-				assert.Error(t, err, tt.error)
-			} else {
-				assert.NoError(t, err)
-				ch := <-chMsg
-				assert.NotNil(t, ch)
-			}
-		})
-	}
-}
-
-func saramaConsumerMessages(ct string) []*sarama.ConsumerMessage {
-	return []*sarama.ConsumerMessage{
-		saramaConsumerMessage("value", &sarama.RecordHeader{
-			Key:   []byte(encoding.ContentTypeHeader),
-			Value: []byte(ct),
-		}),
-	}
-}
-
-func TestConsumer_ConsumeFailedBroker(t *testing.T) {
-	f, err := New("name", "topic", "group", []string{"1", "2"})
-	assert.NoError(t, err)
-	c, err := f.Create()
-	assert.NoError(t, err)
-	chMsg, chErr, err := c.Consume(context.Background())
-	assert.Nil(t, chMsg)
-	assert.Nil(t, chErr)
-	assert.Error(t, err)
-}
-
-func TestConsumer_ConsumeWithGroup(t *testing.T) {
-	broker := sarama.NewMockBroker(t, 0)
-	broker.SetHandlerByMap(map[string]sarama.MockResponse{
-		"MetadataRequest": sarama.NewMockMetadataResponse(t).
-			SetBroker(broker.Addr(), broker.BrokerID()).
-			SetLeader("TOPIC", 0, broker.BrokerID()),
-		"OffsetRequest": sarama.NewMockOffsetResponse(t).
-			SetOffset("TOPIC", 0, sarama.OffsetNewest, 10).
-			SetOffset("TOPIC", 0, sarama.OffsetOldest, 7),
-		"FetchRequest": sarama.NewMockFetchResponse(t, 1).
-			SetMessage("TOPIC", 0, 9, sarama.StringEncoder("Foo")).
-			SetHighWaterMark("TOPIC", 0, 14),
-	})
-
-	f, err := New("name", "TOPIC", "group", []string{broker.Addr()})
-	assert.NoError(t, err)
-	c, err := f.Create()
-	assert.NoError(t, err)
-	ctx := context.Background()
-	chMsg, chErr, err := c.Consume(ctx)
-	assert.NoError(t, err)
-	assert.NotNil(t, chMsg)
-	assert.NotNil(t, chErr)
-
-	err = c.Close()
-	assert.NoError(t, err)
-	broker.Close()
-
-	ctx.Done()
-}
-
-func TestConsumer_ConsumeWithoutGroup(t *testing.T) {
-	broker := sarama.NewMockBroker(t, 0)
-	topic := "foo_topic"
-	broker.SetHandlerByMap(map[string]sarama.MockResponse{
-		"MetadataRequest": sarama.NewMockMetadataResponse(t).
-			SetBroker(broker.Addr(), broker.BrokerID()).
-			SetLeader(topic, 0, broker.BrokerID()),
-		"OffsetRequest": sarama.NewMockOffsetResponse(t).
-			SetVersion(1).
-			SetOffset(topic, 0, sarama.OffsetNewest, 10).
-			SetOffset(topic, 0, sarama.OffsetOldest, 0),
-		"FetchRequest": sarama.NewMockFetchResponse(t, 1).
-			SetMessage(topic, 0, 9, sarama.StringEncoder("Foo")),
-	})
-
-	f, err := New("name", topic, "", []string{broker.Addr()})
-	assert.NoError(t, err)
-	c, err := f.Create()
-	assert.NoError(t, err)
-	ctx := context.Background()
-	chMsg, chErr, err := c.Consume(ctx)
-	assert.NoError(t, err)
-	assert.NotNil(t, chMsg)
-	assert.NotNil(t, chErr)
-
-	err = c.Close()
-	assert.NoError(t, err)
-	broker.Close()
-
-	ctx.Done()
-}
-
 type decodingTestData struct {
 	counter                eventCounter
 	msgs                   []*sarama.ConsumerMessage
@@ -355,14 +131,14 @@ type eventCounter struct {
 	claimErr     int
 }
 
-func TestNilDecoderError(t *testing.T) {
+func TestWrongContentTypeError(t *testing.T) {
 
 	testData := decodingTestData{
 		counter: eventCounter{
-			decodingErr: 1,
+			claimErr: 1,
 		},
 		msgs: []*sarama.ConsumerMessage{
-			saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{}),
+			saramaConsumerMessage("[\"value\"]", &sarama.RecordHeader{Key: []byte(encoding.ContentTypeHeader), Value: []byte(`something`)}),
 		},
 		decoder: nil,
 	}
@@ -543,22 +319,6 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 
 	counter := eventCounter{}
 
-	factory, err := New("name", "topic", "group", []string{"0.0.0.0:9092"}, Decoder(data.decoder))
-
-	assert.NoError(t, err, "Could not create factory")
-
-	c, err := factory.Create()
-
-	if data.decoder == nil {
-		assert.Error(t, err)
-		return
-	}
-
-	assert.NoError(t, err, "Could not create component")
-
-	// do a dirty cast for the sake of facilitating the test
-	kc := reflect.ValueOf(c).Elem().Interface().(consumer)
-
 	// claim and process the messages and update the counters accordingly
 	for _, km := range data.msgs {
 
@@ -567,7 +327,7 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 
 		}
 
-		msg, err := claimMessage(ctx, &kc, km)
+		msg, err := ClaimMessage(ctx, km, data.decoder, nil)
 
 		if err != nil {
 			counter.claimErr++

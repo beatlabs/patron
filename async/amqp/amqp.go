@@ -44,13 +44,13 @@ func (m *message) Decode(v interface{}) error {
 
 func (m *message) Ack() error {
 	err := m.del.Ack(false)
-	defer trace.SpanComplete(m.span, nil)
+	trace.SpanSuccess(m.span)
 	return err
 }
 
 func (m *message) Nack() error {
 	err := m.del.Nack(false, m.requeue)
-	defer trace.SpanComplete(m.span, err)
+	trace.SpanError(m.span)
 	return err
 }
 
@@ -174,7 +174,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					if errNack != nil {
 						err = patronErrors.Aggregate(err, fmt.Errorf("failed to NACK message: %w", errNack))
 					}
-					trace.SpanComplete(sp, err)
+					trace.SpanError(sp)
 					chErr <- err
 					return
 				}

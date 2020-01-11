@@ -126,6 +126,18 @@ func SpanComplete(sp opentracing.Span, err error) {
 	sp.Finish()
 }
 
+// SpanSuccess finishes a span with a success indicator.
+func SpanSuccess(sp opentracing.Span) {
+	ext.Error.Set(sp, false)
+	sp.Finish()
+}
+
+// SpanError finishes a span with a error indicator.
+func SpanError(sp opentracing.Span) {
+	ext.Error.Set(sp, true)
+	sp.Finish()
+}
+
 // ChildSpan starts a new child span with specified tags.
 func ChildSpan(ctx context.Context, opName, cmp string, tags ...opentracing.Tag) (opentracing.Span, context.Context) {
 	sp, ctx := opentracing.StartSpanFromContext(ctx, opName)

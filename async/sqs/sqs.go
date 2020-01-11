@@ -104,7 +104,7 @@ func (m *message) Ack() error {
 		return nil
 	}
 	messageCountInc(m.queueName, ackMessageState, 1)
-	trace.SpanComplete(m.span, nil)
+	trace.SpanSuccess(m.span)
 	return nil
 }
 
@@ -113,7 +113,7 @@ func (m *message) Ack() error {
 // than the visibility timeout.
 func (m *message) Nack() error {
 	messageCountInc(m.queueName, nackMessageState, 1)
-	trace.SpanComplete(m.span, errors.New("nack error"))
+	trace.SpanError(m.span)
 	return nil
 }
 
@@ -243,7 +243,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				ct, err := determineContentType(msg.MessageAttributes)
 				if err != nil {
 					messageCountErrorInc(c.queueName, fetchedMessageState, 1)
-					trace.SpanComplete(sp, err)
+					trace.SpanError(sp)
 					logger.Errorf("failed to determine content type: %v", err)
 					continue
 				}
@@ -251,7 +251,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				dec, err := async.DetermineDecoder(ct)
 				if err != nil {
 					messageCountErrorInc(c.queueName, fetchedMessageState, 1)
-					trace.SpanComplete(sp, err)
+					trace.SpanError(sp)
 					logger.Errorf("failed to determine decoder: %v", err)
 					continue
 				}

@@ -175,7 +175,7 @@ func (db *DB) Conn(ctx context.Context) (*Conn, error) {
 // Driver returns the database's underlying driver.
 func (db *DB) Driver(ctx context.Context) driver.Driver {
 	sp, _ := db.startSpan(ctx, "db.Driver", "")
-	defer trace.SpanComplete(sp, nil)
+	defer trace.SpanSuccess(sp)
 	return db.db.Driver()
 }
 
@@ -230,7 +230,7 @@ func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (*sq
 // QueryRow executes a query that is expected to return at most one row.
 func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	sp, _ := db.startSpan(ctx, "db.QueryRow", query)
-	defer trace.SpanComplete(sp, nil)
+	trace.SpanSuccess(sp)
 	return db.db.QueryRowContext(ctx, query, args...)
 }
 
@@ -252,7 +252,7 @@ func (db *DB) SetMaxOpenConns(n int) {
 // Stats returns database statistics.
 func (db *DB) Stats(ctx context.Context) sql.DBStats {
 	sp, _ := db.startSpan(ctx, "db.Stats", "")
-	defer trace.SpanComplete(sp, nil)
+	defer trace.SpanSuccess(sp)
 	return db.db.Stats()
 }
 
@@ -301,7 +301,7 @@ func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error
 // QueryRow executes a prepared query statement.
 func (s *Stmt) QueryRow(ctx context.Context, args ...interface{}) *sql.Row {
 	sp, _ := s.startSpan(ctx, "stmt.QueryRow", "")
-	defer trace.SpanComplete(sp, nil)
+	defer trace.SpanSuccess(sp)
 	return s.stmt.QueryRowContext(ctx, args...)
 }
 
@@ -361,7 +361,7 @@ func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sq
 // QueryRow executes a query that is expected to return at most one row.
 func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	sp, _ := tx.startSpan(ctx, "tx.QueryRow", query)
-	defer trace.SpanComplete(sp, nil)
+	defer trace.SpanSuccess(sp)
 	return tx.tx.QueryRowContext(ctx, query, args...)
 }
 

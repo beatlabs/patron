@@ -2,7 +2,6 @@ package trace
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"testing"
 
@@ -31,7 +30,7 @@ func TestStartFinishConsumerSpan(t *testing.T) {
 	jsp := sp.(*mocktracer.MockSpan)
 	assert.NotNil(t, jsp)
 	assert.Equal(t, "123", jsp.OperationName)
-	SpanComplete(sp, errors.New("test span error"))
+	SpanError(sp)
 	assert.NotNil(t, sp)
 	rawSpan := mtr.FinishedSpans()[0]
 	assert.Equal(t, map[string]interface{}{
@@ -58,7 +57,7 @@ func TestStartFinishChildSpan(t *testing.T) {
 	jsp := childSp.(*mocktracer.MockSpan)
 	assert.NotNil(t, jsp)
 	assert.Equal(t, "123", jsp.OperationName)
-	SpanComplete(childSp, errors.New("test span error"))
+	SpanError(childSp)
 	assert.NotNil(t, childSp)
 	rawSpan := mtr.FinishedSpans()[0]
 	assert.Equal(t, map[string]interface{}{
@@ -67,7 +66,7 @@ func TestStartFinishChildSpan(t *testing.T) {
 		"key":       "value",
 		"version":   "dev",
 	}, rawSpan.Tags())
-	SpanComplete(sp, nil)
+	SpanSuccess(sp)
 	rawSpan = mtr.FinishedSpans()[1]
 	assert.Equal(t, map[string]interface{}{
 		"component":     "amqp-consumer",
@@ -116,7 +115,7 @@ func TestSQLStartFinishSpan(t *testing.T) {
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
 	jsp := sp.(*mocktracer.MockSpan)
 	assert.NotNil(t, jsp)
-	SpanComplete(sp, nil)
+	SpanSuccess(sp)
 	rawSpan := mtr.FinishedSpans()[0]
 	assert.Equal(t, map[string]interface{}{
 		"component":    "sql",
@@ -139,7 +138,7 @@ func TestEsSpan(t *testing.T) {
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
 	jsp := sp.(*mocktracer.MockSpan)
 	assert.NotNil(t, jsp)
-	SpanComplete(sp, nil)
+	SpanSuccess(sp)
 	rawspan := mtr.FinishedSpans()[0]
 	assert.Equal(t, map[string]interface{}{
 		"component":    "es-component",

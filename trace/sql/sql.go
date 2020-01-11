@@ -39,7 +39,7 @@ type DSNInfo struct {
 func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	sp, _ := c.startSpan(ctx, "conn.BeginTx", "")
 	tx, err := c.conn.BeginTx(ctx, opts)
-	defer trace.SpanComplete(sp, err)
+	trace.SpanComplete(sp, err)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 func (c *Conn) Close(ctx context.Context) error {
 	sp, _ := c.startSpan(ctx, "conn.Close", "")
 	err := c.conn.Close()
-	defer trace.SpanComplete(sp, err)
+	trace.SpanComplete(sp, err)
 	if err != nil {
 		return err
 	}

@@ -12,6 +12,7 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20180313041242-367231351874
 	github.com/opentracing/opentracing-go v0.0.0-20180606204148-bd9c31933947
+	github.com/pkg/errors v0.8.0
 	github.com/prometheus/client_golang v0.9.1
 	github.com/prometheus/common v0.2.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190129233650-316cf8ccfec5 // indirect

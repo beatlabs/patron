@@ -2,10 +2,10 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/grpc/greeter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

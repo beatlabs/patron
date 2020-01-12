@@ -2,9 +2,9 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -50,7 +50,7 @@ func unaryInterceptor(ctx context.Context, method string, req, reply interface{}
 	carrier := headersCarrier{Ctx: ctx}
 	err := span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier)
 	if err != nil {
-		return errors.Wrap(err, "failed to inject tracing headers")
+		return fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
 	corID := correlation.IDFromContext(carrier.Ctx)

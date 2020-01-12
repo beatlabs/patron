@@ -17,6 +17,7 @@ import (
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/grpc/greeter"
 	"github.com/beatlabs/patron/log"
+	patrongrpc "github.com/beatlabs/patron/trace/grpc"
 	"google.golang.org/grpc"
 )
 
@@ -57,7 +58,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cc, err := grpc.Dial("localhost:50006", grpc.WithInsecure(), grpc.WithBlock())
+	cc, err := patrongrpc.Dial("localhost:50006", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("failed to dial grpc connection: %v", err)
 	}

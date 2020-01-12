@@ -15,7 +15,9 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	patronsqs "github.com/beatlabs/patron/async/sqs"
+	"github.com/beatlabs/patron/grpc/greeter"
 	"github.com/beatlabs/patron/log"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -55,6 +57,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	cc, err := grpc.Dial("localhost:50006")
+	if err != nil {
+		log.Fatalf("failed to dial grpc connection: %v", err)
+	}
+
+	greeter := greeter.NewGreeterClient(cc)
+
 	// Initialise SQS
 	sqsAPI := sqs.New(
 		session.Must(
@@ -67,7 +76,7 @@ func main() {
 			),
 		),
 	)
-	sqsCmp, err := createSQSComponent(sqsAPI)
+	sqsCmp, err := createSQSComponent(sqsAPI, greeter)
 	if err != nil {
 		log.Fatalf("failed to create sqs component: %v", err)
 	}
@@ -86,10 +95,11 @@ func main() {
 }
 
 type sqsComponent struct {
-	cmp patron.Component
+	cmp     patron.Component
+	greeter greeter.GreeterClient
 }
 
-func createSQSComponent(api sqsiface.SQSAPI) (*sqsComponent, error) {
+func createSQSComponent(api sqsiface.SQSAPI, greeter greeter.GreeterClient) (*sqsComponent, error) {
 	sqsCmp := sqsComponent{}
 
 	cf, err := patronsqs.NewFactory(api, awsSQSQueue)
@@ -117,6 +127,14 @@ func (ac *sqsComponent) Process(msg async.Message) error {
 		return err
 	}
 
-	log.FromContext(msg.Context()).Infof("request processed: %v", got.Message)
+	logger := log.FromContext(msg.Context())
+	logger.Infof("request processed: %v, sending request to sixth service", got.Message)
+
+	reply, err := ac.greeter.SayHello(msg.Context(), &greeter.HelloRequest{Firstname: string, Lastname: string})
+	if err != nil {
+		logger.Errorf("failed to send request: %v", err)
+	}
+
+	logger.Infof("Reply from sixth service: %s", reply.GetMessage())
 	return nil
 }

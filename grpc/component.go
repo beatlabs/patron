@@ -24,7 +24,7 @@ const (
 
 // Component of a gRPC service.
 type Component struct {
-	port string
+	port int
 	srv  *grpc.Server
 }
 
@@ -35,7 +35,7 @@ func (c *Component) Server() *grpc.Server {
 
 // Run the gRPC service.
 func (c *Component) Run(ctx context.Context) error {
-	lis, err := net.Listen("tcp", c.port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", c.port))
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
@@ -50,16 +50,16 @@ func (c *Component) Run(ctx context.Context) error {
 
 // Builder pattern for our gRPC service.
 type Builder struct {
-	port          string
+	port          int
 	serverOptions []grpc.ServerOption
 	errors        []error
 }
 
 // New builder.
-func New(port string) *Builder {
+func New(port int) *Builder {
 	b := &Builder{}
-	if port == "" {
-		b.errors = append(b.errors, errors.New("port is empty"))
+	if port <= 0 || port > 65535 {
+		b.errors = append(b.errors, fmt.Errorf("port is invalid: %d", port))
 		return b
 	}
 	b.port = port

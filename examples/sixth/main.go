@@ -7,6 +7,7 @@ import (
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/grpc"
+	"github.com/beatlabs/patron/grpc/greeter"
 	"github.com/beatlabs/patron/log"
 )
 
@@ -38,11 +39,11 @@ func init() {
 }
 
 type greeterServer struct {
-	UnimplementedGreeterServer
+	greeter.UnimplementedGreeterServer
 }
 
-func (gs *greeterServer) SayHello(ctx context.Context, req *HelloRequest) (*HelloReply, error) {
-	return &HelloReply{Message: fmt.Sprintf("Hello, %s %s!", req.GetFirstname(), req.GetLastname())}, nil
+func (gs *greeterServer) SayHello(ctx context.Context, req *greeter.HelloRequest) (*greeter.HelloReply, error) {
+	return &greeter.HelloReply{Message: fmt.Sprintf("Hello, %s %s!", req.GetFirstname(), req.GetLastname())}, nil
 }
 
 func main() {
@@ -55,12 +56,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	cmp, err := grpc.New(":50006").Create()
+	cmp, err := grpc.New(50006).Create()
 	if err != nil {
 		log.Fatalf("failed to create gRPC component: %v", err)
 	}
 
-	RegisterGreeterServer(cmp.Server(), &greeterServer{})
+	greeter.RegisterGreeterServer(cmp.Server(), &greeterServer{})
 
 	srv, err := patron.New(name, version, patron.Components(cmp))
 	if err != nil {

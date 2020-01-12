@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/errors"
-	"github.com/beatlabs/patron/grpc/helloworld"
+	"github.com/beatlabs/patron/grpc/greeter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -14,14 +14,14 @@ import (
 
 func TestCreate(t *testing.T) {
 	type args struct {
-		port string
+		port int
 	}
 	tests := map[string]struct {
 		args   args
 		expErr string
 	}{
-		"success":      {args: args{port: ":60000"}},
-		"invalid port": {args: args{port: ""}, expErr: "port is empty\n"},
+		"success":      {args: args{port: 60000}},
+		"invalid port": {args: args{port: -1}, expErr: "port is invalid: -1\n"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -39,20 +39,20 @@ func TestCreate(t *testing.T) {
 }
 
 type server struct {
-	helloworld.UnimplementedGreeterServer
+	greeter.UnimplementedGreeterServer
 }
 
-func (s *server) SayHello(ctx context.Context, in *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
-	if in.GetName() == "ERROR" {
+func (s *server) SayHello(ctx context.Context, in *greeter.HelloRequest) (*greeter.HelloReply, error) {
+	if in.GetFirstname() == "ERROR" {
 		return nil, errors.New("ERROR")
 	}
-	return &helloworld.HelloReply{Message: "Hello " + in.GetName()}, nil
+	return &greeter.HelloReply{Message: "Hello " + in.GetFirstname()}, nil
 }
 
 func TestComponent_Run(t *testing.T) {
-	cmp, err := New(":60000").Create()
+	cmp, err := New(60000).Create()
 	require.NoError(t, err)
-	helloworld.RegisterGreeterServer(cmp.Server(), &server{})
+	greeter.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())
 	chDone := make(chan struct{})
 	go func() {
@@ -61,7 +61,7 @@ func TestComponent_Run(t *testing.T) {
 	}()
 	conn, err := grpc.Dial("localhost:60000", grpc.WithInsecure(), grpc.WithBlock())
 	require.NoError(t, err)
-	c := helloworld.NewGreeterClient(conn)
+	c := greeter.NewGreeterClient(conn)
 
 	type args struct {
 		requestName string
@@ -75,7 +75,7 @@ func TestComponent_Run(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			r, err := c.SayHello(ctx, &helloworld.HelloRequest{Name: tt.args.requestName})
+			r, err := c.SayHello(ctx, &greeter.HelloRequest{Firstname: tt.args.requestName})
 			if tt.expErr != "" {
 				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, r)

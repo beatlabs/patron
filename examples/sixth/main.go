@@ -43,6 +43,9 @@ type greeterServer struct {
 }
 
 func (gs *greeterServer) SayHello(ctx context.Context, req *greeter.HelloRequest) (*greeter.HelloReply, error) {
+
+	log.FromContext(ctx).Infof("request received: %v", req.String())
+
 	return &greeter.HelloReply{Message: fmt.Sprintf("Hello, %s %s!", req.GetFirstname(), req.GetLastname())}, nil
 }
 

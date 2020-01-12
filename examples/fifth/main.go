@@ -9,12 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	patronsqs "github.com/beatlabs/patron/async/sqs"
+	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/grpc/greeter"
 	"github.com/beatlabs/patron/log"
 	"google.golang.org/grpc"
@@ -57,10 +57,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	cc, err := grpc.Dial("localhost:50006")
+	cc, err := grpc.Dial("localhost:50006", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("failed to dial grpc connection: %v", err)
 	}
+	defer cc.Close()
 
 	greeter := greeter.NewGreeterClient(cc)
 
@@ -115,22 +116,23 @@ func createSQSComponent(api sqsiface.SQSAPI, greeter greeter.GreeterClient) (*sq
 		return nil, err
 	}
 	sqsCmp.cmp = cmp
+	sqsCmp.greeter = greeter
 
 	return &sqsCmp, nil
 }
 
 func (ac *sqsComponent) Process(msg async.Message) error {
-	var got sns.PublishInput
+	var u examples.User
 
-	err := msg.Decode(&got)
+	err := msg.Decode(&u)
 	if err != nil {
 		return err
 	}
 
 	logger := log.FromContext(msg.Context())
-	logger.Infof("request processed: %v, sending request to sixth service", got.Message)
+	logger.Infof("request processed: %v, sending request to sixth service", u.String())
 
-	reply, err := ac.greeter.SayHello(msg.Context(), &greeter.HelloRequest{Firstname: string, Lastname: string})
+	reply, err := ac.greeter.SayHello(msg.Context(), &greeter.HelloRequest{Firstname: u.GetFirstname(), Lastname: u.GetLastname()})
 	if err != nil {
 		logger.Errorf("failed to send request: %v", err)
 	}

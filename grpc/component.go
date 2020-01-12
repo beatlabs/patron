@@ -14,9 +14,6 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// TODO: Documentation
-// TODO: check out mock implementations in order to add to the tests...
-
 const (
 	componentName = "gRPC-server"
 )

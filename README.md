@@ -113,12 +113,14 @@ The above API gives the `Service` the ability to start and gracefully shutdown a
 The following component implementations are available:
 
 - HTTP (sync)
+- gRPC
 - RabbitMQ consumer (async)
 - Kafka consumer (async)
+- AWS SQS (async)
 
 Adding to the above list is as easy as implementing a `Component` and a `Processor` for that component.
 
-### Middleware
+### HTTP Middlewares
 
 A `MiddlewareFunc` preserves the default net/http middleware pattern.
 You can create new middleware functions and pass them to Service to be chained on all routes in the default Http Component.
@@ -135,6 +137,11 @@ newMiddleware := func(h http.Handler) http.Handler {
     })
 }
 ```
+
+### gRPC
+
+On the server side, the gRPC component injects a `UnaryInterceptor` which handles tracing and log propagation.
+On the client side, we inject a `UnaryInterceptor` which handles tracing and log propagation.
 
 ## Examples
 

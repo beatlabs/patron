@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// TODO: examples
 // TODO: Documentation
 // TODO: check out mock implementations in order to add to the tests...
 

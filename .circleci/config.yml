@@ -4,6 +4,10 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.13
+      - image: circleci/postgres:9.6.9-alpine
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test123
 
     environment:
       TEST_RESULTS: /tmp/test-results

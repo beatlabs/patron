@@ -93,11 +93,15 @@ func tracingInterceptor(ctx context.Context, req interface{}, info *grpc.UnarySe
 	if !ok {
 		md = metadata.New(make(map[string]string))
 	}
+
 	corID := getCorrelationID(md)
 	sp, newCtx := trace.ConsumerSpan(ctx, trace.ComponentOpName(componentName, info.FullMethod), componentName,
 		corID, mapHeader(md))
+
 	logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 	newCtx = log.WithContext(newCtx, logger)
+
+	// TODO: Metrics Latency/requests per status.
 
 	resp, err = handler(newCtx, req)
 	if err != nil {

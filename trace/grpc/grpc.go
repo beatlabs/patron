@@ -57,6 +57,8 @@ func unaryInterceptor(ctx context.Context, method string, req, reply interface{}
 
 	ctx = metadata.AppendToOutgoingContext(carrier.Ctx, correlation.HeaderID, corID)
 
+	// TODO: Metrics response time/requests per status.
+
 	err = invoker(ctx, method, req, reply, cc, opts...)
 	if err != nil {
 		trace.SpanError(span)

@@ -5,8 +5,10 @@ require (
 	github.com/aws/aws-sdk-go v1.21.8
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/elastic/go-elasticsearch/v8 v8.0.0-20190731061900-ea052088db25
-	github.com/golang/protobuf v1.2.0
+	github.com/go-redis/redis/v7 v7.0.0-beta.5
+	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.0
+	github.com/hashicorp/golang-lru v0.5.3
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20180313041242-367231351874
 	github.com/opentracing/opentracing-go v0.0.0-20180606204148-bd9c31933947
@@ -21,9 +23,6 @@ require (
 	github.com/uber/jaeger-client-go v2.14.0+incompatible
 	github.com/uber/jaeger-lib v1.5.0
 	go.uber.org/atomic v1.3.2 // indirect
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
-	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
-	golang.org/x/text v0.3.2 // indirect
 )
 
 go 1.13

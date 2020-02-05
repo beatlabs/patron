@@ -166,7 +166,7 @@ func SQLSpan(ctx context.Context, opName, cmp, sqlType, instance, user, stmt str
 	return sp, ctx
 }
 
-// EsSpan starts a new elasticsearch child span with specified tags
+// EsSpan starts a new elasticsearch child span with specified tags.
 func EsSpan(ctx context.Context, opName, cmp, user, uri, method, body string, hostPool []string) opentracing.Span {
 
 	sp, _ := opentracing.StartSpanFromContext(ctx, opName)

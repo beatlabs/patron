@@ -33,18 +33,11 @@ func NewMessageWithKey(t string, b interface{}, k string) (*Message, error) {
 	return &Message{topic: t, body: b, key: &k}, nil
 }
 
-// Producer interface for Kafka.
-type Producer interface {
-	Send(ctx context.Context, msg *Message) error
-	Error() <-chan error
-	Close() error
-}
-
 // AsyncProducer defines a async Kafka producer.
 type AsyncProducer struct {
+	sarama.AsyncProducer
+
 	cfg         *sarama.Config
-	prod        sarama.AsyncProducer
-	chErr       chan error
 	tag         opentracing.Tag
 	enc         encoding.EncodeFunc
 	contentType string
@@ -60,29 +53,9 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
 		trace.SpanError(sp)
 		return err
 	}
-	ap.prod.Input() <- pm
+	ap.Input() <- pm
 	trace.SpanSuccess(sp)
 	return nil
-}
-
-// Error returns a chanel to monitor for errors.
-func (ap *AsyncProducer) Error() <-chan error {
-	return ap.chErr
-}
-
-// Close gracefully the producer.
-func (ap *AsyncProducer) Close() error {
-	err := ap.prod.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close sync producer: %w", err)
-	}
-	return nil
-}
-
-func (ap *AsyncProducer) propagateError() {
-	for pe := range ap.prod.Errors() {
-		ap.chErr <- fmt.Errorf("failed to send message: %w", pe)
-	}
 }
 
 func (ap *AsyncProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {

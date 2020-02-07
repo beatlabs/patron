@@ -33,7 +33,6 @@ const fieldSetMsg = "Setting property '%v' for '%v'"
 type AsyncBuilder struct {
 	brokers     []string
 	cfg         *sarama.Config
-	chErr       chan error
 	tag         opentracing.Tag
 	enc         encoding.EncodeFunc
 	contentType string
@@ -55,7 +54,6 @@ func NewBuilder(brokers []string) *AsyncBuilder {
 	return &AsyncBuilder{
 		brokers:     brokers,
 		cfg:         cfg,
-		chErr:       make(chan error),
 		tag:         opentracing.Tag{Key: "type", Value: "async"},
 		enc:         json.Encode,
 		contentType: json.Type,
@@ -135,15 +133,13 @@ func (ab *AsyncBuilder) Create() (*AsyncProducer, error) {
 	}
 
 	ap := AsyncProducer{
-		cfg:         ab.cfg,
-		prod:        prod,
-		chErr:       ab.chErr,
-		enc:         ab.enc,
-		contentType: ab.contentType,
-		tag:         ab.tag,
+		cfg:           ab.cfg,
+		AsyncProducer: prod,
+		enc:           ab.enc,
+		contentType:   ab.contentType,
+		tag:           ab.tag,
 	}
 
-	go ap.propagateError()
 	return &ap, nil
 }
 

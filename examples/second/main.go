@@ -15,6 +15,8 @@ import (
 	"github.com/beatlabs/patron/sync/http/auth/apikey"
 	tracehttp "github.com/beatlabs/patron/trace/http"
 	"github.com/beatlabs/patron/trace/kafka"
+
+	"github.com/Shopify/sarama"
 )
 
 const (
@@ -55,6 +57,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
+	// close async producer on exit
+	defer httpCmp.prd.AsyncClose()
+
+	// handle all Kafka async producer errors by logging them
+	go func(errCh <-chan *sarama.ProducerError) {
+		for err := range errCh {
+			log.Errorf("Kafka async producer error: %v", err)
+		}
+	}(httpCmp.prd.Errors())
 
 	auth, err := apikey.New(&apiKeyValidator{validKey: "123456"})
 	if err != nil {
@@ -83,7 +94,7 @@ func main() {
 }
 
 type httpComponent struct {
-	prd   kafka.Producer
+	prd   *kafka.AsyncProducer
 	topic string
 }
 

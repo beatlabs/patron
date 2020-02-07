@@ -74,7 +74,7 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	_, ctx := trace.ChildSpan(context.Background(), "123", "cmp")
 	err = ap.Send(ctx, msg)
 	assert.NoError(t, err)
-	assert.Error(t, <-ap.Error())
+	assert.Error(t, <-ap.Errors())
 	assert.NoError(t, ap.Close())
 }
 
@@ -92,7 +92,7 @@ func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
 	_, ctx := trace.ChildSpan(context.Background(), "123", "cmp")
 	err = ap.Send(ctx, msg)
 	assert.NoError(t, err)
-	assert.Error(t, <-ap.Error())
+	assert.Error(t, <-ap.Errors())
 	assert.NoError(t, ap.Close())
 }
 

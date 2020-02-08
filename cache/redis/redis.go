@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/beatlabs/patron/trace/redis"
+	"github.com/beatlabs/patron/client/redis"
 )
 
 // Cache encapsulates a Redis-based caching mechanism,

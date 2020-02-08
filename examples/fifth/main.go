@@ -14,10 +14,10 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	patronsqs "github.com/beatlabs/patron/async/sqs"
+	patrongrpc "github.com/beatlabs/patron/client/grpc"
+	"github.com/beatlabs/patron/component/grpc/greeter"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/grpc/greeter"
 	"github.com/beatlabs/patron/log"
-	patrongrpc "github.com/beatlabs/patron/trace/grpc"
 	"google.golang.org/grpc"
 )
 

@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/beatlabs/patron"
-	"github.com/beatlabs/patron/grpc"
-	"github.com/beatlabs/patron/grpc/greeter"
+	"github.com/beatlabs/patron/component/grpc"
+	"github.com/beatlabs/patron/component/grpc/greeter"
 	"github.com/beatlabs/patron/log"
 )
 

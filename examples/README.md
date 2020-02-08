@@ -3,11 +3,38 @@
 The following example will show off the usage of patron involving all components implemented.
 The processing will be kicked of by sending a request to the HTTP component. The flow then will be the following:
 
-- HTTP -> RabbitMQ publish
-- RabbitMQ consumer -> kafka publish
-- Kafka consumer -> log to stdout
-- Publish message to AWS SQS and SNS -> Consume them with AWS SQS. On this step, the same message
-is sent to both the SQS queue and the SNS topic, so as to show you how to create both SNS and SQS producers.
+## Service 1
+
+- Accepts HTTP JSON request from curl
+- Sends HTTP protobuf request to service 2
+- Responds to curl
+
+## Service 2
+
+- Accepts HTTP protobuf request from service 1
+- Publishes a message to Kafka
+- Responds to service 1
+
+## Service 3
+
+- Consumes a message from service 2 via Kafka
+- Publishes a message to AMQP
+
+## Service 4
+
+- Consumes a message from service 3 via AMQP
+- Publishes a message to AWS SNS linked to an SQS queue
+- Publishes a message to AWS SQS directly
+
+## Service 5
+
+- Consumes a message from service 4 via AWS SQS
+- Send a rpc request to gRPC server of service 5 and logs response
+
+## Service 6
+
+- Receives a request from service 5
+- Responds to service 5
 
 Since tracing instrumentation is in place we can observer the flow in Jaeger.
 

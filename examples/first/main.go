@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron"
+	clienthttp "github.com/beatlabs/patron/client/http"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync"
 	patronhttp "github.com/beatlabs/patron/sync/http"
-	tracehttp "github.com/beatlabs/patron/trace/http"
 )
 
 func init() {
@@ -89,7 +89,7 @@ func first(ctx context.Context, req *sync.Request) (*sync.Response, error) {
 	secondRouteReq.Header.Add("Content-Type", protobuf.Type)
 	secondRouteReq.Header.Add("Accept", protobuf.Type)
 	secondRouteReq.Header.Add("Authorization", "Apikey 123456")
-	cl, err := tracehttp.New(tracehttp.Timeout(5 * time.Second))
+	cl, err := clienthttp.New(clienthttp.Timeout(5 * time.Second))
 	if err != nil {
 		return nil, err
 	}

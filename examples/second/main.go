@@ -9,12 +9,12 @@ import (
 
 	"github.com/beatlabs/patron"
 	clienthttp "github.com/beatlabs/patron/client/http"
+	"github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync"
 	patronhttp "github.com/beatlabs/patron/sync/http"
 	"github.com/beatlabs/patron/sync/http/auth/apikey"
-	"github.com/beatlabs/patron/trace/kafka"
 )
 
 const (

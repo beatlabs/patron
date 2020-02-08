@@ -12,7 +12,6 @@ import (
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/sync"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -125,18 +124,18 @@ func Test_handleSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	post, err := http.NewRequest(http.MethodPost, "/", nil)
 	assert.NoError(t, err)
-	jsonRsp := sync.NewResponse(struct {
+	jsonRsp := NewResponse(struct {
 		Name    string
 		Address string
 	}{"Sotiris", "Athens"})
-	jsonEncodeFailRsp := sync.NewResponse(struct {
+	jsonEncodeFailRsp := NewResponse(struct {
 		Name    chan bool
 		Address string
 	}{nil, "Athens"})
 
 	type args struct {
 		req *http.Request
-		rsp *sync.Response
+		rsp *Response
 		enc encoding.EncodeFunc
 	}
 	tests := []struct {
@@ -200,11 +199,11 @@ type testHandler struct {
 	resp interface{}
 }
 
-func (th testHandler) Process(ctx context.Context, req *sync.Request) (*sync.Response, error) {
+func (th testHandler) Process(ctx context.Context, req *Request) (*Response, error) {
 	if th.err {
 		return nil, errors.New("TEST")
 	}
-	return sync.NewResponse(th.resp), nil
+	return NewResponse(th.resp), nil
 }
 
 func Test_handler(t *testing.T) {
@@ -223,7 +222,7 @@ func Test_handler(t *testing.T) {
 	// failure handling
 	type args struct {
 		req *http.Request
-		hnd sync.ProcessorFunc
+		hnd ProcessorFunc
 	}
 	tests := []struct {
 		name         string
@@ -273,7 +272,7 @@ func Test_extractParams(t *testing.T) {
 	req.Header.Set(encoding.AcceptHeader, json.Type)
 	var fields map[string]string
 
-	proc := func(_ context.Context, req *sync.Request) (*sync.Response, error) {
+	proc := func(_ context.Context, req *Request) (*Response, error) {
 		fields = req.Fields
 		return nil, nil
 	}

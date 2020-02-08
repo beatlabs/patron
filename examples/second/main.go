@@ -10,11 +10,10 @@ import (
 	"github.com/beatlabs/patron"
 	clienthttp "github.com/beatlabs/patron/client/http"
 	"github.com/beatlabs/patron/client/kafka"
+	patronhttp "github.com/beatlabs/patron/component/http"
+	"github.com/beatlabs/patron/component/http/auth/apikey"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/sync"
-	patronhttp "github.com/beatlabs/patron/sync/http"
-	"github.com/beatlabs/patron/sync/http/auth/apikey"
 )
 
 const (
@@ -84,7 +83,7 @@ func newHTTPComponent(kafkaBroker, topic, url string) (*httpComponent, error) {
 	return &httpComponent{prd: prd, topic: topic}, nil
 }
 
-func (hc *httpComponent) second(ctx context.Context, req *sync.Request) (*sync.Response, error) {
+func (hc *httpComponent) second(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
 
 	var u examples.User
 	err := req.Decode(&u)

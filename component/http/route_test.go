@@ -5,8 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/beatlabs/patron/sync"
-	"github.com/beatlabs/patron/sync/http/auth"
+	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -160,7 +159,7 @@ func TestRouteBuilder_WithAuth(t *testing.T) {
 
 func TestRouteBuilder_Build(t *testing.T) {
 	mockAuth := &MockAuthenticator{}
-	mockProcessor := func(context.Context, *sync.Request) (*sync.Response, error) { return nil, nil }
+	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	middleware := func(next http.Handler) http.Handler { return next }
 	type fields struct {
 		path          string
@@ -222,10 +221,10 @@ func TestNewRawRouteBuilder(t *testing.T) {
 }
 
 func TestNewRouteBuilder(t *testing.T) {
-	mockProcessor := func(context.Context, *sync.Request) (*sync.Response, error) { return nil, nil }
+	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	type args struct {
 		path      string
-		processor sync.ProcessorFunc
+		processor ProcessorFunc
 	}
 	tests := map[string]struct {
 		args        args

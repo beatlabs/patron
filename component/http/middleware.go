@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	trace_http "github.com/beatlabs/patron/client/http"
+	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/sync/http/auth"
 	"github.com/google/uuid"
 )
 

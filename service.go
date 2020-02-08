@@ -10,10 +10,10 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/beatlabs/patron/component/http"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/zerolog"
-	"github.com/beatlabs/patron/sync/http"
 	"github.com/beatlabs/patron/trace"
 	jaeger "github.com/uber/jaeger-client-go"
 )

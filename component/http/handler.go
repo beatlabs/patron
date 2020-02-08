@@ -10,11 +10,10 @@ import (
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/sync"
 	"github.com/julienschmidt/httprouter"
 )
 
-func handler(hnd sync.ProcessorFunc) http.HandlerFunc {
+func handler(hnd ProcessorFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -37,7 +36,7 @@ func handler(hnd sync.ProcessorFunc) http.HandlerFunc {
 
 		h := extractHeaders(r)
 
-		req := sync.NewRequest(f, r.Body, h, dec)
+		req := NewRequest(f, r.Body, h, dec)
 		rsp, err := hnd(ctx, req)
 		if err != nil {
 			handleError(logger, w, enc, err)
@@ -123,7 +122,7 @@ func extractHeaders(r *http.Request) map[string]string {
 	return h
 }
 
-func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *sync.Response, enc encoding.EncodeFunc) error {
+func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *Response, enc encoding.EncodeFunc) error {
 	if rsp == nil {
 		w.WriteHeader(http.StatusNoContent)
 		return nil

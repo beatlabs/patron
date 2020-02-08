@@ -10,11 +10,10 @@ import (
 
 	"github.com/beatlabs/patron"
 	clienthttp "github.com/beatlabs/patron/client/http"
+	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/sync"
-	patronhttp "github.com/beatlabs/patron/sync/http"
 )
 
 func init() {
@@ -68,7 +67,7 @@ func main() {
 	}
 }
 
-func first(ctx context.Context, req *sync.Request) (*sync.Response, error) {
+func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
 
 	var u examples.User
 
@@ -99,5 +98,5 @@ func first(ctx context.Context, req *sync.Request) (*sync.Response, error) {
 	}
 
 	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	return sync.NewResponse(fmt.Sprintf("got %s from second HTTP route", rsp.Status)), nil
+	return patronhttp.NewResponse(fmt.Sprintf("got %s from second HTTP route", rsp.Status)), nil
 }

@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/beatlabs/patron/component/http/auth"
 	errs "github.com/beatlabs/patron/errors"
-	"github.com/beatlabs/patron/sync"
-	"github.com/beatlabs/patron/sync/http/auth"
 )
 
 // Route definition of a HTTP route.
@@ -152,7 +151,7 @@ func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 }
 
 // NewRouteBuilder constructor.
-func NewRouteBuilder(path string, processor sync.ProcessorFunc) *RouteBuilder {
+func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 
 	var err error
 

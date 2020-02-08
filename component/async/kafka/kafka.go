@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/log"

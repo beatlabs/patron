@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	patronErrors "github.com/beatlabs/patron/errors"

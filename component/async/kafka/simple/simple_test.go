@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/async"
-	"github.com/beatlabs/patron/async/kafka"
+	"github.com/beatlabs/patron/component/async"
+	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/stretchr/testify/assert"
 )
 

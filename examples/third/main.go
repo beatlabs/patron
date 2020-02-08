@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron"
-	"github.com/beatlabs/patron/async"
-	"github.com/beatlabs/patron/async/kafka"
-	"github.com/beatlabs/patron/async/kafka/group"
 	"github.com/beatlabs/patron/client/amqp"
+	"github.com/beatlabs/patron/component/async"
+	"github.com/beatlabs/patron/component/async/kafka"
+	"github.com/beatlabs/patron/component/async/kafka/group"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"

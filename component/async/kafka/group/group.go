@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/async"
-	"github.com/beatlabs/patron/async/kafka"
+	"github.com/beatlabs/patron/component/async"
+	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"

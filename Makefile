@@ -12,7 +12,7 @@ cover: fmtcheck
 	rm coverage.txt
 
 coverci: fmtcheck
-	go test ./... -race -cover -mod=vendor -tags=integration -coverprofile=coverage.txt -covermode=atomic	
+	go test ./... -race -cover -mod=vendor -coverprofile=coverage.txt -covermode=atomic	
 
 fmt:
 	go fmt ./...

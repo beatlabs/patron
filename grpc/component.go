@@ -5,17 +5,9 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
-	"github.com/google/uuid"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-)
-
-const (
-	componentName = "gRPC-server"
 )
 
 // Component of a gRPC service.
@@ -78,7 +70,8 @@ func (b *Builder) Create() (*Component, error) {
 		return nil, errors.Aggregate(b.errors...)
 	}
 
-	b.serverOptions = append(b.serverOptions, grpc.UnaryInterceptor(tracingInterceptor))
+	b.serverOptions = append(b.serverOptions, grpc.UnaryInterceptor(observableUnaryInterceptor),
+		grpc.StreamInterceptor(observableStreamInterceptor))
 
 	srv := grpc.NewServer(b.serverOptions...)
 
@@ -86,61 +79,4 @@ func (b *Builder) Create() (*Component, error) {
 		port: b.port,
 		srv:  srv,
 	}, nil
-}
-
-func tracingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		md = metadata.New(make(map[string]string))
-	}
-
-	corID := getCorrelationID(md)
-	sp, newCtx := trace.ConsumerSpan(ctx, trace.ComponentOpName(componentName, info.FullMethod), componentName,
-		corID, mapHeader(md))
-
-	logger := log.Sub(map[string]interface{}{correlation.ID: corID})
-	newCtx = log.WithContext(newCtx, logger)
-
-	// TODO: Metrics Latency/requests per status.
-
-	resp, err = handler(newCtx, req)
-	if err != nil {
-		trace.SpanError(sp)
-	} else {
-		trace.SpanSuccess(sp)
-	}
-	logRequestResponse(corID, info, err)
-	return resp, err
-}
-
-func getCorrelationID(md metadata.MD) string {
-	values := md.Get(correlation.HeaderID)
-	if len(values) == 0 {
-		return uuid.New().String()
-	}
-	return values[0]
-}
-
-func mapHeader(md metadata.MD) map[string]string {
-	mp := make(map[string]string, md.Len())
-	for key, values := range md {
-		mp[key] = values[0]
-	}
-	return mp
-}
-
-func logRequestResponse(corID string, info *grpc.UnaryServerInfo, err error) {
-	if !log.Enabled(log.DebugLevel) {
-		return
-	}
-
-	fields := map[string]interface{}{
-		"server-type":  "grpc",
-		"method":       info.FullMethod,
-		correlation.ID: corID,
-	}
-	if err != nil {
-		fields["error"] = err.Error()
-	}
-	log.Sub(fields).Debug()
 }

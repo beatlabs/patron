@@ -49,7 +49,15 @@ func (s *server) SayHello(ctx context.Context, in *greeter.HelloRequest) (*greet
 	return &greeter.HelloReply{Message: "Hello " + in.GetFirstname()}, nil
 }
 
-func TestComponent_Run(t *testing.T) {
+func (s *server) SayHelloStream(req *greeter.HelloRequest, srv greeter.Greeter_SayHelloStreamServer) error {
+	if req.GetFirstname() == "ERROR" {
+		return errors.New("ERROR")
+	}
+
+	return srv.Send(&greeter.HelloReply{Message: "Hello " + req.GetFirstname()})
+}
+
+func TestComponent_Run_Unary(t *testing.T) {
 	cmp, err := New(60000).Create()
 	require.NoError(t, err)
 	greeter.RegisterGreeterServer(cmp.Server(), &server{})
@@ -83,6 +91,50 @@ func TestComponent_Run(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, r.GetMessage(), "Hello TEST")
 			}
+		})
+	}
+	cnl()
+	require.NoError(t, conn.Close())
+	<-chDone
+}
+
+func TestComponent_Run_Stream(t *testing.T) {
+	cmp, err := New(60000).Create()
+	require.NoError(t, err)
+	greeter.RegisterGreeterServer(cmp.Server(), &server{})
+	ctx, cnl := context.WithCancel(context.Background())
+	chDone := make(chan struct{})
+	go func() {
+		assert.NoError(t, cmp.Run(ctx))
+		chDone <- struct{}{}
+	}()
+	conn, err := grpc.Dial("localhost:60000", grpc.WithInsecure(), grpc.WithBlock())
+	require.NoError(t, err)
+	c := greeter.NewGreeterClient(conn)
+
+	type args struct {
+		requestName string
+	}
+	tests := map[string]struct {
+		args   args
+		expErr string
+	}{
+		"success": {args: args{requestName: "TEST"}},
+		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			client, err := c.SayHelloStream(ctx, &greeter.HelloRequest{Firstname: tt.args.requestName})
+			assert.NoError(t, err)
+			resp, err := client.Recv()
+			if tt.expErr != "" {
+				assert.EqualError(t, err, tt.expErr)
+				assert.Nil(t, resp)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, resp.GetMessage(), "Hello TEST")
+			}
+			assert.NoError(t, client.CloseSend())
 		})
 	}
 	cnl()

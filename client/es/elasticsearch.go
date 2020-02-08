@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
+	trace_http "github.com/beatlabs/patron/client/http"
 	"github.com/beatlabs/patron/trace"
-	trace_http "github.com/beatlabs/patron/trace/http"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/elastic/go-elasticsearch/v8/estransport"

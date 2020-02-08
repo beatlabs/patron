@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
+	trace_http "github.com/beatlabs/patron/client/http"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync/http/auth"
-	trace_http "github.com/beatlabs/patron/trace/http"
 	"github.com/google/uuid"
 )
 

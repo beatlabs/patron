@@ -17,10 +17,10 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/amqp"
+	patronsns "github.com/beatlabs/patron/client/sns"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
-	patronsns "github.com/beatlabs/patron/trace/sns"
 	patronsqs "github.com/beatlabs/patron/trace/sqs"
 	oamqp "github.com/streadway/amqp"
 )

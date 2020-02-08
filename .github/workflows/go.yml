@@ -1,11 +1,11 @@
-name: Build and test Go
+name: Running CI
 on: [pull_request]
 jobs:
   build:
-    name: Build
+    name: CI
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.13
+      - name: Set up Go
         uses: actions/setup-go@v1
         with:
           go-version: 1.13
@@ -23,7 +23,7 @@ jobs:
       - name: Running CI
         run: make ci
 
-      - name: Upload coverage to Codecov
+      - name: Upload code coverage
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

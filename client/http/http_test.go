@@ -101,19 +101,19 @@ func TestHTTPStartFinishSpan(t *testing.T) {
 	opentracing.SetGlobalTracer(mtr)
 	req, err := http.NewRequest("GET", "/", nil)
 	assert.NoError(t, err)
-	sp, req := Span("/", "corID", req)
+	sp, req := span("/", "corID", req)
 	assert.NotNil(t, sp)
 	assert.NotNil(t, req)
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
 	jsp := sp.(*mocktracer.MockSpan)
 	assert.NotNil(t, jsp)
 	assert.Equal(t, "GET /", jsp.OperationName)
-	FinishSpan(jsp, 200)
+	finishSpan(jsp, 200)
 	assert.NotNil(t, jsp)
 	rawSpan := mtr.FinishedSpans()[0]
 	assert.Equal(t, map[string]interface{}{
 		"span.kind":        ext.SpanKindRPCServerEnum,
-		"component":        "http",
+		"component":        "http-client",
 		"error":            false,
 		"http.method":      "GET",
 		"http.status_code": uint16(200),

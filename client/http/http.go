@@ -86,8 +86,7 @@ func (tc *TracedClient) do(req *http.Request) (*http.Response, error) {
 	return r.(*http.Response), nil
 }
 
-// Span starts a new HTTP span.
-func Span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
+func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
 	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
 	if err != nil && err != opentracing.ErrSpanContextNotFound {
 		log.Errorf("failed to extract HTTP span: %v", err)
@@ -95,14 +94,13 @@ func Span(path, corID string, r *http.Request) (opentracing.Span, *http.Request)
 	sp := opentracing.StartSpan(opName(r.Method, path), ext.RPCServerOption(ctx))
 	ext.HTTPMethod.Set(sp, r.Method)
 	ext.HTTPUrl.Set(sp, r.URL.String())
-	ext.Component.Set(sp, "http")
+	ext.Component.Set(sp, clientComponent)
 	sp.SetTag(trace.VersionTag, trace.Version)
 	sp.SetTag(correlation.ID, corID)
 	return sp, r.WithContext(opentracing.ContextWithSpan(r.Context(), sp))
 }
 
-// FinishSpan finishes a HTTP span by providing a HTTP status code.
-func FinishSpan(sp opentracing.Span, code int) {
+func finishSpan(sp opentracing.Span, code int) {
 	ext.HTTPStatusCode.Set(sp, uint16(code))
 	ext.Error.Set(sp, code >= http.StatusInternalServerError)
 	sp.Finish()

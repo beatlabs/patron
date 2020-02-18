@@ -1,9 +1,9 @@
 package sqs
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
-	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -12,10 +12,10 @@ import (
 type attributeDataType string
 
 const (
-	attributeDataTypeString      attributeDataType = "String"
-	attributeDataTypeNumber      attributeDataType = "Number"
-	attributeDataTypeBinary      attributeDataType = "Binary"
-	attributeDataTypeCustom      attributeDataType = "Custom" // TODO: implement
+	attributeDataTypeString attributeDataType = "String"
+	attributeDataTypeNumber attributeDataType = "Number"
+	attributeDataTypeBinary attributeDataType = "Binary"
+	attributeDataTypeCustom attributeDataType = "Custom" // TODO: implement
 )
 
 // MessageBuilder helps building messages to be sent to SQS.
@@ -51,6 +51,12 @@ func (b *MessageBuilder) Build() (*Message, error) {
 
 	if b.input.QueueUrl == nil {
 		return nil, errors.New("missing required field: message queue URL")
+	}
+
+	// Messages with either a group ID or deduplication ID can't have a delay.
+	// These two attributes are only used for FIFO queues, which don't allow for individual message delays.
+	if (b.input.MessageGroupId != nil || b.input.MessageDeduplicationId != nil) && b.input.DelaySeconds != nil {
+		return nil, errors.New("could not set a delay with either a group ID or a deduplication ID")
 	}
 
 	for name, attributeValue := range b.input.MessageAttributes {

@@ -14,8 +14,6 @@ func Test_MessageBuilder_Build(t *testing.T) {
 
 	body := "body"
 	queueURL := "url"
-	deduplicationID := "deduplication ID"
-	groupID := "group ID"
 	delay := int64(10)
 
 	stringAttribute := "string attribute"
@@ -25,20 +23,15 @@ func Test_MessageBuilder_Build(t *testing.T) {
 	got, err := b.
 		Body(body).
 		QueueURL(queueURL).
-		WithDeduplicationID(deduplicationID).
-		WithGroupID(groupID).
 		WithDelaySeconds(delay).
 		WithStringAttribute("string", stringAttribute).
 		WithNumberAttribute("number", numberAttribute).
 		WithBinaryAttribute("binary", binaryAttribute).
-		//WithCustomAttribute("custom").
 		Build()
 
 	assert.NoError(t, err)
 	assert.Equal(t, got.input.MessageBody, &body)
 	assert.Equal(t, got.input.QueueUrl, &queueURL)
-	assert.Equal(t, got.input.MessageDeduplicationId, &deduplicationID)
-	assert.Equal(t, got.input.MessageGroupId, &groupID)
 	assert.Equal(t, got.input.DelaySeconds, &delay)
 
 	assert.Equal(t, string(attributeDataTypeString), *got.input.MessageAttributes["string"].DataType)
@@ -49,6 +42,28 @@ func Test_MessageBuilder_Build(t *testing.T) {
 
 	assert.Equal(t, string(attributeDataTypeBinary), *got.input.MessageAttributes["binary"].DataType)
 	assert.Equal(t, binaryAttribute, got.input.MessageAttributes["binary"].BinaryValue)
+}
+
+func Test_MessageBuilder_Build_Fifo(t *testing.T) {
+	b := NewMessageBuilder()
+
+	body := "body"
+	queueURL := "url"
+	deduplicationID := "deduplication ID"
+	groupID := "group ID"
+
+	got, err := b.
+		Body(body).
+		QueueURL(queueURL).
+		WithDeduplicationID(deduplicationID).
+		WithGroupID(groupID).
+		Build()
+
+	assert.NoError(t, err)
+	assert.Equal(t, got.input.MessageBody, &body)
+	assert.Equal(t, got.input.QueueUrl, &queueURL)
+	assert.Equal(t, got.input.MessageDeduplicationId, &deduplicationID)
+	assert.Equal(t, got.input.MessageGroupId, &groupID)
 }
 
 func Test_MessageBuilder_Build_With_Error(t *testing.T) {
@@ -70,6 +85,21 @@ func Test_MessageBuilder_Build_With_Error(t *testing.T) {
 		"missing queue URL": {
 			msgBuilder:  NewMessageBuilder().Body("body"),
 			expectedErr: errors.New("missing required field: message queue URL"),
+		},
+		"group ID and delay": {
+			msgBuilder: NewMessageBuilder().Body("body").QueueURL("url").
+				WithGroupID("id").WithDelaySeconds(1),
+			expectedErr: errors.New("could not set a delay with either a group ID or a deduplication ID"),
+		},
+		"deduplication ID and delay": {
+			msgBuilder: NewMessageBuilder().Body("body").QueueURL("url").
+				WithDeduplicationID("id").WithDelaySeconds(1),
+			expectedErr: errors.New("could not set a delay with either a group ID or a deduplication ID"),
+		},
+		"group ID and deduplication ID and delay": {
+			msgBuilder: NewMessageBuilder().Body("body").QueueURL("url").
+				WithGroupID("id").WithDeduplicationID("id").WithDelaySeconds(1),
+			expectedErr: errors.New("could not set a delay with either a group ID or a deduplication ID"),
 		},
 	}
 	for name, tC := range testCases {

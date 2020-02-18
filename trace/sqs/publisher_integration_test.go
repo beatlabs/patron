@@ -20,15 +20,22 @@ const (
 	testSqsRegion   string = "eu-west-1"
 )
 
-func Test_Publish_Message(t *testing.T) {
+func Test_Publish_Message_FIFO_Queue(t *testing.T) {
 	api := createAPI(t)
 	pub := createPublisher(t, api)
 	queueURL := createQueue(t, api)
+	fifoQueueURL := createFifoQueue(t, api)
+
 	msg := createMsg(t, queueURL)
+	fifoMsg := createFIFOMsg(t, fifoQueueURL)
 
 	msgID, err := pub.Publish(context.Background(), msg)
 	assert.NoError(t, err)
 	assert.IsType(t, "string", msgID)
+
+	fifoMsgID, err := pub.Publish(context.Background(), fifoMsg)
+	assert.NoError(t, err)
+	assert.IsType(t, "string", fifoMsgID)
 }
 
 func createAPI(t *testing.T) sqsiface.SQSAPI {
@@ -62,12 +69,47 @@ func createQueue(t *testing.T, api sqsiface.SQSAPI) (topicArn string) {
 	return *out.QueueUrl
 }
 
+func createFifoQueue(t *testing.T, api sqsiface.SQSAPI) (topicArn string) {
+	input := &sqs.CreateQueueInput{
+		QueueName: aws.String("test-queue.fifo"),
+	}
+	input.SetAttributes(map[string]*string{
+		"FifoQueue":                 aws.String("true"),
+		"ContentBasedDeduplication": aws.String("true"),
+	})
+	out, err := api.CreateQueue(input)
+	require.NoError(t, err)
+
+	return *out.QueueUrl
+}
+
 func createMsg(t *testing.T, queueURL string) Message {
 	b := NewMessageBuilder()
 
 	msg, err := b.
 		Body("test msg").
 		QueueURL(queueURL).
+		WithStringAttribute("foo", "bar").
+		WithNumberAttribute("bar", 1337).
+		WithBinaryAttribute("baz", []byte("baz")).
+		WithDelaySeconds(1).
+		Build()
+	require.NoError(t, err)
+
+	return *msg
+}
+
+func createFIFOMsg(t *testing.T, queueURL string) Message {
+	b := NewMessageBuilder()
+
+	msg, err := b.
+		Body("test msg").
+		QueueURL(queueURL).
+		WithStringAttribute("foo", "bar").
+		WithNumberAttribute("bar", 1337).
+		WithBinaryAttribute("baz", []byte("baz")).
+		WithDeduplicationID("dedup-id").
+		WithGroupID("group-id").
 		Build()
 	require.NoError(t, err)
 

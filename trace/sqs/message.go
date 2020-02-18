@@ -3,6 +3,7 @@ package sqs
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,8 +16,16 @@ const (
 	attributeDataTypeString attributeDataType = "String"
 	attributeDataTypeNumber attributeDataType = "Number"
 	attributeDataTypeBinary attributeDataType = "Binary"
-	attributeDataTypeCustom attributeDataType = "Custom" // TODO: implement
+	attributeDataTypeCustom attributeDataType = "Custom"
 )
+
+var customDataTypeRegex map[attributeDataType]*regexp.Regexp
+
+func init() {
+	customDataTypeRegex[attributeDataTypeString] = regexp.MustCompile(`String\.\w+`)
+	customDataTypeRegex[attributeDataTypeNumber] = regexp.MustCompile(`Number\.\w+`)
+	customDataTypeRegex[attributeDataTypeString] = regexp.MustCompile(`Custom\.\w+`)
+}
 
 // MessageBuilder helps building messages to be sent to SQS.
 type MessageBuilder struct {
@@ -120,9 +129,42 @@ func (b *MessageBuilder) WithBinaryAttribute(name string, value []byte) *Message
 }
 
 // WithCustomAttribute attaches a custom attribute to the message.
-func (b *MessageBuilder) WithCustomAttribute(name string, value []byte) *MessageBuilder {
-	// TODO: implement this
+func (b *MessageBuilder) WithCustomStringAttribute(name, value string) *MessageBuilder {
+	ok := b.validateCustomAttributeName(name, attributeDataTypeString)
+	if !ok {
+		b.err = errors.New("invalid custom attribute name format, check AWS SQS doc")
+	}
+	v := b.addAttributeValue(name, attributeDataTypeString)
+	v.SetStringValue(value)
 	return b
+}
+
+func (b *MessageBuilder) WithCustomNumberAttribute(name string, value int64) *MessageBuilder {
+	ok := b.validateCustomAttributeName(name, attributeDataTypeNumber)
+	if !ok {
+		b.err = errors.New("invalid custom attribute name format, check AWS SQS doc")
+	}
+	v := b.addAttributeValue(name, attributeDataTypeNumber)
+	v.SetStringValue(strconv.FormatInt(value, 10)) // We need to use StringValue for Number (see SDK doc)
+	return b
+}
+
+func (b *MessageBuilder) WithCustomBinaryAttribute(name string, value []byte) *MessageBuilder {
+	ok := b.validateCustomAttributeName(name, attributeDataTypeBinary)
+	if !ok {
+		b.err = errors.New("invalid custom attribute name format, check AWS SQS doc")
+	}
+	v := b.addAttributeValue(name, attributeDataTypeBinary)
+	v.SetBinaryValue(value)
+	return b
+}
+
+func (b *MessageBuilder) validateCustomAttributeName(name string, dataType attributeDataType) bool {
+	r, ok := customDataTypeRegex[dataType]
+	if !ok {
+		return false
+	}
+	return r.MatchString(name)
 }
 
 func (b *MessageBuilder) addAttributeValue(name string, dataType attributeDataType) *sqs.MessageAttributeValue {

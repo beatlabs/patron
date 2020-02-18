@@ -3,17 +3,18 @@ package sqs
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/aws/aws-sdk-go/service/sqs"
-
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
-
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_NewPublisher(t *testing.T) {
@@ -132,43 +133,42 @@ func (s *stubSQSAPI) SendMessageWithContext(ctx context.Context, input *sqs.Send
 	return s.output, s.err
 }
 
-//
-//func ExamplePublisher() {
-//	// Create the SQS API with the required config, credentials, etc.
-//	sess, err := session.NewSession(
-//		aws.NewConfig().
-//			WithEndpoint("http://localhost:4575").
-//			WithRegion("eu-west-1").
-//			WithCredentials(
-//				credentials.NewStaticCredentials("aws-id", "aws-secret", "aws-token"),
-//			),
-//	)
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	api := sqs.New(sess)
-//
-//	// Create the publisher
-//	pub, err := NewPublisher(api)
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	// Create a message
-//	msg, err := NewMessageBuilder().
-//		Message("my message").
-//		TopicArn("arn:aws:sqs:eu-west-1:123456789012:MyTopic").
-//		Build()
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	// Publish it
-//	msgID, err := pub.Publish(context.Background(), *msg)
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	fmt.Println(msgID)
-//}
+func ExamplePublisher() {
+	// Create the SQS API with the required config, credentials, etc.
+	sess, err := session.NewSession(
+		aws.NewConfig().
+			WithEndpoint("http://localhost:4576").
+			WithRegion("eu-west-1").
+			WithCredentials(
+				credentials.NewStaticCredentials("aws-id", "aws-secret", "aws-token"),
+			),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	api := sqs.New(sess)
+
+	// Create the publisher
+	pub, err := NewPublisher(api)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create a message
+	msg, err := NewMessageBuilder().
+		Body("message body").
+		QueueURL("http://localhost:4576/queue/foo-queue").
+		Build()
+	if err != nil {
+		panic(err)
+	}
+
+	// Publish it
+	msgID, err := pub.Publish(context.Background(), *msg)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(msgID)
+}

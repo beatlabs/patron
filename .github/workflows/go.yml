@@ -1,4 +1,4 @@
-name: Running CI
+name: CI
 on: [pull_request]
 jobs:
   build:

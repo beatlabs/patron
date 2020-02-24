@@ -78,12 +78,77 @@ func (b *Builder) NewBuilder(name, version string) *Builder {
 	}
 }
 
-func (b *Builder) WithRoutes(rr []http.Route) *Builder                {}
-func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {}
-func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder    {}
-func (b *Builder) WithReadyCheck(rcf http.ReadyCheckFunc) *Builder    {}
-func (b *Builder) WithComponents(cc ...Component) *Builder            {}
-func (b *Builder) WithSIGHUP(handler func()) *Builder                 {}
+// WithRoutes adds routes to the default HTTP component.
+func (b *Builder) WithRoutes(rr []http.Route) *Builder {
+	if len(rr) == 0 {
+		b.errors = append(b.errors, errors.New("provided routes slice was empty"))
+	} else {
+		log.Infof(fieldSetMsg, "routes", rr)
+		b.routes = append(b.routes, rr...)
+	}
+
+	return b
+}
+
+// WithMiddlewares adds generic middlewares to the default HTTP component.
+func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {
+	if len(mm) == 0 {
+		b.errors = append(b.errors, errors.New("provided middlewares slice was empty"))
+	} else {
+		log.Infof(fieldSetMsg, "middlewares", mm)
+		b.middlewares = append(b.middlewares, mm...)
+	}
+
+	return b
+}
+
+// WithAliveCheck overrides the default liveness check of the default HTTP component.
+func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder {
+	if acf == nil {
+		b.errors = append(b.errors, errors.New("alive check func provided was nil"))
+	} else {
+		log.Infof(fieldSetMsg, "alive check func", acf)
+		b.acf = acf
+	}
+
+	return b
+}
+
+// WithReadyCheck overrides the default readiness check of the default HTTP component.
+func (b *Builder) WithReadyCheck(rcf http.ReadyCheckFunc) *Builder {
+	if rcf == nil {
+		b.errors = append(b.errors, errors.New("ready check func provided was nil"))
+	} else {
+		log.Infof(fieldSetMsg, "ready check func", rcf)
+		b.rcf = rcf
+	}
+
+	return b
+}
+
+// WithComponents adds custom components to the Patron service.
+func (b *Builder) WithComponents(cc ...Component) *Builder {
+	if len(cc) == 0 {
+		b.errors = append(b.errors, errors.New("provided components slice was empty"))
+	} else {
+		log.Infof(fieldSetMsg, "components", cc)
+		b.cps = cc
+	}
+
+	return b
+}
+
+// WithSIGHUP adds a custom handler when the service receives a SIGHUP.
+func (b *Builder) WithSIGHUP(handler func()) *Builder {
+	if handler == nil {
+		b.errors = append(b.errors, errors.New("provided SIGHUP handler was nil"))
+	} else {
+		log.Infof(fieldSetMsg, "SIGHUP handler", handler)
+		b.sighupHandler = handler
+	}
+
+	return b
+}
 
 func (b *Builder) Build() (Service, error) {
 	return Service{}, nil

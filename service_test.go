@@ -9,40 +9,97 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/beatlabs/patron/log"
 	phttp "github.com/beatlabs/patron/sync/http"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewServer(t *testing.T) {
 	route := phttp.NewRoute("/", "GET", nil, true, nil)
-	middleware := func(h http.Handler) http.Handler {
+	middleware := phttp.MiddlewareFunc(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		})
+	})
+
+	var httpBuilderNoErrors = []error{}
+	var httpBuilderAllErrors = []error{
+		errors.New("name is required"),
+		errors.New("provided routes slice was empty"),
+		errors.New("provided middlewares slice was empty"),
+		errors.New("alive check func provided was nil"),
+		errors.New("ready check func provided was nil"),
+		errors.New("provided components slice was empty"),
+		errors.New("provided SIGHUP handler was nil"),
 	}
-	type args struct {
-		name string
-		opt  []OptionFunc
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+
+	tests := map[string]struct {
+		name          string
+		version       string
+		cps           []Component
+		routes        []phttp.Route
+		middlewares   []phttp.MiddlewareFunc
+		acf           phttp.AliveCheckFunc
+		rcf           phttp.ReadyCheckFunc
+		sighupHandler func()
+		wantErrs      []error
 	}{
-		{"success", args{name: "test", opt: []OptionFunc{Routes([]phttp.Route{route}), Middlewares(middleware)}}, false},
-		{"failed empty middlewares", args{name: "test", opt: []OptionFunc{Routes([]phttp.Route{route}), Middlewares([]phttp.MiddlewareFunc{}...)}}, true},
-		{"failed missing name", args{name: "", opt: []OptionFunc{Routes([]phttp.Route{route})}}, true},
-		{"failed missing routes", args{name: "test", opt: []OptionFunc{Routes([]phttp.Route{})}}, true},
+		"success": {
+			name:          "test",
+			version:       "dev",
+			cps:           []Component{&testComponent{}},
+			routes:        []phttp.Route{route},
+			middlewares:   []phttp.MiddlewareFunc{middleware},
+			acf:           phttp.DefaultAliveCheck,
+			rcf:           phttp.DefaultReadyCheck,
+			sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
+			wantErrs:      httpBuilderNoErrors,
+		},
+		"nil inputs steps": {
+			name:          "",
+			version:       "",
+			cps:           nil,
+			routes:        nil,
+			middlewares:   nil,
+			acf:           nil,
+			rcf:           nil,
+			sighupHandler: nil,
+			wantErrs:      httpBuilderAllErrors,
+		},
+		"error in all builder steps": {
+			name:          "",
+			version:       "",
+			cps:           []Component{},
+			routes:        []phttp.Route{},
+			middlewares:   []phttp.MiddlewareFunc{},
+			acf:           nil,
+			rcf:           nil,
+			sighupHandler: nil,
+			wantErrs:      httpBuilderAllErrors,
+		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, "", tt.args.opt...)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, got)
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotService, gotErrs := NewBuilder(tt.name, tt.version).
+				WithRoutes(tt.routes).
+				WithMiddlewares(tt.middlewares...).
+				WithAliveCheck(tt.acf).
+				WithReadyCheck(tt.rcf).
+				WithComponents(tt.cps...).
+				WithSIGHUP(tt.sighupHandler).Build()
+
+			if len(tt.wantErrs) > 0 {
+				e := ""
+				for _, err := range tt.wantErrs {
+					e += err.Error() + "\n"
+				}
+				assert.Equal(t, e, gotErrs.Error())
+				assert.Nil(t, gotService)
+				assert.Equal(t, 1, 2)
 			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, got)
+				assert.NotNil(t, gotService)
+				assert.IsType(t, &Service{}, gotService)
 			}
 		})
 	}
@@ -62,7 +119,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
 			assert.NoError(t, err)
-			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
+			s, err := NewBuilder("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Build()
 			assert.NoError(t, err)
 			err = s.Run(tt.ctx)
 			if tt.wantErr {
@@ -97,7 +154,7 @@ func TestServer_SetupTracing(t *testing.T) {
 				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", tt.port)
 				assert.NoError(t, err)
 			}
-			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
+			s, err := NewBuilder("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Build()
 			assert.NoError(t, err)
 			err = s.Run(tt.ctx)
 			assert.NoError(t, err)

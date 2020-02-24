@@ -76,12 +76,12 @@ func (b *Builder) NewBuilder(name, version string) *Builder {
 	}
 }
 
-func (b *Builder) WithRoutes() *Builder      {}
-func (b *Builder) WithMiddlewares() *Builder {}
-func (b *Builder) WithAliveCheck() *Builder  {}
-func (b *Builder) WithReadyCheck() *Builder  {}
-func (b *Builder) WithComponents() *Builder  {}
-func (b *Builder) WithSIGHUP() *Builder      {}
+func (b *Builder) WithRoutes(rr []http.Route) *Builder                {}
+func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {}
+func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder    {}
+func (b *Builder) WithReadyCheck(rcf http.ReadyCheckFunc) *Builder    {}
+func (b *Builder) WithComponents(cc ...Component) *Builder            {}
+func (b *Builder) WithSIGHUP(handler func()) *Builder                 {}
 
 func (b *Builder) Build() (Service, error) {
 	return Service{}, nil

@@ -186,41 +186,6 @@ func (b *Builder) Build() (*Service, error) {
 	return &s, nil
 }
 
-// New creates a new named service and allows for customization through functional options.
-func New(name, version string, oo ...OptionFunc) (*Service, error) {
-
-	s := Service{
-		cps:         []Component{},
-		middlewares: []http.MiddlewareFunc{},
-	}
-
-	err := Setup(name, version)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.setupDefaultTracing(name, version)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, o := range oo {
-		err = o(&s)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	httpCp, err := s.createHTTPComponent()
-	if err != nil {
-		return nil, err
-	}
-
-	s.cps = append(s.cps, httpCp)
-	s.setupOSSignal()
-	return &s, nil
-}
-
 func (s *Service) setupOSSignal() {
 	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 }

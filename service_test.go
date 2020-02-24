@@ -96,7 +96,6 @@ func TestNewServer(t *testing.T) {
 				}
 				assert.Equal(t, e, gotErrs.Error())
 				assert.Nil(t, gotService)
-				assert.Equal(t, 1, 2)
 			} else {
 				assert.NotNil(t, gotService)
 				assert.IsType(t, &Service{}, gotService)

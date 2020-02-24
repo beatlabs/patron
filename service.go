@@ -37,6 +37,36 @@ type Service struct {
 	sighupHandler func()
 }
 
+// Builder gathers all required properties to
+// construct a Patron service.
+type Builder struct {
+	errors        []error
+	name          string
+	version       string
+	cps           []Component
+	routes        []http.Route
+	middlewares   []http.MiddlewareFunc
+	acf           http.AliveCheckFunc
+	rcf           http.ReadyCheckFunc
+	termSig       chan os.Signal
+	sighupHandler func()
+}
+
+func (b *Builder) NewBuilder(name, version string) *Builder {
+	return &Builder{}
+}
+
+func (b *Builder) WithRoutes() *Builder      {}
+func (b *Builder) WithMiddlewares() *Builder {}
+func (b *Builder) WithAliveCheck() *Builder  {}
+func (b *Builder) WithReadyCheck() *Builder  {}
+func (b *Builder) WithComponents() *Builder  {}
+func (b *Builder) WithSIGHUP() *Builder      {}
+
+func (b *Builder) Build() (Service, error) {
+	return Service{}, nil
+}
+
 // New creates a new named service and allows for customization through functional options.
 func New(name, version string, oo ...OptionFunc) (*Service, error) {
 	if name == "" {

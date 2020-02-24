@@ -54,6 +54,9 @@ type Builder struct {
 	sighupHandler func()
 }
 
+// NewBuilder initiates the Service builder chain.
+// The builder contains default values for Alive/Ready checks,
+// SIGHUP handeler and version.
 func (b *Builder) NewBuilder(name, version string) *Builder {
 	var errs []error
 

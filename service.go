@@ -150,8 +150,40 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	return b
 }
 
-func (b *Builder) Build() (Service, error) {
-	return Service{}, nil
+// Build constructs the Patron service by applying the gathered properties.
+func (b *Builder) Build() (*Service, error) {
+	if len(b.errors) > 0 {
+		return nil, patronErrors.Aggregate(b.errors...)
+	}
+
+	s := Service{
+		cps:           b.cps,
+		routes:        b.routes,
+		middlewares:   b.middlewares,
+		acf:           b.acf,
+		rcf:           b.rcf,
+		termSig:       b.termSig,
+		sighupHandler: b.sighupHandler,
+	}
+
+	err := Setup(b.name, b.version)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.setupDefaultTracing(b.name, b.version)
+	if err != nil {
+		return nil, err
+	}
+
+	httpCp, err := s.createHTTPComponent()
+	if err != nil {
+		return nil, err
+	}
+
+	s.cps = append(s.cps, httpCp)
+	s.setupOSSignal()
+	return &s, nil
 }
 
 // New creates a new named service and allows for customization through functional options.

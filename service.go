@@ -53,7 +53,27 @@ type Builder struct {
 }
 
 func (b *Builder) NewBuilder(name, version string) *Builder {
-	return &Builder{}
+	var errs []error
+
+	if name == "" {
+		b.errors = append(b.errors, errors.New("name is required"))
+	}
+	if version == "" {
+		version = "dev"
+	}
+
+	return &Builder{
+		errors:        errs,
+		name:          name,
+		version:       version,
+		cps:           []Component{},
+		routes:        []http.Route{},
+		middlewares:   []http.MiddlewareFunc{},
+		acf:           http.DefaultAliveCheck,
+		rcf:           http.DefaultReadyCheck,
+		termSig:       make(chan os.Signal, 1),
+		sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
+	}
 }
 
 func (b *Builder) WithRoutes() *Builder      {}
@@ -69,21 +89,10 @@ func (b *Builder) Build() (Service, error) {
 
 // New creates a new named service and allows for customization through functional options.
 func New(name, version string, oo ...OptionFunc) (*Service, error) {
-	if name == "" {
-		return nil, errors.New("name is required")
-	}
-
-	if version == "" {
-		version = "dev"
-	}
 
 	s := Service{
-		cps:           []Component{},
-		acf:           http.DefaultAliveCheck,
-		rcf:           http.DefaultReadyCheck,
-		termSig:       make(chan os.Signal, 1),
-		sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
-		middlewares:   []http.MiddlewareFunc{},
+		cps:         []Component{},
+		middlewares: []http.MiddlewareFunc{},
 	}
 
 	err := Setup(name, version)

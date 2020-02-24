@@ -84,10 +84,9 @@ func main() {
 	}
 
 	// Run the server
-	srv, err := patron.New(name, version, patron.Components(sqsCmp.cmp))
-	if err != nil {
-		log.Fatalf("failed to create service: %v", err)
-	}
+	srv, err := patron.NewBuilder(name, version).
+		WithComponents(sqsCmp.cmp).
+		Build()
 
 	ctx := context.Background()
 	err = srv.Run(ctx)

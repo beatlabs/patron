@@ -123,11 +123,10 @@ func main() {
 		log.Fatalf("failed to create processor %v", err)
 	}
 
-	srv, err := patron.New(
-		name,
-		version,
-		patron.Components(amqpCmp.cmp),
-	)
+	srv, err := patron.NewBuilder(name, version).
+		WithComponents(amqpCmp.cmp).
+		Build()
+
 	if err != nil {
 		log.Fatalf("failed to create service %v", err)
 	}

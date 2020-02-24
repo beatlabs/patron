@@ -55,18 +55,17 @@ func main() {
 			h.ServeHTTP(w, r)
 		})
 	}
-	sig := patron.SIGHUP(func() {
+	sig := func() {
 		fmt.Println("exit gracefully...")
 		os.Exit(0)
-	})
+	}
 
-	srv, err := patron.New(
-		name,
-		version,
-		patron.Routes(routes),
-		patron.Middlewares(middlewareCors),
-		sig,
-	)
+	srv, err := patron.NewBuilder(name, version).
+		WithRoutes(routes).
+		WithMiddlewares(middlewareCors).
+		WithSIGHUP(sig).
+		Build()
+
 	if err != nil {
 		log.Fatalf("failed to create service %v", err)
 	}

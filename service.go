@@ -37,6 +37,8 @@ type Service struct {
 	sighupHandler func()
 }
 
+const fieldSetMsg = "Setting service property '%v' with '%v'"
+
 // Builder gathers all required properties to
 // construct a Patron service.
 type Builder struct {

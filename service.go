@@ -57,11 +57,11 @@ type Builder struct {
 // NewBuilder initiates the Service builder chain.
 // The builder contains default values for Alive/Ready checks,
 // SIGHUP handeler and version.
-func (b *Builder) NewBuilder(name, version string) *Builder {
+func NewBuilder(name, version string) *Builder {
 	var errs []error
 
 	if name == "" {
-		b.errors = append(b.errors, errors.New("name is required"))
+		errs = append(errs, errors.New("name is required"))
 	}
 	if version == "" {
 		version = "dev"
@@ -71,9 +71,6 @@ func (b *Builder) NewBuilder(name, version string) *Builder {
 		errors:        errs,
 		name:          name,
 		version:       version,
-		cps:           []Component{},
-		routes:        []http.Route{},
-		middlewares:   []http.MiddlewareFunc{},
 		acf:           http.DefaultAliveCheck,
 		rcf:           http.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),

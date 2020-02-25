@@ -22,16 +22,13 @@ func TestNewServer(t *testing.T) {
 		})
 	})
 
-	var httpBuilderNoErrors = []error{}
-	var httpBuilderAllErrors = []error{
-		errors.New("name is required"),
-		errors.New("provided routes slice was empty"),
-		errors.New("provided middlewares slice was empty"),
-		errors.New("alive check func provided was nil"),
-		errors.New("ready check func provided was nil"),
-		errors.New("provided components slice was empty"),
-		errors.New("provided SIGHUP handler was nil"),
-	}
+	var httpBuilderAllErrors = errors.New("name is required\n" +
+		"provided routes slice was empty\n" +
+		"provided middlewares slice was empty\n" +
+		"alive check func provided was nil\n" +
+		"ready check func provided was nil\n" +
+		"provided components slice was empty\n" +
+		"provided SIGHUP handler was nil\n")
 
 	tests := map[string]struct {
 		name          string
@@ -42,7 +39,7 @@ func TestNewServer(t *testing.T) {
 		acf           phttp.AliveCheckFunc
 		rcf           phttp.ReadyCheckFunc
 		sighupHandler func()
-		wantErrs      []error
+		wantErr       error
 	}{
 		"success": {
 			name:          "test",
@@ -53,7 +50,7 @@ func TestNewServer(t *testing.T) {
 			acf:           phttp.DefaultAliveCheck,
 			rcf:           phttp.DefaultReadyCheck,
 			sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
-			wantErrs:      httpBuilderNoErrors,
+			wantErr:       nil,
 		},
 		"nil inputs steps": {
 			name:          "",
@@ -64,7 +61,7 @@ func TestNewServer(t *testing.T) {
 			acf:           nil,
 			rcf:           nil,
 			sighupHandler: nil,
-			wantErrs:      httpBuilderAllErrors,
+			wantErr:       httpBuilderAllErrors,
 		},
 		"error in all builder steps": {
 			name:          "",
@@ -75,13 +72,13 @@ func TestNewServer(t *testing.T) {
 			acf:           nil,
 			rcf:           nil,
 			sighupHandler: nil,
-			wantErrs:      httpBuilderAllErrors,
+			wantErr:       httpBuilderAllErrors,
 		},
 	}
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotService, gotErrs := NewBuilder(tt.name, tt.version).
+			gotService, gotErr := NewBuilder(tt.name, tt.version).
 				WithRoutes(tt.routes).
 				WithMiddlewares(tt.middlewares...).
 				WithAliveCheck(tt.acf).
@@ -89,14 +86,11 @@ func TestNewServer(t *testing.T) {
 				WithComponents(tt.cps...).
 				WithSIGHUP(tt.sighupHandler).Build()
 
-			if len(tt.wantErrs) > 0 {
-				e := ""
-				for _, err := range tt.wantErrs {
-					e += err.Error() + "\n"
-				}
-				assert.Equal(t, e, gotErrs.Error())
+			if tt.wantErr != nil {
+				assert.Equal(t, tt.wantErr.Error(), gotErr.Error())
 				assert.Nil(t, gotService)
 			} else {
+				assert.Nil(t, gotErr)
 				assert.NotNil(t, gotService)
 				assert.IsType(t, &Service{}, gotService)
 			}

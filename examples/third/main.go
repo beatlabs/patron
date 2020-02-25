@@ -60,7 +60,6 @@ func main() {
 	srv, err := patron.NewBuilder(name, version).
 		WithComponents(kafkaCmp.cmp).
 		Build()
-
 	if err != nil {
 		log.Fatalf("failed to create service %v", err)
 	}

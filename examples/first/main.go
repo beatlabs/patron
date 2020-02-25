@@ -65,7 +65,6 @@ func main() {
 		WithMiddlewares(middlewareCors).
 		WithSIGHUP(sig).
 		Build()
-
 	if err != nil {
 		log.Fatalf("failed to create service %v", err)
 	}

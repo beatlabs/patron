@@ -56,7 +56,7 @@ type Builder struct {
 
 // NewBuilder initiates the Service builder chain.
 // The builder contains default values for Alive/Ready checks,
-// SIGHUP handeler and version.
+// the SIGHUP handler and its version.
 func NewBuilder(name, version string) *Builder {
 	var errs []error
 
@@ -138,7 +138,7 @@ func (b *Builder) WithComponents(cc ...Component) *Builder {
 	return b
 }
 
-// WithSIGHUP adds a custom handler when the service receives a SIGHUP.
+// WithSIGHUP adds a custom handler for when the service receives a SIGHUP.
 func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	if handler == nil {
 		b.errors = append(b.errors, errors.New("provided SIGHUP handler was nil"))
@@ -224,7 +224,7 @@ func (s *Service) Run(ctx context.Context) error {
 	return patronErrors.Aggregate(ee...)
 }
 
-// Setup set's up metrics and default logging.
+// Setup sets up metrics and default logging.
 func Setup(name, version string) error {
 
 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")

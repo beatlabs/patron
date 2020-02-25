@@ -166,7 +166,7 @@ func (b *Builder) Build() (*Service, error) {
 		sighupHandler: b.sighupHandler,
 	}
 
-	err := Setup(b.name, b.version)
+	err := SetupLogging(b.name, b.version)
 	if err != nil {
 		return nil, err
 	}
@@ -224,8 +224,8 @@ func (s *Service) Run(ctx context.Context) error {
 	return patronErrors.Aggregate(ee...)
 }
 
-// Setup sets up metrics and default logging.
-func Setup(name, version string) error {
+// SetupLogging sets up the default metrics logging.
+func SetupLogging(name, version string) error {
 
 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
 	if !ok {

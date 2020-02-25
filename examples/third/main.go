@@ -46,7 +46,7 @@ func main() {
 	name := "third"
 	version := "1.0.0"
 
-	err := patron.Setup(name, version)
+	err := patron.SetupLogging(name, version)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)

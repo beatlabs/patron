@@ -8,9 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
-type attributeDataType string
-
-const attributeDataTypeString attributeDataType = "String"
+const attributeDataTypeString string = "String"
 
 // MessageBuilder helps building messages to be sent to SQS.
 type MessageBuilder struct {
@@ -101,7 +99,7 @@ func (m *Message) injectHeaders(carrier sqsHeadersCarrier) {
 
 func (m *Message) setMessageAttribute(key, value string) {
 	m.input.MessageAttributes[key] = &sqs.MessageAttributeValue{
-		DataType:    aws.String(string(attributeDataTypeString)),
+		DataType:    aws.String(attributeDataTypeString),
 		StringValue: aws.String(value),
 	}
 }

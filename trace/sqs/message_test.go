@@ -65,8 +65,8 @@ func Test_Message_injectHeaders(t *testing.T) {
 	assert.Equal(
 		t,
 		map[string]*sqs.MessageAttributeValue{
-			"foo": {DataType: aws.String(string(attributeDataTypeString)), StringValue: aws.String("bar")},
-			"baz": {DataType: aws.String(string(attributeDataTypeString)), StringValue: aws.String("42")},
+			"foo": {DataType: aws.String(attributeDataTypeString), StringValue: aws.String("bar")},
+			"baz": {DataType: aws.String(attributeDataTypeString), StringValue: aws.String("42")},
 		},
 		msg.input.MessageAttributes,
 	)

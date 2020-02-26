@@ -14,9 +14,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 )
 
-const (
-	publisherComponent = "sqs-publisher"
-)
+const publisherComponent = "sqs-publisher"
 
 // Publisher is the interface defining an SQS publisher, used to publish messages to SQS.
 type Publisher interface {

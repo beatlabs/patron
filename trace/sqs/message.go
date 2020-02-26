@@ -22,6 +22,7 @@ const (
 var customDataTypeRegex map[attributeDataType]*regexp.Regexp
 
 func init() {
+	customDataTypeRegex = make(map[attributeDataType]*regexp.Regexp, 3)
 	customDataTypeRegex[attributeDataTypeString] = regexp.MustCompile(`String\.\w+`)
 	customDataTypeRegex[attributeDataTypeNumber] = regexp.MustCompile(`Number\.\w+`)
 	customDataTypeRegex[attributeDataTypeBinary] = regexp.MustCompile(`Binary\.\w+`)

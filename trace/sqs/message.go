@@ -66,7 +66,7 @@ func (b *MessageBuilder) Body(body string) *MessageBuilder {
 	return b
 }
 
-// WithGroupID sets the group ID.
+// QueueURL sets the queue URL.
 func (b *MessageBuilder) QueueURL(url string) *MessageBuilder {
 	b.input.SetQueueUrl(url)
 	return b

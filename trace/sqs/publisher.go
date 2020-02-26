@@ -63,6 +63,7 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 
 	trace.SpanComplete(span, err)
 	if err != nil {
+		fmt.Println(err)
 		return "", fmt.Errorf("failed to publish message: %w", err)
 	}
 

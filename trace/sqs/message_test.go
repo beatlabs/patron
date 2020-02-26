@@ -2,9 +2,10 @@ package sqs
 
 import (
 	"errors"
-	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,32 +17,16 @@ func Test_MessageBuilder_Build(t *testing.T) {
 	queueURL := "url"
 	delay := int64(10)
 
-	stringAttribute := "string attribute"
-	numberAttribute := int64(1337)
-	binaryAttribute := []byte("binary attribute")
-
 	got, err := b.
 		Body(body).
 		QueueURL(queueURL).
 		WithDelaySeconds(delay).
-		WithStringAttribute("string", stringAttribute).
-		WithNumberAttribute("number", numberAttribute).
-		WithBinaryAttribute("binary", binaryAttribute).
 		Build()
 
 	assert.NoError(t, err)
 	assert.Equal(t, got.input.MessageBody, &body)
 	assert.Equal(t, got.input.QueueUrl, &queueURL)
 	assert.Equal(t, got.input.DelaySeconds, &delay)
-
-	assert.Equal(t, string(attributeDataTypeString), *got.input.MessageAttributes["string"].DataType)
-	assert.Equal(t, stringAttribute, *got.input.MessageAttributes["string"].StringValue)
-
-	assert.Equal(t, string(attributeDataTypeNumber), *got.input.MessageAttributes["number"].DataType)
-	assert.Equal(t, strconv.FormatInt(numberAttribute, 10), *got.input.MessageAttributes["number"].StringValue)
-
-	assert.Equal(t, string(attributeDataTypeBinary), *got.input.MessageAttributes["binary"].DataType)
-	assert.Equal(t, binaryAttribute, got.input.MessageAttributes["binary"].BinaryValue)
 }
 
 func Test_MessageBuilder_Build_Fifo(t *testing.T) {
@@ -64,6 +49,27 @@ func Test_MessageBuilder_Build_Fifo(t *testing.T) {
 	assert.Equal(t, got.input.QueueUrl, &queueURL)
 	assert.Equal(t, got.input.MessageDeduplicationId, &deduplicationID)
 	assert.Equal(t, got.input.MessageGroupId, &groupID)
+}
+
+func Test_Message_injectHeaders(t *testing.T) {
+	msg := &Message{input: &sqs.SendMessageInput{
+		MessageAttributes: map[string]*sqs.MessageAttributeValue{},
+	}}
+	assert.Empty(t, msg.input.MessageAttributes)
+
+	headers := map[string]interface{}{
+		"foo": "bar",
+		"baz": "42",
+	}
+	msg.injectHeaders(headers)
+	assert.Equal(
+		t,
+		map[string]*sqs.MessageAttributeValue{
+			"foo": {DataType: aws.String("String"), StringValue: aws.String("bar")},
+			"baz": {DataType: aws.String("String"), StringValue: aws.String("42")},
+		},
+		msg.input.MessageAttributes,
+	)
 }
 
 func Test_MessageBuilder_Build_With_Error(t *testing.T) {

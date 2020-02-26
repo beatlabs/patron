@@ -256,7 +256,6 @@ func (ac *amqpComponent) Process(msg async.Message) error {
 	sqsMsg, err := patronsqs.NewMessageBuilder().
 		Body(string(payload)).
 		QueueURL(ac.sqsQueueURL).
-		WithStringAttribute("foo", "bar").
 		Build()
 	_, err = ac.sqsPub.Publish(msg.Context(), *sqsMsg)
 	if err != nil {

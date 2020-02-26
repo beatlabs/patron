@@ -10,9 +10,7 @@ import (
 
 type attributeDataType string
 
-const (
-	attributeDataTypeString attributeDataType = "String"
-)
+const attributeDataTypeString attributeDataType = "String"
 
 // MessageBuilder helps building messages to be sent to SQS.
 type MessageBuilder struct {

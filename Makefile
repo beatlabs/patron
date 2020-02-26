@@ -12,7 +12,7 @@ cover: fmtcheck
 	rm coverage.txt
 
 coverci: fmtcheck
-	gotestsum --junitfile gotestsum-report.xml -- ./... -cover -race -count=1 -mod=vendor -coverprofile=coverage.txt -covermode=atomic
+	go test ./... -race -cover -mod=vendor -coverprofile=coverage.txt -covermode=atomic	
 
 fmt:
 	go fmt ./...

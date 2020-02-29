@@ -23,5 +23,9 @@ jobs:
         run: make ci
 
       - name: Upload code coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CodeCovToken }}
         run: |
-          bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
+          bash <(curl -s https://codecov.io/bash)
+        
+

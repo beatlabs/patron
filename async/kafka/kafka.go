@@ -20,13 +20,30 @@ import (
 
 const (
 	consumerComponent = "kafka-consumer"
+	// MessageReceived is used to label the Prometheus Message Status counter.
+	MessageReceived = "received"
+	// MessageClaimErrors is used to label the Prometheus Message Status counter.
+	MessageClaimErrors = "claim-errors"
+	// MessageDecoded is used to label the Prometheus Message Status counter.
+	MessageDecoded = "decoded"
 )
 
 var topicPartitionOffsetDiff *prometheus.GaugeVec
+var messageStatus *prometheus.CounterVec
+var messageConfirmation *prometheus.CounterVec
 
 // TopicPartitionOffsetDiffGaugeSet creates a new Gauge that measures partition offsets.
 func TopicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high, offset int64) {
 	topicPartitionOffsetDiff.WithLabelValues(group, topic, strconv.FormatInt(int64(partition), 10)).Set(float64(high - offset))
+}
+
+// MessageStatusCountInc increments the messageStatus counter for a certain status.
+func MessageStatusCountInc(status, group, topic string) {
+	messageStatus.WithLabelValues(status, group, topic).Inc()
+}
+
+func messageConfirmationCountInc(status string) {
+	messageConfirmation.WithLabelValues(status).Inc()
 }
 
 func init() {
@@ -39,7 +56,30 @@ func init() {
 		},
 		[]string{"group", "topic", "partition"},
 	)
-	prometheus.MustRegister(topicPartitionOffsetDiff)
+
+	messageStatus = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "component",
+			Subsystem: "kafka_consumer",
+			Name:      "message_status",
+			Help:      "Message status counter (received, decoded, decoding-errors) classified by topic and partition",
+		}, []string{"status", "group", "topic"},
+	)
+
+	messageConfirmation = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "component",
+			Subsystem: "kafka_consumer",
+			Name:      "message_confirmation",
+			Help:      "Message confirmation counter (ACK/NACK)",
+		}, []string{"status"},
+	)
+
+	prometheus.MustRegister(
+		topicPartitionOffsetDiff,
+		messageStatus,
+		messageConfirmation,
+	)
 }
 
 // ConsumerConfig is the common configuration of patron kafka consumers.
@@ -73,6 +113,7 @@ func (m *message) Ack() error {
 	if m.sess != nil {
 		m.sess.MarkMessage(m.msg, "")
 	}
+	messageConfirmationCountInc("ACK")
 	trace.SpanSuccess(m.span)
 	return nil
 }
@@ -84,6 +125,7 @@ func (m *message) Source() string {
 
 // Nack signals the producing side an erroring condition or inconsistency.
 func (m *message) Nack() error {
+	messageConfirmationCountInc("NACK")
 	trace.SpanError(m.span)
 	return nil
 }

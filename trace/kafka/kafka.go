@@ -11,11 +11,33 @@ import (
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	producerComponent = "kafka-async-producer"
+	producerComponent     = "kafka-async-producer"
+	messageCreationErrors = "creation-errors"
+	messageSendErrors     = "send-errors"
+	messageSent           = "sent"
 )
+
+var messageStatus *prometheus.CounterVec
+
+func messageStatusCountInc(status, topic string) {
+	messageStatus.WithLabelValues(status, topic).Inc()
+}
+
+func init() {
+	messageStatus = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "component",
+			Subsystem: "kafka_async_producer",
+			Name:      "message_status",
+			Help:      "Message status counter (received, decoded, decoding-errors) classified by topic",
+		}, []string{"status", "topic"},
+	)
+	prometheus.MustRegister(messageStatus)
+}
 
 // Message abstraction of a Kafka message.
 type Message struct {
@@ -61,9 +83,11 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
 		opentracing.Tag{Key: "topic", Value: msg.topic})
 	pm, err := ap.createProducerMessage(ctx, msg, sp)
 	if err != nil {
+		messageStatusCountInc(messageCreationErrors, msg.topic)
 		trace.SpanError(sp)
 		return err
 	}
+	messageStatusCountInc(messageSent, msg.topic)
 	ap.prod.Input() <- pm
 	trace.SpanSuccess(sp)
 	return nil
@@ -85,6 +109,7 @@ func (ap *AsyncProducer) Close() error {
 
 func (ap *AsyncProducer) propagateError() {
 	for pe := range ap.prod.Errors() {
+		messageStatusCountInc(messageSendErrors, pe.Msg.Topic)
 		ap.chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
 }

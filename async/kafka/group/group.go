@@ -164,10 +164,14 @@ func (h handler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Con
 	ctx := sess.Context()
 	for msg := range claim.Messages() {
 		kafka.TopicPartitionOffsetDiffGaugeSet(h.consumer.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
+		kafka.MessageStatusCountInc(kafka.MessageReceived, h.consumer.group, msg.Topic)
+
 		m, err := kafka.ClaimMessage(ctx, msg, h.consumer.config.DecoderFunc, sess)
 		if err != nil {
+			kafka.MessageStatusCountInc(kafka.MessageClaimErrors, h.consumer.group, msg.Topic)
 			return err
 		}
+		kafka.MessageStatusCountInc(kafka.MessageDecoded, h.consumer.group, msg.Topic)
 		h.messages <- m
 	}
 	return nil

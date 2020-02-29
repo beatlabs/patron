@@ -19,3 +19,6 @@ debug
 
 # Output of the goteststum tool
 gotestsum-report.xml 
+
+# coverage file
+coverage.txt

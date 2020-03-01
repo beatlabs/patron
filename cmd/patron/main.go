@@ -13,11 +13,6 @@ import (
 	"text/template"
 )
 
-type component struct {
-	Import string
-	Code   string
-}
-
 type genData struct {
 	Name   string
 	Module string

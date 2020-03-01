@@ -16,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron"
 	patronsns "github.com/beatlabs/patron/client/sns"
+	patronsqs "github.com/beatlabs/patron/client/sqs"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/amqp"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
-	patronsqs "github.com/beatlabs/patron/trace/sqs"
 	oamqp "github.com/streadway/amqp"
 )
 

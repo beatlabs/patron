@@ -1,11 +1,151 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 
+	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/sync"
 	"github.com/beatlabs/patron/sync/http/auth"
 )
+
+// Method for HTTP.
+type Method string
+
+const (
+	// MethodGet for HTTP.
+	MethodGet Method = http.MethodGet
+	// MethodHead for HTTP.
+	MethodHead Method = http.MethodHead
+	// MethodPost for HTTP.
+	MethodPost Method = http.MethodPost
+	// MethodPut for HTTP.
+	MethodPut Method = http.MethodPut
+	// MethodPatch for HTTP.
+	MethodPatch Method = http.MethodPatch
+	// MethodDelete for HTTP.
+	MethodDelete Method = http.MethodDelete
+	// MethodConnect for HTTP.
+	MethodConnect Method = http.MethodConnect
+	// MethodOptions for HTTP.
+	MethodOptions Method = http.MethodOptions
+	// MethodTrace for HTTP.
+	MethodTrace Method = http.MethodTrace
+)
+
+// RouteBuilder for building a route.
+type RouteBuilder struct {
+	method        Method
+	path          string
+	trace         bool
+	middlewares   []MiddlewareFunc
+	authenticator auth.Authenticator
+	handler       http.HandlerFunc
+	errors        []error
+}
+
+// WithTrace enables route tracing.
+func (rb *RouteBuilder) WithTrace() *RouteBuilder {
+	if len(rb.errors) > 0 {
+		return rb
+	}
+	rb.trace = true
+	return rb
+}
+
+// WithMiddlewares adds middlewares.
+func (rb *RouteBuilder) WithMiddlewares(mm ...MiddlewareFunc) *RouteBuilder {
+	if len(rb.errors) > 0 {
+		return rb
+	}
+	if len(mm) == 0 {
+		rb.errors = append(rb.errors, errors.New("middlewares are empty"))
+	}
+	rb.middlewares = mm
+	return rb
+}
+
+// WithAuth adds authenticator.
+func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
+	if len(rb.errors) > 0 {
+		return rb
+	}
+	if auth == nil {
+		rb.errors = append(rb.errors, errors.New("authenticator is nil"))
+	}
+	rb.authenticator = auth
+	return rb
+}
+
+// WithProcessor adds a processor func.
+func (rb *RouteBuilder) WithProcessor(pr sync.ProcessorFunc) *RouteBuilder {
+	if len(rb.errors) > 0 {
+		return rb
+	}
+	if pr == nil {
+		rb.errors = append(rb.errors, errors.New("processor func is nil"))
+	}
+	rb.handler = handler(pr)
+	return rb
+}
+
+// WithRawHandler adds a std http handler func.
+func (rb *RouteBuilder) WithRawHandler(hf http.HandlerFunc) *RouteBuilder {
+	if len(rb.errors) > 0 {
+		return rb
+	}
+	if hf == nil {
+		rb.errors = append(rb.errors, errors.New("raw handler func is nil"))
+	}
+	rb.handler = hf
+	return rb
+}
+
+// Build a route.
+func (rb *RouteBuilder) Build() (*Route, error) {
+	if len(rb.errors) > 0 {
+		return nil, patronerrors.Aggregate(rb.errors...)
+	}
+
+	if rb.handler == nil {
+		return nil, errors.New("handler is nil")
+	}
+
+	var middlewares []MiddlewareFunc
+	if rb.trace {
+		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path))
+	}
+	if rb.authenticator != nil {
+		middlewares = append(middlewares, NewAuthMiddleware(rb.authenticator))
+	}
+	if len(rb.middlewares) > 0 {
+		middlewares = append(middlewares, rb.middlewares...)
+	}
+
+	return &Route{
+		Pattern:     rb.path,
+		Method:      string(rb.method),
+		Handler:     rb.handler,
+		Trace:       rb.trace,
+		Auth:        rb.authenticator,
+		Middlewares: middlewares,
+	}, nil
+}
+
+// NewRouteBuilder constructor.
+func NewRouteBuilder(method Method, path string) *RouteBuilder {
+	var ee []error
+
+	if method == "" {
+		ee = append(ee, errors.New("method is empty"))
+	}
+
+	if path == "" {
+		ee = append(ee, errors.New("path is empty"))
+	}
+
+	return &RouteBuilder{method: method, path: path, errors: ee}
+}
 
 // Route definition of a HTTP route.
 type Route struct {

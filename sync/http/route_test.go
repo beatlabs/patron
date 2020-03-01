@@ -1,9 +1,12 @@
 package http
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
+	"github.com/beatlabs/patron/sync"
+	"github.com/beatlabs/patron/sync/http/auth"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -184,4 +187,341 @@ func TestNewAuthRouteRaw(t *testing.T) {
 	assert.True(t, r.Trace)
 	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 3)
+}
+
+func TestRouteBuilder_Build1(t *testing.T) {
+
+	mockHandlerFunc := func(http.ResponseWriter, *http.Request) {}
+	middleware := func(next http.Handler) http.Handler { return next }
+	mockAuthenticator := MockAuthenticator{}
+
+	type fields struct {
+		method        Method
+		path          string
+		trace         bool
+		middlewares   []MiddlewareFunc
+		authenticator auth.Authenticator
+		handler       http.HandlerFunc
+		processor     sync.ProcessorFunc
+	}
+	tests := map[string]struct {
+		fields      fields
+		want        *Route
+		expectedErr string
+	}{
+		"missing method": {
+			fields: fields{
+				method:        "",
+				path:          "/",
+				trace:         false,
+				authenticator: mockAuthenticator,
+				handler:       mockHandlerFunc,
+				middlewares:   []MiddlewareFunc{middleware},
+			},
+			expectedErr: "method is empty\n",
+		},
+		"missing path": {
+			fields: fields{
+				method:        MethodGet,
+				path:          "",
+				trace:         true,
+				authenticator: mockAuthenticator,
+				handler:       mockHandlerFunc,
+				middlewares:   []MiddlewareFunc{middleware},
+			},
+			expectedErr: "path is empty\n",
+		},
+		"success without trace": {
+			fields: fields{
+				method:        MethodGet,
+				path:          "/",
+				trace:         false,
+				authenticator: mockAuthenticator,
+				handler:       mockHandlerFunc,
+				middlewares:   []MiddlewareFunc{middleware},
+			},
+			want: &Route{
+				Method:  "GET",
+				Pattern: "/",
+				Auth:    mockAuthenticator,
+				Trace:   false,
+			},
+		},
+		"success with trace": {
+			fields: fields{
+				method:        MethodGet,
+				path:          "/",
+				trace:         true,
+				authenticator: mockAuthenticator,
+				handler:       mockHandlerFunc,
+				middlewares:   []MiddlewareFunc{middleware},
+			},
+			want: &Route{
+				Method:  "GET",
+				Pattern: "/",
+				Auth:    mockAuthenticator,
+				Trace:   true,
+			},
+		},
+		"success without authenticator": {
+			fields: fields{
+				method:        MethodGet,
+				path:          "/",
+				trace:         true,
+				authenticator: nil,
+				handler:       mockHandlerFunc,
+				middlewares:   []MiddlewareFunc{middleware},
+			},
+			want: &Route{
+				Method:  "GET",
+				Pattern: "/",
+				Trace:   true,
+			},
+		},
+		"success without middlewares": {
+			fields: fields{
+				method:      MethodGet,
+				path:        "/",
+				trace:       true,
+				handler:     mockHandlerFunc,
+				middlewares: nil,
+			},
+			want: &Route{
+				Method:  "GET",
+				Pattern: "/",
+				Trace:   true,
+			},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			rb := NewRouteBuilder(tt.fields.method, tt.fields.path)
+
+			if tt.fields.authenticator != nil {
+				rb = rb.WithAuth(tt.fields.authenticator)
+			}
+
+			if len(tt.fields.middlewares) > 0 {
+				rb = rb.WithMiddlewares(tt.fields.middlewares...)
+			}
+
+			if tt.fields.processor != nil {
+				rb = rb.WithProcessor(tt.fields.processor)
+			}
+
+			if tt.fields.handler != nil {
+				rb = rb.WithRawHandler(tt.fields.handler)
+			}
+
+			if tt.fields.trace {
+				rb = rb.WithTrace()
+			}
+
+			got, err := rb.Build()
+
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want.Pattern, got.Pattern)
+				assert.Equal(t, tt.want.Method, got.Method)
+				assert.NotNil(t, got.Handler)
+				assert.Equal(t, tt.want.Trace, got.Trace)
+				assert.Equal(t, tt.want.Auth, got.Auth)
+				count := len(tt.fields.middlewares)
+				if tt.fields.trace {
+					count++
+				}
+				if tt.fields.authenticator != nil {
+					count++
+				}
+				assert.Len(t, got.Middlewares, count)
+			}
+		})
+	}
+}
+
+func TestRouteBuilder_WithTrace(t *testing.T) {
+	type fields struct {
+		path string
+	}
+	tests := map[string]struct {
+		fields      fields
+		expectedErr string
+	}{
+		"success":      {fields: fields{path: "/"}},
+		"missing path": {fields: fields{path: ""}, expectedErr: "path is empty"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			rb := NewRouteBuilder(MethodGet, tt.fields.path)
+			rb.WithTrace()
+
+			if tt.expectedErr != "" {
+				assert.Len(t, rb.errors, 1)
+				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+			} else {
+				assert.Len(t, rb.errors, 0)
+				assert.True(t, rb.trace)
+			}
+		})
+	}
+}
+
+func TestRouteBuilder_WithMiddlewares(t *testing.T) {
+	middleware := func(next http.Handler) http.Handler { return next }
+	type fields struct {
+		path        string
+		middlewares []MiddlewareFunc
+	}
+	tests := map[string]struct {
+		fields      fields
+		expectedErr string
+	}{
+		"success":            {fields: fields{path: "/", middlewares: []MiddlewareFunc{middleware}}},
+		"missing path":       {fields: fields{path: ""}, expectedErr: "path is empty"},
+		"missing middleware": {fields: fields{path: "/"}, expectedErr: "middlewares are empty"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			rb := NewRouteBuilder(MethodGet, tt.fields.path)
+			if len(tt.fields.middlewares) == 0 {
+				rb.WithMiddlewares()
+			} else {
+				rb.WithMiddlewares(tt.fields.middlewares...)
+			}
+
+			if tt.expectedErr != "" {
+				assert.Len(t, rb.errors, 1)
+				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+			} else {
+				assert.Len(t, rb.errors, 0)
+				assert.Len(t, rb.middlewares, 1)
+			}
+		})
+	}
+}
+
+func TestRouteBuilder_WithAuth(t *testing.T) {
+	mockAuth := &MockAuthenticator{}
+	type fields struct {
+		path          string
+		authenticator auth.Authenticator
+	}
+	tests := map[string]struct {
+		fields      fields
+		expectedErr string
+	}{
+		"success":            {fields: fields{path: "/", authenticator: mockAuth}},
+		"missing path":       {fields: fields{path: ""}, expectedErr: "path is empty"},
+		"missing middleware": {fields: fields{path: "/"}, expectedErr: "authenticator is nil"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			rb := NewRouteBuilder(MethodGet, tt.fields.path)
+			rb.WithAuth(tt.fields.authenticator)
+
+			if tt.expectedErr != "" {
+				assert.Len(t, rb.errors, 1)
+				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+			} else {
+				assert.Len(t, rb.errors, 0)
+				assert.NotNil(t, rb.authenticator)
+			}
+		})
+	}
+}
+
+func TestRouteBuilder_WithProcessor(t *testing.T) {
+	mockProcessor := func(ctx context.Context, r *sync.Request) (*sync.Response, error) { return nil, nil }
+	type fields struct {
+		path      string
+		processor sync.ProcessorFunc
+	}
+	tests := map[string]struct {
+		fields      fields
+		expectedErr string
+	}{
+		"success":            {fields: fields{path: "/", processor: mockProcessor}},
+		"missing path":       {fields: fields{path: ""}, expectedErr: "path is empty"},
+		"missing middleware": {fields: fields{path: "/"}, expectedErr: "processor func is nil"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			rb := NewRouteBuilder(MethodGet, tt.fields.path)
+			rb.WithProcessor(tt.fields.processor)
+
+			if tt.expectedErr != "" {
+				assert.Len(t, rb.errors, 1)
+				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+			} else {
+				assert.Len(t, rb.errors, 0)
+				assert.NotNil(t, rb.handler)
+			}
+		})
+	}
+}
+
+func TestRouteBuilder_WithRawHandler(t *testing.T) {
+	mockHandler := func(http.ResponseWriter, *http.Request) {}
+	type fields struct {
+		path    string
+		handler http.HandlerFunc
+	}
+	tests := map[string]struct {
+		fields      fields
+		expectedErr string
+	}{
+		"success":            {fields: fields{path: "/", handler: mockHandler}},
+		"missing path":       {fields: fields{path: ""}, expectedErr: "path is empty"},
+		"missing middleware": {fields: fields{path: "/"}, expectedErr: "raw handler func is nil"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			rb := NewRouteBuilder(MethodGet, tt.fields.path)
+			rb.WithRawHandler(tt.fields.handler)
+
+			if tt.expectedErr != "" {
+				assert.Len(t, rb.errors, 1)
+				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+			} else {
+				assert.Len(t, rb.errors, 0)
+				assert.NotNil(t, rb.handler)
+			}
+		})
+	}
+}
+
+func TestRouteBuilder_Build(t *testing.T) {
+	mockHandler := func(http.ResponseWriter, *http.Request) {}
+	type fields struct {
+		path    string
+		handler http.HandlerFunc
+	}
+	tests := map[string]struct {
+		fields      fields
+		expectedErr string
+	}{
+		"success":            {fields: fields{path: "/", handler: mockHandler}},
+		"missing path":       {fields: fields{path: ""}, expectedErr: "path is empty\n"},
+		"missing middleware": {fields: fields{path: "/"}, expectedErr: "handler is nil"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			rb := NewRouteBuilder(MethodGet, tt.fields.path)
+			if tt.fields.handler != nil {
+				rb = rb.WithRawHandler(tt.fields.handler)
+			}
+			got, err := rb.Build()
+
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, got)
+			}
+		})
+	}
 }

@@ -126,8 +126,6 @@ func (rb *RouteBuilder) Build() (*Route, error) {
 		Pattern:     rb.path,
 		Method:      string(rb.method),
 		Handler:     rb.handler,
-		Trace:       rb.trace,
-		Auth:        rb.authenticator,
 		Middlewares: middlewares,
 	}, nil
 }
@@ -152,8 +150,6 @@ type Route struct {
 	Pattern     string
 	Method      string
 	Handler     http.HandlerFunc
-	Trace       bool
-	Auth        auth.Authenticator
 	Middlewares []MiddlewareFunc
 }
 
@@ -204,7 +200,7 @@ func NewRoute(p string, m string, pr sync.ProcessorFunc, trace bool, auth auth.A
 	if len(mm) > 0 {
 		middlewares = append(middlewares, mm...)
 	}
-	return Route{Pattern: p, Method: m, Handler: handler(pr), Trace: trace, Auth: auth, Middlewares: middlewares}
+	return Route{Pattern: p, Method: m, Handler: handler(pr), Middlewares: middlewares}
 }
 
 // NewRouteRaw creates a new route from a HTTP handler.
@@ -216,7 +212,7 @@ func NewRouteRaw(p string, m string, h http.HandlerFunc, trace bool, mm ...Middl
 	if len(mm) > 0 {
 		middlewares = append(middlewares, mm...)
 	}
-	return Route{Pattern: p, Method: m, Handler: h, Trace: trace, Middlewares: middlewares}
+	return Route{Pattern: p, Method: m, Handler: h, Middlewares: middlewares}
 }
 
 // NewAuthGetRoute creates a new GET route from a generic handler with auth capability.
@@ -266,5 +262,5 @@ func NewAuthRouteRaw(p string, m string, h http.HandlerFunc, trace bool, auth au
 	if len(mm) > 0 {
 		middlewares = append(middlewares, mm...)
 	}
-	return Route{Pattern: p, Method: m, Handler: h, Trace: trace, Auth: auth, Middlewares: middlewares}
+	return Route{Pattern: p, Method: m, Handler: h, Middlewares: middlewares}
 }

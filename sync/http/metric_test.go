@@ -12,5 +12,4 @@ func Test_metricRoute(t *testing.T) {
 	assert.Equal(t, http.MethodGet, route.Method)
 	assert.Equal(t, "/metrics", route.Pattern)
 	assert.NotNil(t, route.Handler)
-	assert.False(t, route.Trace)
 }

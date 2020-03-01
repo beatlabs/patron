@@ -26,8 +26,6 @@ func TestNewRoute(t *testing.T) {
 	r := NewRoute("/index", http.MethodGet, nil, true, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodGet, r.Method)
-	assert.True(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 }
 
 func TestNewGetRoute(t *testing.T) {
@@ -36,8 +34,6 @@ func TestNewGetRoute(t *testing.T) {
 	r := NewGetRoute("/index", nil, true, t1, t2)
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodGet, r.Method)
-	assert.True(t, r.Trace)
-	assert.Nil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 3)
 }
 
@@ -45,8 +41,6 @@ func TestNewPostRoute(t *testing.T) {
 	r := NewPostRoute("/index", nil, true)
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodPost, r.Method)
-	assert.True(t, r.Trace)
-	assert.Nil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 1)
 }
 
@@ -54,8 +48,6 @@ func TestNewPutRoute(t *testing.T) {
 	r := NewPutRoute("/index", nil, true)
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodPut, r.Method)
-	assert.True(t, r.Trace)
-	assert.Nil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 1)
 }
 
@@ -63,8 +55,6 @@ func TestNewDeleteRoute(t *testing.T) {
 	r := NewDeleteRoute("/index", nil, true)
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodDelete, r.Method)
-	assert.True(t, r.Trace)
-	assert.Nil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 1)
 }
 
@@ -72,8 +62,6 @@ func TestNewPatchRoute(t *testing.T) {
 	r := NewPatchRoute("/index", nil, true)
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodPatch, r.Method)
-	assert.True(t, r.Trace)
-	assert.Nil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 1)
 }
 
@@ -81,8 +69,6 @@ func TestNewHeadRoute(t *testing.T) {
 	r := NewHeadRoute("/index", nil, true)
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodHead, r.Method)
-	assert.True(t, r.Trace)
-	assert.Nil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 1)
 }
 
@@ -90,23 +76,17 @@ func TestNewOptionsRoute(t *testing.T) {
 	r := NewOptionsRoute("/index", nil, true)
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodOptions, r.Method)
-	assert.True(t, r.Trace)
-	assert.Nil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 1)
 }
 func TestNewRouteRaw(t *testing.T) {
 	r := NewRouteRaw("/index", http.MethodGet, nil, false)
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, "GET", r.Method)
-	assert.False(t, r.Trace)
-	assert.Nil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 0)
 
 	r = NewRouteRaw("/index", http.MethodGet, nil, true, tagMiddleware("t1"))
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, "GET", r.Method)
-	assert.True(t, r.Trace)
-	assert.Nil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 2)
 }
 
@@ -114,8 +94,6 @@ func TestNewAuthGetRoute(t *testing.T) {
 	r := NewAuthGetRoute("/index", nil, true, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodGet, r.Method)
-	assert.True(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 2)
 }
 
@@ -123,8 +101,6 @@ func TestNewAuthPostRoute(t *testing.T) {
 	r := NewAuthPostRoute("/index", nil, true, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodPost, r.Method)
-	assert.True(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 2)
 }
 
@@ -132,8 +108,6 @@ func TestNewAuthPutRoute(t *testing.T) {
 	r := NewAuthPutRoute("/index", nil, true, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodPut, r.Method)
-	assert.True(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 2)
 }
 
@@ -141,8 +115,6 @@ func TestNewAuthDeleteRoute(t *testing.T) {
 	r := NewAuthDeleteRoute("/index", nil, true, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodDelete, r.Method)
-	assert.True(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 2)
 }
 
@@ -150,8 +122,6 @@ func TestNewAuthPatchRoute(t *testing.T) {
 	r := NewAuthPatchRoute("/index", nil, true, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodPatch, r.Method)
-	assert.True(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 2)
 }
 
@@ -159,8 +129,6 @@ func TestNewAuthHeadRoute(t *testing.T) {
 	r := NewAuthHeadRoute("/index", nil, true, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodHead, r.Method)
-	assert.True(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 2)
 }
 
@@ -168,8 +136,6 @@ func TestNewAuthOptionsRoute(t *testing.T) {
 	r := NewAuthOptionsRoute("/index", nil, true, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, http.MethodOptions, r.Method)
-	assert.True(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 2)
 }
 
@@ -177,169 +143,12 @@ func TestNewAuthRouteRaw(t *testing.T) {
 	r := NewAuthRouteRaw("/index", http.MethodGet, nil, false, &MockAuthenticator{})
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, "GET", r.Method)
-	assert.False(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 1)
 
 	r = NewAuthRouteRaw("/index", http.MethodGet, nil, true, &MockAuthenticator{}, tagMiddleware("tag1"))
 	assert.Equal(t, "/index", r.Pattern)
 	assert.Equal(t, "GET", r.Method)
-	assert.True(t, r.Trace)
-	assert.NotNil(t, r.Auth)
 	assert.Len(t, r.Middlewares, 3)
-}
-
-func TestRouteBuilder_Build1(t *testing.T) {
-
-	mockHandlerFunc := func(http.ResponseWriter, *http.Request) {}
-	middleware := func(next http.Handler) http.Handler { return next }
-	mockAuthenticator := MockAuthenticator{}
-
-	type fields struct {
-		method        Method
-		path          string
-		trace         bool
-		middlewares   []MiddlewareFunc
-		authenticator auth.Authenticator
-		handler       http.HandlerFunc
-		processor     sync.ProcessorFunc
-	}
-	tests := map[string]struct {
-		fields      fields
-		want        *Route
-		expectedErr string
-	}{
-		"missing method": {
-			fields: fields{
-				method:        "",
-				path:          "/",
-				trace:         false,
-				authenticator: mockAuthenticator,
-				handler:       mockHandlerFunc,
-				middlewares:   []MiddlewareFunc{middleware},
-			},
-			expectedErr: "method is empty\n",
-		},
-		"missing path": {
-			fields: fields{
-				method:        MethodGet,
-				path:          "",
-				trace:         true,
-				authenticator: mockAuthenticator,
-				handler:       mockHandlerFunc,
-				middlewares:   []MiddlewareFunc{middleware},
-			},
-			expectedErr: "path is empty\n",
-		},
-		"success without trace": {
-			fields: fields{
-				method:        MethodGet,
-				path:          "/",
-				trace:         false,
-				authenticator: mockAuthenticator,
-				handler:       mockHandlerFunc,
-				middlewares:   []MiddlewareFunc{middleware},
-			},
-			want: &Route{
-				Method:  "GET",
-				Pattern: "/",
-				Auth:    mockAuthenticator,
-				Trace:   false,
-			},
-		},
-		"success with trace": {
-			fields: fields{
-				method:        MethodGet,
-				path:          "/",
-				trace:         true,
-				authenticator: mockAuthenticator,
-				handler:       mockHandlerFunc,
-				middlewares:   []MiddlewareFunc{middleware},
-			},
-			want: &Route{
-				Method:  "GET",
-				Pattern: "/",
-				Auth:    mockAuthenticator,
-				Trace:   true,
-			},
-		},
-		"success without authenticator": {
-			fields: fields{
-				method:        MethodGet,
-				path:          "/",
-				trace:         true,
-				authenticator: nil,
-				handler:       mockHandlerFunc,
-				middlewares:   []MiddlewareFunc{middleware},
-			},
-			want: &Route{
-				Method:  "GET",
-				Pattern: "/",
-				Trace:   true,
-			},
-		},
-		"success without middlewares": {
-			fields: fields{
-				method:      MethodGet,
-				path:        "/",
-				trace:       true,
-				handler:     mockHandlerFunc,
-				middlewares: nil,
-			},
-			want: &Route{
-				Method:  "GET",
-				Pattern: "/",
-				Trace:   true,
-			},
-		},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			rb := NewRouteBuilder(tt.fields.method, tt.fields.path)
-
-			if tt.fields.authenticator != nil {
-				rb = rb.WithAuth(tt.fields.authenticator)
-			}
-
-			if len(tt.fields.middlewares) > 0 {
-				rb = rb.WithMiddlewares(tt.fields.middlewares...)
-			}
-
-			if tt.fields.processor != nil {
-				rb = rb.WithProcessor(tt.fields.processor)
-			}
-
-			if tt.fields.handler != nil {
-				rb = rb.WithRawHandler(tt.fields.handler)
-			}
-
-			if tt.fields.trace {
-				rb = rb.WithTrace()
-			}
-
-			got, err := rb.Build()
-
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
-				assert.Nil(t, got)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.want.Pattern, got.Pattern)
-				assert.Equal(t, tt.want.Method, got.Method)
-				assert.NotNil(t, got.Handler)
-				assert.Equal(t, tt.want.Trace, got.Trace)
-				assert.Equal(t, tt.want.Auth, got.Auth)
-				count := len(tt.fields.middlewares)
-				if tt.fields.trace {
-					count++
-				}
-				if tt.fields.authenticator != nil {
-					count++
-				}
-				assert.Len(t, got.Middlewares, count)
-			}
-		})
-	}
 }
 
 func TestRouteBuilder_WithTrace(t *testing.T) {

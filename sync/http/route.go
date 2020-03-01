@@ -33,6 +33,14 @@ const (
 	MethodTrace Method = http.MethodTrace
 )
 
+// Route definition of a HTTP route.
+type Route struct {
+	path        string
+	method      string
+	handler     http.HandlerFunc
+	middlewares []MiddlewareFunc
+}
+
 // RouteBuilder for building a route.
 type RouteBuilder struct {
 	method        Method
@@ -77,38 +85,10 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 	return rb
 }
 
-// WithProcessor adds a processor func.
-func (rb *RouteBuilder) WithProcessor(pr sync.ProcessorFunc) *RouteBuilder {
-	if len(rb.errors) > 0 {
-		return rb
-	}
-	if pr == nil {
-		rb.errors = append(rb.errors, errors.New("processor func is nil"))
-	}
-	rb.handler = handler(pr)
-	return rb
-}
-
-// WithRawHandler adds a std http handler func.
-func (rb *RouteBuilder) WithRawHandler(hf http.HandlerFunc) *RouteBuilder {
-	if len(rb.errors) > 0 {
-		return rb
-	}
-	if hf == nil {
-		rb.errors = append(rb.errors, errors.New("raw handler func is nil"))
-	}
-	rb.handler = hf
-	return rb
-}
-
 // Build a route.
 func (rb *RouteBuilder) Build() (*Route, error) {
 	if len(rb.errors) > 0 {
 		return nil, patronerrors.Aggregate(rb.errors...)
-	}
-
-	if rb.handler == nil {
-		return nil, errors.New("handler is nil")
 	}
 
 	var middlewares []MiddlewareFunc
@@ -130,8 +110,8 @@ func (rb *RouteBuilder) Build() (*Route, error) {
 	}, nil
 }
 
-// NewRouteBuilder constructor.
-func NewRouteBuilder(method Method, path string) *RouteBuilder {
+// NewRawRouteBuilder constructor.
+func NewRawRouteBuilder(method Method, path string, handler http.HandlerFunc) *RouteBuilder {
 	var ee []error
 
 	if method == "" {
@@ -142,15 +122,57 @@ func NewRouteBuilder(method Method, path string) *RouteBuilder {
 		ee = append(ee, errors.New("path is empty"))
 	}
 
-	return &RouteBuilder{method: method, path: path, errors: ee}
+	if handler == nil {
+		ee = append(ee, errors.New("handler is nil"))
+	}
+
+	return &RouteBuilder{method: method, path: path, errors: ee, handler: handler}
 }
 
-// Route definition of a HTTP route.
-type Route struct {
-	path        string
-	method      string
-	handler     http.HandlerFunc
-	middlewares []MiddlewareFunc
+// NewRouteBuilder constructor.
+func NewRouteBuilder(method Method, path string, processor sync.ProcessorFunc) *RouteBuilder {
+
+	var err error
+
+	if processor == nil {
+		err = errors.New("processor is nil")
+	}
+
+	rb := NewRawRouteBuilder(method, path, handler(processor))
+	if err != nil {
+		rb.errors = append(rb.errors, err)
+	}
+	return rb
+}
+
+// RoutesBuilder creates a list of routes.
+type RoutesBuilder struct {
+	routes []*Route
+	errors []error
+}
+
+// Append a route to the list.
+func (rb *RoutesBuilder) Append(builder *RouteBuilder) *RoutesBuilder {
+	route, err := builder.Build()
+	if err != nil {
+		rb.errors = append(rb.errors, err)
+	} else {
+		rb.routes = append(rb.routes, route)
+	}
+	return rb
+}
+
+// Build the routes.
+func (rb *RoutesBuilder) Build(builder *RouteBuilder) ([]*Route, error) {
+	if len(rb.errors) > 0 {
+		return nil, patronerrors.Aggregate(rb.errors...)
+	}
+	return rb.routes, nil
+}
+
+// NewRoutesBuilder constructor.
+func NewRoutesBuilder(rr ...*Route) *RoutesBuilder {
+	return &RoutesBuilder{routes: rr}
 }
 
 // NewGetRoute creates a new GET route from a generic handler.

@@ -76,12 +76,12 @@ func (c *Component) createHTTPServer(ctx context.Context) *http.Server {
 	for _, route := range c.routes {
 		if len(route.Middlewares) > 0 {
 			h := MiddlewareChain(route.Handler, route.Middlewares...)
-			router.Handler(route.Method, route.Pattern, h)
+			router.Handler(route.Method, route.Path, h)
 		} else {
-			router.HandlerFunc(route.Method, route.Pattern, route.Handler)
+			router.HandlerFunc(route.Method, route.Path, route.Handler)
 		}
 
-		log.Debugf("added route %s %s", route.Method, route.Pattern)
+		log.Debugf("added route %s %s", route.Method, route.Path)
 	}
 	// Add first the recovery middleware to ensure that no panic occur.
 	routerAfterMiddleware := MiddlewareChain(router, NewRecoveryMiddleware())

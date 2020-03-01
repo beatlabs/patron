@@ -13,7 +13,7 @@ func Test_PprofHandlers(t *testing.T) {
 	mux := http.NewServeMux()
 
 	for _, r := range profilingRoutes() {
-		mux.HandleFunc(r.Path, r.Handler)
+		mux.HandleFunc(r.path, r.handler)
 	}
 
 	server := httptest.NewServer(mux)

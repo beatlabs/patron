@@ -24,7 +24,7 @@ func Test_aliveCheckRoute(t *testing.T) {
 			resp := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", "/alive", nil)
 			assert.NoError(t, err)
-			r.Handler(resp, req)
+			r.handler(resp, req)
 			assert.Equal(t, tt.want, resp.Code)
 		})
 	}

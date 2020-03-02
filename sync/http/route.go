@@ -9,30 +9,6 @@ import (
 	"github.com/beatlabs/patron/sync/http/auth"
 )
 
-// Method for HTTP.
-type Method string
-
-const (
-	// MethodGet for HTTP.
-	MethodGet Method = http.MethodGet
-	// MethodHead for HTTP.
-	MethodHead Method = http.MethodHead
-	// MethodPost for HTTP.
-	MethodPost Method = http.MethodPost
-	// MethodPut for HTTP.
-	MethodPut Method = http.MethodPut
-	// MethodPatch for HTTP.
-	MethodPatch Method = http.MethodPatch
-	// MethodDelete for HTTP.
-	MethodDelete Method = http.MethodDelete
-	// MethodConnect for HTTP.
-	MethodConnect Method = http.MethodConnect
-	// MethodOptions for HTTP.
-	MethodOptions Method = http.MethodOptions
-	// MethodTrace for HTTP.
-	MethodTrace Method = http.MethodTrace
-)
-
 // Route definition of a HTTP route.
 type Route struct {
 	path        string
@@ -43,7 +19,7 @@ type Route struct {
 
 // RouteBuilder for building a route.
 type RouteBuilder struct {
-	method        Method
+	method        string
 	path          string
 	trace         bool
 	middlewares   []MiddlewareFunc
@@ -54,18 +30,12 @@ type RouteBuilder struct {
 
 // WithTrace enables route tracing.
 func (rb *RouteBuilder) WithTrace() *RouteBuilder {
-	if len(rb.errors) > 0 {
-		return rb
-	}
 	rb.trace = true
 	return rb
 }
 
 // WithMiddlewares adds middlewares.
 func (rb *RouteBuilder) WithMiddlewares(mm ...MiddlewareFunc) *RouteBuilder {
-	if len(rb.errors) > 0 {
-		return rb
-	}
 	if len(mm) == 0 {
 		rb.errors = append(rb.errors, errors.New("middlewares are empty"))
 	}
@@ -75,9 +45,6 @@ func (rb *RouteBuilder) WithMiddlewares(mm ...MiddlewareFunc) *RouteBuilder {
 
 // WithAuth adds authenticator.
 func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
-	if len(rb.errors) > 0 {
-		return rb
-	}
 	if auth == nil {
 		rb.errors = append(rb.errors, errors.New("authenticator is nil"))
 	}
@@ -85,10 +52,68 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 	return rb
 }
 
+// WithMethodGet HTTP method.
+func (rb *RouteBuilder) WithMethodGet() *RouteBuilder {
+	rb.method = http.MethodGet
+	return rb
+}
+
+// WithMethodHead HTTP method.
+func (rb *RouteBuilder) WithMethodHead() *RouteBuilder {
+	rb.method = http.MethodHead
+	return rb
+}
+
+// WithMethodPost HTTP method.
+func (rb *RouteBuilder) WithMethodPost() *RouteBuilder {
+	rb.method = http.MethodPost
+	return rb
+}
+
+// WithMethodPut HTTP method.
+func (rb *RouteBuilder) WithMethodPut() *RouteBuilder {
+	rb.method = http.MethodPut
+	return rb
+}
+
+// WithMethodPatch HTTP method.
+func (rb *RouteBuilder) WithMethodPatch() *RouteBuilder {
+	rb.method = http.MethodPatch
+	return rb
+}
+
+// WithMethodDelete HTTP method.
+func (rb *RouteBuilder) WithMethodDelete() *RouteBuilder {
+	rb.method = http.MethodDelete
+	return rb
+}
+
+// WithMethodConnect HTTP method.
+func (rb *RouteBuilder) WithMethodConnect() *RouteBuilder {
+	rb.method = http.MethodConnect
+	return rb
+}
+
+// WithMethodOptions HTTP method.
+func (rb *RouteBuilder) WithMethodOptions() *RouteBuilder {
+	rb.method = http.MethodOptions
+	return rb
+}
+
+// WithMethodTrace HTTP method.
+func (rb *RouteBuilder) WithMethodTrace() *RouteBuilder {
+	rb.method = http.MethodTrace
+	return rb
+}
+
 // Build a route.
 func (rb *RouteBuilder) Build() (Route, error) {
 	if len(rb.errors) > 0 {
 		return Route{}, patronerrors.Aggregate(rb.errors...)
+	}
+
+	if rb.method == "" {
+		return Route{}, errors.New("method is missing")
 	}
 
 	var middlewares []MiddlewareFunc
@@ -111,12 +136,8 @@ func (rb *RouteBuilder) Build() (Route, error) {
 }
 
 // NewRawRouteBuilder constructor.
-func NewRawRouteBuilder(method Method, path string, handler http.HandlerFunc) *RouteBuilder {
+func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 	var ee []error
-
-	if method == "" {
-		ee = append(ee, errors.New("method is empty"))
-	}
 
 	if path == "" {
 		ee = append(ee, errors.New("path is empty"))
@@ -126,11 +147,11 @@ func NewRawRouteBuilder(method Method, path string, handler http.HandlerFunc) *R
 		ee = append(ee, errors.New("handler is nil"))
 	}
 
-	return &RouteBuilder{method: method, path: path, errors: ee, handler: handler}
+	return &RouteBuilder{path: path, errors: ee, handler: handler}
 }
 
 // NewRouteBuilder constructor.
-func NewRouteBuilder(method Method, path string, processor sync.ProcessorFunc) *RouteBuilder {
+func NewRouteBuilder(path string, processor sync.ProcessorFunc) *RouteBuilder {
 
 	var err error
 
@@ -138,7 +159,7 @@ func NewRouteBuilder(method Method, path string, processor sync.ProcessorFunc) *
 		err = errors.New("processor is nil")
 	}
 
-	rb := NewRawRouteBuilder(method, path, handler(processor))
+	rb := NewRawRouteBuilder(path, handler(processor))
 	if err != nil {
 		rb.errors = append(rb.errors, err)
 	}

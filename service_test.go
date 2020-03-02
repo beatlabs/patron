@@ -18,7 +18,7 @@ import (
 func TestNewServer(t *testing.T) {
 
 	routes, err := phttp.NewRoutesBuilder().
-		Append(phttp.NewRawRouteBuilder(phttp.MethodGet, "/", func(w http.ResponseWriter, r *http.Request) {})).Build()
+		Append(phttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).WithMethodGet()).Build()
 	require.NoError(t, err)
 	middleware := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

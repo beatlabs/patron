@@ -29,5 +29,5 @@ func readyCheckRoute(rcf ReadyCheckFunc) *RouteBuilder {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	return NewRawRouteBuilder(MethodGet, "/ready", f)
+	return NewRawRouteBuilder("/ready", f).WithMethodGet()
 }

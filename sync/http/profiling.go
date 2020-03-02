@@ -7,17 +7,17 @@ import (
 
 func profilingRoutes() []*RouteBuilder {
 	return []*RouteBuilder{
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/", profIndex),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/allocs/", pprofAllocsIndex),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/cmdline/", profCmdline),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/profile/", profProfile),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/symbol/", profSymbol),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/trace/", profTrace),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/heap/", profHeap),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/goroutine/", profGoroutine),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/block/", profBlock),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/threadcreate/", profThreadcreate),
-		NewRawRouteBuilder(MethodGet, "/debug/pprof/mutex/", profMutex),
+		NewRawRouteBuilder("/debug/pprof/", profIndex).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/allocs/", pprofAllocsIndex).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/cmdline/", profCmdline).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/profile/", profProfile).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/symbol/", profSymbol).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/trace/", profTrace).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/heap/", profHeap).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/goroutine/", profGoroutine).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/block/", profBlock).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/threadcreate/", profThreadcreate).WithMethodGet(),
+		NewRawRouteBuilder("/debug/pprof/mutex/", profMutex).WithMethodGet(),
 	}
 }
 

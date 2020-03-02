@@ -63,7 +63,7 @@ func main() {
 
 	// Set up routes
 	routes, err := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewRouteBuilder(patronhttp.MethodGet, "/", httpCmp.second).WithTrace().WithAuth(auth)).Build()
+		Append(patronhttp.NewRouteBuilder("/", httpCmp.second).WithMethodGet().WithTrace().WithAuth(auth)).Build()
 	if err != nil {
 		log.Fatalf("failed to create routes %v", err)
 	}

@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// Set up routes
-	routes, err := patronhttp.NewRoutesBuilder().Append(patronhttp.NewRouteBuilder(patronhttp.MethodPost, "/", first)).Build()
+	routes, err := patronhttp.NewRoutesBuilder().Append(patronhttp.NewRouteBuilder("/", first).WithMethodPost()).Build()
 	if err != nil {
 		log.Fatalf("failed to create routes %v", err)
 	}

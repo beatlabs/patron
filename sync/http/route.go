@@ -152,18 +152,23 @@ type RoutesBuilder struct {
 }
 
 // Append a route to the list.
-func (rb *RoutesBuilder) Append(builder *RouteBuilder) *RoutesBuilder {
-	route, err := builder.Build()
-	if err != nil {
-		rb.errors = append(rb.errors, err)
-	} else {
-		rb.routes = append(rb.routes, route)
+func (rb *RoutesBuilder) Append(builders ...*RouteBuilder) *RoutesBuilder {
+	if len(builders) == 0 {
+		rb.errors = append(rb.errors, errors.New("builders is empty"))
+	}
+	for _, builder := range builders {
+		route, err := builder.Build()
+		if err != nil {
+			rb.errors = append(rb.errors, err)
+		} else {
+			rb.routes = append(rb.routes, route)
+		}
 	}
 	return rb
 }
 
 // Build the routes.
-func (rb *RoutesBuilder) Build(builder *RouteBuilder) ([]*Route, error) {
+func (rb *RoutesBuilder) Build() ([]*Route, error) {
 	if len(rb.errors) > 0 {
 		return nil, patronerrors.Aggregate(rb.errors...)
 	}

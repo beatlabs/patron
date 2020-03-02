@@ -17,11 +17,9 @@ func TestBuilderWithoutOptions(t *testing.T) {
 }
 
 func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
-	rr, err := NewRoutesBuilder().
-		Append(NewRawRouteBuilder(MethodGet, "/", func(http.ResponseWriter, *http.Request) {}).WithTrace()).
-		Build()
-	assert.NoError(t, err)
-	s, err := NewBuilder().WithRoutes(rr).WithPort(50003).Create()
+	rb := NewRoutesBuilder().
+		Append(NewRawRouteBuilder(MethodGet, "/", func(http.ResponseWriter, *http.Request) {}).WithTrace())
+	s, err := NewBuilder().WithRoutes(rb).WithPort(50003).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())
@@ -36,10 +34,8 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 }
 
 func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
-	rr, err := NewRoutesBuilder().Append(NewRawRouteBuilder(MethodGet, "/", func(http.ResponseWriter, *http.Request) {})).
-		Build()
-	assert.NoError(t, err)
-	s, err := NewBuilder().WithRoutes(rr).WithSSL("testdata/server.pem", "testdata/server.key").WithPort(50003).Create()
+	rb := NewRoutesBuilder().Append(NewRawRouteBuilder(MethodGet, "/", func(http.ResponseWriter, *http.Request) {}))
+	s, err := NewBuilder().WithRoutes(rb).WithSSL("testdata/server.pem", "testdata/server.key").WithPort(50003).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())
@@ -54,10 +50,8 @@ func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
 }
 
 func TestComponent_ListenAndServeTLS_FailsInvalidCerts(t *testing.T) {
-	rr, err := NewRoutesBuilder().Append(NewRawRouteBuilder(MethodGet, "/", func(http.ResponseWriter, *http.Request) {})).
-		Build()
-	assert.NoError(t, err)
-	s, err := NewBuilder().WithRoutes(rr).WithSSL("testdata/server.pem", "testdata/server.pem").Create()
+	rb := NewRoutesBuilder().Append(NewRawRouteBuilder(MethodGet, "/", func(http.ResponseWriter, *http.Request) {}))
+	s, err := NewBuilder().WithRoutes(rb).WithSSL("testdata/server.pem", "testdata/server.pem").Create()
 	assert.NoError(t, err)
 	assert.Error(t, s.Run(context.Background()))
 }
@@ -90,9 +84,8 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		errors.New("Invalid cert or key provided"),
 	}
 
-	routes, err := NewRoutesBuilder().Append(aliveCheckRoute(DefaultAliveCheck)).
-		Append(readyCheckRoute(DefaultReadyCheck)).Append(metricRoute()).Build()
-	assert.NoError(t, err)
+	rb := NewRoutesBuilder().Append(aliveCheckRoute(DefaultAliveCheck)).
+		Append(readyCheckRoute(DefaultReadyCheck)).Append(metricRoute())
 
 	tests := map[string]struct {
 		acf      AliveCheckFunc
@@ -100,7 +93,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		p        int
 		rt       time.Duration
 		wt       time.Duration
-		rr       []Route
+		rb       *RoutesBuilder
 		mm       []MiddlewareFunc
 		c        string
 		k        string
@@ -112,7 +105,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			p:   httpPort,
 			rt:  httpReadTimeout,
 			wt:  httpIdleTimeout,
-			rr:  routes,
+			rb:  rb,
 			mm: []MiddlewareFunc{
 				NewRecoveryMiddleware(),
 				panicMiddleware("error"),
@@ -127,7 +120,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			p:        -1,
 			rt:       -10 * time.Second,
 			wt:       -20 * time.Second,
-			rr:       []Route{},
+			rb:       NewRoutesBuilder(),
 			mm:       []MiddlewareFunc{},
 			c:        "",
 			k:        "",
@@ -143,7 +136,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 				WithPort(tc.p).
 				WithReadTimeout(tc.rt).
 				WithWriteTimeout(tc.wt).
-				WithRoutes(tc.rr).
+				WithRoutes(tc.rb).
 				WithMiddlewares(tc.mm...).
 				WithSSL(tc.c, tc.k).
 				Create()

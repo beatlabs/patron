@@ -251,24 +251,34 @@ func TestNewRouteBuilder(t *testing.T) {
 
 func TestRoutesBuilder_Build(t *testing.T) {
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
+	validRb := NewRawRouteBuilder("/", mockHandler).WithMethodGet()
+	invalidRb := NewRawRouteBuilder("/", mockHandler)
 	type args struct {
-		rb *RouteBuilder
+		rbs []*RouteBuilder
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
 		"success": {
-			args: args{rb: NewRawRouteBuilder("/", mockHandler).WithMethodGet()},
+			args: args{rbs: []*RouteBuilder{validRb}},
 		},
 		"invalid route builder": {
-			args:        args{rb: NewRawRouteBuilder("/", mockHandler)},
+			args:        args{rbs: []*RouteBuilder{invalidRb}},
 			expectedErr: "method is missing\n",
+		},
+		"duplicate routes": {
+			args:        args{rbs: []*RouteBuilder{validRb, validRb}},
+			expectedErr: "route with key get-/ is duplicate\n",
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := NewRoutesBuilder().Append(tt.args.rb).Build()
+			builder := NewRoutesBuilder()
+			for _, rb := range tt.args.rbs {
+				builder.Append(rb)
+			}
+			got, err := builder.Build()
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

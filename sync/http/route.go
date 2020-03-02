@@ -2,9 +2,11 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
-	perrors "github.com/beatlabs/patron/errors"
+	errs "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/sync"
 	"github.com/beatlabs/patron/sync/http/auth"
 )
@@ -108,7 +110,7 @@ func (rb *RouteBuilder) WithMethodTrace() *RouteBuilder {
 // Build a route.
 func (rb *RouteBuilder) Build() (Route, error) {
 	if len(rb.errors) > 0 {
-		return Route{}, perrors.Aggregate(rb.errors...)
+		return Route{}, errs.Aggregate(rb.errors...)
 	}
 
 	if rb.method == "" {
@@ -184,9 +186,23 @@ func (rb *RoutesBuilder) Append(builder *RouteBuilder) *RoutesBuilder {
 
 // Build the routes.
 func (rb *RoutesBuilder) Build() ([]Route, error) {
-	if len(rb.errors) > 0 {
-		return nil, perrors.Aggregate(rb.errors...)
+
+	duplicates := make(map[string]struct{}, len(rb.routes))
+
+	for _, r := range rb.routes {
+		key := strings.ToLower(r.method + "-" + r.path)
+		_, ok := duplicates[key]
+		if ok {
+			rb.errors = append(rb.errors, fmt.Errorf("route with key %s is duplicate", key))
+			continue
+		}
+		duplicates[key] = struct{}{}
 	}
+
+	if len(rb.errors) > 0 {
+		return nil, errs.Aggregate(rb.errors...)
+	}
+
 	return rb.routes, nil
 }
 

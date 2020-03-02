@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	errs "github.com/beatlabs/patron/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -74,18 +75,17 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 
 	var httpBuilderNoErrors = []error{}
 	var httpBuilderAllErrors = []error{
-		errors.New("Nil AliveCheckFunc was provided"),
-		errors.New("Nil ReadyCheckFunc provided"),
-		errors.New("Invalid HTTP Port provided"),
-		errors.New("Negative or zero read timeout provided"),
-		errors.New("Negative or zero write timeout provided"),
-		errors.New("Empty Routes slice provided"),
-		errors.New("Empty list of middlewares provided"),
-		errors.New("Invalid cert or key provided"),
+		errors.New("nil AliveCheckFunc was provided"),
+		errors.New("nil ReadyCheckFunc provided"),
+		errors.New("invalid HTTP Port provided"),
+		errors.New("negative or zero read timeout provided"),
+		errors.New("negative or zero write timeout provided"),
+		errors.New("route builder is nil"),
+		errors.New("empty list of middlewares provided"),
+		errors.New("invalid cert or key provided"),
 	}
 
-	rb := NewRoutesBuilder().Append(aliveCheckRoute(DefaultAliveCheck)).
-		Append(readyCheckRoute(DefaultReadyCheck)).Append(metricRoute())
+	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodGet())
 
 	tests := map[string]struct {
 		acf      AliveCheckFunc
@@ -120,7 +120,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			p:        -1,
 			rt:       -10 * time.Second,
 			wt:       -20 * time.Second,
-			rb:       NewRoutesBuilder(),
+			rb:       nil,
 			mm:       []MiddlewareFunc{},
 			c:        "",
 			k:        "",
@@ -130,19 +130,12 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotHTTPComponent, gotErrs := NewBuilder().
-				WithAliveCheckFunc(tc.acf).
-				WithReadyCheckFunc(tc.rcf).
-				WithPort(tc.p).
-				WithReadTimeout(tc.rt).
-				WithWriteTimeout(tc.wt).
-				WithRoutes(tc.rb).
-				WithMiddlewares(tc.mm...).
-				WithSSL(tc.c, tc.k).
-				Create()
+			gotHTTPComponent, err := NewBuilder().WithAliveCheckFunc(tc.acf).WithReadyCheckFunc(tc.rcf).
+				WithPort(tc.p).WithReadTimeout(tc.rt).WithWriteTimeout(tc.wt).WithRoutes(tc.rb).
+				WithMiddlewares(tc.mm...).WithSSL(tc.c, tc.k).Create()
 
 			if len(tc.wantErrs) > 0 {
-				assert.ObjectsAreEqual(tc.wantErrs, gotErrs)
+				assert.EqualError(t, err, errs.Aggregate(tc.wantErrs...).Error())
 				assert.Nil(t, gotHTTPComponent)
 			} else {
 				assert.NotNil(t, gotHTTPComponent)
@@ -150,5 +143,4 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			}
 		})
 	}
-
 }

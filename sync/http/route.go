@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	patronerrors "github.com/beatlabs/patron/errors"
+	perrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/sync"
 	"github.com/beatlabs/patron/sync/http/auth"
 )
@@ -109,7 +109,7 @@ func (rb *RouteBuilder) WithMethodTrace() *RouteBuilder {
 // Build a route.
 func (rb *RouteBuilder) Build() (Route, error) {
 	if len(rb.errors) > 0 {
-		return Route{}, patronerrors.Aggregate(rb.errors...)
+		return Route{}, perrors.Aggregate(rb.errors...)
 	}
 
 	if rb.method == "" {
@@ -186,7 +186,7 @@ func (rb *RoutesBuilder) Append(builder *RouteBuilder) *RoutesBuilder {
 // Build the routes.
 func (rb *RoutesBuilder) Build() ([]Route, error) {
 	if len(rb.errors) > 0 {
-		return nil, patronerrors.Aggregate(rb.errors...)
+		return nil, perrors.Aggregate(rb.errors...)
 	}
 	return rb.routes, nil
 }

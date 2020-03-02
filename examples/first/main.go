@@ -41,8 +41,9 @@ func main() {
 	}
 
 	// Set up routes
-	routes := []patronhttp.Route{
-		patronhttp.NewPostRoute("/", first, true),
+	routes, err := patronhttp.NewRoutesBuilder().Append(patronhttp.NewRouteBuilder(patronhttp.MethodPost, "/", first)).Build()
+	if err != nil {
+		log.Fatalf("failed to create routes %v", err)
 	}
 
 	// Setup a simple CORS middleware

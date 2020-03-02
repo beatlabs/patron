@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 	"time"
 
@@ -16,7 +17,10 @@ func TestBuilderWithoutOptions(t *testing.T) {
 }
 
 func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
-	rr := []Route{NewRoute("/", "GET", nil, true, nil)}
+	rr, err := NewRoutesBuilder().
+		Append(NewRawRouteBuilder(MethodGet, "/", func(http.ResponseWriter, *http.Request) {}).WithTrace()).
+		Build()
+	assert.NoError(t, err)
 	s, err := NewBuilder().WithRoutes(rr).WithPort(50003).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
@@ -32,7 +36,9 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 }
 
 func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
-	rr := []Route{NewRoute("/", "GET", nil, true, nil)}
+	rr, err := NewRoutesBuilder().Append(NewRawRouteBuilder(MethodGet, "/", func(http.ResponseWriter, *http.Request) {})).
+		Build()
+	assert.NoError(t, err)
 	s, err := NewBuilder().WithRoutes(rr).WithSSL("testdata/server.pem", "testdata/server.key").WithPort(50003).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
@@ -48,7 +54,9 @@ func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
 }
 
 func TestComponent_ListenAndServeTLS_FailsInvalidCerts(t *testing.T) {
-	rr := []Route{NewRoute("/", "GET", nil, true, nil)}
+	rr, err := NewRoutesBuilder().Append(NewRawRouteBuilder(MethodGet, "/", func(http.ResponseWriter, *http.Request) {})).
+		Build()
+	assert.NoError(t, err)
 	s, err := NewBuilder().WithRoutes(rr).WithSSL("testdata/server.pem", "testdata/server.pem").Create()
 	assert.NoError(t, err)
 	assert.Error(t, s.Run(context.Background()))
@@ -82,6 +90,10 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		errors.New("Invalid cert or key provided"),
 	}
 
+	routes, err := NewRoutesBuilder().Append(aliveCheckRoute(DefaultAliveCheck)).
+		Append(readyCheckRoute(DefaultReadyCheck)).Append(metricRoute()).Build()
+	assert.NoError(t, err)
+
 	tests := map[string]struct {
 		acf      AliveCheckFunc
 		rcf      ReadyCheckFunc
@@ -100,11 +112,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			p:   httpPort,
 			rt:  httpReadTimeout,
 			wt:  httpIdleTimeout,
-			rr: []Route{
-				aliveCheckRoute(DefaultAliveCheck),
-				readyCheckRoute(DefaultReadyCheck),
-				metricRoute(),
-			},
+			rr:  routes,
 			mm: []MiddlewareFunc{
 				NewRecoveryMiddleware(),
 				panicMiddleware("error"),

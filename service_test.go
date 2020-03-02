@@ -12,17 +12,19 @@ import (
 	"github.com/beatlabs/patron/log"
 	phttp "github.com/beatlabs/patron/sync/http"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewServer(t *testing.T) {
-	getRoute := phttp.NewRoute("/", "GET", nil, true, nil)
-	putRoute := phttp.NewRoute("/", "PUT", nil, true, nil)
 
-	middleware := phttp.MiddlewareFunc(func(h http.Handler) http.Handler {
+	routes, err := phttp.NewRoutesBuilder().
+		Append(phttp.NewRawRouteBuilder(phttp.MethodGet, "/", func(w http.ResponseWriter, r *http.Request) {})).Build()
+	require.NoError(t, err)
+	middleware := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		})
-	})
+	}
 
 	var httpBuilderAllErrors = errors.New("name is required\n" +
 		"provided routes slice was empty\n" +
@@ -47,7 +49,7 @@ func TestNewServer(t *testing.T) {
 			name:          "test",
 			version:       "dev",
 			cps:           []Component{&testComponent{}, &testComponent{}},
-			routes:        []phttp.Route{getRoute, putRoute},
+			routes:        routes,
 			middlewares:   []phttp.MiddlewareFunc{middleware},
 			acf:           phttp.DefaultAliveCheck,
 			rcf:           phttp.DefaultReadyCheck,
@@ -108,9 +110,7 @@ func TestNewServer(t *testing.T) {
 				for _, comp := range tt.cps {
 					assert.Contains(t, gotService.cps, comp)
 				}
-				for i, route := range tt.routes {
-					assert.Equal(t, gotService.routes[i].Method, route.Method)
-				}
+				assert.Len(t, gotService.routes, len(tt.routes))
 				for _, middleware := range tt.middlewares {
 					assert.NotNil(t, middleware)
 				}

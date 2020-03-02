@@ -110,6 +110,7 @@ type Builder struct {
 	httpReadTimeout  time.Duration
 	httpWriteTimeout time.Duration
 	routes           []Route
+	routesBuilder    *RoutesBuilder
 	middlewares      []MiddlewareFunc
 	certFile         string
 	keyFile          string
@@ -127,6 +128,7 @@ func NewBuilder() *Builder {
 		httpPort:         httpPort,
 		httpReadTimeout:  httpReadTimeout,
 		httpWriteTimeout: httpWriteTimeout,
+		routesBuilder:    NewRoutesBuilder(),
 		errors:           errs,
 	}
 }
@@ -234,22 +236,27 @@ func (cb *Builder) Create() (*Component, error) {
 		return nil, patronErrors.Aggregate(cb.errors...)
 	}
 
-	c := &Component{
+	for _, rb := range profilingRoutes() {
+		cb.routesBuilder.Append(rb)
+	}
+
+	routes, err := cb.routesBuilder.Append(aliveCheckRoute(cb.ac)).Append(readyCheckRoute(cb.rc)).
+		Append(metricRoute()).Build()
+	if err != nil {
+		return nil, err
+	}
+
+	routes = append(routes, cb.routes...)
+
+	return &Component{
 		ac:               cb.ac,
 		rc:               cb.rc,
 		httpPort:         cb.httpPort,
 		httpReadTimeout:  cb.httpReadTimeout,
 		httpWriteTimeout: cb.httpWriteTimeout,
-		routes:           cb.routes,
+		routes:           routes,
 		middlewares:      cb.middlewares,
 		certFile:         cb.certFile,
 		keyFile:          cb.keyFile,
-	}
-
-	c.routes = append(c.routes, aliveCheckRoute(c.ac))
-	c.routes = append(c.routes, readyCheckRoute(c.rc))
-	c.routes = append(c.routes, profilingRoutes()...)
-	c.routes = append(c.routes, metricRoute())
-
-	return c, nil
+	}, nil
 }

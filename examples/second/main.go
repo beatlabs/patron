@@ -62,8 +62,10 @@ func main() {
 	}
 
 	// Set up routes
-	routes := []patronhttp.Route{
-		patronhttp.NewAuthGetRoute("/", httpCmp.second, true, auth),
+	routes, err := patronhttp.NewRoutesBuilder().
+		Append(patronhttp.NewRouteBuilder(patronhttp.MethodGet, "/", httpCmp.second).WithTrace().WithAuth(auth)).Build()
+	if err != nil {
+		log.Fatalf("failed to create routes %v", err)
 	}
 
 	ctx := context.Background()

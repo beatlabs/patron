@@ -23,8 +23,33 @@ func (mo MockAuthenticator) Authenticate(req *http.Request) (bool, error) {
 }
 
 func TestRouteBuilder_WithMethodGet(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodGet()
-	assert.Equal(t, http.MethodGet, rb.method)
+	type args struct {
+		methodExists bool
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success":               {args: args{}},
+		"method already exists": {args: args{methodExists: true}, expectedErr: "method already set\n"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {})
+			if tt.args.methodExists {
+				rb.WithMethodGet()
+			}
+			got, err := rb.WithMethodGet().Build()
+
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+				assert.Equal(t, Route{}, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, http.MethodGet, got.method)
+			}
+		})
+	}
 }
 
 func TestRouteBuilder_WithMethodPost(t *testing.T) {

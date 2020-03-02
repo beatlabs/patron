@@ -52,58 +52,57 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 	return rb
 }
 
+func (rb *RouteBuilder) setMethod(method string) *RouteBuilder {
+	if rb.method != "" {
+		rb.errors = append(rb.errors, errors.New("method already set"))
+	}
+	rb.method = method
+	return rb
+}
+
 // WithMethodGet HTTP method.
 func (rb *RouteBuilder) WithMethodGet() *RouteBuilder {
-	rb.method = http.MethodGet
-	return rb
+	return rb.setMethod(http.MethodGet)
 }
 
 // WithMethodHead HTTP method.
 func (rb *RouteBuilder) WithMethodHead() *RouteBuilder {
-	rb.method = http.MethodHead
-	return rb
+	return rb.setMethod(http.MethodHead)
 }
 
 // WithMethodPost HTTP method.
 func (rb *RouteBuilder) WithMethodPost() *RouteBuilder {
-	rb.method = http.MethodPost
-	return rb
+	return rb.setMethod(http.MethodPost)
 }
 
 // WithMethodPut HTTP method.
 func (rb *RouteBuilder) WithMethodPut() *RouteBuilder {
-	rb.method = http.MethodPut
-	return rb
+	return rb.setMethod(http.MethodPut)
 }
 
 // WithMethodPatch HTTP method.
 func (rb *RouteBuilder) WithMethodPatch() *RouteBuilder {
-	rb.method = http.MethodPatch
-	return rb
+	return rb.setMethod(http.MethodPatch)
 }
 
 // WithMethodDelete HTTP method.
 func (rb *RouteBuilder) WithMethodDelete() *RouteBuilder {
-	rb.method = http.MethodDelete
-	return rb
+	return rb.setMethod(http.MethodDelete)
 }
 
 // WithMethodConnect HTTP method.
 func (rb *RouteBuilder) WithMethodConnect() *RouteBuilder {
-	rb.method = http.MethodConnect
-	return rb
+	return rb.setMethod(http.MethodConnect)
 }
 
 // WithMethodOptions HTTP method.
 func (rb *RouteBuilder) WithMethodOptions() *RouteBuilder {
-	rb.method = http.MethodOptions
-	return rb
+	return rb.setMethod(http.MethodOptions)
 }
 
 // WithMethodTrace HTTP method.
 func (rb *RouteBuilder) WithMethodTrace() *RouteBuilder {
-	rb.method = http.MethodTrace
-	return rb
+	return rb.setMethod(http.MethodTrace)
 }
 
 // Build a route.

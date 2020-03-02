@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -46,7 +47,7 @@ func (c *Component) Run(ctx context.Context) error {
 	c.Lock()
 	log.Debug("applying tracing to routes")
 	chFail := make(chan error)
-	srv := c.createHTTPServer()
+	srv := c.createHTTPServer(ctx)
 	go c.listenAndServe(srv, chFail)
 	c.Unlock()
 
@@ -69,7 +70,7 @@ func (c *Component) listenAndServe(srv *http.Server, ch chan<- error) {
 	ch <- srv.ListenAndServe()
 }
 
-func (c *Component) createHTTPServer() *http.Server {
+func (c *Component) createHTTPServer(ctx context.Context) *http.Server {
 	log.Debugf("adding %d routes", len(c.routes))
 	router := httprouter.New()
 	for _, route := range c.routes {
@@ -92,6 +93,9 @@ func (c *Component) createHTTPServer() *http.Server {
 		WriteTimeout: c.httpWriteTimeout,
 		IdleTimeout:  httpIdleTimeout,
 		Handler:      routerAfterMiddleware,
+		BaseContext: func(net.Listener) context.Context {
+			return ctx
+		},
 	}
 }
 

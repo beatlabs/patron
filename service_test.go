@@ -15,7 +15,9 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	route := phttp.NewRoute("/", "GET", nil, true, nil)
+	getRoute := phttp.NewRoute("/", "GET", nil, true, nil)
+	putRoute := phttp.NewRoute("/", "PUT", nil, true, nil)
+
 	middleware := phttp.MiddlewareFunc(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
@@ -44,8 +46,8 @@ func TestNewServer(t *testing.T) {
 		"success": {
 			name:          "test",
 			version:       "dev",
-			cps:           []Component{&testComponent{}},
-			routes:        []phttp.Route{route},
+			cps:           []Component{&testComponent{}, &testComponent{}},
+			routes:        []phttp.Route{getRoute, putRoute},
 			middlewares:   []phttp.MiddlewareFunc{middleware},
 			acf:           phttp.DefaultAliveCheck,
 			rcf:           phttp.DefaultReadyCheck,
@@ -93,6 +95,24 @@ func TestNewServer(t *testing.T) {
 				assert.Nil(t, gotErr)
 				assert.NotNil(t, gotService)
 				assert.IsType(t, &Service{}, gotService)
+
+				assert.NotEmpty(t, gotService.cps)
+				assert.Len(t, gotService.routes, len(tt.routes))
+				assert.Len(t, gotService.middlewares, len(tt.middlewares))
+				assert.NotNil(t, gotService.rcf)
+				assert.NotNil(t, gotService.acf)
+				assert.NotNil(t, gotService.termSig)
+				assert.NotNil(t, gotService.sighupHandler)
+
+				for _, comp := range tt.cps {
+					assert.Contains(t, gotService.cps, comp)
+				}
+				for i, route := range tt.routes {
+					assert.Equal(t, gotService.routes[i].Method, route.Method)
+				}
+				for _, middleware := range tt.middlewares {
+					assert.NotNil(t, middleware)
+				}
 			}
 		})
 	}

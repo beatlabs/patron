@@ -52,7 +52,7 @@ go run examples/sixth/main.go
 and the use curl to send a request:
 
 ```shell
-./start_processing.sh
+curl -i -H "Content-Type: application/json" -X POST http://localhost:50000 --data '{"firstname":"John","lastname":"Doe"}'
 ```
 
 After that head over to [jaeger](http://localhost:16686/search) and [prometheus](http://localhost:9090/graph).

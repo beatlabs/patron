@@ -8,7 +8,7 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync/http/auth"
-	"github.com/beatlabs/patron/trace"
+	trace_http "github.com/beatlabs/patron/trace/http"
 	"github.com/google/uuid"
 )
 
@@ -108,10 +108,10 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			corID := getOrSetCorrelationID(r.Header)
-			sp, r := trace.HTTPSpan(path, corID, r)
+			sp, r := trace_http.Span(path, corID, r)
 			lw := newResponseWriter(w)
 			next.ServeHTTP(lw, r)
-			trace.FinishHTTPSpan(sp, lw.Status())
+			trace_http.FinishSpan(sp, lw.Status())
 			logRequestResponse(lw, r)
 		})
 	}

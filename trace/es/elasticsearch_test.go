@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/beatlabs/patron/trace"
+
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/estransport"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -184,4 +186,37 @@ func TestGetAddrFromEnv(t *testing.T) {
 	}
 	addr = getAddrFromEnv()
 	assert.Equal(t, "http://10.1.1.1:9300", addr)
+}
+
+func TestStartSpan(t *testing.T) {
+	mtr := mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
+
+	hostPool := []string{"http://localhost:9200", "http:10.1.1.1:9201", "https://www.domain.com:9203"}
+	tracingInfo := tracingInfo{
+		user:  "es-user",
+		hosts: hostPool,
+	}
+	req, err := http.NewRequest("query-method", "es-uri", strings.NewReader("query-body"))
+	assert.NoError(t, err)
+
+	sp, err := tracingInfo.startSpan(req)
+	assert.NoError(t, err)
+	assert.NotNil(t, sp)
+	assert.IsType(t, &mocktracer.MockSpan{}, sp)
+	jsp := sp.(*mocktracer.MockSpan)
+	assert.NotNil(t, jsp)
+	trace.SpanSuccess(sp)
+	rawspan := mtr.FinishedSpans()[0]
+	assert.Equal(t, map[string]interface{}{
+		"component":    "go-elasticsearch",
+		"version":      "dev",
+		"db.statement": "query-body",
+		"db.type":      "elasticsearch",
+		"db.user":      "es-user",
+		"http.url":     "es-uri",
+		"http.method":  "query-method",
+		trace.HostsTag: "[http://localhost:9200, http:10.1.1.1:9201, https://www.domain.com:9203]",
+		"error":        false,
+	}, rawspan.Tags())
 }

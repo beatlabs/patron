@@ -60,7 +60,8 @@ func Test_createHTTPServer(t *testing.T) {
 		httpReadTimeout:  5 * time.Second,
 		httpWriteTimeout: 10 * time.Second,
 	}
-	s := cmp.createHTTPServer()
+	ctx := context.Background()
+	s := cmp.createHTTPServer(ctx)
 	assert.NotNil(t, s)
 	assert.Equal(t, ":10000", s.Addr)
 	assert.Equal(t, 5*time.Second, s.ReadTimeout)

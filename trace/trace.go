@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
@@ -18,37 +16,23 @@ import (
 )
 
 const (
-	// KafkaConsumerComponent definition.
-	KafkaConsumerComponent = "kafka-consumer"
-	// KafkaAsyncProducerComponent definition.
-	KafkaAsyncProducerComponent = "kafka-async-producer"
-	// KafkaSyncProducerComponent definition.
-	KafkaSyncProducerComponent = "kafka-sync-producer"
-	// AMQPConsumerComponent definition.
-	AMQPConsumerComponent = "amqp-consumer"
-	// AMQPPublisherComponent definition.
-	AMQPPublisherComponent = "amqp-publisher"
-	// HTTPComponent definition.
-	HTTPComponent = "http"
-	// HTTPClientComponent definition.
-	HTTPClientComponent = "http-client"
-	// SQSConsumerComponent definition.
-	SQSConsumerComponent = "sqs-consumer"
-	// SNSPublisherComponent definition.
-	SNSPublisherComponent = "sns-publisher"
-	versionTag            = "version"
-	hostsTag              = "hosts"
+	// HostsTag is used to tag the components's hosts.
+	HostsTag = "hosts"
+	// VersionTag is used to tag the components's version.
+	VersionTag = "version"
 )
 
 var (
-	cls     io.Closer
-	version = "dev"
+	cls io.Closer
+	// Version will be used to tag all traced components.
+	// It can be used to distinguish between dev, stage, and prod environments.
+	Version = "dev"
 )
 
 // Setup tracing by providing all necessary parameters.
 func Setup(name, ver, agent, typ string, prm float64) error {
 	if ver != "" {
-		version = ver
+		Version = ver
 	}
 	cfg := config.Configuration{
 		ServiceName: name,
@@ -73,7 +57,6 @@ func Setup(name, ver, agent, typ string, prm float64) error {
 	}
 	cls = clsTemp
 	opentracing.SetGlobalTracer(tr)
-	version = ver
 	return nil
 }
 
@@ -81,28 +64,6 @@ func Setup(name, ver, agent, typ string, prm float64) error {
 func Close() error {
 	log.Debug("closing tracer")
 	return cls.Close()
-}
-
-// HTTPSpan starts a new HTTP span.
-func HTTPSpan(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
-	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	if err != nil && err != opentracing.ErrSpanContextNotFound {
-		log.Errorf("failed to extract HTTP span: %v", err)
-	}
-	sp := opentracing.StartSpan(HTTPOpName(r.Method, path), ext.RPCServerOption(ctx))
-	ext.HTTPMethod.Set(sp, r.Method)
-	ext.HTTPUrl.Set(sp, r.URL.String())
-	ext.Component.Set(sp, "http")
-	sp.SetTag(versionTag, version)
-	sp.SetTag(correlation.ID, corID)
-	return sp, r.WithContext(opentracing.ContextWithSpan(r.Context(), sp))
-}
-
-// FinishHTTPSpan finishes a HTTP span by providing a HTTP status code.
-func FinishHTTPSpan(sp opentracing.Span, code int) {
-	ext.HTTPStatusCode.Set(sp, uint16(code))
-	ext.Error.Set(sp, code >= http.StatusInternalServerError)
-	sp.Finish()
 }
 
 // ConsumerSpan starts a new consumer span.
@@ -115,7 +76,7 @@ func ConsumerSpan(ctx context.Context, opName, cmp, corID string, hdr map[string
 	sp := opentracing.StartSpan(opName, consumerOption{ctx: spCtx})
 	ext.Component.Set(sp, cmp)
 	sp.SetTag(correlation.ID, corID)
-	sp.SetTag(versionTag, version)
+	sp.SetTag(VersionTag, Version)
 	for _, t := range tags {
 		sp.SetTag(t.Key, t.Value)
 	}
@@ -147,49 +108,8 @@ func ChildSpan(ctx context.Context, opName, cmp string, tags ...opentracing.Tag)
 	for _, t := range tags {
 		sp.SetTag(t.Key, t.Value)
 	}
-	sp.SetTag(versionTag, version)
+	sp.SetTag(VersionTag, Version)
 	return sp, ctx
-}
-
-// SQLSpan starts a new SQL child span with specified tags.
-func SQLSpan(ctx context.Context, opName, cmp, sqlType, instance, user, stmt string,
-	tags ...opentracing.Tag) (opentracing.Span, context.Context) {
-
-	sp, ctx := opentracing.StartSpanFromContext(ctx, opName)
-	ext.Component.Set(sp, cmp)
-	ext.DBType.Set(sp, sqlType)
-	ext.DBInstance.Set(sp, instance)
-	ext.DBUser.Set(sp, user)
-	ext.DBStatement.Set(sp, stmt)
-	for _, t := range tags {
-		sp.SetTag(t.Key, t.Value)
-	}
-	sp.SetTag(versionTag, version)
-	return sp, ctx
-}
-
-// EsSpan starts a new elasticsearch child span with specified tags.
-func EsSpan(ctx context.Context, opName, cmp, user, uri, method, body string, hostPool []string) opentracing.Span {
-
-	sp, _ := opentracing.StartSpanFromContext(ctx, opName)
-	ext.Component.Set(sp, cmp)
-	ext.DBType.Set(sp, "elasticsearch")
-	ext.DBUser.Set(sp, user)
-
-	ext.HTTPUrl.Set(sp, uri)
-	ext.HTTPMethod.Set(sp, method)
-	ext.DBStatement.Set(sp, body)
-
-	hostsFmt := "[" + strings.Join(hostPool, ", ") + "]"
-	sp.SetTag(hostsTag, hostsFmt)
-	sp.SetTag(versionTag, version)
-
-	return sp
-}
-
-// HTTPOpName return a string representation of the HTTP request operation.
-func HTTPOpName(method, path string) string {
-	return method + " " + path
 }
 
 type jaegerLoggerAdapter struct {

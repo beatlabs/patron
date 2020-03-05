@@ -1,31 +1,29 @@
-// Package sns provides a set of common interfaces and structs for publishing messages to AWS SNS. Implementations
+// Package sqs provides a set of common interfaces and structs for publishing messages to AWS SQS. Implementations
 // in this package also include distributed tracing capabilities by default.
-package sns
+package sqs
 
 import (
 	"context"
 	"errors"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/service/sns/snsiface"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 
-const (
-	publisherComponent = "sns-publisher"
-)
+const publisherComponent = "sqs-publisher"
 
-// Publisher is the interface defining an SNS publisher, used to publish messages to SNS.
+// Publisher is the interface defining an SQS publisher, used to publish messages to SQS.
 type Publisher interface {
 	Publish(ctx context.Context, msg Message) (messageID string, err error)
 }
 
 // TracedPublisher is an implementation of the Publisher interface with added distributed tracing capabilities.
 type TracedPublisher struct {
-	api snsiface.SNSAPI
+	api sqsiface.SQSAPI
 
 	// component is the name of the component used in tracing operations
 	component string
@@ -33,8 +31,8 @@ type TracedPublisher struct {
 	tag opentracing.Tag
 }
 
-// NewPublisher creates a new SNS publisher.
-func NewPublisher(api snsiface.SNSAPI) (*TracedPublisher, error) {
+// NewPublisher creates a new SQS publisher.
+func NewPublisher(api sqsiface.SQSAPI) (*TracedPublisher, error) {
 	if api == nil {
 		return nil, errors.New("missing api")
 	}
@@ -46,11 +44,11 @@ func NewPublisher(api snsiface.SNSAPI) (*TracedPublisher, error) {
 	}, nil
 }
 
-// Publish tries to publish a new message to SNS. It also stores tracing information.
+// Publish tries to publish a new message to SQS. It also stores tracing information.
 func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID string, err error) {
 	span, _ := trace.ChildSpan(ctx, p.publishOpName(msg), p.component, ext.SpanKindProducer, p.tag)
 
-	carrier := snsHeadersCarrier{}
+	carrier := sqsHeadersCarrier{}
 	err = span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier)
 	if err != nil {
 		return "", fmt.Errorf("failed to inject tracing headers: %w", err)
@@ -59,7 +57,7 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 	msg.injectHeaders(carrier)
 	msg.setMessageAttribute(correlation.HeaderID, correlation.IDFromContext(ctx))
 
-	out, err := p.api.PublishWithContext(ctx, msg.input)
+	out, err := p.api.SendMessageWithContext(ctx, msg.input)
 
 	trace.SpanComplete(span, err)
 	if err != nil {
@@ -77,13 +75,13 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 func (p TracedPublisher) publishOpName(msg Message) string {
 	return trace.ComponentOpName(
 		p.component,
-		msg.tracingTarget(),
+		*msg.input.QueueUrl,
 	)
 }
 
-type snsHeadersCarrier map[string]interface{}
+type sqsHeadersCarrier map[string]interface{}
 
 // Set implements Set() of opentracing.TextMapWriter.
-func (c snsHeadersCarrier) Set(key, val string) {
+func (c sqsHeadersCarrier) Set(key, val string) {
 	c[key] = val
 }

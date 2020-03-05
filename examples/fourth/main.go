@@ -21,6 +21,7 @@ import (
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 	patronsns "github.com/beatlabs/patron/trace/sns"
+	patronsqs "github.com/beatlabs/patron/trace/sqs"
 	oamqp "github.com/streadway/amqp"
 )
 
@@ -75,7 +76,7 @@ func main() {
 
 	// Programmatically create an empty SQS queue for the sake of the example
 	sqsAPI := sqs.New(getAWSSession(awsSQSEndpoint))
-	sqsQueueArn, err := createSQSQueue(sqsAPI)
+	sqsQueueURL, err := createSQSQueue(sqsAPI)
 	if err != nil {
 		log.Fatalf("failed to create sqs queue: %v", err)
 	}
@@ -89,7 +90,7 @@ func main() {
 
 	// Route the SNS topic to the SQS queue, so that any message received on the SNS topic
 	// will be automatically sent to the SQS queue.
-	err = routeSNSTOpicToSQSQueue(snsAPI, sqsQueueArn, snsTopicArn)
+	err = routeSNSTOpicToSQSQueue(snsAPI, sqsQueueURL, snsTopicArn)
 	if err != nil {
 		log.Fatalf("failed to route sns to sqs: %v", err)
 	}
@@ -98,6 +99,12 @@ func main() {
 	snsPub, err := patronsns.NewPublisher(snsAPI)
 	if err != nil {
 		log.Fatalf("failed to create sns publisher: %v", err)
+	}
+
+	// Create an SQS publisher
+	sqsPub, err := patronsqs.NewPublisher(sqsAPI)
+	if err != nil {
+		log.Fatalf("failed to create sqs publisher: %v", err)
 	}
 
 	// Initialise the AMQP component
@@ -109,6 +116,8 @@ func main() {
 		[]string{"bind.one.*", "bind.two.*"},
 		snsTopicArn,
 		snsPub,
+		sqsPub,
+		sqsQueueURL,
 	)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
@@ -182,16 +191,20 @@ type amqpComponent struct {
 	cmp         patron.Component
 	snsTopicArn string
 	snsPub      patronsns.Publisher
+	sqsPub      patronsqs.Publisher
+	sqsQueueURL string
 }
 
-func newAmqpComponent(url, queue, exchangeName, exchangeType string, bindings []string, snsTopicArn string, snsPub patronsns.Publisher) (*amqpComponent, error) {
+func newAmqpComponent(url, queue, exchangeName, exchangeType string, bindings []string, snsTopicArn string, snsPub patronsns.Publisher,
+	sqsPub patronsqs.Publisher, sqsQueueURL string) (*amqpComponent, error) {
 	amqpCmp := amqpComponent{
 		snsTopicArn: snsTopicArn,
 		snsPub:      snsPub,
+		sqsPub:      sqsPub,
+		sqsQueueURL: sqsQueueURL,
 	}
 
 	exchange, err := amqp.NewExchange(exchangeName, exchangeType)
-
 	if err != nil {
 		return nil, err
 	}
@@ -226,6 +239,7 @@ func (ac *amqpComponent) Process(msg async.Message) error {
 		return err
 	}
 
+	// Create a new SNS message and publish it
 	snsMsg, err := patronsns.NewMessageBuilder().
 		Message(string(payload)).
 		TopicArn(ac.snsTopicArn).
@@ -233,10 +247,19 @@ func (ac *amqpComponent) Process(msg async.Message) error {
 	if err != nil {
 		return fmt.Errorf("failed to create message: %v", err)
 	}
-
 	_, err = ac.snsPub.Publish(msg.Context(), *snsMsg)
 	if err != nil {
-		return fmt.Errorf("failed to publish message: %v", err)
+		return fmt.Errorf("failed to publish message to SNS: %v", err)
+	}
+
+	// Create a new SQS message and publish it
+	sqsMsg, err := patronsqs.NewMessageBuilder().
+		Body(string(payload)).
+		QueueURL(ac.sqsQueueURL).
+		Build()
+	_, err = ac.sqsPub.Publish(msg.Context(), *sqsMsg)
+	if err != nil {
+		return fmt.Errorf("failed to publish message to SQS: %v", err)
 	}
 
 	log.FromContext(msg.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())

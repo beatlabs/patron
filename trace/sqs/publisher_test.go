@@ -1,4 +1,4 @@
-package sns
+package sqs
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sns/snsiface"
+	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,7 +20,7 @@ import (
 func Test_NewPublisher(t *testing.T) {
 	testCases := []struct {
 		desc        string
-		api         snsiface.SNSAPI
+		api         sqsiface.SQSAPI
 		expectedErr error
 	}{
 		{
@@ -30,7 +30,7 @@ func Test_NewPublisher(t *testing.T) {
 		},
 		{
 			desc:        "Success",
-			api:         newStubSNSAPI(nil, nil),
+			api:         newStubSQSAPI(nil, nil),
 			expectedErr: nil,
 		},
 	}
@@ -53,37 +53,37 @@ func Test_NewPublisher(t *testing.T) {
 func Test_Publisher_Publish(t *testing.T) {
 	ctx := context.Background()
 
-	msg, err := NewMessageBuilder().Build()
+	msg, err := NewMessageBuilder().Body("body").QueueURL("url").Build()
 	require.NoError(t, err)
 
 	testCases := []struct {
 		desc          string
-		sns           snsiface.SNSAPI
+		sqs           sqsiface.SQSAPI
 		expectedMsgID string
 		expectedErr   error
 	}{
 		{
 			desc:          "Publish error",
-			sns:           newStubSNSAPI(nil, errors.New("publish error")),
+			sqs:           newStubSQSAPI(nil, errors.New("publish error")),
 			expectedMsgID: "",
 			expectedErr:   errors.New("failed to publish message: publish error"),
 		},
 		{
 			desc:          "No message ID returned",
-			sns:           newStubSNSAPI(&sns.PublishOutput{}, nil),
+			sqs:           newStubSQSAPI(&sqs.SendMessageOutput{}, nil),
 			expectedMsgID: "",
 			expectedErr:   errors.New("tried to publish a message but no message ID returned"),
 		},
 		{
 			desc:          "Success",
-			sns:           newStubSNSAPI((&sns.PublishOutput{}).SetMessageId("msgID"), nil),
+			sqs:           newStubSQSAPI((&sqs.SendMessageOutput{}).SetMessageId("msgID"), nil),
 			expectedMsgID: "msgID",
 			expectedErr:   nil,
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			p, err := NewPublisher(tC.sns)
+			p, err := NewPublisher(tC.sqs)
 			require.NoError(t, err)
 
 			msgID, err := p.Publish(ctx, *msg)
@@ -105,39 +105,39 @@ func Test_Publisher_publishOpName(t *testing.T) {
 		component: component,
 	}
 
-	msg, err := NewMessageBuilder().Build()
+	msg, err := NewMessageBuilder().Body("body").QueueURL("url").Build()
 	require.NoError(t, err)
 
-	assert.Equal(t, "component unknown", p.publishOpName(*msg))
+	assert.Equal(t, "component url", p.publishOpName(*msg))
 }
 
-func Test_snsHeadersCarrier_Set(t *testing.T) {
-	carrier := snsHeadersCarrier{}
+func Test_sqsHeadersCarrier_Set(t *testing.T) {
+	carrier := sqsHeadersCarrier{}
 	carrier.Set("foo", "bar")
 
 	assert.Equal(t, "bar", carrier["foo"])
 }
 
-type stubSNSAPI struct {
-	snsiface.SNSAPI // Implement the interface's methods without defining all of them (just override what we need)
+type stubSQSAPI struct {
+	sqsiface.SQSAPI // Implement the interface's methods without defining all of them (just override what we need)
 
-	output *sns.PublishOutput
+	output *sqs.SendMessageOutput
 	err    error
 }
 
-func newStubSNSAPI(expectedOutput *sns.PublishOutput, expectedErr error) *stubSNSAPI {
-	return &stubSNSAPI{output: expectedOutput, err: expectedErr}
+func newStubSQSAPI(expectedOutput *sqs.SendMessageOutput, expectedErr error) *stubSQSAPI {
+	return &stubSQSAPI{output: expectedOutput, err: expectedErr}
 }
 
-func (s *stubSNSAPI) PublishWithContext(ctx context.Context, input *sns.PublishInput, options ...request.Option) (*sns.PublishOutput, error) {
+func (s *stubSQSAPI) SendMessageWithContext(ctx context.Context, input *sqs.SendMessageInput, options ...request.Option) (*sqs.SendMessageOutput, error) {
 	return s.output, s.err
 }
 
 func ExamplePublisher() {
-	// Create the SNS API with the required config, credentials, etc.
+	// Create the SQS API with the required config, credentials, etc.
 	sess, err := session.NewSession(
 		aws.NewConfig().
-			WithEndpoint("http://localhost:4575").
+			WithEndpoint("http://localhost:4576").
 			WithRegion("eu-west-1").
 			WithCredentials(
 				credentials.NewStaticCredentials("aws-id", "aws-secret", "aws-token"),
@@ -147,7 +147,7 @@ func ExamplePublisher() {
 		panic(err)
 	}
 
-	api := sns.New(sess)
+	api := sqs.New(sess)
 
 	// Create the publisher
 	pub, err := NewPublisher(api)
@@ -157,8 +157,8 @@ func ExamplePublisher() {
 
 	// Create a message
 	msg, err := NewMessageBuilder().
-		Message("my message").
-		TopicArn("arn:aws:sns:eu-west-1:123456789012:MyTopic").
+		Body("message body").
+		QueueURL("http://localhost:4576/queue/foo-queue").
 		Build()
 	if err != nil {
 		panic(err)

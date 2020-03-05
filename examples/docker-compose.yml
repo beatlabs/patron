@@ -28,6 +28,8 @@ services:
       examplenw:
         aliases:
           - prometheus
+    volumes:
+      - ${PWD}/config/prometheus.yml:/etc/prometheus/prometheus.yml
     expose:
       - "9090"
     ports:
@@ -128,3 +130,4 @@ services:
 
 networks:
   examplenw: {}
+

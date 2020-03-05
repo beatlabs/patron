@@ -9,14 +9,30 @@ import (
 
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+)
+
+const (
+	component = "sql"
+	dbtype    = "RDBMS"
 )
 
 type connInfo struct {
 	instance, user string
 }
 
-func (c *connInfo) startSpan(ctx context.Context, opName, stmt string) (opentracing.Span, context.Context) {
-	return trace.SQLSpan(ctx, opName, "sql", "RDBMS", c.instance, c.user, stmt)
+func (c *connInfo) startSpan(ctx context.Context, opName, stmt string, tags ...opentracing.Tag) (opentracing.Span, context.Context) {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, opName)
+	ext.Component.Set(sp, component)
+	ext.DBType.Set(sp, dbtype)
+	ext.DBInstance.Set(sp, c.instance)
+	ext.DBUser.Set(sp, c.user)
+	ext.DBStatement.Set(sp, stmt)
+	for _, t := range tags {
+		sp.SetTag(t.Key, t.Value)
+	}
+	sp.SetTag(trace.VersionTag, trace.Version)
+	return sp, ctx
 }
 
 // Conn represents a single database connection.
@@ -26,7 +42,7 @@ type Conn struct {
 }
 
 // DSNInfo contains information extracted from a valid
-// connection string. Additional parameters provided are discarded
+// connection string. Additional parameters provided are discarded.
 type DSNInfo struct {
 	Driver   string
 	DBName   string

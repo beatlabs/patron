@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
-	"github.com/beatlabs/patron/trace"
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,7 +33,7 @@ func TestTracedClient_Do(t *testing.T) {
 	assert.NoError(t, err)
 	reqErr, err := http.NewRequest("GET", "", nil)
 	assert.NoError(t, err)
-	opName := trace.HTTPOpName("GET", ts.URL)
+	opName := opName("GET", ts.URL)
 	opNameError := "HTTP GET"
 
 	type args struct {
@@ -94,4 +94,31 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHTTPStartFinishSpan(t *testing.T) {
+	mtr := mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
+	req, err := http.NewRequest("GET", "/", nil)
+	assert.NoError(t, err)
+	sp, req := Span("/", "corID", req)
+	assert.NotNil(t, sp)
+	assert.NotNil(t, req)
+	assert.IsType(t, &mocktracer.MockSpan{}, sp)
+	jsp := sp.(*mocktracer.MockSpan)
+	assert.NotNil(t, jsp)
+	assert.Equal(t, "GET /", jsp.OperationName)
+	FinishSpan(jsp, 200)
+	assert.NotNil(t, jsp)
+	rawSpan := mtr.FinishedSpans()[0]
+	assert.Equal(t, map[string]interface{}{
+		"span.kind":        ext.SpanKindRPCServerEnum,
+		"component":        "http",
+		"error":            false,
+		"http.method":      "GET",
+		"http.status_code": uint16(200),
+		"http.url":         "/",
+		"version":          "dev",
+		"correlationID":    "corID",
+	}, rawSpan.Tags())
 }

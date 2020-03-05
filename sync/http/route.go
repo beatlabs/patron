@@ -56,7 +56,7 @@ func NewOptionsRoute(p string, pr sync.ProcessorFunc, trace bool, mm ...Middlewa
 func NewRoute(p string, m string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
 	var middlewares []MiddlewareFunc
 	if trace {
-		middlewares = append(middlewares, NewTracingMiddleware(p))
+		middlewares = append(middlewares, NewLoggingTracingMiddleware(p))
 	}
 	if auth != nil {
 		middlewares = append(middlewares, NewAuthMiddleware(auth))
@@ -71,7 +71,7 @@ func NewRoute(p string, m string, pr sync.ProcessorFunc, trace bool, auth auth.A
 func NewRouteRaw(p string, m string, h http.HandlerFunc, trace bool, mm ...MiddlewareFunc) Route {
 	var middlewares []MiddlewareFunc
 	if trace {
-		middlewares = append(middlewares, NewTracingMiddleware(p))
+		middlewares = append(middlewares, NewLoggingTracingMiddleware(p))
 	}
 	if len(mm) > 0 {
 		middlewares = append(middlewares, mm...)
@@ -118,7 +118,7 @@ func NewAuthOptionsRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.
 func NewAuthRouteRaw(p string, m string, h http.HandlerFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
 	var middlewares []MiddlewareFunc
 	if trace {
-		middlewares = append(middlewares, NewTracingMiddleware(p))
+		middlewares = append(middlewares, NewLoggingTracingMiddleware(p))
 	}
 	if auth != nil {
 		middlewares = append(middlewares, NewAuthMiddleware(auth))

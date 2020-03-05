@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"regexp"
 	"time"
 
 	"github.com/beatlabs/patron/trace"
@@ -14,10 +15,7 @@ type connInfo struct {
 	instance, user string
 }
 
-func (c *connInfo) startSpan(
-	ctx context.Context,
-	opName, stmt string,
-) (opentracing.Span, context.Context) {
+func (c *connInfo) startSpan(ctx context.Context, opName, stmt string) (opentracing.Span, context.Context) {
 	return trace.SQLSpan(ctx, opName, "sql", "RDBMS", c.instance, c.user, stmt)
 }
 
@@ -27,16 +25,25 @@ type Conn struct {
 	conn *sql.Conn
 }
 
+// DSNInfo contains information extracted from a valid
+// connection string. Additional parameters provided are discarded
+type DSNInfo struct {
+	Driver   string
+	DBName   string
+	Address  string
+	User     string
+	Protocol string
+}
+
 // BeginTx starts a transaction.
 func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	sp, _ := c.startSpan(ctx, "conn.BeginTx", "")
 	tx, err := c.conn.BeginTx(ctx, opts)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
 
-	trace.SpanSuccess(sp)
 	return &Tx{tx: tx}, nil
 }
 
@@ -44,47 +51,34 @@ func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 func (c *Conn) Close(ctx context.Context) error {
 	sp, _ := c.startSpan(ctx, "conn.Close", "")
 	err := c.conn.Close()
-	if err != nil {
-		trace.SpanError(sp)
-		return err
-	}
-	trace.SpanSuccess(sp)
-	return nil
+	trace.SpanComplete(sp, err)
+	return err
 }
 
 // Exec executes a query without returning any rows.
 func (c *Conn) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	sp, _ := c.startSpan(ctx, "conn.Exec", query)
 	res, err := c.conn.ExecContext(ctx, query, args...)
-	if err != nil {
-		trace.SpanError(sp)
-		return nil, err
-	}
-	trace.SpanSuccess(sp)
-	return res, nil
+	trace.SpanComplete(sp, err)
+	return res, err
 }
 
 // Ping verifies the connection to the database is still alive.
 func (c *Conn) Ping(ctx context.Context) error {
 	sp, _ := c.startSpan(ctx, "conn.Ping", "")
 	err := c.conn.PingContext(ctx)
-	if err != nil {
-		trace.SpanError(sp)
-		return err
-	}
-	trace.SpanSuccess(sp)
-	return nil
+	trace.SpanComplete(sp, err)
+	return err
 }
 
 // Prepare creates a prepared statement for later queries or executions.
 func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	sp, _ := c.startSpan(ctx, "conn.Prepare", query)
 	stmt, err := c.conn.PrepareContext(ctx, query)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
 	return &Stmt{stmt: stmt}, nil
 }
 
@@ -92,11 +86,11 @@ func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 func (c *Conn) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	sp, _ := c.startSpan(ctx, "conn.Query", query)
 	rows, err := c.conn.QueryContext(ctx, query, args...)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return rows, nil
 }
 
@@ -119,7 +113,9 @@ func Open(driverName, dataSourceName string) (*DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &DB{db: db}, nil
+	info := parseDSN(dataSourceName)
+
+	return &DB{connInfo: connInfo{info.DBName, info.User}, db: db}, nil
 }
 
 // OpenDB opens a database.
@@ -132,11 +128,11 @@ func OpenDB(c driver.Connector) *DB {
 func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	sp, _ := db.startSpan(ctx, "db.BeginTx", "")
 	tx, err := db.db.BeginTx(ctx, opts)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return &Tx{tx: tx}, nil
 }
 
@@ -144,23 +140,19 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 func (db *DB) Close(ctx context.Context) error {
 	sp, _ := db.startSpan(ctx, "db.Close", "")
 	err := db.db.Close()
-	if err != nil {
-		trace.SpanError(sp)
-		return err
-	}
-	trace.SpanSuccess(sp)
-	return nil
+	trace.SpanComplete(sp, err)
+	return err
 }
 
 // Conn returns a connection.
 func (db *DB) Conn(ctx context.Context) (*Conn, error) {
 	sp, _ := db.startSpan(ctx, "db.Conn", "")
 	conn, err := db.db.Conn(ctx)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return &Conn{conn: conn, connInfo: db.connInfo}, nil
 }
 
@@ -175,11 +167,11 @@ func (db *DB) Driver(ctx context.Context) driver.Driver {
 func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	sp, _ := db.startSpan(ctx, "db.Exec", query)
 	res, err := db.db.ExecContext(ctx, query, args...)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return res, nil
 }
 
@@ -187,23 +179,19 @@ func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 func (db *DB) Ping(ctx context.Context) error {
 	sp, _ := db.startSpan(ctx, "db.Ping", "")
 	err := db.db.PingContext(ctx)
-	if err != nil {
-		trace.SpanError(sp)
-		return err
-	}
-	trace.SpanSuccess(sp)
-	return nil
+	trace.SpanComplete(sp, err)
+	return err
 }
 
 // Prepare creates a prepared statement for later queries or executions.
 func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	sp, _ := db.startSpan(ctx, "db.Prepare", query)
 	stmt, err := db.db.PrepareContext(ctx, query)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return &Stmt{stmt: stmt}, nil
 }
 
@@ -211,11 +199,11 @@ func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	sp, _ := db.startSpan(ctx, "db.Query", query)
 	rows, err := db.db.QueryContext(ctx, query, args...)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return rows, err
 }
 
@@ -258,23 +246,19 @@ type Stmt struct {
 func (s *Stmt) Close(ctx context.Context) error {
 	sp, _ := s.startSpan(ctx, "stmt.Close", "")
 	err := s.stmt.Close()
-	if err != nil {
-		trace.SpanError(sp)
-		return err
-	}
-	trace.SpanSuccess(sp)
-	return nil
+	trace.SpanComplete(sp, err)
+	return err
 }
 
 // Exec executes a prepared statement.
 func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error) {
 	sp, _ := s.startSpan(ctx, "stmt.Exec", "")
 	res, err := s.stmt.ExecContext(ctx, args...)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return res, nil
 }
 
@@ -282,11 +266,11 @@ func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error
 func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
 	sp, _ := s.startSpan(ctx, "stmt.Query", "")
 	rows, err := s.stmt.QueryContext(ctx, args...)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return rows, nil
 }
 
@@ -307,23 +291,19 @@ type Tx struct {
 func (tx *Tx) Commit(ctx context.Context) error {
 	sp, _ := tx.startSpan(ctx, "tx.Commit", "")
 	err := tx.tx.Commit()
-	if err != nil {
-		trace.SpanError(sp)
-		return err
-	}
-	trace.SpanSuccess(sp)
-	return nil
+	trace.SpanComplete(sp, err)
+	return err
 }
 
 // Exec executes a query that doesn't return rows.
 func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	sp, _ := tx.startSpan(ctx, "tx.Exec", query)
 	res, err := tx.tx.ExecContext(ctx, query, args...)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return res, nil
 }
 
@@ -331,11 +311,11 @@ func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	sp, _ := tx.startSpan(ctx, "tx.Prepare", query)
 	stmt, err := tx.tx.PrepareContext(ctx, query)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
+
 	return &Stmt{stmt: stmt}, nil
 }
 
@@ -343,11 +323,10 @@ func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	sp, _ := tx.startSpan(ctx, "tx.Query", query)
 	rows, err := tx.tx.QueryContext(ctx, query, args...)
+	trace.SpanComplete(sp, err)
 	if err != nil {
-		trace.SpanError(sp)
 		return nil, err
 	}
-	trace.SpanSuccess(sp)
 	return rows, nil
 }
 
@@ -362,17 +341,43 @@ func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *
 func (tx *Tx) Rollback(ctx context.Context) error {
 	sp, _ := tx.startSpan(ctx, "tx.Rollback", "")
 	err := tx.tx.Rollback()
-	if err != nil {
-		trace.SpanError(sp)
-		return err
-	}
-	trace.SpanSuccess(sp)
-	return nil
+	trace.SpanComplete(sp, err)
+	return err
 }
 
 // Stmt returns a transaction-specific prepared statement from an existing statement.
 func (tx *Tx) Stmt(ctx context.Context, stmt *Stmt) *Stmt {
 	sp, _ := tx.startSpan(ctx, "tx.Stmt", "")
-	defer trace.SpanSuccess(sp)
+	defer trace.SpanComplete(sp, nil)
 	return &Stmt{stmt: tx.tx.StmtContext(ctx, stmt.stmt)}
+}
+
+func parseDSN(dsn string) DSNInfo {
+	res := DSNInfo{}
+
+	dsnPattern := regexp.MustCompile(
+		`^(?P<driver>.*:\/\/)?(?:(?P<username>.*?)(?::(.*))?@)?` + // [driver://][user[:password]@]
+			`(?:(?P<protocol>[^\(]*)(?:\((?P<address>[^\)]*)\))?)?` + // [net[(addr)]]
+			`\/(?P<dbname>.*?)` + // /dbname
+			`(?:\?(?P<params>[^\?]*))?$`) // [?param1=value1&paramN=valueN]
+
+	matches := dsnPattern.FindStringSubmatch(dsn)
+	fields := dsnPattern.SubexpNames()
+
+	for i, match := range matches {
+		switch fields[i] {
+		case "driver":
+			res.Driver = match
+		case "username":
+			res.User = match
+		case "protocol":
+			res.Protocol = match
+		case "address":
+			res.Address = match
+		case "dbname":
+			res.DBName = match
+		}
+	}
+
+	return res
 }

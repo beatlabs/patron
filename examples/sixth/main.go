@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/beatlabs/patron/trace/sync/kafka"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/beatlabs/patron/trace/sync/kafka"
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/examples"
@@ -70,7 +71,8 @@ func main() {
 		log.Fatalf("failed to create service %v", err)
 	}
 
-	err = srv.Run()
+	ctx := context.Background()
+	err = srv.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to run service %v", err)
 	}

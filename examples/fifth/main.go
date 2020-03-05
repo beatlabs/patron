@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -77,7 +78,8 @@ func main() {
 		log.Fatalf("failed to create service: %v", err)
 	}
 
-	err = srv.Run()
+	ctx := context.Background()
+	err = srv.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to run service: %v", err)
 	}
@@ -95,7 +97,10 @@ func createSQSComponent(api sqsiface.SQSAPI) (*sqsComponent, error) {
 		return nil, err
 	}
 
-	cmp, err := async.New("sqs-cmp", sqsCmp.Process, cf, async.ConsumerRetry(10, 10*time.Second))
+	cmp, err := async.New("sqs-cmp", cf, sqsCmp.Process).
+		WithRetries(10).
+		WithRetryWait(10 * time.Second).
+		Create()
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/beatlabs/patron/errors"
 )
 
 type attributeDataType string
@@ -175,7 +174,7 @@ func (b *MessageBuilder) Build() (*Message, error) {
 
 	for name, attributeValue := range b.input.MessageAttributes {
 		if err := attributeValue.Validate(); err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid attribute %s", name))
+			return nil, fmt.Errorf("invalid attribute %s: %w", name, err)
 		}
 	}
 
@@ -185,9 +184,13 @@ func (b *MessageBuilder) Build() (*Message, error) {
 // injectHeaders injects the SNS headers carrier's headers into the message's attributes.
 func (m *Message) injectHeaders(carrier snsHeadersCarrier) {
 	for k, v := range carrier {
-		m.input.MessageAttributes[k] = &sns.MessageAttributeValue{
-			DataType:    aws.String(string(attributeDataTypeString)),
-			StringValue: aws.String(v.(string)),
-		}
+		m.setMessageAttribute(k, v.(string))
+	}
+}
+
+func (m *Message) setMessageAttribute(key, value string) {
+	m.input.MessageAttributes[key] = &sns.MessageAttributeValue{
+		DataType:    aws.String(string(attributeDataTypeString)),
+		StringValue: aws.String(value),
 	}
 }

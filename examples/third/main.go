@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/kafka"
+	"github.com/beatlabs/patron/async/kafka/group"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
@@ -64,7 +66,8 @@ func main() {
 		log.Fatalf("failed to create service %v", err)
 	}
 
-	err = srv.Run()
+	ctx := context.Background()
+	err = srv.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to run service %v", err)
 	}
@@ -75,16 +78,19 @@ type kafkaComponent struct {
 	pub amqp.Publisher
 }
 
-func newKafkaComponent(name, broker, topic, group, amqpURL, amqpExc string) (*kafkaComponent, error) {
+func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*kafkaComponent, error) {
 
 	kafkaCmp := kafkaComponent{}
 
-	cf, err := kafka.New(name, json.Type, topic, group, []string{broker})
+	cf, err := group.New(name, groupID, []string{topic}, []string{broker}, kafka.Decoder(json.DecodeRaw))
 	if err != nil {
 		return nil, err
 	}
 
-	cmp, err := async.New("kafka-cmp", kafkaCmp.Process, cf, async.ConsumerRetry(10, 5*time.Second))
+	cmp, err := async.New("kafka-cmp", cf, kafkaCmp.Process).
+		WithRetries(10).
+		WithRetryWait(5 * time.Second).
+		Create()
 	if err != nil {
 		return nil, err
 	}

@@ -128,6 +128,21 @@ func TestLogger_Debugf(t *testing.T) {
 	assert.Equal(t, "{\"lvl\":\"debug\",\"key\":\"value\",\"msg\":\"testing 1\"}\n", b.String())
 }
 
+func TestLog_Level(t *testing.T) {
+	var b bytes.Buffer
+	zl := zerolog.New(&b)
+	testCases := []log.Level{
+		log.DebugLevel,
+		log.InfoLevel,
+		log.WarnLevel,
+	}
+	for _, tc := range testCases {
+		t.Run(string(tc), func(t *testing.T) {
+			assert.Equal(t, tc, NewLogger(&zl, tc, f).Level())
+		})
+	}
+}
+
 var t int
 
 func Benchmark_LoggingEnabled(b *testing.B) {

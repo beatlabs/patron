@@ -4,22 +4,23 @@ Patron is a framework for creating microservices, originally created by Sotiris 
 
 `Patron` is french for `template` or `pattern`, but it means also `boss` which we found out later (no pun intended).
 
-The entry point of the framework is the `Service`. The `Service` uses `Components` to handle the processing of sync and async requests. The `Service` starts by default a `HTTP Component` which hosts the debug, health and metric endpoints. Any other endpoints will be added to the default `HTTP Component` as `Routes`. Alongside `Routes` one can specify middleware functions to be applied ordered to all routes as `MiddlewareFunc`. The service set's up by default logging with `zerolog`, tracing and metrics with `jaeger` and `prometheus`.
+The entry point of the framework is the `Service`. The `Service` uses `Components` to handle the processing of sync and async requests. The `Service` starts by default an `HTTP Component` which hosts the debug, alive, ready and metric endpoints. Any other endpoints will be added to the default `HTTP Component` as `Routes`. Alongside `Routes` one can specify middleware functions to be applied ordered to all routes as `MiddlewareFunc`. The service set's up by default logging with `zerolog`, tracing and metrics with `jaeger` and `prometheus`.
 
 `Patron` provides abstractions for the following functionality of the framework:
 
 - service, which orchestrates everything
-- components and processors, which provide a abstraction of adding processing functionality to the service
+- components and processors, which provide an abstraction of adding processing functionality to the service
   - asynchronous message processing (RabbitMQ, Kafka, AWS SQS)
   - synchronous processing (HTTP)
 - metrics and tracing
 - logging
 
-`Patron` provides same defaults for making the usage as simple as possible.
+`Patron` provides the same defaults for making the usage as simple as possible.
+`Patron` needs Go 1.13 as a minimum.
 
 ## How to Contribute
 
-1. **Contributor**: An issue has to be created with a problem description and possible solutions using the github template. The better the problem and solution is described, the easier for the **Curators and Others** to understand it and the faster the process. In case of a bug, steps to reproduce will help a lot.
+1. **Contributor**: An issue has to be created with a problem description and possible solutions using the github template. The better the problem and solution are described, the easier for the **Curators and Others** to understand it and the faster the process. In case of a bug, steps to reproduce will help a lot.
 2. **Curators and Others**: The curators will engage in a discussion about the problem and the possible solution. Others can join the discussion to bring other solutions and insights at any point.
 3. **Curators**: After the discussion mentioned above, it will be determined if the proposed solution will be implemented or not. Appropriate tags will be applied to the issue.
 4. **Contributor**: The contributor will work as follows:
@@ -62,7 +63,7 @@ The latest version can be installed with
 go get github.com/beatlabs/patron/cmd/patron
 ```
 
-The below is an example of a service created with the cli that has a module name `github.com/beatlabs/test` and will be created in the test folder in the current directory.
+Below is an example of a service created with the cli that has a module name `github.com/beatlabs/test` and will be created in the test folder in the current directory.
 
 ```go
 patron -m "github.com/beatlabs/test" -p "test"
@@ -75,9 +76,10 @@ The `Service` has the role of glueing all of the above together, which are:
 - setting up logging
 - setting up default HTTP component with the following endpoints configured:
   - profiling via pprof
-  - health check
+  - liveness check
+  - readiness check
 - setting up termination by os signal
-- setting up SIGHUP custom hook if provided by a option
+- setting up SIGHUP custom hook if provided by an option
 - starting and stopping components
 - handling component errors
 - setting up metrics and tracing
@@ -90,11 +92,11 @@ The service has some default settings which can be changed via environment varia
   - agent host `0.0.0.0` with `PATRON_JAEGER_AGENT_HOST`
   - agent port `6831` with `PATRON_JAEGER_AGENT_PORT`
   - sampler type `probabilistic`with `PATRON_JAEGER_SAMPLER_TYPE`
-  - sampler param `0.1` with `PATRON_JAEGER_SAMPLER_PARAM`
+  - sampler param `0.0` with `PATRON_JAEGER_SAMPLER_PARAM`, which means that traces are not initiated here.
 
 ### Component
 
-A `Component` is a interface that exposes the following API:
+A `Component` is an interface that exposes the following API:
 
 ```go
 type Component interface {
@@ -102,7 +104,7 @@ type Component interface {
 }
 ```
 
-The above API gives the `Service` the ability to start and gracefully shutdown a `component` via context cancellation. Furthermore the component describes itself by implementing the `Info` method and thus giving the service the ability to report the information of all components. The framework divides the components in 2 categories:
+The above API gives the `Service` the ability to start and gracefully shutdown a `component` via context cancellation. Furthermore, the component describes itself by implementing the `Info` method and thus giving the service the ability to report the information of all components. The framework divides the components in 2 categories:
 
 - synchronous, which are components that follow the request/response pattern and
 - asynchronous, which consume messages from a source but don't respond anything back
@@ -163,7 +165,7 @@ The `Request` model contains the following properties (which are provided when c
 - Headers, the request headers in the form of `map[string]string`
 - decode, which is a function of type `encoding.Decode` that decodes the raw reader
 
-A exported function exists for decoding the raw io.Reader in the form of
+An exported function exists for decoding the raw io.Reader in the form of
 
 ```go
 Decode(v interface{}) error
@@ -191,7 +193,7 @@ The implementation of the async processor follows exactly the same principle as 
 The main difference is that:
 
 - The `Request` is the `Message` and contains only data as `[]byte`
-- There is no `Response`, so the processor may return a error
+- There is no `Response`, so the processor may return an error
 
 ```go
 type ProcessorFunc func(context.Context, *Message) error
@@ -204,7 +206,7 @@ Everything else is exactly the same.
 Tracing and metrics are provided by Jaeger's implementation of the OpenTracing project.
 Every component has been integrated with the above library and produces traces and metrics.
 Metrics are provided with the default HTTP component at the `/metrics` route for Prometheus to scrape.
-Tracing will be send to a jaeger agent which can be setup though environment variables mentioned in the config section. Sane defaults are applied for making the use easy.
+Tracing will be sent to a jaeger agent which can be setup through environment variables mentioned in the config section. Sane defaults are applied for making the use easy.
 We have included some clients inside the trace package which are instrumented and allow propagation of tracing to
 downstream systems. The tracing information is added to each implementations header. These clients are:
 
@@ -212,6 +214,11 @@ downstream systems. The tracing information is added to each implementations hea
 - AMQP
 - Kafka
 - SQL
+
+## Correlation ID propagation
+
+Patron receives and propagates a correlation ID. Much like the distributed tracing id, the correlation id is receiver on the entry points of the service e.g. HTTP, Kafka, etc. and is propagated via the provided clients. In case no correlation ID has been received, a new one is created.  
+The ID is usually received and sent via a header with key `X-Correlation-Id`.
 
 ## Reliability
 
@@ -221,7 +228,7 @@ The reliability package contains the following implementations:
 
 ### Circuit Breaker
 
-The circuit breaker supports a half-open state which allows to probe for successful responses in order to close the circuit again. Every aspect of the circuit breaker is configurable via it's settings.
+The circuit breaker supports a half-open state which allows to probe for successful responses in order to close the circuit again. Every aspect of the circuit breaker is configurable via its settings.
 
 ## Clients
 
@@ -252,7 +259,7 @@ From there logging is as simple as
   log.Info("Hello world!")
 ```
 
-The implementations should support following log levels:
+The implementations should support the following log levels:
 
 - Debug, which should log the message with debug level
 - Info, which should log the message with info level
@@ -277,7 +284,7 @@ Logs can be associated with some contextual data e.g. a request id. Every line l
 ctx := log.WithContext(r.Context(), log.Sub(map[string]interface{}{"requestID": uuid.New().String()}))
 ```
 
-The context travels through the code as a argument and can be acquired as follows:
+The context travels through the code as an argument and can be acquired as follows:
 
 ```go
 logger:=log.FromContext(ctx)
@@ -321,13 +328,13 @@ type FactoryFunc func(map[string]interface{}) Logger
 
 ## Security
 
-The necessary abstraction are available to implement authentication in the following components:
+The necessary abstraction is available to implement authentication in the following components:
 
 - HTTP
 
 ### HTTP
 
-In order to use authentication, a authenticator has to be implement following the interface:
+In order to use authentication, an authenticator has to be implemented following the interface:
 
 ```go
 type Authenticator interface {
@@ -337,6 +344,22 @@ type Authenticator interface {
 
 This authenticator can then be used to set up routes with authentication.
 
-The following authenticator are available:
+The following authenticator is available:
 
 - API key authenticator, see examples
+
+## HTTP lifecycle endpoints
+
+When creating a new HTTP component, Patron will automatically create a liveness and readiness route, which can be used to know the lifecycle of the application:
+
+```
+# liveness
+GET /alive
+
+# readiness
+GET /ready
+```
+
+Both can return either a `200 OK` or a `503 Service Unavailable` status code (default: `200 OK`).
+
+It is possible to customize their behaviour by injecting an `http.AliveCheck` and/or an `http.ReadyCheck` `OptionFunc` to the HTTP component constructor.

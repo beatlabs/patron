@@ -1,9 +1,10 @@
 package http
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
 )
 
@@ -26,7 +27,7 @@ func CircuitBreaker(name string, set circuitbreaker.Setting) OptionFunc {
 	return func(tc *TracedClient) error {
 		cb, err := circuitbreaker.New(name, set)
 		if err != nil {
-			return errors.Wrap(err, "failed to set circuit breaker")
+			return fmt.Errorf("failed to set circuit breaker: %w", err)
 		}
 		tc.cb = cb
 		return nil

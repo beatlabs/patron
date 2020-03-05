@@ -2,11 +2,23 @@ package async
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
-	"github.com/beatlabs/patron/errors"
+)
+
+// FailStrategy type definition.
+type FailStrategy int
+
+const (
+	// NackExitStrategy does not acknowledge the message and exits the application on error.
+	NackExitStrategy FailStrategy = iota
+	// NackStrategy does not acknowledge the message, leaving it for reprocessing, and continues.
+	NackStrategy
+	// AckStrategy acknowledges message and continues.
+	AckStrategy
 )
 
 // ProcessorFunc definition of a async processor.
@@ -18,6 +30,7 @@ type Message interface {
 	Decode(v interface{}) error
 	Ack() error
 	Nack() error
+	Source() string
 }
 
 // ConsumerFactory interface for creating consumers.
@@ -39,5 +52,5 @@ func DetermineDecoder(contentType string) (encoding.DecodeRawFunc, error) {
 	case protobuf.Type, protobuf.TypeGoogle:
 		return protobuf.DecodeRaw, nil
 	}
-	return nil, errors.Errorf("content header %s is unsupported", contentType)
+	return nil, fmt.Errorf("content header %s is unsupported", contentType)
 }

@@ -2,6 +2,8 @@ package sqs
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -9,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron/async"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
+	"github.com/google/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -112,6 +115,11 @@ func (m *message) Nack() error {
 	messageCountInc(m.queueName, nackMessageState, 1)
 	trace.SpanError(m.span)
 	return nil
+}
+
+// Source returns the queue's name where the message arrived.
+func (m *message) Source() string {
+	return m.queueName
 }
 
 // Factory for creating SQS consumers.
@@ -228,14 +236,20 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			for _, msg := range output.Messages {
 				observerMessageAge(c.queueName, msg.Attributes)
 
-				sp, chCtx := trace.ConsumerSpan(sqsCtx, trace.ComponentOpName(trace.SQSConsumerComponent, c.queueName),
-					trace.SQSConsumerComponent, mapHeader(msg.MessageAttributes))
+				corID := getCorrelationID(msg.MessageAttributes)
+
+				sp, ctxCh := trace.ConsumerSpan(sqsCtx, trace.ComponentOpName(trace.SQSConsumerComponent, c.queueName),
+					trace.SQSConsumerComponent, corID, mapHeader(msg.MessageAttributes))
+
+				ctxCh = correlation.ContextWithID(ctxCh, corID)
+				logger := log.Sub(map[string]interface{}{"correlationID": corID})
+				ctxCh = log.WithContext(ctxCh, logger)
 
 				ct, err := determineContentType(msg.MessageAttributes)
 				if err != nil {
 					messageCountErrorInc(c.queueName, fetchedMessageState, 1)
 					trace.SpanError(sp)
-					log.Errorf("failed to determine content type: %v", err)
+					logger.Errorf("failed to determine content type: %v", err)
 					continue
 				}
 
@@ -243,7 +257,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				if err != nil {
 					messageCountErrorInc(c.queueName, fetchedMessageState, 1)
 					trace.SpanError(sp)
-					log.Errorf("failed to determine decoder: %v", err)
+					logger.Errorf("failed to determine decoder: %v", err)
 					continue
 				}
 
@@ -252,7 +266,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					queueURL:  c.queueURL,
 					span:      sp,
 					msg:       msg,
-					ctx:       log.WithContext(chCtx, log.Sub(map[string]interface{}{"messageID": *msg.MessageId})),
+					ctx:       ctxCh,
 					queue:     c.queue,
 					dec:       dec,
 				}
@@ -319,11 +333,11 @@ func (c *consumer) reportQueueStats(ctx context.Context, queueURL string) error 
 func getAttributeFloat64(attr map[string]*string, key string) (float64, error) {
 	valueString := attr[key]
 	if valueString == nil {
-		return 0.0, errors.Errorf("value of %s does not exist", key)
+		return 0.0, fmt.Errorf("value of %s does not exist", key)
 	}
 	value, err := strconv.ParseFloat(*valueString, 64)
 	if err != nil {
-		return 0.0, errors.Errorf("could not convert %s to float64", *valueString)
+		return 0.0, fmt.Errorf("could not convert %s to float64", *valueString)
 	}
 	return value, nil
 }
@@ -338,6 +352,18 @@ func determineContentType(ma map[string]*sqs.MessageAttributeValue) (string, err
 		}
 	}
 	return json.Type, nil
+}
+
+func getCorrelationID(ma map[string]*sqs.MessageAttributeValue) string {
+	for key, value := range ma {
+		if key == correlation.HeaderID {
+			if value.StringValue != nil {
+				return *value.StringValue
+			}
+			break
+		}
+	}
+	return uuid.New().String()
 }
 
 func mapHeader(ma map[string]*sqs.MessageAttributeValue) map[string]string {

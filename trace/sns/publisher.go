@@ -4,9 +4,11 @@ package sns
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -47,23 +49,22 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 	carrier := snsHeadersCarrier{}
 	err = span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to inject tracing headers")
+		return "", fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
 	msg.injectHeaders(carrier)
+	msg.setMessageAttribute(correlation.HeaderID, correlation.IDFromContext(ctx))
 
 	out, err := p.api.PublishWithContext(ctx, msg.input)
 
+	trace.SpanComplete(span, err)
 	if err != nil {
-		trace.SpanError(span)
-		return "", errors.Wrap(err, "failed to publish message")
+		return "", fmt.Errorf("failed to publish message: %w", err)
 	}
 
 	if out.MessageId == nil {
 		return "", errors.New("tried to publish a message but no message ID returned")
 	}
-
-	trace.SpanSuccess(span)
 
 	return *out.MessageId, nil
 }

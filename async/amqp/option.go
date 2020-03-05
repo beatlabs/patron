@@ -1,10 +1,10 @@
 package amqp
 
 import (
+	"errors"
 	"net"
 	"time"
 
-	"github.com/beatlabs/patron/errors"
 	"github.com/streadway/amqp"
 )
 

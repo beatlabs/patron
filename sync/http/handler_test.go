@@ -2,14 +2,16 @@ package http
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
-	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
@@ -94,6 +96,30 @@ func request(t *testing.T, contentType, accept string) *http.Request {
 	return req
 }
 
+func Test_getOrSetCorrelationID(t *testing.T) {
+	withID := http.Header{correlation.HeaderID: []string{"123"}}
+	withoutID := http.Header{correlation.HeaderID: []string{}}
+	withEmptyID := http.Header{correlation.HeaderID: []string{""}}
+	missingHeader := http.Header{}
+	type args struct {
+		hdr http.Header
+	}
+	tests := map[string]struct {
+		args args
+	}{
+		"with id":        {args: args{hdr: withID}},
+		"without id":     {args: args{hdr: withoutID}},
+		"with empty id":  {args: args{hdr: withEmptyID}},
+		"missing header": {args: args{hdr: missingHeader}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.NotEmpty(t, getOrSetCorrelationID(tt.args.hdr))
+			assert.NotEmpty(t, tt.args.hdr[correlation.HeaderID][0])
+		})
+	}
+}
+
 func Test_handleSuccess(t *testing.T) {
 	get, err := http.NewRequest(http.MethodGet, "/", nil)
 	assert.NoError(t, err)
@@ -163,7 +189,7 @@ func Test_handleError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rsp := httptest.NewRecorder()
-			handleError(rsp, tt.args.enc, tt.args.err)
+			handleError(log.Sub(nil), rsp, tt.args.enc, tt.args.err)
 			assert.Equal(t, tt.expectedCode, rsp.Code)
 		})
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -122,7 +123,8 @@ func main() {
 		log.Fatalf("failed to create service %v", err)
 	}
 
-	err = srv.Run()
+	ctx := context.Background()
+	err = srv.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to run service %v", err)
 	}
@@ -199,7 +201,10 @@ func newAmqpComponent(url, queue, exchangeName, exchangeType string, bindings []
 		return nil, err
 	}
 
-	cmp, err := async.New("amqp-cmp", amqpCmp.Process, cf, async.ConsumerRetry(10, 10*time.Second))
+	cmp, err := async.New("amqp-cmp", cf, amqpCmp.Process).
+		WithRetries(10).
+		WithRetryWait(10 * time.Second).
+		Create()
 	if err != nil {
 		return nil, err
 	}

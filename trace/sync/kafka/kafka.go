@@ -2,11 +2,12 @@ package kafka
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/beatlabs/patron/trace"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/errors"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
@@ -26,7 +27,7 @@ func NewMessage(t string, b []byte) *Message {
 func NewJSONMessage(t string, d interface{}) (*Message, error) {
 	b, err := json.Encode(d)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to JSON encode")
+		return nil, fmt.Errorf("failed to JSON encode: %w", err)
 	}
 	return &Message{topic: t, body: b}, nil
 }
@@ -64,7 +65,7 @@ func NewSyncProducer(brokers []string, oo ...OptionFunc) (*SyncProducer, error) 
 
 	prod, err := sarama.NewSyncProducer(brokers, sp.cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create sync producer")
+		return nil, fmt.Errorf("failed to create sync producer: %w", err)
 	}
 	sp.prod = prod
 	return &sp, nil
@@ -99,15 +100,20 @@ func (sp *SyncProducer) Send(ctx context.Context, msg *Message) (partition int32
 
 // Close gracefully the producer.
 func (sp *SyncProducer) Close() error {
-	return errors.Wrap(sp.prod.Close(), "failed to close sync producer")
+	err := sp.prod.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close sync producer: %w", err)
+	}
+	return nil
 }
 
 func createProducerMessage(msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
 	c := kafkaHeadersCarrier{}
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to inject tracing headers")
+		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
+
 	return &sarama.ProducerMessage{
 		Topic:   msg.topic,
 		Key:     nil,

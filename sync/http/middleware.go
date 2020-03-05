@@ -1,12 +1,15 @@
 package http
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
-	"github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync/http/auth"
 	"github.com/beatlabs/patron/trace"
+	"github.com/google/uuid"
 )
 
 type responseWriter struct {
@@ -99,14 +102,17 @@ func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
 	}
 }
 
-// NewTracingMiddleware creates a MiddlewareFunc that continues a tracing span and finishes it.
-func NewTracingMiddleware(path string) MiddlewareFunc {
+// NewLoggingTracingMiddleware creates a MiddlewareFunc that continues a tracing span and finishes it.
+// It also logs the HTTP request on debug logging level
+func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			sp, r := trace.HTTPSpan(path, r)
+			corID := getOrSetCorrelationID(r.Header)
+			sp, r := trace.HTTPSpan(path, corID, r)
 			lw := newResponseWriter(w)
 			next.ServeHTTP(lw, r)
 			trace.FinishHTTPSpan(sp, lw.Status())
+			logRequestResponse(lw, r)
 		})
 	}
 }
@@ -117,4 +123,48 @@ func MiddlewareChain(f http.Handler, mm ...MiddlewareFunc) http.Handler {
 		f = mm[i](f)
 	}
 	return f
+}
+
+func logRequestResponse(w *responseWriter, r *http.Request) {
+	if !log.Enabled(log.DebugLevel) {
+		return
+	}
+
+	remoteAddr := r.RemoteAddr
+	if i := strings.LastIndex(remoteAddr, ":"); i != -1 {
+		remoteAddr = remoteAddr[:i]
+	}
+
+	info := map[string]interface{}{
+		"request": map[string]interface{}{
+			"remote-address": remoteAddr,
+			"method":         r.Method,
+			"url":            r.URL,
+			"proto":          r.Proto,
+			"status":         w.Status(),
+			"referer":        r.Referer(),
+			"user-agent":     r.UserAgent(),
+		},
+	}
+	log.Sub(info).Debug()
+}
+
+func getOrSetCorrelationID(h http.Header) string {
+	cor, ok := h[correlation.HeaderID]
+	if !ok {
+		corID := uuid.New().String()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	if len(cor) == 0 {
+		corID := uuid.New().String()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	if cor[0] == "" {
+		corID := uuid.New().String()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	return cor[0]
 }

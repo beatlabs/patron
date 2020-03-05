@@ -20,6 +20,7 @@ var levelMap = map[log.Level]zerolog.Level{
 // Logger abstraction based on zerolog.
 type Logger struct {
 	logger *zerolog.Logger
+	level  log.Level
 }
 
 // NewLogger creates a new logger.
@@ -28,7 +29,7 @@ func NewLogger(l *zerolog.Logger, lvl log.Level, f map[string]interface{}) log.L
 		f = make(map[string]interface{})
 	}
 	zl := l.Level(levelMap[lvl]).With().Fields(f).Logger()
-	return &Logger{logger: &zl}
+	return &Logger{logger: &zl, level: lvl}
 }
 
 // Sub returns a sub logger with new fields attached.
@@ -37,7 +38,7 @@ func (l *Logger) Sub(ff map[string]interface{}) log.Logger {
 		return l
 	}
 	sl := l.logger.With().Fields(ff).Logger()
-	return &Logger{logger: &sl}
+	return &Logger{logger: &sl, level: l.level}
 }
 
 // Panic logging.
@@ -98,4 +99,9 @@ func (l *Logger) Debug(args ...interface{}) {
 // Debugf logging.
 func (l *Logger) Debugf(msg string, args ...interface{}) {
 	l.logger.Debug().Msgf(msg, args...)
+}
+
+// Level return the logging level.
+func (l *Logger) Level() log.Level {
+	return l.level
 }

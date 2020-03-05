@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -27,7 +28,7 @@ type genData struct {
 }
 
 var patronPackages = map[string]component{
-	"http": component{
+	"http": {
 		Import: "\"github.com/beatlabs/patron/sync\"\n\tsync_http \"github.com/beatlabs/patron/sync/http\"\n\t\"context\"\n\t\"net/http\"",
 		Code: `// Set up HTTP routes
 		routes := make([]sync_http.Route, 0)
@@ -38,9 +39,9 @@ var patronPackages = map[string]component{
 		
 		oo = append(oo, patron.Routes(routes))`,
 	},
-	"kafka": component{
+	"kafka": {
 		Import: "\"github.com/beatlabs/patron/async\"\n\t\"github.com/beatlabs/patron/async/kafka\"",
-		Code: `kafkaCf, err := kafka.New(name, "json.Type", "TOPIC", []string{"BROKER"})
+		Code: `kafkaCf, err := kafka.New(name, "json.Type", "TOPIC", "GROUP", []string{"BROKER"})
 		if err != nil {
 			log.Fatalf("failed to create kafka consumer factory: %v", err)
 		}
@@ -52,7 +53,7 @@ var patronPackages = map[string]component{
 		
 		oo = append(oo, patron.Components(kafkaCmp))`,
 	},
-	"amqp": component{
+	"amqp": {
 		Import: "\"github.com/beatlabs/patron/async\"\n\t\"github.com/beatlabs/patron/async/amqp\"",
 		Code: `amqpCf, err := amqp.New("URL", "QUEUE", "EXCHANGE")
 		if err != nil {
@@ -95,6 +96,11 @@ func main() {
 	err = createMain(gd)
 	if err != nil {
 		log.Fatalf("failed to create main: %v", err)
+	}
+
+	err = createGitIgnore()
+	if err != nil {
+		log.Fatalf("failed to create .gitignore: %v", err)
 	}
 
 	err = createDockerfile(gd)
@@ -160,13 +166,14 @@ func nameFromModule(module string) string {
 }
 
 func packagesFromFlag(packages *string) ([]component, error) {
-	var cs []component
 
 	if packages == nil || *packages == "" {
-		return cs, nil
+		return []component{}, nil
 	}
 
 	ss := strings.Split(*packages, ",")
+
+	cs := make([]component, 0, len(ss))
 
 	for _, s := range ss {
 		cmp, ok := patronPackages[s]
@@ -182,6 +189,13 @@ func packagesFromFlag(packages *string) ([]component, error) {
 func setupGit() error {
 	log.Printf("creating git repository")
 	return exec.Command("git", "init").Run()
+}
+
+func createGitIgnore() error {
+	log.Printf("copying .gitignore")
+	_, err := copyFile("../assets/template.gitignore", ".gitignore")
+
+	return err
 }
 
 func createDockerfile(gd *genData) error {
@@ -293,6 +307,7 @@ func mainContent(gd *genData) ([]byte, error) {
 	cnt := `package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	
@@ -329,7 +344,8 @@ func main() {
 		log.Fatalf("failed to create service %v", err)
 	}
 
-	err = srv.Run()
+	ctx := context.Background()
+	err = srv.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to run service %v", err)
 	}
@@ -346,4 +362,38 @@ func main() {
 
 func readmeContent(gd *genData) []byte {
 	return []byte(fmt.Sprintf("# %s", gd.Name))
+}
+
+func copyFile(src, dst string) (result int64, rerr error) {
+	type funcWithErr func() error
+	withErrorHandling := func(f funcWithErr) {
+		err := f()
+		if err != nil {
+			rerr = err
+		}
+	}
+
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer withErrorHandling(source.Close)
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer withErrorHandling(destination.Close)
+
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
 }

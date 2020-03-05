@@ -2,13 +2,15 @@ package patron
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"strconv"
 	"sync"
 	"syscall"
 
-	"github.com/beatlabs/patron/errors"
+	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/zerolog"
 	"github.com/beatlabs/patron/sync/http"
@@ -29,7 +31,8 @@ type Service struct {
 	cps           []Component
 	routes        []http.Route
 	middlewares   []http.MiddlewareFunc
-	hcf           http.HealthCheckFunc
+	acf           http.AliveCheckFunc
+	rcf           http.ReadyCheckFunc
 	termSig       chan os.Signal
 	sighupHandler func()
 }
@@ -46,7 +49,8 @@ func New(name, version string, oo ...OptionFunc) (*Service, error) {
 
 	s := Service{
 		cps:           []Component{},
-		hcf:           http.DefaultHealthCheck,
+		acf:           http.DefaultAliveCheck,
+		rcf:           http.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),
 		sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
 		middlewares:   []http.MiddlewareFunc{},
@@ -86,25 +90,25 @@ func (s *Service) setupOSSignal() {
 // Run starts up all service components and monitors for errors.
 // If a component returns a error the service is responsible for shutting down
 // all components and terminate itself.
-func (s *Service) Run() error {
+func (s *Service) Run(ctx context.Context) error {
 	defer func() {
 		err := trace.Close()
 		if err != nil {
 			log.Errorf("failed to close trace %v", err)
 		}
 	}()
-	ctx, cnl := context.WithCancel(context.Background())
+	cctx, cnl := context.WithCancel(ctx)
 	chErr := make(chan error, len(s.cps))
 	wg := sync.WaitGroup{}
 	wg.Add(len(s.cps))
 	for _, cp := range s.cps {
 		go func(c Component) {
 			defer wg.Done()
-			chErr <- c.Run(ctx)
+			chErr <- c.Run(cctx)
 		}(cp)
 	}
 
-	var ee []error
+	ee := make([]error, 0, len(s.cps))
 	ee = append(ee, s.waitTermination(chErr))
 	cnl()
 
@@ -114,7 +118,7 @@ func (s *Service) Run() error {
 	for err := range chErr {
 		ee = append(ee, err)
 	}
-	return errors.Aggregate(ee...)
+	return patronErrors.Aggregate(ee...)
 }
 
 // Setup set's up metrics and default logging.
@@ -127,7 +131,7 @@ func Setup(name, version string) error {
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		return errors.Wrap(err, "failed to get hostname")
+		return fmt.Errorf("failed to get hostname: %w", err)
 	}
 
 	f := map[string]interface{}{
@@ -164,7 +168,7 @@ func (s *Service) setupDefaultTracing(name, version string) error {
 	if prm, ok := os.LookupEnv("PATRON_JAEGER_SAMPLER_PARAM"); ok {
 		prmVal, err = strconv.ParseFloat(prm, 64)
 		if err != nil {
-			return errors.Wrap(err, "env var for jaeger sampler param is not valid")
+			return fmt.Errorf("env var for jaeger sampler param is not valid: %w", err)
 		}
 	}
 
@@ -179,31 +183,33 @@ func (s *Service) createHTTPComponent() (Component, error) {
 	if ok {
 		portVal, err = strconv.ParseInt(port, 10, 64)
 		if err != nil {
-			return nil, errors.Wrap(err, "env var for HTTP default port is not valid")
+			return nil, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
 		}
 	}
 	port = strconv.FormatInt(portVal, 10)
 	log.Infof("creating default HTTP component at port %s", port)
 
-	options := []http.OptionFunc{
-		http.Port(int(portVal)),
+	b := http.NewBuilder().WithPort(int(portVal))
+
+	if s.acf != nil {
+		b.WithAliveCheckFunc(s.acf)
 	}
 
-	if s.hcf != nil {
-		options = append(options, http.HealthCheck(s.hcf))
+	if s.rcf != nil {
+		b.WithReadyCheckFunc(s.rcf)
 	}
 
 	if s.routes != nil {
-		options = append(options, http.Routes(s.routes))
+		b.WithRoutes(s.routes)
 	}
 
 	if s.middlewares != nil && len(s.middlewares) > 0 {
-		options = append(options, http.Middlewares(s.middlewares...))
+		b.WithMiddlewares(s.middlewares...)
 	}
 
-	cp, err := http.New(options...)
+	cp, err := b.Create()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create default HTTP component")
+		return nil, fmt.Errorf("failed to create default HTTP component: %w", err)
 	}
 
 	return cp, nil

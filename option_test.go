@@ -69,23 +69,49 @@ func TestMiddlewares(t *testing.T) {
 	}
 }
 
-func TestHealthCheck(t *testing.T) {
+func TestAliveCheck(t *testing.T) {
 	type args struct {
-		hcf phttp.HealthCheckFunc
+		acf phttp.AliveCheckFunc
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{"failure due to nil health check", args{hcf: nil}, true},
-		{"success", args{hcf: phttp.DefaultHealthCheck}, false},
+		{"failure due to nil liveness check", args{acf: nil}, true},
+		{"success", args{acf: phttp.DefaultAliveCheck}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s, err := New("test", "1.0.0")
 			assert.NoError(t, err)
-			err = HealthCheck(tt.args.hcf)(s)
+			err = AliveCheck(tt.args.acf)(s)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestReadyCheck(t *testing.T) {
+	type args struct {
+		rcf phttp.ReadyCheckFunc
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"failure due to nil liveness check", args{rcf: nil}, true},
+		{"success", args{rcf: phttp.DefaultReadyCheck}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s, err := New("test", "1.0.0")
+			assert.NoError(t, err)
+			err = ReadyCheck(tt.args.rcf)(s)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

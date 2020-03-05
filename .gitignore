@@ -2,9 +2,11 @@
 *.exe
 *.dll
 *.so
+*.DS_Store
 *.dylib
 debug
 .idea/*
+*.vscode
 
 # Test binary, build with `go test -c`
 *.test
@@ -14,3 +16,6 @@ debug
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
+
+# Output of the goteststum tool
+gotestsum-report.xml 

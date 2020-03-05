@@ -7,14 +7,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/beatlabs/patron/trace/sync/kafka"
-
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/sync"
 	patronhttp "github.com/beatlabs/patron/sync/http"
 	tracehttp "github.com/beatlabs/patron/trace/http"
+	"github.com/beatlabs/patron/trace/sync/kafka"
 )
 
 const (

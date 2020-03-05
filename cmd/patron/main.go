@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,69 +13,20 @@ import (
 	"text/template"
 )
 
-type component struct {
-	Import string
-	Code   string
-}
-
 type genData struct {
-	Name       string
-	Components []component
-	Module     string
-	Path       string
-	Vendor     bool
-}
-
-var patronPackages = map[string]component{
-	"http": {
-		Import: "\"github.com/beatlabs/patron/sync\"\n\tsync_http \"github.com/beatlabs/patron/sync/http\"\n\t\"context\"\n\t\"net/http\"",
-		Code: `// Set up HTTP routes
-		routes := make([]sync_http.Route, 0)
-		// Append a GET route
-		routes = append(routes, sync_http.NewRoute("/", http.MethodGet, func(ctx context.Context, req *sync.Request) (*sync.Response, error) {
-		  return sync.NewResponse("Get data"), nil
-		}, true, nil))
-		
-		oo = append(oo, patron.Routes(routes))`,
-	},
-	"kafka": {
-		Import: "\"github.com/beatlabs/patron/async\"\n\t\"github.com/beatlabs/patron/async/kafka\"",
-		Code: `kafkaCf, err := kafka.New(name, "json.Type", "TOPIC", "GROUP", []string{"BROKER"})
-		if err != nil {
-			log.Fatalf("failed to create kafka consumer factory: %v", err)
-		}
-	
-		kafkaCmp, err := async.New("RENAME", nil, kafkaCf)
-		if err != nil {
-			log.Fatalf("failed to create kafka async component: %v", err)
-		}
-		
-		oo = append(oo, patron.Components(kafkaCmp))`,
-	},
-	"amqp": {
-		Import: "\"github.com/beatlabs/patron/async\"\n\t\"github.com/beatlabs/patron/async/amqp\"",
-		Code: `amqpCf, err := amqp.New("URL", "QUEUE", "EXCHANGE")
-		if err != nil {
-			log.Fatalf("failed to create amqp consumer factory: %v", err)
-		}
-		
-		amqpCmp, err := async.New("RENAME", nil, amqpCf)
-		if err != nil {
-			log.Fatalf("failed to create kafka async component: %v", err)
-		}
-		
-		oo = append(oo, patron.Components(amqpCmp))`,
-	},
+	Name   string
+	Module string
+	Path   string
+	Vendor bool
 }
 
 func main() {
 	module := flag.String("m", "", `define the module name ("github.com/beatlabs/patron")`)
 	path := flag.String("p", "", "define the project folder (defaults to current)")
 	vendor := flag.Bool("d", true, "define vendoring behavior (default true)")
-	packages := flag.String("r", "", "define additional packages comma separated (kafka,amqp,http)")
 	flag.Parse()
 
-	gd, err := getGenData(path, module, packages, vendor)
+	gd, err := getGenData(*path, *module, *vendor)
 	if err != nil {
 		fmt.Printf("error occurred. %v\n\n", err)
 		flag.Usage()
@@ -130,30 +80,21 @@ func main() {
 	log.Print("completed successful")
 }
 
-func getGenData(path, module, packages *string, vendor *bool) (*genData, error) {
-
-	if *path == "" {
+func getGenData(path, module string, vendor bool) (*genData, error) {
+	if path == "" {
 		return nil, errors.New("path is required")
 	}
 
-	if *module == "" {
+	if module == "" {
 		return nil, errors.New("module is required")
 	}
 
-	var gd = &genData{
-		Path:   *path,
-		Vendor: *vendor,
-		Module: *module,
-		Name:   nameFromModule(*module),
-	}
-	var err error
-
-	gd.Components, err = packagesFromFlag(packages)
-	if err != nil {
-		return nil, err
-	}
-
-	return gd, nil
+	return &genData{
+		Path:   path,
+		Vendor: vendor,
+		Module: module,
+		Name:   nameFromModule(module),
+	}, nil
 }
 
 func nameFromModule(module string) string {
@@ -165,27 +106,6 @@ func nameFromModule(module string) string {
 	return module[lst+1:]
 }
 
-func packagesFromFlag(packages *string) ([]component, error) {
-
-	if packages == nil || *packages == "" {
-		return []component{}, nil
-	}
-
-	ss := strings.Split(*packages, ",")
-
-	cs := make([]component, 0, len(ss))
-
-	for _, s := range ss {
-		cmp, ok := patronPackages[s]
-		if !ok {
-			return nil, fmt.Errorf("package %s invalid/not supported", s)
-		}
-		cs = append(cs, cmp)
-	}
-
-	return cs, nil
-}
-
 func setupGit() error {
 	log.Printf("creating git repository")
 	return exec.Command("git", "init").Run()
@@ -193,9 +113,7 @@ func setupGit() error {
 
 func createGitIgnore() error {
 	log.Printf("copying .gitignore")
-	_, err := copyFile("../assets/template.gitignore", ".gitignore")
-
-	return err
+	return ioutil.WriteFile("README.md", gitIgnoreContent(), 0664)
 }
 
 func createDockerfile(gd *genData) error {
@@ -313,9 +231,6 @@ import (
 	
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/log"
-	{{ range .Components -}}
-	{{- .Import }}
-	{{ end }}
 )
 
 var (
@@ -331,15 +246,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	{{if .Components}}
-	var oo []patron.OptionFunc
-
-	{{ range .Components }}
-		{{ .Code }}
-	{{ end }}
-	{{end}}
-
-	srv, err := patron.New(name, version{{if .Components}}, oo...{{end}})
+	srv, err := patron.New(name, version)
 	if err != nil {
 		log.Fatalf("failed to create service %v", err)
 	}
@@ -364,36 +271,36 @@ func readmeContent(gd *genData) []byte {
 	return []byte(fmt.Sprintf("# %s", gd.Name))
 }
 
-func copyFile(src, dst string) (result int64, rerr error) {
-	type funcWithErr func() error
-	withErrorHandling := func(f funcWithErr) {
-		err := f()
-		if err != nil {
-			rerr = err
-		}
-	}
+func gitIgnoreContent() []byte {
+	content := `# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.DS_Store
+*.dylib
+debug/
 
-	sourceFileStat, err := os.Stat(src)
-	if err != nil {
-		return 0, err
-	}
+# JetBrains
+.idea/*
+*.iws
+out/
+.idea_modules/
 
-	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
-	}
+# JIRA plugin
+atlassian-ide-plugin.xml
 
-	source, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
-	defer withErrorHandling(source.Close)
+# VS Code
+*.vscode
+.vscode/*
 
-	destination, err := os.Create(dst)
-	if err != nil {
-		return 0, err
-	}
-	defer withErrorHandling(destination.Close)
+# Test binary, build with "go test -c"
+*.test
 
-	nBytes, err := io.Copy(destination, source)
-	return nBytes, err
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
+.glide/
+`
+	return []byte(content)
 }

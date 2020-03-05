@@ -2,14 +2,18 @@ package kafka
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/trace"
+	"github.com/beatlabs/patron/trace/kafka"
+
+	"github.com/Shopify/sarama"
 	"github.com/prometheus/client_golang/prometheus"
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
@@ -24,9 +28,9 @@ type testMetric struct {
 }
 
 func TestNewMessage(t *testing.T) {
-	m := NewMessage("TOPIC", []byte("TEST"))
-	assert.Equal(t, "TOPIC", m.topic)
-	assert.Equal(t, []byte("TEST"), m.body)
+	m := kafka.NewMessage("TOPIC", []byte("TEST"))
+	assert.Equal(t, "TOPIC", m.Topic)
+	assert.Equal(t, []byte("TEST"), m.Body)
 }
 
 func TestNewMessageWithKey(t *testing.T) {
@@ -41,7 +45,7 @@ func TestNewMessageWithKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewMessageWithKey("TOPIC", tt.data, tt.key)
+			got, err := kafka.NewMessageWithKey("TOPIC", tt.data, tt.key)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)
@@ -54,29 +58,33 @@ func TestNewMessageWithKey(t *testing.T) {
 }
 
 func TestNewSyncProducer_Failure(t *testing.T) {
-	got, err := NewBuilder([]string{}).Create()
+	ab := AsyncBuilder{kafka.NewBuilder([]string{})}
+	got, err := ab.Create()
 	assert.Error(t, err)
 	assert.Nil(t, got)
 }
 
 func TestNewSyncProducer_Option_Failure(t *testing.T) {
-	got, err := NewBuilder([]string{"xxx"}).WithVersion("xxxx").Create()
+	ab := AsyncBuilder{kafka.NewBuilder([]string{"xxx"}).WithVersion("xxxx")}
+	got, err := ab.Create()
 	assert.Error(t, err)
 	assert.Nil(t, got)
 }
 
 func TestNewSyncProducer_Success(t *testing.T) {
 	seed := createKafkaBroker(t, false)
-	got, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).Create()
+	ab := AsyncBuilder{kafka.NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String())}
+	got, err := ab.Create()
 	assert.NoError(t, err)
 	assert.NotNil(t, got)
 }
 
 func TestAsyncProducer_SendMessage_Close(t *testing.T) {
-	msg := NewMessage("TOPIC", "TEST")
+	msg := kafka.NewMessage("TOPIC", "TEST")
 	tm := testMetric{messageStatus, "component_kafka_async_producer_message_status", "sent", 1}
 	seed := createKafkaBroker(t, true)
-	ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).Create()
+	sb := AsyncBuilder{kafka.NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String())}
+	ap, err := sb.Create()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	err = trace.Setup("test", "1.0.0", "0.0.0.0:6831", jaeger.SamplerTypeProbabilistic, 0.1)
@@ -92,12 +100,13 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 
 func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
 	testKey := "TEST"
-	msg, err := NewMessageWithKey("TOPIC", "TEST", testKey)
+	msg, err := kafka.NewMessageWithKey("TOPIC", "TEST", testKey)
 	tm := testMetric{messageStatus, "component_kafka_async_producer_message_status", "sent", 1}
-	assert.Equal(t, testKey, *msg.key)
+	assert.Equal(t, testKey, *msg.Key)
 	assert.NoError(t, err)
 	seed := createKafkaBroker(t, true)
-	ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).Create()
+	ab := AsyncBuilder{kafka.NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String())}
+	ap, err := ab.Create()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	err = trace.Setup("test", "1.0.0", "0.0.0.0:6831", jaeger.SamplerTypeProbabilistic, 0.1)
@@ -158,10 +167,11 @@ func TestSendWithCustomEncoder(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			clearMetrics(tt.tm...)
-			msg, _ := NewMessageWithKey("TOPIC", tt.data, tt.key)
+			msg, _ := kafka.NewMessageWithKey("TOPIC", tt.data, tt.key)
 
 			seed := createKafkaBroker(t, true)
-			ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).WithEncoder(tt.enc, tt.ct).Create()
+			ab := AsyncBuilder{kafka.NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).WithEncoder(tt.enc, tt.ct)}
+			ap, err := ab.Create()
 			if tt.enc != nil {
 				assert.NoError(t, err)
 			} else {
@@ -223,4 +233,71 @@ func assertMetric(t *testing.T, testMetrics ...testMetric) {
 		}
 		counter.Reset()
 	}
+}
+
+func Test_createAsyncProducerUsingBuilder(t *testing.T) {
+	seed := createKafkaBroker(t, true)
+
+	var builderNoErrors = []error{}
+	var builderAllErrors = []error{
+		errors.New("brokers list is empty"),
+		errors.New("encoder is nil"),
+		errors.New("content type is empty"),
+		errors.New("dial timeout has to be positive"),
+		errors.New("version is required"),
+		errors.New("invalid value for required acks policy provided"),
+	}
+
+	tests := map[string]struct {
+		brokers     []string
+		version     string
+		ack         kafka.RequiredAcks
+		timeout     time.Duration
+		enc         encoding.EncodeFunc
+		contentType string
+		wantErrs    []error
+	}{
+		"success": {
+			brokers:     []string{seed.Addr()},
+			version:     sarama.V0_8_2_0.String(),
+			ack:         kafka.NoResponse,
+			timeout:     1 * time.Second,
+			enc:         json.Encode,
+			contentType: json.Type,
+			wantErrs:    builderNoErrors,
+		},
+		"error in all builder steps": {
+			brokers:     []string{},
+			version:     "",
+			ack:         -5,
+			timeout:     -1 * time.Second,
+			enc:         nil,
+			contentType: "",
+			wantErrs:    builderAllErrors,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			ab := AsyncBuilder{kafka.NewBuilder(tt.brokers).
+				WithVersion(tt.version).
+				WithRequiredAcksPolicy(tt.ack).
+				WithTimeout(tt.timeout).
+				WithEncoder(tt.enc, tt.contentType)}
+			gotAsyncProducer, gotErrs := ab.Create()
+
+			v, _ := sarama.ParseKafkaVersion(tt.version)
+			if len(tt.wantErrs) > 0 {
+				assert.ObjectsAreEqual(tt.wantErrs, gotErrs)
+				assert.Nil(t, gotAsyncProducer)
+			} else {
+				assert.NotNil(t, gotAsyncProducer)
+				assert.IsType(t, &AsyncProducer{}, gotAsyncProducer)
+				assert.EqualValues(t, v, gotAsyncProducer.cfg.Version)
+				assert.EqualValues(t, tt.ack, gotAsyncProducer.cfg.Producer.RequiredAcks)
+				assert.Equal(t, tt.timeout, gotAsyncProducer.cfg.Net.DialTimeout)
+			}
+		})
+	}
+
 }

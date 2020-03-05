@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"errors"
 	"testing"
 	"time"
 
@@ -30,12 +29,12 @@ func TestVersion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ab := NewBuilder([]string{seed.Addr()}).WithVersion(tt.args.version)
 			if tt.wantErr {
-				assert.NotEmpty(t, ab.errors)
+				assert.NotEmpty(t, ab.Errors)
 			} else {
-				assert.Empty(t, ab.errors)
+				assert.Empty(t, ab.Errors)
 				v, err := sarama.ParseKafkaVersion(tt.args.version)
 				assert.NoError(t, err)
-				assert.Equal(t, v, ab.cfg.Version)
+				assert.Equal(t, v, ab.Cfg.Version)
 			}
 		})
 	}
@@ -58,13 +57,35 @@ func TestTimeouts(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ab := NewBuilder([]string{seed.Addr()}).WithTimeout(tt.args.dial)
 			if tt.wantErr {
-				assert.NotEmpty(t, ab.errors)
+				assert.NotEmpty(t, ab.Errors)
 			} else {
-				assert.Empty(t, ab.errors)
-				assert.Equal(t, tt.args.dial, ab.cfg.Net.DialTimeout)
+				assert.Empty(t, ab.Errors)
+				assert.Equal(t, tt.args.dial, ab.Cfg.Net.DialTimeout)
 			}
 		})
 	}
+}
+
+func createKafkaBroker(t *testing.T, retError bool) *sarama.MockBroker {
+	lead := sarama.NewMockBroker(t, 2)
+	metadataResponse := new(sarama.MetadataResponse)
+	metadataResponse.AddBroker(lead.Addr(), lead.BrokerID())
+	metadataResponse.AddTopicPartition("TOPIC", 0, lead.BrokerID(), nil, nil, sarama.ErrNoError)
+
+	prodSuccess := new(sarama.ProduceResponse)
+	if retError {
+		prodSuccess.AddTopicPartition("TOPIC", 0, sarama.ErrDuplicateSequenceNumber)
+	} else {
+		prodSuccess.AddTopicPartition("TOPIC", 0, sarama.ErrNoError)
+	}
+	lead.Returns(prodSuccess)
+
+	config := sarama.NewConfig()
+	config.Producer.Flush.Messages = 10
+	config.Producer.Return.Successes = true
+	seed := sarama.NewMockBroker(t, 1)
+	seed.Returns(metadataResponse)
+	return seed
 }
 
 func TestRequiredAcksPolicy(t *testing.T) {
@@ -86,10 +107,10 @@ func TestRequiredAcksPolicy(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ab := NewBuilder([]string{seed.Addr()}).WithRequiredAcksPolicy(tt.args.requiredAcks)
 			if tt.wantErr {
-				assert.NotEmpty(t, ab.errors)
+				assert.NotEmpty(t, ab.Errors)
 			} else {
-				assert.Empty(t, ab.errors)
-				assert.EqualValues(t, tt.args.requiredAcks, ab.cfg.Producer.RequiredAcks)
+				assert.Empty(t, ab.Errors)
+				assert.EqualValues(t, tt.args.requiredAcks, ab.Cfg.Producer.RequiredAcks)
 			}
 		})
 	}
@@ -116,11 +137,11 @@ func TestEncoder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ab := NewBuilder([]string{seed.Addr()}).WithEncoder(tt.args.enc, tt.args.contentType)
 			if tt.wantErr {
-				assert.NotEmpty(t, ab.errors)
+				assert.NotEmpty(t, ab.Errors)
 			} else {
-				assert.Empty(t, ab.errors)
-				assert.NotNil(t, ab.enc)
-				assert.Equal(t, tt.args.contentType, ab.contentType)
+				assert.Empty(t, ab.Errors)
+				assert.NotNil(t, ab.Enc)
+				assert.Equal(t, tt.args.contentType, ab.ContentType)
 			}
 		})
 	}
@@ -146,77 +167,10 @@ func TestBrokers(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ab := NewBuilder(tt.args.brokers)
 			if tt.wantErr {
-				assert.Empty(t, ab.brokers)
+				assert.Empty(t, ab.Brokers)
 			} else {
-				assert.NotEmpty(t, ab.brokers)
+				assert.NotEmpty(t, ab.Brokers)
 			}
 		})
 	}
-}
-
-func Test_createAsyncProducerUsingBuilder(t *testing.T) {
-	seed := createKafkaBroker(t, true)
-
-	var builderNoErrors = []error{}
-	var builderAllErrors = []error{
-		errors.New("brokers list is empty"),
-		errors.New("encoder is nil"),
-		errors.New("content type is empty"),
-		errors.New("dial timeout has to be positive"),
-		errors.New("version is required"),
-		errors.New("invalid value for required acks policy provided"),
-	}
-
-	tests := map[string]struct {
-		brokers     []string
-		version     string
-		ack         RequiredAcks
-		timeout     time.Duration
-		enc         encoding.EncodeFunc
-		contentType string
-		wantErrs    []error
-	}{
-		"success": {
-			brokers:     []string{seed.Addr()},
-			version:     sarama.V0_8_2_0.String(),
-			ack:         NoResponse,
-			timeout:     1 * time.Second,
-			enc:         json.Encode,
-			contentType: json.Type,
-			wantErrs:    builderNoErrors,
-		},
-		"error in all builder steps": {
-			brokers:     []string{},
-			version:     "",
-			ack:         -5,
-			timeout:     -1 * time.Second,
-			enc:         nil,
-			contentType: "",
-			wantErrs:    builderAllErrors,
-		},
-	}
-
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			gotAsyncProducer, gotErrs := NewBuilder(tt.brokers).
-				WithVersion(tt.version).
-				WithRequiredAcksPolicy(tt.ack).
-				WithTimeout(tt.timeout).
-				WithEncoder(tt.enc, tt.contentType).
-				Create()
-
-			v, _ := sarama.ParseKafkaVersion(tt.version)
-			if len(tt.wantErrs) > 0 {
-				assert.ObjectsAreEqual(tt.wantErrs, gotErrs)
-				assert.Nil(t, gotAsyncProducer)
-			} else {
-				assert.NotNil(t, gotAsyncProducer)
-				assert.IsType(t, &AsyncProducer{}, gotAsyncProducer)
-				assert.EqualValues(t, v, gotAsyncProducer.cfg.Version)
-				assert.EqualValues(t, tt.ack, gotAsyncProducer.cfg.Producer.RequiredAcks)
-				assert.Equal(t, tt.timeout, gotAsyncProducer.cfg.Net.DialTimeout)
-			}
-		})
-	}
-
 }

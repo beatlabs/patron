@@ -13,8 +13,8 @@ import (
 	"github.com/beatlabs/patron/sync"
 	patronhttp "github.com/beatlabs/patron/sync/http"
 	"github.com/beatlabs/patron/sync/http/auth/apikey"
-	"github.com/beatlabs/patron/trace/async/kafka"
 	tracehttp "github.com/beatlabs/patron/trace/http"
+	"github.com/beatlabs/patron/trace/kafka/async"
 )
 
 const (

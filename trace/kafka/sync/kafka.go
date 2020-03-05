@@ -12,6 +12,8 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 )
 
+const producerComponent = "kafka-sync-producer"
+
 // Message abstraction of a Kafka message.
 type Message struct {
 	topic string
@@ -76,8 +78,8 @@ func NewSyncProducer(brokers []string, oo ...OptionFunc) (*SyncProducer, error) 
 func (sp *SyncProducer) Send(ctx context.Context, msg *Message) (partition int32, offset int64, err error) {
 	ts, _ := trace.ChildSpan(
 		ctx,
-		trace.ComponentOpName(trace.KafkaSyncProducerComponent, msg.topic),
-		trace.KafkaSyncProducerComponent,
+		trace.ComponentOpName(producerComponent, msg.topic),
+		producerComponent,
 		ext.SpanKindProducer,
 		sp.tag,
 		opentracing.Tag{Key: "topic", Value: msg.topic},

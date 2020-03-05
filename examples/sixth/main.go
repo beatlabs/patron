@@ -13,7 +13,8 @@ import (
 	"github.com/beatlabs/patron/sync"
 	patronhttp "github.com/beatlabs/patron/sync/http"
 	tracehttp "github.com/beatlabs/patron/trace/http"
-	kafka "github.com/beatlabs/patron/trace/kafka/sync"
+	"github.com/beatlabs/patron/trace/kafka"
+	synckafka "github.com/beatlabs/patron/trace/kafka/sync"
 )
 
 const (
@@ -77,15 +78,17 @@ func main() {
 }
 
 type httpComponent struct {
-	prd   kafka.Producer
+	prd   synckafka.Producer
 	topic string
 }
 
 func newHTTPComponent(kafkaBroker, topic, url string) (*httpComponent, error) {
-	prd, err := kafka.NewSyncProducer([]string{kafkaBroker})
+	sb := synckafka.SyncBuilder{kafka.NewBuilder([]string{kafkaBroker})}
+	prd, err := sb.Create()
 	if err != nil {
 		return nil, err
 	}
+
 	return &httpComponent{prd: prd, topic: topic}, nil
 }
 
@@ -110,10 +113,7 @@ func (hc *httpComponent) sixth(ctx context.Context, req *sync.Request) (*sync.Re
 		return nil, fmt.Errorf("failed to get www.google.com: %w", err)
 	}
 
-	kafkaMsg, err := kafka.NewJSONMessage(hc.topic, &u)
-	if err != nil {
-		return nil, err
-	}
+	kafkaMsg := kafka.NewMessage(hc.topic, &u)
 
 	_, _, err = hc.prd.Send(ctx, kafkaMsg)
 	if err != nil {

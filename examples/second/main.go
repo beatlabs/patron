@@ -14,7 +14,8 @@ import (
 	patronhttp "github.com/beatlabs/patron/sync/http"
 	"github.com/beatlabs/patron/sync/http/auth/apikey"
 	tracehttp "github.com/beatlabs/patron/trace/http"
-	"github.com/beatlabs/patron/trace/kafka/async"
+	"github.com/beatlabs/patron/trace/kafka"
+	ak "github.com/beatlabs/patron/trace/kafka/async"
 )
 
 const (
@@ -83,12 +84,13 @@ func main() {
 }
 
 type httpComponent struct {
-	prd   kafka.Producer
+	prd   *ak.AsyncProducer
 	topic string
 }
 
 func newHTTPComponent(kafkaBroker, topic, url string) (*httpComponent, error) {
-	prd, err := kafka.NewBuilder([]string{kafkaBroker}).Create()
+	ab := ak.AsyncBuilder{kafka.NewBuilder([]string{kafkaBroker})}
+	prd, err := ab.Create()
 	if err != nil {
 		return nil, err
 	}

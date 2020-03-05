@@ -2,13 +2,13 @@ package kafka
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
+	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
+	"github.com/beatlabs/patron/trace/kafka"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
@@ -39,29 +39,9 @@ func init() {
 	prometheus.MustRegister(messageStatus)
 }
 
-// Message abstraction of a Kafka message.
-type Message struct {
-	topic string
-	body  interface{}
-	key   *string
-}
-
-// NewMessage creates a new message.
-func NewMessage(t string, b interface{}) *Message {
-	return &Message{topic: t, body: b}
-}
-
-// NewMessageWithKey creates a new message with an associated key.
-func NewMessageWithKey(t string, b interface{}, k string) (*Message, error) {
-	if k == "" {
-		return nil, errors.New("key string can not be null")
-	}
-	return &Message{topic: t, body: b, key: &k}, nil
-}
-
 // Producer interface for Kafka.
 type Producer interface {
-	Send(ctx context.Context, msg *Message) error
+	Send(ctx context.Context, msg *kafka.Message) error
 	Error() <-chan error
 	Close() error
 }
@@ -76,18 +56,48 @@ type AsyncProducer struct {
 	contentType string
 }
 
-// Send a message to a topic.
-func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(producerComponent, msg.topic),
-		producerComponent, ext.SpanKindProducer, ap.tag,
-		opentracing.Tag{Key: "topic", Value: msg.topic})
-	pm, err := ap.createProducerMessage(ctx, msg, sp)
+// AsyncBuilder is a builder which constructs AsyncProducers.
+type AsyncBuilder struct {
+	*kafka.Builder
+}
+
+// Create constructs the AsyncProducer component by applying the gathered properties.
+func (ab *AsyncBuilder) Create() (*AsyncProducer, error) {
+
+	if len(ab.Errors) > 0 {
+		return nil, patronErrors.Aggregate(ab.Errors...)
+	}
+
+	prod, err := sarama.NewAsyncProducer(ab.Brokers, ab.Cfg)
 	if err != nil {
-		messageStatusCountInc(messageCreationErrors, msg.topic)
+		return nil, fmt.Errorf("failed to create async producer: %w", err)
+	}
+
+	ap := AsyncProducer{
+		cfg:         ab.Cfg,
+		prod:        prod,
+		chErr:       make(chan error),
+		enc:         ab.Enc,
+		contentType: ab.ContentType,
+		tag:         opentracing.Tag{Key: "type", Value: "async"},
+	}
+
+	go ap.propagateError()
+	return &ap, nil
+}
+
+// Send a message to a topic.
+func (ap *AsyncProducer) Send(ctx context.Context, msg *kafka.Message) error {
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(producerComponent, msg.Topic),
+		producerComponent, ext.SpanKindProducer, ap.tag,
+		opentracing.Tag{Key: "topic", Value: msg.Topic})
+	pm, err := msg.CreateProducerMessage(ctx, ap.contentType, ap.enc, sp)
+	if err != nil {
+		messageStatusCountInc(messageCreationErrors, msg.Topic)
 		trace.SpanError(sp)
 		return err
 	}
-	messageStatusCountInc(messageSent, msg.topic)
+	messageStatusCountInc(messageSent, msg.Topic)
 	ap.prod.Input() <- pm
 	trace.SpanSuccess(sp)
 	return nil
@@ -112,38 +122,4 @@ func (ap *AsyncProducer) propagateError() {
 		messageStatusCountInc(messageSendErrors, pe.Msg.Topic)
 		ap.chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
-}
-
-func (ap *AsyncProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
-	c := kafkaHeadersCarrier{}
-	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
-	if err != nil {
-		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)
-	}
-	c.Set(encoding.ContentTypeHeader, ap.contentType)
-
-	var saramaKey sarama.Encoder
-	if msg.key != nil {
-		saramaKey = sarama.StringEncoder(*msg.key)
-	}
-
-	b, err := ap.enc(msg.body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to encode message body")
-	}
-
-	c.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
-	return &sarama.ProducerMessage{
-		Topic:   msg.topic,
-		Key:     saramaKey,
-		Value:   sarama.ByteEncoder(b),
-		Headers: c,
-	}, nil
-}
-
-type kafkaHeadersCarrier []sarama.RecordHeader
-
-// Set implements Set() of opentracing.TextMapWriter.
-func (c *kafkaHeadersCarrier) Set(key, val string) {
-	*c = append(*c, sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
 }

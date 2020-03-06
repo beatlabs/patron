@@ -57,7 +57,7 @@ type Builder struct {
 // NewBuilder initiates the Service builder chain.
 // The builder contains default values for Alive/Ready checks,
 // the SIGHUP handler and its version.
-func NewBuilder(name, version string) *Builder {
+func New(name, version string) *Builder {
 	var errs []error
 
 	if name == "" {

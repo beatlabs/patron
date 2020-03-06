@@ -60,19 +60,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	srv, err := patron.NewBuilder(name, version).
+	ctx := context.Background()
+	err = patron.NewBuilder(name, version).
 		WithRoutes(routes).
 		WithMiddlewares(middlewareCors).
 		WithSIGHUP(sig).
-		Build()
+		Run(ctx)
 	if err != nil {
-		log.Fatalf("failed to create service %v", err)
-	}
-
-	ctx := context.Background()
-	err = srv.Run(ctx)
-	if err != nil {
-		log.Fatalf("failed to run service %v", err)
+		log.Fatalf("failed to create and run service %v", err)
 	}
 }
 

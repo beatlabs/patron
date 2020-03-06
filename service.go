@@ -151,7 +151,7 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 }
 
 // Build constructs the Patron service by applying the gathered properties.
-func (b *Builder) Build() (*Service, error) {
+func (b *Builder) build() (*Service, error) {
 	if len(b.errors) > 0 {
 		return nil, patronErrors.Aggregate(b.errors...)
 	}
@@ -186,14 +186,23 @@ func (b *Builder) Build() (*Service, error) {
 	return &s, nil
 }
 
+// Run starts up all service components and monitors for errors.
+// If a component returns a error the service is responsible for shutting down
+// all components and terminate itself.
+func (b *Builder) Run(ctx context.Context) error {
+	s, err := b.build()
+	if err != nil {
+		return err
+	}
+
+	return s.run(ctx)
+}
+
 func (s *Service) setupOSSignal() {
 	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 }
 
-// Run starts up all service components and monitors for errors.
-// If a component returns a error the service is responsible for shutting down
-// all components and terminate itself.
-func (s *Service) Run(ctx context.Context) error {
+func (s *Service) run(ctx context.Context) error {
 	defer func() {
 		err := trace.Close()
 		if err != nil {

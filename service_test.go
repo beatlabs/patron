@@ -86,7 +86,8 @@ func TestNewServer(t *testing.T) {
 				WithAliveCheck(tt.acf).
 				WithReadyCheck(tt.rcf).
 				WithComponents(tt.cps...).
-				WithSIGHUP(tt.sighupHandler).Build()
+				WithSIGHUP(tt.sighupHandler).
+				build()
 
 			if tt.wantErr != nil {
 				assert.Equal(t, tt.wantErr.Error(), gotErr.Error())
@@ -132,9 +133,9 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
 			assert.NoError(t, err)
-			s, err := NewBuilder("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Build()
+			s, err := NewBuilder("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
 			assert.NoError(t, err)
-			err = s.Run(tt.ctx)
+			err = s.run(tt.ctx)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -167,9 +168,9 @@ func TestServer_SetupTracing(t *testing.T) {
 				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", tt.port)
 				assert.NoError(t, err)
 			}
-			s, err := NewBuilder("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Build()
+			s, err := NewBuilder("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
 			assert.NoError(t, err)
-			err = s.Run(tt.ctx)
+			err = s.run(tt.ctx)
 			assert.NoError(t, err)
 		})
 	}

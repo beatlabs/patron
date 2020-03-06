@@ -95,7 +95,7 @@ func TestNewServer(t *testing.T) {
 			} else {
 				assert.Nil(t, gotErr)
 				assert.NotNil(t, gotService)
-				assert.IsType(t, &Service{}, gotService)
+				assert.IsType(t, &service{}, gotService)
 
 				assert.NotEmpty(t, gotService.cps)
 				assert.Len(t, gotService.routes, len(tt.routes))

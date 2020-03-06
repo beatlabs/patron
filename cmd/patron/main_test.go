@@ -93,7 +93,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = patron.NewBuilder(name, version).Run(ctx)
+	err = patron.New(name, version).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

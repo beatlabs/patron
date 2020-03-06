@@ -124,7 +124,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = patron.NewBuilder(name, version).WithComponents(amqpCmp.cmp).Run(ctx)
+	err = patron.New(name, version).WithComponents(amqpCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

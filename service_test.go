@@ -80,7 +80,7 @@ func TestNewServer(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotService, gotErr := NewBuilder(tt.name, tt.version).
+			gotService, gotErr := New(tt.name, tt.version).
 				WithRoutes(tt.routes).
 				WithMiddlewares(tt.middlewares...).
 				WithAliveCheck(tt.acf).
@@ -133,7 +133,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
 			assert.NoError(t, err)
-			s, err := NewBuilder("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
+			s, err := New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
 			assert.NoError(t, err)
 			err = s.run(tt.ctx)
 			if tt.wantErr {
@@ -168,7 +168,7 @@ func TestServer_SetupTracing(t *testing.T) {
 				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", tt.port)
 				assert.NoError(t, err)
 			}
-			s, err := NewBuilder("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
+			s, err := New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
 			assert.NoError(t, err)
 			err = s.run(tt.ctx)
 			assert.NoError(t, err)

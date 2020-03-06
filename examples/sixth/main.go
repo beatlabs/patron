@@ -67,7 +67,7 @@ func main() {
 	greeter.RegisterGreeterServer(cmp.Server(), &greeterServer{})
 
 	ctx := context.Background()
-	err = patron.NewBuilder(name, version).WithComponents(cmp).Run(ctx)
+	err = patron.New(name, version).WithComponents(cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service: %v", err)
 	}

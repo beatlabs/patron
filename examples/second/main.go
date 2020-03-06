@@ -67,7 +67,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = patron.NewBuilder(name, version).WithRoutes(routes).Run(ctx)
+	err = patron.New(name, version).WithRoutes(routes).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

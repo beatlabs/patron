@@ -61,7 +61,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = patron.NewBuilder(name, version).
+	err = patron.New(name, version).
 		WithRoutes(routes).
 		WithMiddlewares(middlewareCors).
 		WithSIGHUP(sig).

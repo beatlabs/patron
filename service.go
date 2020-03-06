@@ -25,9 +25,9 @@ type Component interface {
 	Run(ctx context.Context) error
 }
 
-// Service is responsible for managing and setting up everything.
+// service is responsible for managing and setting up everything.
 // The service will start by default a HTTP component in order to host management endpoint.
-type Service struct {
+type service struct {
 	cps           []Component
 	routes        []http.Route
 	middlewares   []http.MiddlewareFunc
@@ -151,12 +151,12 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 }
 
 // Build constructs the Patron service by applying the gathered properties.
-func (b *Builder) build() (*Service, error) {
+func (b *Builder) build() (*service, error) {
 	if len(b.errors) > 0 {
 		return nil, patronErrors.Aggregate(b.errors...)
 	}
 
-	s := Service{
+	s := service{
 		cps:           b.cps,
 		routes:        b.routes,
 		middlewares:   b.middlewares,
@@ -198,11 +198,11 @@ func (b *Builder) Run(ctx context.Context) error {
 	return s.run(ctx)
 }
 
-func (s *Service) setupOSSignal() {
+func (s *service) setupOSSignal() {
 	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 }
 
-func (s *Service) run(ctx context.Context) error {
+func (s *service) run(ctx context.Context) error {
 	defer func() {
 		err := trace.Close()
 		if err != nil {
@@ -258,7 +258,7 @@ func SetupLogging(name, version string) error {
 	return err
 }
 
-func (s *Service) setupDefaultTracing(name, version string) error {
+func (s *service) setupDefaultTracing(name, version string) error {
 	var err error
 
 	host, ok := os.LookupEnv("PATRON_JAEGER_AGENT_HOST")
@@ -288,7 +288,7 @@ func (s *Service) setupDefaultTracing(name, version string) error {
 	return trace.Setup(name, version, agent, tp, prmVal)
 }
 
-func (s *Service) createHTTPComponent() (Component, error) {
+func (s *service) createHTTPComponent() (Component, error) {
 	var err error
 	var portVal = int64(50000)
 	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
@@ -327,7 +327,7 @@ func (s *Service) createHTTPComponent() (Component, error) {
 	return cp, nil
 }
 
-func (s *Service) waitTermination(chErr <-chan error) error {
+func (s *service) waitTermination(chErr <-chan error) error {
 	for {
 		select {
 		case sig := <-s.termSig:

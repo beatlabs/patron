@@ -1,0 +1,21 @@
+version: '2'
+
+services:  
+  mysql:
+    image: mysql:5.7
+    hostname: "mysql"
+    networks:
+      examplenw:
+        aliases:
+          - mysql
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_USER: 'patron'
+      MYSQL_DATABASE: 'patrondb'
+      MYSQL_PASSWORD: 'test123'
+      MYSQL_ROOT_PASSWORD: 'test123'
+  
+networks:
+  examplenw: {}
+

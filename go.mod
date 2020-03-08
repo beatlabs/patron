@@ -6,10 +6,12 @@ require (
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/elastic/go-elasticsearch/v8 v8.0.0-20190731061900-ea052088db25
 	github.com/go-redis/redis/v7 v7.0.0-beta.5
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.0
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/julienschmidt/httprouter v1.2.0
+	github.com/lib/pq v1.3.0
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20180313041242-367231351874
 	github.com/opentracing/opentracing-go v0.0.0-20180606204148-bd9c31933947
 	github.com/prometheus/client_golang v0.9.1

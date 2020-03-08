@@ -4,15 +4,6 @@ jobs:
   build:
     name: CI
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:5.7
-        env:
-          MYSQL_ROOT_PASSWORD: test123
-          MYSQL_DATABASE: patrondb
-        ports:
-          - 3306:3306
-
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
@@ -27,6 +18,12 @@ jobs:
 
       - name: Check out source code
         uses: actions/checkout@v1
+
+      - name: docker compose up
+        run: docker-compose up -d
+    
+      - name: Check running containers
+        run: docker ps -a
 
       - name: Running CI
         run: make ci

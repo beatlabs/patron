@@ -40,7 +40,7 @@ func TestOpen(t *testing.T) {
 
 func TestOpenPingClose(t *testing.T) {
 	ctx := context.Background()
-	db, err := Open("mysql", "patron:test123@tcp/patrondb?parseTime=true")
+	db, err := Open("mysql", "patron:test123@tcp(127.0.0.1:3307)/patrondb?parseTime=true")
 	assert.NoError(t, err)
 	assert.NotNil(t, db)
 	db.SetConnMaxLifetime(time.Minute)

@@ -1,6 +1,6 @@
-// // +build integration
+// +build integration
 
-// package sns
+package sns
 
 // import (
 // 	"context"

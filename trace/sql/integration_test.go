@@ -74,7 +74,7 @@ func TestIntegration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, count >= 0)
 		mtr.Reset()
-		result, err = db.Exec(ctx, query, "patron")
+		result, err = db.Exec(ctx, insertQuery, "patron")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assertSpan(t, mtr.FinishedSpans()[0], "db.Exec", insertQuery)
@@ -155,7 +155,7 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("conn.Exec", func(t *testing.T) {
 			mtr.Reset()
-			result, err := conn.Exec(ctx, query, "patron")
+			result, err := conn.Exec(ctx, insertQuery, "patron")
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
 			assertSpan(t, mtr.FinishedSpans()[0], "conn.Exec", insertQuery)
@@ -210,11 +210,9 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("tx.Exec", func(t *testing.T) {
 			mtr.Reset()
-			result, err := tx.Exec(ctx, query, "patron")
+			result, err := tx.Exec(ctx, insertQuery, "patron")
 			assert.NoError(t, err)
-			count, err := result.RowsAffected()
-			assert.NoError(t, err)
-			assert.True(t, count == 1)
+			assert.NotNil(t, result)
 			assertSpan(t, mtr.FinishedSpans()[0], "tx.Exec", insertQuery)
 		})
 

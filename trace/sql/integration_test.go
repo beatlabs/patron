@@ -4,11 +4,12 @@ package sql
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,7 +39,9 @@ func TestOpen(t *testing.T) {
 	}
 }
 
-func TestOpenPingClose(t *testing.T) {
+func TestIntegration(t *testing.T) {
+	mtr := mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
 	ctx := context.Background()
 	db, err := Open("mysql", "patron:test123@tcp(127.0.0.1:3307)/patrondb?parseTime=true")
 	assert.NoError(t, err)
@@ -48,13 +51,16 @@ func TestOpenPingClose(t *testing.T) {
 	db.SetMaxOpenConns(10)
 
 	t.Run("db.Ping", func(t *testing.T) {
+		mtr.Reset()
 		assert.NoError(t, db.Ping(ctx))
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Ping", "")
 	})
 
 	t.Run("db.Stats", func(t *testing.T) {
+		mtr.Reset()
 		stats := db.Stats(ctx)
-		expected := sql.DBStats{MaxOpenConnections: 10, OpenConnections: 1, InUse: 0, Idle: 1, WaitCount: 0, WaitDuration: 0, MaxIdleClosed: 0, MaxLifetimeClosed: 0}
-		assert.Equal(t, expected, stats)
+		assert.NotNil(t, stats)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Stats", "")
 	})
 
 	t.Run("db.Exec", func(t *testing.T) {
@@ -63,189 +69,199 @@ func TestOpenPingClose(t *testing.T) {
 		count, err := result.RowsAffected()
 		assert.NoError(t, err)
 		assert.True(t, count >= 0)
-		result, err = db.Exec(ctx, "INSERT INTO employee(name) value (?)", "patron")
+		mtr.Reset()
+		query := "INSERT INTO employee(name) value (?)"
+		result, err = db.Exec(ctx, query, "patron")
 		assert.NoError(t, err)
-		count, err = result.RowsAffected()
-		assert.NoError(t, err)
-		assert.True(t, count == 1)
+		assert.NotNil(t, result)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Exec", query)
 	})
 
 	t.Run("db.Query", func(t *testing.T) {
-		rows, err := db.Query(ctx, "SELECT * FROM employee LIMIT 1")
-		assert.NoError(t, err)
+		mtr.Reset()
+		query := "SELECT * FROM employee LIMIT 1"
+		rows, err := db.Query(ctx, query)
 		defer func() {
 			assert.NoError(t, rows.Close())
 		}()
-		for rows.Next() {
-			var id int
-			var name string
-			assert.NoError(t, rows.Scan(&id, &name))
-			assert.True(t, id > 0)
-			assert.Equal(t, "patron", name)
-		}
-		assert.NoError(t, rows.Err())
+		assert.NoError(t, err)
+		assert.NotNil(t, rows)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Query", query)
 	})
 
 	t.Run("db.QueryRow", func(t *testing.T) {
-		row := db.QueryRow(ctx, "SELECT * FROM employee LIMIT 1")
-		var id int
-		var name string
-		assert.NoError(t, row.Scan(&id, &name))
-		assert.True(t, id > 0)
-		assert.Equal(t, "patron", name)
+		mtr.Reset()
+		query := "SELECT * FROM employee LIMIT 1"
+		row := db.QueryRow(ctx, query)
+		assert.NotNil(t, row)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.QueryRow", query)
 	})
 
 	t.Run("db.Driver", func(t *testing.T) {
+		mtr.Reset()
 		drv := db.Driver(ctx)
 		assert.NotNil(t, drv)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Driver", "")
 	})
 
 	t.Run("stmt", func(t *testing.T) {
-		stmt, err := db.Prepare(ctx, "SELECT * FROM employee LIMIT 1")
+		mtr.Reset()
+		query := "SELECT * FROM employee LIMIT 1"
+		stmt, err := db.Prepare(ctx, query)
 		assert.NoError(t, err)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Prepare", query)
 
 		t.Run("stmt.Exec", func(t *testing.T) {
+			mtr.Reset()
 			result, err := stmt.Exec(ctx)
 			assert.NoError(t, err)
-			count, err := result.RowsAffected()
-			assert.NoError(t, err)
-			assert.True(t, count >= 0)
+			assert.NotNil(t, result)
+			assertSpan(t, mtr.FinishedSpans()[0], "stmt.Exec", query)
 		})
 
 		t.Run("stmt.Query", func(t *testing.T) {
+			mtr.Reset()
 			rows, err := stmt.Query(ctx)
 			assert.NoError(t, err)
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
-			for rows.Next() {
-				var id int
-				var name string
-				assert.NoError(t, rows.Scan(&id, &name))
-				assert.True(t, id > 0)
-				assert.Equal(t, "patron", name)
-			}
-			assert.NoError(t, rows.Err())
+			assertSpan(t, mtr.FinishedSpans()[0], "stmt.Query", query)
 		})
 
 		t.Run("stmt.QueryRow", func(t *testing.T) {
+			mtr.Reset()
 			row := stmt.QueryRow(ctx)
-			var id int
-			var name string
-			assert.NoError(t, row.Scan(&id, &name))
-			assert.True(t, id > 0)
-			assert.Equal(t, "patron", name)
+			assert.NotNil(t, row)
+			assertSpan(t, mtr.FinishedSpans()[0], "stmt.QueryRow", query)
 		})
 
+		mtr.Reset()
 		assert.NoError(t, stmt.Close(ctx))
+		assertSpan(t, mtr.FinishedSpans()[0], "stmt.Close", "")
 	})
 
-	t.Run("cnn", func(t *testing.T) {
-		cnn, err := db.Conn(ctx)
+	t.Run("conn", func(t *testing.T) {
+		mtr.Reset()
+		conn, err := db.Conn(ctx)
 		assert.NoError(t, err)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Conn", "")
 
-		t.Run("cnn.Ping", func(t *testing.T) {
-			assert.NoError(t, cnn.Ping(ctx))
+		t.Run("conn.Ping", func(t *testing.T) {
+			mtr.Reset()
+			assert.NoError(t, conn.Ping(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.Ping", "")
 		})
 
-		t.Run("cnn.Exec", func(t *testing.T) {
-			result, err := db.Exec(ctx, "INSERT INTO employee(name) value (?)", "patron")
+		t.Run("conn.Exec", func(t *testing.T) {
+			mtr.Reset()
+			query := "INSERT INTO employee(name) value (?)"
+			result, err := conn.Exec(ctx, query, "patron")
 			assert.NoError(t, err)
-			count, err := result.RowsAffected()
-			assert.NoError(t, err)
-			assert.True(t, count == 1)
+			assert.NotNil(t, result)
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.Exec", query)
 		})
 
-		t.Run("cnn.Query", func(t *testing.T) {
-			rows, err := cnn.Query(ctx, "SELECT * FROM employee LIMIT 1")
+		t.Run("conn.Query", func(t *testing.T) {
+			mtr.Reset()
+			query := "SELECT * FROM employee LIMIT 1"
+			rows, err := conn.Query(ctx, query)
 			assert.NoError(t, err)
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
-			for rows.Next() {
-				var id int
-				var name string
-				assert.NoError(t, rows.Scan(&id, &name))
-				assert.True(t, id > 0)
-				assert.Equal(t, "patron", name)
-			}
-			assert.NoError(t, rows.Err())
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.Query", query)
 		})
 
-		t.Run("cnn.QueryRow", func(t *testing.T) {
-			row := cnn.QueryRow(ctx, "SELECT * FROM employee LIMIT 1")
+		t.Run("conn.QueryRow", func(t *testing.T) {
+			mtr.Reset()
+			query := "SELECT * FROM employee LIMIT 1"
+			row := conn.QueryRow(ctx, query)
 			var id int
 			var name string
 			assert.NoError(t, row.Scan(&id, &name))
-			assert.True(t, id > 0)
-			assert.Equal(t, "patron", name)
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.QueryRow", query)
 		})
 
-		t.Run("cnn.QueryRow", func(t *testing.T) {
-			stmt, err := cnn.Prepare(ctx, "SELECT * FROM employee LIMIT 1")
+		t.Run("conn.Prepare", func(t *testing.T) {
+			mtr.Reset()
+			query := "SELECT * FROM employee LIMIT 1"
+			stmt, err := conn.Prepare(ctx, query)
 			assert.NoError(t, err)
 			assert.NoError(t, stmt.Close(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.Prepare", query)
 		})
 
-		t.Run("cnn.BeginTx", func(t *testing.T) {
-			tx, err := cnn.BeginTx(ctx, nil)
+		t.Run("conn.BeginTx", func(t *testing.T) {
+			mtr.Reset()
+			tx, err := conn.BeginTx(ctx, nil)
 			assert.NoError(t, err)
 			assert.NoError(t, tx.Commit(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.BeginTx", "")
 		})
 
-		assert.NoError(t, cnn.Close(ctx))
+		mtr.Reset()
+		assert.NoError(t, conn.Close(ctx))
+		assertSpan(t, mtr.FinishedSpans()[0], "conn.Close", "")
 	})
 
 	t.Run("tx", func(t *testing.T) {
+		mtr.Reset()
 		tx, err := db.BeginTx(ctx, nil)
 		assert.NoError(t, err)
-		assert.NotNil(t, db)
+		assert.NotNil(t, tx)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.BeginTx", "")
 
 		t.Run("tx.Exec", func(t *testing.T) {
-			result, err := tx.Exec(ctx, "INSERT INTO employee(name) value (?)", "patron")
+			mtr.Reset()
+			query := "INSERT INTO employee(name) value (?)"
+			result, err := tx.Exec(ctx, query, "patron")
 			assert.NoError(t, err)
 			count, err := result.RowsAffected()
 			assert.NoError(t, err)
 			assert.True(t, count == 1)
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Exec", query)
 		})
 
 		t.Run("tx.Query", func(t *testing.T) {
-			rows, err := tx.Query(ctx, "SELECT * FROM employee LIMIT 1")
+			mtr.Reset()
+			query := "SELECT * FROM employee LIMIT 1"
+			rows, err := tx.Query(ctx, query)
 			assert.NoError(t, err)
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
-			for rows.Next() {
-				var id int
-				var name string
-				assert.NoError(t, rows.Scan(&id, &name))
-				assert.True(t, id > 0)
-				assert.Equal(t, "patron", name)
-			}
-			assert.NoError(t, rows.Err())
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Query", query)
 		})
 
 		t.Run("tx.QueryRow", func(t *testing.T) {
-			row := tx.QueryRow(ctx, "SELECT * FROM employee LIMIT 1")
+			mtr.Reset()
+			query := "SELECT * FROM employee LIMIT 1"
+			row := tx.QueryRow(ctx, query)
 			var id int
 			var name string
 			assert.NoError(t, row.Scan(&id, &name))
-			assert.True(t, id > 0)
-			assert.Equal(t, "patron", name)
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.QueryRow", query)
 		})
 
 		t.Run("tx.Prepare", func(t *testing.T) {
-			stmt, err := tx.Prepare(ctx, "SELECT * FROM employee LIMIT 1")
+			mtr.Reset()
+			query := "SELECT * FROM employee LIMIT 1"
+			stmt, err := tx.Prepare(ctx, query)
 			assert.NoError(t, err)
 			assert.NoError(t, stmt.Close(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Prepare", query)
 		})
 
 		t.Run("tx.Stmt", func(t *testing.T) {
-			stmt, err := db.Prepare(ctx, "SELECT * FROM employee LIMIT 1")
+			query := "SELECT * FROM employee LIMIT 1"
+			stmt, err := db.Prepare(ctx, query)
 			assert.NoError(t, err)
+			mtr.Reset()
 			txStmt := tx.Stmt(ctx, stmt)
 			assert.NoError(t, txStmt.Close(ctx))
 			assert.NoError(t, stmt.Close(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Stmt", query)
 		})
 
 		assert.NoError(t, tx.Commit(ctx))
@@ -259,12 +275,27 @@ func TestOpenPingClose(t *testing.T) {
 			var id int
 			var name string
 			assert.NoError(t, row.Scan(&id, &name))
-			assert.True(t, id > 0)
-			assert.Equal(t, "patron", name)
 
+			mtr.Reset()
 			assert.NoError(t, tx.Rollback(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Rollback", "")
 		})
 	})
 
+	mtr.Reset()
 	assert.NoError(t, db.Close(ctx))
+	assertSpan(t, mtr.FinishedSpans()[0], "db.Close", "")
+}
+
+func assertSpan(t *testing.T, sp *mocktracer.MockSpan, opName, statement string) {
+	assert.Equal(t, opName, sp.OperationName)
+	assert.Equal(t, map[string]interface{}{
+		"component":    "sql",
+		"db.instance":  "patrondb",
+		"db.statement": statement,
+		"db.type":      "RDBMS",
+		"db.user":      "patron",
+		"version":      "dev",
+		"error":        false,
+	}, sp.Tags())
 }

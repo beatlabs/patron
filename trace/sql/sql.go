@@ -148,8 +148,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return &Tx{tx: tx}, nil
+	return &Tx{tx: tx, connInfo: connInfo{instance: db.instance, user: db.user}}, nil
 }
 
 // Close closes the database, releasing any open resources.
@@ -208,7 +207,7 @@ func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 		return nil, err
 	}
 
-	return &Stmt{stmt: stmt}, nil
+	return &Stmt{stmt: stmt, connInfo: db.connInfo, query: query}, nil
 }
 
 // Query executes a query that returns rows.
@@ -255,7 +254,8 @@ func (db *DB) Stats(ctx context.Context) sql.DBStats {
 // Stmt is a prepared statement.
 type Stmt struct {
 	connInfo
-	stmt *sql.Stmt
+	query string
+	stmt  *sql.Stmt
 }
 
 // Close closes the statement.
@@ -268,7 +268,7 @@ func (s *Stmt) Close(ctx context.Context) error {
 
 // Exec executes a prepared statement.
 func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error) {
-	sp, _ := s.startSpan(ctx, "stmt.Exec", "")
+	sp, _ := s.startSpan(ctx, "stmt.Exec", s.query)
 	res, err := s.stmt.ExecContext(ctx, args...)
 	trace.SpanComplete(sp, err)
 	if err != nil {
@@ -280,7 +280,7 @@ func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error
 
 // Query executes a prepared query statement.
 func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
-	sp, _ := s.startSpan(ctx, "stmt.Query", "")
+	sp, _ := s.startSpan(ctx, "stmt.Query", s.query)
 	rows, err := s.stmt.QueryContext(ctx, args...)
 	trace.SpanComplete(sp, err)
 	if err != nil {
@@ -292,7 +292,7 @@ func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error
 
 // QueryRow executes a prepared query statement.
 func (s *Stmt) QueryRow(ctx context.Context, args ...interface{}) *sql.Row {
-	sp, _ := s.startSpan(ctx, "stmt.QueryRow", "")
+	sp, _ := s.startSpan(ctx, "stmt.QueryRow", s.query)
 	defer trace.SpanSuccess(sp)
 	return s.stmt.QueryRowContext(ctx, args...)
 }
@@ -363,9 +363,9 @@ func (tx *Tx) Rollback(ctx context.Context) error {
 
 // Stmt returns a transaction-specific prepared statement from an existing statement.
 func (tx *Tx) Stmt(ctx context.Context, stmt *Stmt) *Stmt {
-	sp, _ := tx.startSpan(ctx, "tx.Stmt", "")
+	sp, _ := tx.startSpan(ctx, "tx.Stmt", stmt.query)
 	defer trace.SpanComplete(sp, nil)
-	return &Stmt{stmt: tx.tx.StmtContext(ctx, stmt.stmt)}
+	return &Stmt{stmt: tx.tx.StmtContext(ctx, stmt.stmt), connInfo: tx.connInfo, query: stmt.query}
 }
 
 func parseDSN(dsn string) DSNInfo {

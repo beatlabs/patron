@@ -5,7 +5,7 @@ services:
     image: mysql:5.7
     hostname: "mysql"
     networks:
-      examplenw:
+      nw:
         aliases:
           - mysql
     ports:
@@ -19,7 +19,26 @@ services:
       MYSQL_DATABASE: 'patrondb'
       MYSQL_PASSWORD: 'test123'
       MYSQL_ROOT_PASSWORD: 'test123'
+  localstack:
+    image: localstack/localstack
+    hostname: localstack
+    networks:
+      nw:
+        aliases:
+          - localstack
+    ports:
+      - "4567-4584:4567-4584"
+      - "8090:8080"
+    environment:
+      - LOCALSTACK_SERVICES=sqs,sns
+      - LOCALSTACK_DEBUG=1
+      - LOCALSTACK_DATA_DIR=/tmp/localstack/data
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=eu-west-1
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
   
 networks:
-  examplenw: {}
+  nw: {}
 

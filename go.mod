@@ -11,7 +11,6 @@ require (
 	github.com/google/uuid v1.1.0
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/julienschmidt/httprouter v1.2.0
-	github.com/lib/pq v1.3.0
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20180313041242-367231351874
 	github.com/opentracing/opentracing-go v0.0.0-20180606204148-bd9c31933947
 	github.com/prometheus/client_golang v0.9.1

@@ -43,6 +43,10 @@ func TestIntegration(t *testing.T) {
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
 	ctx := context.Background()
+
+	const query = "SELECT * FROM employee LIMIT 1"
+	const insertQuery = "INSERT INTO employee(name) value (?)"
+
 	db, err := Open("mysql", "patron:test123@tcp(127.0.0.1:3307)/patrondb?parseTime=true")
 	assert.NoError(t, err)
 	assert.NotNil(t, db)
@@ -70,16 +74,14 @@ func TestIntegration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, count >= 0)
 		mtr.Reset()
-		query := "INSERT INTO employee(name) value (?)"
 		result, err = db.Exec(ctx, query, "patron")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assertSpan(t, mtr.FinishedSpans()[0], "db.Exec", query)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Exec", insertQuery)
 	})
 
 	t.Run("db.Query", func(t *testing.T) {
 		mtr.Reset()
-		query := "SELECT * FROM employee LIMIT 1"
 		rows, err := db.Query(ctx, query)
 		defer func() {
 			assert.NoError(t, rows.Close())
@@ -91,7 +93,6 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("db.QueryRow", func(t *testing.T) {
 		mtr.Reset()
-		query := "SELECT * FROM employee LIMIT 1"
 		row := db.QueryRow(ctx, query)
 		assert.NotNil(t, row)
 		assertSpan(t, mtr.FinishedSpans()[0], "db.QueryRow", query)
@@ -106,7 +107,6 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("stmt", func(t *testing.T) {
 		mtr.Reset()
-		query := "SELECT * FROM employee LIMIT 1"
 		stmt, err := db.Prepare(ctx, query)
 		assert.NoError(t, err)
 		assertSpan(t, mtr.FinishedSpans()[0], "db.Prepare", query)
@@ -155,16 +155,14 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("conn.Exec", func(t *testing.T) {
 			mtr.Reset()
-			query := "INSERT INTO employee(name) value (?)"
 			result, err := conn.Exec(ctx, query, "patron")
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assertSpan(t, mtr.FinishedSpans()[0], "conn.Exec", query)
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.Exec", insertQuery)
 		})
 
 		t.Run("conn.Query", func(t *testing.T) {
 			mtr.Reset()
-			query := "SELECT * FROM employee LIMIT 1"
 			rows, err := conn.Query(ctx, query)
 			assert.NoError(t, err)
 			defer func() {
@@ -175,7 +173,6 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("conn.QueryRow", func(t *testing.T) {
 			mtr.Reset()
-			query := "SELECT * FROM employee LIMIT 1"
 			row := conn.QueryRow(ctx, query)
 			var id int
 			var name string
@@ -185,7 +182,6 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("conn.Prepare", func(t *testing.T) {
 			mtr.Reset()
-			query := "SELECT * FROM employee LIMIT 1"
 			stmt, err := conn.Prepare(ctx, query)
 			assert.NoError(t, err)
 			assert.NoError(t, stmt.Close(ctx))
@@ -214,18 +210,16 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("tx.Exec", func(t *testing.T) {
 			mtr.Reset()
-			query := "INSERT INTO employee(name) value (?)"
 			result, err := tx.Exec(ctx, query, "patron")
 			assert.NoError(t, err)
 			count, err := result.RowsAffected()
 			assert.NoError(t, err)
 			assert.True(t, count == 1)
-			assertSpan(t, mtr.FinishedSpans()[0], "tx.Exec", query)
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Exec", insertQuery)
 		})
 
 		t.Run("tx.Query", func(t *testing.T) {
 			mtr.Reset()
-			query := "SELECT * FROM employee LIMIT 1"
 			rows, err := tx.Query(ctx, query)
 			assert.NoError(t, err)
 			defer func() {
@@ -236,7 +230,6 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("tx.QueryRow", func(t *testing.T) {
 			mtr.Reset()
-			query := "SELECT * FROM employee LIMIT 1"
 			row := tx.QueryRow(ctx, query)
 			var id int
 			var name string
@@ -246,7 +239,6 @@ func TestIntegration(t *testing.T) {
 
 		t.Run("tx.Prepare", func(t *testing.T) {
 			mtr.Reset()
-			query := "SELECT * FROM employee LIMIT 1"
 			stmt, err := tx.Prepare(ctx, query)
 			assert.NoError(t, err)
 			assert.NoError(t, stmt.Close(ctx))
@@ -254,7 +246,6 @@ func TestIntegration(t *testing.T) {
 		})
 
 		t.Run("tx.Stmt", func(t *testing.T) {
-			query := "SELECT * FROM employee LIMIT 1"
 			stmt, err := db.Prepare(ctx, query)
 			assert.NoError(t, err)
 			mtr.Reset()
@@ -271,7 +262,7 @@ func TestIntegration(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, db)
 
-			row := tx.QueryRow(ctx, "SELECT * FROM employee LIMIT 1")
+			row := tx.QueryRow(ctx, query)
 			var id int
 			var name string
 			assert.NoError(t, row.Scan(&id, &name))

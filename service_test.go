@@ -133,9 +133,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
 			assert.NoError(t, err)
-			s, err := New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
-			assert.NoError(t, err)
-			err = s.run(tt.ctx)
+			err = New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Run(tt.ctx)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -174,6 +172,42 @@ func TestServer_SetupTracing(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
+}
+
+func TestBuild_FailingConditions(t *testing.T) {
+	tests := []struct {
+		name         string
+		cp           Component
+		ctx          context.Context
+		samplerParam string
+		port         string
+	}{
+		{name: "failure w/ port", cp: &testComponent{}, ctx: context.Background(), port: "foo"},
+		{name: "failure w/ overflowing port", cp: &testComponent{}, ctx: context.Background(), port: "153000"},
+		{name: "failure w/ sampler param", cp: &testComponent{}, ctx: context.Background(), samplerParam: "foo"},
+		{name: "failure w/ overflowing sampler param", cp: &testComponent{}, ctx: context.Background(), samplerParam: "8"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.samplerParam != "" {
+				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tt.samplerParam)
+				assert.NoError(t, err)
+			}
+			if tt.port != "" {
+				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
+				assert.NoError(t, err)
+			}
+			err := New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Run(tt.ctx)
+			assert.Error(t, err)
+		})
+	}
+
+	err := os.Unsetenv("PATRON_JAEGER_SAMPLER_PARAM")
+	assert.NoError(t, err)
+
+	err = os.Unsetenv("PATRON_HTTP_DEFAULT_PORT")
+	assert.NoError(t, err)
 }
 
 func getRandomPort() string {

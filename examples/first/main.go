@@ -34,7 +34,7 @@ func main() {
 	name := "first"
 	version := "1.0.0"
 
-	err := patron.Setup(name, version)
+	err := patron.SetupLogging(name, version)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
@@ -55,26 +55,19 @@ func main() {
 			h.ServeHTTP(w, r)
 		})
 	}
-	sig := patron.SIGHUP(func() {
+	sig := func() {
 		fmt.Println("exit gracefully...")
 		os.Exit(0)
-	})
-
-	srv, err := patron.New(
-		name,
-		version,
-		patron.Routes(routes),
-		patron.Middlewares(middlewareCors),
-		sig,
-	)
-	if err != nil {
-		log.Fatalf("failed to create service %v", err)
 	}
 
 	ctx := context.Background()
-	err = srv.Run(ctx)
+	err = patron.New(name, version).
+		WithRoutes(routes).
+		WithMiddlewares(middlewareCors).
+		WithSIGHUP(sig).
+		Run(ctx)
 	if err != nil {
-		log.Fatalf("failed to run service %v", err)
+		log.Fatalf("failed to create and run service %v", err)
 	}
 }
 

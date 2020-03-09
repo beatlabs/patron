@@ -86,21 +86,16 @@ var (
 func main() {
 	name := "name"
 
-	err := patron.Setup(name, version)
+	err := patron.SetupLogger(name, version)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
 	}
 
-	srv, err := patron.New(name, version)
-	if err != nil {
-		log.Fatalf("failed to create service %v", err)
-	}
-
 	ctx := context.Background()
-	err = srv.Run(ctx)
+	err = patron.New(name, version).Run(ctx)
 	if err != nil {
-		log.Fatalf("failed to run service %v", err)
+		log.Fatalf("failed to create and run service %v", err)
 	}
 }
 `

@@ -12,7 +12,7 @@ import (
 )
 
 func TestVersion(t *testing.T) {
-	seed := createKafkaBroker(t, true)
+	seed := createKafkaBroker(t)
 	type args struct {
 		version string
 	}
@@ -41,7 +41,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestTimeouts(t *testing.T) {
-	seed := createKafkaBroker(t, true)
+	seed := createKafkaBroker(t)
 	type args struct {
 		dial time.Duration
 	}
@@ -66,18 +66,15 @@ func TestTimeouts(t *testing.T) {
 	}
 }
 
-func createKafkaBroker(t *testing.T, retError bool) *sarama.MockBroker {
+func createKafkaBroker(t *testing.T) *sarama.MockBroker {
 	lead := sarama.NewMockBroker(t, 2)
 	metadataResponse := new(sarama.MetadataResponse)
 	metadataResponse.AddBroker(lead.Addr(), lead.BrokerID())
 	metadataResponse.AddTopicPartition("TOPIC", 0, lead.BrokerID(), nil, nil, sarama.ErrNoError)
 
 	prodSuccess := new(sarama.ProduceResponse)
-	if retError {
-		prodSuccess.AddTopicPartition("TOPIC", 0, sarama.ErrDuplicateSequenceNumber)
-	} else {
-		prodSuccess.AddTopicPartition("TOPIC", 0, sarama.ErrNoError)
-	}
+	prodSuccess.AddTopicPartition("TOPIC", 0, sarama.ErrDuplicateSequenceNumber)
+
 	lead.Returns(prodSuccess)
 
 	config := sarama.NewConfig()
@@ -89,7 +86,7 @@ func createKafkaBroker(t *testing.T, retError bool) *sarama.MockBroker {
 }
 
 func TestRequiredAcksPolicy(t *testing.T) {
-	seed := createKafkaBroker(t, true)
+	seed := createKafkaBroker(t)
 	type args struct {
 		requiredAcks RequiredAcks
 	}
@@ -117,7 +114,7 @@ func TestRequiredAcksPolicy(t *testing.T) {
 }
 
 func TestEncoder(t *testing.T) {
-	seed := createKafkaBroker(t, true)
+	seed := createKafkaBroker(t)
 	type args struct {
 		enc         encoding.EncodeFunc
 		contentType string
@@ -148,7 +145,7 @@ func TestEncoder(t *testing.T) {
 }
 
 func TestBrokers(t *testing.T) {
-	seed := createKafkaBroker(t, true)
+	seed := createKafkaBroker(t)
 
 	type args struct {
 		brokers []string

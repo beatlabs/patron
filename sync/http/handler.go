@@ -32,7 +32,7 @@ func handler(hnd sync.ProcessorFunc) http.HandlerFunc {
 
 		corID := getOrSetCorrelationID(r.Header)
 		ctx := correlation.ContextWithID(r.Context(), corID)
-		logger := log.Sub(map[string]interface{}{"correlationID": corID})
+		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 		ctx = log.WithContext(ctx, logger)
 
 		h := extractHeaders(r)

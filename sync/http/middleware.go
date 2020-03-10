@@ -112,7 +112,7 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 			lw := newResponseWriter(w)
 			next.ServeHTTP(lw, r)
 			trace_http.FinishSpan(sp, lw.Status())
-			logRequestResponse(lw, r)
+			logRequestResponse(corID, lw, r)
 		})
 	}
 }
@@ -125,7 +125,7 @@ func MiddlewareChain(f http.Handler, mm ...MiddlewareFunc) http.Handler {
 	return f
 }
 
-func logRequestResponse(w *responseWriter, r *http.Request) {
+func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 	if !log.Enabled(log.DebugLevel) {
 		return
 	}
@@ -144,6 +144,7 @@ func logRequestResponse(w *responseWriter, r *http.Request) {
 			"status":         w.Status(),
 			"referer":        r.Referer(),
 			"user-agent":     r.UserAgent(),
+			correlation.ID:   corID,
 		},
 	}
 	log.Sub(info).Debug()

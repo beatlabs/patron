@@ -19,6 +19,12 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v1
 
+      - name: Docker Compose Up
+        run: docker-compose up -d
+    
+      - name: Check running containers
+        run: docker ps -a
+
       - name: Running CI
         run: make ci
 

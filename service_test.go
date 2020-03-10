@@ -9,40 +9,111 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/beatlabs/patron/log"
 	phttp "github.com/beatlabs/patron/sync/http"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewServer(t *testing.T) {
-	route := phttp.NewRoute("/", "GET", nil, true, nil)
-	middleware := func(h http.Handler) http.Handler {
+	getRoute := phttp.NewRoute("/", "GET", nil, true, nil)
+	putRoute := phttp.NewRoute("/", "PUT", nil, true, nil)
+
+	middleware := phttp.MiddlewareFunc(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		})
-	}
-	type args struct {
-		name string
-		opt  []OptionFunc
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+	})
+
+	var httpBuilderAllErrors = errors.New("name is required\n" +
+		"provided routes slice was empty\n" +
+		"provided middlewares slice was empty\n" +
+		"alive check func provided was nil\n" +
+		"ready check func provided was nil\n" +
+		"provided components slice was empty\n" +
+		"provided SIGHUP handler was nil\n")
+
+	tests := map[string]struct {
+		name          string
+		version       string
+		cps           []Component
+		routes        []phttp.Route
+		middlewares   []phttp.MiddlewareFunc
+		acf           phttp.AliveCheckFunc
+		rcf           phttp.ReadyCheckFunc
+		sighupHandler func()
+		wantErr       error
 	}{
-		{"success", args{name: "test", opt: []OptionFunc{Routes([]phttp.Route{route}), Middlewares(middleware)}}, false},
-		{"failed empty middlewares", args{name: "test", opt: []OptionFunc{Routes([]phttp.Route{route}), Middlewares([]phttp.MiddlewareFunc{}...)}}, true},
-		{"failed missing name", args{name: "", opt: []OptionFunc{Routes([]phttp.Route{route})}}, true},
-		{"failed missing routes", args{name: "test", opt: []OptionFunc{Routes([]phttp.Route{})}}, true},
+		"success": {
+			name:          "test",
+			version:       "dev",
+			cps:           []Component{&testComponent{}, &testComponent{}},
+			routes:        []phttp.Route{getRoute, putRoute},
+			middlewares:   []phttp.MiddlewareFunc{middleware},
+			acf:           phttp.DefaultAliveCheck,
+			rcf:           phttp.DefaultReadyCheck,
+			sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
+			wantErr:       nil,
+		},
+		"nil inputs steps": {
+			name:          "",
+			version:       "",
+			cps:           nil,
+			routes:        nil,
+			middlewares:   nil,
+			acf:           nil,
+			rcf:           nil,
+			sighupHandler: nil,
+			wantErr:       httpBuilderAllErrors,
+		},
+		"error in all builder steps": {
+			name:          "",
+			version:       "",
+			cps:           []Component{},
+			routes:        []phttp.Route{},
+			middlewares:   []phttp.MiddlewareFunc{},
+			acf:           nil,
+			rcf:           nil,
+			sighupHandler: nil,
+			wantErr:       httpBuilderAllErrors,
+		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, "", tt.args.opt...)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, got)
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotService, gotErr := New(tt.name, tt.version).
+				WithRoutes(tt.routes).
+				WithMiddlewares(tt.middlewares...).
+				WithAliveCheck(tt.acf).
+				WithReadyCheck(tt.rcf).
+				WithComponents(tt.cps...).
+				WithSIGHUP(tt.sighupHandler).
+				build()
+
+			if tt.wantErr != nil {
+				assert.Equal(t, tt.wantErr.Error(), gotErr.Error())
+				assert.Nil(t, gotService)
 			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, got)
+				assert.Nil(t, gotErr)
+				assert.NotNil(t, gotService)
+				assert.IsType(t, &service{}, gotService)
+
+				assert.NotEmpty(t, gotService.cps)
+				assert.Len(t, gotService.routes, len(tt.routes))
+				assert.Len(t, gotService.middlewares, len(tt.middlewares))
+				assert.NotNil(t, gotService.rcf)
+				assert.NotNil(t, gotService.acf)
+				assert.NotNil(t, gotService.termSig)
+				assert.NotNil(t, gotService.sighupHandler)
+
+				for _, comp := range tt.cps {
+					assert.Contains(t, gotService.cps, comp)
+				}
+				for i, route := range tt.routes {
+					assert.Equal(t, gotService.routes[i].Method, route.Method)
+				}
+				for _, middleware := range tt.middlewares {
+					assert.NotNil(t, middleware)
+				}
 			}
 		})
 	}
@@ -62,9 +133,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
 			assert.NoError(t, err)
-			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
-			assert.NoError(t, err)
-			err = s.Run(tt.ctx)
+			err = New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Run(tt.ctx)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -97,12 +166,48 @@ func TestServer_SetupTracing(t *testing.T) {
 				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", tt.port)
 				assert.NoError(t, err)
 			}
-			s, err := New("test", "", Components(tt.cp, tt.cp, tt.cp))
+			s, err := New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
 			assert.NoError(t, err)
-			err = s.Run(tt.ctx)
+			err = s.run(tt.ctx)
 			assert.NoError(t, err)
 		})
 	}
+}
+
+func TestBuild_FailingConditions(t *testing.T) {
+	tests := []struct {
+		name         string
+		cp           Component
+		ctx          context.Context
+		samplerParam string
+		port         string
+	}{
+		{name: "failure w/ port", cp: &testComponent{}, ctx: context.Background(), port: "foo"},
+		{name: "failure w/ overflowing port", cp: &testComponent{}, ctx: context.Background(), port: "153000"},
+		{name: "failure w/ sampler param", cp: &testComponent{}, ctx: context.Background(), samplerParam: "foo"},
+		{name: "failure w/ overflowing sampler param", cp: &testComponent{}, ctx: context.Background(), samplerParam: "8"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.samplerParam != "" {
+				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tt.samplerParam)
+				assert.NoError(t, err)
+			}
+			if tt.port != "" {
+				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
+				assert.NoError(t, err)
+			}
+			err := New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Run(tt.ctx)
+			assert.Error(t, err)
+		})
+	}
+
+	err := os.Unsetenv("PATRON_JAEGER_SAMPLER_PARAM")
+	assert.NoError(t, err)
+
+	err = os.Unsetenv("PATRON_HTTP_DEFAULT_PORT")
+	assert.NoError(t, err)
 }
 
 func getRandomPort() string {

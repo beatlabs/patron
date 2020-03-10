@@ -155,7 +155,7 @@ func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.D
 	sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, msg.Topic),
 		consumerComponent, corID, mapHeader(msg.Headers))
 	ctxCh = correlation.ContextWithID(ctxCh, corID)
-	ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{"correlationID": corID}))
+	ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{correlation.ID: corID}))
 
 	dec, err := determineDecoder(d, msg, sp)
 	if err != nil {

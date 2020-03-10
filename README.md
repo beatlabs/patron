@@ -12,6 +12,7 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 - components and processors, which provide an abstraction of adding processing functionality to the service
   - asynchronous message processing (RabbitMQ, Kafka, AWS SQS)
   - synchronous processing (HTTP)
+  - gRPC support
 - metrics and tracing
 - logging
 
@@ -112,12 +113,14 @@ The above API gives the `Service` the ability to start and gracefully shutdown a
 The following component implementations are available:
 
 - HTTP (sync)
+- gRPC
 - RabbitMQ consumer (async)
 - Kafka consumer (async)
+- AWS SQS (async)
 
 Adding to the above list is as easy as implementing a `Component` and a `Processor` for that component.
 
-### Middleware
+### HTTP Middlewares
 
 A `MiddlewareFunc` preserves the default net/http middleware pattern.
 You can create new middleware functions and pass them to Service to be chained on all routes in the default Http Component.
@@ -135,6 +138,11 @@ newMiddleware := func(h http.Handler) http.Handler {
 }
 ```
 
+### gRPC
+
+On the server side, the gRPC component injects a `UnaryInterceptor` which handles tracing and log propagation.
+On the client side, we inject a `UnaryInterceptor` which handles tracing and log propagation.
+
 ## Examples
 
 Detailed examples can be found in the [examples](/examples) folder with the following components involved:
@@ -145,6 +153,7 @@ Detailed examples can be found in the [examples](/examples) folder with the foll
 - [Kafka Producer Component](/examples/seventh/main.go)
 - [AMQP Component, AWS SNS](/examples/fourth/main.go)
 - [AWS SQS](/examples/fifth/main.go)
+- [gRPC](/examples/sixth/main.go)
 
 ## Processors
 

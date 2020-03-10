@@ -9,13 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/async"
 	patronsqs "github.com/beatlabs/patron/async/sqs"
+	patrongrpc "github.com/beatlabs/patron/client/grpc"
+	"github.com/beatlabs/patron/component/grpc/greeter"
+	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -49,11 +52,19 @@ func main() {
 	name := "fifth"
 	version := "1.0.0"
 
-	err := patron.Setup(name, version)
+	err := patron.SetupLogging(name, version)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
 	}
+
+	cc, err := patrongrpc.Dial("localhost:50006", grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("failed to dial grpc connection: %v", err)
+	}
+	defer cc.Close()
+
+	greeter := greeter.NewGreeterClient(cc)
 
 	// Initialise SQS
 	sqsAPI := sqs.New(
@@ -67,29 +78,25 @@ func main() {
 			),
 		),
 	)
-	sqsCmp, err := createSQSComponent(sqsAPI)
+	sqsCmp, err := createSQSComponent(sqsAPI, greeter)
 	if err != nil {
 		log.Fatalf("failed to create sqs component: %v", err)
 	}
 
 	// Run the server
-	srv, err := patron.New(name, version, patron.Components(sqsCmp.cmp))
-	if err != nil {
-		log.Fatalf("failed to create service: %v", err)
-	}
-
 	ctx := context.Background()
-	err = srv.Run(ctx)
+	err = patron.New(name, version).WithComponents(sqsCmp.cmp).Run(ctx)
 	if err != nil {
-		log.Fatalf("failed to run service: %v", err)
+		log.Fatalf("failed to create and run service: %v", err)
 	}
 }
 
 type sqsComponent struct {
-	cmp patron.Component
+	cmp     patron.Component
+	greeter greeter.GreeterClient
 }
 
-func createSQSComponent(api sqsiface.SQSAPI) (*sqsComponent, error) {
+func createSQSComponent(api sqsiface.SQSAPI, greeter greeter.GreeterClient) (*sqsComponent, error) {
 	sqsCmp := sqsComponent{}
 
 	cf, err := patronsqs.NewFactory(api, awsSQSQueue)
@@ -105,18 +112,27 @@ func createSQSComponent(api sqsiface.SQSAPI) (*sqsComponent, error) {
 		return nil, err
 	}
 	sqsCmp.cmp = cmp
+	sqsCmp.greeter = greeter
 
 	return &sqsCmp, nil
 }
 
 func (ac *sqsComponent) Process(msg async.Message) error {
-	var got sns.PublishInput
+	var u examples.User
 
-	err := msg.Decode(&got)
+	err := msg.Decode(&u)
 	if err != nil {
 		return err
 	}
 
-	log.FromContext(msg.Context()).Infof("request processed: %v", got.Message)
+	logger := log.FromContext(msg.Context())
+	logger.Infof("request processed: %v, sending request to sixth service", u.String())
+
+	reply, err := ac.greeter.SayHello(msg.Context(), &greeter.HelloRequest{Firstname: u.GetFirstname(), Lastname: u.GetLastname()})
+	if err != nil {
+		logger.Errorf("failed to send request: %v", err)
+	}
+
+	logger.Infof("Reply from sixth service: %s", reply.GetMessage())
 	return nil
 }

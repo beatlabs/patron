@@ -25,9 +25,9 @@ type Component interface {
 	Run(ctx context.Context) error
 }
 
-// Service is responsible for managing and setting up everything.
+// service is responsible for managing and setting up everything.
 // The service will start by default a HTTP component in order to host management endpoint.
-type Service struct {
+type service struct {
 	cps           []Component
 	routes        []http.Route
 	middlewares   []http.MiddlewareFunc
@@ -37,40 +37,143 @@ type Service struct {
 	sighupHandler func()
 }
 
-// New creates a new named service and allows for customization through functional options.
-func New(name, version string, oo ...OptionFunc) (*Service, error) {
-	if name == "" {
-		return nil, errors.New("name is required")
-	}
+const fieldSetMsg = "Setting service property '%v' with '%v'"
 
+// Builder gathers all required properties to
+// construct a Patron service.
+type Builder struct {
+	errors        []error
+	name          string
+	version       string
+	cps           []Component
+	routes        []http.Route
+	middlewares   []http.MiddlewareFunc
+	acf           http.AliveCheckFunc
+	rcf           http.ReadyCheckFunc
+	termSig       chan os.Signal
+	sighupHandler func()
+}
+
+// New initiates the Service builder chain.
+// The builder contains default values for Alive/Ready checks,
+// the SIGHUP handler and its version.
+func New(name, version string) *Builder {
+	var errs []error
+
+	if name == "" {
+		errs = append(errs, errors.New("name is required"))
+	}
 	if version == "" {
 		version = "dev"
 	}
 
-	s := Service{
-		cps:           []Component{},
+	return &Builder{
+		errors:        errs,
+		name:          name,
+		version:       version,
 		acf:           http.DefaultAliveCheck,
 		rcf:           http.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),
 		sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
-		middlewares:   []http.MiddlewareFunc{},
+	}
+}
+
+// WithRoutes adds routes to the default HTTP component.
+func (b *Builder) WithRoutes(rr []http.Route) *Builder {
+	if len(rr) == 0 {
+		b.errors = append(b.errors, errors.New("provided routes slice was empty"))
+	} else {
+		log.Infof(fieldSetMsg, "routes", rr)
+		b.routes = append(b.routes, rr...)
 	}
 
-	err := Setup(name, version)
+	return b
+}
+
+// WithMiddlewares adds generic middlewares to the default HTTP component.
+func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {
+	if len(mm) == 0 {
+		b.errors = append(b.errors, errors.New("provided middlewares slice was empty"))
+	} else {
+		log.Infof(fieldSetMsg, "middlewares", mm)
+		b.middlewares = append(b.middlewares, mm...)
+	}
+
+	return b
+}
+
+// WithAliveCheck overrides the default liveness check of the default HTTP component.
+func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder {
+	if acf == nil {
+		b.errors = append(b.errors, errors.New("alive check func provided was nil"))
+	} else {
+		log.Infof(fieldSetMsg, "alive check func", acf)
+		b.acf = acf
+	}
+
+	return b
+}
+
+// WithReadyCheck overrides the default readiness check of the default HTTP component.
+func (b *Builder) WithReadyCheck(rcf http.ReadyCheckFunc) *Builder {
+	if rcf == nil {
+		b.errors = append(b.errors, errors.New("ready check func provided was nil"))
+	} else {
+		log.Infof(fieldSetMsg, "ready check func", rcf)
+		b.rcf = rcf
+	}
+
+	return b
+}
+
+// WithComponents adds custom components to the Patron service.
+func (b *Builder) WithComponents(cc ...Component) *Builder {
+	if len(cc) == 0 {
+		b.errors = append(b.errors, errors.New("provided components slice was empty"))
+	} else {
+		log.Infof(fieldSetMsg, "components", cc)
+		b.cps = cc
+	}
+
+	return b
+}
+
+// WithSIGHUP adds a custom handler for when the service receives a SIGHUP.
+func (b *Builder) WithSIGHUP(handler func()) *Builder {
+	if handler == nil {
+		b.errors = append(b.errors, errors.New("provided SIGHUP handler was nil"))
+	} else {
+		log.Infof(fieldSetMsg, "SIGHUP handler", handler)
+		b.sighupHandler = handler
+	}
+
+	return b
+}
+
+// Build constructs the Patron service by applying the gathered properties.
+func (b *Builder) build() (*service, error) {
+	if len(b.errors) > 0 {
+		return nil, patronErrors.Aggregate(b.errors...)
+	}
+
+	s := service{
+		cps:           b.cps,
+		routes:        b.routes,
+		middlewares:   b.middlewares,
+		acf:           b.acf,
+		rcf:           b.rcf,
+		termSig:       b.termSig,
+		sighupHandler: b.sighupHandler,
+	}
+
+	err := SetupLogging(b.name, b.version)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.setupDefaultTracing(name, version)
+	err = s.setupDefaultTracing(b.name, b.version)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, o := range oo {
-		err = o(&s)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	httpCp, err := s.createHTTPComponent()
@@ -83,14 +186,23 @@ func New(name, version string, oo ...OptionFunc) (*Service, error) {
 	return &s, nil
 }
 
-func (s *Service) setupOSSignal() {
-	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
-}
-
 // Run starts up all service components and monitors for errors.
 // If a component returns a error the service is responsible for shutting down
 // all components and terminate itself.
-func (s *Service) Run(ctx context.Context) error {
+func (b *Builder) Run(ctx context.Context) error {
+	s, err := b.build()
+	if err != nil {
+		return err
+	}
+
+	return s.run(ctx)
+}
+
+func (s *service) setupOSSignal() {
+	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+}
+
+func (s *service) run(ctx context.Context) error {
 	defer func() {
 		err := trace.Close()
 		if err != nil {
@@ -121,8 +233,8 @@ func (s *Service) Run(ctx context.Context) error {
 	return patronErrors.Aggregate(ee...)
 }
 
-// Setup set's up metrics and default logging.
-func Setup(name, version string) error {
+// SetupLogging sets up the default metrics logging.
+func SetupLogging(name, version string) error {
 
 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
 	if !ok {
@@ -146,7 +258,7 @@ func Setup(name, version string) error {
 	return err
 }
 
-func (s *Service) setupDefaultTracing(name, version string) error {
+func (s *service) setupDefaultTracing(name, version string) error {
 	var err error
 
 	host, ok := os.LookupEnv("PATRON_JAEGER_AGENT_HOST")
@@ -176,7 +288,7 @@ func (s *Service) setupDefaultTracing(name, version string) error {
 	return trace.Setup(name, version, agent, tp, prmVal)
 }
 
-func (s *Service) createHTTPComponent() (Component, error) {
+func (s *service) createHTTPComponent() (Component, error) {
 	var err error
 	var portVal = int64(50000)
 	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
@@ -215,7 +327,7 @@ func (s *Service) createHTTPComponent() (Component, error) {
 	return cp, nil
 }
 
-func (s *Service) waitTermination(chErr <-chan error) error {
+func (s *service) waitTermination(chErr <-chan error) error {
 	for {
 		select {
 		case sig := <-s.termSig:

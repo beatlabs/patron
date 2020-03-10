@@ -71,10 +71,10 @@ go run examples/fifth/main.go
 go run examples/sixth/main.go examples/sixth/greeter.pb.go
 ```
 
-Start sixth service:
+Start seventh service:
 
 ```shell
-go run examples/sixth/main.go
+go run examples/seventh/main.go
 ```
 
 and the use curl to send a request:

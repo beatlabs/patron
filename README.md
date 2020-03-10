@@ -142,7 +142,7 @@ Detailed examples can be found in the [examples](/examples) folder with the foll
 - [HTTP Component, HTTP Tracing, HTTP middleware](/examples/first/main.go)
 - [Kafka Consumer Component, HTTP Component, HTTP Authentication, Kafka Tracing](/examples/second/main.go)
 - [Kafka Consumer Component, AMQP Tracing](/examples/third/main.go)
-- [Kafka Producer Component](/examples/sixth/main.go)
+- [Kafka Producer Component](/examples/seventh/main.go)
 - [AMQP Component, AWS SNS](/examples/fourth/main.go)
 - [AWS SQS](/examples/fifth/main.go)
 

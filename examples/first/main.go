@@ -40,11 +40,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Set up routes
-	routes, err := patronhttp.NewRoutesBuilder().Append(patronhttp.NewRouteBuilder("/", first).WithMethodPost()).Build()
-	if err != nil {
-		log.Fatalf("failed to create routes %v", err)
-	}
+	routesBuilder := patronhttp.NewRoutesBuilder().Append(patronhttp.NewRouteBuilder("/", first).WithMethodPost())
 
 	// Setup a simple CORS middleware
 	middlewareCors := func(h http.Handler) http.Handler {
@@ -63,7 +59,7 @@ func main() {
 
 	ctx := context.Background()
 	err = patron.New(name, version).
-		WithRoutes(routes).
+		WithRoutes(routesBuilder).
 		WithMiddlewares(middlewareCors).
 		WithSIGHUP(sig).
 		Run(ctx)

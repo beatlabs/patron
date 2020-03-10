@@ -61,15 +61,11 @@ func main() {
 		log.Fatalf("failed to create authenticator %v", err)
 	}
 
-	// Set up routes
-	routes, err := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewRouteBuilder("/", httpCmp.second).WithMethodGet().WithTrace().WithAuth(auth)).Build()
-	if err != nil {
-		log.Fatalf("failed to create routes %v", err)
-	}
+	routesBuilder := patronhttp.NewRoutesBuilder().
+		Append(patronhttp.NewRouteBuilder("/", httpCmp.second).WithMethodGet().WithTrace().WithAuth(auth))
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithRoutes(routes).Run(ctx)
+	err = patron.New(name, version).WithRoutes(routesBuilder).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

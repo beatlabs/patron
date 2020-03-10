@@ -12,14 +12,13 @@ import (
 	"github.com/beatlabs/patron/log"
 	phttp "github.com/beatlabs/patron/sync/http"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewServer(t *testing.T) {
 
-	routes, err := phttp.NewRoutesBuilder().
-		Append(phttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).WithMethodGet()).Build()
-	require.NoError(t, err)
+	routesBuilder := phttp.NewRoutesBuilder().
+		Append(phttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).WithMethodGet())
+
 	middleware := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
@@ -27,7 +26,7 @@ func TestNewServer(t *testing.T) {
 	}
 
 	var httpBuilderAllErrors = errors.New("name is required\n" +
-		"provided routes slice was empty\n" +
+		"routes builder is nil\n" +
 		"provided middlewares slice was empty\n" +
 		"alive check func provided was nil\n" +
 		"ready check func provided was nil\n" +
@@ -38,7 +37,7 @@ func TestNewServer(t *testing.T) {
 		name          string
 		version       string
 		cps           []Component
-		routes        []phttp.Route
+		routesBuilder *phttp.RoutesBuilder
 		middlewares   []phttp.MiddlewareFunc
 		acf           phttp.AliveCheckFunc
 		rcf           phttp.ReadyCheckFunc
@@ -49,7 +48,7 @@ func TestNewServer(t *testing.T) {
 			name:          "test",
 			version:       "dev",
 			cps:           []Component{&testComponent{}, &testComponent{}},
-			routes:        routes,
+			routesBuilder: routesBuilder,
 			middlewares:   []phttp.MiddlewareFunc{middleware},
 			acf:           phttp.DefaultAliveCheck,
 			rcf:           phttp.DefaultReadyCheck,
@@ -60,7 +59,7 @@ func TestNewServer(t *testing.T) {
 			name:          "",
 			version:       "",
 			cps:           nil,
-			routes:        nil,
+			routesBuilder: nil,
 			middlewares:   nil,
 			acf:           nil,
 			rcf:           nil,
@@ -71,7 +70,7 @@ func TestNewServer(t *testing.T) {
 			name:          "",
 			version:       "",
 			cps:           []Component{},
-			routes:        []phttp.Route{},
+			routesBuilder: nil,
 			middlewares:   []phttp.MiddlewareFunc{},
 			acf:           nil,
 			rcf:           nil,
@@ -83,7 +82,7 @@ func TestNewServer(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			gotService, gotErr := New(tt.name, tt.version).
-				WithRoutes(tt.routes).
+				WithRoutes(tt.routesBuilder).
 				WithMiddlewares(tt.middlewares...).
 				WithAliveCheck(tt.acf).
 				WithReadyCheck(tt.rcf).
@@ -100,7 +99,7 @@ func TestNewServer(t *testing.T) {
 				assert.IsType(t, &service{}, gotService)
 
 				assert.NotEmpty(t, gotService.cps)
-				assert.Len(t, gotService.routes, len(tt.routes))
+				assert.NotNil(t, gotService.routesBuilder)
 				assert.Len(t, gotService.middlewares, len(tt.middlewares))
 				assert.NotNil(t, gotService.rcf)
 				assert.NotNil(t, gotService.acf)
@@ -110,7 +109,7 @@ func TestNewServer(t *testing.T) {
 				for _, comp := range tt.cps {
 					assert.Contains(t, gotService.cps, comp)
 				}
-				assert.Len(t, gotService.routes, len(tt.routes))
+
 				for _, middleware := range tt.middlewares {
 					assert.NotNil(t, middleware)
 				}

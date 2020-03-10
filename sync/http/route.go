@@ -62,48 +62,48 @@ func (rb *RouteBuilder) setMethod(method string) *RouteBuilder {
 	return rb
 }
 
-// WithMethodGet HTTP method.
-func (rb *RouteBuilder) WithMethodGet() *RouteBuilder {
+// MethodGet HTTP method.
+func (rb *RouteBuilder) MethodGet() *RouteBuilder {
 	return rb.setMethod(http.MethodGet)
 }
 
-// WithMethodHead HTTP method.
-func (rb *RouteBuilder) WithMethodHead() *RouteBuilder {
+// MethodHead HTTP method.
+func (rb *RouteBuilder) MethodHead() *RouteBuilder {
 	return rb.setMethod(http.MethodHead)
 }
 
-// WithMethodPost HTTP method.
-func (rb *RouteBuilder) WithMethodPost() *RouteBuilder {
+// MethodPost HTTP method.
+func (rb *RouteBuilder) MethodPost() *RouteBuilder {
 	return rb.setMethod(http.MethodPost)
 }
 
-// WithMethodPut HTTP method.
-func (rb *RouteBuilder) WithMethodPut() *RouteBuilder {
+// MethodPut HTTP method.
+func (rb *RouteBuilder) MethodPut() *RouteBuilder {
 	return rb.setMethod(http.MethodPut)
 }
 
-// WithMethodPatch HTTP method.
-func (rb *RouteBuilder) WithMethodPatch() *RouteBuilder {
+// MethodPatch HTTP method.
+func (rb *RouteBuilder) MethodPatch() *RouteBuilder {
 	return rb.setMethod(http.MethodPatch)
 }
 
-// WithMethodDelete HTTP method.
-func (rb *RouteBuilder) WithMethodDelete() *RouteBuilder {
+// MethodDelete HTTP method.
+func (rb *RouteBuilder) MethodDelete() *RouteBuilder {
 	return rb.setMethod(http.MethodDelete)
 }
 
-// WithMethodConnect HTTP method.
-func (rb *RouteBuilder) WithMethodConnect() *RouteBuilder {
+// MethodConnect HTTP method.
+func (rb *RouteBuilder) MethodConnect() *RouteBuilder {
 	return rb.setMethod(http.MethodConnect)
 }
 
-// WithMethodOptions HTTP method.
-func (rb *RouteBuilder) WithMethodOptions() *RouteBuilder {
+// MethodOptions HTTP method.
+func (rb *RouteBuilder) MethodOptions() *RouteBuilder {
 	return rb.setMethod(http.MethodOptions)
 }
 
-// WithMethodTrace HTTP method.
-func (rb *RouteBuilder) WithMethodTrace() *RouteBuilder {
+// MethodTrace HTTP method.
+func (rb *RouteBuilder) MethodTrace() *RouteBuilder {
 	return rb.setMethod(http.MethodTrace)
 }
 

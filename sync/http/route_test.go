@@ -37,9 +37,9 @@ func TestRouteBuilder_WithMethodGet(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {})
 			if tt.args.methodExists {
-				rb.WithMethodGet()
+				rb.MethodGet()
 			}
-			got, err := rb.WithMethodGet().Build()
+			got, err := rb.MethodGet().Build()
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -53,42 +53,42 @@ func TestRouteBuilder_WithMethodGet(t *testing.T) {
 }
 
 func TestRouteBuilder_WithMethodPost(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodPost()
+	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodPost()
 	assert.Equal(t, http.MethodPost, rb.method)
 }
 
 func TestRouteBuilder_WithMethodPut(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodPut()
+	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodPut()
 	assert.Equal(t, http.MethodPut, rb.method)
 }
 
 func TestRouteBuilder_WithMethodPatch(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodPatch()
+	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodPatch()
 	assert.Equal(t, http.MethodPatch, rb.method)
 }
 
 func TestRouteBuilder_WithMethodConnect(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodConnect()
+	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodConnect()
 	assert.Equal(t, http.MethodConnect, rb.method)
 }
 
 func TestRouteBuilder_WithMethodDelete(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodDelete()
+	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodDelete()
 	assert.Equal(t, http.MethodDelete, rb.method)
 }
 
 func TestRouteBuilder_WithMethodHead(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodHead()
+	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodHead()
 	assert.Equal(t, http.MethodHead, rb.method)
 }
 
 func TestRouteBuilder_WithMethodTrace(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodTrace()
+	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodTrace()
 	assert.Equal(t, http.MethodTrace, rb.method)
 }
 
 func TestRouteBuilder_WithMethodOptions(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodOptions()
+	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodOptions()
 	assert.Equal(t, http.MethodOptions, rb.method)
 }
 
@@ -112,7 +112,7 @@ func TestRouteBuilder_WithMiddlewares(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			rb := NewRawRouteBuilder("/", mockHandler).WithMethodGet()
+			rb := NewRawRouteBuilder("/", mockHandler).MethodGet()
 			if len(tt.fields.middlewares) == 0 {
 				rb.WithMiddlewares()
 			} else {
@@ -178,7 +178,7 @@ func TestRouteBuilder_Build(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			rb := NewRouteBuilder(tt.fields.path, mockProcessor).WithTrace().WithAuth(mockAuth).WithMiddlewares(middleware)
 			if !tt.fields.missingMethod {
-				rb.WithMethodGet()
+				rb.MethodGet()
 			}
 			got, err := rb.Build()
 
@@ -251,7 +251,7 @@ func TestNewRouteBuilder(t *testing.T) {
 
 func TestRoutesBuilder_Build(t *testing.T) {
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
-	validRb := NewRawRouteBuilder("/", mockHandler).WithMethodGet()
+	validRb := NewRawRouteBuilder("/", mockHandler).MethodGet()
 	invalidRb := NewRawRouteBuilder("/", mockHandler)
 	type args struct {
 		rbs []*RouteBuilder

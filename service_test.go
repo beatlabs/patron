@@ -17,7 +17,7 @@ import (
 func TestNewServer(t *testing.T) {
 
 	routesBuilder := phttp.NewRoutesBuilder().
-		Append(phttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).WithMethodGet())
+		Append(phttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).MethodGet())
 
 	middleware := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

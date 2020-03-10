@@ -62,7 +62,7 @@ func main() {
 	}
 
 	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewRouteBuilder("/", httpCmp.second).WithMethodGet().WithTrace().WithAuth(auth))
+		Append(patronhttp.NewRouteBuilder("/", httpCmp.second).MethodGet().WithTrace().WithAuth(auth))
 
 	ctx := context.Background()
 	err = patron.New(name, version).WithRoutesBuilder(routesBuilder).Run(ctx)

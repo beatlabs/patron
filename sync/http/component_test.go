@@ -19,7 +19,7 @@ func TestBuilderWithoutOptions(t *testing.T) {
 
 func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 	rb := NewRoutesBuilder().
-		Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodGet().WithTrace())
+		Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet().WithTrace())
 	s, err := NewBuilder().WithRoutesBuilder(rb).WithPort(50003).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
@@ -35,7 +35,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 }
 
 func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
-	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodGet())
+	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet())
 	s, err := NewBuilder().WithRoutesBuilder(rb).WithSSL("testdata/server.pem", "testdata/server.key").WithPort(50003).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
@@ -51,7 +51,7 @@ func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
 }
 
 func TestComponent_ListenAndServeTLS_FailsInvalidCerts(t *testing.T) {
-	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodGet())
+	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet())
 	s, err := NewBuilder().WithRoutesBuilder(rb).WithSSL("testdata/server.pem", "testdata/server.pem").Create()
 	assert.NoError(t, err)
 	assert.Error(t, s.Run(context.Background()))
@@ -85,7 +85,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		errors.New("invalid cert or key provided"),
 	}
 
-	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodGet())
+	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet())
 
 	tests := map[string]struct {
 		acf      AliveCheckFunc

@@ -29,5 +29,5 @@ func aliveCheckRoute(acf AliveCheckFunc) *RouteBuilder {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	return NewRawRouteBuilder("/alive", f).WithMethodGet()
+	return NewRawRouteBuilder("/alive", f).MethodGet()
 }

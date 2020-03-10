@@ -5,5 +5,5 @@ import (
 )
 
 func metricRoute() *RouteBuilder {
-	return NewRawRouteBuilder("/metrics", promhttp.Handler().ServeHTTP).WithMethodGet()
+	return NewRawRouteBuilder("/metrics", promhttp.Handler().ServeHTTP).MethodGet()
 }

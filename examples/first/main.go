@@ -59,7 +59,7 @@ func main() {
 
 	ctx := context.Background()
 	err = patron.New(name, version).
-		WithRoutes(routesBuilder).
+		WithRoutesBuilder(routesBuilder).
 		WithMiddlewares(middlewareCors).
 		WithSIGHUP(sig).
 		Run(ctx)

@@ -65,7 +65,7 @@ func main() {
 		Append(patronhttp.NewRouteBuilder("/", httpCmp.second).WithMethodGet().WithTrace().WithAuth(auth))
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithRoutes(routesBuilder).Run(ctx)
+	err = patron.New(name, version).WithRoutesBuilder(routesBuilder).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

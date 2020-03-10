@@ -82,7 +82,7 @@ func TestNewServer(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			gotService, gotErr := New(tt.name, tt.version).
-				WithRoutes(tt.routesBuilder).
+				WithRoutesBuilder(tt.routesBuilder).
 				WithMiddlewares(tt.middlewares...).
 				WithAliveCheck(tt.acf).
 				WithReadyCheck(tt.rcf).

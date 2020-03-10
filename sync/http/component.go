@@ -143,8 +143,8 @@ func (cb *Builder) WithSSL(c, k string) *Builder {
 	return cb
 }
 
-// WithRoutes adds routes to the HTTP component.
-func (cb *Builder) WithRoutes(rb *RoutesBuilder) *Builder {
+// WithRoutesBuilder adds routes builder to the HTTP component.
+func (cb *Builder) WithRoutesBuilder(rb *RoutesBuilder) *Builder {
 	if rb == nil {
 		cb.errors = append(cb.errors, errors.New("route builder is nil"))
 	} else {

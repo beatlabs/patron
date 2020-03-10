@@ -151,7 +151,7 @@ func (s *service) createHTTPComponent() (Component, error) {
 	}
 
 	if s.routesBuilder != nil {
-		b.WithRoutes(s.routesBuilder)
+		b.WithRoutesBuilder(s.routesBuilder)
 	}
 
 	if s.middlewares != nil && len(s.middlewares) > 0 {
@@ -223,8 +223,8 @@ func New(name, version string) *Builder {
 	}
 }
 
-// WithRoutes adds routes to the default HTTP component.
-func (b *Builder) WithRoutes(rb *http.RoutesBuilder) *Builder {
+// WithRoutesBuilder adds routes builder to the default HTTP component.
+func (b *Builder) WithRoutesBuilder(rb *http.RoutesBuilder) *Builder {
 	if rb == nil {
 		b.errors = append(b.errors, errors.New("routes builder is nil"))
 	} else {

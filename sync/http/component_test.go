@@ -20,7 +20,7 @@ func TestBuilderWithoutOptions(t *testing.T) {
 func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 	rb := NewRoutesBuilder().
 		Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodGet().WithTrace())
-	s, err := NewBuilder().WithRoutes(rb).WithPort(50003).Create()
+	s, err := NewBuilder().WithRoutesBuilder(rb).WithPort(50003).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())
@@ -36,7 +36,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 
 func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
 	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodGet())
-	s, err := NewBuilder().WithRoutes(rb).WithSSL("testdata/server.pem", "testdata/server.key").WithPort(50003).Create()
+	s, err := NewBuilder().WithRoutesBuilder(rb).WithSSL("testdata/server.pem", "testdata/server.key").WithPort(50003).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())
@@ -52,7 +52,7 @@ func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
 
 func TestComponent_ListenAndServeTLS_FailsInvalidCerts(t *testing.T) {
 	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithMethodGet())
-	s, err := NewBuilder().WithRoutes(rb).WithSSL("testdata/server.pem", "testdata/server.pem").Create()
+	s, err := NewBuilder().WithRoutesBuilder(rb).WithSSL("testdata/server.pem", "testdata/server.pem").Create()
 	assert.NoError(t, err)
 	assert.Error(t, s.Run(context.Background()))
 }
@@ -131,7 +131,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			gotHTTPComponent, err := NewBuilder().WithAliveCheckFunc(tc.acf).WithReadyCheckFunc(tc.rcf).
-				WithPort(tc.p).WithReadTimeout(tc.rt).WithWriteTimeout(tc.wt).WithRoutes(tc.rb).
+				WithPort(tc.p).WithReadTimeout(tc.rt).WithWriteTimeout(tc.wt).WithRoutesBuilder(tc.rb).
 				WithMiddlewares(tc.mm...).WithSSL(tc.c, tc.k).Create()
 
 			if len(tc.wantErrs) > 0 {

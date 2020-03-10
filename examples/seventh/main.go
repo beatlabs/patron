@@ -45,7 +45,7 @@ func main() {
 	name := "sixth"
 	version := "1.0.0"
 
-	err := patron.Setup(name, version)
+	err := patron.SetupLogging(name, version)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
@@ -61,14 +61,7 @@ func main() {
 		patronhttp.NewAuthGetRoute("/", httpCmp.sixth, true, nil),
 	}
 
-	srv, err := patron.New(
-		name,
-		version,
-		patron.Routes(routes),
-	)
-	if err != nil {
-		log.Fatalf("failed to create service %v", err)
-	}
+	srv := patron.New(name, version).WithRoutes(routes)
 
 	ctx := context.Background()
 	err = srv.Run(ctx)

@@ -122,6 +122,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				closeConsumer(c.cg)
 				return
 			case consumerError := <-c.cg.Errors():
+				log.Warn("closing consumer group ", <-c.cg.Errors())
 				closeConsumer(c.cg)
 				chErr <- consumerError
 				return

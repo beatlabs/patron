@@ -20,6 +20,31 @@ import (
 
 var logSetupOnce sync.Once
 
+// SetupLogging sets up the default metrics logging.
+func SetupLogging(name, version string) error {
+
+	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
+	if !ok {
+		lvl = string(log.InfoLevel)
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return fmt.Errorf("failed to get hostname: %w", err)
+	}
+
+	f := map[string]interface{}{
+		"srv":  name,
+		"ver":  version,
+		"host": hostname,
+	}
+	logSetupOnce.Do(func() {
+		err = log.Setup(zerolog.Create(log.Level(lvl)), f)
+	})
+
+	return err
+}
+
 // Component interface for implementing service components.
 type Component interface {
 	Run(ctx context.Context) error
@@ -29,173 +54,12 @@ type Component interface {
 // The service will start by default a HTTP component in order to host management endpoint.
 type service struct {
 	cps           []Component
-	routes        []http.Route
+	routesBuilder *http.RoutesBuilder
 	middlewares   []http.MiddlewareFunc
 	acf           http.AliveCheckFunc
 	rcf           http.ReadyCheckFunc
 	termSig       chan os.Signal
 	sighupHandler func()
-}
-
-const fieldSetMsg = "Setting service property '%v' with '%v'"
-
-// Builder gathers all required properties to
-// construct a Patron service.
-type Builder struct {
-	errors        []error
-	name          string
-	version       string
-	cps           []Component
-	routes        []http.Route
-	middlewares   []http.MiddlewareFunc
-	acf           http.AliveCheckFunc
-	rcf           http.ReadyCheckFunc
-	termSig       chan os.Signal
-	sighupHandler func()
-}
-
-// New initiates the Service builder chain.
-// The builder contains default values for Alive/Ready checks,
-// the SIGHUP handler and its version.
-func New(name, version string) *Builder {
-	var errs []error
-
-	if name == "" {
-		errs = append(errs, errors.New("name is required"))
-	}
-	if version == "" {
-		version = "dev"
-	}
-
-	return &Builder{
-		errors:        errs,
-		name:          name,
-		version:       version,
-		acf:           http.DefaultAliveCheck,
-		rcf:           http.DefaultReadyCheck,
-		termSig:       make(chan os.Signal, 1),
-		sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
-	}
-}
-
-// WithRoutes adds routes to the default HTTP component.
-func (b *Builder) WithRoutes(rr []http.Route) *Builder {
-	if len(rr) == 0 {
-		b.errors = append(b.errors, errors.New("provided routes slice was empty"))
-	} else {
-		log.Infof(fieldSetMsg, "routes", rr)
-		b.routes = append(b.routes, rr...)
-	}
-
-	return b
-}
-
-// WithMiddlewares adds generic middlewares to the default HTTP component.
-func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {
-	if len(mm) == 0 {
-		b.errors = append(b.errors, errors.New("provided middlewares slice was empty"))
-	} else {
-		log.Infof(fieldSetMsg, "middlewares", mm)
-		b.middlewares = append(b.middlewares, mm...)
-	}
-
-	return b
-}
-
-// WithAliveCheck overrides the default liveness check of the default HTTP component.
-func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder {
-	if acf == nil {
-		b.errors = append(b.errors, errors.New("alive check func provided was nil"))
-	} else {
-		log.Infof(fieldSetMsg, "alive check func", acf)
-		b.acf = acf
-	}
-
-	return b
-}
-
-// WithReadyCheck overrides the default readiness check of the default HTTP component.
-func (b *Builder) WithReadyCheck(rcf http.ReadyCheckFunc) *Builder {
-	if rcf == nil {
-		b.errors = append(b.errors, errors.New("ready check func provided was nil"))
-	} else {
-		log.Infof(fieldSetMsg, "ready check func", rcf)
-		b.rcf = rcf
-	}
-
-	return b
-}
-
-// WithComponents adds custom components to the Patron service.
-func (b *Builder) WithComponents(cc ...Component) *Builder {
-	if len(cc) == 0 {
-		b.errors = append(b.errors, errors.New("provided components slice was empty"))
-	} else {
-		log.Infof(fieldSetMsg, "components", cc)
-		b.cps = cc
-	}
-
-	return b
-}
-
-// WithSIGHUP adds a custom handler for when the service receives a SIGHUP.
-func (b *Builder) WithSIGHUP(handler func()) *Builder {
-	if handler == nil {
-		b.errors = append(b.errors, errors.New("provided SIGHUP handler was nil"))
-	} else {
-		log.Infof(fieldSetMsg, "SIGHUP handler", handler)
-		b.sighupHandler = handler
-	}
-
-	return b
-}
-
-// Build constructs the Patron service by applying the gathered properties.
-func (b *Builder) build() (*service, error) {
-	if len(b.errors) > 0 {
-		return nil, patronErrors.Aggregate(b.errors...)
-	}
-
-	s := service{
-		cps:           b.cps,
-		routes:        b.routes,
-		middlewares:   b.middlewares,
-		acf:           b.acf,
-		rcf:           b.rcf,
-		termSig:       b.termSig,
-		sighupHandler: b.sighupHandler,
-	}
-
-	err := SetupLogging(b.name, b.version)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.setupDefaultTracing(b.name, b.version)
-	if err != nil {
-		return nil, err
-	}
-
-	httpCp, err := s.createHTTPComponent()
-	if err != nil {
-		return nil, err
-	}
-
-	s.cps = append(s.cps, httpCp)
-	s.setupOSSignal()
-	return &s, nil
-}
-
-// Run starts up all service components and monitors for errors.
-// If a component returns a error the service is responsible for shutting down
-// all components and terminate itself.
-func (b *Builder) Run(ctx context.Context) error {
-	s, err := b.build()
-	if err != nil {
-		return err
-	}
-
-	return s.run(ctx)
 }
 
 func (s *service) setupOSSignal() {
@@ -231,31 +95,6 @@ func (s *service) run(ctx context.Context) error {
 		ee = append(ee, err)
 	}
 	return patronErrors.Aggregate(ee...)
-}
-
-// SetupLogging sets up the default metrics logging.
-func SetupLogging(name, version string) error {
-
-	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
-	if !ok {
-		lvl = string(log.InfoLevel)
-	}
-
-	hostname, err := os.Hostname()
-	if err != nil {
-		return fmt.Errorf("failed to get hostname: %w", err)
-	}
-
-	f := map[string]interface{}{
-		"srv":  name,
-		"ver":  version,
-		"host": hostname,
-	}
-	logSetupOnce.Do(func() {
-		err = log.Setup(zerolog.Create(log.Level(lvl)), f)
-	})
-
-	return err
 }
 
 func (s *service) setupDefaultTracing(name, version string) error {
@@ -311,8 +150,8 @@ func (s *service) createHTTPComponent() (Component, error) {
 		b.WithReadyCheckFunc(s.rcf)
 	}
 
-	if s.routes != nil {
-		b.WithRoutes(s.routes)
+	if s.routesBuilder != nil {
+		b.WithRoutesBuilder(s.routesBuilder)
 	}
 
 	if s.middlewares != nil && len(s.middlewares) > 0 {
@@ -343,4 +182,163 @@ func (s *service) waitTermination(chErr <-chan error) error {
 			return err
 		}
 	}
+}
+
+// Builder gathers all required properties to
+// construct a Patron service.
+type Builder struct {
+	errors        []error
+	name          string
+	version       string
+	cps           []Component
+	routesBuilder *http.RoutesBuilder
+	middlewares   []http.MiddlewareFunc
+	acf           http.AliveCheckFunc
+	rcf           http.ReadyCheckFunc
+	termSig       chan os.Signal
+	sighupHandler func()
+}
+
+// New initiates the Service builder chain.
+// The builder contains default values for Alive/Ready checks,
+// the SIGHUP handler and its version.
+func New(name, version string) *Builder {
+	var errs []error
+
+	if name == "" {
+		errs = append(errs, errors.New("name is required"))
+	}
+	if version == "" {
+		version = "dev"
+	}
+
+	return &Builder{
+		errors:        errs,
+		name:          name,
+		version:       version,
+		acf:           http.DefaultAliveCheck,
+		rcf:           http.DefaultReadyCheck,
+		termSig:       make(chan os.Signal, 1),
+		sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
+	}
+}
+
+// WithRoutesBuilder adds routes builder to the default HTTP component.
+func (b *Builder) WithRoutesBuilder(rb *http.RoutesBuilder) *Builder {
+	if rb == nil {
+		b.errors = append(b.errors, errors.New("routes builder is nil"))
+	} else {
+		log.Info("setting routes builder")
+		b.routesBuilder = rb
+	}
+
+	return b
+}
+
+// WithMiddlewares adds generic middlewares to the default HTTP component.
+func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {
+	if len(mm) == 0 {
+		b.errors = append(b.errors, errors.New("provided middlewares slice was empty"))
+	} else {
+		log.Info("setting middlewares")
+		b.middlewares = append(b.middlewares, mm...)
+	}
+
+	return b
+}
+
+// WithAliveCheck overrides the default liveness check of the default HTTP component.
+func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder {
+	if acf == nil {
+		b.errors = append(b.errors, errors.New("alive check func provided was nil"))
+	} else {
+		log.Info("setting alive check func")
+		b.acf = acf
+	}
+
+	return b
+}
+
+// WithReadyCheck overrides the default readiness check of the default HTTP component.
+func (b *Builder) WithReadyCheck(rcf http.ReadyCheckFunc) *Builder {
+	if rcf == nil {
+		b.errors = append(b.errors, errors.New("ready check func provided was nil"))
+	} else {
+		log.Info("setting ready check func")
+		b.rcf = rcf
+	}
+
+	return b
+}
+
+// WithComponents adds custom components to the Patron service.
+func (b *Builder) WithComponents(cc ...Component) *Builder {
+	if len(cc) == 0 {
+		b.errors = append(b.errors, errors.New("provided components slice was empty"))
+	} else {
+		log.Info("setting components")
+		b.cps = cc
+	}
+
+	return b
+}
+
+// WithSIGHUP adds a custom handler for when the service receives a SIGHUP.
+func (b *Builder) WithSIGHUP(handler func()) *Builder {
+	if handler == nil {
+		b.errors = append(b.errors, errors.New("provided SIGHUP handler was nil"))
+	} else {
+		log.Info("setting SIGHUP handler func")
+		b.sighupHandler = handler
+	}
+
+	return b
+}
+
+// Build constructs the Patron service by applying the gathered properties.
+func (b *Builder) build() (*service, error) {
+	if len(b.errors) > 0 {
+		return nil, patronErrors.Aggregate(b.errors...)
+	}
+
+	s := service{
+		cps:           b.cps,
+		routesBuilder: b.routesBuilder,
+		middlewares:   b.middlewares,
+		acf:           b.acf,
+		rcf:           b.rcf,
+		termSig:       b.termSig,
+		sighupHandler: b.sighupHandler,
+	}
+
+	err := SetupLogging(b.name, b.version)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.setupDefaultTracing(b.name, b.version)
+	if err != nil {
+		return nil, err
+	}
+
+	httpCp, err := s.createHTTPComponent()
+	if err != nil {
+		return nil, err
+	}
+
+	s.cps = append(s.cps, httpCp)
+	s.setupOSSignal()
+	return &s, nil
+}
+
+// Run starts up all service components and monitors for errors.
+// If a component returns a error the service is responsible for shutting down
+// all components and terminate itself.
+func (b *Builder) Run(ctx context.Context) error {
+	s, err := b.build()
+	if err != nil {
+		return err
+	}
+
+	return s.run(ctx)
 }

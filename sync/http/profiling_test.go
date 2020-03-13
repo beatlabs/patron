@@ -12,8 +12,12 @@ import (
 func Test_PprofHandlers(t *testing.T) {
 	mux := http.NewServeMux()
 
-	for _, r := range profilingRoutes() {
-		mux.HandleFunc(r.Pattern, r.Handler)
+	rr := profilingRoutes()
+
+	for _, r := range rr {
+		route, err := r.Build()
+		assert.NoError(t, err)
+		mux.HandleFunc(route.path, route.handler)
 	}
 
 	server := httptest.NewServer(mux)

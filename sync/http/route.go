@@ -1,130 +1,212 @@
 package http
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
+	errs "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/sync"
 	"github.com/beatlabs/patron/sync/http/auth"
 )
 
 // Route definition of a HTTP route.
 type Route struct {
-	Pattern     string
-	Method      string
-	Handler     http.HandlerFunc
-	Trace       bool
-	Auth        auth.Authenticator
-	Middlewares []MiddlewareFunc
+	path        string
+	method      string
+	handler     http.HandlerFunc
+	middlewares []MiddlewareFunc
 }
 
-// NewGetRoute creates a new GET route from a generic handler.
-func NewGetRoute(p string, pr sync.ProcessorFunc, trace bool, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodGet, pr, trace, nil, mm...)
+// RouteBuilder for building a route.
+type RouteBuilder struct {
+	method        string
+	path          string
+	trace         bool
+	middlewares   []MiddlewareFunc
+	authenticator auth.Authenticator
+	handler       http.HandlerFunc
+	errors        []error
 }
 
-// NewPostRoute creates a new POST route from a generic handler.
-func NewPostRoute(p string, pr sync.ProcessorFunc, trace bool, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodPost, pr, trace, nil, mm...)
+// WithTrace enables route tracing.
+func (rb *RouteBuilder) WithTrace() *RouteBuilder {
+	rb.trace = true
+	return rb
 }
 
-// NewPutRoute creates a new PUT route from a generic handler.
-func NewPutRoute(p string, pr sync.ProcessorFunc, trace bool, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodPut, pr, trace, nil, mm...)
+// WithMiddlewares adds middlewares.
+func (rb *RouteBuilder) WithMiddlewares(mm ...MiddlewareFunc) *RouteBuilder {
+	if len(mm) == 0 {
+		rb.errors = append(rb.errors, errors.New("middlewares are empty"))
+	}
+	rb.middlewares = mm
+	return rb
 }
 
-// NewDeleteRoute creates a new DELETE route from a generic handler.
-func NewDeleteRoute(p string, pr sync.ProcessorFunc, trace bool, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodDelete, pr, trace, nil, mm...)
+// WithAuth adds authenticator.
+func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
+	if auth == nil {
+		rb.errors = append(rb.errors, errors.New("authenticator is nil"))
+	}
+	rb.authenticator = auth
+	return rb
 }
 
-// NewPatchRoute creates a new PATCH route from a generic handler.
-func NewPatchRoute(p string, pr sync.ProcessorFunc, trace bool, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodPatch, pr, trace, nil, mm...)
+func (rb *RouteBuilder) setMethod(method string) *RouteBuilder {
+	if rb.method != "" {
+		rb.errors = append(rb.errors, errors.New("method already set"))
+	}
+	rb.method = method
+	return rb
 }
 
-// NewHeadRoute creates a new HEAD route from a generic handler.
-func NewHeadRoute(p string, pr sync.ProcessorFunc, trace bool, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodHead, pr, trace, nil, mm...)
+// MethodGet HTTP method.
+func (rb *RouteBuilder) MethodGet() *RouteBuilder {
+	return rb.setMethod(http.MethodGet)
 }
 
-// NewOptionsRoute creates a new OPTIONS route from a generic handler.
-func NewOptionsRoute(p string, pr sync.ProcessorFunc, trace bool, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodOptions, pr, trace, nil, mm...)
+// MethodHead HTTP method.
+func (rb *RouteBuilder) MethodHead() *RouteBuilder {
+	return rb.setMethod(http.MethodHead)
 }
 
-// NewRoute creates a new route from a generic handler with auth capability.
-func NewRoute(p string, m string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
+// MethodPost HTTP method.
+func (rb *RouteBuilder) MethodPost() *RouteBuilder {
+	return rb.setMethod(http.MethodPost)
+}
+
+// MethodPut HTTP method.
+func (rb *RouteBuilder) MethodPut() *RouteBuilder {
+	return rb.setMethod(http.MethodPut)
+}
+
+// MethodPatch HTTP method.
+func (rb *RouteBuilder) MethodPatch() *RouteBuilder {
+	return rb.setMethod(http.MethodPatch)
+}
+
+// MethodDelete HTTP method.
+func (rb *RouteBuilder) MethodDelete() *RouteBuilder {
+	return rb.setMethod(http.MethodDelete)
+}
+
+// MethodConnect HTTP method.
+func (rb *RouteBuilder) MethodConnect() *RouteBuilder {
+	return rb.setMethod(http.MethodConnect)
+}
+
+// MethodOptions HTTP method.
+func (rb *RouteBuilder) MethodOptions() *RouteBuilder {
+	return rb.setMethod(http.MethodOptions)
+}
+
+// MethodTrace HTTP method.
+func (rb *RouteBuilder) MethodTrace() *RouteBuilder {
+	return rb.setMethod(http.MethodTrace)
+}
+
+// Build a route.
+func (rb *RouteBuilder) Build() (Route, error) {
+	if len(rb.errors) > 0 {
+		return Route{}, errs.Aggregate(rb.errors...)
+	}
+
+	if rb.method == "" {
+		return Route{}, errors.New("method is missing")
+	}
+
 	var middlewares []MiddlewareFunc
-	if trace {
-		middlewares = append(middlewares, NewLoggingTracingMiddleware(p))
+	if rb.trace {
+		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path))
 	}
-	if auth != nil {
-		middlewares = append(middlewares, NewAuthMiddleware(auth))
+	if rb.authenticator != nil {
+		middlewares = append(middlewares, NewAuthMiddleware(rb.authenticator))
 	}
-	if len(mm) > 0 {
-		middlewares = append(middlewares, mm...)
+	if len(rb.middlewares) > 0 {
+		middlewares = append(middlewares, rb.middlewares...)
 	}
-	return Route{Pattern: p, Method: m, Handler: handler(pr), Trace: trace, Auth: auth, Middlewares: middlewares}
+
+	return Route{
+		path:        rb.path,
+		method:      string(rb.method),
+		handler:     rb.handler,
+		middlewares: middlewares,
+	}, nil
 }
 
-// NewRouteRaw creates a new route from a HTTP handler.
-func NewRouteRaw(p string, m string, h http.HandlerFunc, trace bool, mm ...MiddlewareFunc) Route {
-	var middlewares []MiddlewareFunc
-	if trace {
-		middlewares = append(middlewares, NewLoggingTracingMiddleware(p))
+// NewRawRouteBuilder constructor.
+func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
+	var ee []error
+
+	if path == "" {
+		ee = append(ee, errors.New("path is empty"))
 	}
-	if len(mm) > 0 {
-		middlewares = append(middlewares, mm...)
+
+	if handler == nil {
+		ee = append(ee, errors.New("handler is nil"))
 	}
-	return Route{Pattern: p, Method: m, Handler: h, Trace: trace, Middlewares: middlewares}
+
+	return &RouteBuilder{path: path, errors: ee, handler: handler}
 }
 
-// NewAuthGetRoute creates a new GET route from a generic handler with auth capability.
-func NewAuthGetRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodGet, pr, trace, auth, mm...)
-}
+// NewRouteBuilder constructor.
+func NewRouteBuilder(path string, processor sync.ProcessorFunc) *RouteBuilder {
 
-// NewAuthPostRoute creates a new POST route from a generic handler with auth capability.
-func NewAuthPostRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodPost, pr, trace, auth, mm...)
-}
+	var err error
 
-// NewAuthPutRoute creates a new PUT route from a generic handler with auth capability.
-func NewAuthPutRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodPut, pr, trace, auth, mm...)
-}
-
-// NewAuthDeleteRoute creates a new DELETE route from a generic handler with auth capability.
-func NewAuthDeleteRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodDelete, pr, trace, auth, mm...)
-}
-
-// NewAuthPatchRoute creates a new PATCH route from a generic handler with auth capability.
-func NewAuthPatchRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodPatch, pr, trace, auth, mm...)
-}
-
-// NewAuthHeadRoute creates a new HEAD route from a generic handler with auth capability.
-func NewAuthHeadRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodHead, pr, trace, auth, mm...)
-}
-
-// NewAuthOptionsRoute creates a new OPTIONS route from a generic handler with auth capability.
-func NewAuthOptionsRoute(p string, pr sync.ProcessorFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
-	return NewRoute(p, http.MethodOptions, pr, trace, auth, mm...)
-}
-
-// NewAuthRouteRaw creates a new route from a HTTP handler with auth capability.
-func NewAuthRouteRaw(p string, m string, h http.HandlerFunc, trace bool, auth auth.Authenticator, mm ...MiddlewareFunc) Route {
-	var middlewares []MiddlewareFunc
-	if trace {
-		middlewares = append(middlewares, NewLoggingTracingMiddleware(p))
+	if processor == nil {
+		err = errors.New("processor is nil")
 	}
-	if auth != nil {
-		middlewares = append(middlewares, NewAuthMiddleware(auth))
+
+	rb := NewRawRouteBuilder(path, handler(processor))
+	if err != nil {
+		rb.errors = append(rb.errors, err)
 	}
-	if len(mm) > 0 {
-		middlewares = append(middlewares, mm...)
+	return rb
+}
+
+// RoutesBuilder creates a list of routes.
+type RoutesBuilder struct {
+	routes []Route
+	errors []error
+}
+
+// Append a route to the list.
+func (rb *RoutesBuilder) Append(builder *RouteBuilder) *RoutesBuilder {
+	route, err := builder.Build()
+	if err != nil {
+		rb.errors = append(rb.errors, err)
+	} else {
+		rb.routes = append(rb.routes, route)
 	}
-	return Route{Pattern: p, Method: m, Handler: h, Trace: trace, Auth: auth, Middlewares: middlewares}
+	return rb
+}
+
+// Build the routes.
+func (rb *RoutesBuilder) Build() ([]Route, error) {
+
+	duplicates := make(map[string]struct{}, len(rb.routes))
+
+	for _, r := range rb.routes {
+		key := strings.ToLower(r.method + "-" + r.path)
+		_, ok := duplicates[key]
+		if ok {
+			rb.errors = append(rb.errors, fmt.Errorf("route with key %s is duplicate", key))
+			continue
+		}
+		duplicates[key] = struct{}{}
+	}
+
+	if len(rb.errors) > 0 {
+		return nil, errs.Aggregate(rb.errors...)
+	}
+
+	return rb.routes, nil
+}
+
+// NewRoutesBuilder constructor.
+func NewRoutesBuilder() *RoutesBuilder {
+	return &RoutesBuilder{}
 }

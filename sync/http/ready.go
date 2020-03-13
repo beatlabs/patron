@@ -17,7 +17,7 @@ const (
 // ReadyCheckFunc defines a function type for implementing a readiness check.
 type ReadyCheckFunc func() ReadyStatus
 
-func readyCheckRoute(rcf ReadyCheckFunc) Route {
+func readyCheckRoute(rcf ReadyCheckFunc) *RouteBuilder {
 
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch rcf() {
@@ -29,5 +29,5 @@ func readyCheckRoute(rcf ReadyCheckFunc) Route {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	return NewRouteRaw("/ready", http.MethodGet, f, false)
+	return NewRawRouteBuilder("/ready", f).MethodGet()
 }

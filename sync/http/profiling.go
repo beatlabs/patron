@@ -5,19 +5,19 @@ import (
 	"net/http/pprof"
 )
 
-func profilingRoutes() []Route {
-	return []Route{
-		NewRouteRaw("/debug/pprof/", http.MethodGet, profIndex, false),
-		NewRouteRaw("/debug/pprof/allocs/", http.MethodGet, pprofAllocsIndex, false),
-		NewRouteRaw("/debug/pprof/cmdline/", http.MethodGet, profCmdline, false),
-		NewRouteRaw("/debug/pprof/profile/", http.MethodGet, profProfile, false),
-		NewRouteRaw("/debug/pprof/symbol/", http.MethodGet, profSymbol, false),
-		NewRouteRaw("/debug/pprof/trace/", http.MethodGet, profTrace, false),
-		NewRouteRaw("/debug/pprof/heap/", http.MethodGet, profHeap, false),
-		NewRouteRaw("/debug/pprof/goroutine/", http.MethodGet, profGoroutine, false),
-		NewRouteRaw("/debug/pprof/block/", http.MethodGet, profBlock, false),
-		NewRouteRaw("/debug/pprof/threadcreate/", http.MethodGet, profThreadcreate, false),
-		NewRouteRaw("/debug/pprof/mutex/", http.MethodGet, profMutex, false),
+func profilingRoutes() []*RouteBuilder {
+	return []*RouteBuilder{
+		NewRawRouteBuilder("/debug/pprof/", profIndex).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/allocs/", pprofAllocsIndex).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/cmdline/", profCmdline).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/profile/", profProfile).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/symbol/", profSymbol).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/trace/", profTrace).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/heap/", profHeap).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/goroutine/", profGoroutine).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/block/", profBlock).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/threadcreate/", profThreadcreate).MethodGet(),
+		NewRawRouteBuilder("/debug/pprof/mutex/", profMutex).MethodGet(),
 	}
 }
 

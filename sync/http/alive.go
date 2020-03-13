@@ -17,7 +17,7 @@ const (
 // AliveCheckFunc defines a function type for implementing a liveness check.
 type AliveCheckFunc func() AliveStatus
 
-func aliveCheckRoute(acf AliveCheckFunc) Route {
+func aliveCheckRoute(acf AliveCheckFunc) *RouteBuilder {
 
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch acf() {
@@ -29,5 +29,5 @@ func aliveCheckRoute(acf AliveCheckFunc) Route {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	return NewRouteRaw("/alive", http.MethodGet, f, false)
+	return NewRawRouteBuilder("/alive", f).MethodGet()
 }

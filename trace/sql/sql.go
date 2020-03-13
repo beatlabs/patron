@@ -140,6 +140,18 @@ func OpenDB(c driver.Connector) *DB {
 	return &DB{db: db}
 }
 
+// FromDB wraps an opened db. This allows to support libraries that provide
+// *sql.DB like sqlmock.
+func FromDB(db *sql.DB) *DB {
+	return &DB{db: db}
+}
+
+// DB returns the underlying db. This is useful for SQL code that does not
+// require tracing.
+func (db *DB) DB() *sql.DB {
+	return db.db
+}
+
 // BeginTx starts a transaction.
 func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	sp, _ := db.startSpan(ctx, "db.BeginTx", "")

@@ -2,6 +2,7 @@ package sql
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/beatlabs/patron/trace"
@@ -62,4 +63,11 @@ func TestSQLStartFinishSpan(t *testing.T) {
 		"error":        false,
 		"key":          "value",
 	}, rawSpan.Tags())
+}
+
+func TestFromDB(t *testing.T) {
+	want := &sql.DB{}
+	db := FromDB(want)
+	got := db.DB()
+	assert.Equal(t, want, got)
 }

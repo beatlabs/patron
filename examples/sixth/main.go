@@ -55,20 +55,33 @@ func main() {
 
 	err := patron.SetupLogging(name, version)
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to init the cache %v", err)
 	}
-
-	cmp, err := grpc.New(50006).Create()
-	if err != nil {
-		log.Fatalf("failed to create gRPC component: %v", err)
-	}
-
-	greeter.RegisterGreeterServer(cmp.Server(), &greeterServer{})
+	cachedRoute := patronhttp.NewCachedRouteBuilder("/", sixth).WithCache(cache).MethodGet()
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithComponents(cmp).Run(ctx)
+	err = patron.New(name, version).WithRoutesBuilder(patronhttp.NewRoutesBuilder().Append(cachedRoute)).Run(ctx)
 	if err != nil {
-		log.Fatalf("failed to create and run service: %v", err)
+		log.Fatalf("failed to run patron service %v", err)
 	}
+
+}
+
+func sixth(ctx context.Context, req *sync.Request) (*sync.Response, error) {
+
+	var u examples.User
+	println(fmt.Sprintf("u = %v", u))
+	err := req.Decode(&u)
+	println(fmt.Sprintf("err = %v", err))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode request: %w", err)
+	}
+
+	b, err := json.Encode(&u)
+	if err != nil {
+		return nil, fmt.Errorf("failed create request: %w", err)
+	}
+
+	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
+	return sync.NewResponse(string(b)), nil
 }

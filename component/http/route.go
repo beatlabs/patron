@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/beatlabs/patron/cache"
 
 	"github.com/beatlabs/patron/component/http/auth"
 	errs "github.com/beatlabs/patron/errors"
@@ -208,4 +211,41 @@ func (rb *RoutesBuilder) Build() ([]Route, error) {
 // NewRoutesBuilder constructor.
 func NewRoutesBuilder() *RoutesBuilder {
 	return &RoutesBuilder{}
+}
+
+type CachedRouteBuilder struct {
+	path      string
+	processor sync.ProcessorFunc
+	cache     cache.Cache
+	instant   TimeInstant
+	errors    []error
+}
+
+func NewCachedRouteBuilder(path string, processor sync.ProcessorFunc) *CachedRouteBuilder {
+
+	return &CachedRouteBuilder{
+		path:      path,
+		processor: processor,
+		instant: func() int64 {
+			return time.Now().Unix()
+		},
+	}
+}
+
+// WithTimeInstant adds authenticator.
+func (cb *CachedRouteBuilder) WithTimeInstant(instant TimeInstant) *CachedRouteBuilder {
+	if instant == nil {
+		cb.errors = append(cb.errors, errors.New("time instant is nil"))
+	}
+	cb.instant = instant
+	return cb
+}
+
+// WithCache adds authenticator.
+func (cb *CachedRouteBuilder) WithCache(cache cache.Cache) *RouteBuilder {
+	if cache == nil {
+		// let it break later
+		return NewRouteBuilder(cb.path, nil)
+	}
+	return NewRouteBuilder(cb.path, cacheHandler(cb.processor, cb.cache, cb.instant))
 }

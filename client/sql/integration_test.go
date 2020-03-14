@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/log"
-
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -58,75 +57,30 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
-func startUpContainerSync(d *dockerRuntime) error {
-
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		return err
+func TestOpen(t *testing.T) {
+	type args struct {
+		driverName string
 	}
-	d.pool = pool
-	d.pool.MaxWait = time.Minute * 2
-
-	d.sql, err = d.pool.RunWithOptions(&dockertest.RunOptions{Repository: "mysql",
-		Tag: "5.7.25",
-		PortBindings: map[docker.Port][]docker.PortBinding{
-			"3306/tcp":  {{HostIP: "", HostPort: "3307"}},
-			"33060/tcp": {{HostIP: "", HostPort: "33061"}},
-		},
-		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
-		Env: []string{
-			fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", dbRootPassword),
-			fmt.Sprintf("MYSQL_USER=%s", dbUsername),
-			fmt.Sprintf("MYSQL_PASSWORD=%s", dbPassword),
-			fmt.Sprintf("MYSQL_DATABASE=%s", dbSchema),
-			"TIMEZONE=UTC",
-		}})
-	if err != nil {
-		return err
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success":            {args: args{driverName: "mysql"}},
+		"failure with wrong": {args: args{driverName: "XXX"}, expectedErr: "sql: unknown driver \"XXX\" (forgotten import?)"},
 	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := Open(tt.args.driverName, fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
 
-	// optionally print the container logs in stdout
-	//TailLogs(d, d.sql.Container.ID, os.Stdout)
-
-	// wait until the container is ready
-	err = d.pool.Retry(func() error {
-		db, err := sqlx.Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
-		if err != nil {
-			// container not ready ... return error to try again
-			return err
-		}
-		return db.Ping()
-	})
-	// start up any other services
-	return nil
-}
-
-func TailLogs(d *dockerRuntime, containerID string, out io.Writer) {
-	opts := docker.LogsOptions{
-		Context: context.Background(),
-
-		Stderr:      true,
-		Stdout:      true,
-		Follow:      true,
-		Timestamps:  true,
-		RawTerminal: true,
-
-		Container: containerID,
-
-		OutputStream: out,
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, got)
+			}
+		})
 	}
-
-	// show the logs on a different thread
-	go func(d *dockerRuntime) {
-		err := d.pool.Client.Logs(opts)
-		if err != nil {
-			log.Errorf("could not forward container logs to write %v", err)
-		}
-	}(d)
-}
-
-func tearDownContainerSync(d *dockerRuntime) error {
-	return d.pool.Purge(d.sql)
 }
 
 func TestIntegration(t *testing.T) {
@@ -377,4 +331,75 @@ func assertSpan(t *testing.T, sp *mocktracer.MockSpan, opName, statement string)
 		"version":      "dev",
 		"error":        false,
 	}, sp.Tags())
+}
+
+func startUpContainerSync(d *dockerRuntime) error {
+
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		return err
+	}
+	d.pool = pool
+	d.pool.MaxWait = time.Minute * 2
+
+	d.sql, err = d.pool.RunWithOptions(&dockertest.RunOptions{Repository: "mysql",
+		Tag: "5.7.25",
+		PortBindings: map[docker.Port][]docker.PortBinding{
+			"3306/tcp":  {{HostIP: "", HostPort: "3307"}},
+			"33060/tcp": {{HostIP: "", HostPort: "33061"}},
+		},
+		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
+		Env: []string{
+			fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", dbRootPassword),
+			fmt.Sprintf("MYSQL_USER=%s", dbUsername),
+			fmt.Sprintf("MYSQL_PASSWORD=%s", dbPassword),
+			fmt.Sprintf("MYSQL_DATABASE=%s", dbSchema),
+			"TIMEZONE=UTC",
+		}})
+	if err != nil {
+		return err
+	}
+
+	// optionally print the container logs in stdout
+	//TailLogs(d, d.sql.Container.ID, os.Stdout)
+
+	// wait until the container is ready
+	err = d.pool.Retry(func() error {
+		db, err := sqlx.Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
+		if err != nil {
+			// container not ready ... return error to try again
+			return err
+		}
+		return db.Ping()
+	})
+	// start up any other services
+	return nil
+}
+
+func TailLogs(d *dockerRuntime, containerID string, out io.Writer) {
+	opts := docker.LogsOptions{
+		Context: context.Background(),
+
+		Stderr:      true,
+		Stdout:      true,
+		Follow:      true,
+		Timestamps:  true,
+		RawTerminal: true,
+
+		Container: containerID,
+
+		OutputStream: out,
+	}
+
+	// show the logs on a different thread
+	go func(d *dockerRuntime) {
+		err := d.pool.Client.Logs(opts)
+		if err != nil {
+			log.Errorf("could not forward container logs to write %v", err)
+		}
+	}(d)
+}
+
+func tearDownContainerSync(d *dockerRuntime) error {
+	return d.pool.Purge(d.sql)
 }

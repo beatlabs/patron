@@ -6,48 +6,68 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/beatlabs/patron/log"
+
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
-	DBHost         = "localhost"
-	DBSchema       = "patrondb"
-	DBPort         = "3307"
-	DBPassword     = "test123"
-	DBRootPassword = "test123"
-	DBUsername     = "patron"
+	dbHost           = "localhost"
+	dbSchema         = "patrondb"
+	dbPort           = "3307"
+	dbPassword       = "test123"
+	dbRootPassword   = "test123"
+	dbUsername       = "patron"
+	connectionFormat = "%s:%s@(%s:%s)/%s?parseTime=true"
 )
 
-type SQLTestSuite struct {
-	suite.Suite
+type dockerRuntime struct {
 	sql  *dockertest.Resource
 	pool *dockertest.Pool
-	db   *DB
-	mtr  *mocktracer.MockTracer
-	ctx  context.Context
 }
 
-func TestSQLTestSuite(t *testing.T) {
-	suite.Run(t, new(SQLTestSuite))
+func TestMain(m *testing.M) {
+
+	d := dockerRuntime{}
+
+	err := startUpContainerSync(&d)
+	if err != nil {
+		log.Errorf("could not start containers %v", err)
+		os.Exit(1)
+	}
+
+	exitVal := m.Run()
+
+	err = tearDownContainerSync(&d)
+	if err != nil {
+		log.Errorf("could not tear down containers %v", err)
+		os.Exit(1)
+	}
+
+	os.Exit(exitVal)
 }
 
-func (s *SQLTestSuite) SetupSuite() {
-	s.ctx = context.Background()
+func startUpContainerSync(d *dockerRuntime) error {
 
 	pool, err := dockertest.NewPool("")
-	s.NoError(err)
-	s.pool = pool
-	s.pool.MaxWait = time.Minute * 2
+	if err != nil {
+		return err
+	}
+	d.pool = pool
+	d.pool.MaxWait = time.Minute * 2
 
-	s.sql, err = s.pool.RunWithOptions(&dockertest.RunOptions{Repository: "mysql",
+	d.sql, err = d.pool.RunWithOptions(&dockertest.RunOptions{Repository: "mysql",
 		Tag: "5.7.25",
 		PortBindings: map[docker.Port][]docker.PortBinding{
 			"3306/tcp":  {{HostIP: "", HostPort: "3307"}},
@@ -55,43 +75,33 @@ func (s *SQLTestSuite) SetupSuite() {
 		},
 		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
 		Env: []string{
-			fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", DBRootPassword),
-			fmt.Sprintf("MYSQL_USER=%s", DBUsername),
-			fmt.Sprintf("MYSQL_PASSWORD=%s", DBPassword),
-			fmt.Sprintf("MYSQL_DATABASE=%s", DBSchema),
+			fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", dbRootPassword),
+			fmt.Sprintf("MYSQL_USER=%s", dbUsername),
+			fmt.Sprintf("MYSQL_PASSWORD=%s", dbPassword),
+			fmt.Sprintf("MYSQL_DATABASE=%s", dbSchema),
 			"TIMEZONE=UTC",
 		}})
-	s.NoError(err)
+	if err != nil {
+		return err
+	}
 
-	// optional : enable logs for the container
-	//s.TailLogs(s.sql.Container.ID, os.Stdout)
+	// optionally print the container logs in stdout
+	//TailLogs(d, d.sql.Container.ID, os.Stdout)
 
 	// wait until the container is ready
-	err = s.pool.Retry(func() error {
-		connString := fmt.Sprintf("%s:%s@(%s:%s)/%s?parseTime=true&multiStatements=true", DBUsername, DBPassword, DBHost, DBPort, DBSchema)
-		db, err := Open("mysql", connString)
+	err = d.pool.Retry(func() error {
+		db, err := sqlx.Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
 		if err != nil {
 			// container not ready ... return error to try again
 			return err
 		}
-		s.NotNil(db)
-		s.db = db
-		return db.Ping(s.ctx)
+		return db.Ping()
 	})
-	s.NoError(err)
-
 	// start up any other services
-
-	s.mtr = mocktracer.New()
-	opentracing.SetGlobalTracer(s.mtr)
-
-	s.db.SetConnMaxLifetime(time.Minute)
-	s.db.SetMaxIdleConns(10)
-	s.db.SetMaxOpenConns(10)
-
+	return nil
 }
 
-func (s *SQLTestSuite) TailLogs(containerID string, out io.Writer) {
+func TailLogs(d *dockerRuntime, containerID string, out io.Writer) {
 	opts := docker.LogsOptions{
 		Context: context.Background(),
 
@@ -107,250 +117,260 @@ func (s *SQLTestSuite) TailLogs(containerID string, out io.Writer) {
 	}
 
 	// show the logs on a different thread
-	go func(s *SQLTestSuite) {
-		err := s.pool.Client.Logs(opts)
-		s.NoError(err)
-	}(s)
+	go func(d *dockerRuntime) {
+		err := d.pool.Client.Logs(opts)
+		if err != nil {
+			log.Errorf("could not forward container logs to write %v", err)
+		}
+	}(d)
 }
 
-func (s *SQLTestSuite) TearDownSuite() {
-	err := s.pool.Purge(s.sql)
-	s.NoError(err)
+func tearDownContainerSync(d *dockerRuntime) error {
+	return d.pool.Purge(d.sql)
 }
 
-func (s *SQLTestSuite) BeforeTest(suiteName, testName string) {
-	s.mtr.Reset()
-}
-
-func (s *SQLTestSuite) TestIntegration() {
+func TestIntegration(t *testing.T) {
+	mtr := mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
+	ctx := context.Background()
 
 	const query = "SELECT * FROM employee LIMIT 1"
 	const insertQuery = "INSERT INTO employee(name) value (?)"
 
-	s.Run("db.Ping", func() {
-		s.NoError(s.db.Ping(s.ctx))
-		assertSpan(s, s.mtr.FinishedSpans()[0], "db.Ping", "")
+	db, err := Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
+	assert.NoError(t, err)
+	assert.NotNil(t, db)
+	db.SetConnMaxLifetime(time.Minute)
+	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(10)
+
+	t.Run("db.Ping", func(t *testing.T) {
+		mtr.Reset()
+		assert.NoError(t, db.Ping(ctx))
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Ping", "")
 	})
 
-	s.Run("db.Stats", func() {
-		s.mtr.Reset()
-		stats := s.db.Stats(s.ctx)
-		s.NotNil(stats)
-		assertSpan(s, s.mtr.FinishedSpans()[0], "db.Stats", "")
+	t.Run("db.Stats", func(t *testing.T) {
+		mtr.Reset()
+		stats := db.Stats(ctx)
+		assert.NotNil(t, stats)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Stats", "")
 	})
 
-	s.Run("db.Exec", func() {
-		result, err := s.db.Exec(s.ctx, "CREATE TABLE IF NOT EXISTS employee(id int NOT NULL AUTO_INCREMENT PRIMARY KEY,name VARCHAR(255) NOT NULL)")
-		s.NoError(err)
+	t.Run("db.Exec", func(t *testing.T) {
+		result, err := db.Exec(ctx, "CREATE TABLE IF NOT EXISTS employee(id int NOT NULL AUTO_INCREMENT PRIMARY KEY,name VARCHAR(255) NOT NULL)")
+		println(fmt.Sprintf("err = %v", err))
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
 		count, err := result.RowsAffected()
-		s.NoError(err)
-		s.True(count >= 0)
-		s.mtr.Reset()
-		result, err = s.db.Exec(s.ctx, insertQuery, "patron")
-		s.NoError(err)
-		s.NotNil(result)
-		assertSpan(s, s.mtr.FinishedSpans()[0], "db.Exec", insertQuery)
+		assert.NoError(t, err)
+		assert.True(t, count >= 0)
+		mtr.Reset()
+		result, err = db.Exec(ctx, insertQuery, "patron")
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Exec", insertQuery)
 	})
 
-	s.Run("db.Query", func() {
-		s.mtr.Reset()
-		rows, err := s.db.Query(s.ctx, query)
+	t.Run("db.Query", func(t *testing.T) {
+		mtr.Reset()
+		rows, err := db.Query(ctx, query)
 		defer func() {
-			s.NoError(rows.Close())
+			assert.NoError(t, rows.Close())
 		}()
-		s.NoError(err)
-		s.NotNil(rows)
-		assertSpan(s, s.mtr.FinishedSpans()[0], "db.Query", query)
+		assert.NoError(t, err)
+		assert.NotNil(t, rows)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Query", query)
 	})
 
-	s.Run("db.QueryRow", func() {
-		s.mtr.Reset()
-		row := s.db.QueryRow(s.ctx, query)
-		s.NotNil(row)
-		assertSpan(s, s.mtr.FinishedSpans()[0], "db.QueryRow", query)
+	t.Run("db.QueryRow", func(t *testing.T) {
+		mtr.Reset()
+		row := db.QueryRow(ctx, query)
+		assert.NotNil(t, row)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.QueryRow", query)
 	})
 
-	s.Run("db.Driver", func() {
-		s.mtr.Reset()
-		drv := s.db.Driver(s.ctx)
-		s.NotNil(drv)
-		assertSpan(s, s.mtr.FinishedSpans()[0], "db.Driver", "")
+	t.Run("db.Driver", func(t *testing.T) {
+		mtr.Reset()
+		drv := db.Driver(ctx)
+		assert.NotNil(t, drv)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Driver", "")
 	})
 
-	s.Run("stmt", func() {
-		s.mtr.Reset()
-		stmt, err := s.db.Prepare(s.ctx, query)
-		s.NoError(err)
-		assertSpan(s, s.mtr.FinishedSpans()[0], "db.Prepare", query)
+	t.Run("stmt", func(t *testing.T) {
+		mtr.Reset()
+		stmt, err := db.Prepare(ctx, query)
+		assert.NoError(t, err)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Prepare", query)
 
-		s.Run("stmt.Exec", func() {
-			s.mtr.Reset()
-			result, err := stmt.Exec(s.ctx)
-			s.NoError(err)
-			s.NotNil(result)
-			assertSpan(s, s.mtr.FinishedSpans()[0], "stmt.Exec", query)
+		t.Run("stmt.Exec", func(t *testing.T) {
+			mtr.Reset()
+			result, err := stmt.Exec(ctx)
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+			assertSpan(t, mtr.FinishedSpans()[0], "stmt.Exec", query)
 		})
 
-		s.Run("stmt.Query", func() {
-			s.mtr.Reset()
-			rows, err := stmt.Query(s.ctx)
-			s.NoError(err)
+		t.Run("stmt.Query", func(t *testing.T) {
+			mtr.Reset()
+			rows, err := stmt.Query(ctx)
+			assert.NoError(t, err)
 			defer func() {
-				s.NoError(rows.Close())
+				assert.NoError(t, rows.Close())
 			}()
-			assertSpan(s, s.mtr.FinishedSpans()[0], "stmt.Query", query)
+			assertSpan(t, mtr.FinishedSpans()[0], "stmt.Query", query)
 		})
 
-		s.Run("stmt.QueryRow", func() {
-			s.mtr.Reset()
-			row := stmt.QueryRow(s.ctx)
-			s.NotNil(row)
-			assertSpan(s, s.mtr.FinishedSpans()[0], "stmt.QueryRow", query)
+		t.Run("stmt.QueryRow", func(t *testing.T) {
+			mtr.Reset()
+			row := stmt.QueryRow(ctx)
+			assert.NotNil(t, row)
+			assertSpan(t, mtr.FinishedSpans()[0], "stmt.QueryRow", query)
 		})
 
-		s.mtr.Reset()
-		s.NoError(stmt.Close(s.ctx))
-		assertSpan(s, s.mtr.FinishedSpans()[0], "stmt.Close", "")
+		mtr.Reset()
+		assert.NoError(t, stmt.Close(ctx))
+		assertSpan(t, mtr.FinishedSpans()[0], "stmt.Close", "")
 	})
 
-	s.Run("conn", func() {
-		s.mtr.Reset()
-		conn, err := s.db.Conn(s.ctx)
-		s.NoError(err)
-		assertSpan(s, s.mtr.FinishedSpans()[0], "db.Conn", "")
+	t.Run("conn", func(t *testing.T) {
+		mtr.Reset()
+		conn, err := db.Conn(ctx)
+		assert.NoError(t, err)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.Conn", "")
 
-		s.Run("conn.Ping", func() {
-			s.mtr.Reset()
-			s.NoError(conn.Ping(s.ctx))
-			assertSpan(s, s.mtr.FinishedSpans()[0], "conn.Ping", "")
+		t.Run("conn.Ping", func(t *testing.T) {
+			mtr.Reset()
+			assert.NoError(t, conn.Ping(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.Ping", "")
 		})
 
-		s.Run("conn.Exec", func() {
-			s.mtr.Reset()
-			result, err := conn.Exec(s.ctx, insertQuery, "patron")
-			s.NoError(err)
-			s.NotNil(result)
-			assertSpan(s, s.mtr.FinishedSpans()[0], "conn.Exec", insertQuery)
+		t.Run("conn.Exec", func(t *testing.T) {
+			mtr.Reset()
+			result, err := conn.Exec(ctx, insertQuery, "patron")
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.Exec", insertQuery)
 		})
 
-		s.Run("conn.Query", func() {
-			s.mtr.Reset()
-			rows, err := conn.Query(s.ctx, query)
-			s.NoError(err)
+		t.Run("conn.Query", func(t *testing.T) {
+			mtr.Reset()
+			rows, err := conn.Query(ctx, query)
+			assert.NoError(t, err)
 			defer func() {
-				s.NoError(rows.Close())
+				assert.NoError(t, rows.Close())
 			}()
-			assertSpan(s, s.mtr.FinishedSpans()[0], "conn.Query", query)
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.Query", query)
 		})
 
-		s.Run("conn.QueryRow", func() {
-			s.mtr.Reset()
-			row := conn.QueryRow(s.ctx, query)
+		t.Run("conn.QueryRow", func(t *testing.T) {
+			mtr.Reset()
+			row := conn.QueryRow(ctx, query)
 			var id int
 			var name string
-			s.NoError(row.Scan(&id, &name))
-			assertSpan(s, s.mtr.FinishedSpans()[0], "conn.QueryRow", query)
+			assert.NoError(t, row.Scan(&id, &name))
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.QueryRow", query)
 		})
 
-		s.Run("conn.Prepare", func() {
-			s.mtr.Reset()
-			stmt, err := conn.Prepare(s.ctx, query)
-			s.NoError(err)
-			s.NoError(stmt.Close(s.ctx))
-			assertSpan(s, s.mtr.FinishedSpans()[0], "conn.Prepare", query)
+		t.Run("conn.Prepare", func(t *testing.T) {
+			mtr.Reset()
+			stmt, err := conn.Prepare(ctx, query)
+			assert.NoError(t, err)
+			assert.NoError(t, stmt.Close(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.Prepare", query)
 		})
 
-		s.Run("conn.BeginTx", func() {
-			s.mtr.Reset()
-			tx, err := conn.BeginTx(s.ctx, nil)
-			s.NoError(err)
-			s.NoError(tx.Commit(s.ctx))
-			assertSpan(s, s.mtr.FinishedSpans()[0], "conn.BeginTx", "")
+		t.Run("conn.BeginTx", func(t *testing.T) {
+			mtr.Reset()
+			tx, err := conn.BeginTx(ctx, nil)
+			assert.NoError(t, err)
+			assert.NoError(t, tx.Commit(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "conn.BeginTx", "")
 		})
 
-		s.mtr.Reset()
-		s.NoError(conn.Close(s.ctx))
-		assertSpan(s, s.mtr.FinishedSpans()[0], "conn.Close", "")
+		mtr.Reset()
+		assert.NoError(t, conn.Close(ctx))
+		assertSpan(t, mtr.FinishedSpans()[0], "conn.Close", "")
 	})
 
-	s.Run("tx", func() {
-		s.mtr.Reset()
-		tx, err := s.db.BeginTx(s.ctx, nil)
-		s.NoError(err)
-		s.NotNil(tx)
-		assertSpan(s, s.mtr.FinishedSpans()[0], "db.BeginTx", "")
+	t.Run("tx", func(t *testing.T) {
+		mtr.Reset()
+		tx, err := db.BeginTx(ctx, nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, tx)
+		assertSpan(t, mtr.FinishedSpans()[0], "db.BeginTx", "")
 
-		s.Run("tx.Exec", func() {
-			s.mtr.Reset()
-			result, err := tx.Exec(s.ctx, insertQuery, "patron")
-			s.NoError(err)
-			s.NotNil(result)
-			assertSpan(s, s.mtr.FinishedSpans()[0], "tx.Exec", insertQuery)
+		t.Run("tx.Exec", func(t *testing.T) {
+			mtr.Reset()
+			result, err := tx.Exec(ctx, insertQuery, "patron")
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Exec", insertQuery)
 		})
 
-		s.Run("tx.Query", func() {
-			s.mtr.Reset()
-			rows, err := tx.Query(s.ctx, query)
-			s.NoError(err)
+		t.Run("tx.Query", func(t *testing.T) {
+			mtr.Reset()
+			rows, err := tx.Query(ctx, query)
+			assert.NoError(t, err)
 			defer func() {
-				s.NoError(rows.Close())
+				assert.NoError(t, rows.Close())
 			}()
-			assertSpan(s, s.mtr.FinishedSpans()[0], "tx.Query", query)
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Query", query)
 		})
 
-		s.Run("tx.QueryRow", func() {
-			s.mtr.Reset()
-			row := tx.QueryRow(s.ctx, query)
+		t.Run("tx.QueryRow", func(t *testing.T) {
+			mtr.Reset()
+			row := tx.QueryRow(ctx, query)
 			var id int
 			var name string
-			s.NoError(row.Scan(&id, &name))
-			assertSpan(s, s.mtr.FinishedSpans()[0], "tx.QueryRow", query)
+			assert.NoError(t, row.Scan(&id, &name))
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.QueryRow", query)
 		})
 
-		s.Run("tx.Prepare", func() {
-			s.mtr.Reset()
-			stmt, err := tx.Prepare(s.ctx, query)
-			s.NoError(err)
-			s.NoError(stmt.Close(s.ctx))
-			assertSpan(s, s.mtr.FinishedSpans()[0], "tx.Prepare", query)
+		t.Run("tx.Prepare", func(t *testing.T) {
+			mtr.Reset()
+			stmt, err := tx.Prepare(ctx, query)
+			assert.NoError(t, err)
+			assert.NoError(t, stmt.Close(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Prepare", query)
 		})
 
-		s.Run("tx.Stmt", func() {
-			stmt, err := s.db.Prepare(s.ctx, query)
-			s.NoError(err)
-			s.mtr.Reset()
-			txStmt := tx.Stmt(s.ctx, stmt)
-			s.NoError(txStmt.Close(s.ctx))
-			s.NoError(stmt.Close(s.ctx))
-			assertSpan(s, s.mtr.FinishedSpans()[0], "tx.Stmt", query)
+		t.Run("tx.Stmt", func(t *testing.T) {
+			stmt, err := db.Prepare(ctx, query)
+			assert.NoError(t, err)
+			mtr.Reset()
+			txStmt := tx.Stmt(ctx, stmt)
+			assert.NoError(t, txStmt.Close(ctx))
+			assert.NoError(t, stmt.Close(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Stmt", query)
 		})
 
-		s.NoError(tx.Commit(s.ctx))
+		assert.NoError(t, tx.Commit(ctx))
 
-		s.Run("tx.Rollback", func() {
-			tx, err := s.db.BeginTx(s.ctx, nil)
-			s.NoError(err)
-			s.NotNil(s.db)
+		t.Run("tx.Rollback", func(t *testing.T) {
+			tx, err := db.BeginTx(ctx, nil)
+			assert.NoError(t, err)
+			assert.NotNil(t, db)
 
-			row := tx.QueryRow(s.ctx, query)
+			row := tx.QueryRow(ctx, query)
 			var id int
 			var name string
-			s.NoError(row.Scan(&id, &name))
+			assert.NoError(t, row.Scan(&id, &name))
 
-			s.mtr.Reset()
-			s.NoError(tx.Rollback(s.ctx))
-			assertSpan(s, s.mtr.FinishedSpans()[0], "tx.Rollback", "")
+			mtr.Reset()
+			assert.NoError(t, tx.Rollback(ctx))
+			assertSpan(t, mtr.FinishedSpans()[0], "tx.Rollback", "")
 		})
 	})
 
-	s.mtr.Reset()
-	s.NoError(s.db.Close(s.ctx))
-	assertSpan(s, s.mtr.FinishedSpans()[0], "db.Close", "")
+	mtr.Reset()
+	assert.NoError(t, db.Close(ctx))
+	assertSpan(t, mtr.FinishedSpans()[0], "db.Close", "")
 }
 
-func assertSpan(s *SQLTestSuite, sp *mocktracer.MockSpan, opName, statement string) {
-	s.Equal(opName, sp.OperationName)
-	s.Equal(map[string]interface{}{
+func assertSpan(t *testing.T, sp *mocktracer.MockSpan, opName, statement string) {
+	assert.Equal(t, opName, sp.OperationName)
+	assert.Equal(t, map[string]interface{}{
 		"component":    "sql",
 		"db.instance":  "patrondb",
 		"db.statement": statement,

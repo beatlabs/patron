@@ -159,9 +159,7 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("db.Exec", func(t *testing.T) {
 		result, err := db.Exec(ctx, "CREATE TABLE IF NOT EXISTS employee(id int NOT NULL AUTO_INCREMENT PRIMARY KEY,name VARCHAR(255) NOT NULL)")
-		println(fmt.Sprintf("err = %v", err))
 		assert.NoError(t, err)
-		assert.NotNil(t, result)
 		count, err := result.RowsAffected()
 		assert.NoError(t, err)
 		assert.True(t, count >= 0)

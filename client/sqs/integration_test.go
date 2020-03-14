@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
@@ -90,7 +91,8 @@ func createAPI(t *testing.T) sqsiface.SQSAPI {
 	sess, err := session.NewSession(
 		aws.NewConfig().
 			WithEndpoint(testSqsEndpoint).
-			WithRegion(testSqsRegion),
+			WithRegion(testSqsRegion).
+			WithCredentials(credentials.NewStaticCredentials("test", "test", "")),
 	)
 	require.NoError(t, err)
 

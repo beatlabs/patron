@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
@@ -35,7 +36,8 @@ func createAPI(t *testing.T) snsiface.SNSAPI {
 	sess, err := session.NewSession(
 		aws.NewConfig().
 			WithEndpoint(testSnsEndpoint).
-			WithRegion(testSnsRegion),
+			WithRegion(testSnsRegion).
+			WithCredentials(credentials.NewStaticCredentials("test", "test", "")),
 	)
 	require.NoError(t, err)
 

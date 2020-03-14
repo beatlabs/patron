@@ -18,12 +18,12 @@ import (
 )
 
 const (
-	DB_HOST          = "localhost"
-	DB_SCHEMA        = "patrondb"
-	DB_PORT          = "3307"
-	DB_PASSWORD      = "test123"
-	DB_ROOT_PASSWORD = "test123"
-	DB_USERNAME      = "patron"
+	DBHost         = "localhost"
+	DBSchema       = "patrondb"
+	DBPort         = "3307"
+	DBPassword     = "test123"
+	DBRootPassword = "test123"
+	DBUsername     = "patron"
 )
 
 type SQLTestSuite struct {
@@ -55,10 +55,10 @@ func (s *SQLTestSuite) SetupSuite() {
 		},
 		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
 		Env: []string{
-			fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", DB_ROOT_PASSWORD),
-			fmt.Sprintf("MYSQL_USER=%s", DB_USERNAME),
-			fmt.Sprintf("MYSQL_PASSWORD=%s", DB_PASSWORD),
-			fmt.Sprintf("MYSQL_DATABASE=%s", DB_SCHEMA),
+			fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", DBRootPassword),
+			fmt.Sprintf("MYSQL_USER=%s", DBUsername),
+			fmt.Sprintf("MYSQL_PASSWORD=%s", DBPassword),
+			fmt.Sprintf("MYSQL_DATABASE=%s", DBSchema),
 			"TIMEZONE=UTC",
 		}})
 	s.NoError(err)
@@ -68,7 +68,7 @@ func (s *SQLTestSuite) SetupSuite() {
 
 	// wait until the container is ready
 	err = s.pool.Retry(func() error {
-		connString := fmt.Sprintf("%s:%s@(%s:%s)/%s?parseTime=true&multiStatements=true", DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_SCHEMA)
+		connString := fmt.Sprintf("%s:%s@(%s:%s)/%s?parseTime=true&multiStatements=true", DBUsername, DBPassword, DBHost, DBPort, DBSchema)
 		db, err := Open("mysql", connString)
 		if err != nil {
 			// container not ready ... return error to try again

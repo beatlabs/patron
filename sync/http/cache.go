@@ -11,6 +11,8 @@ import (
 	"github.com/beatlabs/patron/sync"
 )
 
+// TODO : add comments where applicable
+
 type CacheHeader int
 
 const (
@@ -21,11 +23,13 @@ const (
 	no_store
 	no_transform
 	only_if_cached
+	public
+	private
 
 	CacheControlHeader = "CACHE-CONTROL"
 )
 
-var cacheHeaders = map[string]CacheHeader{"max-age": max_age, "max-stale": max_stale, "min-fresh": min_fresh, "no-cache": no_cache, "no-store": no_store, "no-transform": no_transform, "only-if-cached": only_if_cached}
+var cacheHeaders = map[string]CacheHeader{"public": public, "private": private, "max-age": max_age, "max-stale": max_stale, "min-fresh": min_fresh, "no-cache": no_cache, "no-store": no_store, "no-transform": no_transform, "only-if-cached": only_if_cached}
 
 type TimeInstant func() int64
 
@@ -47,6 +51,8 @@ func cacheHandler(hnd sync.ProcessorFunc, cache cache.Cache, instant TimeInstant
 			// TODO : cache also errors ???
 			if r, ok := resp.(cachedResponse); ok && notExpired(now, r.lastValid, ttl) {
 				println(fmt.Sprintf("cache = %v", cache))
+				// TODO : set the headers
+				// ETag , Last-Modified
 				return r.response, r.err
 			} else {
 				log.Errorf("could not parse cached response from %v", resp)
@@ -121,13 +127,21 @@ func extractCacheHeaders(request *sync.Request) (bool, bool, int64) {
 					}
 				case no_cache:
 					/**
-					retrieve from the store
+					return response if entity has changed
+					e.g. (304 response if nothing has changed : 304 Not Modified)
 					it SHOULD NOT include min-fresh, max-stale, or max-age.
+					reqeust should be accompanied by an ETag token
 					*/
 					fallthrough
 				case no_store:
 					/**
 					no storage whatsoever
+					*/
+					fallthrough
+				case private:
+					/**
+					server does not support private caching,
+					this should be the responsibility of the client
 					*/
 					noCache = true
 				case no_transform:
@@ -159,6 +173,7 @@ type cachedResponse struct {
 }
 
 func createRequestKey(request *sync.Request) string {
+	// TODO : define the key requirements in more detail
 	return fmt.Sprintf("%s:%s", request.Headers, request.Fields)
 }
 

@@ -1,5 +1,3 @@
-// +build integration
-
 package sql
 
 import (
@@ -11,7 +9,6 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/log"
-	"github.com/jmoiron/sqlx"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/opentracing/opentracing-go"
@@ -40,7 +37,7 @@ func TestMain(m *testing.M) {
 
 	d := dockerRuntime{}
 
-	err := startUpContainerSync(&d)
+	err := d.startUpContainerSync()
 	if err != nil {
 		log.Errorf("could not start containers %v", err)
 		os.Exit(1)
@@ -48,7 +45,7 @@ func TestMain(m *testing.M) {
 
 	exitVal := m.Run()
 
-	err = tearDownContainerSync(&d)
+	err = d.tearDownContainerSync()
 	if err != nil {
 		log.Errorf("could not tear down containers %v", err)
 		os.Exit(1)
@@ -333,7 +330,7 @@ func assertSpan(t *testing.T, sp *mocktracer.MockSpan, opName, statement string)
 	}, sp.Tags())
 }
 
-func startUpContainerSync(d *dockerRuntime) error {
+func (d *dockerRuntime) startUpContainerSync() error {
 
 	pool, err := dockertest.NewPool("")
 	if err != nil {
@@ -361,22 +358,21 @@ func startUpContainerSync(d *dockerRuntime) error {
 	}
 
 	// optionally print the container logs in stdout
-	//TailLogs(d, d.sql.Container.ID, os.Stdout)
+	d.TailLogs(d.sql.Container.ID, os.Stdout)
 
+	ctx := context.Background()
 	// wait until the container is ready
-	err = d.pool.Retry(func() error {
-		db, err := sqlx.Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
+	return d.pool.Retry(func() error {
+		db, err := Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
 		if err != nil {
 			// container not ready ... return error to try again
 			return err
 		}
-		return db.Ping()
+		return db.Ping(ctx)
 	})
-	// start up any other services
-	return nil
 }
 
-func TailLogs(d *dockerRuntime, containerID string, out io.Writer) {
+func (d *dockerRuntime) TailLogs(containerID string, out io.Writer) {
 	opts := docker.LogsOptions{
 		Context: context.Background(),
 
@@ -400,6 +396,6 @@ func TailLogs(d *dockerRuntime, containerID string, out io.Writer) {
 	}(d)
 }
 
-func tearDownContainerSync(d *dockerRuntime) error {
+func (d *dockerRuntime) tearDownContainerSync() error {
 	return d.pool.Purge(d.sql)
 }

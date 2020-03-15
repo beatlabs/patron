@@ -375,7 +375,7 @@ func (d *dockerRuntime) startUpContainerSync() error {
 	})
 }
 
-func (d *dockerRuntime) TailLogs(containerID string, out io.Writer) {
+func (d *dockerRuntime) tailLogs(containerID string, out io.Writer) {
 	opts := docker.LogsOptions{
 		Context: context.Background(),
 

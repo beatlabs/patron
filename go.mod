@@ -1,6 +1,8 @@
 module github.com/beatlabs/patron
 
 require (
+	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
+	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/Shopify/sarama v1.21.0
 	github.com/aws/aws-sdk-go v1.21.8
@@ -14,9 +16,10 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.0
+	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/hashicorp/golang-lru v0.5.3
-	github.com/jmoiron/sqlx v1.2.0
 	github.com/julienschmidt/httprouter v1.2.0
+	github.com/lib/pq v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20180313041242-367231351874
@@ -34,6 +37,7 @@ require (
 	github.com/uber/jaeger-lib v1.5.0
 	go.uber.org/atomic v1.3.2 // indirect
 	google.golang.org/grpc v1.27.1
+	gotest.tools v2.2.0+incompatible // indirect
 )
 
 go 1.13

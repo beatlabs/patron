@@ -2,6 +2,7 @@ package sql
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"os"
@@ -360,15 +361,14 @@ func (d *dockerRuntime) startUpContainerSync() error {
 	// optionally print the container logs in stdout
 	d.TailLogs(d.sql.Container.ID, os.Stdout)
 
-	ctx := context.Background()
 	// wait until the container is ready
 	return d.pool.Retry(func() error {
-		db, err := Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
+		db, err := sql.Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
 		if err != nil {
 			// container not ready ... return error to try again
 			return err
 		}
-		return db.Ping(ctx)
+		return db.Ping()
 	})
 }
 

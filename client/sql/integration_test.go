@@ -32,11 +32,6 @@ const (
 	connectionFormat = "%s:%s@(%s:%s)/%s?parseTime=true"
 )
 
-type dockerRuntime struct {
-	sql  *dockertest.Resource
-	pool *dockertest.Pool
-}
-
 func TestMain(m *testing.M) {
 
 	d := dockerRuntime{}
@@ -334,6 +329,11 @@ func assertSpan(t *testing.T, sp *mocktracer.MockSpan, opName, statement string)
 	}, sp.Tags())
 }
 
+type dockerRuntime struct {
+	sql  *dockertest.Resource
+	pool *dockertest.Pool
+}
+
 func (d *dockerRuntime) startUpContainerSync() error {
 
 	pool, err := dockertest.NewPool("")
@@ -362,7 +362,7 @@ func (d *dockerRuntime) startUpContainerSync() error {
 	}
 
 	// optionally print the container logs in stdout
-	d.TailLogs(d.sql.Container.ID, os.Stdout)
+	d.tailLogs(d.sql.Container.ID, os.Stdout)
 
 	// wait until the container is ready
 	return d.pool.Retry(func() error {

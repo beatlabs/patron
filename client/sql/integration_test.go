@@ -24,7 +24,8 @@ import (
 const (
 	dbHost           = "localhost"
 	dbSchema         = "patrondb"
-	dbPort           = "3307"
+	dbPort           = "3309"
+	dbRouterPort     = "33069"
 	dbPassword       = "test123"
 	dbRootPassword   = "test123"
 	dbUsername       = "patron"
@@ -345,8 +346,8 @@ func (d *dockerRuntime) startUpContainerSync() error {
 	d.sql, err = d.pool.RunWithOptions(&dockertest.RunOptions{Repository: "mysql",
 		Tag: "5.7.25",
 		PortBindings: map[docker.Port][]docker.PortBinding{
-			"3306/tcp":  {{HostIP: "", HostPort: "3307"}},
-			"33060/tcp": {{HostIP: "", HostPort: "33061"}},
+			"3306/tcp":  {{HostIP: "", HostPort: dbPort}},
+			"33060/tcp": {{HostIP: "", HostPort: dbRouterPort}},
 		},
 		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
 		Env: []string{

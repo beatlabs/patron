@@ -13,10 +13,9 @@ import (
 
 // Factory definition of a consumer factory.
 type Factory struct {
-	name    string
-	topic   string
-	brokers []string
-	oo      []kafka.OptionFunc
+	name  string
+	topic string
+	oo    []kafka.OptionFunc
 }
 
 // New constructor.

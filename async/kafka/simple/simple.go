@@ -20,21 +20,17 @@ type Factory struct {
 }
 
 // New constructor.
-func New(name, topic string, brokers []string, oo ...kafka.OptionFunc) (*Factory, error) {
+func New(name, topic string, oo ...kafka.OptionFunc) (*Factory, error) {
 
 	if name == "" {
 		return nil, errors.New("name is required")
-	}
-
-	if len(brokers) == 0 {
-		return nil, errors.New("provide at least one broker")
 	}
 
 	if topic == "" {
 		return nil, errors.New("topic is required")
 	}
 
-	return &Factory{name: name, topic: topic, brokers: brokers, oo: oo}, nil
+	return &Factory{name: name, topic: topic, oo: oo}, nil
 }
 
 // Create a new consumer.
@@ -46,7 +42,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 	}
 
 	cc := kafka.ConsumerConfig{
-		Brokers:      f.brokers,
 		Buffer:       1000,
 		SaramaConfig: config,
 	}

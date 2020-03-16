@@ -14,15 +14,13 @@ import (
 
 // Factory definition of a consumer factory.
 type Factory struct {
-	name    string
-	group   string
-	topics  []string
-	brokers []string
-	oo      []kafka.OptionFunc
+	name  string
+	group string
+	oo    []kafka.OptionFunc
 }
 
 // New constructor.
-func New(name, group string, topics, brokers []string, oo ...kafka.OptionFunc) (*Factory, error) {
+func New(name, group string, oo ...kafka.OptionFunc) (*Factory, error) {
 
 	if name == "" {
 		return nil, errors.New("name is required")
@@ -32,15 +30,7 @@ func New(name, group string, topics, brokers []string, oo ...kafka.OptionFunc) (
 		return nil, errors.New("group is required")
 	}
 
-	if len(brokers) == 0 {
-		return nil, errors.New("provide at least one broker")
-	}
-
-	if len(topics) == 0 {
-		return nil, errors.New("at least one topic is required")
-	}
-
-	return &Factory{name: name, group: group, topics: topics, brokers: brokers, oo: oo}, nil
+	return &Factory{name: name, group: group, oo: oo}, nil
 }
 
 // Create a new consumer.
@@ -53,13 +43,11 @@ func (f *Factory) Create() (async.Consumer, error) {
 	}
 
 	cc := kafka.ConsumerConfig{
-		Brokers:      f.brokers,
 		Buffer:       0,
 		SaramaConfig: config,
 	}
 
 	c := &consumer{
-		topics:   f.topics,
 		group:    f.group,
 		traceTag: opentracing.Tag{Key: "group", Value: f.group},
 		config:   cc,
@@ -77,7 +65,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 
 // consumer members can be injected or overwritten with the usage of OptionFunc arguments.
 type consumer struct {
-	topics   []string
 	group    string
 	traceTag opentracing.Tag
 	cnl      context.CancelFunc
@@ -109,7 +96,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 		return nil, nil, fmt.Errorf("failed to create consumer: %w", err)
 	}
 	c.cg = cg
-	log.Infof("consuming messages from topics '%#v' using group '%s'", c.topics, c.group)
+	log.Infof("consuming messages from topics '%#v' using group '%s'", c.config.Topics, c.group)
 
 	chMsg := make(chan async.Message, c.config.Buffer)
 	chErr := make(chan error, c.config.Buffer)
@@ -133,7 +120,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	go func() {
 		hnd := handler{consumer: c, messages: chMsg}
 		for {
-			err := c.cg.Consume(ctx, c.topics, hnd)
+			err := c.cg.Consume(ctx, c.config.Topics, hnd)
 			if err != nil {
 				chErr <- err
 			}

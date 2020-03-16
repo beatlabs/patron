@@ -3,6 +3,7 @@ package kafka
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -48,7 +49,7 @@ func Timeout(timeout time.Duration) OptionFunc {
 	}
 }
 
-// Start option for adjusting the the starting offset
+// Start option for adjusting the starting offset.
 func Start(offset int64) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Consumer.Offsets.Initial = offset
@@ -56,7 +57,7 @@ func Start(offset int64) OptionFunc {
 	}
 }
 
-// StartFromOldest option for adjusting the the starting offset to oldest
+// StartFromOldest option for adjusting the starting offset to oldest.
 func StartFromOldest() OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -64,7 +65,7 @@ func StartFromOldest() OptionFunc {
 	}
 }
 
-// StartFromNewest option for adjusting the the starting offset to newest
+// StartFromNewest option for adjusting the starting offset to newest.
 func StartFromNewest() OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetNewest
@@ -72,7 +73,7 @@ func StartFromNewest() OptionFunc {
 	}
 }
 
-// Decoder option for injecting a specific decoder implementation
+// Decoder option for injecting a specific decoder implementation.
 func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		if dec == nil {
@@ -83,10 +84,43 @@ func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
 	}
 }
 
-// DecoderJSON option for injecting json decoder
+// DecoderJSON option for injecting json decoder.
 func DecoderJSON() OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.DecoderFunc = json.DecodeRaw
 		return nil
 	}
+}
+
+// Topics option for configuring kafka topics.
+func Topics(topics []string) OptionFunc {
+	return func(c *ConsumerConfig) error {
+		if containsEmtpyValue(topics) {
+			return errors.New("one of the topics values is empty")
+		}
+
+		c.Topics = topics
+		return nil
+	}
+}
+
+// Brokers options for configuring kafka brokers.
+func Brokers(brokers []string) OptionFunc {
+	return func(c *ConsumerConfig) error {
+		if containsEmtpyValue(brokers) {
+			return errors.New("one of the brokers values is empty")
+		}
+
+		c.Brokers = brokers
+		return nil
+	}
+}
+
+func containsEmtpyValue(values []string) bool {
+	for _, v := range values {
+		if strings.TrimSpace(v) == "" {
+			return true
+		}
+	}
+	return false
 }

@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 	"time"
@@ -149,4 +150,123 @@ func TestDecoderJSON(t *testing.T) {
 		reflect.ValueOf(json.DecodeRaw).Pointer(),
 		reflect.ValueOf(c.DecoderFunc).Pointer(),
 	)
+}
+
+func TestTopics(t *testing.T) {
+	tcases := []struct {
+		name    string
+		topics  []string
+		wantErr error
+	}{
+		{
+			name:    "all topics are empty",
+			topics:  []string{"", ""},
+			wantErr: errors.New("one of the topics values is empty"),
+		},
+		{
+			name:    "one of the topics is empty",
+			topics:  []string{"", "value"},
+			wantErr: errors.New("one of the topics values is empty"),
+		},
+		{
+			name:    "one of the topics is only-spaces value",
+			topics:  []string{"     ", "value"},
+			wantErr: errors.New("one of the topics values is empty"),
+		},
+		{
+			name:   "all topics are non-empty",
+			topics: []string{"value1", "value2"},
+		},
+	}
+
+	for _, tc := range tcases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := ConsumerConfig{}
+			err := Topics(tc.topics)(&c)
+			if tc.wantErr != nil {
+				assert.Error(t, tc.wantErr, err.Error())
+				assert.Empty(t, c.Topics)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.topics, c.Topics)
+			}
+		})
+	}
+}
+
+func TestBrokers(t *testing.T) {
+	tcases := []struct {
+		name    string
+		brokers []string
+		wantErr error
+	}{
+		{
+			name:    "all brokers are empty",
+			brokers: []string{"", ""},
+			wantErr: errors.New("one of the brokers values is empty"),
+		},
+		{
+			name:    "one of the brokers is empty",
+			brokers: []string{"", "value"},
+			wantErr: errors.New("one of the brokers values is empty"),
+		},
+		{
+			name:    "one of the brokers is only-spaces value",
+			brokers: []string{"value1", "     ", "value2"},
+			wantErr: errors.New("one of the brokers values is empty"),
+		},
+		{
+			name:    "all brokers are non-empty",
+			brokers: []string{"value1", "value2"},
+		},
+	}
+
+	for _, tc := range tcases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := ConsumerConfig{}
+			err := Brokers(tc.brokers)(&c)
+			if tc.wantErr != nil {
+				assert.Error(t, tc.wantErr, err.Error())
+				assert.Empty(t, c.Brokers)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.brokers, c.Brokers)
+			}
+		})
+	}
+}
+
+func Test_containsEmptyValue(t *testing.T) {
+	tcases := []struct {
+		name       string
+		values     []string
+		wantResult bool
+	}{
+		{
+			name:       "all values are empty",
+			values:     []string{"", ""},
+			wantResult: true,
+		},
+		{
+			name:       "one of the values is empty",
+			values:     []string{"", "value"},
+			wantResult: true,
+		},
+		{
+			name:       "one of the values is only-spaces value",
+			values:     []string{"     ", "value"},
+			wantResult: true,
+		},
+		{
+			name:       "all values are non-empty",
+			values:     []string{"value1", "value2"},
+			wantResult: false,
+		},
+	}
+
+	for _, tc := range tcases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.wantResult, containsEmtpyValue(tc.values))
+		})
+	}
 }

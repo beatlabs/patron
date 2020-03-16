@@ -54,7 +54,7 @@ func TestProtobuf(t *testing.T) {
 
 	assert.Equal(t, "", test1.GetLabel())
 	assert.Equal(t, int32(0), test1.GetType())
-	assert.Equal(t, []int64([]int64(nil)), test1.GetReps())
+	assert.Equal(t, []int64(nil), test1.GetReps())
 
 	test.XXX_DiscardUnknown()
 	test.XXX_Merge(&test1)

@@ -159,7 +159,7 @@ func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.D
 
 	dec, err := determineDecoder(d, msg, sp)
 	if err != nil {
-		return nil, fmt.Errorf("Could not determine decoder  %w", err)
+		return nil, fmt.Errorf("could not determine decoder  %w", err)
 	}
 
 	return &message{

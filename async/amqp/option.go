@@ -46,7 +46,7 @@ func Requeue(requeue bool) OptionFunc {
 func Bindings(bindings ...string) OptionFunc {
 	return func(c *consumer) error {
 		if len(bindings) == 0 {
-			return errors.New("Provided bindings cannot be empty")
+			return errors.New("provided bindings cannot be empty")
 		}
 
 		c.bindings = bindings

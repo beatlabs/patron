@@ -6,6 +6,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+var (
+	errTest    = errors.New("test error")
+	testResult = "test result"
 )
 
 func TestNew(t *testing.T) {
@@ -35,28 +41,68 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestRetry_Execute_Success(t *testing.T) {
-	r, err := New(3, 10*time.Millisecond)
-	assert.NoError(t, err)
-	act := mockAction{errors: 1}
-	res, err := r.Execute(func() (interface{}, error) {
-		return act.Execute()
-	})
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
-	assert.Equal(t, 2, act.executions)
-}
+func Test_Retry_Execute(t *testing.T) {
+	testCases := map[string]struct {
+		retries            int
+		delay              time.Duration
+		action             mockAction
+		expectedExecutions int
+		expectErr          bool
+	}{
+		"instant success": {
+			retries:            3,
+			action:             mockAction{errors: 0},
+			expectedExecutions: 1,
+		},
+		"instant success with delay": {
+			retries:            3,
+			delay:              500 * time.Millisecond,
+			action:             mockAction{errors: 0},
+			expectedExecutions: 1,
+		},
+		"success without delay after an error": {
+			retries:            3,
+			action:             mockAction{errors: 1},
+			expectedExecutions: 2,
+		},
+		"success with delay after an error": {
+			retries:            3,
+			delay:              500 * time.Millisecond,
+			action:             mockAction{errors: 1},
+			expectedExecutions: 2,
+		},
+		"error": {
+			retries:            3,
+			action:             mockAction{errors: 3},
+			expectedExecutions: 3,
+			expectErr:          true,
+		},
+	}
+	for name, tC := range testCases {
+		t.Run(name, func(t *testing.T) {
+			r, err := New(tC.retries, tC.delay)
+			require.NoError(t, err)
 
-func TestRetry_Execute_Failed(t *testing.T) {
-	r, err := New(3, 10*time.Millisecond)
-	assert.NoError(t, err)
-	act := mockAction{errors: 3}
-	res, err := r.Execute(func() (interface{}, error) {
-		return act.Execute()
-	})
-	assert.Error(t, err)
-	assert.Nil(t, res)
-	assert.Equal(t, 3, act.executions)
+			start := time.Now()
+			res, err := r.Execute(func() (interface{}, error) {
+				return tC.action.Execute()
+			})
+			elapsed := time.Since(start)
+
+			if tC.expectErr {
+				assert.Equal(t, err, errTest)
+				assert.Nil(t, res)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testResult, res)
+			}
+
+			assert.Equal(t, tC.expectedExecutions, tC.action.executions)
+
+			// Assert that the total time taken takes into account the delay between retries
+			assert.True(t, elapsed > tC.delay*time.Duration(tC.expectedExecutions-1))
+		})
+	}
 }
 
 type mockAction struct {
@@ -70,14 +116,14 @@ func (ma *mockAction) Execute() (string, error) {
 		ma.executions++
 	}()
 	if ma.errors > 0 {
-		return "", errors.New("TEST")
+		return "", errTest
 	}
-	return "TEST", nil
+	return testResult, nil
 }
 
 var err error
 
-func BenchmarkCircuitBreaker_Execute(b *testing.B) {
+func BenchmarkRetry_Execute(b *testing.B) {
 	var r *Retry
 	r, err = New(3, 0)
 	b.ReportAllocs()

@@ -37,6 +37,10 @@ func (r Retry) Execute(act Action) (interface{}, error) {
 		if current == 0 {
 			break
 		}
+
+		if r.delay > 0 {
+			time.Sleep(r.delay)
+		}
 	}
 	return nil, err
 }

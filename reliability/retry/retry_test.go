@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	testErr    = errors.New("test error")
+	errTest    = errors.New("test error")
 	testResult = "test result"
 )
 
@@ -90,7 +90,7 @@ func Test_Retry_Execute(t *testing.T) {
 			elapsed := time.Since(start)
 
 			if tC.expectErr {
-				assert.Equal(t, err, testErr)
+				assert.Equal(t, err, errTest)
 				assert.Nil(t, res)
 			} else {
 				assert.NoError(t, err)
@@ -116,7 +116,7 @@ func (ma *mockAction) Execute() (string, error) {
 		ma.executions++
 	}()
 	if ma.errors > 0 {
-		return "", testErr
+		return "", errTest
 	}
 	return testResult, nil
 }

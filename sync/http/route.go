@@ -130,7 +130,7 @@ func (rb *RouteBuilder) Build() (Route, error) {
 
 	return Route{
 		path:        rb.path,
-		method:      string(rb.method),
+		method:      rb.method,
 		handler:     rb.handler,
 		middlewares: middlewares,
 	}, nil

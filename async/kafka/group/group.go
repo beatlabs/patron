@@ -154,7 +154,7 @@ func closeConsumer(cns sarama.ConsumerGroup) {
 	}
 }
 
-func containsEmtpyValue(values []string) bool {
+func containsEmptyValue(values []string) bool {
 	for _, v := range values {
 		if strings.TrimSpace(v) == "" {
 			return true

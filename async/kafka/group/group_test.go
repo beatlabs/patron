@@ -15,8 +15,11 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	brokers := []string{"192.168.1.1"}
 	type args struct {
 		name    string
+		brokers []string
+		topics  []string
 		group   string
 		options []kafka.OptionFunc
 	}
@@ -27,23 +30,43 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name:    "fails with missing name",
-			args:    args{name: "", group: "group1"},
+			args:    args{name: "", brokers: brokers, topics: []string{"topic1"}, group: "group1"},
+			wantErr: true,
+		},
+		{
+			name:    "fails with missing brokers",
+			args:    args{name: "test", brokers: []string{}, topics: []string{"topic1"}, group: "group1"},
+			wantErr: true,
+		},
+		{
+			name:    "fails with empty broker",
+			args:    args{name: "test", brokers: []string{" "}, topics: []string{"topic1"}, group: "group1"},
+			wantErr: true,
+		},
+		{
+			name:    "fails with missing topics",
+			args:    args{name: "test", brokers: brokers, topics: nil, group: "group1"},
+			wantErr: true,
+		},
+		{
+			name:    "fails with one empty topic",
+			args:    args{name: "test", brokers: brokers, topics: []string{"topic1", ""}, group: "group1"},
 			wantErr: true,
 		},
 		{
 			name:    "fails with missing group",
-			args:    args{name: "test", group: ""},
+			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: ""},
 			wantErr: true,
 		},
 		{
 			name:    "success",
-			args:    args{name: "test", group: "group1"},
+			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: "group1"},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, tt.args.group, tt.args.options...)
+			got, err := New(tt.args.name, tt.args.group, tt.args.topics, tt.args.brokers, tt.args.options...)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)
@@ -58,6 +81,8 @@ func TestNew(t *testing.T) {
 func TestFactory_Create(t *testing.T) {
 	type fields struct {
 		clientName string
+		topics     []string
+		brokers    []string
 		oo         []kafka.OptionFunc
 	}
 	tests := map[string]struct {
@@ -67,21 +92,17 @@ func TestFactory_Create(t *testing.T) {
 		"success": {
 			fields: fields{
 				clientName: "clientA",
-				oo: []kafka.OptionFunc{
-					kafka.Topics([]string{"topicA"}),
-					kafka.Brokers([]string{"192.168.1.1"}),
-				},
+				topics:     []string{"topicA"},
+				brokers:    []string{"192.168.1.1"},
 			},
 			wantErr: false,
 		},
 		"failed with invalid option": {
 			fields: fields{
 				clientName: "clientB",
-				oo: []kafka.OptionFunc{
-					kafka.Buffer(-100),
-					kafka.Topics([]string{"topicA"}),
-					kafka.Brokers([]string{"192.168.1.1"}),
-				},
+				topics:     []string{"topicA"},
+				brokers:    []string{"192.168.1.1"},
+				oo:         []kafka.OptionFunc{kafka.Buffer(-100)},
 			},
 			wantErr: true,
 		},
@@ -89,8 +110,10 @@ func TestFactory_Create(t *testing.T) {
 	for testName, tt := range tests {
 		t.Run(testName, func(t *testing.T) {
 			f := &Factory{
-				name: tt.fields.clientName,
-				oo:   tt.fields.oo,
+				name:    tt.fields.clientName,
+				topics:  tt.fields.topics,
+				brokers: tt.fields.brokers,
+				oo:      tt.fields.oo,
 			}
 			got, err := f.Create()
 			if tt.wantErr {
@@ -101,6 +124,8 @@ func TestFactory_Create(t *testing.T) {
 				assert.NotNil(t, got)
 				consumer, ok := got.(*consumer)
 				assert.True(t, ok, "consumer is not of type group.consumer")
+				assert.Equal(t, tt.fields.brokers, consumer.config.Brokers)
+				assert.Equal(t, tt.fields.topics, consumer.topics)
 				assert.True(t, strings.HasSuffix(consumer.config.SaramaConfig.ClientID, tt.fields.clientName))
 			}
 		})
@@ -201,7 +226,7 @@ func versionedConsumerMessage(value string, header *sarama.RecordHeader, version
 }
 
 func TestConsumer_ConsumeFailedBroker(t *testing.T) {
-	f, err := New("name", "group", kafka.Topics([]string{"topic"}), kafka.Brokers([]string{"1", "2"}))
+	f, err := New("name", "group", []string{"topic"}, []string{"1", "2"})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)
@@ -225,7 +250,7 @@ func TestConsumer_ConsumeWithGroup(t *testing.T) {
 			SetHighWaterMark("TOPIC", 0, 14),
 	})
 
-	f, err := New("name", "group", kafka.Topics([]string{"TOPIC"}), kafka.Brokers([]string{broker.Addr()}))
+	f, err := New("name", "group", []string{"TOPIC"}, []string{broker.Addr()})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)
@@ -240,4 +265,39 @@ func TestConsumer_ConsumeWithGroup(t *testing.T) {
 	broker.Close()
 
 	ctx.Done()
+}
+
+func Test_containsEmptyValue(t *testing.T) {
+	tcases := []struct {
+		name       string
+		values     []string
+		wantResult bool
+	}{
+		{
+			name:       "all values are empty",
+			values:     []string{"", ""},
+			wantResult: true,
+		},
+		{
+			name:       "one of the values is empty",
+			values:     []string{"", "value"},
+			wantResult: true,
+		},
+		{
+			name:       "one of the values is only-spaces value",
+			values:     []string{"     ", "value"},
+			wantResult: true,
+		},
+		{
+			name:       "all values are non-empty",
+			values:     []string{"value1", "value2"},
+			wantResult: false,
+		},
+	}
+
+	for _, tc := range tcases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.wantResult, containsEmtpyValue(tc.values))
+		})
+	}
 }

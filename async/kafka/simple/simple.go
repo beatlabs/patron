@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
@@ -13,23 +14,28 @@ import (
 
 // Factory definition of a consumer factory.
 type Factory struct {
-	name  string
-	topic string
-	oo    []kafka.OptionFunc
+	name    string
+	topic   string
+	brokers []string
+	oo      []kafka.OptionFunc
 }
 
 // New constructor.
-func New(name, topic string, oo ...kafka.OptionFunc) (*Factory, error) {
+func New(name, topic string, brokers []string, oo ...kafka.OptionFunc) (*Factory, error) {
 
 	if name == "" {
 		return nil, errors.New("name is required")
+	}
+
+	if len(brokers) == 0 || containsEmtpyValue(brokers) {
+		return nil, errors.New("brokers are empty or have an empty value")
 	}
 
 	if topic == "" {
 		return nil, errors.New("topic is required")
 	}
 
-	return &Factory{name: name, topic: topic, oo: oo}, nil
+	return &Factory{name: name, topic: topic, brokers: brokers, oo: oo}, nil
 }
 
 // Create a new consumer.
@@ -41,6 +47,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 	}
 
 	cc := kafka.ConsumerConfig{
+		Brokers:      f.brokers,
 		Buffer:       1000,
 		SaramaConfig: config,
 	}
@@ -164,4 +171,13 @@ func closePartitionConsumer(cns sarama.PartitionConsumer) {
 	if err != nil {
 		log.Errorf("failed to close partition consumer: %v", err)
 	}
+}
+
+func containsEmtpyValue(values []string) bool {
+	for _, v := range values {
+		if strings.TrimSpace(v) == "" {
+			return true
+		}
+	}
+	return false
 }

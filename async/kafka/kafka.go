@@ -85,7 +85,6 @@ func init() {
 // ConsumerConfig is the common configuration of patron kafka consumers.
 type ConsumerConfig struct {
 	Brokers      []string
-	Topics       []string
 	Buffer       int
 	DecoderFunc  encoding.DecodeRawFunc
 	SaramaConfig *sarama.Config

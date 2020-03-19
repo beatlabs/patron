@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/kafka"
+	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"
 )
@@ -33,11 +33,11 @@ func New(name, group string, topics, brokers []string, oo ...kafka.OptionFunc) (
 		return nil, errors.New("group is required")
 	}
 
-	if len(brokers) == 0 || containsEmtpyValue(brokers) {
+	if validation.IsStringSliceEmpty(brokers) {
 		return nil, errors.New("brokers are empty or have an empty value")
 	}
 
-	if len(topics) == 0 || containsEmtpyValue(topics) {
+	if validation.IsStringSliceEmpty(topics) {
 		return nil, errors.New("topics are empty or have an empty value")
 	}
 
@@ -152,15 +152,6 @@ func closeConsumer(cns sarama.ConsumerGroup) {
 	if err != nil {
 		log.Errorf("failed to close consumer group: %v", err)
 	}
-}
-
-func containsEmtpyValue(values []string) bool {
-	for _, v := range values {
-		if strings.TrimSpace(v) == "" {
-			return true
-		}
-	}
-	return false
 }
 
 type handler struct {

@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/async"
 	"github.com/beatlabs/patron/async/kafka"
+	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
 )
 
@@ -27,7 +27,7 @@ func New(name, topic string, brokers []string, oo ...kafka.OptionFunc) (*Factory
 		return nil, errors.New("name is required")
 	}
 
-	if len(brokers) == 0 || containsEmtpyValue(brokers) {
+	if validation.IsStringSliceEmpty(brokers) {
 		return nil, errors.New("brokers are empty or have an empty value")
 	}
 
@@ -171,13 +171,4 @@ func closePartitionConsumer(cns sarama.PartitionConsumer) {
 	if err != nil {
 		log.Errorf("failed to close partition consumer: %v", err)
 	}
-}
-
-func containsEmtpyValue(values []string) bool {
-	for _, v := range values {
-		if strings.TrimSpace(v) == "" {
-			return true
-		}
-	}
-	return false
 }

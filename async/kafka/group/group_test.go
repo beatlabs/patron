@@ -266,38 +266,3 @@ func TestConsumer_ConsumeWithGroup(t *testing.T) {
 
 	ctx.Done()
 }
-
-func Test_containsEmptyValue(t *testing.T) {
-	tcases := []struct {
-		name       string
-		values     []string
-		wantResult bool
-	}{
-		{
-			name:       "all values are empty",
-			values:     []string{"", ""},
-			wantResult: true,
-		},
-		{
-			name:       "one of the values is empty",
-			values:     []string{"", "value"},
-			wantResult: true,
-		},
-		{
-			name:       "one of the values is only-spaces value",
-			values:     []string{"     ", "value"},
-			wantResult: true,
-		},
-		{
-			name:       "all values are non-empty",
-			values:     []string{"value1", "value2"},
-			wantResult: false,
-		},
-	}
-
-	for _, tc := range tcases {
-		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.wantResult, containsEmtpyValue(tc.values))
-		})
-	}
-}

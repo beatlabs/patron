@@ -129,7 +129,7 @@ func (ap *AsyncProducer) createProducerMessage(ctx context.Context, msg *Message
 
 	b, err := ap.enc(msg.body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encode message body")
+		return nil, fmt.Errorf("failed to encode message body: %w", err)
 	}
 
 	c.Set(correlation.HeaderID, correlation.IDFromContext(ctx))

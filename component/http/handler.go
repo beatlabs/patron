@@ -36,7 +36,9 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 
 		h := extractHeaders(r)
 
+		// TODO : pass url to the Request
 		req := NewRequest(f, r.Body, h, dec)
+		// TODO : manage warning error type by adding warning to headers
 		rsp, err := hnd(ctx, req)
 		if err != nil {
 			handleError(logger, w, enc, err)

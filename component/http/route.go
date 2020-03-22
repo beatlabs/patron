@@ -214,25 +214,18 @@ func NewRoutesBuilder() *RoutesBuilder {
 }
 
 type CachedRouteBuilder struct {
-	path      string
-	processor sync.ProcessorFunc
-	cache     cache.Cache
-	instant   TimeInstant
-	errors    []error
+	path          string
+	processor     sync.ProcessorFunc
+	cache         cache.Cache
+	instant       TimeInstant
+	ttl           time.Duration
+	minAge        uint
+	maxFresh      uint
+	staleResponse bool
+	errors        []error
 }
 
-func NewCachedRouteBuilder(path string, processor sync.ProcessorFunc) *CachedRouteBuilder {
-
-	return &CachedRouteBuilder{
-		path:      path,
-		processor: processor,
-		instant: func() int64 {
-			return time.Now().Unix()
-		},
-	}
-}
-
-// WithTimeInstant adds authenticator.
+// WithTimeInstant specifies a time instant function for checking expiry.
 func (cb *CachedRouteBuilder) WithTimeInstant(instant TimeInstant) *CachedRouteBuilder {
 	if instant == nil {
 		cb.errors = append(cb.errors, errors.New("time instant is nil"))
@@ -241,11 +234,87 @@ func (cb *CachedRouteBuilder) WithTimeInstant(instant TimeInstant) *CachedRouteB
 	return cb
 }
 
-// WithCache adds authenticator.
-func (cb *CachedRouteBuilder) WithCache(cache cache.Cache) *RouteBuilder {
-	if cache == nil {
-		// let it break later
-		return NewRouteBuilder(cb.path, nil)
+// WithTimeInstant adds a time to live parameter to control the cache expiry policy.
+func (cb *CachedRouteBuilder) WithTimeToLive(ttl time.Duration) *CachedRouteBuilder {
+	if ttl <= 0 {
+		cb.errors = append(cb.errors, errors.New("time to live must be greater than `0`"))
 	}
-	return NewRouteBuilder(cb.path, cacheHandler(cb.processor, cb.cache, cb.instant))
+	cb.ttl = ttl
+	return cb
+}
+
+// WithMinAge adds a minimum age for the cache responses.
+// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache
+// This means that if this parameter is missing (e.g. is equal to '0' , the cache can effectively be made obsolete in the above scenario)
+func (cb *CachedRouteBuilder) WithMinAge(minAge uint) *CachedRouteBuilder {
+	cb.minAge = minAge
+	return cb
+}
+
+// WithMinFresh adds a minimum age for the cache responses.
+// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache
+// This means that if this parameter is missing (e.g. is equal to '0' , the cache can effectively be made obsolete in the above scenario)
+func (cb *CachedRouteBuilder) WithMaxFresh(maxFresh uint) *CachedRouteBuilder {
+	cb.maxFresh = maxFresh
+	return cb
+}
+
+// WithStaleResponse allows the cache to return stale responses.
+func (cb *CachedRouteBuilder) WithStaleResponse(staleResponse bool) *CachedRouteBuilder {
+	cb.staleResponse = staleResponse
+	return cb
+}
+
+func (cb *CachedRouteBuilder) Create() (*routeCache, error) {
+	//if len(cb.errors) > 0 {
+	//ttl > 0
+	//maxfresh < ttl
+	return &routeCache{}, nil
+	//}
+}
+
+func NewRouteCache(path string, processor sync.ProcessorFunc, cache cache.Cache) *routeCache {
+	if strings.ReplaceAll(path, " ", "") == "" {
+
+	}
+	return &routeCache{
+		path:      path,
+		processor: processor,
+		cache:     cache,
+		instant: func() int64 {
+			return time.Now().Unix()
+		},
+	}
+}
+
+// ToGetRouteBuilder transforms the cached builder to a GET endpoint builder
+// while propagating any errors
+func (cb *CachedRouteBuilder) ToGetRouteBuilder() *RouteBuilder {
+	routeCache, err := cb.Create()
+	if err == nil {
+
+	}
+	rb := NewRouteBuilder(cb.path, cacheHandler(cb.processor, routeCache)).MethodGet()
+	rb.errors = append(rb.errors, cb.errors...)
+	return rb
+}
+
+type routeCache struct {
+	// path is the route path, which the cache is enabled for
+	path string
+	// processor is the processor function for the route
+	processor sync.ProcessorFunc
+	// cache is the cache implementation to be used
+	cache cache.Cache
+	// ttl is the time to live for all cached objects
+	ttl time.Duration
+	// instant is the timing function for the cache expiry calculations
+	instant TimeInstant
+	// minAge specifies the minimum amount of max-age header value for client cache-control requests
+	minAge uint
+	// max-fresh specifies the maximum amount of min-fresh header value for client cache-control requests
+	maxFresh uint
+	// staleResponse specifies if the server is willing to send stale responses
+	// if a new response could not be generated for any reason
+	staleResponse bool
 }

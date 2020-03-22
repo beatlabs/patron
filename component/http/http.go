@@ -28,6 +28,7 @@ func (r *Request) Decode(v interface{}) error {
 // Response definition of the sync response model.
 type Response struct {
 	Payload interface{}
+	Headers map[string]string
 }
 
 // NewResponse creates a new response.

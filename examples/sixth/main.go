@@ -44,7 +44,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to init the cache %v", err)
 	}
-	cachedRoute := patronhttp.NewCachedRouteBuilder("/", sixth).WithCache(cache).MethodGet()
+	cachedRoute := patronhttp.NewCachedRouteBuilder("/", sixth, cache).ToGetRouteBuilder()
 
 	ctx := context.Background()
 	err = patron.New(name, version).WithRoutesBuilder(patronhttp.NewRoutesBuilder().Append(cachedRoute)).Run(ctx)

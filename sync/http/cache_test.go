@@ -2,220 +2,1320 @@ package http
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"os"
 	"strconv"
 	"testing"
+	"time"
+
+	"github.com/beatlabs/patron/cache"
+
+	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/log/zerolog"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/beatlabs/patron/sync"
 )
 
+func TestMain(m *testing.M) {
+
+	err := log.Setup(zerolog.Create(log.Level(log.DebugLevel)), make(map[string]interface{}))
+
+	if err != nil {
+		os.Exit(1)
+	}
+
+	exitVal := m.Run()
+
+	os.Exit(exitVal)
+
+}
+
 func TestExtractCacheHeaders(t *testing.T) {
 
+	type caheRequestCondition struct {
+		noCache         bool
+		forceCache      bool
+		validators      int
+		expiryValidator bool
+	}
+
 	type args struct {
-		headers    map[string]string
-		noCache    bool
-		forceCache bool
-		ttl        int64
+		cfg     caheRequestCondition
+		headers map[string]string
+		wrn     string
 	}
 
 	// TODO : cover the extract headers functionality from 'real' http header samples
 
+	minAge := uint(0)
+	minFresh := uint(0)
+
 	params := []args{
 		{
-			headers:    map[string]string{CacheControlHeader: "max-age=10"},
-			noCache:    false,
-			forceCache: false,
-			ttl:        -10,
+			headers: map[string]string{cacheControlHeader: "max-age=10"},
+			cfg: caheRequestCondition{
+				noCache:    false,
+				forceCache: false,
+				validators: 1,
+			},
+			wrn: "",
+		},
+		// header cannot be parsed
+		{
+			headers: map[string]string{cacheControlHeader: "maxage=10"},
+			cfg: caheRequestCondition{
+				noCache:    false,
+				forceCache: false,
+			},
+			wrn: "",
+		},
+		// header resets to minAge
+		{
+			headers: map[string]string{cacheControlHeader: "max-age=twenty"},
+			cfg: caheRequestCondition{
+				noCache:    false,
+				forceCache: false,
+				validators: 1,
+			},
+			wrn: "",
+		},
+		{
+			headers: map[string]string{cacheControlHeader: "min-fresh=10"},
+			cfg: caheRequestCondition{
+				noCache:    false,
+				forceCache: false,
+				validators: 1,
+			},
+			wrn: "",
+		},
+		{
+			headers: map[string]string{cacheControlHeader: "min-fresh=5,max-age=5"},
+			cfg: caheRequestCondition{
+				noCache:    false,
+				forceCache: false,
+				validators: 2,
+			},
+			wrn: "",
+		},
+		{
+			headers: map[string]string{cacheControlHeader: "max-stale=5"},
+			cfg: caheRequestCondition{
+				noCache:         false,
+				forceCache:      false,
+				expiryValidator: true,
+			},
+			wrn: "",
+		},
+		{
+			headers: map[string]string{cacheControlHeader: "no-cache"},
+			cfg: caheRequestCondition{
+				noCache:    true,
+				forceCache: false,
+			},
+			wrn: "",
+		},
+		{
+			headers: map[string]string{cacheControlHeader: "no-store"},
+			cfg: caheRequestCondition{
+				noCache:    true,
+				forceCache: false,
+			},
+			wrn: "",
 		},
 	}
 
 	for _, param := range params {
 		req := sync.NewRequest(map[string]string{}, nil, param.headers, nil)
-		noCache, forceCache, ttl := extractCacheHeaders(req)
-		assert.Equal(t, param.noCache, noCache)
-		assert.Equal(t, param.forceCache, forceCache)
-		assert.Equal(t, param.ttl, ttl)
+		cfg, wrn := extractCacheHeaders(req, minAge, minFresh)
+		assert.Equal(t, param.wrn, wrn)
+		assert.Equal(t, param.cfg.noCache, cfg.noCache)
+		assert.Equal(t, param.cfg.forceCache, cfg.forceCache)
+		assert.Equal(t, param.cfg.validators, len(cfg.validators))
+		assert.Equal(t, param.cfg.expiryValidator, cfg.expiryValidator != nil)
 	}
 
+}
+
+type routeConfig struct {
+	path          string
+	ttl           time.Duration
+	hnd           sync.ProcessorFunc
+	minAge        uint
+	maxFresh      uint
+	staleResponse bool
+}
+
+type requestParams struct {
+	header       map[string]string
+	fields       map[string]string
+	timeInstance int64
 }
 
 type testArgs struct {
-	header       map[string]string
-	fields       map[string]string
-	response     *sync.Response
-	timeInstance int64
-	err          error
+	routeConfig   routeConfig
+	cache         cache.Cache
+	requestParams requestParams
+	response      *sync.Response
+	err           error
 }
 
-// TestCacheMaxAgeHeader tests the cache implementation
-// for the same request,
-// for header max-age
-func TestCacheMaxAgeHeader(t *testing.T) {
+func testHeader(maxAge int) map[string]string {
+	header := make(map[string]string)
+	header[cacheControlHeader] = genCacheControlHeader(time.Duration(maxAge)*time.Second, 0)
+	return header
+}
+
+func testHeaderWithWarning(maxAge int, warning string) map[string]string {
+	h := testHeader(maxAge)
+	h[warningHeader] = warning
+	return h
+}
+
+func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        1, // to avoid no-cache
+		staleResponse: false,
+	}
 
 	args := [][]testArgs{
 		// cache expiration with max-age header
 		{
-			// initial request
+			// initial request, will fill up the cache
 			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(10),
-				timeInstance: 1,
-				err:          nil,
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				err:         nil,
 			},
 			// cache response
 			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(10),
-				timeInstance: 9,
-				err:          nil,
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 9,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(2)},
+				err:         nil,
 			},
-			// still cached response because we are at the edge of the expiry e.g. 11 - 1 = 10
+			// still cached response
 			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(10),
-				timeInstance: 11,
-				err:          nil,
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 11,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(0)},
+				err:         nil,
 			},
-			// new response because cache has expired
+			// new response , due to expiry validator 10 + 1 - 12 < 0
 			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(120),
-				timeInstance: 12,
-				err:          nil,
-			},
-			// make an extra request with the new cache value
-			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(120),
-				timeInstance: 15,
-				err:          nil,
-			},
-			// and another when the previous has expired 12 + 10 = 22
-			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(230),
-				timeInstance: 23,
-				err:          nil,
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 12,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 120, Headers: testHeader(10)},
+				err:         nil,
 			},
 		},
 	}
-
 	run(t, args)
-
 }
 
-// TestCacheMaxAgeHeader tests the cache implementation
-// for the same request,
-// for header max-age
-func TestCacheMinFreshHeader(t *testing.T) {
+func TestNoMinAgeCache_WithoutClientHeader(t *testing.T) {
+
+	rc := routeConfig{
+		path:   "/",
+		ttl:    10 * time.Second,
+		minAge: 0, // min age is set to '0',
+		// this means , without client control headers we will always return a non-cached response
+		// despite the ttl parameter
+		staleResponse: false,
+	}
 
 	args := [][]testArgs{
 		// cache expiration with max-age header
 		{
-			// initial request
+			// initial request, will fill up the cache
 			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "min-fresh=10"},
-				response:     sync.NewResponse(10),
-				timeInstance: 1,
-				err:          nil,
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				err:         nil,
 			},
-			// cache response
+			// no cached response
 			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(10),
-				timeInstance: 9,
-				err:          nil,
-			},
-			// still cached response because we are at the edge of the expiry e.g. 11 - 1 = 10
-			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(10),
-				timeInstance: 11,
-				err:          nil,
-			},
-			// new response because cache has expired
-			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(120),
-				timeInstance: 12,
-				err:          nil,
-			},
-			// make an extra request with the new cache value
-			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(120),
-				timeInstance: 15,
-				err:          nil,
-			},
-			// and another when the previous has expired 12 + 10 = 22
-			{
-				fields:       map[string]string{"VALUE": "1"},
-				header:       map[string]string{CacheControlHeader: "max-age=10"},
-				response:     sync.NewResponse(230),
-				timeInstance: 23,
-				err:          nil,
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 2,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 20, Headers: testHeader(10)},
+				err:         nil,
 			},
 		},
 	}
+	run(t, args)
+}
 
+func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        0,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		// cache expiration with max-age header
+		{
+			// initial request, will fill up the cache
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cached response, because of the max-age header
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=10"},
+					timeInstance: 3,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(8)},
+				err:         nil,
+			},
+			// new response, because of missing header, and minAge == 0
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 9,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 90, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// new cached response , because max-age header again
+			// note : because of the cache refresh triggered by the previous call we see the last cached value
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=10"},
+					timeInstance: 14,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 90, Headers: testHeader(5)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        5,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		// cache expiration with max-age header
+		{
+			// initial request, will fill up the cache
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=5"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cached response
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=5"},
+					timeInstance: 3,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(8)},
+				err:         nil,
+			},
+			// new response, because max-age > 9 - 1
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=5"},
+					timeInstance: 9,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 90, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cached response right before the age threshold max-age == 14 - 9
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=5"},
+					timeInstance: 14,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 90, Headers: testHeader(5)},
+				err:         nil,
+			},
+			// new response, because max-age > 15 - 9
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=5"},
+					timeInstance: 15,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 150, Headers: testHeader(10)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestCache_WithMaxAgeHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           30 * time.Second,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		// cache expiration with max-age header
+		{
+			// initial request, will fill up the cache
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(30)},
+				err:         nil,
+			},
+			// cached response
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=10"},
+					timeInstance: 10,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(20)},
+				err:         nil,
+			},
+			// cached response
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=20"},
+					timeInstance: 20,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// new response
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=5"},
+					timeInstance: 20,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 200, Headers: testHeader(30)},
+				err:         nil,
+			},
+			// cache response
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=25"},
+					timeInstance: 25,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 200, Headers: testHeader(25)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           5 * time.Second,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		// cache expiration with max-age header
+		{
+			// initial request, will fill up the cache
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(5)},
+				err:         nil,
+			},
+			// despite the max-age request, the cache will refresh because of it's ttl
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=100"},
+					timeInstance: 6,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 60, Headers: testHeader(5)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           30 * time.Second,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		// cache expiration with max-age header
+		{
+			// initial request, will fill up the cache
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(30)},
+				err:         nil,
+			},
+			// a max-age=0 request will always refresh the cache,
+			// if there is not minAge limit set
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=0"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(30)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           30 * time.Second,
+		minAge:        5,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		// cache expiration with max-age header
+		{
+			// initial request, will fill up the cache
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(30)},
+				err:         nil,
+			},
+			// cached response still, because of minAge override
+			// note : max-age=2 gets ignored
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=2"},
+					timeInstance: 4,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeaderWithWarning(26, "max-age=5")},
+				err:         nil,
+			},
+			// cached response because of bigger max-age parameter
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=20"},
+					timeInstance: 5,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(25)},
+				err:         nil,
+			},
+			// new response because of minAge floor
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-age=3"},
+					timeInstance: 6,
+				},
+				routeConfig: rc,
+				// note : no warning because it s a new response
+				response: &sync.Response{Payload: 60, Headers: testHeader(30)},
+				err:      nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// expecting cache response, as value is still fresh : 5 - 0 == 5
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
+					timeInstance: 5,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(5)},
+				err:         nil,
+			},
+			// expecting new response, as value is not fresh enough
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
+					timeInstance: 6,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 60, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cache response, as value is expired : 11 - 6 <= 5
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
+					timeInstance: 11,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 60, Headers: testHeader(5)},
+				err:         nil,
+			},
+			// expecting new response
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
+					timeInstance: 12,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 120, Headers: testHeader(10)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestNoMaxFreshCache_WithExtremeMinFreshHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				err:         nil,
+			},
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=100"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestMaxFreshCache_WithMinFreshHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		maxFresh:      5,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// expecting cache response, as min-fresh is bounded by maxFresh configuration  parameter
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=100"},
+					timeInstance: 5,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeaderWithWarning(5, "min-fresh=5")},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request, will fill up the cache
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cached response
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-stale=5"},
+					timeInstance: 3,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(7)},
+				err:         nil,
+			},
+			// cached response
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-stale=5"},
+					timeInstance: 8,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(2)},
+				err:         nil,
+			},
+			// cached response , still stale threshold not breached , 12 - 0 <= 10 + 5
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-stale=5"},
+					timeInstance: 15,
+				},
+				routeConfig: rc,
+				// note : we are also getting a must-revalidate header
+				response: &sync.Response{Payload: 0, Headers: testHeader(-5)},
+				err:      nil,
+			},
+			// new response
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "max-stale=5"},
+					timeInstance: 16,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 160, Headers: testHeader(10)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestCache_WithMixedHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        5,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5,max-age=5"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// expecting cache response, as value is still fresh : 5 - 0 == min-fresh and still young : 5 - 0 < max-age
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5,max-age=10"},
+					timeInstance: 5,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(5)},
+				err:         nil,
+			},
+			// new response, as value is not fresh enough : 6 - 0 > min-fresh
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=5,max-age=10"},
+					timeInstance: 6,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 60, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cached response, as value is still fresh enough and still young
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=10,max-age=8"},
+					timeInstance: 6,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 60, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// new response, as value is still fresh enough but too old
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "min-fresh=10,max-age=8"},
+					timeInstance: 15,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 150, Headers: testHeader(10)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestStaleCache_WithoutHeaders(t *testing.T) {
+
+	hndErr := errors.New("error encountered on handler")
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		maxFresh:      10,
+		staleResponse: true,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+			},
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 11,
+				},
+				routeConfig: routeConfig{
+					path: rc.path,
+					ttl:  rc.ttl,
+					hnd: func(i context.Context, i2 *sync.Request) (response *sync.Response, e error) {
+						return nil, hndErr
+					},
+					minAge:        rc.minAge,
+					maxFresh:      rc.maxFresh,
+					staleResponse: rc.staleResponse,
+				},
+				response: &sync.Response{Payload: 0, Headers: testHeaderWithWarning(-1, "last-valid")},
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestNoStaleCache_WithoutHeaders(t *testing.T) {
+
+	hndErr := errors.New("error encountered on handler")
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		maxFresh:      10,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+			},
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 11,
+				},
+				routeConfig: routeConfig{
+					path: rc.path,
+					ttl:  rc.ttl,
+					hnd: func(i context.Context, i2 *sync.Request) (response *sync.Response, e error) {
+						return nil, hndErr
+					},
+					minAge:        rc.minAge,
+					maxFresh:      rc.maxFresh,
+					staleResponse: rc.staleResponse,
+				},
+				err: hndErr,
+			},
+		},
+	}
+	run(t, args)
+}
+
+// TODO : test stale response for error (with Warning)
+
+func TestCache_WithHandlerErr(t *testing.T) {
+
+	hndErr := errors.New("error encountered on handler")
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		maxFresh:      10,
+		staleResponse: false,
+		hnd: func(i context.Context, i2 *sync.Request) (response *sync.Response, e error) {
+			return nil, hndErr
+		},
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				err:         hndErr,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestCache_WithCacheGetErr(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		maxFresh:      10,
+		staleResponse: false,
+	}
+
+	cacheImpl := &testingCache{
+		cache:  make(map[string]interface{}),
+		getErr: errors.New("get error"),
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				cache:       cacheImpl,
+			},
+			// new response, because of cache get error
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				cache:       cacheImpl,
+			},
+		},
+	}
 	run(t, args)
 
+	assert.Equal(t, 2, cacheImpl.getCount)
+	assert.Equal(t, 2, cacheImpl.setCount)
+
 }
+
+func TestCache_WithCacheSetErr(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		maxFresh:      10,
+		staleResponse: false,
+	}
+
+	cacheImpl := &testingCache{
+		cache:  make(map[string]interface{}),
+		setErr: errors.New("set error"),
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				cache:       cacheImpl,
+			},
+			// new response, because of cache get error
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				cache:       cacheImpl,
+			},
+		},
+	}
+	run(t, args)
+
+	assert.Equal(t, 2, cacheImpl.getCount)
+	assert.Equal(t, 2, cacheImpl.setCount)
+
+}
+
+func TestCache_WithMixedPaths(t *testing.T) {
+
+	rc1 := routeConfig{
+		path:          "/1",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		maxFresh:      10,
+		staleResponse: false,
+	}
+
+	rc2 := routeConfig{
+		path:          "/2",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		maxFresh:      10,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc1,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cached response for the same path
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 1,
+				},
+				routeConfig: rc1,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(9)},
+				err:         nil,
+			},
+			// initial request for second path
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 1,
+				},
+				routeConfig: rc2,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cached response for second path
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 2,
+				},
+				routeConfig: rc2,
+				response:    &sync.Response{Payload: 10, Headers: testHeader(9)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+func TestCache_WithMixedRequestParameters(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10 * time.Second,
+		minAge:        10,
+		maxFresh:      10,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cached response for same request parameter
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 0, Headers: testHeader(9)},
+				err:         nil,
+			},
+			// new response for different request parameter
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "2"},
+					timeInstance: 1,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 20, Headers: testHeader(10)},
+				err:         nil,
+			},
+			// cached response for second request parameter
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "2"},
+					timeInstance: 2,
+				},
+				routeConfig: rc,
+				response:    &sync.Response{Payload: 20, Headers: testHeader(9)},
+				err:         nil,
+			},
+		},
+	}
+	run(t, args)
+}
+
+// TODO  : test no-cache
+// TODO : test no-store
+// TODO : test only-if-cached
+
 func run(t *testing.T, args [][]testArgs) {
+
+	// create a test request handler
+	// that returns the current time instant times '10' multiplied by the VALUE parameter in the request
 	handler := func(timeInstance int64) func(ctx context.Context, request *sync.Request) (*sync.Response, error) {
 		return func(ctx context.Context, request *sync.Request) (*sync.Response, error) {
 			i, err := strconv.Atoi(request.Fields["VALUE"])
 			if err != nil {
 				return nil, err
 			}
-			// return the specified parameter multiplied by the time instant
 			return sync.NewResponse(i * 10 * int(timeInstance)), nil
 		}
 	}
 
-	cache := &testingCache{cache: make(map[string]interface{})}
+	// test cache implementation
+	cacheIml := &testingCache{cache: make(map[string]interface{})}
 
 	for _, testArg := range args {
 		for _, arg := range testArg {
-			request := sync.NewRequest(arg.fields, nil, arg.header, nil)
-			// initial request
-			response, err := cacheHandler(handler(arg.timeInstance), cache, func() int64 {
-				return arg.timeInstance
+			request := sync.NewRequest(arg.requestParams.fields, nil, arg.requestParams.header, nil)
+
+			var hnd sync.ProcessorFunc
+			if arg.routeConfig.hnd != nil {
+				hnd = arg.routeConfig.hnd
+			} else {
+				hnd = handler(arg.requestParams.timeInstance)
+			}
+
+			var ch cache.Cache
+			if arg.cache != nil {
+				ch = arg.cache
+			} else {
+				ch = cacheIml
+			}
+
+			response, err := cacheHandler(hnd, &routeCache{
+				cache: ch,
+				instant: func() int64 {
+					return arg.requestParams.timeInstance
+				},
+				ttl:           arg.routeConfig.ttl,
+				path:          arg.routeConfig.path,
+				minAge:        arg.routeConfig.minAge,
+				maxFresh:      arg.routeConfig.maxFresh,
+				staleResponse: arg.routeConfig.staleResponse,
 			})(context.Background(), request)
+
 			if arg.err != nil {
 				assert.Error(t, err)
-				assert.NotNil(t, response)
-				// TODO : assert type of error
+				assert.Nil(t, response)
+				assert.Equal(t, err, arg.err)
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, response)
-				assert.Equal(t, arg.response, response)
+				assert.Equal(t, arg.response.Payload, response.Payload)
+				assert.Equal(t, arg.response.Headers[cacheControlHeader], response.Headers[cacheControlHeader])
+				assert.Equal(t, arg.response.Headers[warningHeader], response.Headers[warningHeader])
+				assert.NotNil(t, arg.response.Headers[eTagHeader])
+				assert.False(t, response.Headers[eTagHeader] == "")
 			}
 		}
 	}
 }
 
 type testingCache struct {
-	cache map[string]interface{}
+	cache    map[string]interface{}
+	getCount int
+	setCount int
+	getErr   error
+	setErr   error
 }
 
 func (t *testingCache) Get(key string) (interface{}, bool, error) {
+	t.getCount++
+	if t.getErr != nil {
+		return nil, false, t.getErr
+	}
 	r, ok := t.cache[key]
-	println(fmt.Sprintf("key = %v", key))
-	println(fmt.Sprintf("r = %v", r))
 	return r, ok, nil
 }
 
@@ -232,8 +1332,10 @@ func (t *testingCache) Remove(key string) error {
 }
 
 func (t *testingCache) Set(key string, value interface{}) error {
+	t.setCount++
+	if t.setErr != nil {
+		return t.getErr
+	}
 	t.cache[key] = value
-	println(fmt.Sprintf("key = %v", key))
-	println(fmt.Sprintf("value = %v", value))
 	return nil
 }

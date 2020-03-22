@@ -195,6 +195,82 @@ route := NewRoute("/index", "GET" ProcessorFunc, true, ...MiddlewareFunc)
 routeWithAuth := NewAuthRoute("/index", "GET" ProcessorFunc, true, Authendicator, ...MiddlewareFunc)
 ```
 
+### HTTP Caching
+
+The caching layer for HTTP routes is specified per Route.
+
+```go
+type routeCache struct {
+	// path is the route path, which the cache is enabled for
+	path string
+	// processor is the processor function for the route
+	processor sync.ProcessorFunc
+	// cache is the cache implementation to be used
+	cache cache.Cache
+	// ttl is the time to live for all cached objects
+	ttl time.Duration
+	// instant is the timing function for the cache expiry calculations
+	instant TimeInstant
+	// minAge specifies the minimum amount of max-age header value for client cache-control requests
+	minAge uint
+	// max-fresh specifies the maximum amount of min-fresh header value for client cache-control requests
+	maxFresh uint
+	// staleResponse specifies if the server is willing to send stale responses
+	// if a new response could not be generated for any reason
+	staleResponse bool
+}
+```
+
+#### server cache
+- The **cache key** is based on the route path and the url request parameters.
+- The server caches only **GET requests**.
+- The server implementation must specify a **Time to Live policy** upon construction.
+- The route should return always the most fresh object instance.
+- An **ETag header** must be always in responses that are part of the cache, representing the hash of the response.
+- Requests within the time-to-live threshold, will be served from the cache. 
+Otherwise the request will be handled as usual by the route processor function. 
+The resulting response will be cached for future requests.
+- Requests that cannot be processed due to any kind of error, but are found in the cache,
+will be returned to the client with a `Warning` header present in the response. 
+ONLY IF : this option is specified in the server with the `staleResponse` parameter set to `true`
+
+```
+Note : The server is unaware of the cache time-to-live policy itself. 
+The cache might evict entries based on it's internal configuration.
+This is transparent to the server. As long as a key cannot be found in the cache, 
+the server will execute the route processor function and fill the corresponding cache entry
+```
+
+#### client cache-control
+The client can control the cache with the appropriate Headers
+- `max-age=?` 
+
+returns the cached instance only if the age of the instance is lower than the max-age parameter.
+This parameter is bounded from below by the server option `minAge`.
+This is to avoid chatty clients with no cache control policy (or very aggressive max-age policy) to effectively disable the cache
+- `min-fesh=?` 
+ 
+returns the cached instance if the time left for expiration is lower than the provided parameter.
+This parameter is bounded from above by the server option `maxFresh`.
+This is to avoid chatty clients with no cache control policy (or very aggressive min-fresh policy) to effectively disable the cache
+- `max-stale=?`
+ 
+returns the cached instance, even if it has expired within the provided bound by the client.
+This response should always be accompanied by a `must-revalidate` response header.
+- `no-cache` / `no-store`
+
+returns a new response to the client by executing the route processing function.
+NOTE : Except for cases where a `minAge` or `maxFresh` parameter has been specified in the server.
+This is again a safety mechanism to avoid 'aggressive' clients put unexpected load on the server.
+The server is responsible to cap the refresh time, BUT must respond with a `Warning` header in such a case.
+- `only-if-cached`
+
+expects any response that is found in the cache, otherwise returns an empty response
+
+#### cache design reference
+- https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
+- https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9
+
 ### Asynchronous
 
 The implementation of the async processor follows exactly the same principle as the sync processor.

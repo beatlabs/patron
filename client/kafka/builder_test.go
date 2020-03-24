@@ -140,15 +140,16 @@ func TestBrokers(t *testing.T) {
 		{name: "single mock broker", args: args{brokers: []string{seed.Addr()}}, wantErr: false},
 		{name: "multiple mock brokers", args: args{brokers: []string{seed.Addr(), seed.Addr(), seed.Addr()}}, wantErr: false},
 		{name: "empty brokers list", args: args{brokers: []string{}}, wantErr: true},
+		{name: "brokers list with an empty value", args: args{brokers: []string{" ", "value"}}, wantErr: true},
 		{name: "nil brokers list", args: args{brokers: nil}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ab := NewBuilder(tt.args.brokers)
 			if tt.wantErr {
-				assert.Empty(t, ab.brokers)
+				assert.NotEmpty(t, ab.errors)
 			} else {
-				assert.NotEmpty(t, ab.brokers)
+				assert.Empty(t, ab.errors)
 			}
 		})
 	}

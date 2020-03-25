@@ -9,6 +9,7 @@ import (
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	patronErrors "github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"
 )
@@ -48,8 +49,8 @@ func NewBuilder(brokers []string) *AsyncBuilder {
 	cfg.Version = sarama.V0_11_0_0
 
 	errs := []error{}
-	if len(brokers) == 0 {
-		errs = append(errs, errors.New("brokers list is empty"))
+	if validation.IsStringSliceEmpty(brokers) {
+		errs = append(errs, errors.New("brokers are empty or have an empty value"))
 	}
 
 	return &AsyncBuilder{

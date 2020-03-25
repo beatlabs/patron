@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/mantzas/patron/encoding/json"
 	"github.com/mantzas/patron/errors"
 	"github.com/mantzas/patron/trace"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 )
 
 // Message abstraction of a Kafka message.
@@ -40,10 +40,11 @@ type Producer interface {
 
 // AsyncProducer defines a async Kafka producer.
 type AsyncProducer struct {
-	cfg   *sarama.Config
-	prod  sarama.AsyncProducer
-	chErr chan error
-	tag   opentracing.Tag
+	cfg        *sarama.Config
+	prodClient sarama.Client
+	prod       sarama.AsyncProducer
+	chErr      chan error
+	tag        opentracing.Tag
 }
 
 // NewAsyncProducer creates a new async producer with default configuration.
@@ -61,7 +62,13 @@ func NewAsyncProducer(brokers []string, oo ...OptionFunc) (*AsyncProducer, error
 		}
 	}
 
-	prod, err := sarama.NewAsyncProducer(brokers, ap.cfg)
+	prodClient, err := sarama.NewClient(brokers, cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create async producer client")
+	}
+	ap.prodClient = prodClient
+
+	prod, err := sarama.NewAsyncProducerFromClient(prodClient)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create sync producer")
 	}
@@ -95,9 +102,29 @@ func (ap *AsyncProducer) Error() <-chan error {
 	return ap.chErr
 }
 
-// Close gracefully the producer.
+// ActiveBrokers returns a list of active brokers' addresses.
+func (ap *AsyncProducer) ActiveBrokers() []string {
+	brokers := ap.prodClient.Brokers()
+	activeBrokerAddresses := make([]string, len(brokers))
+	for i, b := range brokers {
+		activeBrokerAddresses[i] = b.Addr()
+	}
+	return activeBrokerAddresses
+}
+
+// Close shuts down the producer and waits for any buffered messages to be
+// flushed. You must call this function before a producer object passes out of
+// scope, as it may otherwise leak memory.
 func (ap *AsyncProducer) Close() error {
-	return errors.Wrap(ap.prod.Close(), "failed to close sync producer")
+	err := ap.prod.Close()
+	if err != nil {
+		return errors.Wrap(err, "failed to close async producer")
+	}
+	err = ap.prodClient.Close()
+	if err != nil {
+		return errors.Wrap(err, "failed to close async producer client")
+	}
+	return nil
 }
 
 func (ap *AsyncProducer) propagateError() {

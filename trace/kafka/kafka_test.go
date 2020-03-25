@@ -95,3 +95,14 @@ func createKafkaBroker(t *testing.T, retError bool) *sarama.MockBroker {
 	seed.Returns(metadataResponse)
 	return seed
 }
+
+func TestAsyncProducerActiveBrokers(t *testing.T) {
+	seed := createKafkaBroker(t, true)
+	ap, err := NewAsyncProducer([]string{seed.Addr()}, Version(sarama.V0_8_2_0.String()))
+	assert.NoError(t, err)
+	assert.NotNil(t, ap)
+
+	assert.NotEmpty(t, ap.ActiveBrokers())
+
+	assert.NoError(t, ap.Close())
+}

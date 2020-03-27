@@ -224,3 +224,14 @@ func assertMetric(t *testing.T, testMetrics ...testMetric) {
 		counter.Reset()
 	}
 }
+
+func TestAsyncProducerActiveBrokers(t *testing.T) {
+	seed := createKafkaBroker(t, true)
+	ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).Create()
+	assert.NoError(t, err)
+	assert.NotNil(t, ap)
+
+	assert.NotEmpty(t, ap.ActiveBrokers())
+
+	assert.NoError(t, ap.Close())
+}

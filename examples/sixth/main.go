@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/beatlabs/patron/cache/lru"
-
-	"github.com/beatlabs/patron/encoding/json"
-
 	"github.com/beatlabs/patron"
-	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/component/grpc"
+	"github.com/beatlabs/patron/component/grpc/greeter"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/sync"
-	patronhttp "github.com/beatlabs/patron/sync/http"
+)
+
+const (
+	awsRegion      = "eu-west-1"
+	awsID          = "test"
+	awsSecret      = "test"
+	awsToken       = "token"
+	awsSQSEndpoint = "http://localhost:4576"
+	awsSQSQueue    = "patron"
 )
 
 func init() {
@@ -27,48 +31,44 @@ func init() {
 		fmt.Printf("failed to set sampler env vars: %v", err)
 		os.Exit(1)
 	}
-
-	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50006")
+	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50005")
 	if err != nil {
 		fmt.Printf("failed to set default patron port env vars: %v", err)
 		os.Exit(1)
 	}
 }
 
+type greeterServer struct {
+	greeter.UnimplementedGreeterServer
+}
+
+func (gs *greeterServer) SayHello(ctx context.Context, req *greeter.HelloRequest) (*greeter.HelloReply, error) {
+
+	log.FromContext(ctx).Infof("request received: %v", req.String())
+
+	return &greeter.HelloReply{Message: fmt.Sprintf("Hello, %s %s!", req.GetFirstname(), req.GetLastname())}, nil
+}
+
 func main() {
 	name := "sixth"
 	version := "1.0.0"
 
-	// Set up routes
-	cache, err := lru.New(100)
+	err := patron.SetupLogging(name, version)
 	if err != nil {
-		log.Fatalf("failed to init the cache %v", err)
+		fmt.Printf("failed to set up logging: %v", err)
+		os.Exit(1)
 	}
-	cachedRoute := patronhttp.NewCachedRouteBuilder("/", sixth, cache).ToGetRouteBuilder()
+
+	cmp, err := grpc.New(50006).Create()
+	if err != nil {
+		log.Fatalf("failed to create gRPC component: %v", err)
+	}
+
+	greeter.RegisterGreeterServer(cmp.Server(), &greeterServer{})
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithRoutesBuilder(patronhttp.NewRoutesBuilder().Append(cachedRoute)).Run(ctx)
+	err = patron.New(name, version).WithComponents(cmp).Run(ctx)
 	if err != nil {
-		log.Fatalf("failed to run patron service %v", err)
+		log.Fatalf("failed to create and run service: %v", err)
 	}
-
-}
-
-func sixth(ctx context.Context, req *sync.Request) (*sync.Response, error) {
-
-	var u examples.User
-	println(fmt.Sprintf("u = %v", u))
-	err := req.Decode(&u)
-	println(fmt.Sprintf("err = %v", err))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode request: %w", err)
-	}
-
-	b, err := json.Encode(&u)
-	if err != nil {
-		return nil, fmt.Errorf("failed create request: %w", err)
-	}
-
-	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	return sync.NewResponse(string(b)), nil
 }

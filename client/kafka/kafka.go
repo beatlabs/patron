@@ -69,6 +69,7 @@ type Producer interface {
 // AsyncProducer defines a async Kafka producer.
 type AsyncProducer struct {
 	cfg         *sarama.Config
+	prodClient  sarama.Client
 	prod        sarama.AsyncProducer
 	chErr       chan error
 	tag         opentracing.Tag
@@ -98,11 +99,31 @@ func (ap *AsyncProducer) Error() <-chan error {
 	return ap.chErr
 }
 
-// Close gracefully the producer.
+// ActiveBrokers returns a list of active brokers' addresses.
+func (ap *AsyncProducer) ActiveBrokers() []string {
+	brokers := ap.prodClient.Brokers()
+	activeBrokerAddresses := make([]string, len(brokers))
+	for i, b := range brokers {
+		activeBrokerAddresses[i] = b.Addr()
+	}
+	return activeBrokerAddresses
+}
+
+// Close shuts down the producer and waits for any buffered messages to be
+// flushed. You must call this function before a producer object passes out of
+// scope, as it may otherwise leak memory.
 func (ap *AsyncProducer) Close() error {
 	err := ap.prod.Close()
 	if err != nil {
-		return fmt.Errorf("failed to close sync producer: %w", err)
+		// always close client
+		_ = ap.prodClient.Close()
+
+		return fmt.Errorf("failed to close async producer client: %w", err)
+	}
+
+	err = ap.prodClient.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close async producer: %w", err)
 	}
 	return nil
 }

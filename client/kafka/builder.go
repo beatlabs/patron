@@ -130,13 +130,18 @@ func (ab *AsyncBuilder) Create() (*AsyncProducer, error) {
 		return nil, patronErrors.Aggregate(ab.errors...)
 	}
 
-	prod, err := sarama.NewAsyncProducer(ab.brokers, ab.cfg)
+	prodClient, err := sarama.NewClient(ab.brokers, ab.cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create async producer client: %w", err)
+	}
+	prod, err := sarama.NewAsyncProducerFromClient(prodClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create async producer: %w", err)
 	}
 
 	ap := AsyncProducer{
 		cfg:         ab.cfg,
+		prodClient:  prodClient,
 		prod:        prod,
 		chErr:       ab.chErr,
 		enc:         ab.enc,

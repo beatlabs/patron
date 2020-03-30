@@ -201,23 +201,21 @@ The caching layer for HTTP routes is specified per Route.
 
 ```go
 type routeCache struct {
-	// path is the route path, which the cache is enabled for
-	path string
-	// processor is the processor function for the route
-	processor sync.ProcessorFunc
 	// cache is the cache implementation to be used
 	cache cache.Cache
-	// ttl is the time to live for all cached objects
-	ttl time.Duration
+	// ttl is the time to live for all cached objects in seconds
+	ttl int64
 	// instant is the timing function for the cache expiry calculations
 	instant TimeInstant
-	// minAge specifies the minimum amount of max-age header value for client cache-control requests
-	minAge uint
-	// max-fresh specifies the maximum amount of min-fresh header value for client cache-control requests
-	maxFresh uint
+	// minAge specifies the minimum amount of max-age header value for client cache-control requests in seconds
+	minAge int64
+	// max-fresh specifies the maximum amount of min-fresh header value for client cache-control requests in seconds
+	maxFresh int64
 	// staleResponse specifies if the server is willing to send stale responses
 	// if a new response could not be generated for any reason
 	staleResponse bool
+	// metrics is the implementation for keeping track of the cache operations
+	metrics cacheMetrics
 }
 ```
 

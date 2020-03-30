@@ -56,6 +56,10 @@ func (c *Component) Run(ctx context.Context) error {
 		log.Info("shutting down component")
 		return srv.Shutdown(ctx)
 	case err := <-chFail:
+		log.Errorf("shutting down component due to error: %v", err)
+		if shutDownErr := srv.Shutdown(ctx); shutDownErr != nil {
+			return patronErrors.Aggregate(shutDownErr, err)
+		}
 		return err
 	}
 }

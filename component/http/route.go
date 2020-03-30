@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
-
-	"github.com/beatlabs/patron/cache"
 
 	"github.com/beatlabs/patron/component/http/auth"
 	errs "github.com/beatlabs/patron/errors"
@@ -23,13 +20,15 @@ type Route struct {
 
 // RouteBuilder for building a route.
 type RouteBuilder struct {
-	method        string
-	path          string
-	trace         bool
-	middlewares   []MiddlewareFunc
-	authenticator auth.Authenticator
-	handler       http.HandlerFunc
-	errors        []error
+	method            string
+	path              string
+	trace             bool
+	middlewares       []MiddlewareFunc
+	authenticator     auth.Authenticator
+	processor         ProcessorFunc
+	handler           http.HandlerFunc
+	routeCacheBuilder *RouteCacheBuilder
+	errors            []error
 }
 
 // WithTrace enables route tracing.
@@ -53,6 +52,14 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 		rb.errors = append(rb.errors, errors.New("authenticator is nil"))
 	}
 	rb.authenticator = auth
+	return rb
+}
+
+func (rb *RouteBuilder) WithRouteCachedBuilder(routeCacheBuilder *RouteCacheBuilder) *RouteBuilder {
+	if routeCacheBuilder == nil {
+		rb.errors = append(rb.errors, errors.New("cache route builder is nil"))
+	}
+	rb.routeCacheBuilder = routeCacheBuilder
 	return rb
 }
 
@@ -130,12 +137,54 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		middlewares = append(middlewares, rb.middlewares...)
 	}
 
+	// TODO : refactor appropriately
+	var processor ProcessorFunc
+	var handler http.HandlerFunc
+
+	if rb.routeCacheBuilder != nil {
+
+		if rb.method != http.MethodGet {
+			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
+		}
+
+		rc, err := rb.routeCacheBuilder.create(rb.path)
+		if err != nil {
+			return Route{}, fmt.Errorf("could not build cache from builder %v: %w", rb.routeCacheBuilder, err)
+		}
+
+		// TODO : we need to refactor the abstraction in issue #160
+		if rb.processor != nil {
+			// builder was initialised from the NewRouteBuilder constructor
+			// e.g. the only place where the rb.processor is set
+			processor = wrapProcessorFunc(rb.path, rb.processor, rc)
+		} else {
+			// we could have handled the processor also at a middleware level,
+			// but this would not work uniformly for the above case as well.
+			handler = wrapHandlerFunc(rb.handler, rc)
+		}
+	}
+
+	if processor == nil {
+		processor = rb.processor
+	}
+
+	if handler == nil {
+		handler = rb.handler
+	}
+
 	return Route{
 		path:        rb.path,
 		method:      rb.method,
-		handler:     rb.handler,
+		handler:     constructHTTPHandler(processor, handler),
 		middlewares: middlewares,
 	}, nil
+}
+
+func constructHTTPHandler(processor ProcessorFunc, httpHandler http.HandlerFunc) http.HandlerFunc {
+	if processor == nil {
+		return httpHandler
+	}
+	return handler(processor)
 }
 
 // NewRawRouteBuilder constructor.
@@ -156,17 +205,17 @@ func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 // NewRouteBuilder constructor.
 func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 
-	var err error
+	var ee []error
+
+	if path == "" {
+		ee = append(ee, errors.New("path is empty"))
+	}
 
 	if processor == nil {
-		err = errors.New("processor is nil")
+		ee = append(ee, errors.New("processor is nil"))
 	}
 
-	rb := NewRawRouteBuilder(path, handler(processor))
-	if err != nil {
-		rb.errors = append(rb.errors, err)
-	}
-	return rb
+	return &RouteBuilder{path: path, errors: ee, processor: processor}
 }
 
 // RoutesBuilder creates a list of routes.
@@ -211,110 +260,4 @@ func (rb *RoutesBuilder) Build() ([]Route, error) {
 // NewRoutesBuilder constructor.
 func NewRoutesBuilder() *RoutesBuilder {
 	return &RoutesBuilder{}
-}
-
-type CachedRouteBuilder struct {
-	path          string
-	processor     sync.ProcessorFunc
-	cache         cache.Cache
-	instant       TimeInstant
-	ttl           time.Duration
-	minAge        uint
-	maxFresh      uint
-	staleResponse bool
-	errors        []error
-}
-
-// WithTimeInstant specifies a time instant function for checking expiry.
-func (cb *CachedRouteBuilder) WithTimeInstant(instant TimeInstant) *CachedRouteBuilder {
-	if instant == nil {
-		cb.errors = append(cb.errors, errors.New("time instant is nil"))
-	}
-	cb.instant = instant
-	return cb
-}
-
-// WithTimeInstant adds a time to live parameter to control the cache expiry policy.
-func (cb *CachedRouteBuilder) WithTimeToLive(ttl time.Duration) *CachedRouteBuilder {
-	if ttl <= 0 {
-		cb.errors = append(cb.errors, errors.New("time to live must be greater than `0`"))
-	}
-	cb.ttl = ttl
-	return cb
-}
-
-// WithMinAge adds a minimum age for the cache responses.
-// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache
-// This means that if this parameter is missing (e.g. is equal to '0' , the cache can effectively be made obsolete in the above scenario)
-func (cb *CachedRouteBuilder) WithMinAge(minAge uint) *CachedRouteBuilder {
-	cb.minAge = minAge
-	return cb
-}
-
-// WithMinFresh adds a minimum age for the cache responses.
-// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache
-// This means that if this parameter is missing (e.g. is equal to '0' , the cache can effectively be made obsolete in the above scenario)
-func (cb *CachedRouteBuilder) WithMaxFresh(maxFresh uint) *CachedRouteBuilder {
-	cb.maxFresh = maxFresh
-	return cb
-}
-
-// WithStaleResponse allows the cache to return stale responses.
-func (cb *CachedRouteBuilder) WithStaleResponse(staleResponse bool) *CachedRouteBuilder {
-	cb.staleResponse = staleResponse
-	return cb
-}
-
-func (cb *CachedRouteBuilder) Create() (*routeCache, error) {
-	//if len(cb.errors) > 0 {
-	//ttl > 0
-	//maxfresh < ttl
-	return &routeCache{}, nil
-	//}
-}
-
-func NewRouteCache(path string, processor sync.ProcessorFunc, cache cache.Cache) *routeCache {
-	if strings.ReplaceAll(path, " ", "") == "" {
-
-	}
-	return &routeCache{
-		path:      path,
-		processor: processor,
-		cache:     cache,
-		instant: func() int64 {
-			return time.Now().Unix()
-		},
-	}
-}
-
-// ToGetRouteBuilder transforms the cached builder to a GET endpoint builder
-// while propagating any errors
-func (cb *CachedRouteBuilder) ToGetRouteBuilder() *RouteBuilder {
-	routeCache, err := cb.Create()
-	if err == nil {
-
-	}
-	rb := NewRouteBuilder(cb.path, cacheHandler(cb.processor, routeCache)).MethodGet()
-	rb.errors = append(rb.errors, cb.errors...)
-	return rb
-}
-
-type routeCache struct {
-	// path is the route path, which the cache is enabled for
-	path string
-	// processor is the processor function for the route
-	processor sync.ProcessorFunc
-	// cache is the cache implementation to be used
-	cache cache.Cache
-	// ttl is the time to live for all cached objects
-	ttl time.Duration
-	// instant is the timing function for the cache expiry calculations
-	instant TimeInstant
-	// minAge specifies the minimum amount of max-age header value for client cache-control requests
-	minAge uint
-	// max-fresh specifies the maximum amount of min-fresh header value for client cache-control requests
-	maxFresh uint
-	// staleResponse specifies if the server is willing to send stale responses
-	// if a new response could not be generated for any reason
-	staleResponse bool
 }

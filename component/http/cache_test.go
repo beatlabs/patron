@@ -1,12 +1,14 @@
 package http
 
 import (
-	"context"
 	"errors"
 	"os"
 	"strconv"
 	"testing"
-	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/prometheus/client_golang/prometheus/testutil"
 
 	"github.com/beatlabs/patron/cache"
 
@@ -14,8 +16,6 @@ import (
 	"github.com/beatlabs/patron/log/zerolog"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beatlabs/patron/sync"
 )
 
 func TestMain(m *testing.M) {
@@ -49,8 +49,8 @@ func TestExtractCacheHeaders(t *testing.T) {
 
 	// TODO : cover the extract headers functionality from 'real' http header samples
 
-	minAge := uint(0)
-	minFresh := uint(0)
+	minAge := int64(0)
+	minFresh := int64(0)
 
 	params := []args{
 		{
@@ -127,8 +127,8 @@ func TestExtractCacheHeaders(t *testing.T) {
 	}
 
 	for _, param := range params {
-		req := sync.NewRequest(map[string]string{}, nil, param.headers, nil)
-		cfg, wrn := extractCacheHeaders(req, minAge, minFresh)
+		header := param.headers[cacheControlHeader]
+		cfg, wrn := extractCacheHeaders(header, minAge, minFresh)
 		assert.Equal(t, param.wrn, wrn)
 		assert.Equal(t, param.cfg.noCache, cfg.noCache)
 		assert.Equal(t, param.cfg.forceCache, cfg.forceCache)
@@ -140,34 +140,50 @@ func TestExtractCacheHeaders(t *testing.T) {
 
 type routeConfig struct {
 	path          string
-	ttl           time.Duration
-	hnd           sync.ProcessorFunc
-	minAge        uint
-	maxFresh      uint
+	ttl           int64
+	hnd           executor
+	minAge        int64
+	maxFresh      int64
 	staleResponse bool
 }
 
 type requestParams struct {
+	path         string
 	header       map[string]string
 	fields       map[string]string
 	timeInstance int64
+}
+
+type metricState struct {
+	additions int
+	misses    int
+	evictions int
+	hits      int
+}
+
+func (m *metricState) add(n metricState) {
+	m.evictions += n.evictions
+	m.additions += n.additions
+	m.misses += n.misses
+	m.hits += n.hits
 }
 
 type testArgs struct {
 	routeConfig   routeConfig
 	cache         cache.Cache
 	requestParams requestParams
-	response      *sync.Response
+	response      *Response
+	metrics       metricState
 	err           error
 }
 
-func testHeader(maxAge int) map[string]string {
+func testHeader(maxAge int64) map[string]string {
 	header := make(map[string]string)
-	header[cacheControlHeader] = genCacheControlHeader(time.Duration(maxAge)*time.Second, 0)
+	header[cacheControlHeader] = createCacheControlHeader(maxAge, 0)
 	return header
 }
 
-func testHeaderWithWarning(maxAge int, warning string) map[string]string {
+func testHeaderWithWarning(maxAge int64, warning string) map[string]string {
 	h := testHeader(maxAge)
 	h[warningHeader] = warning
 	return h
@@ -177,7 +193,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        1, // to avoid no-cache
 		staleResponse: false,
 	}
@@ -192,8 +208,12 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// cache response
 			{
@@ -202,8 +222,11 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 					timeInstance: 9,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(2)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(2)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// still cached response
 			{
@@ -212,8 +235,11 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 					timeInstance: 11,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(0)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(0)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response , due to expiry validator 10 + 1 - 12 < 0
 			{
@@ -222,19 +248,23 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 					timeInstance: 12,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 120, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 120, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestNoMinAgeCache_WithoutClientHeader(t *testing.T) {
 
 	rc := routeConfig{
 		path:   "/",
-		ttl:    10 * time.Second,
+		ttl:    10,
 		minAge: 0, // min age is set to '0',
 		// this means , without client control headers we will always return a non-cached response
 		// despite the ttl parameter
@@ -251,8 +281,11 @@ func TestNoMinAgeCache_WithoutClientHeader(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
 			},
 			// no cached response
 			{
@@ -261,19 +294,22 @@ func TestNoMinAgeCache_WithoutClientHeader(t *testing.T) {
 					timeInstance: 2,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 20, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 20, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        0,
 		staleResponse: false,
 	}
@@ -288,8 +324,11 @@ func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
 			},
 			// cached response, because of the max-age header
 			{
@@ -299,8 +338,11 @@ func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
 					timeInstance: 3,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(8)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(8)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response, because of missing header, and minAge == 0
 			{
@@ -309,8 +351,11 @@ func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
 					timeInstance: 9,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 90, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 90, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
 			},
 			// new cached response , because max-age header again
 			// note : because of the cache refresh triggered by the previous call we see the last cached value
@@ -321,19 +366,22 @@ func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
 					timeInstance: 14,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 90, Headers: testHeader(5)},
-				err:         nil,
+				response:    &Response{Payload: 90, Headers: testHeader(5)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        5,
 		staleResponse: false,
 	}
@@ -349,8 +397,12 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// cached response
 			{
@@ -360,8 +412,11 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 					timeInstance: 3,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(8)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(8)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response, because max-age > 9 - 1
 			{
@@ -371,8 +426,12 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 					timeInstance: 9,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 90, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 90, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 			// cached response right before the age threshold max-age == 14 - 9
 			{
@@ -382,8 +441,11 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 					timeInstance: 14,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 90, Headers: testHeader(5)},
-				err:         nil,
+				response:    &Response{Payload: 90, Headers: testHeader(5)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response, because max-age > 15 - 9
 			{
@@ -393,19 +455,23 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 					timeInstance: 15,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 150, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 150, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestCache_WithMaxAgeHeaders(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           30 * time.Second,
+		ttl:           30,
 		staleResponse: false,
 	}
 
@@ -419,8 +485,11 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(30)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(30)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
 			},
 			// cached response
 			{
@@ -430,8 +499,11 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 					timeInstance: 10,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(20)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(20)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// cached response
 			{
@@ -441,8 +513,11 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 					timeInstance: 20,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response
 			{
@@ -452,8 +527,12 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 					timeInstance: 20,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 200, Headers: testHeader(30)},
-				err:         nil,
+				response:    &Response{Payload: 200, Headers: testHeader(30)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 			// cache response
 			{
@@ -463,19 +542,22 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 					timeInstance: 25,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 200, Headers: testHeader(25)},
-				err:         nil,
+				response:    &Response{Payload: 200, Headers: testHeader(25)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           5 * time.Second,
+		ttl:           5,
 		staleResponse: false,
 	}
 
@@ -489,8 +571,11 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(5)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(5)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
 			},
 			// despite the max-age request, the cache will refresh because of it's ttl
 			{
@@ -500,19 +585,23 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 					timeInstance: 6,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 60, Headers: testHeader(5)},
-				err:         nil,
+				response:    &Response{Payload: 60, Headers: testHeader(5)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           30 * time.Second,
+		ttl:           30,
 		staleResponse: false,
 	}
 
@@ -526,8 +615,11 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(30)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(30)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
 			},
 			// a max-age=0 request will always refresh the cache,
 			// if there is not minAge limit set
@@ -538,19 +630,23 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(30)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(30)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           30 * time.Second,
+		ttl:           30,
 		minAge:        5,
 		staleResponse: false,
 	}
@@ -565,8 +661,12 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(30)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(30)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// cached response still, because of minAge override
 			// note : max-age=2 gets ignored
@@ -577,8 +677,11 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 					timeInstance: 4,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeaderWithWarning(26, "max-age=5")},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeaderWithWarning(26, "max-age=5")},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// cached response because of bigger max-age parameter
 			{
@@ -588,8 +691,11 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 					timeInstance: 5,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(25)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(25)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response because of minAge floor
 			{
@@ -600,19 +706,23 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				// note : no warning because it s a new response
-				response: &sync.Response{Payload: 60, Headers: testHeader(30)},
-				err:      nil,
+				response: &Response{Payload: 60, Headers: testHeader(30)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		staleResponse: false,
 	}
@@ -627,8 +737,12 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// expecting cache response, as value is still fresh : 5 - 0 == 5
 			{
@@ -638,8 +752,11 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 					timeInstance: 5,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(5)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(5)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// expecting new response, as value is not fresh enough
 			{
@@ -649,8 +766,12 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 					timeInstance: 6,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 60, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 60, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 			// cache response, as value is expired : 11 - 6 <= 5
 			{
@@ -660,8 +781,11 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 					timeInstance: 11,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 60, Headers: testHeader(5)},
-				err:         nil,
+				response:    &Response{Payload: 60, Headers: testHeader(5)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// expecting new response
 			{
@@ -671,19 +795,23 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 					timeInstance: 12,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 120, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 120, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestNoMaxFreshCache_WithExtremeMinFreshHeaders(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		staleResponse: false,
 	}
@@ -698,8 +826,12 @@ func TestNoMaxFreshCache_WithExtremeMinFreshHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			{
 				requestParams: requestParams{
@@ -708,19 +840,23 @@ func TestNoMaxFreshCache_WithExtremeMinFreshHeaders(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 10, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestMaxFreshCache_WithMinFreshHeaders(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		maxFresh:      5,
 		staleResponse: false,
@@ -736,8 +872,12 @@ func TestMaxFreshCache_WithMinFreshHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// expecting cache response, as min-fresh is bounded by maxFresh configuration  parameter
 			{
@@ -747,19 +887,22 @@ func TestMaxFreshCache_WithMinFreshHeaders(t *testing.T) {
 					timeInstance: 5,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeaderWithWarning(5, "min-fresh=5")},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeaderWithWarning(5, "min-fresh=5")},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		staleResponse: false,
 	}
@@ -773,8 +916,12 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// cached response
 			{
@@ -784,8 +931,11 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 					timeInstance: 3,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(7)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(7)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// cached response
 			{
@@ -795,8 +945,11 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 					timeInstance: 8,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(2)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(2)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// cached response , still stale threshold not breached , 12 - 0 <= 10 + 5
 			{
@@ -807,8 +960,11 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				// note : we are also getting a must-revalidate header
-				response: &sync.Response{Payload: 0, Headers: testHeader(-5)},
-				err:      nil,
+				response: &Response{Payload: 0, Headers: testHeader(-5)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response
 			{
@@ -818,19 +974,23 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 					timeInstance: 16,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 160, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 160, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestCache_WithMixedHeaders(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        5,
 		staleResponse: false,
 	}
@@ -845,8 +1005,12 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// expecting cache response, as value is still fresh : 5 - 0 == min-fresh and still young : 5 - 0 < max-age
 			{
@@ -856,8 +1020,11 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 					timeInstance: 5,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(5)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(5)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response, as value is not fresh enough : 6 - 0 > min-fresh
 			{
@@ -867,8 +1034,12 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 					timeInstance: 6,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 60, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 60, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 			// cached response, as value is still fresh enough and still young
 			{
@@ -878,8 +1049,11 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 					timeInstance: 6,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 60, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 60, Headers: testHeader(10)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response, as value is still fresh enough but too old
 			{
@@ -889,21 +1063,25 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 					timeInstance: 15,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 150, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 150, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
-func TestStaleCache_WithoutHeaders(t *testing.T) {
+func TestStaleCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 
 	hndErr := errors.New("error encountered on handler")
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		maxFresh:      10,
 		staleResponse: true,
@@ -918,7 +1096,11 @@ func TestStaleCache_WithoutHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
 			},
 			{
 				requestParams: requestParams{
@@ -928,27 +1110,32 @@ func TestStaleCache_WithoutHeaders(t *testing.T) {
 				routeConfig: routeConfig{
 					path: rc.path,
 					ttl:  rc.ttl,
-					hnd: func(i context.Context, i2 *sync.Request) (response *sync.Response, e error) {
-						return nil, hndErr
+					hnd: func(now int64, key string) *cachedResponse {
+						return &cachedResponse{
+							err: hndErr,
+						}
 					},
 					minAge:        rc.minAge,
 					maxFresh:      rc.maxFresh,
 					staleResponse: rc.staleResponse,
 				},
-				response: &sync.Response{Payload: 0, Headers: testHeaderWithWarning(-1, "last-valid")},
+				metrics: metricState{
+					hits: 1,
+				},
+				response: &Response{Payload: 0, Headers: testHeaderWithWarning(-1, "last-valid")},
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
-func TestNoStaleCache_WithoutHeaders(t *testing.T) {
+func TestNoStaleCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 
 	hndErr := errors.New("error encountered on handler")
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		maxFresh:      10,
 		staleResponse: false,
@@ -963,7 +1150,11 @@ func TestNoStaleCache_WithoutHeaders(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
 			},
 			{
 				requestParams: requestParams{
@@ -973,18 +1164,23 @@ func TestNoStaleCache_WithoutHeaders(t *testing.T) {
 				routeConfig: routeConfig{
 					path: rc.path,
 					ttl:  rc.ttl,
-					hnd: func(i context.Context, i2 *sync.Request) (response *sync.Response, e error) {
-						return nil, hndErr
+					hnd: func(now int64, key string) *cachedResponse {
+						return &cachedResponse{
+							err: hndErr,
+						}
 					},
 					minAge:        rc.minAge,
 					maxFresh:      rc.maxFresh,
 					staleResponse: rc.staleResponse,
 				},
+				metrics: metricState{
+					evictions: 1,
+				},
 				err: hndErr,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 // TODO : test stale response for error (with Warning)
@@ -995,12 +1191,14 @@ func TestCache_WithHandlerErr(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		maxFresh:      10,
 		staleResponse: false,
-		hnd: func(i context.Context, i2 *sync.Request) (response *sync.Response, e error) {
-			return nil, hndErr
+		hnd: func(now int64, key string) *cachedResponse {
+			return &cachedResponse{
+				err: hndErr,
+			}
 		},
 	}
 
@@ -1013,18 +1211,21 @@ func TestCache_WithHandlerErr(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				err:         hndErr,
+				metrics: metricState{
+					misses: 1,
+				},
+				err: hndErr,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestCache_WithCacheGetErr(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		maxFresh:      10,
 		staleResponse: false,
@@ -1044,8 +1245,12 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
 				cache:       cacheImpl,
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
 			},
 			// new response, because of cache get error
 			{
@@ -1054,12 +1259,16 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				response:    &Response{Payload: 10, Headers: testHeader(10)},
 				cache:       cacheImpl,
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 
 	assert.Equal(t, 2, cacheImpl.getCount)
 	assert.Equal(t, 2, cacheImpl.setCount)
@@ -1070,7 +1279,7 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		maxFresh:      10,
 		staleResponse: false,
@@ -1090,8 +1299,12 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
 				cache:       cacheImpl,
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
 			},
 			// new response, because of cache get error
 			{
@@ -1100,12 +1313,16 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
+				response:    &Response{Payload: 10, Headers: testHeader(10)},
 				cache:       cacheImpl,
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 
 	assert.Equal(t, 2, cacheImpl.getCount)
 	assert.Equal(t, 2, cacheImpl.setCount)
@@ -1114,17 +1331,9 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 
 func TestCache_WithMixedPaths(t *testing.T) {
 
-	rc1 := routeConfig{
-		path:          "/1",
-		ttl:           10 * time.Second,
-		minAge:        10,
-		maxFresh:      10,
-		staleResponse: false,
-	}
-
-	rc2 := routeConfig{
-		path:          "/2",
-		ttl:           10 * time.Second,
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10,
 		minAge:        10,
 		maxFresh:      10,
 		staleResponse: false,
@@ -1137,51 +1346,69 @@ func TestCache_WithMixedPaths(t *testing.T) {
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
 					timeInstance: 0,
+					path:         "/1",
 				},
-				routeConfig: rc1,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
-				err:         nil,
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// cached response for the same path
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
 					timeInstance: 1,
+					path:         "/1",
 				},
-				routeConfig: rc1,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(9)},
-				err:         nil,
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeader(9)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// initial request for second path
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
 					timeInstance: 1,
+					path:         "/2",
 				},
-				routeConfig: rc2,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(10)},
-				err:         nil,
+				routeConfig: rc,
+				response:    &Response{Payload: 10, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// cached response for second path
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
 					timeInstance: 2,
+					path:         "/2",
 				},
-				routeConfig: rc2,
-				response:    &sync.Response{Payload: 10, Headers: testHeader(9)},
-				err:         nil,
+				routeConfig: rc,
+				response:    &Response{Payload: 10, Headers: testHeader(9)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 func TestCache_WithMixedRequestParameters(t *testing.T) {
 
 	rc := routeConfig{
 		path:          "/",
-		ttl:           10 * time.Second,
+		ttl:           10,
 		minAge:        10,
 		maxFresh:      10,
 		staleResponse: false,
@@ -1196,8 +1423,12 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// cached response for same request parameter
 			{
@@ -1206,8 +1437,11 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 0, Headers: testHeader(9)},
-				err:         nil,
+				response:    &Response{Payload: 0, Headers: testHeader(9)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 			// new response for different request parameter
 			{
@@ -1216,8 +1450,12 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 20, Headers: testHeader(10)},
-				err:         nil,
+				response:    &Response{Payload: 20, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
 			},
 			// cached response for second request parameter
 			{
@@ -1226,44 +1464,68 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 					timeInstance: 2,
 				},
 				routeConfig: rc,
-				response:    &sync.Response{Payload: 20, Headers: testHeader(9)},
-				err:         nil,
+				response:    &Response{Payload: 20, Headers: testHeader(9)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
 			},
 		},
 	}
-	run(t, args)
+	assertCache(t, args)
 }
 
 // TODO  : test no-cache
 // TODO : test no-store
 // TODO : test only-if-cached
 
-func run(t *testing.T, args [][]testArgs) {
+func assertCache(t *testing.T, args [][]testArgs) {
+
+	chMetrics := NewPrometheusMetrics("path", 0)
+	chMetrics.reset()
 
 	// create a test request handler
 	// that returns the current time instant times '10' multiplied by the VALUE parameter in the request
-	handler := func(timeInstance int64) func(ctx context.Context, request *sync.Request) (*sync.Response, error) {
-		return func(ctx context.Context, request *sync.Request) (*sync.Response, error) {
-			i, err := strconv.Atoi(request.Fields["VALUE"])
+	exec := func(request requestParams) func(now int64, key string) *cachedResponse {
+		return func(now int64, key string) *cachedResponse {
+			i, err := strconv.Atoi(request.fields["VALUE"])
 			if err != nil {
-				return nil, err
+				return &cachedResponse{
+					err: err,
+				}
 			}
-			return sync.NewResponse(i * 10 * int(timeInstance)), nil
+			return &cachedResponse{
+				response: &cacheHandlerResponse{
+					payload: i * 10 * int(request.timeInstance),
+					header:  make(map[string]string),
+				},
+				etag:      generateETag([]byte{}, int(now)),
+				lastValid: request.timeInstance,
+			}
 		}
 	}
 
 	// test cache implementation
-	cacheIml := &testingCache{cache: make(map[string]interface{})}
+	cacheIml := newTestingCache()
+
+	argMetrics := metricState{}
 
 	for _, testArg := range args {
 		for _, arg := range testArg {
-			request := sync.NewRequest(arg.requestParams.fields, nil, arg.requestParams.header, nil)
 
-			var hnd sync.ProcessorFunc
+			path := arg.routeConfig.path
+			if arg.requestParams.path != "" {
+				path = arg.requestParams.path
+			}
+
+			request := &cacheHandlerRequest{}
+			request.fromRequest(path, NewRequest(arg.requestParams.fields, nil, arg.requestParams.header, nil))
+
+			var hnd executor
 			if arg.routeConfig.hnd != nil {
 				hnd = arg.routeConfig.hnd
 			} else {
-				hnd = handler(arg.requestParams.timeInstance)
+				hnd = exec(arg.requestParams)
 			}
 
 			var ch cache.Cache
@@ -1279,11 +1541,11 @@ func run(t *testing.T, args [][]testArgs) {
 					return arg.requestParams.timeInstance
 				},
 				ttl:           arg.routeConfig.ttl,
-				path:          arg.routeConfig.path,
 				minAge:        arg.routeConfig.minAge,
 				maxFresh:      arg.routeConfig.maxFresh,
 				staleResponse: arg.routeConfig.staleResponse,
-			})(context.Background(), request)
+				metrics:       chMetrics,
+			})(request)
 
 			if arg.err != nil {
 				assert.Error(t, err)
@@ -1292,14 +1554,47 @@ func run(t *testing.T, args [][]testArgs) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, response)
-				assert.Equal(t, arg.response.Payload, response.Payload)
-				assert.Equal(t, arg.response.Headers[cacheControlHeader], response.Headers[cacheControlHeader])
-				assert.Equal(t, arg.response.Headers[warningHeader], response.Headers[warningHeader])
+				assert.Equal(t, arg.response.Payload, response.payload)
+				assert.Equal(t, arg.response.Headers[cacheControlHeader], response.header[cacheControlHeader])
+				assert.Equal(t, arg.response.Headers[warningHeader], response.header[warningHeader])
 				assert.NotNil(t, arg.response.Headers[eTagHeader])
-				assert.False(t, response.Headers[eTagHeader] == "")
+				assert.False(t, response.header[eTagHeader] == "")
 			}
+			// we provide the diff
+			argMetrics.add(arg.metrics)
+			// we assert the sum
+			assertPrometheusMetrics(t, argMetrics, chMetrics)
 		}
 	}
+}
+
+func assertPrometheusMetrics(t *testing.T, mState metricState, metrics *prometheusMetrics) {
+
+	assertMetric(t, mState.misses, metrics.misses)
+	assertMetric(t, mState.additions, metrics.additions)
+	assertMetric(t, mState.hits, metrics.hits)
+	assertMetric(t, mState.evictions, metrics.evictions)
+
+}
+
+func assertMetric(t *testing.T, value int, c prometheus.Collector) {
+	if value > 0 {
+		v := testutil.ToFloat64(c)
+		assert.Equal(t, float64(value), v)
+	} else {
+		assertPanic(t, func() {
+			testutil.ToFloat64(c)
+		})
+	}
+}
+
+func assertPanic(t *testing.T, exec func()) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic")
+		}
+	}()
+	exec()
 }
 
 type testingCache struct {
@@ -1308,6 +1603,10 @@ type testingCache struct {
 	setCount int
 	getErr   error
 	setErr   error
+}
+
+func newTestingCache() *testingCache {
+	return &testingCache{cache: make(map[string]interface{})}
 }
 
 func (t *testingCache) Get(key string) (interface{}, bool, error) {
@@ -1338,4 +1637,8 @@ func (t *testingCache) Set(key string, value interface{}) error {
 	}
 	t.cache[key] = value
 	return nil
+}
+
+func (t *testingCache) size() int {
+	return len(t.cache)
 }

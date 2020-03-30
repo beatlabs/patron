@@ -241,6 +241,12 @@ This is transparent to the server. As long as a key cannot be found in the cache
 the server will execute the route processor function and fill the corresponding cache entry
 ```
 
+```
+Note : When a cache is used, the handler execution might be skipped.
+That implies that all generic handler functionalities MUST be delegated to a custom middleware.
+i.e. counting number of server client requests etc ... 
+```
+
 #### client cache-control
 The client can control the cache with the appropriate Headers
 - `max-age=?` 
@@ -270,6 +276,11 @@ expects any response that is found in the cache, otherwise returns an empty resp
 #### cache design reference
 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9
+
+#### improvement considerations
+- we can split the storing of the cached objects and the age parameter, to avoid loading the whole object in memory,
+if the object is already expired. This would provide considerable performance (in terms of memory utilisation) 
+improvement for big response objects. 
 
 ### Asynchronous
 

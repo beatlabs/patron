@@ -2,11 +2,15 @@ package http
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MockAuthenticator struct {
@@ -297,5 +301,42 @@ func TestRoutesBuilder_Build(t *testing.T) {
 				assert.Len(t, got, 1)
 			}
 		})
+	}
+}
+
+func TestRoute_Getters(t *testing.T) {
+	type testResponse struct {
+		Value string
+	}
+
+	path := "/foo"
+	expectedResponse := testResponse{"foo"}
+	r, err := NewRouteBuilder(path, testingHandlerMock(expectedResponse)).WithTrace().MethodPost().Build()
+	require.NoError(t, err)
+
+	assert.Equal(t, path, r.Path())
+	assert.Equal(t, http.MethodPost, r.Method())
+	assert.Len(t, r.Middlewares(), 1)
+
+	// the only way to test do we get the same handler that we provided initially, is to run it explicitly,
+	// since all we have in Route itself is a wrapper function
+	req, err := http.NewRequest(http.MethodPost, path, nil)
+	require.NoError(t, err)
+	wr := httptest.NewRecorder()
+
+	r.Handler().ServeHTTP(wr, req)
+	br, err := ioutil.ReadAll(wr.Body)
+	require.NoError(t, err)
+
+	gotResponse := testResponse{}
+	err = json.Unmarshal(br, &gotResponse)
+	require.NoError(t, err)
+
+	assert.Equal(t, expectedResponse, gotResponse)
+}
+
+func testingHandlerMock(expected interface{}) ProcessorFunc {
+	return func(_ context.Context, _ *Request) (*Response, error) {
+		return NewResponse(expected), nil
 	}
 }

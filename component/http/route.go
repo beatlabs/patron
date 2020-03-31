@@ -18,6 +18,26 @@ type Route struct {
 	middlewares []MiddlewareFunc
 }
 
+// Returns route path value.
+func (r Route) GetPath() string {
+	return r.path
+}
+
+// Returns route method value (GET/POST/...)
+func (r Route) GetMethod() string {
+	return r.method
+}
+
+// Returns route middlewares
+func (r Route) GetMiddlewares() []MiddlewareFunc {
+	return r.middlewares
+}
+
+// Returns route handler function
+func (r Route) GetHandler() http.HandlerFunc {
+	return r.handler
+}
+
 // RouteBuilder for building a route.
 type RouteBuilder struct {
 	method        string

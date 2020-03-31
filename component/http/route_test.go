@@ -311,10 +311,13 @@ func TestRoute_Getters(t *testing.T) {
 	// the only way to test do we get the same handler that we provided initially, is to run it explicitly,
 	// since all we have in Route itself is a wrapper function
 	req, err := http.NewRequest(http.MethodPost, path, nil)
+	require.NoError(t, err)
 	wr := httptest.NewRecorder()
 
 	r.GetHandler().ServeHTTP(wr, req)
 	br, err := ioutil.ReadAll(wr.Body)
+	require.NoError(t, err)
+
 	gotResponse := testResponse{}
 	err = json.Unmarshal(br, &gotResponse)
 	require.NoError(t, err)

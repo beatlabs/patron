@@ -148,7 +148,7 @@ func (rb *RouteBuilder) Build() (Route, error) {
 			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
 		}
 
-		rc, err := rb.routeCacheBuilder.create(rb.path)
+		rc, err := rb.routeCacheBuilder.create()
 		if err != nil {
 			return Route{}, fmt.Errorf("could not build cache from builder %v: %w", rb.routeCacheBuilder, err)
 		}

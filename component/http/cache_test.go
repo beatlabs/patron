@@ -20,7 +20,7 @@ import (
 
 func TestMain(m *testing.M) {
 
-	err := log.Setup(zerolog.Create(log.Level(log.DebugLevel)), make(map[string]interface{}))
+	err := log.Setup(zerolog.Create(log.DebugLevel), make(map[string]interface{}))
 
 	if err != nil {
 		os.Exit(1)

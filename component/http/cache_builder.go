@@ -87,7 +87,7 @@ func (cb *RouteCacheBuilder) WithMetrics(metrics cacheMetrics) *RouteCacheBuilde
 	return cb
 }
 
-func (cb *RouteCacheBuilder) create(path string) (*routeCache, error) {
+func (cb *RouteCacheBuilder) create() (*routeCache, error) {
 	if len(cb.errors) > 0 {
 		return nil, errs.Aggregate(cb.errors...)
 	}

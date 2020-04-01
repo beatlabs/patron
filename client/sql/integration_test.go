@@ -4,14 +4,54 @@ package sql
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
+	"io"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/beatlabs/patron/log"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/docker"
 	"github.com/stretchr/testify/assert"
 )
+
+const (
+	dbHost           = "localhost"
+	dbSchema         = "patrondb"
+	dbPort           = "3309"
+	dbRouterPort     = "33069"
+	dbPassword       = "test123"
+	dbRootPassword   = "test123"
+	dbUsername       = "patron"
+	connectionFormat = "%s:%s@(%s:%s)/%s?parseTime=true"
+)
+
+func TestMain(m *testing.M) {
+
+	d := dockerRuntime{}
+
+	err := d.startUpContainerSync()
+	if err != nil {
+		log.Errorf("could not start containers %v", err)
+		os.Exit(1)
+	}
+
+	exitVal := m.Run()
+
+	err = d.tearDownContainerSync()
+	if err != nil {
+		log.Errorf("could not tear down containers %v", err)
+		os.Exit(1)
+	}
+
+	os.Exit(exitVal)
+}
 
 func TestOpen(t *testing.T) {
 	type args struct {
@@ -26,7 +66,7 @@ func TestOpen(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := Open(tt.args.driverName, "patron:test123@tcp/patrondb?parseTime=true")
+			got, err := Open(tt.args.driverName, fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -47,7 +87,7 @@ func TestIntegration(t *testing.T) {
 	const query = "SELECT * FROM employee LIMIT 1"
 	const insertQuery = "INSERT INTO employee(name) value (?)"
 
-	db, err := Open("mysql", "patron:test123@tcp(127.0.0.1:3307)/patrondb?parseTime=true")
+	db, err := Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
 	assert.NoError(t, err)
 	assert.NotNil(t, db)
 	db.SetConnMaxLifetime(time.Minute)
@@ -287,4 +327,78 @@ func assertSpan(t *testing.T, sp *mocktracer.MockSpan, opName, statement string)
 		"version":      "dev",
 		"error":        false,
 	}, sp.Tags())
+}
+
+type dockerRuntime struct {
+	sql  *dockertest.Resource
+	pool *dockertest.Pool
+}
+
+func (d *dockerRuntime) startUpContainerSync() error {
+
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		return err
+	}
+	d.pool = pool
+	d.pool.MaxWait = time.Minute * 2
+
+	d.sql, err = d.pool.RunWithOptions(&dockertest.RunOptions{Repository: "mysql",
+		Tag: "5.7.25",
+		PortBindings: map[docker.Port][]docker.PortBinding{
+			"3306/tcp":  {{HostIP: "", HostPort: dbPort}},
+			"33060/tcp": {{HostIP: "", HostPort: dbRouterPort}},
+		},
+		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
+		Env: []string{
+			fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", dbRootPassword),
+			fmt.Sprintf("MYSQL_USER=%s", dbUsername),
+			fmt.Sprintf("MYSQL_PASSWORD=%s", dbPassword),
+			fmt.Sprintf("MYSQL_DATABASE=%s", dbSchema),
+			"TIMEZONE=UTC",
+		}})
+	if err != nil {
+		return err
+	}
+
+	// optionally print the container logs in stdout
+	d.tailLogs(d.sql.Container.ID, os.Stdout)
+
+	// wait until the container is ready
+	return d.pool.Retry(func() error {
+		db, err := sql.Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
+		if err != nil {
+			// container not ready ... return error to try again
+			return err
+		}
+		return db.Ping()
+	})
+}
+
+func (d *dockerRuntime) tailLogs(containerID string, out io.Writer) {
+	opts := docker.LogsOptions{
+		Context: context.Background(),
+
+		Stderr:      true,
+		Stdout:      true,
+		Follow:      true,
+		Timestamps:  true,
+		RawTerminal: true,
+
+		Container: containerID,
+
+		OutputStream: out,
+	}
+
+	// show the logs on a different thread
+	go func(d *dockerRuntime) {
+		err := d.pool.Client.Logs(opts)
+		if err != nil {
+			log.Errorf("could not forward container logs to write %v", err)
+		}
+	}(d)
+}
+
+func (d *dockerRuntime) tearDownContainerSync() error {
+	return d.pool.Purge(d.sql)
 }

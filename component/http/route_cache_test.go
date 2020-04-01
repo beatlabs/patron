@@ -48,7 +48,7 @@ func TestProcessorWrapper(t *testing.T) {
 
 	for _, testArg := range args {
 		c := newTestingCache()
-		rc, err := NewRouteCacheBuilder(c, 10).create("/")
+		rc, err := NewRouteCacheBuilder(c, 10).create()
 		assert.NoError(t, err)
 
 		wrappedProcessor := wrapProcessorFunc("/", testArg.processor, rc)
@@ -88,7 +88,7 @@ func TestHandlerWrapper(t *testing.T) {
 
 	for _, testArg := range args {
 		c := newTestingCache()
-		rc, err := NewRouteCacheBuilder(c, 10).create("/")
+		rc, err := NewRouteCacheBuilder(c, 10).create()
 		assert.NoError(t, err)
 
 		wrappedHandler := wrapHandlerFunc(testArg.handler, rc)

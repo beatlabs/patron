@@ -117,9 +117,9 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	ctx, cln := context.WithTimeout(context.Background(), 3*time.Second)
 
-	runRoute(t, ctx, routeBuilder)
+	runRoute(ctx, t, routeBuilder)
 
-	assertResponse(t, ctx, []http.Response{
+	assertResponse(ctx, t, []http.Response{
 		{
 			Header: map[string][]string{cacheControlHeader: {"max-age=10"}},
 			Body:   &bodyReader{body: "\"body\""},
@@ -157,9 +157,9 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	ctx, cln := context.WithTimeout(context.Background(), 3*time.Second)
 
-	runRoute(t, ctx, routeBuilder)
+	runRoute(ctx, t, routeBuilder)
 
-	assertResponse(t, ctx, []http.Response{
+	assertResponse(ctx, t, []http.Response{
 		{
 			Header: map[string][]string{cacheControlHeader: {"max-age=10"}},
 			Body:   &bodyReader{body: "\"body\""},
@@ -200,7 +200,7 @@ func (br *bodyReader) Close() error {
 	return nil
 }
 
-func runRoute(t *testing.T, ctx context.Context, routeBuilder *RouteBuilder) {
+func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder) {
 	cmp, err := NewBuilder().WithRoutesBuilder(NewRoutesBuilder().Append(routeBuilder)).Create()
 
 	assert.NoError(t, err)
@@ -234,7 +234,7 @@ func runRoute(t *testing.T, ctx context.Context, routeBuilder *RouteBuilder) {
 	lwg.Wait()
 }
 
-func assertResponse(t *testing.T, ctx context.Context, expected []http.Response) {
+func assertResponse(ctx context.Context, t *testing.T, expected []http.Response) {
 
 	cl, err := client.New()
 	assert.NoError(t, err)

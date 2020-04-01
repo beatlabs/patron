@@ -55,6 +55,7 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 	return rb
 }
 
+// WithRouteCachedBuilder adds a cache to the corresponding route
 func (rb *RouteBuilder) WithRouteCachedBuilder(routeCacheBuilder *RouteCacheBuilder) *RouteBuilder {
 	if routeCacheBuilder == nil {
 		rb.errors = append(rb.errors, errors.New("cache route builder is nil"))

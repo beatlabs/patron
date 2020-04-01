@@ -1568,7 +1568,7 @@ func assertCache(t *testing.T, args [][]testArgs) {
 	}
 }
 
-func assertPrometheusMetrics(t *testing.T, mState metricState, metrics *prometheusMetrics) {
+func assertPrometheusMetrics(t *testing.T, mState metricState, metrics *PrometheusMetrics) {
 
 	assertMetric(t, mState.misses, metrics.misses)
 	assertMetric(t, mState.additions, metrics.additions)

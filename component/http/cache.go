@@ -13,6 +13,7 @@ import (
 
 // TODO : wrap up implementation
 
+// CacheHeader is an enum representing the header value
 type CacheHeader int
 
 type validationContext int
@@ -214,9 +215,8 @@ var cacheRetriever = func(key string, rc *routeCache, now int64) *cachedResponse
 	if resp, ok, err := rc.cache.Get(key); ok && err == nil {
 		if r, ok := resp.(*cachedResponse); ok {
 			return r
-		} else {
-			log.Errorf("could not parse cached response %v for key %s", resp, key)
 		}
+		log.Errorf("could not parse cached response %v for key %s", resp, key)
 	} else if err != nil {
 		log.Debugf("could not read cache value for [ key = %v , err = %v ]", key, err)
 	}

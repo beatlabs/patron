@@ -12,7 +12,8 @@ type cacheMetrics interface {
 	reset() bool
 }
 
-type prometheusMetrics struct {
+// PrometheusMetrics is the prometheus implementation for exposing cache metrics
+type PrometheusMetrics struct {
 	path         string
 	expiry       *prometheus.GaugeVec
 	ageHistogram *prometheus.HistogramVec
@@ -22,24 +23,24 @@ type prometheusMetrics struct {
 	evictions    *prometheus.CounterVec
 }
 
-func (m *prometheusMetrics) add(key string) {
+func (m *PrometheusMetrics) add(key string) {
 	m.additions.WithLabelValues(m.path).Inc()
 }
 
-func (m *prometheusMetrics) miss(key string) {
+func (m *PrometheusMetrics) miss(key string) {
 	m.misses.WithLabelValues(m.path).Inc()
 }
 
-func (m *prometheusMetrics) hit(key string) {
+func (m *PrometheusMetrics) hit(key string) {
 	m.hits.WithLabelValues(m.path).Inc()
 }
 
-func (m *prometheusMetrics) evict(key string, context validationContext, age int64) {
+func (m *PrometheusMetrics) evict(key string, context validationContext, age int64) {
 	m.ageHistogram.WithLabelValues(m.path).Observe(float64(age))
 	m.evictions.WithLabelValues(m.path, validationReason[context]).Inc()
 }
 
-func (m *prometheusMetrics) reset() bool {
+func (m *PrometheusMetrics) reset() bool {
 	exp := prometheus.DefaultRegisterer.Unregister(m.expiry)
 	hist := prometheus.DefaultRegisterer.Unregister(m.ageHistogram)
 	miss := prometheus.DefaultRegisterer.Unregister(m.misses)
@@ -49,7 +50,8 @@ func (m *prometheusMetrics) reset() bool {
 	return exp && hist && miss && evict && hits && add
 }
 
-func NewPrometheusMetrics(path string, expiry int64) *prometheusMetrics {
+// NewPrometheusMetrics constructs a new prometheus metrics implementation instance
+func NewPrometheusMetrics(path string, expiry int64) *PrometheusMetrics {
 
 	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "http_cache",
@@ -98,7 +100,7 @@ func NewPrometheusMetrics(path string, expiry int64) *prometheusMetrics {
 
 	expiration.WithLabelValues(path).Set(float64(expiry))
 
-	return &prometheusMetrics{
+	return &PrometheusMetrics{
 		path:         path,
 		expiry:       expiration,
 		ageHistogram: histogram,
@@ -110,30 +112,32 @@ func NewPrometheusMetrics(path string, expiry int64) *prometheusMetrics {
 
 }
 
-type voidMetrics struct {
+// VoidMetrics is a void implementation for the cache metrics
+type VoidMetrics struct {
 }
 
-func NewVoidMetrics() *voidMetrics {
-	return &voidMetrics{}
+// NewVoidMetrics constructs a new instance of VoidMetrics
+func NewVoidMetrics() *VoidMetrics {
+	return &VoidMetrics{}
 }
 
-func (v *voidMetrics) add(key string) {
+func (v *VoidMetrics) add(key string) {
 	// do nothing
 }
 
-func (v *voidMetrics) miss(key string) {
+func (v *VoidMetrics) miss(key string) {
 	// do nothing
 }
 
-func (v *voidMetrics) hit(key string) {
+func (v *VoidMetrics) hit(key string) {
 	// do nothing
 }
 
-func (v *voidMetrics) evict(key string, context validationContext, age int64) {
+func (v *VoidMetrics) evict(key string, context validationContext, age int64) {
 	// do nothing
 }
 
-func (v *voidMetrics) reset() bool {
+func (v *VoidMetrics) reset() bool {
 	// do nothing
 	return true
 }

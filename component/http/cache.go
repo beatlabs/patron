@@ -183,6 +183,7 @@ func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerReque
 		}
 
 		response = rsp.response
+		println(fmt.Sprintf("rsp = %v", rsp))
 		e = rsp.err
 
 		// we cache response only if we did not retrieve it from the cache itself

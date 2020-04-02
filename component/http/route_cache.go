@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -27,7 +26,8 @@ func wrapProcessorFunc(path string, processor ProcessorFunc, rc *routeCache) Pro
 var processorExecutor = func(ctx context.Context, request *Request, hnd ProcessorFunc) executor {
 	return func(now int64, key string) *cachedResponse {
 		var err error
-		if response, err := hnd(ctx, request); err == nil {
+		response, err := hnd(ctx, request)
+		if err == nil {
 			return &cachedResponse{
 				response: &cacheHandlerResponse{
 					payload: response.Payload,
@@ -48,7 +48,6 @@ func wrapHandlerFunc(handler http.HandlerFunc, rc *routeCache) http.HandlerFunc 
 		if resp, err := cacheHandler(handlerExecutor(response, request, handler), rc)(req); err != nil {
 			log.Errorf("could not handle request with the cache processor: %v", err)
 		} else {
-			println(fmt.Sprintf("resp = %v", resp))
 			propagateHeaders(resp.header, response.Header())
 			if i, err := response.Write(resp.bytes); err != nil {
 				log.Errorf("could not write cache processor result into response %d: %v", i, err)
@@ -63,7 +62,8 @@ var handlerExecutor = func(response http.ResponseWriter, request *http.Request, 
 		var err error
 		responseReadWriter := NewResponseReadWriter()
 		hnd(responseReadWriter, request)
-		if payload, err := responseReadWriter.ReadAll(); err == nil {
+		payload, err := responseReadWriter.ReadAll()
+		if err == nil {
 			return &cachedResponse{
 				response: &cacheHandlerResponse{
 					bytes:  payload,

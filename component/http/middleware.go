@@ -158,21 +158,12 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 
 func getOrSetCorrelationID(h http.Header) string {
 	cor, ok := h[correlation.HeaderID]
-	if !ok {
+	if !ok || len(cor) == 0 || cor[0] == "" {
 		corID := uuid.New().String()
 		h.Set(correlation.HeaderID, corID)
 		return corID
 	}
-	if len(cor) == 0 {
-		corID := uuid.New().String()
-		h.Set(correlation.HeaderID, corID)
-		return corID
-	}
-	if cor[0] == "" {
-		corID := uuid.New().String()
-		h.Set(correlation.HeaderID, corID)
-		return corID
-	}
+
 	return cor[0]
 }
 

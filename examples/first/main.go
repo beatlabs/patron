@@ -16,30 +16,26 @@ import (
 	"github.com/beatlabs/patron/log"
 )
 
+const (
+	name    = "first"
+	version = "1.0.0"
+)
+
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
-		fmt.Printf("failed to set log level env var: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set log level env var: %v", err)
 	}
+
 	err = os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
-		fmt.Printf("failed to set sampler env vars: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set sampler env vars: %v", err)
 	}
 }
 
 func main() {
-	name := "first"
-	version := "1.0.0"
-
-	err := patron.SetupLogging(name, version)
-	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
-		os.Exit(1)
-	}
-
-	routesBuilder := patronhttp.NewRoutesBuilder().Append(patronhttp.NewRouteBuilder("/", first).MethodPost())
+	routesBuilder := patronhttp.NewRoutesBuilder().
+		Append(patronhttp.NewRouteBuilder("/", first).MethodPost())
 
 	// Setup a simple CORS middleware
 	middlewareCors := func(h http.Handler) http.Handler {
@@ -56,12 +52,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	ctx := context.Background()
-	err = patron.New(name, version).
+	err := patron.New(name, version).
 		WithRoutesBuilder(routesBuilder).
 		WithMiddlewares(middlewareCors).
 		WithSIGHUP(sig).
-		Run(ctx)
+		Run(context.Background())
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}
@@ -70,7 +65,6 @@ func main() {
 func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
 
 	var u examples.User
-
 	err := req.Decode(&u)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode request: %w", err)
@@ -88,10 +82,12 @@ func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, 
 	secondRouteReq.Header.Add("Content-Type", protobuf.Type)
 	secondRouteReq.Header.Add("Accept", protobuf.Type)
 	secondRouteReq.Header.Add("Authorization", "Apikey 123456")
+
 	cl, err := clienthttp.New(clienthttp.Timeout(5 * time.Second))
 	if err != nil {
 		return nil, err
 	}
+
 	rsp, err := cl.Do(ctx, secondRouteReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to post to second service: %w", err)

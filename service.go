@@ -109,13 +109,13 @@ func (s *service) setupDefaultTracing(name, version string) error {
 		port = "6831"
 	}
 	agent := host + ":" + port
+
 	tp, ok := os.LookupEnv("PATRON_JAEGER_SAMPLER_TYPE")
 	if !ok {
 		tp = jaeger.SamplerTypeProbabilistic
 	}
-	var prmVal = 0.0
-	var prm = "0.0"
 
+	var prmVal float64
 	if prm, ok := os.LookupEnv("PATRON_JAEGER_SAMPLER_PARAM"); ok {
 		prmVal, err = strconv.ParseFloat(prm, 64)
 		if err != nil {
@@ -123,7 +123,7 @@ func (s *service) setupDefaultTracing(name, version string) error {
 		}
 	}
 
-	log.Infof("setting up default tracing %s, %s with param %s", agent, tp, prm)
+	log.Infof("setting up default tracing %s, %s with sampler param %f", agent, tp, prmVal)
 	return trace.Setup(name, version, agent, tp, prmVal)
 }
 
@@ -154,7 +154,7 @@ func (s *service) createHTTPComponent() (Component, error) {
 		b.WithRoutesBuilder(s.routesBuilder)
 	}
 
-	if s.middlewares != nil && len(s.middlewares) > 0 {
+	if len(s.middlewares) > 0 {
 		b.WithMiddlewares(s.middlewares...)
 	}
 
@@ -208,6 +208,7 @@ func New(name, version string) *Builder {
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
 	}
+
 	if version == "" {
 		version = "dev"
 	}

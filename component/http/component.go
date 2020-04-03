@@ -168,7 +168,7 @@ func (cb *Builder) WithMiddlewares(mm ...MiddlewareFunc) *Builder {
 
 // WithReadTimeout sets the Read Timeout for the HTTP component.
 func (cb *Builder) WithReadTimeout(rt time.Duration) *Builder {
-	if rt <= 0*time.Second {
+	if rt <= 0 {
 		cb.errors = append(cb.errors, errors.New("negative or zero read timeout provided"))
 	} else {
 		log.Infof("setting read timeout")
@@ -180,7 +180,7 @@ func (cb *Builder) WithReadTimeout(rt time.Duration) *Builder {
 
 // WithWriteTimeout sets the Write Timeout for the HTTP component.
 func (cb *Builder) WithWriteTimeout(wt time.Duration) *Builder {
-	if wt <= 0*time.Second {
+	if wt <= 0 {
 		cb.errors = append(cb.errors, errors.New("negative or zero write timeout provided"))
 	} else {
 		log.Infof("setting write timeout")

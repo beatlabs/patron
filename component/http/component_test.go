@@ -20,7 +20,7 @@ func TestBuilderWithoutOptions(t *testing.T) {
 func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 	rb := NewRoutesBuilder().
 		Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet().WithTrace())
-	s, err := NewBuilder().WithRoutesBuilder(rb).WithPort(50003).Create()
+	s, err := NewBuilder().WithRoutesBuilder(rb).WithPort(50013).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())
@@ -36,7 +36,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 
 func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
 	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet())
-	s, err := NewBuilder().WithRoutesBuilder(rb).WithSSL("testdata/server.pem", "testdata/server.key").WithPort(50003).Create()
+	s, err := NewBuilder().WithRoutesBuilder(rb).WithSSL("testdata/server.pem", "testdata/server.key").WithPort(50014).Create()
 	assert.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())

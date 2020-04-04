@@ -201,7 +201,7 @@ func (br *bodyReader) Close() error {
 }
 
 func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder) {
-	cmp, err := NewBuilder().WithRoutesBuilder(NewRoutesBuilder().Append(routeBuilder)).Create()
+	cmp, err := NewBuilder().WithRoutesBuilder(NewRoutesBuilder().Append(routeBuilder)).WithPort(50023).Create()
 
 	assert.NoError(t, err)
 	assert.NotNil(t, cmp)
@@ -216,7 +216,7 @@ func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder) {
 	go func() {
 		cl, err := client.New()
 		assert.NoError(t, err)
-		req, err := http.NewRequest("GET", "http://localhost:50000/ready", nil)
+		req, err := http.NewRequest("GET", "http://localhost:50023/ready", nil)
 		assert.NoError(t, err)
 		for {
 			select {
@@ -238,7 +238,7 @@ func assertResponse(ctx context.Context, t *testing.T, expected []http.Response)
 
 	cl, err := client.New()
 	assert.NoError(t, err)
-	req, err := http.NewRequest("GET", "http://localhost:50000/path", nil)
+	req, err := http.NewRequest("GET", "http://localhost:50023/path", nil)
 	assert.NoError(t, err)
 
 	for _, expectedResponse := range expected {

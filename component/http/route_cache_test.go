@@ -117,7 +117,7 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
-	runRoute(ctx, t, routeBuilder)
+	runRoute(ctx, t, routeBuilder, 50023)
 
 	assertResponse(ctx, t, []http.Response{
 		{
@@ -157,7 +157,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
-	runRoute(ctx, t, routeBuilder)
+	runRoute(ctx, t, routeBuilder, 50024)
 
 	assertResponse(ctx, t, []http.Response{
 		{
@@ -200,8 +200,8 @@ func (br *bodyReader) Close() error {
 	return nil
 }
 
-func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder) {
-	cmp, err := NewBuilder().WithRoutesBuilder(NewRoutesBuilder().Append(routeBuilder)).WithPort(50023).Create()
+func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, port int) {
+	cmp, err := NewBuilder().WithRoutesBuilder(NewRoutesBuilder().Append(routeBuilder)).WithPort(port).Create()
 
 	assert.NoError(t, err)
 	assert.NotNil(t, cmp)

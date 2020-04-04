@@ -11,8 +11,6 @@ import (
 	"github.com/beatlabs/patron/log"
 )
 
-// TODO : wrap up implementation
-
 // CacheHeader is an enum representing the header value
 type CacheHeader int
 
@@ -83,6 +81,7 @@ var expiryCheck validator = func(age, ttl int64) (bool, validationContext) {
 type cacheControl struct {
 	noCache         bool
 	forceCache      bool
+	warning         string
 	validators      []validator
 	expiryValidator validator
 }
@@ -125,6 +124,16 @@ func (r *cacheHandlerRequest) fromHTTPRequest(req *http.Request) {
 	}
 }
 
+// cachedResponse is the struct representing an object retrieved or ready to be put into the route cache
+type cachedResponse struct {
+	response  *cacheHandlerResponse
+	lastValid int64
+	etag      string
+	warning   string
+	fromCache bool
+	err       error
+}
+
 // executor is the function returning a cache response object from the underlying implementation
 type executor func(now int64, key string) *cachedResponse
 
@@ -137,72 +146,21 @@ func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerReque
 
 		now := rc.instant()
 
-		cfg, warning := extractCacheHeaders(request.header, rc.minAge, rc.maxFresh)
+		cfg := extractRequestHeaders(request.header, rc.minAge, rc.maxFresh)
 		if cfg.expiryValidator == nil {
 			cfg.expiryValidator = expiryCheck
 		}
 		key := extractRequestKey(request.path, request.query)
-		var rsp *cachedResponse
-		var fromCache bool
 
-		// explore the cache
-		if cfg.noCache && !rc.staleResponse {
-			// need to execute the handler always
-			rsp = exec(now, key)
-		} else {
-			// lets check the cache if we have anything for the given key
-			if rsp = cacheRetriever(key, rc, now); rsp == nil {
-				rc.metrics.miss(key)
-				// we have not encountered this key before
-				rsp = exec(now, key)
-			} else {
-				expiry := rc.ttl
-				age := now - rsp.lastValid
-				if isValid, cx := isValid(age, expiry, append(cfg.validators, cfg.expiryValidator)...); !isValid {
-					tmpRsp := exec(now, key)
-					// if we could not generate a fresh response, serve the last cached value,
-					// with a warning header
-					if rc.staleResponse && tmpRsp.err != nil {
-						warning = "last-valid"
-						fromCache = true
-						rc.metrics.hit(key)
-					} else {
-						rsp = tmpRsp
-						rc.metrics.evict(key, cx, age)
-					}
-				} else {
-					fromCache = true
-					rc.metrics.hit(key)
-				}
-			}
-		}
-		// TODO : use the forceCache parameter
-		if cfg.forceCache {
-			// return empty response if we have rc-only responseHeaders present
-			return &cacheHandlerResponse{payload: []byte{}}, nil
-		}
+		rsp := getResponse(cfg, key, now, rc, exec)
 
 		response = rsp.response
-		println(fmt.Sprintf("rsp = %v", rsp))
 		e = rsp.err
 
-		// we cache response only if we did not retrieve it from the cache itself
-		// and if there was no error
-		if !fromCache && e == nil {
-			if err := rc.cache.Set(key, rsp); err != nil {
-				log.Errorf("could not cache response for request key %s %v", key, err)
-			}
-			rc.metrics.add(key)
-		}
-
-		// TODO : abstract into method
 		if e == nil {
-			response.header[eTagHeader] = rsp.etag
-			response.header[cacheControlHeader] = createCacheControlHeader(rc.ttl, now-rsp.lastValid)
-			if warning != "" && fromCache {
-				response.header[warningHeader] = warning
-			} else {
-				delete(response.header, warningHeader)
+			addResponseHeaders(now, response.header, rsp, rc.ttl)
+			if !rsp.fromCache {
+				saveResponse(key, rsp, rc)
 			}
 		}
 
@@ -210,31 +168,103 @@ func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerReque
 	}
 }
 
-// cacheRetriever is the implementation that will provide a cachedResponse instance from the cache,
+// getResponse will get the appropriate response either using the cache or the executor,
+// depending on the
+func getResponse(cfg *cacheControl, key string, now int64, rc *routeCache, exec executor) *cachedResponse {
+	var rsp *cachedResponse
+	if cfg.noCache && !rc.staleResponse {
+		rsp = exec(now, key)
+	} else {
+		rsp = getFromCache(key, rc)
+		if rsp == nil {
+			rc.metrics.miss(key)
+			rsp = exec(now, key)
+		} else if rsp.err != nil {
+			rc.metrics.err(key)
+			rsp = exec(now, key)
+		} else if isValid, cx := isValid(now-rsp.lastValid, rc.ttl, append(cfg.validators, cfg.expiryValidator)...); !isValid {
+			tmpRsp := exec(now, key)
+			// if we could not retrieve a fresh response,
+			// serve the last cached value, with a warning header
+			if cfg.forceCache || (rc.staleResponse && tmpRsp.err != nil) {
+				rsp.warning = "last-valid"
+				rc.metrics.hit(key)
+			} else {
+				rsp = tmpRsp
+				rc.metrics.evict(key, cx, now-rsp.lastValid)
+			}
+		} else {
+			rsp.warning = cfg.warning
+			rc.metrics.hit(key)
+		}
+	}
+	return rsp
+}
+
+func isValid(age, ttl int64, validators ...validator) (bool, validationContext) {
+	if len(validators) == 0 {
+		return false, 0
+	}
+	for _, validator := range validators {
+		if isValid, cx := validator(age, ttl); !isValid {
+			return false, cx
+		}
+	}
+	return true, 0
+}
+
+// getFromCache is the implementation that will provide a cachedResponse instance from the cache,
 // if it exists
-var cacheRetriever = func(key string, rc *routeCache, now int64) *cachedResponse {
+func getFromCache(key string, rc *routeCache) *cachedResponse {
 	if resp, ok, err := rc.cache.Get(key); ok && err == nil {
 		if r, ok := resp.(*cachedResponse); ok {
+			r.fromCache = true
 			return r
 		}
-		log.Errorf("could not parse cached response %v for key %s", resp, key)
+		return &cachedResponse{err: fmt.Errorf("could not parse cached response %v for key %s", resp, key)}
 	} else if err != nil {
-		log.Debugf("could not read cache value for [ key = %v , err = %v ]", key, err)
+		return &cachedResponse{err: fmt.Errorf("could not read cache value for [ key = %v , err = %v ]", key, err)}
 	}
 	return nil
 }
 
-// extractCacheHeaders extracts the client request headers allowing the client some control over the cache
-func extractCacheHeaders(header string, minAge, maxFresh int64) (*cacheControl, string) {
+// saveResponse caches the given response if required
+func saveResponse(key string, rsp *cachedResponse, rc *routeCache) {
+	if !rsp.fromCache && rsp.err == nil {
+		if err := rc.cache.Set(key, rsp); err != nil {
+			log.Errorf("could not cache response for request key %s %v", key, err)
+		} else {
+			rc.metrics.add(key)
+		}
+	}
+}
+
+// addResponseHeaders adds the appropriate headers according to the cachedResponse conditions
+func addResponseHeaders(now int64, header map[string]string, rsp *cachedResponse, ttl int64) {
+	header[eTagHeader] = rsp.etag
+	header[cacheControlHeader] = createCacheControlHeader(ttl, now-rsp.lastValid)
+	if rsp.warning != "" && rsp.fromCache {
+		header[warningHeader] = rsp.warning
+	} else {
+		delete(header, warningHeader)
+	}
+}
+
+// extractRequestKey generates a unique cache key based on the route path and the query parameters
+func extractRequestKey(path, query string) string {
+	return fmt.Sprintf("%s:%s", path, query)
+}
+
+// extractRequestHeaders extracts the client request headers allowing the client some control over the cache
+func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl {
 	if header == "" {
-		return &cacheControl{noCache: minAge == 0 && maxFresh == 0}, ""
+		return &cacheControl{noCache: minAge == 0 && maxFresh == 0}
 	}
 
 	cfg := cacheControl{
 		validators: make([]validator, 0),
 	}
 
-	var warning string
 	wrn := make([]string, 0)
 
 	for _, header := range strings.Split(header, ",") {
@@ -320,10 +350,22 @@ func extractCacheHeaders(header string, minAge, maxFresh int64) (*cacheControl, 
 		}
 	}
 	if len(wrn) > 0 {
-		warning = strings.Join(wrn, ",")
+		cfg.warning = strings.Join(wrn, ",")
 	}
 
-	return &cfg, warning
+	return &cfg
+}
+
+func generateETag(key []byte, t int) string {
+	return fmt.Sprintf("%d-%d", crc32.ChecksumIEEE(key), t)
+}
+
+func createCacheControlHeader(ttl, lastValid int64) string {
+	mAge := ttl - lastValid
+	if mAge < 0 {
+		return mustRevalidate
+	}
+	return fmt.Sprintf("%s=%d", maxAge, ttl-lastValid)
 }
 
 func min(value, threshold int64) (int64, bool) {
@@ -348,39 +390,4 @@ func parseValue(keyValue []string) (int64, bool) {
 		}
 	}
 	return 0, false
-}
-
-type cachedResponse struct {
-	response  *cacheHandlerResponse
-	lastValid int64
-	etag      string
-	err       error
-}
-
-func extractRequestKey(path, query string) string {
-	return fmt.Sprintf("%s:%s", path, query)
-}
-
-func isValid(age, ttl int64, validators ...validator) (bool, validationContext) {
-	if len(validators) == 0 {
-		return false, 0
-	}
-	for _, validator := range validators {
-		if isValid, cx := validator(age, ttl); !isValid {
-			return false, cx
-		}
-	}
-	return true, 0
-}
-
-func generateETag(key []byte, t int) string {
-	return fmt.Sprintf("%d-%d", crc32.ChecksumIEEE(key), t)
-}
-
-func createCacheControlHeader(ttl, lastValid int64) string {
-	mAge := ttl - lastValid
-	if mAge < 0 {
-		return mustRevalidate
-	}
-	return fmt.Sprintf("%s=%d", maxAge, ttl-lastValid)
 }

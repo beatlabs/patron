@@ -47,8 +47,6 @@ func TestExtractCacheHeaders(t *testing.T) {
 		wrn     string
 	}
 
-	// TODO : cover the extract headers functionality from 'real' http header samples
-
 	minAge := int64(0)
 	minFresh := int64(0)
 
@@ -128,8 +126,8 @@ func TestExtractCacheHeaders(t *testing.T) {
 
 	for _, param := range params {
 		header := param.headers[cacheControlHeader]
-		cfg, wrn := extractCacheHeaders(header, minAge, minFresh)
-		assert.Equal(t, param.wrn, wrn)
+		cfg := extractRequestHeaders(header, minAge, minFresh)
+		assert.Equal(t, param.wrn, cfg.warning)
 		assert.Equal(t, param.cfg.noCache, cfg.noCache)
 		assert.Equal(t, param.cfg.forceCache, cfg.forceCache)
 		assert.Equal(t, param.cfg.validators, len(cfg.validators))
@@ -159,6 +157,7 @@ type metricState struct {
 	misses    int
 	evictions int
 	hits      int
+	errors    int
 }
 
 func (m *metricState) add(n metricState) {
@@ -166,6 +165,7 @@ func (m *metricState) add(n metricState) {
 	m.additions += n.additions
 	m.misses += n.misses
 	m.hits += n.hits
+	m.errors += n.errors
 }
 
 type testArgs struct {
@@ -1183,8 +1183,6 @@ func TestNoStaleCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 	assertCache(t, args)
 }
 
-// TODO : test stale response for error (with Warning)
-
 func TestCache_WithHandlerErr(t *testing.T) {
 
 	hndErr := errors.New("error encountered on handler")
@@ -1249,7 +1247,7 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 				cache:       cacheImpl,
 				metrics: metricState{
 					additions: 1,
-					misses:    1,
+					errors:    1,
 				},
 			},
 			// new response, because of cache get error
@@ -1263,7 +1261,7 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 				cache:       cacheImpl,
 				metrics: metricState{
 					additions: 1,
-					misses:    1,
+					errors:    1,
 				},
 			},
 		},
@@ -1569,29 +1567,29 @@ func assertCache(t *testing.T, args [][]testArgs) {
 }
 
 func assertPrometheusMetrics(t *testing.T, mState metricState, metrics *PrometheusMetrics) {
-
-	assertMetric(t, mState.misses, metrics.misses)
-	assertMetric(t, mState.additions, metrics.additions)
-	assertMetric(t, mState.hits, metrics.hits)
-	assertMetric(t, mState.evictions, metrics.evictions)
+	assertMetric(t, "error", mState.errors, metrics.errors)
+	assertMetric(t, "misses", mState.misses, metrics.misses)
+	assertMetric(t, "additions", mState.additions, metrics.additions)
+	assertMetric(t, "hits", mState.hits, metrics.hits)
+	assertMetric(t, "evictions", mState.evictions, metrics.evictions)
 
 }
 
-func assertMetric(t *testing.T, value int, c prometheus.Collector) {
+func assertMetric(t *testing.T, metric string, value int, c prometheus.Collector) {
 	if value > 0 {
 		v := testutil.ToFloat64(c)
 		assert.Equal(t, float64(value), v)
 	} else {
 		assertPanic(t, func() {
 			testutil.ToFloat64(c)
-		})
+		}, metric)
 	}
 }
 
-func assertPanic(t *testing.T, exec func()) {
+func assertPanic(t *testing.T, exec func(), metric string) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
+			t.Errorf("value is not '0' for metrics collector %s", metric)
 		}
 	}()
 	exec()

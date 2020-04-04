@@ -8,6 +8,7 @@ type cacheMetrics interface {
 	add(key string)
 	miss(key string)
 	hit(key string)
+	err(key string)
 	evict(key string, context validationContext, age int64)
 	reset() bool
 }
@@ -20,6 +21,7 @@ type PrometheusMetrics struct {
 	misses       *prometheus.CounterVec
 	additions    *prometheus.CounterVec
 	hits         *prometheus.CounterVec
+	errors       *prometheus.CounterVec
 	evictions    *prometheus.CounterVec
 }
 
@@ -35,6 +37,10 @@ func (m *PrometheusMetrics) hit(key string) {
 	m.hits.WithLabelValues(m.path).Inc()
 }
 
+func (m *PrometheusMetrics) err(key string) {
+	m.errors.WithLabelValues(m.path).Inc()
+}
+
 func (m *PrometheusMetrics) evict(key string, context validationContext, age int64) {
 	m.ageHistogram.WithLabelValues(m.path).Observe(float64(age))
 	m.evictions.WithLabelValues(m.path, validationReason[context]).Inc()
@@ -45,9 +51,10 @@ func (m *PrometheusMetrics) reset() bool {
 	hist := prometheus.DefaultRegisterer.Unregister(m.ageHistogram)
 	miss := prometheus.DefaultRegisterer.Unregister(m.misses)
 	hits := prometheus.DefaultRegisterer.Unregister(m.hits)
+	errors := prometheus.DefaultRegisterer.Unregister(m.errors)
 	evict := prometheus.DefaultRegisterer.Unregister(m.evictions)
 	add := prometheus.DefaultRegisterer.Unregister(m.additions)
-	return exp && hist && miss && evict && hits && add
+	return exp && hist && miss && evict && hits && add && errors
 }
 
 // NewPrometheusMetrics constructs a new prometheus metrics implementation instance
@@ -82,6 +89,13 @@ func NewPrometheusMetrics(path string, expiry int64) *PrometheusMetrics {
 		Help:      "Number of cache hits.",
 	}, []string{"route"})
 
+	errors := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "http_cache",
+		Subsystem: "handler",
+		Name:      "errors",
+		Help:      "Number of cache errors.",
+	}, []string{"route"})
+
 	evictions := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "http_cache",
 		Subsystem: "handler",
@@ -107,6 +121,7 @@ func NewPrometheusMetrics(path string, expiry int64) *PrometheusMetrics {
 		additions:    additions,
 		misses:       misses,
 		hits:         hits,
+		errors:       errors,
 		evictions:    evictions,
 	}
 
@@ -130,6 +145,10 @@ func (v *VoidMetrics) miss(key string) {
 }
 
 func (v *VoidMetrics) hit(key string) {
+	// do nothing
+}
+
+func (v *VoidMetrics) err(key string) {
 	// do nothing
 }
 

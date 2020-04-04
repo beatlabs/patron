@@ -158,7 +158,6 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		middlewares = append(middlewares, rb.middlewares...)
 	}
 
-	// TODO : refactor appropriately
 	var processor ProcessorFunc
 	var handler http.HandlerFunc
 
@@ -180,7 +179,7 @@ func (rb *RouteBuilder) Build() (Route, error) {
 			processor = wrapProcessorFunc(rb.path, rb.processor, rc)
 		} else {
 			// we could have handled the processor also at a middleware level,
-			// but this would not work uniformly for the above case as well.
+			// but this would not work uniformly for the processor case as well.
 			handler = wrapHandlerFunc(rb.handler, rc)
 		}
 	}

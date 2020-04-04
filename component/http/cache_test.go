@@ -1473,9 +1473,258 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 	assertCache(t, args)
 }
 
-// TODO  : test no-cache
-// TODO : test no-store
-// TODO : test only-if-cached
+func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10,
+		minAge:        0,
+		maxFresh:      0,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
+			},
+			// expecting new response, as we are using no-cache header
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "no-cache"},
+					timeInstance: 5,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 50, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
+			},
+		},
+	}
+	assertCache(t, args)
+}
+
+func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10,
+		minAge:        2,
+		maxFresh:      0,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
+			},
+			// expecting cached response, as we are using no-cache header but are within the minAge limit
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "no-cache"},
+					timeInstance: 2,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeaderWithWarning(8, "max-age=2")},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
+			},
+			// expecting new response, as we are using no-cache header
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "no-cache"},
+					timeInstance: 5,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 50, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
+			},
+		},
+	}
+	assertCache(t, args)
+}
+
+func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10,
+		minAge:        0,
+		maxFresh:      0,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
+			},
+			// expecting new response, as we are using no-store header
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "no-store"},
+					timeInstance: 5,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 50, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+				},
+				err: nil,
+			},
+		},
+	}
+	assertCache(t, args)
+}
+
+func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10,
+		minAge:        2,
+		maxFresh:      0,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
+			},
+			// expecting cached response, as we are using no-store header but are within the minAge limit
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "no-store"},
+					timeInstance: 2,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeaderWithWarning(8, "max-age=2")},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
+			},
+			// expecting new response, as we are using no-store header
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "no-store"},
+					timeInstance: 5,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 50, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					evictions: 1,
+				},
+				err: nil,
+			},
+		},
+	}
+	assertCache(t, args)
+}
+
+func TestCache_WithForceCacheHeaders(t *testing.T) {
+
+	rc := routeConfig{
+		path:          "/",
+		ttl:           10,
+		minAge:        10,
+		maxFresh:      10,
+		staleResponse: false,
+	}
+
+	args := [][]testArgs{
+		{
+			// initial request
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					timeInstance: 0,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeader(10)},
+				metrics: metricState{
+					additions: 1,
+					misses:    1,
+				},
+				err: nil,
+			},
+			// expecting cache response, as min-fresh is bounded by maxFresh configuration  parameter
+			{
+				requestParams: requestParams{
+					fields:       map[string]string{"VALUE": "1"},
+					header:       map[string]string{cacheControlHeader: "only-if-cached"},
+					timeInstance: 5,
+				},
+				routeConfig: rc,
+				response:    &Response{Payload: 0, Headers: testHeader(5)},
+				metrics: metricState{
+					hits: 1,
+				},
+				err: nil,
+			},
+		},
+	}
+	assertCache(t, args)
+}
 
 func assertCache(t *testing.T, args [][]testArgs) {
 

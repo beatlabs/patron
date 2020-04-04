@@ -339,7 +339,14 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 			/**
 			no storage whatsoever
 			*/
-			cfg.noCache = true
+			if minAge == 0 && maxFresh == 0 {
+				cfg.noCache = true
+			} else {
+				wrn = append(wrn, fmt.Sprintf("max-age=%d", minAge))
+				cfg.validators = append(cfg.validators, func(age, ttl int64) (bool, validationContext) {
+					return age <= minAge, maxAgeValidation
+				})
+			}
 		case onlyIfCached:
 			/**
 			return only if is in cache , otherwise 504

@@ -115,7 +115,7 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 		return NewResponse("body"), nil
 	}).WithRouteCachedBuilder(NewRouteCacheBuilder(cache, 10*time.Second)).MethodGet()
 
-	ctx, cln := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
 	runRoute(ctx, t, routeBuilder)
 
@@ -155,7 +155,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 		assert.True(t, i > 0)
 	}).WithRouteCachedBuilder(NewRouteCacheBuilder(cache, 10*time.Second)).MethodGet()
 
-	ctx, cln := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
 	runRoute(ctx, t, routeBuilder)
 

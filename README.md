@@ -314,8 +314,8 @@ The
 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9
 
 #### improvement considerations
-- we can split the storing of the cached objects and the age parameter, to avoid loading the whole object in memory,
-if the object is already expired. This would provide considerable performance (in terms of memory utilisation) 
+- we can could the storing of the cached objects and their age counter. That way we would avoid loading the whole object in memory,
+if the object is already expired. This approach might provide considerable performance (in terms of memory utilisation) 
 improvement for big response objects. 
 
 ### Asynchronous

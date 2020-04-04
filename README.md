@@ -271,6 +271,44 @@ The server is responsible to cap the refresh time, BUT must respond with a `Warn
 
 expects any response that is found in the cache, otherwise returns an empty response
 
+#### metrics
+
+The http cache exposes several metrics, used to 
+- assess the state of the cache
+- help trim the optimal time-to-live policy
+- identify client control interference
+
+```go
+type cacheMetrics interface {
+	add(key string)
+	miss(key string)
+	hit(key string)
+	err(key string)
+	evict(key string, context validationContext, age int64)
+	reset() bool
+}
+```
+
+- `additions = misses + evictions`
+
+Always , the cache addition operations (objects added to the cache), 
+must be equal to the misses (requests that were not cached) plus the evictions (expired objects).
+Otherwise we would expect to notice also an increased amount of errors or having the cache misbehaving in a different manner.
+
+- `hits ~ additions`
+
+The cache hit count represents how well the cache performs for the access patterns of client requests. 
+If this number is rather low e.g. comparable to the additions, 
+this would signify that probably a cache is not a good option for the access patterns at hand.
+
+- `eviction age`
+
+The age at which the objects are evicted from the cache is a very useful indicator. 
+If the vast amount of evictions are close to the time to live setting, it would indicate a nicely working cache.
+If we find that many evictions happen before the time to live threshold, clients would be making use cache-control headers.
+
+The 
+
 #### cache design reference
 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9

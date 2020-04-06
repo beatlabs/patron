@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -216,7 +217,7 @@ func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, por
 	go func() {
 		cl, err := client.New()
 		assert.NoError(t, err)
-		req, err := http.NewRequest("GET", "http://localhost:50023/ready", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/ready", port), nil)
 		assert.NoError(t, err)
 		for {
 			select {
@@ -234,11 +235,11 @@ func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, por
 	lwg.Wait()
 }
 
-func assertResponse(ctx context.Context, t *testing.T, expected []http.Response) {
+func assertResponse(ctx context.Context, t *testing.T, expected []http.Response, port int) {
 
 	cl, err := client.New()
 	assert.NoError(t, err)
-	req, err := http.NewRequest("GET", "http://localhost:50023/path", nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/path", port), nil)
 	assert.NoError(t, err)
 
 	for _, expectedResponse := range expected {

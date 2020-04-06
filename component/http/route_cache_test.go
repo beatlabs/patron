@@ -118,7 +118,8 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
-	runRoute(ctx, t, routeBuilder, 50023)
+	port := 50023
+	runRoute(ctx, t, routeBuilder, port)
 
 	assertResponse(ctx, t, []http.Response{
 		{
@@ -129,7 +130,7 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 			Header: map[string][]string{cacheControlHeader: {"max-age=10"}},
 			Body:   &bodyReader{body: "\"body\""},
 		},
-	})
+	}, port)
 
 	assertCacheState(t, *cache, cacheState{
 		setOps: 1,
@@ -158,7 +159,8 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
-	runRoute(ctx, t, routeBuilder, 50024)
+	port := 50024
+	runRoute(ctx, t, routeBuilder, port)
 
 	assertResponse(ctx, t, []http.Response{
 		{
@@ -169,7 +171,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 			Header: map[string][]string{cacheControlHeader: {"max-age=10"}},
 			Body:   &bodyReader{body: "\"body\""},
 		},
-	})
+	}, port)
 
 	assertCacheState(t, *cache, cacheState{
 		setOps: 1,

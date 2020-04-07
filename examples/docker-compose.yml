@@ -29,7 +29,7 @@ services:
         aliases:
           - prometheus
     volumes:
-      - ${PWD}examples/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${PWD}/config/prometheus.yml:/etc/prometheus/prometheus.yml
     expose:
       - "9090"
     ports:

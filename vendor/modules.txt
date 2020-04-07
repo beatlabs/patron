@@ -46,12 +46,12 @@ github.com/aws/aws-sdk-go/service/sqs
 github.com/aws/aws-sdk-go/service/sqs/sqsiface
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
-# github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
+# github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
 # github.com/cenkalti/backoff v2.2.1+incompatible
 github.com/cenkalti/backoff
-# github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd
-github.com/codahale/hdrhistogram
+# github.com/cespare/xxhash/v2 v2.1.1
+github.com/cespare/xxhash/v2
 # github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c
 github.com/containerd/continuity/pathdriver
 # github.com/davecgh/go-spew v1.1.1
@@ -111,7 +111,7 @@ github.com/opencontainers/image-spec/specs-go/v1
 github.com/opencontainers/runc/libcontainer/user
 # github.com/opentracing-contrib/go-stdlib v0.0.0-20180313041242-367231351874
 github.com/opentracing-contrib/go-stdlib/nethttp
-# github.com/opentracing/opentracing-go v0.0.0-20180606204148-bd9c31933947
+# github.com/opentracing/opentracing-go v1.1.0
 github.com/opentracing/opentracing-go
 github.com/opentracing/opentracing-go/ext
 github.com/opentracing/opentracing-go/log
@@ -149,38 +149,38 @@ github.com/pierrec/lz4/internal/xxh32
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/prometheus/client_golang v0.9.1
+# github.com/prometheus/client_golang v1.5.1
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
 github.com/prometheus/client_golang/prometheus/promhttp
-# github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
+# github.com/prometheus/client_model v0.2.0
 github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.2.0
+# github.com/prometheus/common v0.9.1
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
 github.com/prometheus/common/model
-# github.com/prometheus/procfs v0.0.0-20190129233650-316cf8ccfec5
+# github.com/prometheus/procfs v0.0.8
 github.com/prometheus/procfs
+github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
-github.com/prometheus/procfs/nfs
-github.com/prometheus/procfs/xfs
 # github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
 github.com/rcrowley/go-metrics
 # github.com/rs/zerolog v1.5.0
 github.com/rs/zerolog
 github.com/rs/zerolog/internal/json
-# github.com/sirupsen/logrus v1.4.1
+# github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
 # github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
 github.com/streadway/amqp
 # github.com/stretchr/testify v1.4.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/uber/jaeger-client-go v2.14.0+incompatible
+# github.com/uber/jaeger-client-go v2.22.1+incompatible
 github.com/uber/jaeger-client-go
 github.com/uber/jaeger-client-go/config
 github.com/uber/jaeger-client-go/internal/baggage
 github.com/uber/jaeger-client-go/internal/baggage/remote
+github.com/uber/jaeger-client-go/internal/reporterstats
 github.com/uber/jaeger-client-go/internal/spanlog
 github.com/uber/jaeger-client-go/internal/throttler
 github.com/uber/jaeger-client-go/internal/throttler/remote
@@ -192,10 +192,13 @@ github.com/uber/jaeger-client-go/thrift-gen/baggage
 github.com/uber/jaeger-client-go/thrift-gen/jaeger
 github.com/uber/jaeger-client-go/thrift-gen/sampling
 github.com/uber/jaeger-client-go/thrift-gen/zipkincore
+github.com/uber/jaeger-client-go/transport
 github.com/uber/jaeger-client-go/utils
-# github.com/uber/jaeger-lib v1.5.0
+# github.com/uber/jaeger-lib v2.2.0+incompatible
 github.com/uber/jaeger-lib/metrics
 github.com/uber/jaeger-lib/metrics/prometheus
+# go.uber.org/atomic v1.6.0
+go.uber.org/atomic
 # golang.org/x/net v0.0.0-20190923162816-aa69164e4478
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
@@ -204,7 +207,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20191010194322-b09406accb47
+# golang.org/x/sys v0.0.0-20200122134326-e047566fdf82
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/text v0.3.2
@@ -251,5 +254,5 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# gopkg.in/yaml.v2 v2.2.4
+# gopkg.in/yaml.v2 v2.2.5
 gopkg.in/yaml.v2

@@ -12,6 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-client-go/rpcmetrics"
+	"github.com/uber/jaeger-lib/metrics"
 	"github.com/uber/jaeger-lib/metrics/prometheus"
 )
 
@@ -48,9 +49,10 @@ func Setup(name, ver, agent, typ string, prm float64) error {
 	}
 	time.Sleep(100 * time.Millisecond)
 	metricsFactory := prometheus.New()
+	opts := metrics.NSOptions{Name: name, Tags: nil}
 	tr, clsTemp, err := cfg.NewTracer(
 		config.Logger(jaegerLoggerAdapter{}),
-		config.Observer(rpcmetrics.NewObserver(metricsFactory.Namespace(name, nil), rpcmetrics.DefaultNameNormalizer)),
+		config.Observer(rpcmetrics.NewObserver(metricsFactory.Namespace(opts), rpcmetrics.DefaultNameNormalizer)),
 	)
 	if err != nil {
 		return fmt.Errorf("cannot initialize jaeger tracer: %w", err)

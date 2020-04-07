@@ -18,8 +18,8 @@ import (
 func TestTracedClient_Do(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "true", r.Header.Get("Mockpfx-Ids-Sampled"))
-		assert.Equal(t, "46", r.Header.Get("Mockpfx-Ids-Spanid"))
-		assert.Equal(t, "43", r.Header.Get("Mockpfx-Ids-Traceid"))
+		assert.NotEmpty(t, r.Header.Get("Mockpfx-Ids-Spanid"))
+		assert.NotEmpty(t, r.Header.Get("Mockpfx-Ids-Traceid"))
 		fmt.Fprintln(w, "Hello, client")
 	}))
 	defer ts.Close()

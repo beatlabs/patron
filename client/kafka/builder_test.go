@@ -176,7 +176,6 @@ func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 		enc         encoding.EncodeFunc
 		contentType string
 		wantErrs    []error
-		sync        bool
 	}{
 		"success": {
 			brokers:     []string{seed.Addr()},
@@ -200,12 +199,12 @@ func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotAsyncProducer, gotErrs := NewBuilder(tt.brokers).
+			gotAsyncProducer, chErr, gotErrs := NewBuilder(tt.brokers).
 				WithVersion(tt.version).
 				WithRequiredAcksPolicy(tt.ack).
 				WithTimeout(tt.timeout).
 				WithEncoder(tt.enc, tt.contentType).
-				Create()
+				CreateAsync()
 
 			v, _ := sarama.ParseKafkaVersion(tt.version)
 			if len(tt.wantErrs) > 0 {
@@ -213,11 +212,11 @@ func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 				assert.Nil(t, gotAsyncProducer)
 			} else {
 				assert.NotNil(t, gotAsyncProducer)
-				assert.IsType(t, &KafkaProducer{}, gotAsyncProducer)
+				assert.NotNil(t, chErr)
+				assert.IsType(t, &AsyncProducer{}, gotAsyncProducer)
 				assert.EqualValues(t, v, gotAsyncProducer.cfg.Version)
 				assert.EqualValues(t, tt.ack, gotAsyncProducer.cfg.Producer.RequiredAcks)
 				assert.Equal(t, tt.timeout, gotAsyncProducer.cfg.Net.DialTimeout)
-				assert.Equal(t, tt.sync, gotAsyncProducer.sync)
 			}
 		})
 	}

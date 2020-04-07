@@ -8,9 +8,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -22,6 +20,32 @@ const (
 )
 
 var messageStatus *prometheus.CounterVec
+
+// Producer interface for Kafka.
+type Producer interface {
+	Send(ctx context.Context, msg *Message) error
+	Close() error
+}
+
+type baseProducer struct {
+	cfg         *sarama.Config
+	prodClient  sarama.Client
+	tag         opentracing.Tag
+	enc         encoding.EncodeFunc
+	contentType string
+}
+
+var (
+	_ Producer = &AsyncProducer{}
+	_ Producer = &SyncProducer{}
+)
+
+// Message abstraction of a Kafka message.
+type Message struct {
+	topic string
+	body  interface{}
+	key   *string
+}
 
 func messageStatusCountInc(status, topic string) {
 	messageStatus.WithLabelValues(status, topic).Inc()
@@ -39,13 +63,6 @@ func init() {
 	prometheus.MustRegister(messageStatus)
 }
 
-// Message abstraction of a Kafka message.
-type Message struct {
-	topic string
-	body  interface{}
-	key   *string
-}
-
 // NewMessage creates a new message.
 func NewMessage(t string, b interface{}) *Message {
 	return &Message{topic: t, body: b}
@@ -59,63 +76,8 @@ func NewMessageWithKey(t string, b interface{}, k string) (*Message, error) {
 	return &Message{topic: t, body: b, key: &k}, nil
 }
 
-// Producer interface for Kafka.
-type Producer interface {
-	Send(ctx context.Context, msg *Message) error
-	Error() <-chan error
-	Close() error
-}
-
-// KafkaProducer is a synchronous or asynchronous Kafka producer.
-type KafkaProducer struct {
-	cfg         *sarama.Config
-	prodClient  sarama.Client
-	sync        bool
-	asyncProd   sarama.AsyncProducer
-	syncProd    sarama.SyncProducer
-	chErr       chan error
-	tag         opentracing.Tag
-	enc         encoding.EncodeFunc
-	contentType string
-}
-
-// Send a message to a topic.
-func (ap *KafkaProducer) Send(ctx context.Context, msg *Message) error {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(producerComponent, msg.topic),
-		producerComponent, ext.SpanKindProducer, ap.tag,
-		opentracing.Tag{Key: "topic", Value: msg.topic})
-	pm, err := ap.createProducerMessage(ctx, msg, sp)
-	if err != nil {
-		messageStatusCountInc(messageCreationErrors, msg.topic)
-		trace.SpanError(sp)
-		return err
-	}
-
-	if ap.sync {
-		_, _, err := ap.syncProd.SendMessage(pm)
-		if err != nil {
-			messageStatusCountInc(messageCreationErrors, msg.topic)
-			trace.SpanError(sp)
-			return err
-		}
-
-		messageStatusCountInc(messageSent, msg.topic)
-	} else {
-		messageStatusCountInc(messageSent, msg.topic)
-		ap.asyncProd.Input() <- pm
-	}
-	trace.SpanSuccess(sp)
-
-	return nil
-}
-
-// Error returns a chanel to monitor for errors.
-func (ap *KafkaProducer) Error() <-chan error {
-	return ap.chErr
-}
-
 // ActiveBrokers returns a list of active brokers' addresses.
-func (ap *KafkaProducer) ActiveBrokers() []string {
+func (ap *baseProducer) ActiveBrokers() []string {
 	brokers := ap.prodClient.Brokers()
 	activeBrokerAddresses := make([]string, len(brokers))
 	for i, b := range brokers {
@@ -124,38 +86,7 @@ func (ap *KafkaProducer) ActiveBrokers() []string {
 	return activeBrokerAddresses
 }
 
-// Close shuts down the producer and waits for any buffered messages to be
-// flushed. You must call this function before a producer object passes out of
-// scope, as it may otherwise leak memory.
-func (ap *KafkaProducer) Close() error {
-	var err error
-	if ap.sync {
-		err = ap.syncProd.Close()
-	} else {
-		err = ap.asyncProd.Close()
-	}
-	if err != nil {
-		// always close client
-		_ = ap.prodClient.Close()
-
-		return fmt.Errorf("failed to close async producer client: %w", err)
-	}
-
-	err = ap.prodClient.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close async producer: %w", err)
-	}
-	return nil
-}
-
-func (ap *KafkaProducer) propagateError() {
-	for pe := range ap.asyncProd.Errors() {
-		messageStatusCountInc(messageSendErrors, pe.Msg.Topic)
-		ap.chErr <- fmt.Errorf("failed to send message: %w", pe)
-	}
-}
-
-func (ap *KafkaProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
+func (ap *baseProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
 	c := kafkaHeadersCarrier{}
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
 	if err != nil {

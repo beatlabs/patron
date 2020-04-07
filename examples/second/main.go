@@ -76,10 +76,16 @@ type httpComponent struct {
 }
 
 func newHTTPComponent(kafkaBroker, topic, url string) (*httpComponent, error) {
-	prd, err := kafka.NewBuilder([]string{kafkaBroker}).Create()
+	prd, chErr, err := kafka.NewBuilder([]string{kafkaBroker}).CreateAsync()
 	if err != nil {
 		return nil, err
 	}
+	go func() {
+		for {
+			err := <-chErr
+			log.Errorf("error producing Kafka message: %v", err)
+		}
+	}()
 	return &httpComponent{prd: prd, topic: topic}, nil
 }
 

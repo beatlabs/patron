@@ -66,11 +66,13 @@ type Producer interface {
 	Close() error
 }
 
-// AsyncProducer defines a async Kafka producer.
-type AsyncProducer struct {
+// KafkaProducer is a synchronous or asynchronous Kafka producer.
+type KafkaProducer struct {
 	cfg         *sarama.Config
 	prodClient  sarama.Client
-	prod        sarama.AsyncProducer
+	sync        bool
+	asyncProd   sarama.AsyncProducer
+	syncProd    sarama.SyncProducer
 	chErr       chan error
 	tag         opentracing.Tag
 	enc         encoding.EncodeFunc
@@ -78,7 +80,7 @@ type AsyncProducer struct {
 }
 
 // Send a message to a topic.
-func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
+func (ap *KafkaProducer) Send(ctx context.Context, msg *Message) error {
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(producerComponent, msg.topic),
 		producerComponent, ext.SpanKindProducer, ap.tag,
 		opentracing.Tag{Key: "topic", Value: msg.topic})
@@ -88,19 +90,32 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
 		trace.SpanError(sp)
 		return err
 	}
-	messageStatusCountInc(messageSent, msg.topic)
-	ap.prod.Input() <- pm
+
+	if ap.sync {
+		_, _, err := ap.syncProd.SendMessage(pm)
+		if err != nil {
+			messageStatusCountInc(messageCreationErrors, msg.topic)
+			trace.SpanError(sp)
+			return err
+		}
+
+		messageStatusCountInc(messageSent, msg.topic)
+	} else {
+		messageStatusCountInc(messageSent, msg.topic)
+		ap.asyncProd.Input() <- pm
+	}
 	trace.SpanSuccess(sp)
+
 	return nil
 }
 
 // Error returns a chanel to monitor for errors.
-func (ap *AsyncProducer) Error() <-chan error {
+func (ap *KafkaProducer) Error() <-chan error {
 	return ap.chErr
 }
 
 // ActiveBrokers returns a list of active brokers' addresses.
-func (ap *AsyncProducer) ActiveBrokers() []string {
+func (ap *KafkaProducer) ActiveBrokers() []string {
 	brokers := ap.prodClient.Brokers()
 	activeBrokerAddresses := make([]string, len(brokers))
 	for i, b := range brokers {
@@ -112,8 +127,13 @@ func (ap *AsyncProducer) ActiveBrokers() []string {
 // Close shuts down the producer and waits for any buffered messages to be
 // flushed. You must call this function before a producer object passes out of
 // scope, as it may otherwise leak memory.
-func (ap *AsyncProducer) Close() error {
-	err := ap.prod.Close()
+func (ap *KafkaProducer) Close() error {
+	var err error
+	if ap.sync {
+		err = ap.syncProd.Close()
+	} else {
+		err = ap.asyncProd.Close()
+	}
 	if err != nil {
 		// always close client
 		_ = ap.prodClient.Close()
@@ -128,14 +148,14 @@ func (ap *AsyncProducer) Close() error {
 	return nil
 }
 
-func (ap *AsyncProducer) propagateError() {
-	for pe := range ap.prod.Errors() {
+func (ap *KafkaProducer) propagateError() {
+	for pe := range ap.asyncProd.Errors() {
 		messageStatusCountInc(messageSendErrors, pe.Msg.Topic)
 		ap.chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
 }
 
-func (ap *AsyncProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
+func (ap *KafkaProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
 	c := kafkaHeadersCarrier{}
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
 	if err != nil {

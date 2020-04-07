@@ -176,6 +176,7 @@ func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 		enc         encoding.EncodeFunc
 		contentType string
 		wantErrs    []error
+		sync        bool
 	}{
 		"success": {
 			brokers:     []string{seed.Addr()},
@@ -212,10 +213,11 @@ func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 				assert.Nil(t, gotAsyncProducer)
 			} else {
 				assert.NotNil(t, gotAsyncProducer)
-				assert.IsType(t, &AsyncProducer{}, gotAsyncProducer)
+				assert.IsType(t, &KafkaProducer{}, gotAsyncProducer)
 				assert.EqualValues(t, v, gotAsyncProducer.cfg.Version)
 				assert.EqualValues(t, tt.ack, gotAsyncProducer.cfg.Producer.RequiredAcks)
 				assert.Equal(t, tt.timeout, gotAsyncProducer.cfg.Net.DialTimeout)
+				assert.Equal(t, tt.sync, gotAsyncProducer.sync)
 			}
 		})
 	}

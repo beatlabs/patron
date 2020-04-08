@@ -5,21 +5,25 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
+
+	"github.com/Shopify/sarama"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	producerComponent     = "kafka-async-producer"
-	messageCreationErrors = "creation-errors"
-	messageSendErrors     = "send-errors"
-	messageSent           = "sent"
+	asyncProducerComponent = "kafka-async-producer"
+	syncProducerComponent  = "kafka-sync-producer"
+	messageCreationErrors  = "creation-errors"
+	messageSendErrors      = "send-errors"
+	messageSent            = "sent"
 )
 
-var messageStatus *prometheus.CounterVec
+var (
+	messageStatus *prometheus.CounterVec
+)
 
 // Producer interface for Kafka.
 type Producer interface {
@@ -33,6 +37,9 @@ type baseProducer struct {
 	tag         opentracing.Tag
 	enc         encoding.EncodeFunc
 	contentType string
+	// deliveryType can be 'sync' or 'async'
+	deliveryType  string
+	messageStatus *prometheus.CounterVec
 }
 
 var (
@@ -47,19 +54,16 @@ type Message struct {
 	key   *string
 }
 
-func messageStatusCountInc(status, topic string) {
-	messageStatus.WithLabelValues(status, topic).Inc()
-}
-
 func init() {
 	messageStatus = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "component",
-			Subsystem: "kafka_async_producer",
+			Subsystem: "kafka_producer",
 			Name:      "message_status",
-			Help:      "Message status counter (received, decoded, decoding-errors) classified by topic",
-		}, []string{"status", "topic"},
+			Help:      "Message status counter (produced, encoded, encoding-errors) classified by topic",
+		}, []string{"status", "topic", "type"},
 	)
+
 	prometheus.MustRegister(messageStatus)
 }
 
@@ -76,9 +80,13 @@ func NewMessageWithKey(t string, b interface{}, k string) (*Message, error) {
 	return &Message{topic: t, body: b, key: &k}, nil
 }
 
+func (p *baseProducer) statusCountInc(status, topic string) {
+	p.messageStatus.WithLabelValues(status, topic, p.deliveryType).Inc()
+}
+
 // ActiveBrokers returns a list of active brokers' addresses.
-func (ap *baseProducer) ActiveBrokers() []string {
-	brokers := ap.prodClient.Brokers()
+func (p *baseProducer) ActiveBrokers() []string {
+	brokers := p.prodClient.Brokers()
 	activeBrokerAddresses := make([]string, len(brokers))
 	for i, b := range brokers {
 		activeBrokerAddresses[i] = b.Addr()
@@ -86,20 +94,20 @@ func (ap *baseProducer) ActiveBrokers() []string {
 	return activeBrokerAddresses
 }
 
-func (ap *baseProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
+func (p *baseProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
 	c := kafkaHeadersCarrier{}
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
-	c.Set(encoding.ContentTypeHeader, ap.contentType)
+	c.Set(encoding.ContentTypeHeader, p.contentType)
 
 	var saramaKey sarama.Encoder
 	if msg.key != nil {
 		saramaKey = sarama.StringEncoder(*msg.key)
 	}
 
-	b, err := ap.enc(msg.body)
+	b, err := p.enc(msg.body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode message body: %w", err)
 	}

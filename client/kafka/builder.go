@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
+
+	"github.com/Shopify/sarama"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -128,10 +129,12 @@ func (ab *Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 
 	ap := AsyncProducer{
 		baseProducer: baseProducer{
-			cfg:         ab.cfg,
-			enc:         ab.enc,
-			contentType: ab.contentType,
-			tag:         opentracing.Tag{Key: "type", Value: "async"},
+			messageStatus: messageStatus,
+			deliveryType:  "async",
+			cfg:           ab.cfg,
+			enc:           ab.enc,
+			contentType:   ab.contentType,
+			tag:           opentracing.Tag{Key: "type", Value: "async"},
 		},
 	}
 
@@ -154,7 +157,6 @@ func (ab *Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 
 // CreateSync constructs the SyncProducer component by applying the gathered properties.
 func (ab *Builder) CreateSync() (*SyncProducer, error) {
-
 	if len(ab.errors) > 0 {
 		return nil, patronErrors.Aggregate(ab.errors...)
 	}
@@ -164,10 +166,12 @@ func (ab *Builder) CreateSync() (*SyncProducer, error) {
 
 	p := SyncProducer{
 		baseProducer: baseProducer{
-			cfg:         ab.cfg,
-			enc:         ab.enc,
-			contentType: ab.contentType,
-			tag:         opentracing.Tag{Key: "type", Value: "sync"},
+			messageStatus: messageStatus,
+			deliveryType:  "sync",
+			cfg:           ab.cfg,
+			enc:           ab.enc,
+			contentType:   ab.contentType,
+			tag:           opentracing.Tag{Key: "type", Value: "sync"},
 		},
 	}
 

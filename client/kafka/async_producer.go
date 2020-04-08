@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/trace"
+
+	"github.com/Shopify/sarama"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
@@ -20,17 +21,17 @@ type AsyncProducer struct {
 // Send a message to a topic, asynchronously. Producer errors are queued on the
 // channel obtained during the AsyncProducer creation.
 func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(producerComponent, msg.topic),
-		producerComponent, ext.SpanKindProducer, ap.tag,
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(asyncProducerComponent, msg.topic),
+		asyncProducerComponent, ext.SpanKindProducer, ap.tag,
 		opentracing.Tag{Key: "topic", Value: msg.topic})
 	pm, err := ap.createProducerMessage(ctx, msg, sp)
 	if err != nil {
-		messageStatusCountInc(messageCreationErrors, msg.topic)
+		ap.statusCountInc(messageCreationErrors, msg.topic)
 		trace.SpanError(sp)
 		return err
 	}
 
-	messageStatusCountInc(messageSent, msg.topic)
+	ap.statusCountInc(messageSent, msg.topic)
 	ap.asyncProd.Input() <- pm
 	trace.SpanSuccess(sp)
 
@@ -39,7 +40,7 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
 
 func (ap *AsyncProducer) propagateError() {
 	for pe := range ap.asyncProd.Errors() {
-		messageStatusCountInc(messageSendErrors, pe.Msg.Topic)
+		ap.statusCountInc(messageSendErrors, pe.Msg.Topic)
 		ap.chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
 }

@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
+
+	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
 )
 

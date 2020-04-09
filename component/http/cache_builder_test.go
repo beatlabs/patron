@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -78,18 +77,6 @@ func TestNewRouteCacheBuilder(t *testing.T) {
 			},
 			cbop: func(routeBuilder *RouteCacheBuilder) *RouteCacheBuilder {
 				routeBuilder.WithTimeInstant(nil)
-				return routeBuilder
-			},
-			ttl: 10,
-			err: true,
-		},
-		// error for metrics implementation nil
-		{
-			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
-				return routeBuilder.MethodGet()
-			},
-			cbop: func(routeBuilder *RouteCacheBuilder) *RouteCacheBuilder {
-				routeBuilder.WithMetrics(nil)
 				return routeBuilder
 			},
 			ttl: 10,

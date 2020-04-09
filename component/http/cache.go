@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/beatlabs/patron/log"
 )
 
@@ -63,6 +65,13 @@ const (
 	warningHeader = "Warning"
 )
 
+var metrics *PrometheusMetrics
+
+func init() {
+	metrics = NewPrometheusMetrics()
+	metrics.mustRegister(prometheus.DefaultRegisterer)
+}
+
 // TimeInstant is a timing function
 // returns the current time instant of the system's clock
 // by default it can be `tine.Now().Unix()` ,
@@ -101,26 +110,40 @@ type cacheHandlerRequest struct {
 }
 
 // fromRequest transforms the Request object to the cache handler request
-func (r *cacheHandlerRequest) fromRequest(path string, req *Request) {
-	r.path = path
+func fromRequest(path string, req *Request) *cacheHandlerRequest {
+	var header string
 	if req.Headers != nil {
-		r.header = req.Headers[cacheControlHeader]
+		header = req.Headers[cacheControlHeader]
 	}
+	var query string
 	if req.Fields != nil {
-		if query, err := json.Marshal(req.Fields); err == nil {
-			r.query = string(query)
+		if fields, err := json.Marshal(req.Fields); err == nil {
+			query = string(fields)
 		}
+	}
+	return &cacheHandlerRequest{
+		header: header,
+		path:   path,
+		query:  query,
 	}
 }
 
-// fromRequest transforms the http Request object to the cache handler request
-func (r *cacheHandlerRequest) fromHTTPRequest(req *http.Request) {
+// fromHTTPRequest transforms the http Request object to the cache handler request
+func fromHTTPRequest(req *http.Request) *cacheHandlerRequest {
+	var header string
 	if req.Header != nil {
-		r.header = req.Header.Get(cacheControlHeader)
+		header = req.Header.Get(cacheControlHeader)
 	}
+	var path string
+	var query string
 	if req.URL != nil {
-		r.path = req.URL.Path
-		r.query = req.URL.RawQuery
+		path = req.URL.Path
+		query = req.URL.RawQuery
+	}
+	return &cacheHandlerRequest{
+		header: header,
+		path:   path,
+		query:  query,
 	}
 }
 
@@ -152,7 +175,7 @@ func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerReque
 		}
 		key := extractRequestKey(request.path, request.query)
 
-		rsp := getResponse(cfg, key, now, rc, exec)
+		rsp := getResponse(cfg, request.path, key, now, rc, exec)
 
 		response = rsp.response
 		e = rsp.err
@@ -160,7 +183,7 @@ func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerReque
 		if e == nil {
 			addResponseHeaders(now, response.header, rsp, rc.ttl)
 			if !rsp.fromCache {
-				saveResponse(key, rsp, rc)
+				saveResponse(request.path, key, rsp, rc)
 			}
 		}
 
@@ -170,17 +193,17 @@ func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerReque
 
 // getResponse will get the appropriate response either using the cache or the executor,
 // depending on the
-func getResponse(cfg *cacheControl, key string, now int64, rc *routeCache, exec executor) *cachedResponse {
+func getResponse(cfg *cacheControl, path, key string, now int64, rc *routeCache, exec executor) *cachedResponse {
 	var rsp *cachedResponse
 	if cfg.noCache && !rc.staleResponse {
 		rsp = exec(now, key)
 	} else {
 		rsp = getFromCache(key, rc)
 		if rsp == nil {
-			rc.metrics.miss(key)
+			metrics.miss(path, key)
 			rsp = exec(now, key)
 		} else if rsp.err != nil {
-			rc.metrics.err(key)
+			metrics.err(path, key)
 			rsp = exec(now, key)
 		} else if isValid, cx := isValid(now-rsp.lastValid, rc.ttl, append(cfg.validators, cfg.expiryValidator)...); !isValid {
 			tmpRsp := exec(now, key)
@@ -188,14 +211,14 @@ func getResponse(cfg *cacheControl, key string, now int64, rc *routeCache, exec 
 			// serve the last cached value, with a warning header
 			if cfg.forceCache || (rc.staleResponse && tmpRsp.err != nil) {
 				rsp.warning = "last-valid"
-				rc.metrics.hit(key)
+				metrics.hit(path, key)
 			} else {
 				rsp = tmpRsp
-				rc.metrics.evict(key, cx, now-rsp.lastValid)
+				metrics.evict(path, key, cx, now-rsp.lastValid)
 			}
 		} else {
 			rsp.warning = cfg.warning
-			rc.metrics.hit(key)
+			metrics.hit(path, key)
 		}
 	}
 	return rsp
@@ -229,12 +252,12 @@ func getFromCache(key string, rc *routeCache) *cachedResponse {
 }
 
 // saveResponse caches the given response if required
-func saveResponse(key string, rsp *cachedResponse, rc *routeCache) {
+func saveResponse(path, key string, rsp *cachedResponse, rc *routeCache) {
 	if !rsp.fromCache && rsp.err == nil {
 		if err := rc.cache.Set(key, rsp); err != nil {
 			log.Errorf("could not cache response for request key %s %v", key, err)
 		} else {
-			rc.metrics.add(key)
+			metrics.add(path, key)
 		}
 	}
 }

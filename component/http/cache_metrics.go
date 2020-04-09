@@ -4,19 +4,8 @@ import "github.com/prometheus/client_golang/prometheus"
 
 var validationReason = map[validationContext]string{0: "nil", ttlValidation: "expired", maxAgeValidation: "max_age", minFreshValidation: "min_fresh", maxStaleValidation: "max_stale"}
 
-type cacheMetrics interface {
-	add(key string)
-	miss(key string)
-	hit(key string)
-	err(key string)
-	evict(key string, context validationContext, age int64)
-	reset() bool
-}
-
 // PrometheusMetrics is the prometheus implementation for exposing cache metrics
 type PrometheusMetrics struct {
-	path         string
-	expiry       *prometheus.GaugeVec
 	ageHistogram *prometheus.HistogramVec
 	misses       *prometheus.CounterVec
 	additions    *prometheus.CounterVec
@@ -25,40 +14,33 @@ type PrometheusMetrics struct {
 	evictions    *prometheus.CounterVec
 }
 
-func (m *PrometheusMetrics) add(key string) {
-	m.additions.WithLabelValues(m.path).Inc()
+func (m *PrometheusMetrics) add(path, key string) {
+	m.additions.WithLabelValues(path).Inc()
 }
 
-func (m *PrometheusMetrics) miss(key string) {
-	m.misses.WithLabelValues(m.path).Inc()
+func (m *PrometheusMetrics) miss(path, key string) {
+	m.misses.WithLabelValues(path).Inc()
 }
 
-func (m *PrometheusMetrics) hit(key string) {
-	m.hits.WithLabelValues(m.path).Inc()
+func (m *PrometheusMetrics) hit(path, key string) {
+	m.hits.WithLabelValues(path).Inc()
 }
 
-func (m *PrometheusMetrics) err(key string) {
-	m.errors.WithLabelValues(m.path).Inc()
+func (m *PrometheusMetrics) err(path, key string) {
+	m.errors.WithLabelValues(path).Inc()
 }
 
-func (m *PrometheusMetrics) evict(key string, context validationContext, age int64) {
-	m.ageHistogram.WithLabelValues(m.path).Observe(float64(age))
-	m.evictions.WithLabelValues(m.path, validationReason[context]).Inc()
+func (m *PrometheusMetrics) evict(path, key string, context validationContext, age int64) {
+	m.ageHistogram.WithLabelValues(path).Observe(float64(age))
+	m.evictions.WithLabelValues(path, validationReason[context]).Inc()
 }
 
-func (m *PrometheusMetrics) reset() bool {
-	exp := prometheus.DefaultRegisterer.Unregister(m.expiry)
-	hist := prometheus.DefaultRegisterer.Unregister(m.ageHistogram)
-	miss := prometheus.DefaultRegisterer.Unregister(m.misses)
-	hits := prometheus.DefaultRegisterer.Unregister(m.hits)
-	errors := prometheus.DefaultRegisterer.Unregister(m.errors)
-	evict := prometheus.DefaultRegisterer.Unregister(m.evictions)
-	add := prometheus.DefaultRegisterer.Unregister(m.additions)
-	return exp && hist && miss && evict && hits && add && errors
+func (m *PrometheusMetrics) mustRegister(registerer prometheus.Registerer) {
+	registerer.MustRegister(m.ageHistogram, m.additions, m.misses, m.hits, m.evictions)
 }
 
 // NewPrometheusMetrics constructs a new prometheus metrics implementation instance
-func NewPrometheusMetrics(path string, expiry int64) *PrometheusMetrics {
+func NewPrometheusMetrics() *PrometheusMetrics {
 
 	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "http_cache",
@@ -103,20 +85,7 @@ func NewPrometheusMetrics(path string, expiry int64) *PrometheusMetrics {
 		Help:      "Number of cache evictions.",
 	}, []string{"route", "reason"})
 
-	expiration := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "http_cache",
-		Subsystem: "handler",
-		Name:      "time_to_live",
-		Help:      "Expiration parameter of the http cache.",
-	}, []string{"route"})
-
-	prometheus.MustRegister(histogram, additions, misses, hits, evictions, expiration)
-
-	expiration.WithLabelValues(path).Set(float64(expiry))
-
 	return &PrometheusMetrics{
-		path:         path,
-		expiry:       expiration,
 		ageHistogram: histogram,
 		additions:    additions,
 		misses:       misses,
@@ -125,38 +94,4 @@ func NewPrometheusMetrics(path string, expiry int64) *PrometheusMetrics {
 		evictions:    evictions,
 	}
 
-}
-
-// VoidMetrics is a void implementation for the cache metrics
-type VoidMetrics struct {
-}
-
-// NewVoidMetrics constructs a new instance of VoidMetrics
-func NewVoidMetrics() *VoidMetrics {
-	return &VoidMetrics{}
-}
-
-func (v *VoidMetrics) add(key string) {
-	// do nothing
-}
-
-func (v *VoidMetrics) miss(key string) {
-	// do nothing
-}
-
-func (v *VoidMetrics) hit(key string) {
-	// do nothing
-}
-
-func (v *VoidMetrics) err(key string) {
-	// do nothing
-}
-
-func (v *VoidMetrics) evict(key string, context validationContext, age int64) {
-	// do nothing
-}
-
-func (v *VoidMetrics) reset() bool {
-	// do nothing
-	return true
 }

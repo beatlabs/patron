@@ -12,8 +12,7 @@ func wrapProcessorFunc(path string, processor ProcessorFunc, rc *routeCache) Pro
 	return func(ctx context.Context, request *Request) (response *Response, e error) {
 		// we are doing the opposite work that we would do in the processor,
 		// but until we refactor this part this seems the only way
-		req := &cacheHandlerRequest{}
-		req.fromRequest(path, request)
+		req := fromRequest(path, request)
 		resp, err := cacheHandler(processorExecutor(ctx, request, processor), rc)(req)
 		if err != nil {
 			return nil, err
@@ -43,8 +42,7 @@ var processorExecutor = func(ctx context.Context, request *Request, hnd Processo
 
 func wrapHandlerFunc(handler http.HandlerFunc, rc *routeCache) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
-		req := &cacheHandlerRequest{}
-		req.fromHTTPRequest(request)
+		req := fromHTTPRequest(request)
 		if resp, err := cacheHandler(handlerExecutor(response, request, handler), rc)(req); err != nil {
 			log.Errorf("could not handle request with the cache processor: %v", err)
 		} else {

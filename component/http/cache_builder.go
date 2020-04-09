@@ -17,7 +17,6 @@ type RouteCacheBuilder struct {
 	minAge        time.Duration
 	maxFresh      time.Duration
 	staleResponse bool
-	metrics       cacheMetrics
 	errors        []error
 }
 
@@ -36,8 +35,7 @@ func NewRouteCacheBuilder(cache cache.Cache, ttl time.Duration) *RouteCacheBuild
 		instant: func() int64 {
 			return time.Now().Unix()
 		},
-		metrics: NewVoidMetrics(),
-		errors:  ee,
+		errors: ee,
 	}
 }
 
@@ -78,15 +76,6 @@ func (cb *RouteCacheBuilder) WithStaleResponse(staleResponse bool) *RouteCacheBu
 	return cb
 }
 
-// WithMetrics allows the cache to return stale responses.
-func (cb *RouteCacheBuilder) WithMetrics(metrics cacheMetrics) *RouteCacheBuilder {
-	if metrics == nil {
-		cb.errors = append(cb.errors, errors.New("metrics implementation is nil"))
-	}
-	cb.metrics = metrics
-	return cb
-}
-
 func (cb *RouteCacheBuilder) create() (*routeCache, error) {
 	if len(cb.errors) > 0 {
 		return nil, errs.Aggregate(cb.errors...)
@@ -107,7 +96,6 @@ func (cb *RouteCacheBuilder) create() (*routeCache, error) {
 		minAge:        int64(cb.minAge / time.Second),
 		maxFresh:      int64(cb.maxFresh / time.Second),
 		staleResponse: cb.staleResponse,
-		metrics:       cb.metrics,
 	}, nil
 }
 
@@ -125,6 +113,4 @@ type routeCache struct {
 	// staleResponse specifies if the server is willing to send stale responses
 	// if a new response could not be generated for any reason
 	staleResponse bool
-	// metrics is the implementation for keeping track of the cache operations
-	metrics cacheMetrics
 }

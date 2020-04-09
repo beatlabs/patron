@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	client "github.com/beatlabs/patron/client/http"
+	httppatron "github.com/beatlabs/patron/client/http"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -217,7 +217,7 @@ func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, por
 	var lwg sync.WaitGroup
 	lwg.Add(1)
 	go func() {
-		cl, err := client.New()
+		cl, err := httppatron.New()
 		assert.NoError(t, err)
 		req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/ready", port), nil)
 		assert.NoError(t, err)
@@ -239,7 +239,7 @@ func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, por
 
 func assertResponse(ctx context.Context, t *testing.T, expected []http.Response, port int) {
 
-	cl, err := client.New()
+	cl, err := httppatron.New()
 	assert.NoError(t, err)
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/path", port), nil)
 	assert.NoError(t, err)

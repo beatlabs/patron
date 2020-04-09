@@ -37,7 +37,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"reflect"
 
 	"github.com/prometheus/common/expfmt"
 
@@ -109,6 +108,33 @@ func ToFloat64(c prometheus.Collector) float64 {
 	panic(fmt.Errorf("collected a non-gauge/counter/untyped metric: %s", pb))
 }
 
+// CollectAndCount collects all Metrics from the provided Collector and returns their number.
+//
+// This can be used to assert the number of metrics collected by a given collector after certain operations.
+//
+// This function is only for testing purposes, and even for testing, other approaches
+// are often more appropriate (see this package's documentation).
+func CollectAndCount(c prometheus.Collector) int {
+	var (
+		mCount int
+		mChan  = make(chan prometheus.Metric)
+		done   = make(chan struct{})
+	)
+
+	go func() {
+		for range mChan {
+			mCount++
+		}
+		close(done)
+	}()
+
+	c.Collect(mChan)
+	close(mChan)
+	<-done
+
+	return mCount
+}
+
 // CollectAndCompare registers the provided Collector with a newly created
 // pedantic Registry. It then does the same as GatherAndCompare, gathering the
 // metrics from the pedantic Registry.
@@ -125,47 +151,51 @@ func CollectAndCompare(c prometheus.Collector, expected io.Reader, metricNames .
 // exposition format. If any metricNames are provided, only metrics with those
 // names are compared.
 func GatherAndCompare(g prometheus.Gatherer, expected io.Reader, metricNames ...string) error {
-	metrics, err := g.Gather()
+	got, err := g.Gather()
 	if err != nil {
 		return fmt.Errorf("gathering metrics failed: %s", err)
 	}
 	if metricNames != nil {
-		metrics = filterMetrics(metrics, metricNames)
+		got = filterMetrics(got, metricNames)
 	}
 	var tp expfmt.TextParser
-	expectedMetrics, err := tp.TextToMetricFamilies(expected)
+	wantRaw, err := tp.TextToMetricFamilies(expected)
 	if err != nil {
 		return fmt.Errorf("parsing expected metrics failed: %s", err)
 	}
+	want := internal.NormalizeMetricFamilies(wantRaw)
 
-	if !reflect.DeepEqual(metrics, internal.NormalizeMetricFamilies(expectedMetrics)) {
-		// Encode the gathered output to the readable text format for comparison.
-		var buf1 bytes.Buffer
-		enc := expfmt.NewEncoder(&buf1, expfmt.FmtText)
-		for _, mf := range metrics {
-			if err := enc.Encode(mf); err != nil {
-				return fmt.Errorf("encoding result failed: %s", err)
-			}
-		}
-		// Encode normalized expected metrics again to generate them in the same ordering
-		// the registry does to spot differences more easily.
-		var buf2 bytes.Buffer
-		enc = expfmt.NewEncoder(&buf2, expfmt.FmtText)
-		for _, mf := range internal.NormalizeMetricFamilies(expectedMetrics) {
-			if err := enc.Encode(mf); err != nil {
-				return fmt.Errorf("encoding result failed: %s", err)
-			}
-		}
+	return compare(got, want)
+}
 
+// compare encodes both provided slices of metric families into the text format,
+// compares their string message, and returns an error if they do not match.
+// The error contains the encoded text of both the desired and the actual
+// result.
+func compare(got, want []*dto.MetricFamily) error {
+	var gotBuf, wantBuf bytes.Buffer
+	enc := expfmt.NewEncoder(&gotBuf, expfmt.FmtText)
+	for _, mf := range got {
+		if err := enc.Encode(mf); err != nil {
+			return fmt.Errorf("encoding gathered metrics failed: %s", err)
+		}
+	}
+	enc = expfmt.NewEncoder(&wantBuf, expfmt.FmtText)
+	for _, mf := range want {
+		if err := enc.Encode(mf); err != nil {
+			return fmt.Errorf("encoding expected metrics failed: %s", err)
+		}
+	}
+
+	if wantBuf.String() != gotBuf.String() {
 		return fmt.Errorf(`
 metric output does not match expectation; want:
 
 %s
-
 got:
 
-%s
-`, buf2.String(), buf1.String())
+%s`, wantBuf.String(), gotBuf.String())
+
 	}
 	return nil
 }

@@ -14,23 +14,23 @@ type PrometheusMetrics struct {
 	evictions    *prometheus.CounterVec
 }
 
-func (m *PrometheusMetrics) add(path, key string) {
+func (m *PrometheusMetrics) add(path string) {
 	m.additions.WithLabelValues(path).Inc()
 }
 
-func (m *PrometheusMetrics) miss(path, key string) {
+func (m *PrometheusMetrics) miss(path string) {
 	m.misses.WithLabelValues(path).Inc()
 }
 
-func (m *PrometheusMetrics) hit(path, key string) {
+func (m *PrometheusMetrics) hit(path string) {
 	m.hits.WithLabelValues(path).Inc()
 }
 
-func (m *PrometheusMetrics) err(path, key string) {
+func (m *PrometheusMetrics) err(path string) {
 	m.errors.WithLabelValues(path).Inc()
 }
 
-func (m *PrometheusMetrics) evict(path, key string, context validationContext, age int64) {
+func (m *PrometheusMetrics) evict(path string, context validationContext, age int64) {
 	m.ageHistogram.WithLabelValues(path).Observe(float64(age))
 	m.evictions.WithLabelValues(path, validationReason[context]).Inc()
 }

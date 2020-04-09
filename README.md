@@ -317,6 +317,9 @@ The
 - we can could the storing of the cached objects and their age counter. That way we would avoid loading the whole object in memory,
 if the object is already expired. This approach might provide considerable performance (in terms of memory utilisation) 
 improvement for big response objects. 
+- we could extend the metrics to use the key of the object as a label as well for more fine-grained tuning.
+But this has been left out for now, due to the potentially huge number of metric objects.
+We can review according to usage or make this optional in the future.
 
 ### Asynchronous
 

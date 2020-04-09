@@ -200,10 +200,10 @@ func getResponse(cfg *cacheControl, path, key string, now int64, rc *routeCache,
 	} else {
 		rsp = getFromCache(key, rc)
 		if rsp == nil {
-			metrics.miss(path, key)
+			metrics.miss(path)
 			rsp = exec(now, key)
 		} else if rsp.err != nil {
-			metrics.err(path, key)
+			metrics.err(path)
 			rsp = exec(now, key)
 		} else if isValid, cx := isValid(now-rsp.lastValid, rc.ttl, append(cfg.validators, cfg.expiryValidator)...); !isValid {
 			tmpRsp := exec(now, key)
@@ -211,14 +211,14 @@ func getResponse(cfg *cacheControl, path, key string, now int64, rc *routeCache,
 			// serve the last cached value, with a warning header
 			if cfg.forceCache || (rc.staleResponse && tmpRsp.err != nil) {
 				rsp.warning = "last-valid"
-				metrics.hit(path, key)
+				metrics.hit(path)
 			} else {
 				rsp = tmpRsp
-				metrics.evict(path, key, cx, now-rsp.lastValid)
+				metrics.evict(path, cx, now-rsp.lastValid)
 			}
 		} else {
 			rsp.warning = cfg.warning
-			metrics.hit(path, key)
+			metrics.hit(path)
 		}
 	}
 	return rsp
@@ -257,7 +257,7 @@ func saveResponse(path, key string, rsp *cachedResponse, rc *routeCache) {
 		if err := rc.cache.Set(key, rsp); err != nil {
 			log.Errorf("could not cache response for request key %s %v", key, err)
 		} else {
-			metrics.add(path, key)
+			metrics.add(path)
 		}
 	}
 }

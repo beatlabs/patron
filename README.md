@@ -214,8 +214,6 @@ type routeCache struct {
 	// staleResponse specifies if the server is willing to send stale responses
 	// if a new response could not be generated for any reason
 	staleResponse bool
-	// metrics is the implementation for keeping track of the cache operations
-	metrics cacheMetrics
 }
 ```
 
@@ -278,16 +276,7 @@ The http cache exposes several metrics, used to
 - help trim the optimal time-to-live policy
 - identify client control interference
 
-```go
-type cacheMetrics interface {
-	add(key string)
-	miss(key string)
-	hit(key string)
-	err(key string)
-	evict(key string, context validationContext, age int64)
-	reset() bool
-}
-```
+By default we are using prometheus as the the pre-defined metrics framework.
 
 - `additions = misses + evictions`
 
@@ -306,8 +295,7 @@ this would signify that probably a cache is not a good option for the access pat
 The age at which the objects are evicted from the cache is a very useful indicator. 
 If the vast amount of evictions are close to the time to live setting, it would indicate a nicely working cache.
 If we find that many evictions happen before the time to live threshold, clients would be making use cache-control headers.
-
-The 
+ 
 
 #### cache design reference
 - https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html

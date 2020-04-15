@@ -8,13 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/beatlabs/patron/log"
 )
-
-// CacheHeader is an enum representing the header value
-type CacheHeader int
 
 type validationContext int
 
@@ -34,42 +29,43 @@ const (
 
 	// cache control header values
 
-	// maxStale specifies the staleness in seconds
+	// cacheControlMaxStale specifies the staleness in seconds
 	// that the client is willing to accept on a cached response
-	maxStale = "max-stale"
-	// minFresh specifies the minimum amount in seconds
+	cacheControlMaxStale = "max-stale"
+	// cacheControlMinFresh specifies the minimum amount in seconds
 	// that the cached object should have before it expires
-	minFresh = "min-fresh"
-	// noCache specifies that the client does not expect to get a cached response
-	noCache = "no-cache"
-	// noStore specifies that the client does not expect to get a cached response
-	noStore = "no-store"
-	// onlyIfCached specifies that the client wants a response ,
+	cacheControlMinFresh = "min-fresh"
+	// cacheControlNoCache specifies that the client does not expect to get a cached response
+	cacheControlNoCache = "no-cache"
+	// cacheControlNoStore specifies that the client does not expect to get a cached response
+	cacheControlNoStore = "no-store"
+	// cacheControlOnlyIfCached specifies that the client wants a response ,
 	// only if it is present in the cache
-	onlyIfCached = "only-if-cached"
-	// mustRevalidate signals to the client that the response might be stale
-	mustRevalidate = "must-revalidate"
-	// maxAge specifies the maximum age in seconds
+	cacheControlOnlyIfCached = "only-if-cached"
+
+	// cacheHeaderMustRevalidate signals to the client that the response might be stale
+	cacheHeaderMustRevalidate = "must-revalidate"
+	// cacheHeaderMaxAge specifies the maximum age in seconds
 	// - that the client is willing to accept cached objects for
 	// (if it s part of the request headers)
 	// - that the response object still has , before it expires in the cache
 	// (if it s part of the response headers)
-	maxAge = "max-age"
+	cacheHeaderMaxAge = "max-age"
+
 	// other response headers
-	// eTagHeader specifies the hash of the cached object
-	eTagHeader = "ETag"
-	// warningHeader signals to the client that it's request ,
+	// cacheHeaderETagHeader specifies the hash of the cached object
+	cacheHeaderETagHeader = "ETag"
+	// cacheHeaderWarning signals to the client that it's request ,
 	// as defined by the headers , could not be served consistently.
 	// The client must assume the the best-effort approach has been used to return any response
 	// it can ignore the response or use it knowingly of the potential staleness involved
-	warningHeader = "Warning"
+	cacheHeaderWarning = "Warning"
 )
 
-var metrics *PrometheusMetrics
+var metrics cacheMetrics
 
 func init() {
-	metrics = NewPrometheusMetrics()
-	metrics.mustRegister(prometheus.DefaultRegisterer)
+	metrics = newPrometheusMetrics()
 }
 
 // TimeInstant is a timing function
@@ -264,12 +260,12 @@ func saveResponse(path, key string, rsp *cachedResponse, rc *routeCache) {
 
 // addResponseHeaders adds the appropriate headers according to the cachedResponse conditions
 func addResponseHeaders(now int64, header map[string]string, rsp *cachedResponse, ttl int64) {
-	header[eTagHeader] = rsp.etag
+	header[cacheHeaderETagHeader] = rsp.etag
 	header[cacheControlHeader] = createCacheControlHeader(ttl, now-rsp.lastValid)
 	if rsp.warning != "" && rsp.fromCache {
-		header[warningHeader] = rsp.warning
+		header[cacheHeaderWarning] = rsp.warning
 	} else {
-		delete(header, warningHeader)
+		delete(header, cacheHeaderWarning)
 	}
 }
 
@@ -294,7 +290,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 		keyValue := strings.Split(header, "=")
 		headerKey := strings.ToLower(keyValue[0])
 		switch headerKey {
-		case maxStale:
+		case cacheControlMaxStale:
 			/**
 			Indicates that the client is willing to accept a response that has
 			exceeded its expiration time. If max-stale is assigned a value,
@@ -311,7 +307,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 			cfg.expiryValidator = func(age, ttl int64) (bool, validationContext) {
 				return ttl-age+value >= 0, maxStaleValidation
 			}
-		case maxAge:
+		case cacheHeaderMaxAge:
 			/**
 			Indicates that the client is willing to accept a response whose
 			age is no greater than the specified time in seconds. Unless max-
@@ -330,7 +326,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 			cfg.validators = append(cfg.validators, func(age, ttl int64) (bool, validationContext) {
 				return age <= value, maxAgeValidation
 			})
-		case minFresh:
+		case cacheControlMinFresh:
 			/**
 			Indicates that the client is willing to accept a response whose
 			freshness lifetime is no less than its current age plus the
@@ -350,7 +346,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 			cfg.validators = append(cfg.validators, func(age, ttl int64) (bool, validationContext) {
 				return ttl-age >= value, minFreshValidation
 			})
-		case noCache:
+		case cacheControlNoCache:
 			/**
 			return response if entity has changed
 			e.g. (304 response if nothing has changed : 304 Not Modified)
@@ -358,7 +354,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 			request should be accompanied by an ETag token
 			*/
 			fallthrough
-		case noStore:
+		case cacheControlNoStore:
 			/**
 			no storage whatsoever
 			*/
@@ -370,7 +366,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 					return age <= minAge, maxAgeValidation
 				})
 			}
-		case onlyIfCached:
+		case cacheControlOnlyIfCached:
 			/**
 			return only if is in cache , otherwise 504
 			*/
@@ -393,9 +389,9 @@ func generateETag(key []byte, t int) string {
 func createCacheControlHeader(ttl, lastValid int64) string {
 	mAge := ttl - lastValid
 	if mAge < 0 {
-		return mustRevalidate
+		return cacheHeaderMustRevalidate
 	}
-	return fmt.Sprintf("%s=%d", maxAge, ttl-lastValid)
+	return fmt.Sprintf("%s=%d", cacheHeaderMaxAge, ttl-lastValid)
 }
 
 func min(value, threshold int64) (int64, bool) {

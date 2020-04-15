@@ -4,43 +4,43 @@ import "github.com/prometheus/client_golang/prometheus"
 
 var validationReason = map[validationContext]string{0: "nil", ttlValidation: "expired", maxAgeValidation: "max_age", minFreshValidation: "min_fresh", maxStaleValidation: "max_stale"}
 
-// PrometheusMetrics is the prometheus implementation for exposing cache metrics
-type PrometheusMetrics struct {
+type cacheMetrics interface {
+	add(path string)
+	miss(path string)
+	hit(path string)
+	err(path string)
+	evict(path string, context validationContext, age int64)
+}
+
+// prometheusMetrics is the prometheus implementation for exposing cache metrics
+type prometheusMetrics struct {
 	ageHistogram *prometheus.HistogramVec
-	misses       *prometheus.CounterVec
-	additions    *prometheus.CounterVec
-	hits         *prometheus.CounterVec
-	errors       *prometheus.CounterVec
-	evictions    *prometheus.CounterVec
+	operations   *prometheus.CounterVec
 }
 
-func (m *PrometheusMetrics) add(path string) {
-	m.additions.WithLabelValues(path).Inc()
+func (m *prometheusMetrics) add(path string) {
+	m.operations.WithLabelValues(path, "merge", "").Inc()
 }
 
-func (m *PrometheusMetrics) miss(path string) {
-	m.misses.WithLabelValues(path).Inc()
+func (m *prometheusMetrics) miss(path string) {
+	m.operations.WithLabelValues(path, "miss", "").Inc()
 }
 
-func (m *PrometheusMetrics) hit(path string) {
-	m.hits.WithLabelValues(path).Inc()
+func (m *prometheusMetrics) hit(path string) {
+	m.operations.WithLabelValues(path, "hit", "").Inc()
 }
 
-func (m *PrometheusMetrics) err(path string) {
-	m.errors.WithLabelValues(path).Inc()
+func (m *prometheusMetrics) err(path string) {
+	m.operations.WithLabelValues(path, "err", "").Inc()
 }
 
-func (m *PrometheusMetrics) evict(path string, context validationContext, age int64) {
+func (m *prometheusMetrics) evict(path string, context validationContext, age int64) {
 	m.ageHistogram.WithLabelValues(path).Observe(float64(age))
-	m.evictions.WithLabelValues(path, validationReason[context]).Inc()
+	m.operations.WithLabelValues(path, "evict", validationReason[context]).Inc()
 }
 
-func (m *PrometheusMetrics) mustRegister(registerer prometheus.Registerer) {
-	registerer.MustRegister(m.ageHistogram, m.additions, m.misses, m.hits, m.evictions)
-}
-
-// NewPrometheusMetrics constructs a new prometheus metrics implementation instance
-func NewPrometheusMetrics() *PrometheusMetrics {
+// newPrometheusMetrics constructs a new prometheus metrics implementation instance
+func newPrometheusMetrics() *prometheusMetrics {
 
 	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "http_cache",
@@ -50,48 +50,20 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		Buckets:   []float64{1, 10, 30, 60, 60 * 5, 60 * 10, 60 * 30, 60 * 60},
 	}, []string{"route"})
 
-	additions := prometheus.NewCounterVec(prometheus.CounterOpts{
+	operations := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "http_cache",
 		Subsystem: "handler",
-		Name:      "adds",
-		Help:      "Number of Added objects to the cache.",
-	}, []string{"route"})
+		Name:      "operations",
+		Help:      "Number of cache operations.",
+	}, []string{"route", "operation", "reason"})
 
-	misses := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "http_cache",
-		Subsystem: "handler",
-		Name:      "misses",
-		Help:      "Number of cache missed.",
-	}, []string{"route"})
-
-	hits := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "http_cache",
-		Subsystem: "handler",
-		Name:      "hits",
-		Help:      "Number of cache hits.",
-	}, []string{"route"})
-
-	errors := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "http_cache",
-		Subsystem: "handler",
-		Name:      "errors",
-		Help:      "Number of cache errors.",
-	}, []string{"route"})
-
-	evictions := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "http_cache",
-		Subsystem: "handler",
-		Name:      "evicts",
-		Help:      "Number of cache evictions.",
-	}, []string{"route", "reason"})
-
-	return &PrometheusMetrics{
+	m := &prometheusMetrics{
 		ageHistogram: histogram,
-		additions:    additions,
-		misses:       misses,
-		hits:         hits,
-		errors:       errors,
-		evictions:    evictions,
+		operations:   operations,
 	}
+
+	prometheus.DefaultRegisterer.MustRegister(m.ageHistogram, m.operations)
+
+	return m
 
 }

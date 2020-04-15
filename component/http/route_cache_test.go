@@ -249,7 +249,7 @@ func assertResponse(ctx context.Context, t *testing.T, expected []http.Response,
 
 		assert.NoError(t, err)
 		assert.Equal(t, expectedResponse.Header.Get(cacheControlHeader), response.Header.Get(cacheControlHeader))
-		assert.True(t, response.Header.Get(eTagHeader) != "")
+		assert.True(t, response.Header.Get(cacheHeaderETagHeader) != "")
 		expectedPayload := make([]byte, 6)
 		i, err := expectedResponse.Body.Read(expectedPayload)
 		assert.NoError(t, err)

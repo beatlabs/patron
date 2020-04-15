@@ -6,9 +6,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/testutil"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/beatlabs/patron/cache"
@@ -150,33 +147,12 @@ type requestParams struct {
 	timeInstance int64
 }
 
-type metricsAssertion struct {
-	count int
-	state *metricState
-}
-
-type metricState struct {
-	additions int
-	misses    int
-	evictions int
-	hits      int
-	errors    int
-}
-
-func (m *metricState) add(n metricState) {
-	m.evictions += n.evictions
-	m.additions += n.additions
-	m.misses += n.misses
-	m.hits += n.hits
-	m.errors += n.errors
-}
-
 type testArgs struct {
 	routeConfig   routeConfig
 	cache         cache.Cache
 	requestParams requestParams
 	response      *Response
-	metrics       metricsAssertion
+	metrics       testMetrics
 	err           error
 }
 
@@ -188,7 +164,7 @@ func testHeader(maxAge int64) map[string]string {
 
 func testHeaderWithWarning(maxAge int64, warning string) map[string]string {
 	h := testHeader(maxAge)
-	h[warningHeader] = warning
+	h[cacheHeaderWarning] = warning
 	return h
 }
 
@@ -212,11 +188,12 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -229,10 +206,13 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(2)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -245,10 +225,13 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(0)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      2,
+						},
 					},
 				},
 				err: nil,
@@ -261,11 +244,14 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 120, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      2,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -297,10 +283,11 @@ func TestNoMinAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -313,10 +300,11 @@ func TestNoMinAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 20, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+						},
 					},
 				},
 				err: nil,
@@ -346,10 +334,11 @@ func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -363,10 +352,12 @@ func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(8)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -379,10 +370,12 @@ func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 90, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -397,10 +390,12 @@ func TestNoMinAgeCache_WithMaxAgeHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 90, Headers: testHeader(5)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							hits:      2,
+						},
 					},
 				},
 				err: nil,
@@ -431,11 +426,12 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -449,10 +445,13 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(8)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -466,11 +465,14 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 90, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      1,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -484,10 +486,14 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 90, Headers: testHeader(5)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      2,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -501,11 +507,14 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 150, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 3,
+							misses:    1,
+							hits:      2,
+							evictions: 2,
+						},
 					},
 				},
 				err: nil,
@@ -534,10 +543,11 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(30)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -551,10 +561,12 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(20)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -568,10 +580,12 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							hits:      2,
+						},
 					},
 				},
 				err: nil,
@@ -585,11 +599,13 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 200, Headers: testHeader(30)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							hits:      2,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -603,10 +619,13 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 200, Headers: testHeader(25)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							hits:      3,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -635,10 +654,11 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(5)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -652,11 +672,12 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 60, Headers: testHeader(5)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -685,10 +706,11 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(30)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -703,11 +725,12 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(30)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -737,11 +760,12 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(30)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -756,10 +780,13 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeaderWithWarning(26, "max-age=5")},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -773,10 +800,13 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(25)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      2,
+						},
 					},
 				},
 				err: nil,
@@ -791,11 +821,14 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 				routeConfig: rc,
 				// note : no warning because it s a new response
 				response: &Response{Payload: 60, Headers: testHeader(30)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      2,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -825,11 +858,12 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -843,10 +877,13 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(5)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -860,11 +897,14 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 60, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      1,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -878,10 +918,14 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 60, Headers: testHeader(5)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      2,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -895,11 +939,14 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 120, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 3,
+							misses:    1,
+							hits:      2,
+							evictions: 2,
+						},
 					},
 				},
 				err: nil,
@@ -929,11 +976,12 @@ func TestNoMaxFreshCache_WithExtremeMinFreshHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -946,11 +994,13 @@ func TestNoMaxFreshCache_WithExtremeMinFreshHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -981,11 +1031,12 @@ func TestMaxFreshCache_WithMinFreshHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -999,10 +1050,13 @@ func TestMaxFreshCache_WithMinFreshHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeaderWithWarning(5, "min-fresh=5")},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -1031,11 +1085,12 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -1049,10 +1104,13 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(7)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -1066,10 +1124,13 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(2)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      2,
+						},
 					},
 				},
 				err: nil,
@@ -1084,10 +1145,13 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 				routeConfig: rc,
 				// note : we are also getting a must-revalidate header
 				response: &Response{Payload: 0, Headers: testHeader(-5)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      3,
+						},
 					},
 				},
 				err: nil,
@@ -1101,11 +1165,14 @@ func TestCache_WithConstantMaxStaleHeader(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 160, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      3,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -1135,11 +1202,12 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -1153,10 +1221,13 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(5)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -1170,11 +1241,14 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 60, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      1,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -1188,10 +1262,14 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 60, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      2,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -1205,11 +1283,14 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 150, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 3,
+							misses:    1,
+							hits:      2,
+							evictions: 2,
+						},
 					},
 				},
 				err: nil,
@@ -1241,11 +1322,12 @@ func TestStaleCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 			},
@@ -1266,10 +1348,13 @@ func TestStaleCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 					maxFresh:      rc.maxFresh,
 					staleResponse: rc.staleResponse,
 				},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				response: &Response{Payload: 0, Headers: testHeaderWithWarning(-1, "last-valid")},
@@ -1301,11 +1386,12 @@ func TestNoStaleCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 			},
@@ -1326,10 +1412,13 @@ func TestNoStaleCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 					maxFresh:      rc.maxFresh,
 					staleResponse: rc.staleResponse,
 				},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							evictions: 1,
+						},
 					},
 				},
 				err: hndErr,
@@ -1365,10 +1454,11 @@ func TestCache_WithHandlerErr(t *testing.T) {
 					timeInstance: 0,
 				},
 				routeConfig: rc,
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						misses: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							misses: 1,
+						},
 					},
 				},
 				err: hndErr,
@@ -1404,11 +1494,12 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
 				cache:       cacheImpl,
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						errors:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							errors:    1,
+						},
 					},
 				},
 			},
@@ -1421,11 +1512,12 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(10)},
 				cache:       cacheImpl,
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						errors:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							errors:    2,
+						},
 					},
 				},
 			},
@@ -1462,11 +1554,12 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
 				cache:       cacheImpl,
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 			},
@@ -1479,11 +1572,12 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(10)},
 				cache:       cacheImpl,
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    2,
+						},
 					},
 				},
 			},
@@ -1516,8 +1610,13 @@ func TestCache_WithMixedPaths(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/1": {
+							additions: 1,
+							misses:    1,
+						},
+					},
 				},
 				err: nil,
 			},
@@ -1530,8 +1629,14 @@ func TestCache_WithMixedPaths(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(9)},
-				metrics: metricsAssertion{
-					count: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/1": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
+					},
 				},
 				err: nil,
 			},
@@ -1544,8 +1649,18 @@ func TestCache_WithMixedPaths(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 2,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/1": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
+						"/2": {
+							additions: 1,
+							misses:    1,
+						},
+					},
 				},
 				err: nil,
 			},
@@ -1558,8 +1673,19 @@ func TestCache_WithMixedPaths(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 10, Headers: testHeader(9)},
-				metrics: metricsAssertion{
-					count: 2,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/1": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
+						"/2": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
+					},
 				},
 				err: nil,
 			},
@@ -1588,11 +1714,12 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -1605,10 +1732,13 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(9)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -1621,11 +1751,13 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 20, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    2,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -1638,10 +1770,13 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 20, Headers: testHeader(9)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    2,
+							hits:      2,
+						},
 					},
 				},
 				err: nil,
@@ -1671,10 +1806,11 @@ func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -1688,10 +1824,11 @@ func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 50, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+						},
 					},
 				},
 				err: nil,
@@ -1721,11 +1858,12 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -1739,10 +1877,13 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeaderWithWarning(8, "max-age=2")},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -1756,11 +1897,14 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 50, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      1,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -1790,10 +1934,11 @@ func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -1807,10 +1952,11 @@ func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 50, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+						},
 					},
 				},
 				err: nil,
@@ -1840,11 +1986,12 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -1858,10 +2005,13 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeaderWithWarning(8, "max-age=2")},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -1875,11 +2025,14 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 50, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						evictions: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 2,
+							misses:    1,
+							hits:      1,
+							evictions: 1,
+						},
 					},
 				},
 				err: nil,
@@ -1909,11 +2062,12 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(10)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						additions: 1,
-						misses:    1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+						},
 					},
 				},
 				err: nil,
@@ -1927,10 +2081,13 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 				},
 				routeConfig: rc,
 				response:    &Response{Payload: 0, Headers: testHeader(5)},
-				metrics: metricsAssertion{
-					count: 1,
-					state: &metricState{
-						hits: 1,
+				metrics: testMetrics{
+					map[string]*metricState{
+						"/": {
+							additions: 1,
+							misses:    1,
+							hits:      1,
+						},
 					},
 				},
 				err: nil,
@@ -1942,8 +2099,7 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 
 func assertCache(t *testing.T, args [][]testArgs) {
 
-	metrics = NewPrometheusMetrics()
-	metrics.mustRegister(prometheus.NewRegistry())
+	metrics = &testMetrics{}
 
 	// create a test request handler
 	// that returns the current time instant times '10' multiplied by the VALUE parameter in the request
@@ -1968,8 +2124,6 @@ func assertCache(t *testing.T, args [][]testArgs) {
 
 	// test cache implementation
 	cacheIml := newTestingCache()
-
-	argMetrics := metricsAssertion{}
 
 	for _, testArg := range args {
 		for _, arg := range testArg {
@@ -2015,64 +2169,19 @@ func assertCache(t *testing.T, args [][]testArgs) {
 				assert.NotNil(t, response)
 				assert.Equal(t, arg.response.Payload, response.payload)
 				assert.Equal(t, arg.response.Headers[cacheControlHeader], response.header[cacheControlHeader])
-				assert.Equal(t, arg.response.Headers[warningHeader], response.header[warningHeader])
-				assert.NotNil(t, arg.response.Headers[eTagHeader])
-				assert.False(t, response.header[eTagHeader] == "")
+				assert.Equal(t, arg.response.Headers[cacheHeaderWarning], response.header[cacheHeaderWarning])
+				assert.NotNil(t, arg.response.Headers[cacheHeaderETagHeader])
+				assert.False(t, response.header[cacheHeaderETagHeader] == "")
 			}
-			// we provide the diff in the tests to make for a clearer test case definition
-			if arg.metrics.state != nil {
-				if argMetrics.state == nil {
-					argMetrics.state = arg.metrics.state
-				} else {
-					argMetrics.state.add(*arg.metrics.state)
-				}
-			}
-			// we assert the sum
-			assertPrometheusMetrics(t, argMetrics, metrics)
+			assertMetrics(t, arg.metrics, *metrics.(*testMetrics))
 		}
 	}
 }
 
-func assertPrometheusMetrics(t *testing.T, mState metricsAssertion, metrics *PrometheusMetrics) {
-	if mState.state != nil {
-		assertMetricsValue(t, "error", mState.state.errors, metrics.errors)
-		assertMetricsValue(t, "misses", mState.state.misses, metrics.misses)
-		assertMetricsValue(t, "additions", mState.state.additions, metrics.additions)
-		assertMetricsValue(t, "hits", mState.state.hits, metrics.hits)
-		assertMetricsValue(t, "evictions", mState.state.evictions, metrics.evictions)
+func assertMetrics(t *testing.T, expected, actual testMetrics) {
+	for k, v := range expected.values {
+		assert.Equal(t, v, actual.values[k])
 	}
-	assertMetricsCount(t, mState.count, metrics.errors)
-	assertMetricsCount(t, mState.count, metrics.misses)
-	assertMetricsCount(t, mState.count, metrics.additions)
-	assertMetricsCount(t, mState.count, metrics.hits)
-	assertMetricsCount(t, mState.count, metrics.evictions)
-}
-
-func assertMetricsValue(t *testing.T, metric string, value int, c prometheus.Collector) {
-	if value > 0 {
-		v := testutil.ToFloat64(c)
-		assert.Equal(t, float64(value), v)
-	} else {
-		assertPanic(t, func() {
-			testutil.ToFloat64(c)
-		}, metric)
-	}
-}
-
-func assertMetricsCount(t *testing.T, value int, c prometheus.Collector) {
-	if value > 0 {
-		v := testutil.CollectAndCount(c)
-		assert.Equal(t, float64(value), v)
-	}
-}
-
-func assertPanic(t *testing.T, exec func(), metric string) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("value is not '0' for metrics collector %s", metric)
-		}
-	}()
-	exec()
 }
 
 type testingCache struct {
@@ -2119,4 +2228,51 @@ func (t *testingCache) Set(key string, value interface{}) error {
 
 func (t *testingCache) size() int {
 	return len(t.cache)
+}
+
+type testMetrics struct {
+	values map[string]*metricState
+}
+
+type metricState struct {
+	additions int
+	misses    int
+	evictions int
+	hits      int
+	errors    int
+}
+
+func (m *testMetrics) init(path string) {
+	if m.values == nil {
+		m.values = make(map[string]*metricState)
+	}
+	if _, exists := m.values[path]; !exists {
+
+		m.values[path] = &metricState{}
+	}
+}
+
+func (m *testMetrics) add(path string) {
+	m.init(path)
+	m.values[path].additions++
+}
+
+func (m *testMetrics) miss(path string) {
+	m.init(path)
+	m.values[path].misses++
+}
+
+func (m *testMetrics) hit(path string) {
+	m.init(path)
+	m.values[path].hits++
+}
+
+func (m *testMetrics) err(path string) {
+	m.init(path)
+	m.values[path].errors++
+}
+
+func (m *testMetrics) evict(path string, context validationContext, age int64) {
+	m.init(path)
+	m.values[path].evictions++
 }

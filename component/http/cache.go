@@ -27,39 +27,16 @@ const (
 	// note : it is case-sensitive
 	cacheControlHeader = "Cache-Control"
 
-	// cache control header values
-
-	// cacheControlMaxStale specifies the staleness in seconds
-	// that the client is willing to accept on a cached response
-	cacheControlMaxStale = "max-stale"
-	// cacheControlMinFresh specifies the minimum amount in seconds
-	// that the cached object should have before it expires
-	cacheControlMinFresh = "min-fresh"
-	// cacheControlNoCache specifies that the client does not expect to get a cached response
-	cacheControlNoCache = "no-cache"
-	// cacheControlNoStore specifies that the client does not expect to get a cached response
-	cacheControlNoStore = "no-store"
-	// cacheControlOnlyIfCached specifies that the client wants a response ,
-	// only if it is present in the cache
+	cacheControlMaxStale     = "max-stale"
+	cacheControlMinFresh     = "min-fresh"
+	cacheControlNoCache      = "no-cache"
+	cacheControlNoStore      = "no-store"
 	cacheControlOnlyIfCached = "only-if-cached"
 
-	// cacheHeaderMustRevalidate signals to the client that the response might be stale
 	cacheHeaderMustRevalidate = "must-revalidate"
-	// cacheHeaderMaxAge specifies the maximum age in seconds
-	// - that the client is willing to accept cached objects for
-	// (if it s part of the request headers)
-	// - that the response object still has , before it expires in the cache
-	// (if it s part of the response headers)
-	cacheHeaderMaxAge = "max-age"
-
-	// other response headers
-	// cacheHeaderETagHeader specifies the hash of the cached object
-	cacheHeaderETagHeader = "ETag"
-	// cacheHeaderWarning signals to the client that it's request ,
-	// as defined by the headers , could not be served consistently.
-	// The client must assume the the best-effort approach has been used to return any response
-	// it can ignore the response or use it knowingly of the potential staleness involved
-	cacheHeaderWarning = "Warning"
+	cacheHeaderMaxAge         = "max-age"
+	cacheHeaderETagHeader     = "ETag"
+	cacheHeaderWarning        = "Warning"
 )
 
 var metrics cacheMetrics

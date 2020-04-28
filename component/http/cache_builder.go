@@ -22,6 +22,7 @@ type RouteCache struct {
 	errors        []error
 }
 
+// Age defines the route cache life-time boundaries for cached objects
 type Age struct {
 	// Min adds a minimum age for the cache responses.
 	// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache

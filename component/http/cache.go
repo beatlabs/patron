@@ -244,7 +244,7 @@ func getFromCache(key string, rc *RouteCache) *cachedResponse {
 	return nil
 }
 
-// determines if th cache can be used as a TTLCache
+// determines if the cache can be used as a TTLCache
 func determineCache(rc *RouteCache) cacheUpdate {
 	if c, ok := rc.cache.(cache.TTLCache); ok {
 		return func(path, key string, rsp *cachedResponse) {
@@ -257,6 +257,7 @@ func determineCache(rc *RouteCache) cacheUpdate {
 }
 
 // saveResponse caches the given response if required
+// the cachec implementation should handle the clean-up internally
 func saveResponse(path, key string, rsp *cachedResponse, cache cache.Cache) {
 	if !rsp.fromCache && rsp.err == nil {
 		if err := cache.Set(key, rsp); err != nil {
@@ -268,6 +269,7 @@ func saveResponse(path, key string, rsp *cachedResponse, cache cache.Cache) {
 }
 
 // saveResponseWithTTL caches the given response if required with a ttl
+// as we are putting the objects in the cache, if its a TTL one, we need to manage the expiration on our own
 func saveResponseWithTTL(path, key string, rsp *cachedResponse, cache cache.TTLCache, maxAge time.Duration) {
 	if !rsp.fromCache && rsp.err == nil {
 		if err := cache.SetTTL(key, rsp, maxAge); err != nil {

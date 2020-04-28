@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/beatlabs/patron/cache"
 
 	"github.com/beatlabs/patron/log"
 )
@@ -32,6 +35,7 @@ const (
 	cacheControlNoCache      = "no-cache"
 	cacheControlNoStore      = "no-store"
 	cacheControlOnlyIfCached = "only-if-cached"
+	cacheControlEmpty        = ""
 
 	cacheHeaderMustRevalidate = "must-revalidate"
 	cacheHeaderMaxAge         = "max-age"
@@ -133,30 +137,41 @@ type cachedResponse struct {
 // executor is the function returning a cache response object from the underlying implementation
 type executor func(now int64, key string) *cachedResponse
 
+type cacheUpdate func(path, key string, rsp *cachedResponse)
+
 // cacheHandler wraps the an execution logic with a cache layer
 // exec is the processor func that the cache will wrap
 // rc is the route cache implementation to be used
-func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerRequest) (response *cacheHandlerResponse, e error) {
+func cacheHandler(exec executor, rc *RouteCache) func(request *cacheHandlerRequest) (response *cacheHandlerResponse, e error) {
+
+	saveToCache := determineCache(rc)
 
 	return func(request *cacheHandlerRequest) (response *cacheHandlerResponse, e error) {
 
 		now := rc.instant()
 
-		cfg := extractRequestHeaders(request.header, rc.minAge, rc.maxFresh)
+		key := extractRequestKey(request.path, request.query)
+
+		var rsp *cachedResponse
+
+		if hasNoAgeConfig(rc.age.min, rc.age.max) {
+			rsp = exec(now, key)
+			return rsp.response, rsp.err
+		}
+
+		cfg := extractRequestHeaders(request.header, rc.age.min, rc.age.max-rc.age.min)
 		if cfg.expiryValidator == nil {
 			cfg.expiryValidator = expiryCheck
 		}
-		key := extractRequestKey(request.path, request.query)
 
-		rsp := getResponse(cfg, request.path, key, now, rc, exec)
-
+		rsp = getResponse(cfg, request.path, key, now, rc, exec)
 		response = rsp.response
 		e = rsp.err
 
 		if e == nil {
-			addResponseHeaders(now, response.header, rsp, rc.ttl)
-			if !rsp.fromCache {
-				saveResponse(request.path, key, rsp, rc)
+			addResponseHeaders(now, response.header, rsp, rc.age.max)
+			if !rsp.fromCache && !cfg.noCache {
+				saveToCache(request.path, key, rsp)
 			}
 		}
 
@@ -166,43 +181,48 @@ func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerReque
 
 // getResponse will get the appropriate response either using the cache or the executor,
 // depending on the
-func getResponse(cfg *cacheControl, path, key string, now int64, rc *routeCache, exec executor) *cachedResponse {
-	var rsp *cachedResponse
+func getResponse(cfg *cacheControl, path, key string, now int64, rc *RouteCache, exec executor) *cachedResponse {
+
 	if cfg.noCache && !rc.staleResponse {
-		rsp = exec(now, key)
-	} else {
-		rsp = getFromCache(key, rc)
-		if rsp == nil {
-			metrics.miss(path)
-			rsp = exec(now, key)
-		} else if rsp.err != nil {
-			metrics.err(path)
-			rsp = exec(now, key)
-		} else if isValid, cx := isValid(now-rsp.lastValid, rc.ttl, append(cfg.validators, cfg.expiryValidator)...); !isValid {
-			tmpRsp := exec(now, key)
-			// if we could not retrieve a fresh response,
-			// serve the last cached value, with a warning header
-			if cfg.forceCache || (rc.staleResponse && tmpRsp.err != nil) {
-				rsp.warning = "last-valid"
-				metrics.hit(path)
-			} else {
-				rsp = tmpRsp
-				metrics.evict(path, cx, now-rsp.lastValid)
-			}
-		} else {
-			rsp.warning = cfg.warning
-			metrics.hit(path)
-		}
+		return exec(now, key)
 	}
+
+	rsp := getFromCache(key, rc)
+	if rsp == nil {
+		metrics.miss(path)
+		return exec(now, key)
+	}
+	if rsp.err != nil {
+		metrics.err(path)
+		return exec(now, key)
+	}
+	// if the object has expired
+	if isValid, cx := isValid(now-rsp.lastValid, rc.age.max, append(cfg.validators, cfg.expiryValidator)...); !isValid {
+		tmpRsp := exec(now, key)
+		// if we could not retrieve a fresh response,
+		// serve the last cached value, with a warning header
+		if cfg.forceCache || (rc.staleResponse && tmpRsp.err != nil) {
+			rsp.warning = "last-valid"
+			metrics.hit(path)
+		} else {
+			rsp = tmpRsp
+			metrics.evict(path, cx, now-rsp.lastValid)
+		}
+	} else {
+		// add any warning generated while parsing the headers
+		rsp.warning = cfg.warning
+		metrics.hit(path)
+	}
+
 	return rsp
 }
 
-func isValid(age, ttl int64, validators ...validator) (bool, validationContext) {
+func isValid(age, maxAge int64, validators ...validator) (bool, validationContext) {
 	if len(validators) == 0 {
 		return false, 0
 	}
 	for _, validator := range validators {
-		if isValid, cx := validator(age, ttl); !isValid {
+		if isValid, cx := validator(age, maxAge); !isValid {
 			return false, cx
 		}
 	}
@@ -211,7 +231,7 @@ func isValid(age, ttl int64, validators ...validator) (bool, validationContext) 
 
 // getFromCache is the implementation that will provide a cachedResponse instance from the cache,
 // if it exists
-func getFromCache(key string, rc *routeCache) *cachedResponse {
+func getFromCache(key string, rc *RouteCache) *cachedResponse {
 	if resp, ok, err := rc.cache.Get(key); ok && err == nil {
 		if r, ok := resp.(*cachedResponse); ok {
 			r.fromCache = true
@@ -224,10 +244,33 @@ func getFromCache(key string, rc *routeCache) *cachedResponse {
 	return nil
 }
 
+// determines if th cache can be used as a TTLCache
+func determineCache(rc *RouteCache) cacheUpdate {
+	if c, ok := rc.cache.(cache.TTLCache); ok {
+		return func(path, key string, rsp *cachedResponse) {
+			saveResponseWithTTL(path, key, rsp, c, time.Duration(rc.age.max)*time.Second)
+		}
+	}
+	return func(path, key string, rsp *cachedResponse) {
+		saveResponse(path, key, rsp, rc.cache)
+	}
+}
+
 // saveResponse caches the given response if required
-func saveResponse(path, key string, rsp *cachedResponse, rc *routeCache) {
+func saveResponse(path, key string, rsp *cachedResponse, cache cache.Cache) {
 	if !rsp.fromCache && rsp.err == nil {
-		if err := rc.cache.Set(key, rsp); err != nil {
+		if err := cache.Set(key, rsp); err != nil {
+			log.Errorf("could not cache response for request key %s %v", key, err)
+		} else {
+			metrics.add(path)
+		}
+	}
+}
+
+// saveResponseWithTTL caches the given response if required with a ttl
+func saveResponseWithTTL(path, key string, rsp *cachedResponse, cache cache.TTLCache, maxAge time.Duration) {
+	if !rsp.fromCache && rsp.err == nil {
+		if err := cache.SetTTL(key, rsp, maxAge); err != nil {
 			log.Errorf("could not cache response for request key %s %v", key, err)
 		} else {
 			metrics.add(path)
@@ -236,9 +279,9 @@ func saveResponse(path, key string, rsp *cachedResponse, rc *routeCache) {
 }
 
 // addResponseHeaders adds the appropriate headers according to the cachedResponse conditions
-func addResponseHeaders(now int64, header map[string]string, rsp *cachedResponse, ttl int64) {
+func addResponseHeaders(now int64, header map[string]string, rsp *cachedResponse, maxAge int64) {
 	header[cacheHeaderETagHeader] = rsp.etag
-	header[cacheControlHeader] = createCacheControlHeader(ttl, now-rsp.lastValid)
+	header[cacheControlHeader] = createCacheControlHeader(maxAge, now-rsp.lastValid)
 	if rsp.warning != "" && rsp.fromCache {
 		header[cacheHeaderWarning] = rsp.warning
 	} else {
@@ -253,9 +296,6 @@ func extractRequestKey(path, query string) string {
 
 // extractRequestHeaders extracts the client request headers allowing the client some control over the cache
 func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl {
-	if header == "" {
-		return &cacheControl{noCache: minAge == 0 && maxFresh == 0}
-	}
 
 	cfg := cacheControl{
 		validators: make([]validator, 0),
@@ -281,8 +321,8 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 				log.Debugf("invalid value for header '%s', defaulting to '0' ", keyValue)
 				value = 0
 			}
-			cfg.expiryValidator = func(age, ttl int64) (bool, validationContext) {
-				return ttl-age+value >= 0, maxStaleValidation
+			cfg.expiryValidator = func(age, maxAge int64) (bool, validationContext) {
+				return maxAge-age+value >= 0, maxStaleValidation
 			}
 		case cacheHeaderMaxAge:
 			/**
@@ -300,7 +340,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 			if adjusted {
 				wrn = append(wrn, fmt.Sprintf("max-age=%d", minAge))
 			}
-			cfg.validators = append(cfg.validators, func(age, ttl int64) (bool, validationContext) {
+			cfg.validators = append(cfg.validators, func(age, maxAge int64) (bool, validationContext) {
 				return age <= value, maxAgeValidation
 			})
 		case cacheControlMinFresh:
@@ -320,8 +360,8 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 			if adjusted {
 				wrn = append(wrn, fmt.Sprintf("min-fresh=%d", maxFresh))
 			}
-			cfg.validators = append(cfg.validators, func(age, ttl int64) (bool, validationContext) {
-				return ttl-age >= value, minFreshValidation
+			cfg.validators = append(cfg.validators, func(age, maxAge int64) (bool, validationContext) {
+				return maxAge-age >= value, minFreshValidation
 			})
 		case cacheControlNoCache:
 			/**
@@ -335,21 +375,19 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 			/**
 			no storage whatsoever
 			*/
-			if minAge == 0 && maxFresh == 0 {
-				cfg.noCache = true
-			} else {
-				wrn = append(wrn, fmt.Sprintf("max-age=%d", minAge))
-				cfg.validators = append(cfg.validators, func(age, ttl int64) (bool, validationContext) {
-					return age <= minAge, maxAgeValidation
-				})
-			}
+			wrn = append(wrn, fmt.Sprintf("max-age=%d", minAge))
+			cfg.validators = append(cfg.validators, func(age, maxAge int64) (bool, validationContext) {
+				return age <= minAge, maxAgeValidation
+			})
 		case cacheControlOnlyIfCached:
 			/**
 			return only if is in cache , otherwise 504
 			*/
 			cfg.forceCache = true
+		case cacheControlEmpty:
+			// nothing to do here
 		default:
-			log.Warnf("unrecognised cache header %s", header)
+			log.Warn("unrecognised cache header: '%s'", header)
 		}
 	}
 	if len(wrn) > 0 {
@@ -357,6 +395,10 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 	}
 
 	return &cfg
+}
+
+func hasNoAgeConfig(minAge, maxFresh int64) bool {
+	return minAge == 0 && maxFresh == 0
 }
 
 func generateETag(key []byte, t int) string {

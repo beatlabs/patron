@@ -284,6 +284,12 @@ Always , the cache addition operations (objects added to the cache),
 must be equal to the misses (requests that were not cached) plus the evictions (expired objects).
 Otherwise we would expect to notice also an increased amount of errors or having the cache misbehaving in a different manner.
 
+- `additions ~ misses`
+
+If the additions and misses are comparable e.g. misses are almost as many as the additions, 
+it would point to some cleanup of the cache itself. In that case the cache seems to not be able to support
+the request patterns and control headers.
+
 - `hits ~ additions`
 
 The cache hit count represents how well the cache performs for the access patterns of client requests. 

@@ -49,8 +49,7 @@ func TestProcessorWrapper(t *testing.T) {
 
 	for _, testArg := range args {
 		c := newTestingCache()
-		rc, err := NewRouteCacheBuilder(c, 10).create()
-		assert.NoError(t, err)
+		rc := NewRouteCache(c, Age{Max: 10})
 
 		wrappedProcessor := wrapProcessorFunc("/", testArg.processor, rc)
 
@@ -89,14 +88,12 @@ func TestHandlerWrapper(t *testing.T) {
 
 	for _, testArg := range args {
 		c := newTestingCache()
-		rc, err := NewRouteCacheBuilder(c, 10).create()
-		assert.NoError(t, err)
+		rc := NewRouteCache(c, Age{Max: 10})
 
 		wrappedHandler := wrapHandlerFunc(testArg.handler, rc)
 
 		wrappedHandler(testArg.rsp, testArg.req)
 
-		assert.NoError(t, err)
 		b, err := testArg.rsp.ReadAll()
 		assert.NoError(t, err)
 		assert.NotNil(t, b)
@@ -114,7 +111,7 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	routeBuilder := NewRouteBuilder("/path", func(context context.Context, request *Request) (response *Response, e error) {
 		atomic.AddUint32(&executions, 1)
 		return NewResponse("body"), nil
-	}).WithRouteCachedBuilder(NewRouteCacheBuilder(cache, 10*time.Second)).MethodGet()
+	}).WithRouteCache(NewRouteCache(cache, Age{Max: 10 * time.Second})).MethodGet()
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
@@ -155,7 +152,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 		i, err := writer.Write([]byte("\"body\""))
 		assert.NoError(t, err)
 		assert.True(t, i > 0)
-	}).WithRouteCachedBuilder(NewRouteCacheBuilder(cache, 10*time.Second)).MethodGet()
+	}).WithRouteCache(NewRouteCache(cache, Age{Max: 10 * time.Second})).MethodGet()
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 

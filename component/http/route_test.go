@@ -164,7 +164,7 @@ func TestRouteBuilder_WithAuth(t *testing.T) {
 func TestRouteBuilder_WithRouteCacheNil(t *testing.T) {
 
 	rb := NewRawRouteBuilder("/", func(writer http.ResponseWriter, request *http.Request) {}).
-		WithRouteCachedBuilder(nil)
+		WithRouteCache(nil)
 
 	assert.Len(t, rb.errors, 1)
 	assert.EqualError(t, rb.errors[0], "cache route builder is nil")

@@ -40,15 +40,15 @@ func (r Route) Handler() http.HandlerFunc {
 
 // RouteBuilder for building a route.
 type RouteBuilder struct {
-	method            string
-	path              string
-	trace             bool
-	middlewares       []MiddlewareFunc
-	authenticator     auth.Authenticator
-	processor         ProcessorFunc
-	handler           http.HandlerFunc
-	routeCacheBuilder *RouteCacheBuilder
-	errors            []error
+	method        string
+	path          string
+	trace         bool
+	middlewares   []MiddlewareFunc
+	authenticator auth.Authenticator
+	processor     ProcessorFunc
+	handler       http.HandlerFunc
+	routeCache    *RouteCache
+	errors        []error
 }
 
 // WithTrace enables route tracing.
@@ -75,12 +75,12 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 	return rb
 }
 
-// WithRouteCachedBuilder adds a cache to the corresponding route
-func (rb *RouteBuilder) WithRouteCachedBuilder(routeCacheBuilder *RouteCacheBuilder) *RouteBuilder {
-	if routeCacheBuilder == nil {
+// WithRouteCache adds a cache to the corresponding route
+func (rb *RouteBuilder) WithRouteCache(routeCache *RouteCache) *RouteBuilder {
+	if routeCache == nil {
 		rb.errors = append(rb.errors, errors.New("cache route builder is nil"))
 	}
-	rb.routeCacheBuilder = routeCacheBuilder
+	rb.routeCache = routeCache
 	return rb
 }
 
@@ -161,26 +161,25 @@ func (rb *RouteBuilder) Build() (Route, error) {
 	var processor ProcessorFunc
 	var handler http.HandlerFunc
 
-	if rb.routeCacheBuilder != nil {
+	if rb.routeCache != nil {
 
 		if rb.method != http.MethodGet {
 			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
 		}
 
-		rc, err := rb.routeCacheBuilder.create()
-		if err != nil {
-			return Route{}, fmt.Errorf("could not build cache from builder %v: %w", rb.routeCacheBuilder, err)
+		if len(rb.routeCache.errors) != 0 {
+			return Route{}, fmt.Errorf("could not build cache from builder %v: %v", rb.routeCache, rb.routeCache.errors)
 		}
 
 		// TODO : we need to refactor the abstraction in issue #160
 		if rb.processor != nil {
 			// builder was initialised from the NewRouteBuilder constructor
 			// e.g. the only place where the rb.processor is set
-			processor = wrapProcessorFunc(rb.path, rb.processor, rc)
+			processor = wrapProcessorFunc(rb.path, rb.processor, rb.routeCache)
 		} else {
 			// we could have handled the processor also at a middleware level,
 			// but this would not work uniformly for the processor case as well.
-			handler = wrapHandlerFunc(rb.handler, rc)
+			handler = wrapHandlerFunc(rb.handler, rb.routeCache)
 		}
 	}
 

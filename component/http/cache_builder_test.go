@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/beatlabs/patron/cache"
 	"github.com/stretchr/testify/assert"
@@ -12,12 +11,12 @@ import (
 
 type builderOperation func(routeBuilder *RouteBuilder) *RouteBuilder
 
-type cacheBuilderOperation func(routeBuilder *RouteCacheBuilder) *RouteCacheBuilder
+type cacheBuilderOperation func(routeBuilder *RouteCache) *RouteCache
 
 type arg struct {
 	bop  builderOperation
 	cbop cacheBuilderOperation
-	ttl  time.Duration
+	age  Age
 	err  bool
 }
 
@@ -28,14 +27,14 @@ func TestNewRouteCacheBuilder(t *testing.T) {
 			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
 				return routeBuilder.MethodGet()
 			},
-			ttl: 10,
+			age: Age{Max: 10},
 		},
 		// error with '0' ttl
 		{
 			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
 				return routeBuilder.MethodGet()
 			},
-			ttl: 0,
+			age: Age{},
 			err: true,
 		},
 		// error for POST method
@@ -43,43 +42,18 @@ func TestNewRouteCacheBuilder(t *testing.T) {
 			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
 				return routeBuilder.MethodPost()
 			},
-			ttl: 10,
-			err: true,
-		},
-		// error for maxFresh greater than ttl
-		{
-			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
-				return routeBuilder.MethodGet()
-			},
-			cbop: func(routeBuilder *RouteCacheBuilder) *RouteCacheBuilder {
-				routeBuilder.WithMaxFresh(10 + 1)
-				return routeBuilder
-			},
-			ttl: 10,
-			err: true,
-		},
-		// error for minAge value of '0'
-		{
-			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
-				return routeBuilder.MethodGet()
-			},
-			cbop: func(routeBuilder *RouteCacheBuilder) *RouteCacheBuilder {
-				routeBuilder.WithMinAge(0)
-				return routeBuilder
-			},
-			ttl: 10,
+			age: Age{Max: 10},
 			err: true,
 		}, // error for instant function nil
-
 		{
 			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
 				return routeBuilder.MethodGet()
 			},
-			cbop: func(routeBuilder *RouteCacheBuilder) *RouteCacheBuilder {
+			cbop: func(routeBuilder *RouteCache) *RouteCache {
 				routeBuilder.WithTimeInstant(nil)
 				return routeBuilder
 			},
-			ttl: 10,
+			age: Age{Max: 10},
 			err: true,
 		},
 	}
@@ -104,13 +78,13 @@ func TestNewRouteCacheBuilder(t *testing.T) {
 
 func assertCacheBuilderBuild(t *testing.T, arg arg, routeBuilder *RouteBuilder, cache cache.Cache) {
 
-	routeCacheBuilder := NewRouteCacheBuilder(cache, arg.ttl)
+	routeCacheConfig := NewRouteCache(cache, arg.age)
 
 	if arg.cbop != nil {
-		routeCacheBuilder = arg.cbop(routeCacheBuilder)
+		routeCacheConfig = arg.cbop(routeCacheConfig)
 	}
 
-	routeBuilder.WithRouteCachedBuilder(routeCacheBuilder)
+	routeBuilder.WithRouteCache(routeCacheConfig)
 
 	if arg.bop != nil {
 		routeBuilder = arg.bop(routeBuilder)

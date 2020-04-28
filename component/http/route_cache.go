@@ -9,7 +9,7 @@ import (
 )
 
 // wrapProcessorFunc wraps the processing func with the cache handler interface
-func wrapProcessorFunc(path string, processor ProcessorFunc, rc *routeCache) ProcessorFunc {
+func wrapProcessorFunc(path string, processor ProcessorFunc, rc *RouteCache) ProcessorFunc {
 	return func(ctx context.Context, request *Request) (response *Response, e error) {
 		// we are doing the opposite work that we would do in the processor,
 		// but until we refactor this part this seems the only way
@@ -42,7 +42,7 @@ func processorExecutor(ctx context.Context, request *Request, hnd ProcessorFunc)
 }
 
 // wrapHandlerFunc wraps the handler func with the cache handler interface
-func wrapHandlerFunc(handler http.HandlerFunc, rc *routeCache) http.HandlerFunc {
+func wrapHandlerFunc(handler http.HandlerFunc, rc *RouteCache) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
 		req := fromHTTPRequest(request)
 		if resp, err := cacheHandler(handlerExecutor(response, request, handler), rc)(req); err != nil {

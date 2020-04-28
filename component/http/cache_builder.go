@@ -2,45 +2,67 @@ package http
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-	errs "github.com/beatlabs/patron/errors"
 )
 
-// RouteCacheBuilder is the builder needed to build a cache for the corresponding route
-type RouteCacheBuilder struct {
-	cache         cache.Cache
-	instant       TimeInstant
-	ttl           time.Duration
-	minAge        time.Duration
-	maxFresh      time.Duration
+// RouteCache is the builder needed to build a cache for the corresponding route
+type RouteCache struct {
+	// cache is the cache implementation to be used
+	cache cache.Cache
+	// instant is the timing function for the cache expiry calculations
+	instant TimeInstant
+	// age specifies the minimum and maximum amount for max-age and min-fresh header values respectively
+	// regarding the client cache-control requests in seconds
+	age age
+	// staleResponse specifies if the server is willing to send stale responses
+	// if a new response could not be generated for any reason
 	staleResponse bool
 	errors        []error
 }
 
-// NewRouteCacheBuilder creates a new builder for the route cache implementation.
-func NewRouteCacheBuilder(cache cache.Cache, ttl time.Duration) *RouteCacheBuilder {
+type Age struct {
+	// Min adds a minimum age for the cache responses.
+	// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache
+	// This means that if this parameter is missing (e.g. is equal to '0' , the cache can effectively be made obsolete in the above scenario)
+	Min time.Duration
+	// Max adds a maximum age for the cache responses. Which effectively works as a time-to-live wrapper on top of the cache
+	Max time.Duration
+	// The difference of maxAge-minAge sets automatically the max threshold for min-fresh requests
+	// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache
+	// This means that if this parameter is very high (e.g. greater than ttl , the cache can effectively be made obsolete in the above scenario)
+}
+
+type age struct {
+	min int64
+	max int64
+}
+
+// NewRouteCache creates a new builder for the route cache implementation.
+func NewRouteCache(cache cache.Cache, ageBounds Age) *RouteCache {
 
 	var ee []error
 
-	if ttl <= 0 {
-		ee = append(ee, errors.New("time to live must be greater than `0`"))
+	if ageBounds.Max <= 0 {
+		ee = append(ee, errors.New("max age must be greater than `0`"))
 	}
 
-	return &RouteCacheBuilder{
+	return &RouteCache{
 		cache: cache,
-		ttl:   ttl,
 		instant: func() int64 {
 			return time.Now().Unix()
+		},
+		age: age{
+			min: int64(ageBounds.Min / time.Second),
+			max: int64(ageBounds.Max / time.Second),
 		},
 		errors: ee,
 	}
 }
 
 // WithTimeInstant specifies a time instant function for checking expiry.
-func (cb *RouteCacheBuilder) WithTimeInstant(instant TimeInstant) *RouteCacheBuilder {
+func (cb *RouteCache) WithTimeInstant(instant TimeInstant) *RouteCache {
 	if instant == nil {
 		cb.errors = append(cb.errors, errors.New("time instant is nil"))
 	}
@@ -48,69 +70,8 @@ func (cb *RouteCacheBuilder) WithTimeInstant(instant TimeInstant) *RouteCacheBui
 	return cb
 }
 
-// WithMinAge adds a minimum age for the cache responses.
-// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache
-// This means that if this parameter is missing (e.g. is equal to '0' , the cache can effectively be made obsolete in the above scenario)
-func (cb *RouteCacheBuilder) WithMinAge(minAge time.Duration) *RouteCacheBuilder {
-	if minAge <= 0 {
-		cb.errors = append(cb.errors, fmt.Errorf("min-age cannot be lower or equal to zero '0 < %v'", minAge))
-	}
-	cb.minAge = minAge
-	return cb
-}
-
-// WithMaxFresh adds a maximum age for the cache responses.
-// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache
-// This means that if this parameter is very high (e.g. greater than ttl , the cache can effectively be made obsolete in the above scenario)
-func (cb *RouteCacheBuilder) WithMaxFresh(maxFresh time.Duration) *RouteCacheBuilder {
-	if maxFresh > cb.ttl {
-		cb.errors = append(cb.errors, fmt.Errorf("max-fresh cannot be greater than the time to live '%v <= %v'", maxFresh, cb.ttl))
-	}
-	cb.maxFresh = maxFresh
-	return cb
-}
-
 // WithStaleResponse allows the cache to return stale responses.
-func (cb *RouteCacheBuilder) WithStaleResponse(staleResponse bool) *RouteCacheBuilder {
+func (cb *RouteCache) WithStaleResponse(staleResponse bool) *RouteCache {
 	cb.staleResponse = staleResponse
 	return cb
-}
-
-func (cb *RouteCacheBuilder) create() (*routeCache, error) {
-	if len(cb.errors) > 0 {
-		return nil, errs.Aggregate(cb.errors...)
-	}
-
-	if cb.maxFresh == 0 {
-		cb.maxFresh = cb.ttl
-	}
-
-	if cb.minAge == 0 {
-		cb.minAge = cb.ttl
-	}
-
-	return &routeCache{
-		cache:         cb.cache,
-		ttl:           int64(cb.ttl / time.Second),
-		instant:       cb.instant,
-		minAge:        int64(cb.minAge / time.Second),
-		maxFresh:      int64(cb.maxFresh / time.Second),
-		staleResponse: cb.staleResponse,
-	}, nil
-}
-
-type routeCache struct {
-	// cache is the cache implementation to be used
-	cache cache.Cache
-	// ttl is the time to live for all cached objects in seconds
-	ttl int64
-	// instant is the timing function for the cache expiry calculations
-	instant TimeInstant
-	// minAge specifies the minimum amount of max-age header value for client cache-control requests in seconds
-	minAge int64
-	// max-fresh specifies the maximum amount of min-fresh header value for client cache-control requests in seconds
-	maxFresh int64
-	// staleResponse specifies if the server is willing to send stale responses
-	// if a new response could not be generated for any reason
-	staleResponse bool
 }

@@ -24,7 +24,7 @@ type RouteCache struct {
 
 // Age defines the route cache life-time boundaries for cached objects
 type Age struct {
-	// Min adds a minimum age for the cache responses.
+	// Min adds a minimum age threshold for the client controlled cache responses.
 	// This will avoid cases where a single client with high request rate and no cache control headers might effectively disable the cache
 	// This means that if this parameter is missing (e.g. is equal to '0' , the cache can effectively be made obsolete in the above scenario)
 	Min time.Duration

@@ -16,6 +16,7 @@ type RouteCache struct {
 	age age
 }
 
+// NewRouteCache creates a new cache implementation for an http route
 func NewRouteCache(ttlCache cache.TTLCache, age Age) *RouteCache {
 	return &RouteCache{
 		cache: ttlCache,

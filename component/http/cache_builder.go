@@ -49,6 +49,10 @@ func NewRouteCache(cache cache.Cache, ageBounds Age) *RouteCache {
 		ee = append(ee, errors.New("max age must be greater than `0`"))
 	}
 
+	if ageBounds.Min > ageBounds.Max {
+		ee = append(ee, errors.New("max age must always be greater than min age"))
+	}
+
 	return &RouteCache{
 		cache: cache,
 		instant: func() int64 {

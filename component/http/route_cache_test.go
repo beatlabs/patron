@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/cache"
 	httppatron "github.com/beatlabs/patron/client/http"
 
 	"github.com/stretchr/testify/assert"
@@ -19,6 +20,77 @@ type cacheState struct {
 	setOps int
 	getOps int
 	size   int
+}
+
+type builderOperation func(routeBuilder *RouteBuilder) *RouteBuilder
+
+type arg struct {
+	bop builderOperation
+	age Age
+	err bool
+}
+
+func TestNewRouteBuilder_WithCache(t *testing.T) {
+
+	args := []arg{
+		{
+			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
+				return routeBuilder.MethodGet()
+			},
+			age: Age{Max: 10},
+		},
+		// error with '0' ttl
+		{
+			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
+				return routeBuilder.MethodGet()
+			},
+			age: Age{Min: 10, Max: 1},
+			err: true,
+		},
+		// error for POST method
+		{
+			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
+				return routeBuilder.MethodPost()
+			},
+			age: Age{Max: 10},
+			err: true,
+		},
+	}
+
+	c := newTestingCache()
+
+	processor := func(context context.Context, request *Request) (response *Response, e error) {
+		return nil, nil
+	}
+
+	handler := func(writer http.ResponseWriter, i *http.Request) {
+	}
+
+	for _, arg := range args {
+
+		assertRouteBuilder(t, arg, NewRouteBuilder("/", processor), c)
+
+		assertRouteBuilder(t, arg, NewRawRouteBuilder("/", handler), c)
+
+	}
+}
+
+func assertRouteBuilder(t *testing.T, arg arg, routeBuilder *RouteBuilder, cache cache.TTLCache) {
+
+	routeBuilder.WithRouteCache(cache, arg.age)
+
+	if arg.bop != nil {
+		routeBuilder = arg.bop(routeBuilder)
+	}
+
+	route, err := routeBuilder.Build()
+	assert.NotNil(t, route)
+
+	if arg.err {
+		assert.Error(t, err)
+	} else {
+		assert.NoError(t, err)
+	}
 }
 
 func TestProcessorWrapper(t *testing.T) {
@@ -49,7 +121,10 @@ func TestProcessorWrapper(t *testing.T) {
 
 	for _, testArg := range args {
 		c := newTestingCache()
-		rc := NewRouteCache(c, Age{Max: 10})
+		rc := &routeCache{
+			cache: c,
+			age:   Age{Max: 10}.toAgeInSeconds(),
+		}
 
 		wrappedProcessor := wrapProcessorFunc("/", testArg.processor, rc)
 
@@ -88,7 +163,10 @@ func TestHandlerWrapper(t *testing.T) {
 
 	for _, testArg := range args {
 		c := newTestingCache()
-		rc := NewRouteCache(c, Age{Max: 10})
+		rc := &routeCache{
+			cache: c,
+			age:   Age{Max: 10}.toAgeInSeconds(),
+		}
 
 		wrappedHandler := wrapHandlerFunc(testArg.handler, rc)
 
@@ -104,14 +182,15 @@ func TestHandlerWrapper(t *testing.T) {
 
 func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
-	cache := newTestingCache()
+	cc := newTestingCache()
+	cc.instant = now
 
 	var executions uint32
 
 	routeBuilder := NewRouteBuilder("/path", func(context context.Context, request *Request) (response *Response, e error) {
 		atomic.AddUint32(&executions, 1)
 		return NewResponse("body"), nil
-	}).WithRouteCache(NewRouteCache(cache, Age{Max: 10 * time.Second})).MethodGet()
+	}).WithRouteCache(cc, Age{Max: 10 * time.Second}).MethodGet()
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
@@ -129,7 +208,7 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 		},
 	}, port)
 
-	assertCacheState(t, *cache, cacheState{
+	assertCacheState(t, *cc, cacheState{
 		setOps: 1,
 		getOps: 2,
 		size:   1,
@@ -143,7 +222,8 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
-	cache := newTestingCache()
+	cc := newTestingCache()
+	cc.instant = now
 
 	var executions uint32
 
@@ -152,7 +232,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 		i, err := writer.Write([]byte("\"body\""))
 		assert.NoError(t, err)
 		assert.True(t, i > 0)
-	}).WithRouteCache(NewRouteCache(cache, Age{Max: 10 * time.Second})).MethodGet()
+	}).WithRouteCache(cc, Age{Max: 10 * time.Second}).MethodGet()
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
@@ -170,7 +250,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 		},
 	}, port)
 
-	assertCacheState(t, *cache, cacheState{
+	assertCacheState(t, *cc, cacheState{
 		setOps: 1,
 		getOps: 2,
 		size:   1,

@@ -23,14 +23,11 @@ const (
 	maxAgeValidation
 	// minFreshValidation represents a validation , happening due to min-fresh  header requirements
 	minFreshValidation
-	// maxStaleValidation represents a validation , happening due to max-stale header requirements
-	maxStaleValidation
 
 	// cacheControlHeader is the header key for cache related values
 	// note : it is case-sensitive
 	cacheControlHeader = "Cache-Control"
 
-	cacheControlMaxStale     = "max-stale"
 	cacheControlMinFresh     = "min-fresh"
 	cacheControlNoCache      = "no-cache"
 	cacheControlNoStore      = "no-store"
@@ -49,11 +46,15 @@ func init() {
 	metrics = newPrometheusMetrics()
 }
 
-// TimeInstant is a timing function
+// timeInstant is a timing function
 // returns the current time instant of the system's clock
-// by default it can be `tine.Now().Unix()` ,
-// but this abstraction allows also for non-linear implementations
-type TimeInstant func() int64
+// by default it can be `time.Now().Unix()` ,
+// but for testing purposes we want to control the time
+type timeInstant func() int64
+
+var now timeInstant = func() int64 {
+	return time.Now().Unix()
+}
 
 // validator is a conditional function on an objects age and the configured ttl
 type validator func(age, ttl int64) (bool, validationContext)
@@ -137,18 +138,14 @@ type cachedResponse struct {
 // executor is the function returning a cache response object from the underlying implementation
 type executor func(now int64, key string) *cachedResponse
 
-type cacheUpdate func(path, key string, rsp *cachedResponse)
-
 // cacheHandler wraps the an execution logic with a cache layer
 // exec is the processor func that the cache will wrap
 // rc is the route cache implementation to be used
-func cacheHandler(exec executor, rc *RouteCache) func(request *cacheHandlerRequest) (response *cacheHandlerResponse, e error) {
-
-	saveToCache := determineCache(rc)
+func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerRequest) (response *cacheHandlerResponse, e error) {
 
 	return func(request *cacheHandlerRequest) (response *cacheHandlerResponse, e error) {
 
-		now := rc.instant()
+		now := now()
 
 		key := extractRequestKey(request.path, request.query)
 
@@ -171,7 +168,7 @@ func cacheHandler(exec executor, rc *RouteCache) func(request *cacheHandlerReque
 		if e == nil {
 			addResponseHeaders(now, response.header, rsp, rc.age.max)
 			if !rsp.fromCache && !cfg.noCache {
-				saveToCache(request.path, key, rsp)
+				saveResponseWithTTL(request.path, key, rsp, rc.cache, time.Duration(rc.age.max)*time.Second)
 			}
 		}
 
@@ -181,9 +178,9 @@ func cacheHandler(exec executor, rc *RouteCache) func(request *cacheHandlerReque
 
 // getResponse will get the appropriate response either using the cache or the executor,
 // depending on the
-func getResponse(cfg *cacheControl, path, key string, now int64, rc *RouteCache, exec executor) *cachedResponse {
+func getResponse(cfg *cacheControl, path, key string, now int64, rc *routeCache, exec executor) *cachedResponse {
 
-	if cfg.noCache && !rc.staleResponse {
+	if cfg.noCache {
 		return exec(now, key)
 	}
 
@@ -201,7 +198,7 @@ func getResponse(cfg *cacheControl, path, key string, now int64, rc *RouteCache,
 		tmpRsp := exec(now, key)
 		// if we could not retrieve a fresh response,
 		// serve the last cached value, with a warning header
-		if cfg.forceCache || (rc.staleResponse && tmpRsp.err != nil) {
+		if cfg.forceCache || tmpRsp.err != nil {
 			rsp.warning = "last-valid"
 			metrics.hit(path)
 		} else {
@@ -231,7 +228,7 @@ func isValid(age, maxAge int64, validators ...validator) (bool, validationContex
 
 // getFromCache is the implementation that will provide a cachedResponse instance from the cache,
 // if it exists
-func getFromCache(key string, rc *RouteCache) *cachedResponse {
+func getFromCache(key string, rc *routeCache) *cachedResponse {
 	if resp, ok, err := rc.cache.Get(key); ok && err == nil {
 		if r, ok := resp.(*cachedResponse); ok {
 			r.fromCache = true
@@ -242,30 +239,6 @@ func getFromCache(key string, rc *RouteCache) *cachedResponse {
 		return &cachedResponse{err: fmt.Errorf("could not read cache value for [ key = %v , err = %v ]", key, err)}
 	}
 	return nil
-}
-
-// determines if the cache can be used as a TTLCache
-func determineCache(rc *RouteCache) cacheUpdate {
-	if c, ok := rc.cache.(cache.TTLCache); ok {
-		return func(path, key string, rsp *cachedResponse) {
-			saveResponseWithTTL(path, key, rsp, c, time.Duration(rc.age.max)*time.Second)
-		}
-	}
-	return func(path, key string, rsp *cachedResponse) {
-		saveResponse(path, key, rsp, rc.cache)
-	}
-}
-
-// saveResponse caches the given response if required
-// the cachec implementation should handle the clean-up internally
-func saveResponse(path, key string, rsp *cachedResponse, cache cache.Cache) {
-	if !rsp.fromCache && rsp.err == nil {
-		if err := cache.Set(key, rsp); err != nil {
-			log.Errorf("could not cache response for request key %s %v", key, err)
-		} else {
-			metrics.add(path)
-		}
-	}
 }
 
 // saveResponseWithTTL caches the given response if required with a ttl
@@ -309,23 +282,6 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 		keyValue := strings.Split(header, "=")
 		headerKey := strings.ToLower(keyValue[0])
 		switch headerKey {
-		case cacheControlMaxStale:
-			/**
-			Indicates that the client is willing to accept a response that has
-			exceeded its expiration time. If max-stale is assigned a value,
-			then the client is willing to accept a response that has exceeded
-			its expiration time by no more than the specified number of
-			seconds. If no value is assigned to max-stale, then the client is
-			willing to accept a stale response of any age.
-			*/
-			value, ok := parseValue(keyValue)
-			if !ok || value < 0 {
-				log.Debugf("invalid value for header '%s', defaulting to '0' ", keyValue)
-				value = 0
-			}
-			cfg.expiryValidator = func(age, maxAge int64) (bool, validationContext) {
-				return maxAge-age+value >= 0, maxStaleValidation
-			}
 		case cacheHeaderMaxAge:
 			/**
 			Indicates that the client is willing to accept a response whose

@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/beatlabs/patron/cache"
+	"github.com/beatlabs/patron/log"
+
 	"github.com/beatlabs/patron/component/http/auth"
 	errs "github.com/beatlabs/patron/errors"
 )
@@ -47,7 +50,7 @@ type RouteBuilder struct {
 	authenticator auth.Authenticator
 	processor     ProcessorFunc
 	handler       http.HandlerFunc
-	routeCache    *RouteCache
+	routeCache    *routeCache
 	errors        []error
 }
 
@@ -76,11 +79,29 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 }
 
 // WithRouteCache adds a cache to the corresponding route
-func (rb *RouteBuilder) WithRouteCache(routeCache *RouteCache) *RouteBuilder {
-	if routeCache == nil {
-		rb.errors = append(rb.errors, errors.New("cache route builder is nil"))
+func (rb *RouteBuilder) WithRouteCache(cache cache.TTLCache, ageBounds Age) *RouteBuilder {
+
+	cErrors := make([]error, 0)
+
+	if cache == nil {
+		cErrors = append(cErrors, errors.New("route cache is nil"))
 	}
-	rb.routeCache = routeCache
+
+	if ageBounds.Min > ageBounds.Max {
+		cErrors = append(cErrors, errors.New("max age must always be greater than min age"))
+	}
+
+	if hasNoAgeConfig(ageBounds.Min.Milliseconds(), ageBounds.Max.Milliseconds()) {
+		log.Warnf("route cache for %s is disabled because of empty Age property %v ")
+	}
+
+	rc := &routeCache{
+		cache: cache,
+		age:   ageBounds.toAgeInSeconds(),
+	}
+
+	rb.routeCache = rc
+	rb.errors = append(rb.errors, cErrors...)
 	return rb
 }
 
@@ -165,10 +186,6 @@ func (rb *RouteBuilder) Build() (Route, error) {
 
 		if rb.method != http.MethodGet {
 			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
-		}
-
-		if len(rb.routeCache.errors) != 0 {
-			return Route{}, fmt.Errorf("could not build cache from builder %v: %v", rb.routeCache, rb.routeCache.errors)
 		}
 
 		// TODO : we need to refactor the abstraction in issue #160

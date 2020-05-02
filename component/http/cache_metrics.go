@@ -2,7 +2,7 @@ package http
 
 import "github.com/prometheus/client_golang/prometheus"
 
-var validationReason = map[validationContext]string{0: "nil", ttlValidation: "expired", maxAgeValidation: "max_age", minFreshValidation: "min_fresh", maxStaleValidation: "max_stale"}
+var validationReason = map[validationContext]string{0: "nil", ttlValidation: "expired", maxAgeValidation: "max_age", minFreshValidation: "min_fresh"}
 
 type cacheMetrics interface {
 	add(path string)

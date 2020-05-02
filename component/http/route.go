@@ -48,7 +48,6 @@ type RouteBuilder struct {
 	trace         bool
 	middlewares   []MiddlewareFunc
 	authenticator auth.Authenticator
-	processor     ProcessorFunc
 	handler       http.HandlerFunc
 	routeCache    *routeCache
 	errors        []error
@@ -179,48 +178,27 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		middlewares = append(middlewares, rb.middlewares...)
 	}
 
-	var processor ProcessorFunc
-	var handler http.HandlerFunc
+	// TODO :refactor ...
+	var hnd http.HandlerFunc
 
 	if rb.routeCache != nil {
 
 		if rb.method != http.MethodGet {
 			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
 		}
-
-		// TODO : we need to refactor the abstraction in issue #160
-		if rb.processor != nil {
-			// builder was initialised from the NewRouteBuilder constructor
-			// e.g. the only place where the rb.processor is set
-			processor = wrapProcessorFunc(rb.path, rb.processor, rb.routeCache)
-		} else {
-			// we could have handled the processor also at a middleware level,
-			// but this would not work uniformly for the processor case as well.
-			handler = wrapHandlerFunc(rb.handler, rb.routeCache)
-		}
+		hnd = wrapHandlerFunc(rb.handler, rb.routeCache)
 	}
 
-	if processor == nil {
-		processor = rb.processor
-	}
-
-	if handler == nil {
-		handler = rb.handler
+	if hnd == nil {
+		hnd = rb.handler
 	}
 
 	return Route{
 		path:        rb.path,
 		method:      rb.method,
-		handler:     constructHTTPHandler(processor, handler),
+		handler:     hnd,
 		middlewares: middlewares,
 	}, nil
-}
-
-func constructHTTPHandler(processor ProcessorFunc, httpHandler http.HandlerFunc) http.HandlerFunc {
-	if processor == nil {
-		return httpHandler
-	}
-	return handler(processor)
 }
 
 // NewRawRouteBuilder constructor.
@@ -251,7 +229,7 @@ func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 		ee = append(ee, errors.New("processor is nil"))
 	}
 
-	return &RouteBuilder{path: path, errors: ee, processor: processor}
+	return &RouteBuilder{path: path, errors: ee, handler: handler(processor)}
 }
 
 // RoutesBuilder creates a list of routes.

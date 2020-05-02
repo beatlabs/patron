@@ -11,6 +11,7 @@ import (
 	clienthttp "github.com/beatlabs/patron/client/http"
 )
 
+// DoTimingRequest is a helper method to make a request to the seventh example service from other examples
 func DoTimingRequest(ctx context.Context) (string, error) {
 	request, err := http.NewRequest("GET", "http://localhost:50006/", nil)
 	if err != nil {

@@ -98,10 +98,10 @@ func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerReque
 		}
 
 		rsp = getResponse(cfg, request.path, key, now, rc, exec)
-		response = &rsp.Response
 		e = rsp.Err
 
 		if e == nil {
+			response = &rsp.Response
 			addResponseHeaders(now, response.Header, rsp, rc.age.max)
 			if !rsp.FromCache && !cfg.noCache {
 				saveToCache(request.path, key, rsp, rc.cache, time.Duration(rc.age.max)*time.Second)
@@ -123,7 +123,8 @@ func getResponse(cfg *cacheControl, path, key string, now int64, rc *routeCache,
 	rsp := getFromCache(key, rc)
 	if rsp == nil {
 		metrics.miss(path)
-		return exec(now, key)
+		response := exec(now, key)
+		return response
 	}
 	if rsp.Err != nil {
 		log.Errorf("error during cache interaction: %v", rsp.Err)
@@ -169,7 +170,7 @@ func getFromCache(key string, rc *routeCache) *CachedResponse {
 	if resp, ok, err := rc.cache.Get(key); ok && err == nil {
 		if b, ok := resp.([]byte); ok {
 			r := &CachedResponse{}
-			err := r.decode(b)
+			err := r.Decode(b)
 			if err != nil {
 				return &CachedResponse{Err: fmt.Errorf("could not decode cached bytes as response %v for key %s", resp, key)}
 			}
@@ -179,7 +180,7 @@ func getFromCache(key string, rc *routeCache) *CachedResponse {
 		// NOTE : we need to do this hack to bypass the redis go client implementation of returning result as string instead of bytes
 		if b, ok := resp.(string); ok {
 			r := &CachedResponse{}
-			err := r.decode([]byte(b))
+			err := r.Decode([]byte(b))
 			if err != nil {
 				return &CachedResponse{Err: fmt.Errorf("could not decode cached string as response %v for key %s", resp, key)}
 			}
@@ -199,7 +200,7 @@ func getFromCache(key string, rc *routeCache) *CachedResponse {
 func saveToCache(path, key string, rsp *CachedResponse, cache cache.TTLCache, maxAge time.Duration) {
 	if !rsp.FromCache && rsp.Err == nil {
 		// encode to a byte array on our side to avoid cache specific encoding / marshaling requirements
-		bytes, err := rsp.encode()
+		bytes, err := rsp.Encode()
 		if err != nil {
 			log.Errorf("could not encode response for request key %s: %v", key, err)
 			metrics.err(path)

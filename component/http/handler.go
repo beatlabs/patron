@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -17,6 +18,12 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		header := make(map[string][]string)
+
+		if r.Header != nil {
+			header = r.Header
+		}
+
 		ct, dec, enc, err := determineEncoding(r)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnsupportedMediaType), http.StatusUnsupportedMediaType)
@@ -29,12 +36,15 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 			f[k] = v
 		}
 
-		corID := getOrSetCorrelationID(r.Header)
+		// TODO : for cached responses this becomes inconsistent, to be fixed in #160
+		// the corID will be passed to all consecutive responses
+		// if it was missing from the initial request
+		corID := getOrSetCorrelationID(header)
 		ctx := correlation.ContextWithID(r.Context(), corID)
 		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 		ctx = log.WithContext(ctx, logger)
 
-		h := extractHeaders(r)
+		h := extractHeaders(header)
 
 		req := NewRequest(f, r.Body, h, dec)
 
@@ -110,10 +120,10 @@ func extractFields(r *http.Request) map[string]string {
 	return f
 }
 
-func extractHeaders(r *http.Request) map[string]string {
+func extractHeaders(header http.Header) map[string]string {
 	h := make(map[string]string)
 
-	for name, values := range r.Header {
+	for name, values := range header {
 		for _, value := range values {
 			if len(value) > 0 {
 				h[strings.ToUpper(name)] = value
@@ -138,7 +148,9 @@ func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *Response, enc en
 		w.WriteHeader(http.StatusCreated)
 	}
 
-	propagateHeaders(rsp.Headers, w.Header())
+	propagateHeaders(rsp.Header, w.Header())
+
+	println(fmt.Sprintf("w.Header() = %v", w.Header()))
 
 	_, err = w.Write(p)
 	return err

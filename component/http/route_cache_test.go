@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -93,54 +92,6 @@ func assertRouteBuilder(t *testing.T, arg arg, routeBuilder *RouteBuilder, cache
 	}
 }
 
-func TestProcessorWrapper(t *testing.T) {
-
-	type arg struct {
-		processor ProcessorFunc
-		req       *Request
-		err       bool
-	}
-
-	args := []arg{
-		{
-			processor: func(ctx context.Context, request *Request) (response *Response, e error) {
-				return nil, errors.New("processor error")
-			},
-			req: NewRequest(make(map[string]string), nil, make(map[string]string), nil),
-			err: true,
-		},
-		{
-			processor: func(ctx context.Context, request *Request) (response *Response, e error) {
-				return NewResponse(request.Fields), nil
-			},
-			req: NewRequest(make(map[string]string), nil, make(map[string]string), nil),
-		},
-	}
-
-	ctx := context.Background()
-
-	for _, testArg := range args {
-		c := newTestingCache()
-		rc := &routeCache{
-			cache: c,
-			age:   Age{Max: 10}.toAgeInSeconds(),
-		}
-
-		wrappedProcessor := wrapProcessorFunc("/", testArg.processor, rc)
-
-		response, err := wrappedProcessor(ctx, testArg.req)
-
-		if testArg.err {
-			assert.Error(t, err)
-		} else {
-			assert.NoError(t, err)
-			assert.NotNil(t, response)
-		}
-
-	}
-
-}
-
 func TestHandlerWrapper(t *testing.T) {
 
 	type arg struct {
@@ -189,7 +140,9 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	routeBuilder := NewRouteBuilder("/path", func(context context.Context, request *Request) (response *Response, e error) {
 		atomic.AddUint32(&executions, 1)
-		return NewResponse("body"), nil
+		newResponse := NewResponse("body")
+		newResponse.Header["Custom-Header"] = "11"
+		return newResponse, nil
 	}).WithRouteCache(cc, Age{Max: 10 * time.Second}).MethodGet()
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
@@ -199,12 +152,22 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	assertResponse(ctx, t, []http.Response{
 		{
-			Header: map[string][]string{cacheControlHeader: {"max-age=10"}},
-			Body:   &bodyReader{body: "\"body\""},
+			Header: map[string][]string{
+				cacheControlHeader: {"max-age=10"},
+				"Content-Type":     {"application/json; charset=utf-8"},
+				"Content-Length":   {"6"},
+				"Custom-Header":    {"11"},
+			},
+			Body: &bodyReader{body: "\"body\""},
 		},
 		{
-			Header: map[string][]string{cacheControlHeader: {"max-age=10"}},
-			Body:   &bodyReader{body: "\"body\""},
+			Header: map[string][]string{
+				cacheControlHeader: {"max-age=10"},
+				"Content-Type":     {"application/json; charset=utf-8"},
+				"Content-Length":   {"6"},
+				"Custom-Header":    {"11"},
+			},
+			Body: &bodyReader{body: "\"body\""},
 		},
 	}, port)
 
@@ -230,6 +193,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	routeBuilder := NewRawRouteBuilder("/path", func(writer http.ResponseWriter, request *http.Request) {
 		atomic.AddUint32(&executions, 1)
 		i, err := writer.Write([]byte("\"body\""))
+		writer.Header().Set("custom-header", "1")
 		assert.NoError(t, err)
 		assert.True(t, i > 0)
 	}).WithRouteCache(cc, Age{Max: 10 * time.Second}).MethodGet()
@@ -241,12 +205,20 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	assertResponse(ctx, t, []http.Response{
 		{
-			Header: map[string][]string{cacheControlHeader: {"max-age=10"}},
-			Body:   &bodyReader{body: "\"body\""},
+			Header: map[string][]string{
+				cacheControlHeader: {"max-age=10"},
+				"Content-Type":     {"text/plain; charset=utf-8"},
+				"Content-Length":   {"6"},
+				"Custom-Header":    {"1"}},
+			Body: &bodyReader{body: "\"body\""},
 		},
 		{
-			Header: map[string][]string{cacheControlHeader: {"max-age=10"}},
-			Body:   &bodyReader{body: "\"body\""},
+			Header: map[string][]string{
+				cacheControlHeader: {"max-age=10"},
+				"Content-Type":     {"text/plain; charset=utf-8"},
+				"Content-Length":   {"6"},
+				"Custom-Header":    {"1"}},
+			Body: &bodyReader{body: "\"body\""},
 		},
 	}, port)
 
@@ -325,6 +297,15 @@ func assertResponse(ctx context.Context, t *testing.T, expected []http.Response,
 		response, err := cl.Do(ctx, req)
 
 		assert.NoError(t, err)
+
+		for k, v := range response.Header {
+			if k == "Content-Length" || k == "Content-Type" || k == "Custom-Header" {
+				assert.Equal(t, expectedResponse.Header[k], v)
+				delete(expectedResponse.Header, k)
+			}
+		}
+		// only 1 expected header should be left to check, we should have deleted the rest above
+		assert.Equal(t, 1, len(expectedResponse.Header))
 		assert.Equal(t, expectedResponse.Header.Get(cacheControlHeader), response.Header.Get(cacheControlHeader))
 		assert.True(t, response.Header.Get(cacheHeaderETagHeader) != "")
 		expectedPayload := make([]byte, 6)

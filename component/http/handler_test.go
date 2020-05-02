@@ -34,7 +34,7 @@ func Test_extractHeaders(t *testing.T) {
 	r.Header.Set("X-hEadEr-3", "all mixed")
 	r.Header.Set("X-ACME", "")
 	assert.NoError(t, err)
-	h := extractHeaders(r)
+	h := extractHeaders(r.Header)
 	assert.Len(t, h, 3)
 	assert.Equal(t, "all caps", h["X-HEADER-1"])
 	assert.Equal(t, "all lower", h["X-HEADER-2"])

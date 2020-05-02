@@ -9,11 +9,13 @@ import (
 	"github.com/beatlabs/patron/encoding"
 )
 
+type Header map[string]string
+
 // Request definition of the sync request model.
 type Request struct {
 	Fields  map[string]string
 	Raw     io.Reader
-	Headers map[string]string
+	Headers Header
 	decode  encoding.DecodeFunc
 }
 
@@ -30,12 +32,12 @@ func (r *Request) Decode(v interface{}) error {
 // Response definition of the sync Response model.
 type Response struct {
 	Payload interface{}
-	Headers map[string]string
+	Header  Header
 }
 
 // NewResponse creates a new Response.
 func NewResponse(p interface{}) *Response {
-	return &Response{Payload: p}
+	return &Response{Payload: p, Header: make(map[string]string)}
 }
 
 // ProcessorFunc definition of a function type for processing sync requests.
@@ -89,7 +91,7 @@ func (rw *responseReadWriter) WriteHeader(statusCode int) {
 	rw.statusCode = statusCode
 }
 
-func propagateHeaders(header map[string]string, wHeader http.Header) {
+func propagateHeaders(header Header, wHeader http.Header) {
 	for k, h := range header {
 		wHeader.Set(k, h)
 	}

@@ -20,9 +20,8 @@ func (c *cacheHandlerRequest) getKey() string {
 
 // CacheHandlerResponse is the dedicated Response object for the cache handler
 type CacheHandlerResponse struct {
-	Payload interface{}
-	Bytes   []byte
-	Header  map[string]string
+	Bytes  []byte
+	Header map[string]string
 }
 
 // CachedResponse is the struct representing an object retrieved or ready to be put into the route cache

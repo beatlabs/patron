@@ -71,7 +71,7 @@ func TestHandlerWrapper(t *testing.T) {
 	type arg struct {
 		handler http.HandlerFunc
 		req     *http.Request
-		rsp     *ResponseReadWriter
+		rsp     *responseReadWriter
 	}
 
 	args := []arg{
@@ -81,7 +81,7 @@ func TestHandlerWrapper(t *testing.T) {
 				assert.NoError(t, err)
 				assert.True(t, i > 0)
 			},
-			rsp: NewResponseReadWriter(),
+			rsp: newResponseReadWriter(),
 			req: &http.Request{RequestURI: "http://www.localhost.com"},
 		},
 	}
@@ -94,7 +94,7 @@ func TestHandlerWrapper(t *testing.T) {
 
 		wrappedHandler(testArg.rsp, testArg.req)
 
-		b, err := testArg.rsp.ReadAll()
+		b, err := testArg.rsp.readAll()
 		assert.NoError(t, err)
 		assert.NotNil(t, b)
 		assert.True(t, len(b) > 0)

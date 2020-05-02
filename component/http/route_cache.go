@@ -50,7 +50,7 @@ func wrapHandlerFunc(handler http.HandlerFunc, rc *RouteCache) http.HandlerFunc 
 		} else {
 			propagateHeaders(resp.header, response.Header())
 			if i, err := response.Write(resp.bytes); err != nil {
-				log.Errorf("could not write cache processor result into response %d: %v", i, err)
+				log.Errorf("could not Write cache processor result into response %d: %v", i, err)
 			}
 		}
 	}
@@ -60,9 +60,9 @@ func wrapHandlerFunc(handler http.HandlerFunc, rc *RouteCache) http.HandlerFunc 
 func handlerExecutor(_ http.ResponseWriter, request *http.Request, hnd http.HandlerFunc) executor {
 	return func(now int64, key string) *cachedResponse {
 		var err error
-		responseReadWriter := NewResponseReadWriter()
+		responseReadWriter := newResponseReadWriter()
 		hnd(responseReadWriter, request)
-		payload, err := responseReadWriter.ReadAll()
+		payload, err := responseReadWriter.readAll()
 		if err == nil {
 			return &cachedResponse{
 				response: &cacheHandlerResponse{

@@ -41,51 +41,51 @@ func NewResponse(p interface{}) *Response {
 // ProcessorFunc definition of a function type for processing sync requests.
 type ProcessorFunc func(context.Context, *Request) (*Response, error)
 
-// ResponseReadWriter is a response writer able to read the payload.
-type ResponseReadWriter struct {
+// responseReadWriter is a response writer able to read the payload.
+type responseReadWriter struct {
 	buffer     *bytes.Buffer
 	len        int
 	header     http.Header
 	statusCode int
 }
 
-// NewResponseReadWriter creates a new ResponseReadWriter.
-func NewResponseReadWriter() *ResponseReadWriter {
-	return &ResponseReadWriter{
+// newResponseReadWriter creates a new responseReadWriter.
+func newResponseReadWriter() *responseReadWriter {
+	return &responseReadWriter{
 		buffer: new(bytes.Buffer),
 		header: make(http.Header),
 	}
 }
 
-// Read reads the ResponsereadWriter payload.
-func (rw *ResponseReadWriter) Read(p []byte) (n int, err error) {
+// read reads the responsereadWriter payload.
+func (rw *responseReadWriter) read(p []byte) (n int, err error) {
 	return rw.buffer.Read(p)
 }
 
-// ReadAll returns the response payload bytes.
-func (rw *ResponseReadWriter) ReadAll() ([]byte, error) {
+// readAll returns the response payload bytes.
+func (rw *responseReadWriter) readAll() ([]byte, error) {
 	if rw.len == 0 {
 		// nothing has been written
 		return []byte{}, nil
 	}
 	b := make([]byte, rw.len)
-	_, err := rw.Read(b)
+	_, err := rw.read(b)
 	return b, err
 }
 
 // Header returns the Header object.
-func (rw *ResponseReadWriter) Header() http.Header {
+func (rw *responseReadWriter) Header() http.Header {
 	return rw.header
 }
 
 // Write writes the provied bytes to the byte buffer.
-func (rw *ResponseReadWriter) Write(p []byte) (int, error) {
+func (rw *responseReadWriter) Write(p []byte) (int, error) {
 	rw.len = len(p)
 	return rw.buffer.Write(p)
 }
 
 // WriteHeader writes the header status code.
-func (rw *ResponseReadWriter) WriteHeader(statusCode int) {
+func (rw *responseReadWriter) WriteHeader(statusCode int) {
 	rw.statusCode = statusCode
 }
 

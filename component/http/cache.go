@@ -170,7 +170,7 @@ func getFromCache(key string, rc *routeCache) *CachedResponse {
 	if resp, ok, err := rc.cache.Get(key); ok && err == nil {
 		if b, ok := resp.([]byte); ok {
 			r := &CachedResponse{}
-			err := r.Decode(b)
+			err := r.decode(b)
 			if err != nil {
 				return &CachedResponse{Err: fmt.Errorf("could not decode cached bytes as response %v for key %s", resp, key)}
 			}
@@ -180,7 +180,7 @@ func getFromCache(key string, rc *routeCache) *CachedResponse {
 		// NOTE : we need to do this hack to bypass the redis go client implementation of returning result as string instead of bytes
 		if b, ok := resp.(string); ok {
 			r := &CachedResponse{}
-			err := r.Decode([]byte(b))
+			err := r.decode([]byte(b))
 			if err != nil {
 				return &CachedResponse{Err: fmt.Errorf("could not decode cached string as response %v for key %s", resp, key)}
 			}
@@ -200,7 +200,7 @@ func getFromCache(key string, rc *routeCache) *CachedResponse {
 func saveToCache(path, key string, rsp *CachedResponse, cache cache.TTLCache, maxAge time.Duration) {
 	if !rsp.FromCache && rsp.Err == nil {
 		// encode to a byte array on our side to avoid cache specific encoding / marshaling requirements
-		bytes, err := rsp.Encode()
+		bytes, err := rsp.encode()
 		if err != nil {
 			log.Errorf("could not encode response for request key %s: %v", key, err)
 			metrics.err(path)

@@ -67,7 +67,7 @@ func Test_determineEncoding(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ct, got, got1, err := determineEncoding(tt.args.req)
+			ct, got, got1, err := determineEncoding(tt.args.req.Header)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)

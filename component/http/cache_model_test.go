@@ -56,11 +56,11 @@ func assertForCacheHandlerResponse(t *testing.T, payload interface{}) {
 		Err:       nil,
 	}
 
-	b, err := response.Encode()
+	b, err := response.encode()
 	assert.NoError(t, err)
 
 	rsp := CachedResponse{}
-	err = rsp.Decode(b)
+	err = rsp.decode(b)
 	assert.NoError(t, err)
 
 	assert.Equal(t, response, rsp)

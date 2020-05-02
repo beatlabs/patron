@@ -18,13 +18,7 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		header := make(map[string][]string)
-
-		if r.Header != nil {
-			header = r.Header
-		}
-
-		ct, dec, enc, err := determineEncoding(r)
+		ct, dec, enc, err := determineEncoding(r.Header)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnsupportedMediaType), http.StatusUnsupportedMediaType)
 			return
@@ -39,12 +33,12 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 		// TODO : for cached responses this becomes inconsistent, to be fixed in #160
 		// the corID will be passed to all consecutive responses
 		// if it was missing from the initial request
-		corID := getOrSetCorrelationID(header)
+		corID := getOrSetCorrelationID(r.Header)
 		ctx := correlation.ContextWithID(r.Context(), corID)
 		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 		ctx = log.WithContext(ctx, logger)
 
-		h := extractHeaders(header)
+		h := extractHeaders(r.Header)
 
 		req := NewRequest(f, r.Body, h, dec)
 
@@ -61,9 +55,9 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 	}
 }
 
-func determineEncoding(r *http.Request) (string, encoding.DecodeFunc, encoding.EncodeFunc, error) {
-	cth, cok := r.Header[encoding.ContentTypeHeader]
-	ach, aok := r.Header[encoding.AcceptHeader]
+func determineEncoding(h http.Header) (string, encoding.DecodeFunc, encoding.EncodeFunc, error) {
+	cth, cok := h[encoding.ContentTypeHeader]
+	ach, aok := h[encoding.AcceptHeader]
 
 	// No headers default to JSON
 	if !cok && !aok {
@@ -120,7 +114,7 @@ func extractFields(r *http.Request) map[string]string {
 	return f
 }
 
-func extractHeaders(header http.Header) map[string]string {
+func extractHeaders(header http.Header) Header {
 	h := make(map[string]string)
 
 	for name, values := range header {

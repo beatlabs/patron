@@ -2,8 +2,11 @@ package http
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -136,9 +139,29 @@ type routeConfig struct {
 
 type requestParams struct {
 	path         string
-	header       map[string]string
-	fields       map[string]string
+	header       Header
+	query        string
 	timeInstance int64
+}
+
+func newRequestAt(timeInstant int64, cacheControlHeaders ...string) requestParams {
+	params := requestParams{
+		query:        "VALUE=1",
+		timeInstance: timeInstant,
+		header:       make(map[string]string),
+	}
+	if len(cacheControlHeaders) > 0 {
+		params.header[cacheControlHeader] = strings.Join(cacheControlHeaders, ",")
+	}
+	return params
+}
+
+func maxAgeHeader(value string) string {
+	return fmt.Sprintf("%s=%s", cacheHeaderMaxAge, value)
+}
+
+func minFreshHeader(value string) string {
+	return fmt.Sprintf("%s=%s", cacheControlMinFresh, value)
 }
 
 type testArgs struct {
@@ -174,12 +197,9 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 		{
 			// initial request, will fill up the cache
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 1,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(10)},
+				requestParams: newRequestAt(1),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -192,12 +212,9 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 			},
 			// cache Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 9,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(2)},
+				requestParams: newRequestAt(9),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10, Header: testHeader(2)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -211,12 +228,9 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 			},
 			// still cached Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 11,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(0)},
+				requestParams: newRequestAt(11),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10, Header: testHeader(0)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -230,12 +244,9 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 			},
 			// new Response , due to expiry validator 10 + 1 - 12 < 0
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 12,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 120, Header: testHeader(10)},
+				requestParams: newRequestAt(12),
+				routeConfig:   rc,
+				response:      &Response{Payload: 120, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -268,12 +279,9 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 		{
 			// initial request, will fill up the cache
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 1,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10},
+				requestParams: newRequestAt(1),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {},
@@ -283,12 +291,9 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 			},
 			// no cached Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 2,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 20},
+				requestParams: newRequestAt(2),
+				routeConfig:   rc,
+				response:      &Response{Payload: 20},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {},
@@ -298,13 +303,9 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 			},
 			// no cached Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=5"},
-					timeInstance: 2,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 20},
+				requestParams: newRequestAt(2, maxAgeHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 20},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {},
@@ -314,13 +315,9 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 			},
 			// no cached Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
-					timeInstance: 2,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 20},
+				requestParams: newRequestAt(2, minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 20},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {},
@@ -345,13 +342,9 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 		{
 			// initial request, will fill up the cache
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=5"},
-					timeInstance: 1,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(10)},
+				requestParams: newRequestAt(1, maxAgeHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -364,13 +357,9 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 			},
 			// cached Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=5"},
-					timeInstance: 3,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(8)},
+				requestParams: newRequestAt(3, maxAgeHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10, Header: testHeader(8)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -384,13 +373,9 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 			},
 			// new Response, because max-age > 9 - 1
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=5"},
-					timeInstance: 9,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 90, Header: testHeader(10)},
+				requestParams: newRequestAt(9, maxAgeHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 90, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -405,13 +390,9 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 			},
 			// cached Response right before the age threshold max-age == 14 - 9
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=5"},
-					timeInstance: 14,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 90, Header: testHeader(5)},
+				requestParams: newRequestAt(14, maxAgeHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 90, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -426,13 +407,9 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 			},
 			// new Response, because max-age > 15 - 9
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=5"},
-					timeInstance: 15,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 150, Header: testHeader(10)},
+				requestParams: newRequestAt(15, maxAgeHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 150, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -462,12 +439,9 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 		{
 			// initial request, will fill up the cache
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(30)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -480,13 +454,9 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 			},
 			// cached Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=10"},
-					timeInstance: 10,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(20)},
+				requestParams: newRequestAt(10, maxAgeHeader("10")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(20)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -500,13 +470,9 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 			},
 			// cached Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=20"},
-					timeInstance: 20,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(20, maxAgeHeader("20")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -520,13 +486,9 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 			},
 			// new Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=5"},
-					timeInstance: 20,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 200, Header: testHeader(30)},
+				requestParams: newRequestAt(20, maxAgeHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 200, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -541,13 +503,9 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 			},
 			// cache Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=25"},
-					timeInstance: 25,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 200, Header: testHeader(25)},
+				requestParams: newRequestAt(25, maxAgeHeader("25")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 200, Header: testHeader(25)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -577,12 +535,9 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 		{
 			// initial request, will fill up the cache
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(5)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -595,13 +550,9 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 			},
 			// despite the max-age request, the cache will refresh because of it's ttl
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=100"},
-					timeInstance: 6,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 60, Header: testHeader(5)},
+				requestParams: newRequestAt(6, maxAgeHeader("100")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 60, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -629,12 +580,9 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 		{
 			// initial request, will fill up the cache
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(30)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -648,13 +596,9 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 			// a max-age=0 request will always refresh the cache,
 			// if there is not minAge limit set
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=0"},
-					timeInstance: 1,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(30)},
+				requestParams: newRequestAt(1, maxAgeHeader("0")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -683,12 +627,9 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 		{
 			// initial request, will fill up the cache
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(30)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -702,13 +643,9 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 			// cached Response still, because of minAge override
 			// note : max-age=2 gets ignored
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=2"},
-					timeInstance: 4,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeaderWithWarning(26, "max-age=5")},
+				requestParams: newRequestAt(4, maxAgeHeader("2")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeaderWithWarning(26, "max-age=5")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -722,13 +659,9 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 			},
 			// cached Response because of bigger max-age parameter
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=20"},
-					timeInstance: 5,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(25)},
+				requestParams: newRequestAt(5, maxAgeHeader("20")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(25)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -742,12 +675,8 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 			},
 			// new Response because of minAge floor
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "max-age=3"},
-					timeInstance: 6,
-				},
-				routeConfig: rc,
+				requestParams: newRequestAt(6, maxAgeHeader("3")),
+				routeConfig:   rc,
 				// note : no Warning because it s a new Response
 				response: &Response{Payload: 60, Header: testHeader(30)},
 				metrics: testMetrics{
@@ -778,13 +707,9 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0, minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -797,13 +722,9 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 			},
 			// expecting cache Response, as value is still fresh : 5 - 0 == 5
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
-					timeInstance: 5,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(5)},
+				requestParams: newRequestAt(5, minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -817,13 +738,9 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 			},
 			// expecting new Response, as value is not fresh enough
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
-					timeInstance: 6,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 60, Header: testHeader(10)},
+				requestParams: newRequestAt(6, minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 60, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -838,13 +755,9 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 			},
 			// cache Response, as value is expired : 11 - 6 <= 5
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
-					timeInstance: 11,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 60, Header: testHeader(5)},
+				requestParams: newRequestAt(11, minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 60, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -859,13 +772,9 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 			},
 			// expecting new Response
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
-					timeInstance: 12,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 120, Header: testHeader(10)},
+				requestParams: newRequestAt(12, minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 120, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -894,13 +803,9 @@ func TestNoMaxFreshCache_WithLargeMinFreshHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0, minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -912,13 +817,9 @@ func TestNoMaxFreshCache_WithLargeMinFreshHeaders(t *testing.T) {
 				err: nil,
 			},
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=100"},
-					timeInstance: 1,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(10)},
+				requestParams: newRequestAt(1, minFreshHeader("100")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -947,13 +848,9 @@ func TestMaxAgeCache_WithMinFreshHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0, minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -966,13 +863,9 @@ func TestMaxAgeCache_WithMinFreshHeaders(t *testing.T) {
 			},
 			// expecting cache Response, as min-fresh is bounded by maxFresh configuration  parameter
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=100"},
-					timeInstance: 5,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeaderWithWarning(5, "min-fresh=5")},
+				requestParams: newRequestAt(5, minFreshHeader("100")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeaderWithWarning(5, "min-fresh=5")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1000,13 +893,9 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5,max-age=5"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0, maxAgeHeader("5"), minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1019,13 +908,9 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 			},
 			// expecting cache Response, as value is still fresh : 5 - 0 == min-fresh and still young : 5 - 0 < max-age
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5,max-age=10"},
-					timeInstance: 5,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(5)},
+				requestParams: newRequestAt(5, maxAgeHeader("10"), minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1039,13 +924,9 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 			},
 			// new Response, as value is not fresh enough : 6 - 0 > min-fresh
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=5,max-age=10"},
-					timeInstance: 6,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 60, Header: testHeader(10)},
+				requestParams: newRequestAt(6, maxAgeHeader("10"), minFreshHeader("5")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 60, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1060,13 +941,9 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 			},
 			// cached Response, as value is still fresh enough and still young
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=10,max-age=8"},
-					timeInstance: 6,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 60, Header: testHeaderWithWarning(10, "min-fresh=5")},
+				requestParams: newRequestAt(6, maxAgeHeader("8"), minFreshHeader("10")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 60, Header: testHeaderWithWarning(10, "min-fresh=5")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1081,13 +958,9 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 			},
 			// new Response, as value is still fresh enough but too old
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "min-fresh=10,max-age=8"},
-					timeInstance: 15,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 150, Header: testHeader(10)},
+				requestParams: newRequestAt(15, maxAgeHeader("8"), minFreshHeader("10")),
+				routeConfig:   rc,
+				response:      &Response{Payload: 150, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1118,12 +991,9 @@ func TestCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1134,10 +1004,7 @@ func TestCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 				},
 			},
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 11,
-				},
+				requestParams: newRequestAt(11),
 				routeConfig: routeConfig{
 					path: rc.path,
 					hnd: func(now int64, key string) *CachedResponse {
@@ -1180,11 +1047,8 @@ func TestCache_WithHandlerErr(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1216,13 +1080,10 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
-				cache:       cacheImpl,
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
+				cache:         cacheImpl,
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1234,13 +1095,10 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 			},
 			// new Response, because of cache get error
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 1,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(10)},
-				cache:       cacheImpl,
+				requestParams: newRequestAt(1),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10, Header: testHeader(10)},
+				cache:         cacheImpl,
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1274,13 +1132,10 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
-				cache:       cacheImpl,
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
+				cache:         cacheImpl,
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1292,13 +1147,10 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 			},
 			// new Response, because of cache get error
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 1,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(10)},
-				cache:       cacheImpl,
+				requestParams: newRequestAt(1),
+				routeConfig:   rc,
+				response:      &Response{Payload: 10, Header: testHeader(10)},
+				cache:         cacheImpl,
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1328,7 +1180,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 			// initial request
 			{
 				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
+					query:        "VALUE=1",
 					timeInstance: 0,
 					path:         "/1",
 				},
@@ -1347,7 +1199,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 			// cached Response for the same path
 			{
 				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
+					query:        "VALUE=1",
 					timeInstance: 1,
 					path:         "/1",
 				},
@@ -1367,7 +1219,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 			// initial request for second path
 			{
 				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
+					query:        "VALUE=1",
 					timeInstance: 1,
 					path:         "/2",
 				},
@@ -1391,7 +1243,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 			// cached Response for second path
 			{
 				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
+					query:        "VALUE=1",
 					timeInstance: 2,
 					path:         "/2",
 				},
@@ -1429,12 +1281,9 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1448,7 +1297,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 			// cached Response for same request parameter
 			{
 				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
+					query:        "VALUE=1",
 					timeInstance: 1,
 				},
 				routeConfig: rc,
@@ -1467,7 +1316,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 			// new Response for different request parameter
 			{
 				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "2"},
+					query:        "VALUE=2",
 					timeInstance: 1,
 				},
 				routeConfig: rc,
@@ -1486,7 +1335,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 			// cached Response for second request parameter
 			{
 				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "2"},
+					query:        "VALUE=2",
 					timeInstance: 2,
 				},
 				routeConfig: rc,
@@ -1518,12 +1367,9 @@ func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1536,13 +1382,9 @@ func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
 			},
 			// expecting new Response, as we are using no-cache Header
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "no-cache"},
-					timeInstance: 5,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 50, Header: testHeader(10)},
+				requestParams: newRequestAt(5, "no-cache"),
+				routeConfig:   rc,
+				response:      &Response{Payload: 50, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1570,12 +1412,9 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1588,13 +1427,9 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 			},
 			// expecting cached Response, as we are using no-cache Header but are within the minAge limit
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "no-cache"},
-					timeInstance: 2,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeaderWithWarning(8, "max-age=2")},
+				requestParams: newRequestAt(2, "no-cache"),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeaderWithWarning(8, "max-age=2")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1608,13 +1443,9 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 			},
 			// expecting new Response, as we are using no-cache Header
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "no-cache"},
-					timeInstance: 5,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 50, Header: testHeader(10)},
+				requestParams: newRequestAt(5, "no-cache"),
+				routeConfig:   rc,
+				response:      &Response{Payload: 50, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1643,12 +1474,9 @@ func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1661,13 +1489,9 @@ func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
 			},
 			// expecting new Response, as we are using no-store Header
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "no-store"},
-					timeInstance: 5,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 50, Header: testHeader(10)},
+				requestParams: newRequestAt(5, "no-store"),
+				routeConfig:   rc,
+				response:      &Response{Payload: 50, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1695,12 +1519,9 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1713,13 +1534,9 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 			},
 			// expecting cached Response, as we are using no-store Header but are within the minAge limit
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "no-store"},
-					timeInstance: 2,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeaderWithWarning(8, "max-age=2")},
+				requestParams: newRequestAt(2, "no-store"),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeaderWithWarning(8, "max-age=2")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1733,13 +1550,9 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 			},
 			// expecting new Response, as we are using no-store Header
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "no-store"},
-					timeInstance: 5,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 50, Header: testHeader(10)},
+				requestParams: newRequestAt(5, "no-store"),
+				routeConfig:   rc,
+				response:      &Response{Payload: 50, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1768,12 +1581,9 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 		{
 			// initial request
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					timeInstance: 0,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				requestParams: newRequestAt(0),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1786,13 +1596,9 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 			},
 			// expecting cache Response, as min-fresh is bounded by maxFresh configuration  parameter
 			{
-				requestParams: requestParams{
-					fields:       map[string]string{"VALUE": "1"},
-					header:       map[string]string{cacheControlHeader: "only-if-cached"},
-					timeInstance: 5,
-				},
-				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(5)},
+				requestParams: newRequestAt(5, "only-if-cached"),
+				routeConfig:   rc,
+				response:      &Response{Payload: 0, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1817,7 +1623,7 @@ func assertCache(t *testing.T, args [][]testArgs) {
 	// that returns the current time instant times '10' multiplied by the VALUE parameter in the request
 	exec := func(request requestParams) func(now int64, key string) *CachedResponse {
 		return func(now int64, key string) *CachedResponse {
-			i, err := strconv.Atoi(request.fields["VALUE"])
+			i, err := strconv.Atoi(strings.Split(request.query, "=")[1])
 			if err != nil {
 				return &CachedResponse{
 					Err: err,
@@ -1846,7 +1652,11 @@ func assertCache(t *testing.T, args [][]testArgs) {
 				path = arg.requestParams.path
 			}
 
-			request := fromRequest(path, NewRequest(arg.requestParams.fields, nil, arg.requestParams.header, nil))
+			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s?%s", path, arg.requestParams.query), nil)
+			assert.NoError(t, err)
+			propagateHeaders(arg.requestParams.header, req.Header)
+			assert.NoError(t, err)
+			request := toCacheHandlerRequest(req)
 
 			var hnd executor
 			if arg.routeConfig.hnd != nil {
@@ -1869,10 +1679,7 @@ func assertCache(t *testing.T, args [][]testArgs) {
 				return arg.requestParams.timeInstance
 			}
 
-			response, err := cacheHandler(hnd, &routeCache{
-				cache: ch,
-				age:   arg.routeConfig.age.toAgeInSeconds(),
-			})(request)
+			response, err := cacheHandler(hnd, NewRouteCache(ch, arg.routeConfig.age))(request)
 
 			if arg.err != nil {
 				assert.Error(t, err)

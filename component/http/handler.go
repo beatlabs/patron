@@ -2,7 +2,6 @@ package http
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -143,8 +142,6 @@ func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *Response, enc en
 	}
 
 	propagateHeaders(rsp.Header, w.Header())
-
-	println(fmt.Sprintf("w.Header() = %v", w.Header()))
 
 	_, err = w.Write(p)
 	return err

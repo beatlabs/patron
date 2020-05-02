@@ -13,6 +13,25 @@ type cacheHandlerRequest struct {
 	query  string
 }
 
+// toCacheHandlerRequest transforms the http Request object to the cache handler request
+func toCacheHandlerRequest(req *http.Request) *cacheHandlerRequest {
+	var header string
+	if req.Header != nil {
+		header = req.Header.Get(cacheControlHeader)
+	}
+	var path string
+	var query string
+	if req.URL != nil {
+		path = req.URL.Path
+		query = req.URL.RawQuery
+	}
+	return &cacheHandlerRequest{
+		header: header,
+		path:   path,
+		query:  query,
+	}
+}
+
 // getKey generates a unique cache key based on the route path and the query parameters
 func (c *cacheHandlerRequest) getKey() string {
 	return fmt.Sprintf("%s:%s", c.path, c.query)
@@ -44,42 +63,4 @@ func (c *CachedResponse) encode() ([]byte, error) {
 
 func (c *CachedResponse) decode(data []byte) error {
 	return json.Unmarshal(data, c)
-}
-
-// fromRequest transforms the Request object to the cache handler request
-func fromRequest(path string, req *Request) *cacheHandlerRequest {
-	var header string
-	if req.Headers != nil {
-		header = req.Headers[cacheControlHeader]
-	}
-	var query string
-	if req.Fields != nil {
-		if fields, err := json.Marshal(req.Fields); err == nil {
-			query = string(fields)
-		}
-	}
-	return &cacheHandlerRequest{
-		header: header,
-		path:   path,
-		query:  query,
-	}
-}
-
-// fromHTTPRequest transforms the http Request object to the cache handler request
-func fromHTTPRequest(req *http.Request) *cacheHandlerRequest {
-	var header string
-	if req.Header != nil {
-		header = req.Header.Get(cacheControlHeader)
-	}
-	var path string
-	var query string
-	if req.URL != nil {
-		path = req.URL.Path
-		query = req.URL.RawQuery
-	}
-	return &cacheHandlerRequest{
-		header: header,
-		path:   path,
-		query:  query,
-	}
 }

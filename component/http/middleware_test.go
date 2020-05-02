@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -103,6 +104,63 @@ func TestMiddlewares(t *testing.T) {
 			assert.Equal(t, tt.expectedBody, rc.Body.String())
 		})
 	}
+}
+
+func TestCachingMiddleware(t *testing.T) {
+
+	getRequest, err := http.NewRequest("GET", "/test", nil)
+	assert.NoError(t, err)
+
+	postRequest, err := http.NewRequest("POST", "/test", nil)
+	assert.NoError(t, err)
+
+	type args struct {
+		next http.Handler
+		mws  []MiddlewareFunc
+	}
+
+	testingCache := newTestingCache()
+	testingCache.instant = now
+
+	tests := []struct {
+		name         string
+		args         args
+		r            *http.Request
+		expectedCode int
+		expectedBody string
+		cacheState   cacheState
+	}{
+		{"caching middleware with POST request", args{next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(202)
+			i, err := w.Write([]byte{1, 2, 3, 4})
+			assert.NoError(t, err)
+			assert.Equal(t, 4, i)
+		}), mws: []MiddlewareFunc{NewCachingMiddleware(NewRouteCache(testingCache, Age{Max: 1 * time.Second}))}},
+			postRequest, 202, "\x01\x02\x03\x04", cacheState{}},
+		{"caching middleware with GET request", args{next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(200)
+			i, err := w.Write([]byte{1, 2, 3, 4})
+			assert.NoError(t, err)
+			assert.Equal(t, 4, i)
+		}), mws: []MiddlewareFunc{NewCachingMiddleware(NewRouteCache(testingCache, Age{Max: 1 * time.Second}))}},
+			getRequest, 200, "\x01\x02\x03\x04", cacheState{
+				setOps: 1,
+				getOps: 1,
+				size:   1,
+			}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rc := httptest.NewRecorder()
+			rw := newResponseWriter(rc)
+			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
+			tt.args.next.ServeHTTP(rw, tt.r)
+			assert.Equal(t, tt.expectedCode, rw.Status())
+			assert.Equal(t, tt.expectedBody, rc.Body.String())
+			assertCacheState(t, *testingCache, tt.cacheState)
+		})
+	}
+
 }
 
 func TestResponseWriter(t *testing.T) {

@@ -49,7 +49,7 @@ type RouteBuilder struct {
 	middlewares   []MiddlewareFunc
 	authenticator auth.Authenticator
 	handler       http.HandlerFunc
-	routeCache    *routeCache
+	routeCache    *RouteCache
 	errors        []error
 }
 
@@ -94,10 +94,7 @@ func (rb *RouteBuilder) WithRouteCache(cache cache.TTLCache, ageBounds Age) *Rou
 		log.Warnf("route cache for %s is disabled because of empty Age property %v ")
 	}
 
-	rc := &routeCache{
-		cache: cache,
-		age:   ageBounds.toAgeInSeconds(),
-	}
+	rc := NewRouteCache(cache, ageBounds)
 
 	rb.routeCache = rc
 	rb.errors = append(rb.errors, cErrors...)
@@ -177,26 +174,18 @@ func (rb *RouteBuilder) Build() (Route, error) {
 	if len(rb.middlewares) > 0 {
 		middlewares = append(middlewares, rb.middlewares...)
 	}
-
-	// TODO :refactor ...
-	var hnd http.HandlerFunc
-
+	// cache middleware is always last, so that it caches only the headers of the handler
 	if rb.routeCache != nil {
-
 		if rb.method != http.MethodGet {
 			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
 		}
-		hnd = wrapHandlerFunc(rb.handler, rb.routeCache)
-	}
-
-	if hnd == nil {
-		hnd = rb.handler
+		middlewares = append(middlewares, NewCachingMiddleware(rb.routeCache))
 	}
 
 	return Route{
 		path:        rb.path,
 		method:      rb.method,
-		handler:     hnd,
+		handler:     rb.handler,
 		middlewares: middlewares,
 	}, nil
 }

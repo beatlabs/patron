@@ -5,17 +5,22 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-
-	"github.com/beatlabs/patron/log"
 )
 
-// routeCache is the builder needed to build a cache for the corresponding route
-type routeCache struct {
+// RouteCache is the builder needed to build a cache for the corresponding route
+type RouteCache struct {
 	// cache is the ttl cache implementation to be used
 	cache cache.TTLCache
 	// age specifies the minimum and maximum amount for max-age and min-fresh Header values respectively
 	// regarding the client cache-control requests in seconds
 	age age
+}
+
+func NewRouteCache(ttlCache cache.TTLCache, age Age) *RouteCache {
+	return &RouteCache{
+		cache: ttlCache,
+		age:   age.toAgeInSeconds(),
+	}
 }
 
 // Age defines the route cache life-time boundaries for cached objects
@@ -41,21 +46,6 @@ func (a Age) toAgeInSeconds() age {
 type age struct {
 	min int64
 	max int64
-}
-
-// wrapHandlerFunc wraps the handler func with the cache handler interface
-func wrapHandlerFunc(handler http.HandlerFunc, rc *routeCache) http.HandlerFunc {
-	return func(response http.ResponseWriter, request *http.Request) {
-		req := fromHTTPRequest(request)
-		if resp, err := cacheHandler(handlerExecutor(response, request, handler), rc)(req); err != nil {
-			log.Errorf("could not handle request with the cache processor: %v", err)
-		} else {
-			propagateHeaders(resp.Header, response.Header())
-			if i, err := response.Write(resp.Bytes); err != nil {
-				log.Errorf("could not Write cache processor result into Response %d: %v", i, err)
-			}
-		}
-	}
 }
 
 // handlerExecutor is the function that will create a new CachedResponse based on a HandlerFunc implementation

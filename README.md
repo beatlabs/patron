@@ -200,20 +200,22 @@ routeWithAuth := NewAuthRoute("/index", "GET" ProcessorFunc, true, Authendicator
 The caching layer for HTTP routes is specified per Route.
 
 ```go
-// routeCache is the builder needed to build a cache for the corresponding route
-type routeCache struct {
+// RouteCache is the builder needed to build a cache for the corresponding route
+type RouteCache struct {
 	// cache is the ttl cache implementation to be used
 	cache cache.TTLCache
 	// age specifies the minimum and maximum amount for max-age and min-fresh header values respectively
 	// regarding the client cache-control requests in seconds
 	age age
 }
+
+func NewRouteCache(ttlCache cache.TTLCache, age Age) *RouteCache
 ```
 
 #### server cache
 - The **cache key** is based on the route path and the url request parameters.
 - The server caches only **GET requests**.
-- The server implementation must specify **Age** parameters upon construction.
+- The server implementation must specify an **Age** parameters upon construction.
 - Age with **Min=0** and **Max=0** effectively disables caching
 - The route should return always the most fresh object instance.
 - An **ETag header** must be always in responses that are part of the cache, representing the hash of the response.
@@ -227,6 +229,25 @@ will be returned to the client with a `Warning` header present in the response.
 Note : When a cache is used, the handler execution might be skipped.
 That implies that all generic handler functionalities MUST be delegated to a custom middleware.
 i.e. counting number of server client requests etc ... 
+```
+
+### Usage
+
+- provide the cache in the route builder
+```go
+NewRouteBuilder("/", handler).
+	WithRouteCache(cache, http.Age{
+		Min: 30 * time.Minute,
+		Max: 1 * time.Hour,
+	}).
+    MethodGet()
+```
+
+- use the cache as a middleware
+```go
+NewRouteBuilder("/", handler).
+    WithMiddlewares(NewCachingMiddleware(NewRouteCache(cc, Age{Max: 10 * time.Second}))).
+    MethodGet()
 ```
 
 #### client cache-control
@@ -297,6 +318,7 @@ improvement for big response objects.
 - we could extend the metrics to use the key of the object as a label as well for more fine-grained tuning.
 But this has been left out for now, due to the potentially huge number of metric objects.
 We can review according to usage or make this optional in the future.
+- improve the serialization performance for the cache response objects
 
 ### Asynchronous
 

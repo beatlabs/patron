@@ -92,45 +92,6 @@ func assertRouteBuilder(t *testing.T, arg arg, routeBuilder *RouteBuilder, cache
 	}
 }
 
-func TestHandlerWrapper(t *testing.T) {
-
-	type arg struct {
-		handler http.HandlerFunc
-		req     *http.Request
-		rsp     *responseReadWriter
-	}
-
-	args := []arg{
-		{
-			handler: func(writer http.ResponseWriter, request *http.Request) {
-				i, err := writer.Write([]byte(request.RequestURI))
-				assert.NoError(t, err)
-				assert.True(t, i > 0)
-			},
-			rsp: newResponseReadWriter(),
-			req: &http.Request{RequestURI: "http://www.localhost.com"},
-		},
-	}
-
-	for _, testArg := range args {
-		c := newTestingCache()
-		rc := &routeCache{
-			cache: c,
-			age:   Age{Max: 10}.toAgeInSeconds(),
-		}
-
-		wrappedHandler := wrapHandlerFunc(testArg.handler, rc)
-
-		wrappedHandler(testArg.rsp, testArg.req)
-
-		b, err := testArg.rsp.readAll()
-		assert.NoError(t, err)
-		assert.NotNil(t, b)
-		assert.True(t, len(b) > 0)
-	}
-
-}
-
 func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	cc := newTestingCache()
@@ -138,12 +99,23 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	var executions uint32
 
+	preWrapper := newMiddlewareWrapper(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("pre-middleware-header", "pre")
+	})
+
+	postWrapper := newMiddlewareWrapper(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("post-middleware-header", "post")
+	})
+
 	routeBuilder := NewRouteBuilder("/path", func(context context.Context, request *Request) (response *Response, e error) {
 		atomic.AddUint32(&executions, 1)
 		newResponse := NewResponse("body")
 		newResponse.Header["Custom-Header"] = "11"
 		return newResponse, nil
-	}).WithRouteCache(cc, Age{Max: 10 * time.Second}).MethodGet()
+	}).
+		WithRouteCache(cc, Age{Max: 10 * time.Second}).
+		WithMiddlewares(preWrapper.middleware, postWrapper.middleware).
+		MethodGet()
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
@@ -153,19 +125,23 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	assertResponse(ctx, t, []http.Response{
 		{
 			Header: map[string][]string{
-				cacheControlHeader: {"max-age=10"},
-				"Content-Type":     {"application/json; charset=utf-8"},
-				"Content-Length":   {"6"},
-				"Custom-Header":    {"11"},
+				cacheControlHeader:       {"max-age=10"},
+				"Content-Type":           {"application/json; charset=utf-8"},
+				"Content-Length":         {"6"},
+				"Post-Middleware-Header": {"post"},
+				"Pre-Middleware-Header":  {"pre"},
+				"Custom-Header":          {"11"},
 			},
 			Body: &bodyReader{body: "\"body\""},
 		},
 		{
 			Header: map[string][]string{
-				cacheControlHeader: {"max-age=10"},
-				"Content-Type":     {"application/json; charset=utf-8"},
-				"Content-Length":   {"6"},
-				"Custom-Header":    {"11"},
+				cacheControlHeader:       {"max-age=10"},
+				"Content-Type":           {"application/json; charset=utf-8"},
+				"Content-Length":         {"6"},
+				"Post-Middleware-Header": {"post"},
+				"Pre-Middleware-Header":  {"pre"},
+				"Custom-Header":          {"11"},
 			},
 			Body: &bodyReader{body: "\"body\""},
 		},
@@ -177,10 +153,102 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 		size:   1,
 	})
 
+	assert.Equal(t, 2, preWrapper.invocations)
+	assert.Equal(t, 2, postWrapper.invocations)
+
+	assert.Equal(t, executions, uint32(1))
+
+	cln()
+}
+
+func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
+
+	cc := newTestingCache()
+	cc.instant = now
+
+	var executions uint32
+
+	preWrapper := newMiddlewareWrapper(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("pre-middleware-header", "pre")
+	})
+
+	postWrapper := newMiddlewareWrapper(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("post-middleware-header", "post")
+	})
+
+	routeBuilder := NewRouteBuilder("/path", func(context context.Context, request *Request) (response *Response, e error) {
+		atomic.AddUint32(&executions, 1)
+		newResponse := NewResponse("body")
+		newResponse.Header["internal-handler-header"] = "header"
+		return newResponse, nil
+	}).
+		WithMiddlewares(
+			preWrapper.middleware,
+			NewCachingMiddleware(NewRouteCache(cc, Age{Max: 10 * time.Second})),
+			postWrapper.middleware).
+		MethodGet()
+
+	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
+
+	port := 50023
+	runRoute(ctx, t, routeBuilder, port)
+
+	assertResponse(ctx, t, []http.Response{
+		{
+			Header: map[string][]string{
+				cacheControlHeader:        {"max-age=10"},
+				"Content-Type":            {"application/json; charset=utf-8"},
+				"Content-Length":          {"6"},
+				"Post-Middleware-Header":  {"post"},
+				"Pre-Middleware-Header":   {"pre"},
+				"Internal-Handler-Header": {"header"},
+			},
+			Body: &bodyReader{body: "\"body\""},
+		},
+		{
+			Header: map[string][]string{
+				cacheControlHeader:        {"max-age=10"},
+				"Content-Type":            {"application/json; charset=utf-8"},
+				"Post-Middleware-Header":  {"post"},
+				"Pre-Middleware-Header":   {"pre"},
+				"Content-Length":          {"6"},
+				"Internal-Handler-Header": {"header"},
+			},
+			Body: &bodyReader{body: "\"body\""},
+		},
+	}, port)
+
+	assertCacheState(t, *cc, cacheState{
+		setOps: 1,
+		getOps: 2,
+		size:   1,
+	})
+
+	assert.Equal(t, 2, preWrapper.invocations)
+	// NOTE : the post middleware is not executed, as it s hidden behind the cache
+	assert.Equal(t, 1, postWrapper.invocations)
+
 	assert.Equal(t, executions, uint32(1))
 
 	cln()
 
+}
+
+type middlewareWrapper struct {
+	middleware  MiddlewareFunc
+	invocations int
+}
+
+func newMiddlewareWrapper(middlewareFunc func(w http.ResponseWriter, r *http.Request)) *middlewareWrapper {
+	wrapper := &middlewareWrapper{}
+	wrapper.middleware = func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			wrapper.invocations++
+			middlewareFunc(w, r)
+			next.ServeHTTP(w, r)
+		})
+	}
+	return wrapper
 }
 
 func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
@@ -190,13 +258,24 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	var executions uint32
 
+	preWrapper := newMiddlewareWrapper(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("pre-middleware-header", "pre")
+	})
+
+	postWrapper := newMiddlewareWrapper(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("post-middleware-header", "post")
+	})
+
 	routeBuilder := NewRawRouteBuilder("/path", func(writer http.ResponseWriter, request *http.Request) {
 		atomic.AddUint32(&executions, 1)
 		i, err := writer.Write([]byte("\"body\""))
-		writer.Header().Set("custom-header", "1")
+		writer.Header().Set("internal-handler-header", "header")
 		assert.NoError(t, err)
 		assert.True(t, i > 0)
-	}).WithRouteCache(cc, Age{Max: 10 * time.Second}).MethodGet()
+	}).
+		WithRouteCache(cc, Age{Max: 10 * time.Second}).
+		WithMiddlewares(preWrapper.middleware, postWrapper.middleware).
+		MethodGet()
 
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
@@ -206,18 +285,22 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	assertResponse(ctx, t, []http.Response{
 		{
 			Header: map[string][]string{
-				cacheControlHeader: {"max-age=10"},
-				"Content-Type":     {"text/plain; charset=utf-8"},
-				"Content-Length":   {"6"},
-				"Custom-Header":    {"1"}},
+				cacheControlHeader:        {"max-age=10"},
+				"Content-Type":            {"text/plain; charset=utf-8"},
+				"Content-Length":          {"6"},
+				"Post-Middleware-Header":  {"post"},
+				"Pre-Middleware-Header":   {"pre"},
+				"Internal-Handler-Header": {"header"}},
 			Body: &bodyReader{body: "\"body\""},
 		},
 		{
 			Header: map[string][]string{
-				cacheControlHeader: {"max-age=10"},
-				"Content-Type":     {"text/plain; charset=utf-8"},
-				"Content-Length":   {"6"},
-				"Custom-Header":    {"1"}},
+				cacheControlHeader:        {"max-age=10"},
+				"Content-Type":            {"text/plain; charset=utf-8"},
+				"Content-Length":          {"6"},
+				"Post-Middleware-Header":  {"post"},
+				"Pre-Middleware-Header":   {"pre"},
+				"Internal-Handler-Header": {"header"}},
 			Body: &bodyReader{body: "\"body\""},
 		},
 	}, port)
@@ -227,6 +310,9 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 		getOps: 2,
 		size:   1,
 	})
+
+	assert.Equal(t, 2, preWrapper.invocations)
+	assert.Equal(t, 2, postWrapper.invocations)
 
 	assert.Equal(t, executions, uint32(1))
 
@@ -298,14 +384,9 @@ func assertResponse(ctx context.Context, t *testing.T, expected []http.Response,
 
 		assert.NoError(t, err)
 
-		for k, v := range response.Header {
-			if k == "Content-Length" || k == "Content-Type" || k == "Custom-Header" {
-				assert.Equal(t, expectedResponse.Header[k], v)
-				delete(expectedResponse.Header, k)
-			}
+		for k, v := range expectedResponse.Header {
+			assert.Equal(t, v, response.Header[k])
 		}
-		// only 1 expected header should be left to check, we should have deleted the rest above
-		assert.Equal(t, 1, len(expectedResponse.Header))
 		assert.Equal(t, expectedResponse.Header.Get(cacheControlHeader), response.Header.Get(cacheControlHeader))
 		assert.True(t, response.Header.Get(cacheHeaderETagHeader) != "")
 		expectedPayload := make([]byte, 6)

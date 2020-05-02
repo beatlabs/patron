@@ -77,7 +77,7 @@ type executor func(now int64, key string) *CachedResponse
 // cacheHandler wraps the an execution logic with a cache layer
 // exec is the processor func that the cache will wrap
 // rc is the route cache implementation to be used
-func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerRequest) (response *CacheHandlerResponse, e error) {
+func cacheHandler(exec executor, rc *RouteCache) func(request *cacheHandlerRequest) (response *CacheHandlerResponse, e error) {
 
 	return func(request *cacheHandlerRequest) (response *CacheHandlerResponse, e error) {
 
@@ -114,7 +114,7 @@ func cacheHandler(exec executor, rc *routeCache) func(request *cacheHandlerReque
 
 // getResponse will get the appropriate Response either using the cache or the executor,
 // depending on the
-func getResponse(cfg *cacheControl, path, key string, now int64, rc *routeCache, exec executor) *CachedResponse {
+func getResponse(cfg *cacheControl, path, key string, now int64, rc *RouteCache, exec executor) *CachedResponse {
 
 	if cfg.noCache {
 		return exec(now, key)
@@ -166,7 +166,7 @@ func isValid(age, maxAge int64, validators ...validator) (bool, validationContex
 
 // getFromCache is the implementation that will provide a CachedResponse instance from the cache,
 // if it exists
-func getFromCache(key string, rc *routeCache) *CachedResponse {
+func getFromCache(key string, rc *RouteCache) *CachedResponse {
 	if resp, ok, err := rc.cache.Get(key); ok && err == nil {
 		if b, ok := resp.([]byte); ok {
 			r := &CachedResponse{}

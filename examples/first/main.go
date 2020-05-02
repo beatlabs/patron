@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	seventh "github.com/beatlabs/patron/examples/seventh/util"
+
 	"github.com/beatlabs/patron"
 	clienthttp "github.com/beatlabs/patron/client/http"
 	patronhttp "github.com/beatlabs/patron/component/http"
@@ -69,9 +71,16 @@ func main() {
 
 func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
 
+	timing, err := seventh.DoTimingRequest(ctx)
+	if err != nil {
+		log.FromContext(ctx).Infof("first: failed to get timing information %v: could it be that the seventh service is not running ?", err)
+	} else {
+		log.FromContext(ctx).Infof("first: pipeline initiated at: %s", timing)
+	}
+
 	var u examples.User
 
-	err := req.Decode(&u)
+	err = req.Decode(&u)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode request: %w", err)
 	}
@@ -96,7 +105,6 @@ func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to post to second service: %w", err)
 	}
-
 	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
 	return patronhttp.NewResponse(fmt.Sprintf("got %s from second HTTP route", rsp.Status)), nil
 }

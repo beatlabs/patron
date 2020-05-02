@@ -75,7 +75,7 @@ func determineEncoding(r *http.Request) (string, encoding.DecodeFunc, encoding.E
 			dec = protobuf.Decode
 			ct = protobuf.Type
 		default:
-			return "", nil, nil, errors.New("content type header not supported")
+			return "", nil, nil, errors.New("content type Header not supported")
 		}
 	}
 
@@ -94,7 +94,7 @@ func determineEncoding(r *http.Request) (string, encoding.DecodeFunc, encoding.E
 			}
 			ct = protobuf.Type
 		default:
-			return "", nil, nil, errors.New("accept header not supported")
+			return "", nil, nil, errors.New("accept Header not supported")
 		}
 	}
 
@@ -145,7 +145,7 @@ func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *Response, enc en
 }
 
 func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
-	// Assert error to type Error in order to leverage the code and payload values that such errors contain.
+	// Assert error to type Error in order to leverage the code and Payload values that such errors contain.
 	if err, ok := err.(*Error); ok {
 		p, encErr := enc(err.payload)
 		if encErr != nil {
@@ -154,11 +154,11 @@ func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFu
 		}
 		w.WriteHeader(err.code)
 		if _, err := w.Write(p); err != nil {
-			logger.Errorf("failed to write response: %v", err)
+			logger.Errorf("failed to write Response: %v", err)
 		}
 		return
 	}
-	// Using http.Error helper hijacks the content type header of the response returning plain text payload.
+	// Using http.Error helper hijacks the content type Header of the Response returning plain text Payload.
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 

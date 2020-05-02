@@ -36,6 +36,13 @@ The processing will be kicked of by sending a request to the HTTP component. The
 - Receives a request from service 5
 - Responds to service 5
 
+## Service 7
+
+- receives a raw http request
+- returns the 7th minute unix interval for the current server time
+- first makes a request to seventh
+- seventh responds with the timing information
+
 Since tracing instrumentation is in place we can observer the flow in Jaeger.
 
 ## Prerequisites
@@ -59,10 +66,11 @@ docker-compose down
 
 ## Running the examples
 
-When the services started with Docker Compose are ready, you will need to start each of the five
+When the services started with Docker Compose are ready, you will need to start each of the seven
 examples in order:
 
 ```shell
+go run examples/seventh/main.go
 go run examples/first/main.go
 go run examples/second/main.go
 go run examples/third/main.go

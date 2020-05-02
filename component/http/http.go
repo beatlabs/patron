@@ -27,13 +27,13 @@ func (r *Request) Decode(v interface{}) error {
 	return r.decode(r.Raw, v)
 }
 
-// Response definition of the sync response model.
+// Response definition of the sync Response model.
 type Response struct {
 	Payload interface{}
 	Headers map[string]string
 }
 
-// NewResponse creates a new response.
+// NewResponse creates a new Response.
 func NewResponse(p interface{}) *Response {
 	return &Response{Payload: p}
 }
@@ -41,7 +41,7 @@ func NewResponse(p interface{}) *Response {
 // ProcessorFunc definition of a function type for processing sync requests.
 type ProcessorFunc func(context.Context, *Request) (*Response, error)
 
-// responseReadWriter is a response writer able to read the payload.
+// responseReadWriter is a Response writer able to read the Payload.
 type responseReadWriter struct {
 	buffer     *bytes.Buffer
 	len        int
@@ -57,12 +57,12 @@ func newResponseReadWriter() *responseReadWriter {
 	}
 }
 
-// read reads the responsereadWriter payload.
+// read reads the responsereadWriter Payload.
 func (rw *responseReadWriter) read(p []byte) (n int, err error) {
 	return rw.buffer.Read(p)
 }
 
-// readAll returns the response payload bytes.
+// readAll returns the Response Payload Bytes.
 func (rw *responseReadWriter) readAll() ([]byte, error) {
 	if rw.len == 0 {
 		// nothing has been written
@@ -78,13 +78,13 @@ func (rw *responseReadWriter) Header() http.Header {
 	return rw.header
 }
 
-// Write writes the provied bytes to the byte buffer.
+// Write writes the provied Bytes to the byte buffer.
 func (rw *responseReadWriter) Write(p []byte) (int, error) {
 	rw.len = len(p)
 	return rw.buffer.Write(p)
 }
 
-// WriteHeader writes the header status code.
+// WriteHeader writes the Header status code.
 func (rw *responseReadWriter) WriteHeader(statusCode int) {
 	rw.statusCode = statusCode
 }

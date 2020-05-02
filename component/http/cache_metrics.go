@@ -19,7 +19,7 @@ type prometheusMetrics struct {
 }
 
 func (m *prometheusMetrics) add(path string) {
-	m.operations.WithLabelValues(path, "merge", "").Inc()
+	m.operations.WithLabelValues(path, "add", "").Inc()
 }
 
 func (m *prometheusMetrics) miss(path string) {
@@ -31,7 +31,7 @@ func (m *prometheusMetrics) hit(path string) {
 }
 
 func (m *prometheusMetrics) err(path string) {
-	m.operations.WithLabelValues(path, "err", "").Inc()
+	m.operations.WithLabelValues(path, "Err", "").Inc()
 }
 
 func (m *prometheusMetrics) evict(path string, context validationContext, age int64) {

@@ -28,12 +28,12 @@ func newResponseWriter(w http.ResponseWriter) *responseWriter {
 	return &responseWriter{status: -1, statusHeaderWritten: false, writer: w}
 }
 
-// Status returns the http response status.
+// Status returns the http Response status.
 func (w *responseWriter) Status() int {
 	return w.status
 }
 
-// Header returns the header.
+// Header returns the Header.
 func (w *responseWriter) Header() http.Header {
 	return w.writer.Header()
 }
@@ -54,7 +54,7 @@ func (w *responseWriter) Write(d []byte) (int, error) {
 	return value, err
 }
 
-// WriteHeader writes the internal header and saves the status for retrieval.
+// WriteHeader writes the internal Header and saves the status for retrieval.
 func (w *responseWriter) WriteHeader(code int) {
 	w.status = code
 	w.writer.WriteHeader(code)

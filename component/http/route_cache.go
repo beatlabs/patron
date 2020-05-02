@@ -14,7 +14,7 @@ import (
 type routeCache struct {
 	// cache is the ttl cache implementation to be used
 	cache cache.TTLCache
-	// age specifies the minimum and maximum amount for max-age and min-fresh header values respectively
+	// age specifies the minimum and maximum amount for max-age and min-fresh Header values respectively
 	// regarding the client cache-control requests in seconds
 	age age
 }
@@ -54,26 +54,26 @@ func wrapProcessorFunc(path string, processor ProcessorFunc, rc *routeCache) Pro
 		if err != nil {
 			return nil, err
 		}
-		return &Response{Payload: resp.payload, Headers: resp.header}, nil
+		return &Response{Payload: resp.Payload, Headers: resp.Header}, nil
 	}
 }
 
-// processorExecutor is the function that will create a new cachedResponse based on a ProcessorFunc implementation
+// processorExecutor is the function that will create a new CachedResponse based on a ProcessorFunc implementation
 func processorExecutor(ctx context.Context, request *Request, hnd ProcessorFunc) executor {
-	return func(now int64, key string) *cachedResponse {
+	return func(now int64, key string) *CachedResponse {
 		var err error
 		response, err := hnd(ctx, request)
 		if err == nil {
-			return &cachedResponse{
-				response: &cacheHandlerResponse{
-					payload: response.Payload,
-					header:  make(map[string]string),
+			return &CachedResponse{
+				Response: CacheHandlerResponse{
+					Payload: response.Payload,
+					Header:  make(map[string]string),
 				},
-				lastValid: now,
-				etag:      generateETag([]byte(key), time.Now().Nanosecond()),
+				LastValid: now,
+				Etag:      generateETag([]byte(key), time.Now().Nanosecond()),
 			}
 		}
-		return &cachedResponse{err: err}
+		return &CachedResponse{Err: err}
 	}
 }
 
@@ -84,31 +84,31 @@ func wrapHandlerFunc(handler http.HandlerFunc, rc *routeCache) http.HandlerFunc 
 		if resp, err := cacheHandler(handlerExecutor(response, request, handler), rc)(req); err != nil {
 			log.Errorf("could not handle request with the cache processor: %v", err)
 		} else {
-			propagateHeaders(resp.header, response.Header())
-			if i, err := response.Write(resp.bytes); err != nil {
-				log.Errorf("could not Write cache processor result into response %d: %v", i, err)
+			propagateHeaders(resp.Header, response.Header())
+			if i, err := response.Write(resp.Bytes); err != nil {
+				log.Errorf("could not Write cache processor result into Response %d: %v", i, err)
 			}
 		}
 	}
 }
 
-// handlerExecutor is the function that will create a new cachedResponse based on a HandlerFunc implementation
+// handlerExecutor is the function that will create a new CachedResponse based on a HandlerFunc implementation
 func handlerExecutor(_ http.ResponseWriter, request *http.Request, hnd http.HandlerFunc) executor {
-	return func(now int64, key string) *cachedResponse {
+	return func(now int64, key string) *CachedResponse {
 		var err error
 		responseReadWriter := newResponseReadWriter()
 		hnd(responseReadWriter, request)
 		payload, err := responseReadWriter.readAll()
 		if err == nil {
-			return &cachedResponse{
-				response: &cacheHandlerResponse{
-					bytes:  payload,
-					header: make(map[string]string),
+			return &CachedResponse{
+				Response: CacheHandlerResponse{
+					Bytes:  payload,
+					Header: make(map[string]string),
 				},
-				lastValid: now,
-				etag:      generateETag([]byte(key), time.Now().Nanosecond()),
+				LastValid: now,
+				Etag:      generateETag([]byte(key), time.Now().Nanosecond()),
 			}
 		}
-		return &cachedResponse{err: err}
+		return &CachedResponse{Err: err}
 	}
 }

@@ -56,7 +56,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 			},
 			wrn: "",
 		},
-		// header cannot be parsed
+		// Header cannot be parsed
 		{
 			headers: map[string]string{cacheControlHeader: "maxage=10"},
 			cfg: caheRequestCondition{
@@ -65,7 +65,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 			},
 			wrn: "",
 		},
-		// header resets to minAge
+		// Header resets to minAge
 		{
 			headers: map[string]string{cacheControlHeader: "max-age=twenty"},
 			cfg: caheRequestCondition{
@@ -75,7 +75,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 			},
 			wrn: "max-age=5",
 		},
-		// header resets to maxFresh e.g. maxAge - minAge
+		// Header resets to maxFresh e.g. maxAge - minAge
 		{
 			headers: map[string]string{cacheControlHeader: "min-fresh=10"},
 			cfg: caheRequestCondition{
@@ -85,7 +85,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 			},
 			wrn: "min-fresh=5",
 		},
-		// no warning e.g. headers are within allowed values
+		// no Warning e.g. headers are within allowed values
 		{
 			headers: map[string]string{cacheControlHeader: "min-fresh=5,max-age=5"},
 			cfg: caheRequestCondition{
@@ -95,7 +95,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 			},
 			wrn: "",
 		},
-		// cache headers reset to min-age, note we still cache but send a warning header back
+		// cache headers reset to min-age, note we still cache but send a Warning Header back
 		{
 			headers: map[string]string{cacheControlHeader: "no-cache"},
 			cfg: caheRequestCondition{
@@ -170,7 +170,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 	}
 
 	args := [][]testArgs{
-		// cache expiration with max-age header
+		// cache expiration with max-age Header
 		{
 			// initial request, will fill up the cache
 			{
@@ -190,7 +190,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cache response
+			// cache Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -209,7 +209,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// still cached response
+			// still cached Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -228,7 +228,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// new response , due to expiry validator 10 + 1 - 12 < 0
+			// new Response , due to expiry validator 10 + 1 - 12 < 0
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -258,13 +258,13 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 
 	rc := routeConfig{
 		path: "/",
-		// this means , without client control headers we will always return a non-cached response
+		// this means , without client control headers we will always return a non-cached Response
 		// without any proper age configuration
 		age: Age{},
 	}
 
 	args := [][]testArgs{
-		// cache expiration with max-age header
+		// cache expiration with max-age Header
 		{
 			// initial request, will fill up the cache
 			{
@@ -281,7 +281,7 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// no cached response
+			// no cached Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -296,7 +296,7 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// no cached response
+			// no cached Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -312,7 +312,7 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// no cached response
+			// no cached Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -341,7 +341,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 	}
 
 	args := [][]testArgs{
-		// cache expiration with max-age header
+		// cache expiration with max-age Header
 		{
 			// initial request, will fill up the cache
 			{
@@ -362,7 +362,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response
+			// cached Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -382,7 +382,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// new response, because max-age > 9 - 1
+			// new Response, because max-age > 9 - 1
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -403,7 +403,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response right before the age threshold max-age == 14 - 9
+			// cached Response right before the age threshold max-age == 14 - 9
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -424,7 +424,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 				},
 				err: nil,
 			},
-			// new response, because max-age > 15 - 9
+			// new Response, because max-age > 15 - 9
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -458,7 +458,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 	}
 
 	args := [][]testArgs{
-		// cache expiration with max-age header
+		// cache expiration with max-age Header
 		{
 			// initial request, will fill up the cache
 			{
@@ -478,7 +478,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response
+			// cached Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -498,7 +498,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response
+			// cached Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -518,7 +518,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// new response
+			// new Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -539,7 +539,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cache response
+			// cache Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -573,7 +573,7 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 	}
 
 	args := [][]testArgs{
-		// cache expiration with max-age header
+		// cache expiration with max-age Header
 		{
 			// initial request, will fill up the cache
 			{
@@ -625,7 +625,7 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 	}
 
 	args := [][]testArgs{
-		// cache expiration with max-age header
+		// cache expiration with max-age Header
 		{
 			// initial request, will fill up the cache
 			{
@@ -679,7 +679,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 	}
 
 	args := [][]testArgs{
-		// cache expiration with max-age header
+		// cache expiration with max-age Header
 		{
 			// initial request, will fill up the cache
 			{
@@ -699,7 +699,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response still, because of minAge override
+			// cached Response still, because of minAge override
 			// note : max-age=2 gets ignored
 			{
 				requestParams: requestParams{
@@ -720,7 +720,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response because of bigger max-age parameter
+			// cached Response because of bigger max-age parameter
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -740,7 +740,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// new response because of minAge floor
+			// new Response because of minAge floor
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -748,7 +748,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 					timeInstance: 6,
 				},
 				routeConfig: rc,
-				// note : no warning because it s a new response
+				// note : no Warning because it s a new Response
 				response: &Response{Payload: 60, Headers: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
@@ -795,7 +795,7 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting cache response, as value is still fresh : 5 - 0 == 5
+			// expecting cache Response, as value is still fresh : 5 - 0 == 5
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -815,7 +815,7 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting new response, as value is not fresh enough
+			// expecting new Response, as value is not fresh enough
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -836,7 +836,7 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cache response, as value is expired : 11 - 6 <= 5
+			// cache Response, as value is expired : 11 - 6 <= 5
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -857,7 +857,7 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting new response
+			// expecting new Response
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -964,7 +964,7 @@ func TestMaxAgeCache_WithMinFreshHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting cache response, as min-fresh is bounded by maxFresh configuration  parameter
+			// expecting cache Response, as min-fresh is bounded by maxFresh configuration  parameter
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1017,7 +1017,7 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting cache response, as value is still fresh : 5 - 0 == min-fresh and still young : 5 - 0 < max-age
+			// expecting cache Response, as value is still fresh : 5 - 0 == min-fresh and still young : 5 - 0 < max-age
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1037,7 +1037,7 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// new response, as value is not fresh enough : 6 - 0 > min-fresh
+			// new Response, as value is not fresh enough : 6 - 0 > min-fresh
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1058,7 +1058,7 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response, as value is still fresh enough and still young
+			// cached Response, as value is still fresh enough and still young
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1079,7 +1079,7 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// new response, as value is still fresh enough but too old
+			// new Response, as value is still fresh enough but too old
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1140,9 +1140,9 @@ func TestCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 				},
 				routeConfig: routeConfig{
 					path: rc.path,
-					hnd: func(now int64, key string) *cachedResponse {
-						return &cachedResponse{
-							err: hndErr,
+					hnd: func(now int64, key string) *CachedResponse {
+						return &CachedResponse{
+							Err: hndErr,
 						}
 					},
 					age: rc.age,
@@ -1169,9 +1169,9 @@ func TestCache_WithHandlerErr(t *testing.T) {
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
-		hnd: func(now int64, key string) *cachedResponse {
-			return &cachedResponse{
-				err: hndErr,
+		hnd: func(now int64, key string) *CachedResponse {
+			return &CachedResponse{
+				Err: hndErr,
 			}
 		},
 	}
@@ -1232,7 +1232,7 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 					},
 				},
 			},
-			// new response, because of cache get error
+			// new Response, because of cache get error
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1290,7 +1290,7 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 					},
 				},
 			},
-			// new response, because of cache get error
+			// new Response, because of cache get error
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1344,7 +1344,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response for the same path
+			// cached Response for the same path
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1388,7 +1388,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response for second path
+			// cached Response for second path
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1445,7 +1445,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response for same request parameter
+			// cached Response for same request parameter
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1464,7 +1464,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 				},
 				err: nil,
 			},
-			// new response for different request parameter
+			// new Response for different request parameter
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "2"},
@@ -1483,7 +1483,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 				},
 				err: nil,
 			},
-			// cached response for second request parameter
+			// cached Response for second request parameter
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "2"},
@@ -1534,7 +1534,7 @@ func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting new response, as we are using no-cache header
+			// expecting new Response, as we are using no-cache Header
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1586,7 +1586,7 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting cached response, as we are using no-cache header but are within the minAge limit
+			// expecting cached Response, as we are using no-cache Header but are within the minAge limit
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1606,7 +1606,7 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting new response, as we are using no-cache header
+			// expecting new Response, as we are using no-cache Header
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1659,7 +1659,7 @@ func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting new response, as we are using no-store header
+			// expecting new Response, as we are using no-store Header
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1711,7 +1711,7 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting cached response, as we are using no-store header but are within the minAge limit
+			// expecting cached Response, as we are using no-store Header but are within the minAge limit
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1731,7 +1731,7 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting new response, as we are using no-store header
+			// expecting new Response, as we are using no-store Header
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1784,7 +1784,7 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 				},
 				err: nil,
 			},
-			// expecting cache response, as min-fresh is bounded by maxFresh configuration  parameter
+			// expecting cache Response, as min-fresh is bounded by maxFresh configuration  parameter
 			{
 				requestParams: requestParams{
 					fields:       map[string]string{"VALUE": "1"},
@@ -1815,21 +1815,21 @@ func assertCache(t *testing.T, args [][]testArgs) {
 
 	// create a test request handler
 	// that returns the current time instant times '10' multiplied by the VALUE parameter in the request
-	exec := func(request requestParams) func(now int64, key string) *cachedResponse {
-		return func(now int64, key string) *cachedResponse {
+	exec := func(request requestParams) func(now int64, key string) *CachedResponse {
+		return func(now int64, key string) *CachedResponse {
 			i, err := strconv.Atoi(request.fields["VALUE"])
 			if err != nil {
-				return &cachedResponse{
-					err: err,
+				return &CachedResponse{
+					Err: err,
 				}
 			}
-			response := &cachedResponse{
-				response: &cacheHandlerResponse{
-					payload: i * 10 * int(request.timeInstance),
-					header:  make(map[string]string),
+			response := &CachedResponse{
+				Response: &CacheHandlerResponse{
+					Payload: i * 10 * int(request.timeInstance),
+					Header:  make(map[string]string),
 				},
-				etag:      generateETag([]byte{}, int(now)),
-				lastValid: request.timeInstance,
+				Etag:      generateETag([]byte{}, int(now)),
+				LastValid: request.timeInstance,
 			}
 			return response
 		}
@@ -1881,12 +1881,12 @@ func assertCache(t *testing.T, args [][]testArgs) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, response)
-				assert.Equal(t, arg.response.Payload, response.payload)
-				assert.Equal(t, arg.response.Headers[cacheControlHeader], response.header[cacheControlHeader])
-				assert.Equal(t, arg.response.Headers[cacheHeaderWarning], response.header[cacheHeaderWarning])
+				assert.Equal(t, arg.response.Payload, response.Payload)
+				assert.Equal(t, arg.response.Headers[cacheControlHeader], response.Header[cacheControlHeader])
+				assert.Equal(t, arg.response.Headers[cacheHeaderWarning], response.Header[cacheHeaderWarning])
 				assert.NotNil(t, arg.response.Headers[cacheHeaderETagHeader])
 				if !hasNoAgeConfig(int64(arg.routeConfig.age.Min), int64(arg.routeConfig.age.Max)) {
-					assert.False(t, response.header[cacheHeaderETagHeader] == "")
+					assert.False(t, response.Header[cacheHeaderETagHeader] == "")
 				}
 			}
 			assertMetrics(t, arg.metrics, *metrics.(*testMetrics))

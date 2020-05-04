@@ -277,7 +277,7 @@ func (b *Builder) WithComponents(cc ...Component) *Builder {
 		b.errors = append(b.errors, errors.New("provided components slice was empty"))
 	} else {
 		log.Info("setting components")
-		b.cps = cc
+		b.cps = append(b.cps, cc...)
 	}
 
 	return b

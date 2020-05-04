@@ -173,6 +173,11 @@ func TestServer_SetupTracing(t *testing.T) {
 	}
 }
 
+func TestBuilder_WithComponentsTwice(t *testing.T) {
+	bld := New("test", "").WithComponents(&testComponent{}).WithComponents(&testComponent{})
+	assert.Len(t, bld.cps, 2)
+}
+
 func TestBuild_FailingConditions(t *testing.T) {
 	tests := []struct {
 		name         string

@@ -8,13 +8,12 @@ import (
 	"os"
 	"time"
 
-	seventh "github.com/beatlabs/patron/examples/seventh/util"
-
 	"github.com/beatlabs/patron"
 	clienthttp "github.com/beatlabs/patron/client/http"
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
+	seventh "github.com/beatlabs/patron/examples/seventh/util"
 	"github.com/beatlabs/patron/log"
 )
 

@@ -168,7 +168,7 @@ func maxAgeHeader(value string) string {
 }
 
 func minFreshHeader(value string) string {
-	return fmt.Sprintf("%s=%s", cacheControlMinFresh, value)
+	return fmt.Sprintf("%s=%s", controlMinFresh, value)
 }
 
 type testArgs struct {
@@ -1014,8 +1014,8 @@ func TestCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 				requestParams: newRequestAt(11),
 				routeConfig: routeConfig{
 					path: rc.path,
-					hnd: func(now int64, key string) *cachedResponse {
-						return &cachedResponse{
+					hnd: func(now int64, key string) *response {
+						return &response{
 							Err: hndErr,
 						}
 					},
@@ -1043,8 +1043,8 @@ func TestCache_WithHandlerErr(t *testing.T) {
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
-		hnd: func(now int64, key string) *cachedResponse {
-			return &cachedResponse{
+		hnd: func(now int64, key string) *response {
+			return &response{
 				Err: hndErr,
 			}
 		},
@@ -1624,19 +1624,19 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 
 func assertCache(t *testing.T, args [][]testArgs) {
 
-	metrics = &testMetrics{}
+	monitor = &testMetrics{}
 
 	// create a test request handler
 	// that returns the current time instant times '10' multiplied by the VALUE parameter in the request
-	exec := func(request requestParams) func(now int64, key string) *cachedResponse {
-		return func(now int64, key string) *cachedResponse {
+	exec := func(request requestParams) func(now int64, key string) *response {
+		return func(now int64, key string) *response {
 			i, err := strconv.Atoi(strings.Split(request.query, "=")[1])
 			if err != nil {
-				return &cachedResponse{
+				return &response{
 					Err: err,
 				}
 			}
-			response := &cachedResponse{
+			response := &response{
 				Response: handlerResponse{
 					Bytes:  []byte(strconv.Itoa(i * 10 * int(request.timeInstance))),
 					Header: make(map[string][]string),
@@ -1708,7 +1708,7 @@ func assertCache(t *testing.T, args [][]testArgs) {
 					assert.NotEmpty(t, response.Header[HeaderETagHeader])
 				}
 			}
-			assertMetrics(t, arg.metrics, *metrics.(*testMetrics))
+			assertMetrics(t, arg.metrics, *monitor.(*testMetrics))
 		}
 	}
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCachedResponse(t *testing.T) {
+func TestResponse(t *testing.T) {
 
 	type arg struct {
 		payload interface{}
@@ -34,17 +34,17 @@ func TestCachedResponse(t *testing.T) {
 	}
 
 	for _, argument := range args {
-		assertForCacheHandlerResponse(t, argument.payload)
+		assertForHandlerResponse(t, argument.payload)
 	}
 
 }
 
-func assertForCacheHandlerResponse(t *testing.T, payload interface{}) {
+func assertForHandlerResponse(t *testing.T, payload interface{}) {
 
 	bp, err := json.Encode(payload)
 	assert.NoError(t, err)
 
-	response := cachedResponse{
+	r := response{
 		Response: handlerResponse{
 			Bytes:  bp,
 			Header: map[string][]string{"header": {"header-value"}},
@@ -56,13 +56,13 @@ func assertForCacheHandlerResponse(t *testing.T, payload interface{}) {
 		Err:       nil,
 	}
 
-	b, err := response.encode()
+	b, err := r.encode()
 	assert.NoError(t, err)
 
-	rsp := cachedResponse{}
+	rsp := response{}
 	err = rsp.decode(b)
 	assert.NoError(t, err)
 
-	assert.Equal(t, response, rsp)
+	assert.Equal(t, r, rsp)
 
 }

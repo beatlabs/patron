@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/beatlabs/patron/component/http/cache"
-
 	"github.com/beatlabs/patron/component/http/auth"
+	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
@@ -30,7 +29,7 @@ func newResponseWriter(w http.ResponseWriter) *responseWriter {
 	return &responseWriter{status: -1, statusHeaderWritten: false, writer: w}
 }
 
-// Status returns the http Response status.
+// Status returns the http response status.
 func (w *responseWriter) Status() int {
 	return w.status
 }
@@ -40,7 +39,7 @@ func (w *responseWriter) Header() http.Header {
 	return w.writer.Header()
 }
 
-// Write to the internal ResponseWriter and sets the status if not set already.
+// Write to the internal responseWriter and sets the status if not set already.
 func (w *responseWriter) Write(d []byte) (int, error) {
 
 	value, err := w.writer.Write(d)

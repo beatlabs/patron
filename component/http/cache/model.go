@@ -43,8 +43,8 @@ type handlerResponse struct {
 	Header http.Header
 }
 
-// cachedResponse is the struct representing an object retrieved or ready to be put into the route cache
-type cachedResponse struct {
+// response is the struct representing an object retrieved or ready to be put into the route cache
+type response struct {
 	Response  handlerResponse
 	LastValid int64
 	Etag      string
@@ -54,7 +54,7 @@ type cachedResponse struct {
 }
 
 // encode encodes the generic response to bytes for external memory storage
-func (c *cachedResponse) encode() ([]byte, error) {
+func (c *response) encode() ([]byte, error) {
 	b, err := json.Marshal(c)
 	if err != nil {
 		return nil, fmt.Errorf("could not encode cache response object: %w", err)
@@ -63,6 +63,6 @@ func (c *cachedResponse) encode() ([]byte, error) {
 }
 
 // decode decodes the cached object bytes
-func (c *cachedResponse) decode(data []byte) error {
+func (c *response) decode(data []byte) error {
 	return json.Unmarshal(data, c)
 }

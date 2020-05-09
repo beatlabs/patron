@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/beatlabs/patron/encoding/json"
-
 	"github.com/stretchr/testify/assert"
 )
 

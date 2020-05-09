@@ -6,15 +6,15 @@ import (
 	"net/http"
 )
 
-// cacheHandlerRequest is the dedicated request object for the cache handler
-type cacheHandlerRequest struct {
+// handlerRequest is the dedicated request object for the cache handler
+type handlerRequest struct {
 	header string
 	path   string
 	query  string
 }
 
 // toCacheHandlerRequest transforms the http Request object to the cache handler request
-func toCacheHandlerRequest(req *http.Request) *cacheHandlerRequest {
+func toCacheHandlerRequest(req *http.Request) *handlerRequest {
 	var header string
 	if req.Header != nil {
 		header = req.Header.Get(HeaderCacheControl)
@@ -25,7 +25,7 @@ func toCacheHandlerRequest(req *http.Request) *cacheHandlerRequest {
 		path = req.URL.Path
 		query = req.URL.RawQuery
 	}
-	return &cacheHandlerRequest{
+	return &handlerRequest{
 		header: header,
 		path:   path,
 		query:  query,
@@ -33,19 +33,19 @@ func toCacheHandlerRequest(req *http.Request) *cacheHandlerRequest {
 }
 
 // getKey generates a unique cache key based on the route path and the query parameters
-func (c *cacheHandlerRequest) getKey() string {
+func (c *handlerRequest) getKey() string {
 	return fmt.Sprintf("%s:%s", c.path, c.query)
 }
 
-// CacheHandlerResponse is the dedicated Response object for the cache handler
-type CacheHandlerResponse struct {
+// handlerResponse is the dedicated Response object for the cache handler
+type handlerResponse struct {
 	Bytes  []byte
 	Header http.Header
 }
 
-// CachedResponse is the struct representing an object retrieved or ready to be put into the route cache
-type CachedResponse struct {
-	Response  CacheHandlerResponse
+// cachedResponse is the struct representing an object retrieved or ready to be put into the route cache
+type cachedResponse struct {
+	Response  handlerResponse
 	LastValid int64
 	Etag      string
 	Warning   string
@@ -53,7 +53,8 @@ type CachedResponse struct {
 	Err       error
 }
 
-func (c *CachedResponse) encode() ([]byte, error) {
+// encode encodes the generic response to bytes for external memory storage
+func (c *cachedResponse) encode() ([]byte, error) {
 	b, err := json.Marshal(c)
 	if err != nil {
 		return nil, fmt.Errorf("could not encode cache response object: %w", err)
@@ -61,6 +62,7 @@ func (c *CachedResponse) encode() ([]byte, error) {
 	return b, nil
 }
 
-func (c *CachedResponse) decode(data []byte) error {
+// decode decodes the cached object bytes
+func (c *cachedResponse) decode(data []byte) error {
 	return json.Unmarshal(data, c)
 }

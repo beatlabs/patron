@@ -1014,8 +1014,8 @@ func TestCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 				requestParams: newRequestAt(11),
 				routeConfig: routeConfig{
 					path: rc.path,
-					hnd: func(now int64, key string) *CachedResponse {
-						return &CachedResponse{
+					hnd: func(now int64, key string) *cachedResponse {
+						return &cachedResponse{
 							Err: hndErr,
 						}
 					},
@@ -1043,8 +1043,8 @@ func TestCache_WithHandlerErr(t *testing.T) {
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
-		hnd: func(now int64, key string) *CachedResponse {
-			return &CachedResponse{
+		hnd: func(now int64, key string) *cachedResponse {
+			return &cachedResponse{
 				Err: hndErr,
 			}
 		},
@@ -1628,16 +1628,16 @@ func assertCache(t *testing.T, args [][]testArgs) {
 
 	// create a test request handler
 	// that returns the current time instant times '10' multiplied by the VALUE parameter in the request
-	exec := func(request requestParams) func(now int64, key string) *CachedResponse {
-		return func(now int64, key string) *CachedResponse {
+	exec := func(request requestParams) func(now int64, key string) *cachedResponse {
+		return func(now int64, key string) *cachedResponse {
 			i, err := strconv.Atoi(strings.Split(request.query, "=")[1])
 			if err != nil {
-				return &CachedResponse{
+				return &cachedResponse{
 					Err: err,
 				}
 			}
-			response := &CachedResponse{
-				Response: CacheHandlerResponse{
+			response := &cachedResponse{
+				Response: handlerResponse{
 					Bytes:  []byte(strconv.Itoa(i * 10 * int(request.timeInstance))),
 					Header: make(map[string][]string),
 				},
@@ -1689,7 +1689,7 @@ func assertCache(t *testing.T, args [][]testArgs) {
 			routeCache, errs := NewRouteCache(ch, arg.routeConfig.age)
 			assert.Empty(t, errs)
 
-			response, err := cacheHandler(hnd, routeCache)(request)
+			response, err := handler(hnd, routeCache)(request)
 
 			if arg.err != nil {
 				assert.Error(t, err)

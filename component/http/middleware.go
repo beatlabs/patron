@@ -135,7 +135,7 @@ func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
 				next.ServeHTTP(w, r)
 				return
 			}
-			resp, err := cache.CachedExecutor(w, r, rc, next)
+			resp, err := cache.Handler(w, r, rc, next)
 			if err != nil {
 				log.Errorf("could not handle request with the cache processor: %v", err)
 				return

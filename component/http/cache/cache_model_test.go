@@ -44,8 +44,8 @@ func assertForCacheHandlerResponse(t *testing.T, payload interface{}) {
 	bp, err := json.Encode(payload)
 	assert.NoError(t, err)
 
-	response := CachedResponse{
-		Response: CacheHandlerResponse{
+	response := cachedResponse{
+		Response: handlerResponse{
 			Bytes:  bp,
 			Header: map[string][]string{"header": {"header-value"}},
 		},
@@ -59,7 +59,7 @@ func assertForCacheHandlerResponse(t *testing.T, payload interface{}) {
 	b, err := response.encode()
 	assert.NoError(t, err)
 
-	rsp := CachedResponse{}
+	rsp := cachedResponse{}
 	err = rsp.decode(b)
 	assert.NoError(t, err)
 

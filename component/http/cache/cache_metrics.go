@@ -62,7 +62,7 @@ func newPrometheusMetrics() *prometheusMetrics {
 		operations:   operations,
 	}
 
-	prometheus.DefaultRegisterer.MustRegister(m.ageHistogram, m.operations)
+	prometheus.MustRegister(m.ageHistogram, m.operations)
 
 	return m
 

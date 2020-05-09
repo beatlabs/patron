@@ -3,6 +3,7 @@ package cache
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -116,11 +117,21 @@ func (rw *responseReadWriter) WriteHeader(statusCode int) {
 }
 
 // Handler will wrap the handler func with the route cache abstraction
-func Handler(w http.ResponseWriter, r *http.Request, rc *RouteCache, httpHandler http.Handler) (response *handlerResponse, e error) {
+func Handler(w http.ResponseWriter, r *http.Request, rc *RouteCache, httpHandler http.Handler) error {
 	req := toCacheHandlerRequest(r)
-	return handler(httpExecutor(w, r, func(writer http.ResponseWriter, request *http.Request) {
+	response, err := handler(httpExecutor(w, r, func(writer http.ResponseWriter, request *http.Request) {
 		httpHandler.ServeHTTP(writer, request)
 	}), rc)(req)
+	if err != nil {
+		return fmt.Errorf("could not handle request with the cache processor: %v", err)
+	}
+	for k, h := range response.Header {
+		w.Header().Set(k, h[0])
+	}
+	if i, err := w.Write(response.Bytes); err != nil {
+		return fmt.Errorf("could not Write cache processor result into Response %d: %w", i, err)
+	}
+	return nil
 }
 
 // httpExecutor is the function that will create a new response based on a HandlerFunc implementation

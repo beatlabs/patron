@@ -135,16 +135,10 @@ func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
 				next.ServeHTTP(w, r)
 				return
 			}
-			resp, err := cache.Handler(w, r, rc, next)
+			err := cache.Handler(w, r, rc, next)
 			if err != nil {
-				log.Errorf("could not handle request with the cache processor: %v", err)
+				log.Errorf("error encountered in the caching middleware: %v", err)
 				return
-			}
-			for k, h := range resp.Header {
-				w.Header().Set(k, h[0])
-			}
-			if i, err := w.Write(resp.Bytes); err != nil {
-				log.Errorf("could not Write cache processor result into Response %d: %v", i, err)
 			}
 		})
 	}

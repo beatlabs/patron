@@ -1,4 +1,4 @@
-package http
+package cache
 
 import "github.com/prometheus/client_golang/prometheus"
 

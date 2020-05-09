@@ -7,9 +7,8 @@ import (
 	"strings"
 
 	"github.com/beatlabs/patron/cache"
-	"github.com/beatlabs/patron/log"
-
 	"github.com/beatlabs/patron/component/http/auth"
+	httpcache "github.com/beatlabs/patron/component/http/cache"
 	errs "github.com/beatlabs/patron/errors"
 )
 
@@ -49,7 +48,7 @@ type RouteBuilder struct {
 	middlewares   []MiddlewareFunc
 	authenticator auth.Authenticator
 	handler       http.HandlerFunc
-	routeCache    *RouteCache
+	routeCache    *httpcache.RouteCache
 	errors        []error
 }
 
@@ -78,26 +77,12 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 }
 
 // WithRouteCache adds a cache to the corresponding route
-func (rb *RouteBuilder) WithRouteCache(cache cache.TTLCache, ageBounds Age) *RouteBuilder {
+func (rb *RouteBuilder) WithRouteCache(cache cache.TTLCache, ageBounds httpcache.Age) *RouteBuilder {
 
-	cErrors := make([]error, 0)
-
-	if cache == nil {
-		cErrors = append(cErrors, errors.New("route cache is nil"))
-	}
-
-	if ageBounds.Min > ageBounds.Max {
-		cErrors = append(cErrors, errors.New("max age must always be greater than min age"))
-	}
-
-	if hasNoAgeConfig(ageBounds.Min.Milliseconds(), ageBounds.Max.Milliseconds()) {
-		log.Warnf("route cache for %s is disabled because of empty Age property %v ")
-	}
-
-	rc := NewRouteCache(cache, ageBounds)
+	rc, ee := httpcache.NewRouteCache(cache, ageBounds)
 
 	rb.routeCache = rc
-	rb.errors = append(rb.errors, cErrors...)
+	rb.errors = append(rb.errors, ee...)
 	return rb
 }
 

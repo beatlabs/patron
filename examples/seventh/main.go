@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/beatlabs/patron/cache/redis"
-
 	"github.com/beatlabs/patron"
+	"github.com/beatlabs/patron/cache/redis"
 	patronhttp "github.com/beatlabs/patron/component/http"
+	httpcache "github.com/beatlabs/patron/component/http/cache"
 )
 
 func init() {
@@ -51,7 +51,7 @@ func main() {
 
 	routesBuilder := patronhttp.NewRoutesBuilder().
 		Append(patronhttp.NewRouteBuilder("/", seventh).
-			WithRouteCache(cache, patronhttp.Age{
+			WithRouteCache(cache, httpcache.Age{
 				// we wont allow to override the cache more than once per 15 seconds
 				Min: 15 * time.Second,
 				// by default we might send stale response for up to 1 minute
@@ -73,7 +73,7 @@ func main() {
 	}
 }
 
-// seventh gives the 7 minute interval of the current time
+// seventh gives the 7 minute interval of the current unix timestamp
 // since the response will be the same for the next 7 minutes, it s a good use-case to apply caching
 func seventh(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
 	now := time.Now()

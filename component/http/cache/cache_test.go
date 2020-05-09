@@ -1,4 +1,4 @@
-package http
+package cache
 
 import (
 	"errors"
@@ -51,7 +51,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 
 	params := []args{
 		{
-			headers: map[string]string{cacheControlHeader: "max-age=10"},
+			headers: map[string]string{HeaderCacheControl: "max-age=10"},
 			cfg: caheRequestCondition{
 				noCache:    false,
 				forceCache: false,
@@ -61,7 +61,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		},
 		// Header cannot be parsed
 		{
-			headers: map[string]string{cacheControlHeader: "maxage=10"},
+			headers: map[string]string{HeaderCacheControl: "maxage=10"},
 			cfg: caheRequestCondition{
 				noCache:    false,
 				forceCache: false,
@@ -70,7 +70,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		},
 		// Header resets to minAge
 		{
-			headers: map[string]string{cacheControlHeader: "max-age=twenty"},
+			headers: map[string]string{HeaderCacheControl: "max-age=twenty"},
 			cfg: caheRequestCondition{
 				noCache:    false,
 				forceCache: false,
@@ -80,7 +80,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		},
 		// Header resets to maxFresh e.g. maxAge - minAge
 		{
-			headers: map[string]string{cacheControlHeader: "min-fresh=10"},
+			headers: map[string]string{HeaderCacheControl: "min-fresh=10"},
 			cfg: caheRequestCondition{
 				noCache:    false,
 				forceCache: false,
@@ -90,7 +90,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		},
 		// no Warning e.g. headers are within allowed values
 		{
-			headers: map[string]string{cacheControlHeader: "min-fresh=5,max-age=5"},
+			headers: map[string]string{HeaderCacheControl: "min-fresh=5,max-age=5"},
 			cfg: caheRequestCondition{
 				noCache:    false,
 				forceCache: false,
@@ -100,7 +100,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		},
 		// cache headers reset to min-age, note we still cache but send a Warning Header back
 		{
-			headers: map[string]string{cacheControlHeader: "no-cache"},
+			headers: map[string]string{HeaderCacheControl: "no-cache"},
 			cfg: caheRequestCondition{
 				noCache:    false,
 				forceCache: false,
@@ -109,7 +109,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 			wrn: "max-age=5",
 		},
 		{
-			headers: map[string]string{cacheControlHeader: "no-store"},
+			headers: map[string]string{HeaderCacheControl: "no-store"},
 			cfg: caheRequestCondition{
 				noCache:    false,
 				forceCache: false,
@@ -120,7 +120,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 	}
 
 	for _, param := range params {
-		header := param.headers[cacheControlHeader]
+		header := param.headers[HeaderCacheControl]
 		cfg := extractRequestHeaders(header, minAge, maxAge-minAge)
 		assert.Equal(t, param.wrn, cfg.warning)
 		assert.Equal(t, param.cfg.noCache, cfg.noCache)
@@ -139,25 +139,32 @@ type routeConfig struct {
 
 type requestParams struct {
 	path         string
-	header       Header
+	header       map[string]string
 	query        string
 	timeInstance int64
 }
 
-func newRequestAt(timeInstant int64, cacheControlHeaders ...string) requestParams {
+// responseStruct emulates the patron http response,
+// but this can be any struct in general
+type responseStruct struct {
+	Payload interface{}
+	Header  map[string]string
+}
+
+func newRequestAt(timeInstant int64, ControlHeaders ...string) requestParams {
 	params := requestParams{
 		query:        "VALUE=1",
 		timeInstance: timeInstant,
 		header:       make(map[string]string),
 	}
-	if len(cacheControlHeaders) > 0 {
-		params.header[cacheControlHeader] = strings.Join(cacheControlHeaders, ",")
+	if len(ControlHeaders) > 0 {
+		params.header[HeaderCacheControl] = strings.Join(ControlHeaders, ",")
 	}
 	return params
 }
 
 func maxAgeHeader(value string) string {
-	return fmt.Sprintf("%s=%s", cacheHeaderMaxAge, value)
+	return fmt.Sprintf("%s=%s", headerCacheMaxAge, value)
 }
 
 func minFreshHeader(value string) string {
@@ -168,20 +175,20 @@ type testArgs struct {
 	routeConfig   routeConfig
 	cache         cache.TTLCache
 	requestParams requestParams
-	response      *Response
+	response      *responseStruct
 	metrics       testMetrics
 	err           error
 }
 
 func testHeader(maxAge int64) map[string]string {
 	header := make(map[string]string)
-	header[cacheControlHeader] = createCacheControlHeader(maxAge, 0)
+	header[HeaderCacheControl] = createCacheControlHeader(maxAge, 0)
 	return header
 }
 
 func testHeaderWithWarning(maxAge int64, warning string) map[string]string {
 	h := testHeader(maxAge)
-	h[cacheHeaderWarning] = warning
+	h[headerWarning] = warning
 	return h
 }
 
@@ -199,7 +206,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(1),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 10, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -214,7 +221,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(9),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10, Header: testHeader(2)},
+				response:      &responseStruct{Payload: 10, Header: testHeader(2)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -230,7 +237,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(11),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10, Header: testHeader(0)},
+				response:      &responseStruct{Payload: 10, Header: testHeader(0)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -246,7 +253,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(12),
 				routeConfig:   rc,
-				response:      &Response{Payload: 120, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 120, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -281,7 +288,7 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(1),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10},
+				response:      &responseStruct{Payload: 10},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {},
@@ -293,7 +300,7 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(2),
 				routeConfig:   rc,
-				response:      &Response{Payload: 20},
+				response:      &responseStruct{Payload: 20},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {},
@@ -305,7 +312,7 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(2, maxAgeHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 20},
+				response:      &responseStruct{Payload: 20},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {},
@@ -317,7 +324,7 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(2, minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 20},
+				response:      &responseStruct{Payload: 20},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {},
@@ -344,7 +351,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(1, maxAgeHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 10, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -359,7 +366,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(3, maxAgeHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10, Header: testHeader(8)},
+				response:      &responseStruct{Payload: 10, Header: testHeader(8)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -375,7 +382,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(9, maxAgeHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 90, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 90, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -392,7 +399,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(14, maxAgeHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 90, Header: testHeader(5)},
+				response:      &responseStruct{Payload: 90, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -409,7 +416,7 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 			{
 				requestParams: newRequestAt(15, maxAgeHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 150, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 150, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -441,7 +448,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(30)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -456,7 +463,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(10, maxAgeHeader("10")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(20)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(20)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -472,7 +479,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(20, maxAgeHeader("20")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -488,7 +495,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(20, maxAgeHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 200, Header: testHeader(30)},
+				response:      &responseStruct{Payload: 200, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -505,7 +512,7 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(25, maxAgeHeader("25")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 200, Header: testHeader(25)},
+				response:      &responseStruct{Payload: 200, Header: testHeader(25)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -537,7 +544,7 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(5)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -552,7 +559,7 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(6, maxAgeHeader("100")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 60, Header: testHeader(5)},
+				response:      &responseStruct{Payload: 60, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -582,7 +589,7 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(30)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -598,7 +605,7 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(1, maxAgeHeader("0")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10, Header: testHeader(30)},
+				response:      &responseStruct{Payload: 10, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -629,7 +636,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(30)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -645,7 +652,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(4, maxAgeHeader("2")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeaderWithWarning(26, "max-age=5")},
+				response:      &responseStruct{Payload: 0, Header: testHeaderWithWarning(26, "max-age=5")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -661,7 +668,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(5, maxAgeHeader("20")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(25)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(25)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -678,7 +685,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 				requestParams: newRequestAt(6, maxAgeHeader("3")),
 				routeConfig:   rc,
 				// note : no Warning because it s a new Response
-				response: &Response{Payload: 60, Header: testHeader(30)},
+				response: &responseStruct{Payload: 60, Header: testHeader(30)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -709,7 +716,7 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0, minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -724,7 +731,7 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(5, minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(5)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -740,7 +747,7 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(6, minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 60, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 60, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -757,7 +764,7 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(11, minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 60, Header: testHeader(5)},
+				response:      &responseStruct{Payload: 60, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -774,7 +781,7 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(12, minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 120, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 120, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -805,7 +812,7 @@ func TestNoMaxFreshCache_WithLargeMinFreshHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0, minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -819,7 +826,7 @@ func TestNoMaxFreshCache_WithLargeMinFreshHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(1, minFreshHeader("100")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 10, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -850,7 +857,7 @@ func TestMaxAgeCache_WithMinFreshHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0, minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -865,7 +872,7 @@ func TestMaxAgeCache_WithMinFreshHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(5, minFreshHeader("100")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeaderWithWarning(5, "min-fresh=5")},
+				response:      &responseStruct{Payload: 0, Header: testHeaderWithWarning(5, "min-fresh=5")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -895,7 +902,7 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0, maxAgeHeader("5"), minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -910,7 +917,7 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(5, maxAgeHeader("10"), minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(5)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -926,7 +933,7 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(6, maxAgeHeader("10"), minFreshHeader("5")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 60, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 60, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -943,7 +950,7 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(6, maxAgeHeader("8"), minFreshHeader("10")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 60, Header: testHeaderWithWarning(10, "min-fresh=5")},
+				response:      &responseStruct{Payload: 60, Header: testHeaderWithWarning(10, "min-fresh=5")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -960,7 +967,7 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(15, maxAgeHeader("8"), minFreshHeader("10")),
 				routeConfig:   rc,
-				response:      &Response{Payload: 150, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 150, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -993,7 +1000,7 @@ func TestCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1073,7 +1080,7 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 	cacheImpl := &testingCache{
 		cache:   make(map[string]testingCacheEntity),
 		getErr:  errors.New("get error"),
-		instant: now,
+		instant: Now,
 	}
 
 	args := [][]testArgs{
@@ -1082,7 +1089,7 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				cache:         cacheImpl,
 				metrics: testMetrics{
 					map[string]*metricState{
@@ -1097,7 +1104,7 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 			{
 				requestParams: newRequestAt(1),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 10, Header: testHeader(10)},
 				cache:         cacheImpl,
 				metrics: testMetrics{
 					map[string]*metricState{
@@ -1125,7 +1132,7 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 	cacheImpl := &testingCache{
 		cache:   make(map[string]testingCacheEntity),
 		setErr:  errors.New("set error"),
-		instant: now,
+		instant: Now,
 	}
 
 	args := [][]testArgs{
@@ -1134,7 +1141,7 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				cache:         cacheImpl,
 				metrics: testMetrics{
 					map[string]*metricState{
@@ -1149,7 +1156,7 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 			{
 				requestParams: newRequestAt(1),
 				routeConfig:   rc,
-				response:      &Response{Payload: 10, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 10, Header: testHeader(10)},
 				cache:         cacheImpl,
 				metrics: testMetrics{
 					map[string]*metricState{
@@ -1185,7 +1192,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 					path:         "/1",
 				},
 				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(10)},
+				response:    &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/1": {
@@ -1204,7 +1211,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 					path:         "/1",
 				},
 				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(9)},
+				response:    &responseStruct{Payload: 0, Header: testHeader(9)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/1": {
@@ -1224,7 +1231,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 					path:         "/2",
 				},
 				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(10)},
+				response:    &responseStruct{Payload: 10, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/1": {
@@ -1248,7 +1255,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 					path:         "/2",
 				},
 				routeConfig: rc,
-				response:    &Response{Payload: 10, Header: testHeader(9)},
+				response:    &responseStruct{Payload: 10, Header: testHeader(9)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/1": {
@@ -1283,7 +1290,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1301,7 +1308,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &Response{Payload: 0, Header: testHeader(9)},
+				response:    &responseStruct{Payload: 0, Header: testHeader(9)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1320,7 +1327,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 					timeInstance: 1,
 				},
 				routeConfig: rc,
-				response:    &Response{Payload: 20, Header: testHeader(10)},
+				response:    &responseStruct{Payload: 20, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1339,7 +1346,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 					timeInstance: 2,
 				},
 				routeConfig: rc,
-				response:    &Response{Payload: 20, Header: testHeader(9)},
+				response:    &responseStruct{Payload: 20, Header: testHeader(9)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1369,7 +1376,7 @@ func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1384,7 +1391,7 @@ func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(5, "no-cache"),
 				routeConfig:   rc,
-				response:      &Response{Payload: 50, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 50, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1414,7 +1421,7 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1429,7 +1436,7 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(2, "no-cache"),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeaderWithWarning(8, "max-age=2")},
+				response:      &responseStruct{Payload: 0, Header: testHeaderWithWarning(8, "max-age=2")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1445,7 +1452,7 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(5, "no-cache"),
 				routeConfig:   rc,
-				response:      &Response{Payload: 50, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 50, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1476,7 +1483,7 @@ func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1491,7 +1498,7 @@ func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(5, "no-store"),
 				routeConfig:   rc,
-				response:      &Response{Payload: 50, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 50, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1521,7 +1528,7 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1536,7 +1543,7 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(2, "no-store"),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeaderWithWarning(8, "max-age=2")},
+				response:      &responseStruct{Payload: 0, Header: testHeaderWithWarning(8, "max-age=2")},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1552,7 +1559,7 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(5, "no-store"),
 				routeConfig:   rc,
-				response:      &Response{Payload: 50, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 50, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1583,7 +1590,7 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(0),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(10)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(10)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1598,7 +1605,7 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(5, "only-if-cached"),
 				routeConfig:   rc,
-				response:      &Response{Payload: 0, Header: testHeader(5)},
+				response:      &responseStruct{Payload: 0, Header: testHeader(5)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1632,7 +1639,7 @@ func assertCache(t *testing.T, args [][]testArgs) {
 			response := &CachedResponse{
 				Response: CacheHandlerResponse{
 					Bytes:  []byte(strconv.Itoa(i * 10 * int(request.timeInstance))),
-					Header: make(map[string]string),
+					Header: make(map[string][]string),
 				},
 				Etag:      generateETag([]byte{}, int(now)),
 				LastValid: request.timeInstance,
@@ -1675,11 +1682,14 @@ func assertCache(t *testing.T, args [][]testArgs) {
 				}
 			}
 
-			now = func() int64 {
+			Now = func() int64 {
 				return arg.requestParams.timeInstance
 			}
 
-			response, err := cacheHandler(hnd, NewRouteCache(ch, arg.routeConfig.age))(request)
+			routeCache, errs := NewRouteCache(ch, arg.routeConfig.age)
+			assert.Empty(t, errs)
+
+			response, err := cacheHandler(hnd, routeCache)(request)
 
 			if arg.err != nil {
 				assert.Error(t, err)
@@ -1691,16 +1701,31 @@ func assertCache(t *testing.T, args [][]testArgs) {
 				payload, err := strconv.Atoi(string(response.Bytes))
 				assert.NoError(t, err)
 				assert.Equal(t, arg.response.Payload, payload)
-				assert.Equal(t, arg.response.Header[cacheControlHeader], response.Header[cacheControlHeader])
-				assert.Equal(t, arg.response.Header[cacheHeaderWarning], response.Header[cacheHeaderWarning])
-				assert.NotNil(t, arg.response.Header[cacheHeaderETagHeader])
+				assertHeader(t, HeaderCacheControl, arg.response.Header, response.Header)
+				assertHeader(t, headerWarning, arg.response.Header, response.Header)
+				assert.NotNil(t, arg.response.Header[HeaderETagHeader])
 				if !hasNoAgeConfig(int64(arg.routeConfig.age.Min), int64(arg.routeConfig.age.Max)) {
-					assert.False(t, response.Header[cacheHeaderETagHeader] == "")
+					assert.NotEmpty(t, response.Header[HeaderETagHeader])
 				}
 			}
 			assertMetrics(t, arg.metrics, *metrics.(*testMetrics))
 		}
 	}
+}
+
+func propagateHeaders(header map[string]string, wHeader http.Header) {
+	for k, h := range header {
+		wHeader.Set(k, h)
+	}
+}
+
+func assertHeader(t *testing.T, key string, expected map[string]string, actual http.Header) {
+	if expected[key] == "" {
+		assert.Empty(t, actual[key])
+	} else {
+		assert.Equal(t, expected[key], actual[key][0])
+	}
+
 }
 
 func assertMetrics(t *testing.T, expected, actual testMetrics) {
@@ -1725,7 +1750,7 @@ type testingCache struct {
 	setCount int
 	getErr   error
 	setErr   error
-	instant  timeInstant
+	instant  TimeInstant
 }
 
 func newTestingCache() *testingCache {
@@ -1780,10 +1805,6 @@ func (t *testingCache) SetTTL(key string, value interface{}, ttl time.Duration) 
 		t0:  t.instant(),
 	}
 	return nil
-}
-
-func (t *testingCache) size() int {
-	return len(t.cache)
 }
 
 type testMetrics struct {

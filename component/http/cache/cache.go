@@ -1,14 +1,14 @@
-package http
+package cache
 
 import (
 	"fmt"
 	"hash/crc32"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-
 	"github.com/beatlabs/patron/log"
 )
 
@@ -22,9 +22,10 @@ const (
 	// minFreshValidation represents a validation , happening due to min-fresh  Header requirements
 	minFreshValidation
 
-	// cacheControlHeader is the Header key for cache related values
+	// HeaderCacheControl is the Header key for cache related values
 	// note : it is case-sensitive
-	cacheControlHeader = "Cache-Control"
+	HeaderCacheControl = "Cache-Control"
+	HeaderETagHeader   = "Etag"
 
 	cacheControlMinFresh     = "min-fresh"
 	cacheControlNoCache      = "no-cache"
@@ -32,10 +33,9 @@ const (
 	cacheControlOnlyIfCached = "only-if-cached"
 	cacheControlEmpty        = ""
 
-	cacheHeaderMustRevalidate = "must-revalidate"
-	cacheHeaderMaxAge         = "max-age"
-	cacheHeaderETagHeader     = "ETag"
-	cacheHeaderWarning        = "Warning"
+	headerCacheMaxAge    = "max-age"
+	headerMustRevalidate = "must-revalidate"
+	headerWarning        = "Warning"
 )
 
 var metrics cacheMetrics
@@ -44,13 +44,13 @@ func init() {
 	metrics = newPrometheusMetrics()
 }
 
-// timeInstant is a timing function
+// TimeInstant is a timing function
 // returns the current time instant of the system's clock
 // by default it can be `time.Now().Unix()` ,
 // but for testing purposes we want to control the time
-type timeInstant func() int64
+type TimeInstant func() int64
 
-var now timeInstant = func() int64 {
+var Now TimeInstant = func() int64 {
 	return time.Now().Unix()
 }
 
@@ -81,7 +81,7 @@ func cacheHandler(exec executor, rc *RouteCache) func(request *cacheHandlerReque
 
 	return func(request *cacheHandlerRequest) (response *CacheHandlerResponse, e error) {
 
-		now := now()
+		now := Now()
 
 		key := request.getKey()
 
@@ -216,13 +216,13 @@ func saveToCache(path, key string, rsp *CachedResponse, cache cache.TTLCache, ma
 }
 
 // addResponseHeaders adds the appropriate headers according to the CachedResponse conditions
-func addResponseHeaders(now int64, header map[string]string, rsp *CachedResponse, maxAge int64) {
-	header[cacheHeaderETagHeader] = rsp.Etag
-	header[cacheControlHeader] = createCacheControlHeader(maxAge, now-rsp.LastValid)
+func addResponseHeaders(now int64, header http.Header, rsp *CachedResponse, maxAge int64) {
+	header.Set(HeaderETagHeader, rsp.Etag)
+	header.Set(HeaderCacheControl, createCacheControlHeader(maxAge, now-rsp.LastValid))
 	if rsp.Warning != "" && rsp.FromCache {
-		header[cacheHeaderWarning] = rsp.Warning
+		header.Set(headerWarning, rsp.Warning)
 	} else {
-		delete(header, cacheHeaderWarning)
+		delete(header, headerWarning)
 	}
 }
 
@@ -239,7 +239,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *cacheControl 
 		keyValue := strings.Split(header, "=")
 		headerKey := strings.ToLower(keyValue[0])
 		switch headerKey {
-		case cacheHeaderMaxAge:
+		case headerCacheMaxAge:
 			/**
 			Indicates that the client is willing to accept a Response whose
 			age is no greater than the specified time in seconds. Unless max-
@@ -323,9 +323,9 @@ func generateETag(key []byte, t int) string {
 func createCacheControlHeader(ttl, lastValid int64) string {
 	mAge := ttl - lastValid
 	if mAge < 0 {
-		return cacheHeaderMustRevalidate
+		return headerMustRevalidate
 	}
-	return fmt.Sprintf("%s=%d", cacheHeaderMaxAge, ttl-lastValid)
+	return fmt.Sprintf("%s=%d", headerCacheMaxAge, ttl-lastValid)
 }
 
 func min(value, threshold int64) (int64, bool) {

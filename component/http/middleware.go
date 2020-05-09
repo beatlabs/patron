@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/beatlabs/patron/component/http/cache"
+
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
@@ -126,22 +128,21 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 // NewCachingMiddleware creates a cache layer as a middleware
 // when used as part of a middleware chain any middleware later in the chain,
 // will not be executed, but the headers it appends will be part of the cache
-func NewCachingMiddleware(rc *RouteCache) MiddlewareFunc {
+func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != http.MethodGet {
 				next.ServeHTTP(w, r)
 				return
 			}
-			req := toCacheHandlerRequest(r)
-			resp, err := cacheHandler(handlerExecutor(w, r, func(writer http.ResponseWriter, request *http.Request) {
-				next.ServeHTTP(writer, request)
-			}), rc)(req)
+			resp, err := cache.CachedExecutor(w, r, rc, next)
 			if err != nil {
 				log.Errorf("could not handle request with the cache processor: %v", err)
 				return
 			}
-			propagateHeaders(resp.Header, w.Header())
+			for k, h := range resp.Header {
+				w.Header().Set(k, h[0])
+			}
 			if i, err := w.Write(resp.Bytes); err != nil {
 				log.Errorf("could not Write cache processor result into Response %d: %v", i, err)
 			}

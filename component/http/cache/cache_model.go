@@ -1,4 +1,4 @@
-package http
+package cache
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ type cacheHandlerRequest struct {
 func toCacheHandlerRequest(req *http.Request) *cacheHandlerRequest {
 	var header string
 	if req.Header != nil {
-		header = req.Header.Get(cacheControlHeader)
+		header = req.Header.Get(HeaderCacheControl)
 	}
 	var path string
 	var query string
@@ -40,7 +40,7 @@ func (c *cacheHandlerRequest) getKey() string {
 // CacheHandlerResponse is the dedicated Response object for the cache handler
 type CacheHandlerResponse struct {
 	Bytes  []byte
-	Header map[string]string
+	Header http.Header
 }
 
 // CachedResponse is the struct representing an object retrieved or ready to be put into the route cache

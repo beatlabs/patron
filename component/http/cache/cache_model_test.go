@@ -1,4 +1,4 @@
-package http
+package cache
 
 import (
 	"testing"
@@ -47,7 +47,7 @@ func assertForCacheHandlerResponse(t *testing.T, payload interface{}) {
 	response := CachedResponse{
 		Response: CacheHandlerResponse{
 			Bytes:  bp,
-			Header: map[string]string{"header": "header-value"},
+			Header: map[string][]string{"header": {"header-value"}},
 		},
 		LastValid: 10,
 		Etag:      "",

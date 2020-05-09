@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/beatlabs/patron"
@@ -13,7 +15,6 @@ import (
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
-	seventh "github.com/beatlabs/patron/examples/seventh/util"
 	"github.com/beatlabs/patron/log"
 )
 
@@ -70,7 +71,7 @@ func main() {
 
 func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
 
-	timing, err := seventh.DoTimingRequest(ctx)
+	timing, err := DoTimingRequest(ctx)
 	if err != nil {
 		log.FromContext(ctx).Infof("first: failed to get timing information %v: could it be that the seventh service is not running ?", err)
 	} else {
@@ -106,4 +107,33 @@ func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, 
 	}
 	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
 	return patronhttp.NewResponse(fmt.Sprintf("got %s from second HTTP route", rsp.Status)), nil
+}
+
+// DoTimingRequest is a helper method to make a request to the seventh example service from other examples
+func DoTimingRequest(ctx context.Context) (string, error) {
+	request, err := http.NewRequest("GET", "http://localhost:50006/", nil)
+	if err != nil {
+		return "", fmt.Errorf("failed create route request: %w", err)
+	}
+	cl, err := clienthttp.New(clienthttp.Timeout(5 * time.Second))
+	if err != nil {
+		return "", fmt.Errorf("could not create http client: %w", err)
+	}
+
+	response, err := cl.Do(ctx, request)
+	if err != nil {
+		return "", fmt.Errorf("failed create get to seventh service: %w", err)
+	}
+
+	tb, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode timing response body: %w", err)
+	}
+
+	var rgx = regexp.MustCompile(`\((.*?)\)`)
+	timeInstance := rgx.FindStringSubmatch(string(tb))
+	if len(timeInstance) == 1 {
+		return "", fmt.Errorf("could not match timeinstance from response %s", string(tb))
+	}
+	return timeInstance[1], nil
 }

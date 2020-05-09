@@ -1080,7 +1080,7 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 	cacheImpl := &testingCache{
 		cache:   make(map[string]testingCacheEntity),
 		getErr:  errors.New("get error"),
-		instant: Now,
+		instant: NowSeconds,
 	}
 
 	args := [][]testArgs{
@@ -1132,7 +1132,7 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 	cacheImpl := &testingCache{
 		cache:   make(map[string]testingCacheEntity),
 		setErr:  errors.New("set error"),
-		instant: Now,
+		instant: NowSeconds,
 	}
 
 	args := [][]testArgs{
@@ -1682,7 +1682,7 @@ func assertCache(t *testing.T, args [][]testArgs) {
 				}
 			}
 
-			Now = func() int64 {
+			NowSeconds = func() int64 {
 				return arg.requestParams.timeInstance
 			}
 
@@ -1750,7 +1750,7 @@ type testingCache struct {
 	setCount int
 	getErr   error
 	setErr   error
-	instant  TimeInstant
+	instant  func() int64
 }
 
 func newTestingCache() *testingCache {

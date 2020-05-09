@@ -44,13 +44,7 @@ func init() {
 	metrics = newPrometheusMetrics()
 }
 
-// TimeInstant is a timing function
-// returns the current time instant of the system's clock
-// by default it can be `time.Now().Unix()` ,
-// but for testing purposes we want to control the time
-type TimeInstant func() int64
-
-var Now TimeInstant = func() int64 {
+var NowSeconds = func() int64 {
 	return time.Now().Unix()
 }
 
@@ -81,7 +75,7 @@ func cacheHandler(exec executor, rc *RouteCache) func(request *cacheHandlerReque
 
 	return func(request *cacheHandlerRequest) (response *CacheHandlerResponse, e error) {
 
-		now := Now()
+		now := NowSeconds()
 
 		key := request.getKey()
 

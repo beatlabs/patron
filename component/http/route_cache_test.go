@@ -45,7 +45,7 @@ func TestCachingMiddleware(t *testing.T) {
 	}
 
 	testingCache := newTestingCache()
-	testingCache.instant = httpcache.Now
+	testingCache.instant = httpcache.NowSeconds
 
 	cache, errs := httpcache.NewRouteCache(testingCache, httpcache.Age{Max: 1 * time.Second})
 	assert.Empty(t, errs)
@@ -157,7 +157,7 @@ func assertRouteBuilder(t *testing.T, arg arg, routeBuilder *RouteBuilder, cache
 func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	cc := newTestingCache()
-	cc.instant = httpcache.Now
+	cc.instant = httpcache.NowSeconds
 
 	var executions uint32
 
@@ -226,7 +226,7 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
 
 	cc := newTestingCache()
-	cc.instant = httpcache.Now
+	cc.instant = httpcache.NowSeconds
 
 	var executions uint32
 
@@ -318,7 +318,7 @@ func newMiddlewareWrapper(middlewareFunc func(w http.ResponseWriter, r *http.Req
 func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 
 	cc := newTestingCache()
-	cc.instant = httpcache.Now
+	cc.instant = httpcache.NowSeconds
 
 	var executions uint32
 
@@ -485,7 +485,7 @@ type testingCache struct {
 	setCount int
 	getErr   error
 	setErr   error
-	instant  httpcache.TimeInstant
+	instant  func() int64
 }
 
 func newTestingCache() *testingCache {

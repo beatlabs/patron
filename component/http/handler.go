@@ -83,25 +83,61 @@ func determineEncoding(h http.Header) (string, encoding.DecodeFunc, encoding.Enc
 	}
 
 	if aok {
-		switch ach[0] {
-		case "*/*", json.Type, json.TypeCharset:
-			enc = json.Encode
-			if dec == nil {
-				dec = json.Decode
+		var err error
+		encFound := false
+
+		ah := getMultiValueHeaders(ach[0])
+		for _, v := range ah {
+			ct, dec, enc, err = getSingleHeaderEncoding(v)
+			if err == nil {
+				encFound = true
+				break
 			}
-			ct = json.TypeCharset
-		case protobuf.Type, protobuf.TypeGoogle:
-			enc = protobuf.Encode
-			if dec == nil {
-				dec = protobuf.Decode
-			}
-			ct = protobuf.Type
-		default:
-			return "", nil, nil, errors.New("accept Header not supported")
+		}
+		// No valid headers found after going through all headers
+		if !encFound {
+			return "", nil, nil, errors.New("accept header not supported")
 		}
 	}
 
 	return ct, dec, enc, nil
+}
+
+func getSingleHeaderEncoding(header string) (string, encoding.DecodeFunc, encoding.EncodeFunc, error) {
+
+	var enc encoding.EncodeFunc
+	var dec encoding.DecodeFunc
+	var ct string
+
+	switch header {
+	case "*/*", json.Type, json.TypeCharset:
+		enc = json.Encode
+		dec = json.Decode
+		ct = json.TypeCharset
+	case protobuf.Type, protobuf.TypeGoogle:
+		enc = protobuf.Encode
+		dec = protobuf.Decode
+		ct = protobuf.Type
+	default:
+		return "", nil, nil, errors.New("accept header not supported")
+	}
+
+	return ct, dec, enc, nil
+}
+
+func getMultiValueHeaders(header string) []string {
+	if !strings.Contains(header, ",") {
+		return []string{header}
+	}
+
+	splitHeaders := strings.Split(header, ",")
+
+	trimmedHeaders := []string{}
+	for _, v := range splitHeaders {
+		trimmedHeaders = append(trimmedHeaders, strings.TrimSpace(v))
+	}
+
+	return trimmedHeaders
 }
 
 func extractFields(r *http.Request) map[string]string {

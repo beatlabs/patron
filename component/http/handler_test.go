@@ -64,6 +64,7 @@ func Test_determineEncoding(t *testing.T) {
 		{"missing headers, defaults json", args{req: request(t, "", "")}, json.Decode, json.Encode, json.TypeCharset, false},
 		{"accept */*, defaults to json", args{req: request(t, json.TypeCharset, "*/*")}, json.Decode, json.Encode, json.TypeCharset, false},
 		{"wrong content", args{req: request(t, "application/xml", json.TypeCharset)}, nil, nil, json.TypeCharset, true},
+		{"multi-value accept", args{req: request(t, json.TypeCharset, "application/json, */*")}, json.Decode, json.Encode, json.TypeCharset, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -79,6 +80,28 @@ func Test_determineEncoding(t *testing.T) {
 				assert.NotNil(t, got1)
 				assert.Equal(t, tt.ct, ct)
 			}
+		})
+	}
+}
+
+func Test_getMultiValueHeaders(t *testing.T) {
+	tests := []struct {
+		name            string
+		headers         string
+		expectedHeaders []string
+	}{
+		{"empty string", "", []string{""}},
+		{"single header", "*/*", []string{"*/*"}},
+		{"comma separated multi(2) header with space", "application/json, */*", []string{"application/json", "*/*"}},
+		{"comma separated multi(2) header with multiple spaces", " application/json, */* ", []string{"application/json", "*/*"}},
+		{"comma separated multi(2) header with no space", "application/json,*/*", []string{"application/json", "*/*"}},
+		{"comma separated multi(2) header", "application/json,*/*", []string{"application/json", "*/*"}},
+		{"comma separated multi(3) header", "application/json,*/*,application/xml", []string{"application/json", "*/*", "application/xml"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			newHeaders := getMultiValueHeaders(tt.headers)
+			assert.Equal(t, tt.expectedHeaders, newHeaders)
 		})
 	}
 }

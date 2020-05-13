@@ -1,6 +1,7 @@
 package simple
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -79,7 +80,10 @@ func (d *dockerRuntime) setup() error {
 		return fmt.Errorf("could not start zookeeper: %w", err)
 	}
 
-	d.zookeeper.Expire(expiration)
+	err = d.zookeeper.Expire(expiration)
+	if err != nil {
+		return errors.New("could not set expiration on zookeeper")
+	}
 
 	ip := d.zookeeper.Container.NetworkSettings.Networks["bridge"].IPAddress
 
@@ -104,7 +108,10 @@ func (d *dockerRuntime) setup() error {
 		return fmt.Errorf("could not start kafka: %w", err)
 	}
 
-	d.kafka.Expire(expiration)
+	err = d.kafka.Expire(expiration)
+	if err != nil {
+		return errors.New("could not set expiration on kafka")
+	}
 
 	return d.pool.Retry(func() error {
 		consumer, err := NewConsumer()

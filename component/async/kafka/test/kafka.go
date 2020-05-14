@@ -155,7 +155,9 @@ func NewConsumer() (sarama.Consumer, error) {
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
 
-	brokers := []string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)}
+	return sarama.NewConsumer(Brokers(), config)
+}
 
-	return sarama.NewConsumer(brokers, config)
+func Brokers() []string {
+	return []string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)}
 }

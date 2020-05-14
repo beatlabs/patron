@@ -9,10 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beatlabs/patron/component/async/kafka"
-
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/component/async/kafka/test"
+	"github.com/beatlabs/patron/component/async/kafka"
+	dockerKafka "github.com/beatlabs/patron/test/docker/kafka"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,7 +21,7 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(test.RunWithKafka(m, 120*time.Second, fmt.Sprintf("%s:1:1", topic)))
+	os.Exit(dockerKafka.RunWithKafka(m, 120*time.Second, fmt.Sprintf("%s:1:1", topic)))
 }
 
 func TestConsume(t *testing.T) {
@@ -31,14 +30,14 @@ func TestConsume(t *testing.T) {
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := New("test1", topic, test.Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := New("test1", topic, dockerKafka.Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
 			return
 		}
 
-		received, err := consumeMessages(factory, len(sent))
+		received, err := consumeMessages(t, factory, len(sent))
 		if err != nil {
 			chErr <- err
 			return
@@ -48,7 +47,7 @@ func TestConsume(t *testing.T) {
 	}()
 
 	// Send messages
-	prod, err := test.NewProducer()
+	prod, err := dockerKafka.NewProducer()
 	require.NoError(t, err)
 	for _, message := range sent {
 		_, _, err = prod.SendMessage(getProducerMessage(message))
@@ -72,14 +71,14 @@ func TestConsume_ClaimMessageError(t *testing.T) {
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := New("test1", topic, test.Brokers(), kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := New("test1", topic, dockerKafka.Brokers(), kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
 			return
 		}
 
-		received, err := consumeMessages(factory, 1)
+		received, err := consumeMessages(t, factory, 1)
 		if err != nil {
 			chErr <- err
 			return
@@ -89,7 +88,7 @@ func TestConsume_ClaimMessageError(t *testing.T) {
 	}()
 
 	// Send messages
-	prod, err := test.NewProducer()
+	prod, err := dockerKafka.NewProducer()
 	require.NoError(t, err)
 	_, _, err = prod.SendMessage(getProducerMessage("123"))
 	require.NoError(t, err)
@@ -102,12 +101,15 @@ func TestConsume_ClaimMessageError(t *testing.T) {
 	}
 }
 
-func consumeMessages(factory *Factory, expectedMessageCount int) ([]string, error) {
+func consumeMessages(t *testing.T, factory *Factory, expectedMessageCount int) ([]string, error) {
 
 	consumer, err := factory.Create()
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		_ = consumer.Close()
+	}()
 
 	ctx, cnl := context.WithCancel(context.Background())
 	defer cnl()

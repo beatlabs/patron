@@ -46,7 +46,7 @@ func TestConsume(t *testing.T) {
 		chMessages <- received
 	}()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	prod, err := dockerKafka.NewProducer()
 	require.NoError(t, err)
@@ -87,7 +87,7 @@ func TestConsume_ClaimMessageError(t *testing.T) {
 		chMessages <- received
 	}()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	prod, err := dockerKafka.NewProducer()
 	require.NoError(t, err)

@@ -58,3 +58,18 @@ func consumeMessages(consumer async.Consumer, expectedMessageCount int) ([]strin
 		}
 	}
 }
+
+func sendMessages(messages ...string) error {
+	prod, err := dockerKafka.NewProducer()
+	if err != nil {
+		return err
+	}
+	for _, message := range messages {
+		_, _, err = prod.SendMessage(getProducerMessage(message))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

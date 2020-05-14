@@ -48,12 +48,8 @@ func TestSimpleConsume(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	prod, err := dockerKafka.NewProducer()
+	err := sendMessages(sent...)
 	require.NoError(t, err)
-	for _, message := range sent {
-		_, _, err = prod.SendMessage(getProducerMessage(message))
-		require.NoError(t, err)
-	}
 
 	var received []string
 
@@ -98,9 +94,7 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	prod, err := dockerKafka.NewProducer()
-	require.NoError(t, err)
-	_, _, err = prod.SendMessage(getProducerMessage("123"))
+	err := sendMessages("123")
 	require.NoError(t, err)
 
 	select {

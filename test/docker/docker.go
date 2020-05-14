@@ -39,9 +39,19 @@ func (b *Runtime) Expiration() time.Duration {
 	return b.expiration
 }
 
-// AppendResources to the internal resources list.
-func (b *Runtime) AppendResources(r *dockertest.Resource) {
-	b.resources = append(b.resources, r)
+// RunWithOptions runs a resources provided with options.
+func (b *Runtime) RunWithOptions(ro *dockertest.RunOptions) (*dockertest.Resource, error) {
+	resource, err := b.pool.RunWithOptions(ro)
+	if err != nil {
+		return nil, err
+	}
+	b.resources = append(b.resources, resource)
+
+	err = resource.Expire(uint(b.expiration.Seconds()))
+	if err != nil {
+		return nil, err
+	}
+	return resource, nil
 }
 
 // Teardown all resources in the opposite order of their creation.

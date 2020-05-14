@@ -1,7 +1,6 @@
 package test
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -58,7 +57,7 @@ func (k *kafkaRuntime) setup() error {
 
 	var err error
 
-	zookeeper, err := k.Runtime.Pool().RunWithOptions(&dockertest.RunOptions{Repository: "wurstmeister/zookeeper",
+	runOptions := &dockertest.RunOptions{Repository: "wurstmeister/zookeeper",
 		PortBindings: map[docker.Port][]docker.PortBinding{
 			docker.Port(fmt.Sprintf("%s/tcp", zookeeperPort)): {{HostIP: "", HostPort: zookeeperPort}},
 			// port 22 is too generic to be used for the test
@@ -66,23 +65,17 @@ func (k *kafkaRuntime) setup() error {
 			"2888/tcp": {{HostIP: "", HostPort: "2888"}},
 			"3888/tcp": {{HostIP: "", HostPort: "3888"}},
 		},
-	})
+	}
+	zookeeper, err := k.RunWithOptions(runOptions)
 	if err != nil {
 		return fmt.Errorf("could not start zookeeper: %w", err)
 	}
-
-	err = zookeeper.Expire(uint(k.Expiration().Seconds()))
-	if err != nil {
-		return errors.New("could not set expiration on zookeeper")
-	}
-
-	k.AppendResources(zookeeper)
 
 	ip := zookeeper.Container.NetworkSettings.Networks["bridge"].IPAddress
 
 	kafkaTCPPort := fmt.Sprintf("%s/tcp", kafkaPort)
 
-	runOptions := &dockertest.RunOptions{
+	runOptions = &dockertest.RunOptions{
 		Repository: "wurstmeister/kafka",
 		Tag:        "2.12-2.5.0",
 		PortBindings: map[docker.Port][]docker.PortBinding{
@@ -96,17 +89,10 @@ func (k *kafkaRuntime) setup() error {
 			fmt.Sprintf("KAFKA_ZOOKEEPER_CONNECT=%s:%s", ip, zookeeperPort),
 		}}
 
-	kafka, err := k.Pool().RunWithOptions(runOptions)
+	_, err = k.RunWithOptions(runOptions)
 	if err != nil {
 		return fmt.Errorf("could not start kafka: %w", err)
 	}
-
-	err = kafka.Expire(uint(k.Expiration().Seconds()))
-	if err != nil {
-		return errors.New("could not set expiration on kafka")
-	}
-
-	k.AppendResources(kafka)
 
 	return k.Pool().Retry(func() error {
 		consumer, err := NewConsumer()

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	dockerSql "github.com/beatlabs/patron/test/docker/sql"
-	_ "github.com/go-sql-driver/mysql"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"

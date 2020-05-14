@@ -31,7 +31,14 @@ func TestConsume(t *testing.T) {
 	chErr := make(chan error)
 	go func() {
 
-		received, err := consumeMessages(len(sent))
+		factory, err := New("test1", topic, test.Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+			kafka.StartFromNewest())
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		received, err := consumeMessages(factory, len(sent))
 		if err != nil {
 			chErr <- err
 			return
@@ -43,8 +50,8 @@ func TestConsume(t *testing.T) {
 	// Send messages
 	prod, err := test.NewProducer()
 	require.NoError(t, err)
-	for _, message := range getProducerMessages(sent) {
-		_, _, err = prod.SendMessage(message)
+	for _, message := range sent {
+		_, _, err = prod.SendMessage(getProducerMessage(message))
 		require.NoError(t, err)
 	}
 
@@ -60,14 +67,43 @@ func TestConsume(t *testing.T) {
 	assert.Equal(t, sent, received)
 }
 
-func consumeMessages(expectedMessageCount int) ([]string, error) {
+func TestConsume_ClaimMessageError(t *testing.T) {
+	chMessages := make(chan []string)
+	chErr := make(chan error)
+	go func() {
 
-	// consume messages
-	factory, err := New("test1", topic, test.Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-		kafka.StartFromNewest())
-	if err != nil {
-		return nil, err
+		factory, err := New("test1", topic, test.Brokers(), kafka.Version(sarama.V2_1_0_0.String()),
+			kafka.StartFromNewest())
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		received, err := consumeMessages(factory, 1)
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		chMessages <- received
+	}()
+
+	// Send messages
+	prod, err := test.NewProducer()
+	require.NoError(t, err)
+	_, _, err = prod.SendMessage(getProducerMessage("123"))
+	require.NoError(t, err)
+
+	select {
+	case <-chMessages:
+		require.Fail(t, "no messages where expected")
+	case err = <-chErr:
+		require.EqualError(t, err, "could not determine decoder  failed to determine content type from message headers [] : content type header is missing")
 	}
+}
+
+func consumeMessages(factory *Factory, expectedMessageCount int) ([]string, error) {
+
 	consumer, err := factory.Create()
 	if err != nil {
 		return nil, err
@@ -97,13 +133,9 @@ func consumeMessages(expectedMessageCount int) ([]string, error) {
 	}
 }
 
-func getProducerMessages(messages []string) []*sarama.ProducerMessage {
-	mm := make([]*sarama.ProducerMessage, 0, len(messages))
-	for _, message := range messages {
-		mm = append(mm, &sarama.ProducerMessage{
-			Topic: topic,
-			Value: sarama.StringEncoder(message),
-		})
+func getProducerMessage(message string) *sarama.ProducerMessage {
+	return &sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.StringEncoder(message),
 	}
-	return mm
 }

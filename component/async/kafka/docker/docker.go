@@ -1,0 +1,164 @@
+package docker
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/log"
+	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/docker"
+)
+
+const (
+	kafkaHost     = "localhost"
+	kafkaPort     = "9092"
+	zookeeperPort = "2181"
+)
+
+// RunKafkaTest sets up and tears down Kafka and runs the tests.
+func RunKafkaTest(m *testing.M) int {
+	d := dockerRuntime{}
+
+	err := d.setup()
+	if err != nil {
+		log.Errorf("could not start containers %v", err)
+		os.Exit(1)
+	}
+
+	exitVal := m.Run()
+
+	ee := d.teardown()
+	if len(ee) > 0 {
+		for _, err = range ee {
+			log.Errorf("could not tear down containers %v", err)
+		}
+		os.Exit(1)
+	}
+
+	return exitVal
+}
+
+type dockerRuntime struct {
+	topics    []string
+	pool      *dockertest.Pool
+	kafka     *dockertest.Resource
+	zookeeper *dockertest.Resource
+}
+
+func (d *dockerRuntime) setup() error {
+
+	d.topics = []string{"Topic1:1:1"}
+	expiration := uint(120)
+	var err error
+
+	d.pool, err = dockertest.NewPool("")
+	if err != nil {
+		return err
+	}
+	d.pool.MaxWait = time.Duration(expiration) * time.Second
+
+	d.zookeeper, err = d.pool.RunWithOptions(&dockertest.RunOptions{Repository: "wurstmeister/zookeeper",
+		PortBindings: map[docker.Port][]docker.PortBinding{
+			docker.Port(fmt.Sprintf("%s/tcp", zookeeperPort)): {{HostIP: "", HostPort: zookeeperPort}},
+			// port 22 is too generic to be used for the test
+			"29/tcp":   {{HostIP: "", HostPort: "22"}},
+			"2888/tcp": {{HostIP: "", HostPort: "2888"}},
+			"3888/tcp": {{HostIP: "", HostPort: "3888"}},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("could not start zookeeper: %w", err)
+	}
+
+	err = d.zookeeper.Expire(expiration)
+	if err != nil {
+		return errors.New("could not set expiration on zookeeper")
+	}
+
+	ip := d.zookeeper.Container.NetworkSettings.Networks["bridge"].IPAddress
+
+	kafkaTCPPort := fmt.Sprintf("%s/tcp", kafkaPort)
+
+	runOptions := &dockertest.RunOptions{
+		Repository: "wurstmeister/kafka",
+		Tag:        "2.12-2.5.0",
+		PortBindings: map[docker.Port][]docker.PortBinding{
+			docker.Port(kafkaTCPPort): {{HostIP: "", HostPort: kafkaPort}},
+		},
+		ExposedPorts: []string{kafkaTCPPort},
+		Mounts:       []string{"/tmp/local-kafka:/etc/kafka"},
+		Env: []string{
+			"KAFKA_ADVERTISED_HOST_NAME=127.0.0.1",
+			fmt.Sprintf("KAFKA_CREATE_TOPICS=%s", strings.Join(d.topics, ",")),
+			fmt.Sprintf("KAFKA_ZOOKEEPER_CONNECT=%s:%s", ip, zookeeperPort),
+		}}
+
+	d.kafka, err = d.pool.RunWithOptions(runOptions)
+	if err != nil {
+		return fmt.Errorf("could not start kafka: %w", err)
+	}
+
+	err = d.kafka.Expire(expiration)
+	if err != nil {
+		return errors.New("could not set expiration on kafka")
+	}
+
+	return d.pool.Retry(func() error {
+		consumer, err := newConsumer()
+		if err != nil {
+			return err
+		}
+		topics, err := consumer.Topics()
+		if err != nil {
+			log.Infof("err or during topic retrieval = %v", err)
+			return err
+		}
+
+		return validateTopics(topics, d.topics)
+	})
+}
+
+func (d *dockerRuntime) teardown() []error {
+	ee := make([]error, 0)
+	err := d.pool.Purge(d.kafka)
+	if err != nil {
+		ee = append(ee, err)
+	}
+	err = d.pool.Purge(d.zookeeper)
+	if err != nil {
+		ee = append(ee, err)
+	}
+	return ee
+}
+
+func newConsumer() (sarama.Consumer, error) {
+	config := sarama.NewConfig()
+	config.Consumer.Return.Errors = true
+
+	brokers := []string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)}
+
+	return sarama.NewConsumer(brokers, config)
+}
+
+func validateTopics(clusterTopics, wantTopics []string) error {
+	var found int
+	for _, wantTopic := range wantTopics {
+		topic := strings.Split(wantTopic, ":")
+		for _, clusterTopic := range clusterTopics {
+			if topic[0] == clusterTopic {
+				found++
+			}
+		}
+	}
+
+	if found != len(wantTopics) {
+		return fmt.Errorf("failed to find topics %v in cluster topics %v", wantTopics, clusterTopics)
+	}
+
+	return nil
+}

@@ -101,7 +101,7 @@ func TestConsume_ClaimMessageError(t *testing.T) {
 	}
 }
 
-func consumeMessages(t *testing.T, factory *Factory, expectedMessageCount int) ([]string, error) {
+func consumeMessages(factory *Factory, expectedMessageCount int) ([]string, error) {
 
 	consumer, err := factory.Create()
 	if err != nil {

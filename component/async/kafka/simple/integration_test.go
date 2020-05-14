@@ -37,7 +37,7 @@ func TestConsume(t *testing.T) {
 			return
 		}
 
-		received, err := consumeMessages(t, factory, len(sent))
+		received, err := consumeMessages(factory, len(sent))
 		if err != nil {
 			chErr <- err
 			return
@@ -78,7 +78,7 @@ func TestConsume_ClaimMessageError(t *testing.T) {
 			return
 		}
 
-		received, err := consumeMessages(t, factory, 1)
+		received, err := consumeMessages(factory, 1)
 		if err != nil {
 			chErr <- err
 			return

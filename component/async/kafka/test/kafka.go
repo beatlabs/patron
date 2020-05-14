@@ -160,6 +160,7 @@ func NewConsumer() (sarama.Consumer, error) {
 	return sarama.NewConsumer(Brokers(), config)
 }
 
+// Brokers returns a list of brokers.
 func Brokers() []string {
 	return []string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)}
 }

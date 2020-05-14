@@ -26,7 +26,7 @@ func getTopic(name string) string {
 	return fmt.Sprintf("%s:1:1", name)
 }
 
-func getProducerMessage(topic, message string) *sarama.ProducerMessage {
+func getProducerMessage(message string) *sarama.ProducerMessage {
 	return &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.StringEncoder(message),

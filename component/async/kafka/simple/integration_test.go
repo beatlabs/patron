@@ -46,7 +46,8 @@ func TestConsume(t *testing.T) {
 		chMessages <- received
 	}()
 
-	// Send messages
+	time.Sleep(1 * time.Second)
+
 	prod, err := dockerKafka.NewProducer()
 	require.NoError(t, err)
 	for _, message := range sent {
@@ -62,7 +63,6 @@ func TestConsume(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// verify
 	assert.Equal(t, sent, received)
 }
 
@@ -87,7 +87,8 @@ func TestConsume_ClaimMessageError(t *testing.T) {
 		chMessages <- received
 	}()
 
-	// Send messages
+	time.Sleep(1 * time.Second)
+
 	prod, err := dockerKafka.NewProducer()
 	require.NoError(t, err)
 	_, _, err = prod.SendMessage(getProducerMessage("123"))

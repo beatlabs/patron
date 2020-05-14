@@ -144,6 +144,8 @@ func validateTopics(clusterTopics, wantTopics []string) error {
 // NewProducer creates a new sync producer.
 func NewProducer() (sarama.SyncProducer, error) {
 	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.Return.Errors = true
 
 	brokers := []string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)}
 

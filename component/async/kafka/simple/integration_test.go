@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -57,7 +57,7 @@ type dockerRuntime struct {
 
 func (d *dockerRuntime) setup() error {
 
-	d.topics = []string{"simple"}
+	d.topics = []string{"Topic1:1:1"}
 	expiration := uint(120)
 	var err error
 
@@ -99,7 +99,7 @@ func (d *dockerRuntime) setup() error {
 		Mounts:       []string{"/tmp/local-kafka:/etc/kafka"},
 		Env: []string{
 			"KAFKA_ADVERTISED_HOST_NAME=127.0.0.1",
-			fmt.Sprintf("KAFKA_CREATE_TOPICS=%s", d.topics),
+			fmt.Sprintf("KAFKA_CREATE_TOPICS=%s", strings.Join(d.topics, ",")),
 			fmt.Sprintf("KAFKA_ZOOKEEPER_CONNECT=%s:%s", ip, zookeeperPort),
 		}}
 
@@ -123,11 +123,8 @@ func (d *dockerRuntime) setup() error {
 			log.Infof("err or during topic retrieval = %v", err)
 			return err
 		}
-		if reflect.DeepEqual(topics, d.topics) {
-			return nil
-		}
 
-		return fmt.Errorf("expected topics do not exist: %v != %v", d.topics, topics)
+		return validateTopics(topics, d.topics)
 	})
 }
 
@@ -152,4 +149,22 @@ func NewConsumer() (sarama.Consumer, error) {
 	brokers := []string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)}
 
 	return sarama.NewConsumer(brokers, config)
+}
+
+func validateTopics(clusterTopics, wantTopics []string) error {
+	var found int
+	for _, wantTopic := range wantTopics {
+		topic := strings.Split(wantTopic, ":")
+		for _, clusterTopic := range clusterTopics {
+			if topic[0] == clusterTopic {
+				found++
+			}
+		}
+	}
+
+	if found != len(wantTopics) {
+		return fmt.Errorf("failed to find topics %v in cluster topics %v", wantTopics, clusterTopics)
+	}
+
+	return nil
 }

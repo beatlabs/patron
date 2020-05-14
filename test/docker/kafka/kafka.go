@@ -24,15 +24,15 @@ const (
 func RunWithKafka(m *testing.M, expiration time.Duration, topics ...string) int {
 	br, err := patrondocker.NewRuntime(expiration)
 	if err != nil {
-		log.Errorf("could not create base runtime: %v", err)
-		os.Exit(1)
+		fmt.Printf("could not create base runtime: %v\n", err)
+		return 1
 	}
 	d := kafkaRuntime{topics: topics, Runtime: *br}
 
 	err = d.setup()
 	if err != nil {
-		log.Errorf("could not start containers: %v", err)
-		os.Exit(1)
+		fmt.Printf("could not start containers: %v\n", err)
+		return 1
 	}
 
 	exitVal := m.Run()
@@ -40,7 +40,7 @@ func RunWithKafka(m *testing.M, expiration time.Duration, topics ...string) int 
 	ee := d.Teardown()
 	if len(ee) > 0 {
 		for _, err = range ee {
-			log.Errorf("could not tear down containers %v", err)
+			fmt.Printf("could not tear down containers: %v\n", err)
 		}
 		os.Exit(1)
 	}

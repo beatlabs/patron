@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/ory/dockertest/docker"
+
 	"github.com/ory/dockertest"
 )
 
@@ -41,7 +43,9 @@ func (b *Runtime) Expiration() time.Duration {
 
 // RunWithOptions runs a resources provided with options.
 func (b *Runtime) RunWithOptions(ro *dockertest.RunOptions) (*dockertest.Resource, error) {
-	resource, err := b.pool.RunWithOptions(ro)
+	resource, err := b.pool.RunWithOptions(ro, func(config *docker.HostConfig) {
+		config.AutoRemove = true
+	})
 	if err != nil {
 		return nil, err
 	}

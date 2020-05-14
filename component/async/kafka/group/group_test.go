@@ -235,34 +235,3 @@ func TestConsumer_ConsumeFailedBroker(t *testing.T) {
 	assert.Nil(t, chErr)
 	assert.Error(t, err)
 }
-
-func TestConsumer_ConsumeWithGroup(t *testing.T) {
-	broker := sarama.NewMockBroker(t, 0)
-	broker.SetHandlerByMap(map[string]sarama.MockResponse{
-		"MetadataRequest": sarama.NewMockMetadataResponse(t).
-			SetBroker(broker.Addr(), broker.BrokerID()).
-			SetLeader("TOPIC", 0, broker.BrokerID()),
-		"OffsetRequest": sarama.NewMockOffsetResponse(t).
-			SetOffset("TOPIC", 0, sarama.OffsetNewest, 10).
-			SetOffset("TOPIC", 0, sarama.OffsetOldest, 7),
-		"FetchRequest": sarama.NewMockFetchResponse(t, 1).
-			SetMessage("TOPIC", 0, 9, sarama.StringEncoder("Foo")).
-			SetHighWaterMark("TOPIC", 0, 14),
-	})
-
-	f, err := New("name", "group", []string{"TOPIC"}, []string{broker.Addr()})
-	assert.NoError(t, err)
-	c, err := f.Create()
-	assert.NoError(t, err)
-	ctx := context.Background()
-	chMsg, chErr, err := c.Consume(ctx)
-	assert.NoError(t, err)
-	assert.NotNil(t, chMsg)
-	assert.NotNil(t, chErr)
-
-	err = c.Close()
-	assert.NoError(t, err)
-	broker.Close()
-
-	ctx.Done()
-}

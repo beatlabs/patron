@@ -450,6 +450,10 @@ func (mm *mockMessage) Source() string {
 	return ""
 }
 
+func (mm *mockMessage) Payload() []byte {
+	return []byte{}
+}
+
 type mockProcessor struct {
 	errReturn bool
 	execs     int

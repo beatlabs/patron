@@ -147,6 +147,7 @@ func Test_message(t *testing.T) {
 			assert.NoError(t, m.Decode(&mp))
 			assert.Equal(t, map[string]string{"key": "value"}, mp)
 			assert.Equal(t, "queueName", m.Source())
+			assert.Equal(t, []byte(`{"key":"value"}`), m.Payload())
 		})
 	}
 }

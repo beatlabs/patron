@@ -64,6 +64,11 @@ func (m *message) Source() string {
 	return m.source
 }
 
+// Payload returns the message payload.
+func (m *message) Payload() []byte {
+	return m.del.Body
+}
+
 // Exchange represents an AMQP exchange.
 type Exchange struct {
 	name string

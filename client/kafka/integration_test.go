@@ -10,18 +10,15 @@ import (
 	"testing"
 	"time"
 
-	io_prometheus_client "github.com/prometheus/client_model/go"
-
-	"github.com/prometheus/client_golang/prometheus"
-
+	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
-
-	"github.com/Shopify/sarama"
 	dockerKafka "github.com/beatlabs/patron/test/docker/kafka"
 	"github.com/beatlabs/patron/trace"
+	"github.com/prometheus/client_golang/prometheus"
+	prometheusClient "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	jaeger "github.com/uber/jaeger-client-go"
@@ -139,11 +136,10 @@ func TestSyncProducerActiveBrokers(t *testing.T) {
 
 func TestSendWithCustomEncoder(t *testing.T) {
 	var u examples.User
-	firstname, lastname := "John", "Doe"
-	u.Firstname = &firstname
-	u.Lastname = &lastname
-	tests := []struct {
-		name        string
+	firstName, lastName := "John", "Doe"
+	u.Firstname = &firstName
+	u.Lastname = &lastName
+	tests := map[string]struct {
 		data        interface{}
 		key         string
 		enc         encoding.EncodeFunc
@@ -151,16 +147,16 @@ func TestSendWithCustomEncoder(t *testing.T) {
 		tm          []testMetric
 		wantSendErr bool
 	}{
-		{name: "json success", data: "testdata1", key: "testkey1", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
-		{name: "protobuf success", data: &u, key: "testkey2", enc: protobuf.Encode, ct: protobuf.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
-		{name: "failure due to invalid data", data: make(chan bool), key: "testkey3", wantSendErr: true},
-		{name: "nil message data", data: nil, key: "testkey4", wantSendErr: false},
-		{name: "nil encoder", data: "somedata", key: "testkey5", ct: json.Type, wantSendErr: false},
-		{name: "empty data", data: "", key: "testkey6", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
-		{name: "empty data two", data: "", key: "🚖", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
+		"json success":                {data: "testdata1", key: "testkey1", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
+		"protobuf success":            {data: &u, key: "testkey2", enc: protobuf.Encode, ct: protobuf.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
+		"failure due to invalid data": {data: make(chan bool), key: "testkey3", wantSendErr: true},
+		"nil message data":            {data: nil, key: "testkey4", wantSendErr: false},
+		"nil encoder":                 {data: "somedata", key: "testkey5", ct: json.Type, wantSendErr: false},
+		"empty data":                  {data: "", key: "testkey6", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
+		"empty data two":              {data: "", key: "🚖", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			clearMetrics(tt.tm...)
 			msg, _ := NewMessageWithKey("TOPIC", tt.data, tt.key)
 
@@ -188,7 +184,7 @@ func TestSendWithCustomEncoder(t *testing.T) {
 
 func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 
-	var builderNoErrors = []error{}
+	var builderNoErrors []error
 	var builderAllErrors = []error{
 		errors.New("brokers list is empty"),
 		errors.New("encoder is nil"),
@@ -229,7 +225,7 @@ func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotAsyncProducer, chErr, gotErrs := NewBuilder(tt.brokers).
+			got, chErr, gotErrs := NewBuilder(tt.brokers).
 				WithVersion(tt.version).
 				WithRequiredAcksPolicy(tt.ack).
 				WithTimeout(tt.timeout).
@@ -239,14 +235,14 @@ func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 			v, _ := sarama.ParseKafkaVersion(tt.version)
 			if len(tt.wantErrs) > 0 {
 				assert.ObjectsAreEqual(tt.wantErrs, gotErrs)
-				assert.Nil(t, gotAsyncProducer)
+				assert.Nil(t, got)
 			} else {
-				assert.NotNil(t, gotAsyncProducer)
+				assert.NotNil(t, got)
 				assert.NotNil(t, chErr)
-				assert.IsType(t, &AsyncProducer{}, gotAsyncProducer)
-				assert.EqualValues(t, v, gotAsyncProducer.cfg.Version)
-				assert.EqualValues(t, tt.ack, gotAsyncProducer.cfg.Producer.RequiredAcks)
-				assert.Equal(t, tt.timeout, gotAsyncProducer.cfg.Net.DialTimeout)
+				assert.IsType(t, &AsyncProducer{}, got)
+				assert.EqualValues(t, v, got.cfg.Version)
+				assert.EqualValues(t, tt.ack, got.cfg.Producer.RequiredAcks)
+				assert.Equal(t, tt.timeout, got.cfg.Net.DialTimeout)
 			}
 		})
 	}
@@ -280,7 +276,7 @@ func assertMetric(t *testing.T, testMetrics ...testMetric) {
 	assert.NoError(t, err)
 	assert.Len(t, metricFamilies, len(testMetrics))
 
-	var current *io_prometheus_client.Metric
+	var current *prometheusClient.Metric
 	found := map[string]struct{}{}
 	expected := map[string]struct{}{}
 	// Loop over our test metrics

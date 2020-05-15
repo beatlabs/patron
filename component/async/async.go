@@ -31,6 +31,7 @@ type Message interface {
 	Ack() error
 	Nack() error
 	Source() string
+	Payload() []byte
 }
 
 // ConsumerFactory interface for creating consumers.

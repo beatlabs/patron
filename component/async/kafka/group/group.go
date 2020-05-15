@@ -92,11 +92,12 @@ func (c *consumer) Close() error {
 		c.cnl()
 	}
 
-	err := c.cg.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close consumer: %w", err)
+	if c.cg != nil {
+		err := c.cg.Close()
+		if err != nil {
+			return fmt.Errorf("failed to close consumer: %w", err)
+		}
 	}
-
 	return nil
 }
 

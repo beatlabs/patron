@@ -118,16 +118,21 @@ func (m *message) Ack() error {
 	return nil
 }
 
-// Source returns the kafka topic where the message arrived.
-func (m *message) Source() string {
-	return m.msg.Topic
-}
-
 // Nack signals the producing side an erroring condition or inconsistency.
 func (m *message) Nack() error {
 	messageConfirmationCountInc("NACK")
 	trace.SpanError(m.span)
 	return nil
+}
+
+// Source returns the kafka topic where the message arrived.
+func (m *message) Source() string {
+	return m.msg.Topic
+}
+
+// Payload returns the message payload.
+func (m *message) Payload() []byte {
+	return m.msg.Value
 }
 
 // DefaultSaramaConfig function creates a sarama config object with the default configuration set up.

@@ -124,6 +124,11 @@ func (m *message) Source() string {
 	return m.queueName
 }
 
+// Payload returns the message payload.
+func (m *message) Payload() []byte {
+	return []byte(*m.msg.Body)
+}
+
 // Factory for creating SQS consumers.
 type Factory struct {
 	queueName         string

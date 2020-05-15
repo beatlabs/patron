@@ -286,7 +286,7 @@ The following implementations are provided as sub-package and are by default wir
 
 ### Context Logging
 
-Logs can be associated with some contextual data e.g. a request id. Every line logged should contain this id thus grouping the logs together. This is achieved with the usage of the context package like demonstrated bellow:
+Logs can be associated with some contextual data e.g. a request id. Every line logged should contain this id thus grouping the logs together. This is achieved with the usage of the context package as demonstrated below:
 
 ```go
 ctx := log.WithContext(r.Context(), log.Sub(map[string]interface{}{"requestID": uuid.New().String()}))

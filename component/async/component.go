@@ -157,7 +157,7 @@ func (c *Component) processing(ctx context.Context) error {
 		return fmt.Errorf("failed to create consumer: %w", err)
 	}
 	defer func() {
-		err = cns.Close()
+		err := cns.Close()
 		if err != nil {
 			log.Warnf("failed to close consumer: %v", err)
 		}
@@ -168,38 +168,32 @@ func (c *Component) processing(ctx context.Context) error {
 		return fmt.Errorf("failed to get consumer channels: %w", err)
 	}
 
-	failCh := make(chan error)
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Info("closing consumer")
-				failCh <- cns.Close()
-			case msg := <-chMsg:
-				log.Debug("New message from consumer arrived")
-				c.processMessage(msg, failCh)
-			case errMsg := <-chErr:
-				failCh <- fmt.Errorf("an error occurred during message consumption: %w", errMsg)
-				return
+	for {
+		select {
+		case msg := <-chMsg:
+			log.FromContext(msg.Context()).Debug("consumer received a new message")
+			err := c.processMessage(msg)
+			if err != nil {
+				return err
 			}
+		case <-ctx.Done():
+			if ctx.Err() != context.Canceled {
+				log.Warnf("closing consumer: %v", ctx.Err())
+			}
+			return cns.Close()
+		case err := <-chErr:
+			return fmt.Errorf("an error occurred during message consumption: %w", err)
 		}
-	}()
-	return <-failCh
+	}
 }
 
-func (c *Component) processMessage(msg Message, ch chan error) {
+func (c *Component) processMessage(msg Message) error {
 	err := c.proc(msg)
 	if err != nil {
-		err := c.executeFailureStrategy(msg, err)
-		if err != nil {
-			ch <- err
-		}
-		return
+		return c.executeFailureStrategy(msg, err)
 	}
-	if err := msg.Ack(); err != nil {
-		ch <- err
-	}
+
+	return msg.Ack()
 }
 
 var errInvalidFS = errors.New("invalid failure strategy")

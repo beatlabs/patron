@@ -12,7 +12,6 @@ import (
 )
 
 func TestRunTeardown(t *testing.T) {
-
 	d, err := NewRuntime(10 * time.Second)
 	require.NoError(t, err)
 

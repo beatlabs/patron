@@ -27,16 +27,9 @@ const (
 
 // RunWithSQL sets up and tears down Mysql and runs the tests.
 func RunWithSQL(m *testing.M, expiration time.Duration) int {
-	br, err := patronDocker.NewRuntime(expiration)
+	d, err := setup(expiration)
 	if err != nil {
-		fmt.Printf("could not create base runtime: %v\n", err)
-		return 1
-	}
-	d := sqlRuntime{Runtime: *br}
-
-	err = d.setup()
-	if err != nil {
-		fmt.Printf("could not start containers: %v\n", err)
+		fmt.Printf("could not create mysql runtime: %v\n", err)
 		return 1
 	}
 
@@ -57,7 +50,12 @@ type sqlRuntime struct {
 	patronDocker.Runtime
 }
 
-func (s *sqlRuntime) setup() error {
+func setup(expiration time.Duration) (*sqlRuntime, error) {
+	br, err := patronDocker.NewRuntime(expiration)
+	if err != nil {
+		return nil, fmt.Errorf("could not create base runtime: %w\n", err)
+	}
+	d := &sqlRuntime{Runtime: *br}
 
 	runOptions := &dockertest.RunOptions{Repository: "mysql",
 		Tag: "5.7.25",
@@ -74,13 +72,13 @@ func (s *sqlRuntime) setup() error {
 			"TIMEZONE=UTC",
 		}}
 
-	_, err := s.RunWithOptions(runOptions)
+	_, err = d.RunWithOptions(runOptions)
 	if err != nil {
-		return fmt.Errorf("could not start zookeeper: %w", err)
+		return nil, fmt.Errorf("could not start mysql: %w", err)
 	}
 
 	// wait until the container is ready
-	return s.Pool().Retry(func() error {
+	err = d.Pool().Retry(func() error {
 		db, err := sql.Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
 		if err != nil {
 			// container not ready ... return error to try again
@@ -88,6 +86,11 @@ func (s *sqlRuntime) setup() error {
 		}
 		return db.Ping()
 	})
+	if err != nil {
+		return nil, fmt.Errorf("container not ready: %w", err)
+	}
+
+	return d, nil
 }
 
 // DSN of the set up database.

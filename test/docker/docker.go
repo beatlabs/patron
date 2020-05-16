@@ -41,6 +41,11 @@ func (b *Runtime) Expiration() time.Duration {
 	return b.expiration
 }
 
+// Resources getter.
+func (b *Runtime) Resources() []*dockertest.Resource {
+	return b.resources
+}
+
 // RunWithOptions runs a resources provided with options.
 func (b *Runtime) RunWithOptions(ro *dockertest.RunOptions) (*dockertest.Resource, error) {
 	resource, err := b.pool.RunWithOptions(ro, func(config *docker.HostConfig) {

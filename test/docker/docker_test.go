@@ -26,8 +26,8 @@ func TestNewRuntime(t *testing.T) {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.args.expiration, got.expiration)
-				assert.NotNil(t, got.pool)
+				assert.Equal(t, tt.args.expiration, got.Expiration())
+				assert.NotNil(t, got.Pool())
 				assert.Equal(t, tt.args.expiration, got.pool.MaxWait)
 			}
 		})

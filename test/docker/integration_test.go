@@ -1,4 +1,4 @@
-// +build integration1
+// +build integration
 
 package docker
 

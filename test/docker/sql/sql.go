@@ -53,7 +53,7 @@ type sqlRuntime struct {
 func setup(expiration time.Duration) (*sqlRuntime, error) {
 	br, err := patronDocker.NewRuntime(expiration)
 	if err != nil {
-		return nil, fmt.Errorf("could not create base runtime: %w\n", err)
+		return nil, fmt.Errorf("could not create base runtime: %w", err)
 	}
 	d := &sqlRuntime{Runtime: *br}
 

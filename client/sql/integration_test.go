@@ -4,6 +4,7 @@ package sql
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -14,8 +15,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	runtime *dockerSql.Sql
+)
+
 func TestMain(m *testing.M) {
-	os.Exit(dockerSql.RunWithSQL(m, 120*time.Second))
+	var err error
+	runtime, err = dockerSql.Create(120 * time.Second)
+	if err != nil {
+		fmt.Printf("could not create mysql runtime: %v\n", err)
+		os.Exit(1)
+	}
+	defer func() {
+		ee := runtime.Teardown()
+		if len(ee) > 0 {
+			for _, err = range ee {
+				fmt.Printf("could not tear down containers: %v\n", err)
+			}
+		}
+	}()
+	os.Exit(m.Run())
 }
 
 func TestOpen(t *testing.T) {
@@ -31,7 +50,7 @@ func TestOpen(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := Open(tt.args.driverName, dockerSql.DSN())
+			got, err := Open(tt.args.driverName, runtime.DSN())
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -52,7 +71,7 @@ func TestIntegration(t *testing.T) {
 	const query = "SELECT * FROM employee LIMIT 1"
 	const insertQuery = "INSERT INTO employee(name) value (?)"
 
-	db, err := Open("mysql", dockerSql.DSN())
+	db, err := Open("mysql", runtime.DSN())
 	assert.NoError(t, err)
 	assert.NotNil(t, db)
 	db.SetConnMaxLifetime(time.Minute)

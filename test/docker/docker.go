@@ -28,7 +28,7 @@ func NewRuntime(expiration time.Duration) (*Runtime, error) {
 	}
 	pool.MaxWait = expiration
 
-	return &Runtime{expiration: expiration, pool: pool}, nil
+	return &Runtime{expiration: expiration, pool: pool, resources: make([]*dockertest.Resource, 0)}, nil
 }
 
 // Pool getter.

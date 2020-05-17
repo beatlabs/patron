@@ -3,73 +3,45 @@ package sql
 import (
 	"database/sql"
 	"fmt"
-	"testing"
 	"time"
+
+	"github.com/ory/dockertest/docker"
 
 	patronDocker "github.com/beatlabs/patron/test/docker"
 	// Integration test.
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
 )
 
 const (
 	dbHost           = "localhost"
 	dbSchema         = "patrondb"
-	dbPort           = "3309"
-	dbRouterPort     = "33069"
+	dbPort           = "3306"
 	dbPassword       = "test123"
 	dbRootPassword   = "test123"
 	dbUsername       = "patron"
 	connectionFormat = "%s:%s@(%s:%s)/%s?parseTime=true"
 )
 
-// RunWithSQL sets up and tears down Mysql and runs the tests.
-func RunWithSQL(m *testing.M, expiration time.Duration) int {
-	d, err := create(expiration)
-	if err != nil {
-		fmt.Printf("could not create mysql runtime: %v\n", err)
-		return 1
-	}
-
-	err = d.setup()
-	if err != nil {
-		fmt.Printf("could not setup mysql runtime: %v\n", err)
-		return 1
-	}
-	defer func() {
-		ee := d.Teardown()
-		if len(ee) > 0 {
-			for _, err = range ee {
-				fmt.Printf("could not tear down containers: %v\n", err)
-			}
-		}
-	}()
-
-	return m.Run()
-}
-
-type sqlRuntime struct {
+type Sql struct {
 	patronDocker.Runtime
 }
 
-func create(expiration time.Duration) (*sqlRuntime, error) {
+func Create(expiration time.Duration) (*Sql, error) {
 	br, err := patronDocker.NewRuntime(expiration)
 	if err != nil {
 		return nil, fmt.Errorf("could not create base runtime: %w", err)
 	}
-	return &sqlRuntime{Runtime: *br}, nil
-}
 
-func (s *sqlRuntime) setup() error {
+	runtime := &Sql{Runtime: *br}
 
 	runOptions := &dockertest.RunOptions{Repository: "mysql",
 		Tag: "5.7.25",
 		PortBindings: map[docker.Port][]docker.PortBinding{
-			"3306/tcp":  {{HostIP: "", HostPort: dbPort}},
-			"33060/tcp": {{HostIP: "", HostPort: dbRouterPort}},
+			"3306/tcp":  {{HostIP: "", HostPort: ""}},
+			"33060/tcp": {{HostIP: "", HostPort: ""}},
 		},
-		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
+		//ExposedPorts: []string{"3306/tcp", "33060/tcp"},
 		Env: []string{
 			fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", dbRootPassword),
 			fmt.Sprintf("MYSQL_USER=%s", dbUsername),
@@ -77,15 +49,14 @@ func (s *sqlRuntime) setup() error {
 			fmt.Sprintf("MYSQL_DATABASE=%s", dbSchema),
 			"TIMEZONE=UTC",
 		}}
-
-	_, err := s.RunWithOptions(runOptions)
+	_, err = runtime.RunWithOptions(runOptions)
 	if err != nil {
-		return fmt.Errorf("could not start mysql: %w", err)
+		return nil, fmt.Errorf("could not start mysql: %w", err)
 	}
 
 	// wait until the container is ready
-	err = s.Pool().Retry(func() error {
-		db, err := sql.Open("mysql", DSN())
+	err = runtime.Pool().Retry(func() error {
+		db, err := sql.Open("mysql", runtime.DSN())
 		if err != nil {
 			// container not ready ... return error to try again
 			return err
@@ -93,13 +64,20 @@ func (s *sqlRuntime) setup() error {
 		return db.Ping()
 	})
 	if err != nil {
-		return fmt.Errorf("container not ready: %w", err)
+		for _, err1 := range runtime.Teardown() {
+			fmt.Printf("failed to teardown: %v\n", err1)
+		}
+		return nil, fmt.Errorf("container not ready: %w", err)
 	}
 
-	return nil
+	return runtime, nil
 }
 
-// DSN of the set up database.
-func DSN() string {
-	return fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema)
+// Port returns a port where the container service can be reached.
+func (s *Sql) Port() string {
+	return s.Resources()[0].GetPort("3306/tcp")
+}
+
+func (s *Sql) DSN() string {
+	return fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, s.Port(), dbSchema)
 }

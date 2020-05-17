@@ -3,6 +3,7 @@
 package sql
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -10,9 +11,10 @@ import (
 )
 
 func TestRunTeardown(t *testing.T) {
-	d, err := create(120 * time.Second)
+	d, err := Create(120 * time.Second)
 	assert.NoError(t, err)
-	assert.NoError(t, d.setup())
+	dsn := fmt.Sprintf("patron:test123@(localhost:%s)/patrondb?parseTime=true", d.Port())
+	assert.Equal(t, dsn, d.DSN())
 	assert.Len(t, d.Resources(), 1)
 	assert.Empty(t, d.Teardown())
 }

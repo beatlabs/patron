@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -22,35 +21,39 @@ const (
 
 // RunWithKafka sets up and tears down Kafka and runs the tests.
 func RunWithKafka(m *testing.M, expiration time.Duration, topics ...string) int {
-	br, err := patrondocker.NewRuntime(expiration)
+	k, err := create(expiration, topics)
 	if err != nil {
-		fmt.Printf("could not create base runtime: %v\n", err)
+		fmt.Printf("could not create kafka runtime: %v\n", err)
 		return 1
 	}
-	d := kafkaRuntime{topics: topics, Runtime: *br}
-
-	err = d.setup()
+	err = k.setup()
 	if err != nil {
 		fmt.Printf("could not start containers: %v\n", err)
 		return 1
 	}
-
-	exitVal := m.Run()
-
-	ee := d.Teardown()
-	if len(ee) > 0 {
-		for _, err = range ee {
-			fmt.Printf("could not tear down containers: %v\n", err)
+	defer func() {
+		ee := k.Teardown()
+		if len(ee) > 0 {
+			for _, err = range ee {
+				fmt.Printf("could not tear down containers: %v\n", err)
+			}
 		}
-		os.Exit(1)
-	}
+	}()
 
-	return exitVal
+	return m.Run()
 }
 
 type kafkaRuntime struct {
 	patrondocker.Runtime
 	topics []string
+}
+
+func create(expiration time.Duration, topics []string) (*kafkaRuntime, error) {
+	br, err := patrondocker.NewRuntime(expiration)
+	if err != nil {
+		return nil, fmt.Errorf("could not create base runtime: %w", err)
+	}
+	return &kafkaRuntime{topics: topics, Runtime: *br}, nil
 }
 
 func (k *kafkaRuntime) setup() error {

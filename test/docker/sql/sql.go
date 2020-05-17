@@ -85,7 +85,7 @@ func (s *sqlRuntime) setup() error {
 
 	// wait until the container is ready
 	err = s.Pool().Retry(func() error {
-		db, err := sql.Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
+		db, err := sql.Open("mysql", DSN())
 		if err != nil {
 			// container not ready ... return error to try again
 			return err

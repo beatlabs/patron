@@ -3,7 +3,6 @@ package sql
 import (
 	"database/sql"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -27,35 +26,42 @@ const (
 
 // RunWithSQL sets up and tears down Mysql and runs the tests.
 func RunWithSQL(m *testing.M, expiration time.Duration) int {
-	d, err := setup(expiration)
+	d, err := create(expiration)
 	if err != nil {
 		fmt.Printf("could not create mysql runtime: %v\n", err)
 		return 1
 	}
 
-	exitVal := m.Run()
-
-	ee := d.Teardown()
-	if len(ee) > 0 {
-		for _, err = range ee {
-			fmt.Printf("could not tear down containers: %v\n", err)
-		}
-		os.Exit(1)
+	err = d.setup()
+	if err != nil {
+		fmt.Printf("could not setup mysql runtime: %v\n", err)
+		return 1
 	}
+	defer func() {
+		ee := d.Teardown()
+		if len(ee) > 0 {
+			for _, err = range ee {
+				fmt.Printf("could not tear down containers: %v\n", err)
+			}
+		}
+	}()
 
-	return exitVal
+	return m.Run()
 }
 
 type sqlRuntime struct {
 	patronDocker.Runtime
 }
 
-func setup(expiration time.Duration) (*sqlRuntime, error) {
+func create(expiration time.Duration) (*sqlRuntime, error) {
 	br, err := patronDocker.NewRuntime(expiration)
 	if err != nil {
 		return nil, fmt.Errorf("could not create base runtime: %w", err)
 	}
-	d := &sqlRuntime{Runtime: *br}
+	return &sqlRuntime{Runtime: *br}, nil
+}
+
+func (s *sqlRuntime) setup() error {
 
 	runOptions := &dockertest.RunOptions{Repository: "mysql",
 		Tag: "5.7.25",
@@ -72,13 +78,13 @@ func setup(expiration time.Duration) (*sqlRuntime, error) {
 			"TIMEZONE=UTC",
 		}}
 
-	_, err = d.RunWithOptions(runOptions)
+	_, err := s.RunWithOptions(runOptions)
 	if err != nil {
-		return nil, fmt.Errorf("could not start mysql: %w", err)
+		return fmt.Errorf("could not start mysql: %w", err)
 	}
 
 	// wait until the container is ready
-	err = d.Pool().Retry(func() error {
+	err = s.Pool().Retry(func() error {
 		db, err := sql.Open("mysql", fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, dbPort, dbSchema))
 		if err != nil {
 			// container not ready ... return error to try again
@@ -87,10 +93,10 @@ func setup(expiration time.Duration) (*sqlRuntime, error) {
 		return db.Ping()
 	})
 	if err != nil {
-		return nil, fmt.Errorf("container not ready: %w", err)
+		return fmt.Errorf("container not ready: %w", err)
 	}
 
-	return d, nil
+	return nil
 }
 
 // DSN of the set up database.

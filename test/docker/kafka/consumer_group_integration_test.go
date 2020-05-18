@@ -20,7 +20,6 @@ const (
 )
 
 func TestGroupConsume(t *testing.T) {
-	t.Parallel()
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)
 	chErr := make(chan error)
@@ -73,7 +72,6 @@ func TestGroupConsume(t *testing.T) {
 }
 
 func TestGroupConsume_ClaimMessageError(t *testing.T) {
-	t.Parallel()
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {

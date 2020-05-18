@@ -19,7 +19,6 @@ const (
 )
 
 func TestSimpleConsume(t *testing.T) {
-	t.Parallel()
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)
 	chErr := make(chan error)
@@ -72,7 +71,6 @@ func TestSimpleConsume(t *testing.T) {
 }
 
 func TestSimpleConsume_ClaimMessageError(t *testing.T) {
-	t.Parallel()
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {

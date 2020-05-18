@@ -1,6 +1,6 @@
 // +build integration
 
-package simple
+package kafka
 
 import (
 	"testing"
@@ -9,7 +9,6 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"
-	dockerKafka "github.com/beatlabs/patron/test/docker/kafka"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,7 +20,7 @@ func TestGroupConsume(t *testing.T) {
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := group.New("test1", uuid.New().String(), []string{topic}, dockerKafka.Brokers(), kafka.DecoderJSON(),
+		factory, err := group.New("test1", uuid.New().String(), []string{topic}, Brokers(), kafka.DecoderJSON(),
 			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
@@ -67,7 +66,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := group.New("test1", uuid.New().String(), []string{topic}, dockerKafka.Brokers(),
+		factory, err := group.New("test1", uuid.New().String(), []string{topic}, Brokers(),
 			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err

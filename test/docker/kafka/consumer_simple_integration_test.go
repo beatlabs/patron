@@ -1,16 +1,14 @@
 // +build integration
 
-package simple
+package kafka
 
 import (
 	"testing"
 	"time"
 
-	"github.com/beatlabs/patron/component/async/kafka/simple"
-
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/async/kafka"
-	dockerKafka "github.com/beatlabs/patron/test/docker/kafka"
+	"github.com/beatlabs/patron/component/async/kafka/simple"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +19,7 @@ func TestSimpleConsume(t *testing.T) {
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := simple.New("test1", topic, dockerKafka.Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := simple.New("test1", topic, Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
@@ -67,7 +65,7 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := simple.New("test1", topic, dockerKafka.Brokers(), kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := simple.New("test1", topic, Brokers(), kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err

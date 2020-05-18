@@ -14,13 +14,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	groupTopic1 = "groupTopic1"
+	groupTopic2 = "groupTopic2"
+)
+
 func TestGroupConsume(t *testing.T) {
+	t.Parallel()
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := group.New("test1", uuid.New().String(), []string{topic}, Brokers(), kafka.DecoderJSON(),
+		factory, err := group.New("test1", uuid.New().String(), []string{groupTopic1}, Brokers(), kafka.DecoderJSON(),
 			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
@@ -47,7 +53,12 @@ func TestGroupConsume(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	err := sendMessages(sent...)
+	messages := make([]*sarama.ProducerMessage, 0, len(sent))
+	for _, val := range sent {
+		messages = append(messages, getProducerMessage(groupTopic1, val))
+	}
+
+	err := sendMessages(messages...)
 	require.NoError(t, err)
 
 	var received []string
@@ -62,11 +73,12 @@ func TestGroupConsume(t *testing.T) {
 }
 
 func TestGroupConsume_ClaimMessageError(t *testing.T) {
+	t.Parallel()
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := group.New("test1", uuid.New().String(), []string{topic}, Brokers(),
+		factory, err := group.New("test1", uuid.New().String(), []string{groupTopic2}, Brokers(),
 			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
@@ -93,7 +105,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	err := sendMessages("321")
+	err := sendMessages(getProducerMessage(groupTopic2, "321"))
 	require.NoError(t, err)
 
 	select {

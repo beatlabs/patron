@@ -13,13 +13,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	simpleTopic1 = "simpleTopic1"
+	simpleTopic2 = "simpleTopic2"
+)
+
 func TestSimpleConsume(t *testing.T) {
+	t.Parallel()
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := simple.New("test1", topic, Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := simple.New("test1", simpleTopic1, Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
@@ -46,7 +52,12 @@ func TestSimpleConsume(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	err := sendMessages(sent...)
+	messages := make([]*sarama.ProducerMessage, 0, len(sent))
+	for _, val := range sent {
+		messages = append(messages, getProducerMessage(simpleTopic1, val))
+	}
+
+	err := sendMessages(messages...)
 	require.NoError(t, err)
 
 	var received []string
@@ -61,11 +72,12 @@ func TestSimpleConsume(t *testing.T) {
 }
 
 func TestSimpleConsume_ClaimMessageError(t *testing.T) {
+	t.Parallel()
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := simple.New("test1", topic, Brokers(), kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := simple.New("test1", simpleTopic2, Brokers(), kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
@@ -92,7 +104,7 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	err := sendMessages("123")
+	err := sendMessages(getProducerMessage(simpleTopic2, "123"))
 	require.NoError(t, err)
 
 	select {

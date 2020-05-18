@@ -21,6 +21,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	clientTopic = "clientTopic"
+)
+
 func TestNewAsyncProducer_Success(t *testing.T) {
 	ap, chErr, err := client.NewBuilder(Brokers()).WithVersion(sarama.V2_1_0_0.String()).CreateAsync()
 	assert.NoError(t, err)
@@ -35,7 +39,7 @@ func TestNewSyncProducer_Success(t *testing.T) {
 }
 
 func TestAsyncProducer_SendMessage_Close(t *testing.T) {
-	msg := client.NewMessage(topic, "TEST")
+	msg := client.NewMessage(clientTopic, "TEST")
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
@@ -52,7 +56,7 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 		"component": "kafka-async-producer",
 		"error":     false,
 		"span.kind": ext.SpanKindEnum("producer"),
-		"topic":     "Topic",
+		"topic":     clientTopic,
 		"type":      "async",
 		"version":   "dev",
 	}
@@ -60,7 +64,7 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 }
 
 func TestSyncProducer_SendMessage_Close(t *testing.T) {
-	msg := client.NewMessage(topic, "TEST")
+	msg := client.NewMessage(clientTopic, "TEST")
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
@@ -76,7 +80,7 @@ func TestSyncProducer_SendMessage_Close(t *testing.T) {
 		"component": "kafka-sync-producer",
 		"error":     false,
 		"span.kind": ext.SpanKindEnum("producer"),
-		"topic":     "Topic",
+		"topic":     clientTopic,
 		"type":      "sync",
 		"version":   "dev",
 	}
@@ -88,7 +92,7 @@ func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
 	testKey := "TEST"
-	msg, err := client.NewMessageWithKey(topic, "TEST", testKey)
+	msg, err := client.NewMessageWithKey(clientTopic, "TEST", testKey)
 	assert.NoError(t, err)
 	ap, chErr, err := client.NewBuilder(Brokers()).WithVersion(sarama.V2_1_0_0.String()).CreateAsync()
 	assert.NoError(t, err)
@@ -102,7 +106,7 @@ func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
 		"component": "kafka-async-producer",
 		"error":     false,
 		"span.kind": ext.SpanKindEnum("producer"),
-		"topic":     "Topic",
+		"topic":     clientTopic,
 		"type":      "async",
 		"version":   "dev",
 	}
@@ -114,7 +118,7 @@ func TestSyncProducer_SendMessage_WithKey(t *testing.T) {
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
 	testKey := "TEST"
-	msg, err := client.NewMessageWithKey(topic, "TEST", testKey)
+	msg, err := client.NewMessageWithKey(clientTopic, "TEST", testKey)
 	assert.NoError(t, err)
 	ap, err := client.NewBuilder(Brokers()).WithVersion(sarama.V2_1_0_0.String()).CreateSync()
 	require.NoError(t, err)
@@ -126,7 +130,7 @@ func TestSyncProducer_SendMessage_WithKey(t *testing.T) {
 		"component": "kafka-sync-producer",
 		"error":     false,
 		"span.kind": ext.SpanKindEnum("producer"),
-		"topic":     "Topic",
+		"topic":     clientTopic,
 		"type":      "sync",
 		"version":   "dev",
 	}

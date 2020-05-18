@@ -21,11 +21,16 @@ const (
 	kafkaHost     = "localhost"
 	kafkaPort     = "9092"
 	zookeeperPort = "2181"
-	topic         = "Topic"
 )
 
 func TestMain(m *testing.M) {
-	k, err := create(120*time.Second, getTopic(topic))
+	topics := []string{
+		getTopic(simpleTopic1),
+		getTopic(simpleTopic2),
+		getTopic(groupTopic1),
+		getTopic(groupTopic2),
+	}
+	k, err := create(60*time.Second, topics...)
 	if err != nil {
 		fmt.Printf("could not create kafka runtime: %v\n", err)
 		os.Exit(1)
@@ -35,16 +40,17 @@ func TestMain(m *testing.M) {
 		fmt.Printf("could not start containers: %v\n", err)
 		os.Exit(1)
 	}
-	defer func() {
-		ee := k.Teardown()
-		if len(ee) > 0 {
-			for _, err := range ee {
-				fmt.Printf("could not tear down containers: %v\n", err)
-			}
-		}
-	}()
 
-	os.Exit(m.Run())
+	exitCode := m.Run()
+
+	ee := k.Teardown()
+	if len(ee) > 0 {
+		for _, err := range ee {
+			fmt.Printf("could not tear down containers: %v\n", err)
+		}
+	}
+
+	os.Exit(exitCode)
 }
 
 type kafkaRuntime struct {
@@ -188,13 +194,13 @@ func consumeMessages(consumer async.Consumer, expectedMessageCount int) ([]strin
 	}
 }
 
-func sendMessages(messages ...string) error {
+func sendMessages(messages ...*sarama.ProducerMessage) error {
 	prod, err := NewProducer()
 	if err != nil {
 		return err
 	}
 	for _, message := range messages {
-		_, _, err = prod.SendMessage(getProducerMessage(message))
+		_, _, err = prod.SendMessage(message)
 		if err != nil {
 			return err
 		}
@@ -203,7 +209,7 @@ func sendMessages(messages ...string) error {
 	return nil
 }
 
-func getProducerMessage(message string) *sarama.ProducerMessage {
+func getProducerMessage(topic, message string) *sarama.ProducerMessage {
 	return &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.StringEncoder(message),

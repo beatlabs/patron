@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	runtime *dockerSql.Sql
+	runtime *dockerSql.SQL
 )
 
 func TestMain(m *testing.M) {

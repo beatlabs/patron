@@ -16,24 +16,25 @@ import (
 const (
 	dbHost           = "localhost"
 	dbSchema         = "patrondb"
-	dbPort           = "3306"
 	dbPassword       = "test123"
 	dbRootPassword   = "test123"
 	dbUsername       = "patron"
 	connectionFormat = "%s:%s@(%s:%s)/%s?parseTime=true"
 )
 
-type Sql struct {
+// SQL defines a docker SQL runtime.
+type SQL struct {
 	patronDocker.Runtime
 }
 
-func Create(expiration time.Duration) (*Sql, error) {
+// Create initializes a Sql docker runtime.
+func Create(expiration time.Duration) (*SQL, error) {
 	br, err := patronDocker.NewRuntime(expiration)
 	if err != nil {
 		return nil, fmt.Errorf("could not create base runtime: %w", err)
 	}
 
-	runtime := &Sql{Runtime: *br}
+	runtime := &SQL{Runtime: *br}
 
 	runOptions := &dockertest.RunOptions{Repository: "mysql",
 		Tag: "5.7.25",
@@ -74,10 +75,11 @@ func Create(expiration time.Duration) (*Sql, error) {
 }
 
 // Port returns a port where the container service can be reached.
-func (s *Sql) Port() string {
+func (s *SQL) Port() string {
 	return s.Resources()[0].GetPort("3306/tcp")
 }
 
-func (s *Sql) DSN() string {
+// DSN of the runtime.
+func (s *SQL) DSN() string {
 	return fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, s.Port(), dbSchema)
 }

@@ -44,7 +44,7 @@ func TestSimpleConsume(t *testing.T) {
 		chMessages <- received
 	}()
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	err := sendMessages(sent...)
 	require.NoError(t, err)
@@ -90,7 +90,7 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 		chMessages <- received
 	}()
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	err := sendMessages("123")
 	require.NoError(t, err)

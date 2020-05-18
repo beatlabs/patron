@@ -45,7 +45,7 @@ func TestGroupConsume(t *testing.T) {
 		chMessages <- received
 	}()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	err := sendMessages(sent...)
 	require.NoError(t, err)
@@ -91,7 +91,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 		chMessages <- received
 	}()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	err := sendMessages("321")
 	require.NoError(t, err)

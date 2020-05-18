@@ -23,18 +23,18 @@ const (
 )
 
 // SQL defines a docker SQL runtime.
-type SQL struct {
+type sqlRuntime struct {
 	patronDocker.Runtime
 }
 
 // Create initializes a Sql docker runtime.
-func Create(expiration time.Duration) (*SQL, error) {
+func create(expiration time.Duration) (*sqlRuntime, error) {
 	br, err := patronDocker.NewRuntime(expiration)
 	if err != nil {
 		return nil, fmt.Errorf("could not create base runtime: %w", err)
 	}
 
-	runtime := &SQL{Runtime: *br}
+	runtime := &sqlRuntime{Runtime: *br}
 
 	runOptions := &dockertest.RunOptions{Repository: "mysql",
 		Tag: "5.7.25",
@@ -75,11 +75,11 @@ func Create(expiration time.Duration) (*SQL, error) {
 }
 
 // Port returns a port where the container service can be reached.
-func (s *SQL) Port() string {
+func (s *sqlRuntime) Port() string {
 	return s.Resources()[0].GetPort("3306/tcp")
 }
 
 // DSN of the runtime.
-func (s *SQL) DSN() string {
+func (s *sqlRuntime) DSN() string {
 	return fmt.Sprintf(connectionFormat, dbUsername, dbPassword, dbHost, s.Port(), dbSchema)
 }

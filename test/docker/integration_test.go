@@ -16,13 +16,12 @@ func TestRunTeardown(t *testing.T) {
 	require.NoError(t, err)
 
 	runOptions := &dockertest.RunOptions{
-		Repository:   "mysql",
-		Tag:          "5.7.25",
-		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
+		Repository: "nats",
+		Tag:        "2.1.7-scratch",
 	}
-	mysql, err := d.RunWithOptions(runOptions)
+	resource, err := d.RunWithOptions(runOptions)
 	assert.NoError(t, err)
-	assert.NotNil(t, mysql)
+	assert.NotNil(t, resource)
 	ee := d.Teardown()
 	assert.Empty(t, ee)
 }

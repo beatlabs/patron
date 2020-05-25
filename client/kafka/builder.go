@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
+
+	"github.com/Shopify/sarama"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -29,22 +30,20 @@ const (
 
 const fieldSetMsg = "Setting property '%v' for '%v'"
 
-// AsyncBuilder gathers all required and optional properties, in order
-// to construct a Kafka AsyncProducer.
-type AsyncBuilder struct {
+// Builder gathers all required and optional properties, in order
+// to construct a Kafka AsyncProducer/SyncProducer.
+type Builder struct {
 	brokers     []string
 	cfg         *sarama.Config
-	chErr       chan error
-	tag         opentracing.Tag
 	enc         encoding.EncodeFunc
 	contentType string
 	errors      []error
 }
 
-// NewBuilder initiates the AsyncProducer builder chain.
+// NewBuilder initiates the AsyncProducer/SyncProducer builder chain.
 // The builder instantiates the component using default values for
 // EncodeFunc and Content-Type header.
-func NewBuilder(brokers []string) *AsyncBuilder {
+func NewBuilder(brokers []string) *Builder {
 	cfg := sarama.NewConfig()
 	cfg.Version = sarama.V0_11_0_0
 
@@ -53,19 +52,17 @@ func NewBuilder(brokers []string) *AsyncBuilder {
 		errs = append(errs, errors.New("brokers are empty or have an empty value"))
 	}
 
-	return &AsyncBuilder{
+	return &Builder{
 		brokers:     brokers,
 		cfg:         cfg,
-		chErr:       make(chan error),
-		tag:         opentracing.Tag{Key: "type", Value: "async"},
 		enc:         json.Encode,
 		contentType: json.Type,
 		errors:      errs,
 	}
 }
 
-// WithTimeout sets the dial timeout for the AsyncProducer.
-func (ab *AsyncBuilder) WithTimeout(dial time.Duration) *AsyncBuilder {
+// WithTimeout sets the dial timeout for the sync or async producer.
+func (ab *Builder) WithTimeout(dial time.Duration) *Builder {
 	if dial <= 0 {
 		ab.errors = append(ab.errors, errors.New("dial timeout has to be positive"))
 		return ab
@@ -75,8 +72,8 @@ func (ab *AsyncBuilder) WithTimeout(dial time.Duration) *AsyncBuilder {
 	return ab
 }
 
-// WithVersion sets the kafka versionfor the AsyncProducer.
-func (ab *AsyncBuilder) WithVersion(version string) *AsyncBuilder {
+// WithVersion sets the kafka versionfor the AsyncProducer/SyncProducer.
+func (ab *Builder) WithVersion(version string) *Builder {
 	if version == "" {
 		ab.errors = append(ab.errors, errors.New("version is required"))
 		return ab
@@ -94,7 +91,7 @@ func (ab *AsyncBuilder) WithVersion(version string) *AsyncBuilder {
 
 // WithRequiredAcksPolicy adjusts how many replica acknowledgements
 // broker must see before responding.
-func (ab *AsyncBuilder) WithRequiredAcksPolicy(ack RequiredAcks) *AsyncBuilder {
+func (ab *Builder) WithRequiredAcksPolicy(ack RequiredAcks) *Builder {
 	if !isValidRequiredAcks(ack) {
 		ab.errors = append(ab.errors, errors.New("invalid value for required acks policy provided"))
 		return ab
@@ -106,7 +103,7 @@ func (ab *AsyncBuilder) WithRequiredAcksPolicy(ack RequiredAcks) *AsyncBuilder {
 
 // WithEncoder sets a specific encoder implementation and Content-Type string header;
 // if no option is provided it defaults to json.
-func (ab *AsyncBuilder) WithEncoder(enc encoding.EncodeFunc, contentType string) *AsyncBuilder {
+func (ab *Builder) WithEncoder(enc encoding.EncodeFunc, contentType string) *Builder {
 	if enc == nil {
 		ab.errors = append(ab.errors, errors.New("encoder is nil"))
 	} else {
@@ -123,34 +120,73 @@ func (ab *AsyncBuilder) WithEncoder(enc encoding.EncodeFunc, contentType string)
 	return ab
 }
 
-// Create constructs the AsyncProducer component by applying the gathered properties.
-func (ab *AsyncBuilder) Create() (*AsyncProducer, error) {
+// CreateAsync constructs the AsyncProducer component by applying the gathered properties.
+func (ab *Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 
+	if len(ab.errors) > 0 {
+		return nil, nil, patronErrors.Aggregate(ab.errors...)
+	}
+
+	ap := AsyncProducer{
+		baseProducer: baseProducer{
+			messageStatus: messageStatus,
+			deliveryType:  "async",
+			cfg:           ab.cfg,
+			enc:           ab.enc,
+			contentType:   ab.contentType,
+			tag:           opentracing.Tag{Key: "type", Value: "async"},
+		},
+	}
+
+	var err error
+	ap.prodClient, err = sarama.NewClient(ab.brokers, ab.cfg)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create producer client: %w", err)
+	}
+
+	ap.asyncProd, err = sarama.NewAsyncProducerFromClient(ap.prodClient)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create async producer: %w", err)
+	}
+	ap.chErr = make(chan error)
+
+	go ap.propagateError()
+
+	return &ap, ap.chErr, nil
+}
+
+// CreateSync constructs the SyncProducer component by applying the gathered properties.
+func (ab *Builder) CreateSync() (*SyncProducer, error) {
 	if len(ab.errors) > 0 {
 		return nil, patronErrors.Aggregate(ab.errors...)
 	}
 
-	prodClient, err := sarama.NewClient(ab.brokers, ab.cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create async producer client: %w", err)
-	}
-	prod, err := sarama.NewAsyncProducerFromClient(prodClient)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create async producer: %w", err)
+	// required for any SyncProducer; 'Errors' is already true by default for both async/sync producers
+	ab.cfg.Producer.Return.Successes = true
+
+	p := SyncProducer{
+		baseProducer: baseProducer{
+			messageStatus: messageStatus,
+			deliveryType:  "sync",
+			cfg:           ab.cfg,
+			enc:           ab.enc,
+			contentType:   ab.contentType,
+			tag:           opentracing.Tag{Key: "type", Value: "sync"},
+		},
 	}
 
-	ap := AsyncProducer{
-		cfg:         ab.cfg,
-		prodClient:  prodClient,
-		prod:        prod,
-		chErr:       ab.chErr,
-		enc:         ab.enc,
-		contentType: ab.contentType,
-		tag:         ab.tag,
+	var err error
+	p.prodClient, err = sarama.NewClient(ab.brokers, ab.cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create producer client: %w", err)
 	}
 
-	go ap.propagateError()
-	return &ap, nil
+	p.syncProd, err = sarama.NewSyncProducerFromClient(p.prodClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create sync producer: %w", err)
+	}
+
+	return &p, nil
 }
 
 func isValidRequiredAcks(ack RequiredAcks) bool {

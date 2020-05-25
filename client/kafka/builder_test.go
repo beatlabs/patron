@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
+
+	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -199,12 +200,12 @@ func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotAsyncProducer, gotErrs := NewBuilder(tt.brokers).
+			gotAsyncProducer, chErr, gotErrs := NewBuilder(tt.brokers).
 				WithVersion(tt.version).
 				WithRequiredAcksPolicy(tt.ack).
 				WithTimeout(tt.timeout).
 				WithEncoder(tt.enc, tt.contentType).
-				Create()
+				CreateAsync()
 
 			v, _ := sarama.ParseKafkaVersion(tt.version)
 			if len(tt.wantErrs) > 0 {
@@ -212,6 +213,7 @@ func Test_createAsyncProducerUsingBuilder(t *testing.T) {
 				assert.Nil(t, gotAsyncProducer)
 			} else {
 				assert.NotNil(t, gotAsyncProducer)
+				assert.NotNil(t, chErr)
 				assert.IsType(t, &AsyncProducer{}, gotAsyncProducer)
 				assert.EqualValues(t, v, gotAsyncProducer.cfg.Version)
 				assert.EqualValues(t, tt.ack, gotAsyncProducer.cfg.Producer.RequiredAcks)

@@ -4,12 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/trace"
+
+	"github.com/Shopify/sarama"
 	"github.com/prometheus/client_golang/prometheus"
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ import (
 type testMetric struct {
 	metric *prometheus.CounterVec
 	name   string
-	label  string
+	labels []string
 	count  uint64
 }
 
@@ -53,51 +54,93 @@ func TestNewMessageWithKey(t *testing.T) {
 	}
 }
 
+func TestNewAsyncProducer_Failure(t *testing.T) {
+	got, chErr, err := NewBuilder([]string{}).CreateAsync()
+	assert.Error(t, err)
+	assert.Nil(t, got)
+	assert.Nil(t, chErr)
+}
+
+func TestNewAsyncProducer_Option_Failure(t *testing.T) {
+	got, chErr, err := NewBuilder([]string{"xxx"}).WithVersion("xxxx").CreateAsync()
+	assert.Error(t, err)
+	assert.Nil(t, got)
+	assert.Nil(t, chErr)
+}
+
+func TestNewAsyncProducer_Success(t *testing.T) {
+	seed := createKafkaBroker(t, false)
+	got, chErr, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).CreateAsync()
+	assert.NoError(t, err)
+	assert.NotNil(t, got)
+	assert.NotNil(t, chErr)
+}
+
 func TestNewSyncProducer_Failure(t *testing.T) {
-	got, err := NewBuilder([]string{}).Create()
+	got, err := NewBuilder([]string{}).CreateSync()
 	assert.Error(t, err)
 	assert.Nil(t, got)
 }
 
 func TestNewSyncProducer_Option_Failure(t *testing.T) {
-	got, err := NewBuilder([]string{"xxx"}).WithVersion("xxxx").Create()
+	got, err := NewBuilder([]string{"xxx"}).WithVersion("xxxx").CreateSync()
 	assert.Error(t, err)
 	assert.Nil(t, got)
 }
 
 func TestNewSyncProducer_Success(t *testing.T) {
 	seed := createKafkaBroker(t, false)
-	got, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).Create()
+	got, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).CreateSync()
 	assert.NoError(t, err)
 	assert.NotNil(t, got)
 }
 
 func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	msg := NewMessage("TOPIC", "TEST")
-	tm := testMetric{messageStatus, "component_kafka_async_producer_message_status", "sent", 1}
+	tm := testMetric{messageStatus, "component_kafka_async_producer_message_status", []string{"sent", "async"}, 1}
 	seed := createKafkaBroker(t, true)
-	ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).Create()
+	ap, chErr, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).CreateAsync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
+	assert.NotNil(t, chErr)
 	err = trace.Setup("test", "1.0.0", "0.0.0.0:6831", jaeger.SamplerTypeProbabilistic, 0.1)
 	assert.NoError(t, err)
 	_, ctx := trace.ChildSpan(context.Background(), "123", "cmp")
 	clearMetrics(tm)
 	err = ap.Send(ctx, msg)
-	assertMetric(t, tm)
 	assert.NoError(t, err)
-	assert.Error(t, <-ap.Error())
+	assertMetric(t, tm)
+	assert.Error(t, <-chErr)
 	assert.NoError(t, ap.Close())
+}
+
+func TestSyncProducer_SendMessage_Close(t *testing.T) {
+	msg := NewMessage("TOPIC", "TEST")
+	tm := testMetric{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}
+	seed := createKafkaBroker(t, true)
+	p, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_11_0_0.String()).CreateSync()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.NotNil(t, p)
+	err = trace.Setup("test", "1.0.0", "0.0.0.0:6831", jaeger.SamplerTypeProbabilistic, 0.1)
+	assert.NoError(t, err)
+	_, ctx := trace.ChildSpan(context.Background(), "123", "cmp")
+	clearMetrics(tm)
+	err = p.Send(ctx, msg)
+	assert.NoError(t, err)
+	assertMetric(t, tm)
+	assert.NoError(t, p.Close())
 }
 
 func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
 	testKey := "TEST"
 	msg, err := NewMessageWithKey("TOPIC", "TEST", testKey)
-	tm := testMetric{messageStatus, "component_kafka_async_producer_message_status", "sent", 1}
+	tm := testMetric{messageStatus, "component_kafka_async_producer_message_status", []string{"sent", "async"}, 1}
 	assert.Equal(t, testKey, *msg.key)
 	assert.NoError(t, err)
 	seed := createKafkaBroker(t, true)
-	ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).Create()
+	ap, chErr, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).CreateAsync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	err = trace.Setup("test", "1.0.0", "0.0.0.0:6831", jaeger.SamplerTypeProbabilistic, 0.1)
@@ -105,9 +148,31 @@ func TestAsyncProducer_SendMessage_WithKey(t *testing.T) {
 	_, ctx := trace.ChildSpan(context.Background(), "123", "cmp")
 	clearMetrics(tm)
 	err = ap.Send(ctx, msg)
-	assertMetric(t, tm)
 	assert.NoError(t, err)
-	assert.Error(t, <-ap.Error())
+	assertMetric(t, tm)
+	assert.Error(t, <-chErr)
+	assert.NoError(t, ap.Close())
+}
+
+func TestSyncProducer_SendMessage_WithKey(t *testing.T) {
+	testKey := "TEST"
+	msg, err := NewMessageWithKey("TOPIC", "TEST", testKey)
+	tm := testMetric{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}
+	assert.Equal(t, testKey, *msg.key)
+	assert.NoError(t, err)
+	seed := createKafkaBroker(t, true)
+	ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_11_0_0.String()).CreateSync()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.NotNil(t, ap)
+	err = trace.Setup("test", "1.0.0", "0.0.0.0:6831", jaeger.SamplerTypeProbabilistic, 0.1)
+	assert.NoError(t, err)
+	_, ctx := trace.ChildSpan(context.Background(), "123", "cmp")
+	clearMetrics(tm)
+	err = ap.Send(ctx, msg)
+	assert.NoError(t, err)
+	assertMetric(t, tm)
 	assert.NoError(t, ap.Close())
 }
 
@@ -147,13 +212,13 @@ func TestSendWithCustomEncoder(t *testing.T) {
 		tm          []testMetric
 		wantSendErr bool
 	}{
-		{name: "json success", data: "testdata1", key: "testkey1", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_async_producer_message_status", "sent", 1}}, wantSendErr: false},
-		{name: "protobuf success", data: &u, key: "testkey2", enc: protobuf.Encode, ct: protobuf.Type, tm: []testMetric{{messageStatus, "component_kafka_async_producer_message_status", "sent", 1}}, wantSendErr: false},
+		{name: "json success", data: "testdata1", key: "testkey1", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
+		{name: "protobuf success", data: &u, key: "testkey2", enc: protobuf.Encode, ct: protobuf.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
 		{name: "failure due to invalid data", data: make(chan bool), key: "testkey3", wantSendErr: true},
 		{name: "nil message data", data: nil, key: "testkey4", wantSendErr: false},
 		{name: "nil encoder", data: "somedata", key: "testkey5", ct: json.Type, wantSendErr: false},
-		{name: "empty data", data: "", key: "testkey6", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_async_producer_message_status", "sent", 1}}, wantSendErr: false},
-		{name: "empty data two", data: "", key: "🚖", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_async_producer_message_status", "sent", 1}}, wantSendErr: false},
+		{name: "empty data", data: "", key: "testkey6", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
+		{name: "empty data two", data: "", key: "🚖", enc: json.Encode, ct: json.Type, tm: []testMetric{{messageStatus, "component_kafka_sync_producer_message_status", []string{"sent", "sync"}, 1}}, wantSendErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -161,7 +226,7 @@ func TestSendWithCustomEncoder(t *testing.T) {
 			msg, _ := NewMessageWithKey("TOPIC", tt.data, tt.key)
 
 			seed := createKafkaBroker(t, true)
-			ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).WithEncoder(tt.enc, tt.ct).Create()
+			ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_11_0_0.String()).WithEncoder(tt.enc, tt.ct).CreateSync()
 			if tt.enc != nil {
 				assert.NoError(t, err)
 			} else {
@@ -199,18 +264,36 @@ func assertMetric(t *testing.T, testMetrics ...testMetric) {
 	assert.Len(t, metricFamilies, len(testMetrics))
 
 	var current *io_prometheus_client.Metric
+	found := map[string]struct{}{}
+	expected := map[string]struct{}{}
 	// Loop over our test metrics
 	for _, v := range testMetrics {
-		// And find the one which matches the label
+		for _, l := range v.labels {
+			expected[l] = struct{}{}
+		}
+
+		// And find the one which matches the labels
 		for _, mf := range metricFamilies {
 			for _, m := range mf.Metric {
 				for _, l := range m.Label {
-					if *l.Value == v.label {
-						current = m
+					found[*l.Value] = struct{}{}
+
+					for _, lbl := range v.labels {
+						if *l.Value == lbl {
+							current = m
+							break
+						}
 					}
 				}
 			}
 		}
+		// will fail in case of metric mismatch e.g. `creation-errors` instead of `sent`
+		assert.NotNil(t, current)
+		if current == nil {
+			t.Errorf("found: %v expected: %v", found, expected)
+			continue
+		}
+
 		// Then, perform the assertions on the matched counter
 		counter := current.Counter
 		if v.count > 0 {
@@ -227,7 +310,19 @@ func assertMetric(t *testing.T, testMetrics ...testMetric) {
 
 func TestAsyncProducerActiveBrokers(t *testing.T) {
 	seed := createKafkaBroker(t, true)
-	ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).Create()
+	ap, chErr, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).CreateAsync()
+	assert.NoError(t, err)
+	assert.NotNil(t, ap)
+	assert.NotNil(t, chErr)
+
+	assert.NotEmpty(t, ap.ActiveBrokers())
+
+	assert.NoError(t, ap.Close())
+}
+
+func TestSyncProducerActiveBrokers(t *testing.T) {
+	seed := createKafkaBroker(t, true)
+	ap, err := NewBuilder([]string{seed.Addr()}).WithVersion(sarama.V0_8_2_0.String()).CreateSync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 

@@ -1,24 +1,6 @@
 version: '2'
 
 services:  
-  mysql:
-    image: mysql:5.7
-    hostname: "mysql"
-    networks:
-      nw:
-        aliases:
-          - mysql
-    ports:
-      - '3307:3306'
-      - '33061:33060'
-    expose: 
-      - '3307'
-      - '33061'
-    environment:
-      MYSQL_USER: 'patron'
-      MYSQL_DATABASE: 'patrondb'
-      MYSQL_PASSWORD: 'test123'
-      MYSQL_ROOT_PASSWORD: 'test123'
   localstack:
     image: localstack/localstack
     hostname: localstack

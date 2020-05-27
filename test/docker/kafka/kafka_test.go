@@ -1,3 +1,5 @@
+// +build integration
+
 package kafka
 
 import (
@@ -21,6 +23,10 @@ const (
 	kafkaHost     = "localhost"
 	kafkaPort     = "9092"
 	zookeeperPort = "2181"
+	simpleTopic1  = "simpleTopic1"
+	simpleTopic2  = "simpleTopic2"
+	groupTopic1   = "groupTopic1"
+	groupTopic2   = "groupTopic2"
 )
 
 func TestMain(m *testing.M) {

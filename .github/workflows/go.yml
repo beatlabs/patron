@@ -1,9 +1,9 @@
 name: CI
-on: 
+on:
   push:
     branches:
       - master
-  pull_request:     
+  pull_request:
 jobs:
   build:
     name: CI
@@ -19,7 +19,7 @@ jobs:
 
       - name: Docker Compose Up
         run: docker-compose up -d
-    
+
       - name: Check running containers
         run: docker ps -a
 
@@ -31,4 +31,3 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CodeCovToken }}
         run: |
           bash <(curl -s https://codecov.io/bash)
-        

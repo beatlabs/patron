@@ -14,11 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	groupTopic1 = "groupTopic1"
-	groupTopic2 = "groupTopic2"
-)
-
 func TestGroupConsume(t *testing.T) {
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)

@@ -17,7 +17,7 @@ func Create(lvl log.Level) log.FactoryFunc {
 	zerolog.LevelFieldName = "lvl"
 	zerolog.MessageFieldName = "msg"
 	zerolog.TimeFieldFormat = time.RFC3339Nano
-	zl := zerolog.New(os.Stdout).With().Timestamp().Logger().Hook(sourceHook{skip: 7})
+	zl := zerolog.New(os.Stderr).With().Timestamp().Logger().Hook(sourceHook{skip: 7})
 	return func(f map[string]interface{}) log.Logger {
 		return NewLogger(&zl, lvl, f)
 	}

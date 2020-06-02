@@ -13,11 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	simpleTopic1 = "simpleTopic1"
-	simpleTopic2 = "simpleTopic2"
-)
-
 func TestSimpleConsume(t *testing.T) {
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)

@@ -1,7 +1,9 @@
 package http
 
 import (
+	"compress/gzip"
 	"errors"
+	"io"
 	"net/http"
 	"strings"
 
@@ -119,6 +121,60 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 			next.ServeHTTP(lw, r)
 			finishSpan(sp, lw.Status())
 			logRequestResponse(corID, lw, r)
+		})
+	}
+}
+
+type gzipResponseWriter struct {
+	io.Writer
+	http.ResponseWriter
+}
+
+// GZIPConfiguration defines configuration for GZIP Middleware.
+type GZIPConfiguration struct {
+	IgnoreRoutes []string
+}
+
+// Ignore checks if the given url ignored from compression or not.
+func (gc GZIPConfiguration) Ignore(url string) bool {
+	for _, iURL := range gc.IgnoreRoutes {
+		if strings.HasPrefix(url, iURL) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Write provides write func to the writer.
+func (w gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
+
+// NewGzipMiddleware creates a Gzip compression middleware.
+func NewGzipMiddleware(config GZIPConfiguration) MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") || config.Ignore(r.URL.String()) {
+				next.ServeHTTP(w, r)
+				log.Debugf("url %s skipped from gzip encoding", r.URL.String())
+				return
+			}
+			// explicitly specify encoding in header
+			w.Header().Set("Content-Encoding", "gzip")
+
+			// keep content type intact
+			respHeader := r.Header.Get("Content-Type")
+			if respHeader != "" {
+				w.Header().Set("Content-Type", respHeader)
+			}
+
+			gz := gzip.NewWriter(w)
+			defer func() {
+				_ = gz.Close()
+			}()
+			gzr := gzipResponseWriter{Writer: gz, ResponseWriter: w}
+			next.ServeHTTP(gzr, r)
 		})
 	}
 }

@@ -8,16 +8,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
-
-	"github.com/aws/aws-sdk-go/service/sqs"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-
+	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	patronDocker "github.com/beatlabs/patron/test/docker"
 	"github.com/ory/dockertest"
 )
@@ -121,24 +118,6 @@ func (s *awsRuntime) getSQSEndpoint() string {
 	return fmt.Sprintf("http://localhost:%s", s.Resources()[0].GetPort("4576/tcp"))
 }
 
-func createSNSAPI(endpoint string) (snsiface.SNSAPI, error) {
-	sess, err := session.NewSession(
-		aws.NewConfig().
-			WithEndpoint(endpoint).
-			WithRegion(testSnsRegion).
-			WithCredentials(credentials.NewStaticCredentials("test", "test", "")),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create AWS endpoint: %w", err)
-	}
-
-	cfg := &aws.Config{
-		Region: aws.String(testSnsRegion),
-	}
-
-	return sns.New(sess, cfg), nil
-}
-
 func createSNSTopic(api snsiface.SNSAPI, topic string) (string, error) {
 	out, err := api.CreateTopic(&sns.CreateTopicInput{
 		Name: aws.String(topic),
@@ -150,8 +129,34 @@ func createSNSTopic(api snsiface.SNSAPI, topic string) (string, error) {
 	return *out.TopicArn, nil
 }
 
+func createSNSAPI(endpoint string) (snsiface.SNSAPI, error) {
+	ses, err := createSession(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := &aws.Config{
+		Region: aws.String(testSnsRegion),
+	}
+
+	return sns.New(ses, cfg), nil
+}
+
 func createSQSAPI(endpoint string) (sqsiface.SQSAPI, error) {
-	sess, err := session.NewSession(
+	ses, err := createSession(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := &aws.Config{
+		Region: aws.String(testSnsRegion),
+	}
+
+	return sqs.New(ses, cfg), nil
+}
+
+func createSession(endpoint string) (*session.Session, error) {
+	ses, err := session.NewSession(
 		aws.NewConfig().
 			WithEndpoint(endpoint).
 			WithRegion(testSnsRegion).
@@ -161,11 +166,7 @@ func createSQSAPI(endpoint string) (sqsiface.SQSAPI, error) {
 		return nil, fmt.Errorf("failed to create AWS endpoint: %w", err)
 	}
 
-	cfg := &aws.Config{
-		Region: aws.String(testSnsRegion),
-	}
-
-	return sqs.New(sess, cfg), nil
+	return ses, nil
 }
 
 func createSQSQueue(api sqsiface.SQSAPI, queueName string) (string, error) {

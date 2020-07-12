@@ -9,7 +9,8 @@ import (
 	"github.com/beatlabs/patron/encoding"
 
 	"github.com/Shopify/sarama"
-	"github.com/opentracing/opentracing-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -26,6 +27,7 @@ var messageStatus *prometheus.CounterVec
 // Producer interface for Kafka.
 type Producer interface {
 	Send(ctx context.Context, msg *Message) error
+	SendCloudEvent(ctx context.Context, msg *cloudevents.Event) error
 	Close() error
 }
 

@@ -128,14 +128,15 @@ func (p *baseProducer) createProducerMessage(ctx context.Context, msg *Message, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
+	headersCarrier.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 
 	if msg.cloudEvt == nil {
-		return p.createProducerMessagePlain(ctx, headersCarrier, msg)
+		return p.createProducerMessageBase(ctx, headersCarrier, msg)
 	}
 	return createProducerMessageFromCloudEvent(ctx, headersCarrier, msg)
 }
 
-func (p *baseProducer) createProducerMessagePlain(ctx context.Context, headerCarrier kafkaHeadersCarrier,
+func (p *baseProducer) createProducerMessageBase(ctx context.Context, headerCarrier kafkaHeadersCarrier,
 	msg *Message) (*sarama.ProducerMessage, error) {
 
 	headerCarrier.Set(encoding.ContentTypeHeader, p.contentType)
@@ -150,7 +151,6 @@ func (p *baseProducer) createProducerMessagePlain(ctx context.Context, headerCar
 		return nil, fmt.Errorf("failed to encode message body: %w", err)
 	}
 
-	headerCarrier.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 	return &sarama.ProducerMessage{
 		Topic:   msg.topic,
 		Key:     key,

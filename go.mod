@@ -7,6 +7,7 @@ require (
 	github.com/Shopify/sarama v1.21.0
 	github.com/aws/aws-sdk-go v1.21.8
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
+	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.1.0
 	github.com/cloudevents/sdk-go/v2 v2.1.0
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c // indirect

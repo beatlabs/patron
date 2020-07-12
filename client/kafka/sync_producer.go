@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/beatlabs/patron/trace"
-
 	"github.com/Shopify/sarama"
-	"github.com/opentracing/opentracing-go"
+	"github.com/beatlabs/patron/trace"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 
@@ -23,6 +22,7 @@ func (p *SyncProducer) Send(ctx context.Context, msg *Message) error {
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(syncProducerComponent, msg.topic),
 		syncProducerComponent, ext.SpanKindProducer, p.tag,
 		opentracing.Tag{Key: "topic", Value: msg.topic})
+
 	pm, err := p.createProducerMessage(ctx, msg, sp)
 	if err != nil {
 		p.statusCountInc(messageCreationErrors, msg.topic)

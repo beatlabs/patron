@@ -7,8 +7,10 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
+	"github.com/cloudevents/sdk-go/v2/binding"
 
 	"github.com/Shopify/sarama"
+	"github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -27,7 +29,6 @@ var messageStatus *prometheus.CounterVec
 // Producer interface for Kafka.
 type Producer interface {
 	Send(ctx context.Context, msg *Message) error
-	SendCloudEvent(ctx context.Context, msg *cloudevents.Event) error
 	Close() error
 }
 
@@ -45,14 +46,10 @@ type baseProducer struct {
 var (
 	_ Producer = &AsyncProducer{}
 	_ Producer = &SyncProducer{}
-)
 
-// Message abstraction of a Kafka message.
-type Message struct {
-	topic string
-	body  interface{}
-	key   *string
-}
+	errTopicEmpty = errors.New("topic is empty")
+	errBodyIsNil  = errors.New("body is nil")
+)
 
 func init() {
 	messageStatus = prometheus.NewCounterVec(
@@ -67,17 +64,48 @@ func init() {
 	prometheus.MustRegister(messageStatus)
 }
 
+// Message abstraction of a Kafka message.
+type Message struct {
+	topic    string
+	body     interface{}
+	key      *string
+	cloudEvt *cloudevents.Event
+}
+
 // NewMessage creates a new message.
-func NewMessage(t string, b interface{}) *Message {
-	return &Message{topic: t, body: b}
+func NewMessage(topic string, body interface{}) (*Message, error) {
+	if topic == "" {
+		return nil, errTopicEmpty
+	}
+	if body == nil {
+		return nil, errBodyIsNil
+	}
+	return &Message{topic: topic, body: body}, nil
 }
 
 // NewMessageWithKey creates a new message with an associated key.
-func NewMessageWithKey(t string, b interface{}, k string) (*Message, error) {
-	if k == "" {
-		return nil, errors.New("key string can not be null")
+func NewMessageWithKey(topic string, body interface{}, key string) (*Message, error) {
+	if topic == "" {
+		return nil, errTopicEmpty
 	}
-	return &Message{topic: t, body: b, key: &k}, nil
+	if body == nil {
+		return nil, errBodyIsNil
+	}
+	if key == "" {
+		return nil, errors.New("key is empty")
+	}
+	return &Message{topic: topic, body: body, key: &key}, nil
+}
+
+func MessageFromCloudEvent(topic string, evt *cloudevents.Event) (*Message, error) {
+	if topic == "" {
+		return nil, errTopicEmpty
+	}
+	if evt == nil {
+		return nil, errors.New("cloud event is nil")
+	}
+
+	return &Message{topic: topic, cloudEvt: evt}, nil
 }
 
 func (p *baseProducer) statusCountInc(status, topic string) {
@@ -95,16 +123,26 @@ func (p *baseProducer) ActiveBrokers() []string {
 }
 
 func (p *baseProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
-	c := kafkaHeadersCarrier{}
-	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
+	headersCarrier := kafkaHeadersCarrier{}
+	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &headersCarrier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
-	c.Set(encoding.ContentTypeHeader, p.contentType)
 
-	var saramaKey sarama.Encoder
+	if msg.cloudEvt == nil {
+		return p.createProducerMessagePlain(ctx, headersCarrier, msg)
+	}
+	return createProducerMessageFromCloudEvent(ctx, headersCarrier, msg)
+}
+
+func (p *baseProducer) createProducerMessagePlain(ctx context.Context, headerCarrier kafkaHeadersCarrier,
+	msg *Message) (*sarama.ProducerMessage, error) {
+
+	headerCarrier.Set(encoding.ContentTypeHeader, p.contentType)
+
+	var key sarama.Encoder
 	if msg.key != nil {
-		saramaKey = sarama.StringEncoder(*msg.key)
+		key = sarama.StringEncoder(*msg.key)
 	}
 
 	b, err := p.enc(msg.body)
@@ -112,13 +150,28 @@ func (p *baseProducer) createProducerMessage(ctx context.Context, msg *Message, 
 		return nil, fmt.Errorf("failed to encode message body: %w", err)
 	}
 
-	c.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
+	headerCarrier.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 	return &sarama.ProducerMessage{
 		Topic:   msg.topic,
-		Key:     saramaKey,
+		Key:     key,
 		Value:   sarama.ByteEncoder(b),
-		Headers: c,
+		Headers: headerCarrier,
 	}, nil
+}
+
+func createProducerMessageFromCloudEvent(ctx context.Context, headerCarrier kafkaHeadersCarrier,
+	msg *Message) (*sarama.ProducerMessage, error) {
+
+	kafkaMsg := &sarama.ProducerMessage{Topic: msg.topic}
+
+	err := kafka_sarama.WriteProducerMessage(ctx, (*binding.EventMessage)(msg.cloudEvt), kafkaMsg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create CloudEventKafka message: %w", err)
+	}
+
+	kafkaMsg.Headers = append(kafkaMsg.Headers, headerCarrier...)
+
+	return nil, nil
 }
 
 type kafkaHeadersCarrier []sarama.RecordHeader

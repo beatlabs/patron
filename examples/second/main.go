@@ -110,7 +110,10 @@ func (hc *httpComponent) second(ctx context.Context, req *patronhttp.Request) (*
 		return nil, fmt.Errorf("failed to get www.google.com: %w", err)
 	}
 
-	kafkaMsg := kafka.NewMessage(hc.topic, &u)
+	kafkaMsg, err := kafka.NewMessage(hc.topic, &u)
+	if err != nil {
+		return nil, err
+	}
 
 	err = hc.prd.Send(ctx, kafkaMsg)
 	if err != nil {

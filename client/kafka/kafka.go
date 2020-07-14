@@ -131,12 +131,12 @@ func (p *baseProducer) createProducerMessage(ctx context.Context, msg *Message, 
 	headersCarrier.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 
 	if msg.cloudEvt == nil {
-		return p.createProducerMessageBase(ctx, headersCarrier, msg)
+		return p.createProducerMessageBase(headersCarrier, msg)
 	}
 	return createProducerMessageFromCloudEvent(ctx, headersCarrier, msg)
 }
 
-func (p *baseProducer) createProducerMessageBase(ctx context.Context, headerCarrier kafkaHeadersCarrier,
+func (p *baseProducer) createProducerMessageBase(headerCarrier kafkaHeadersCarrier,
 	msg *Message) (*sarama.ProducerMessage, error) {
 
 	headerCarrier.Set(encoding.ContentTypeHeader, p.contentType)

@@ -6,10 +6,15 @@ import (
 	"fmt"
 
 	"github.com/beatlabs/patron/trace"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 
 	"github.com/Shopify/sarama"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+)
+
+const (
+	asyncProducerComponent = "kafka-async-producer"
 )
 
 // AsyncProducer is an asynchronous Kafka producer.
@@ -33,6 +38,25 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
 	}
 
 	ap.statusCountInc(messageSent, msg.topic)
+	ap.asyncProd.Input() <- pm
+	trace.SpanSuccess(sp)
+
+	return nil
+}
+
+func (ap *AsyncProducer) SendCloudEvent(ctx context.Context, topic string, msg *cloudevents.Event) error {
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(asyncProducerComponent, topic),
+		asyncProducerComponent, ext.SpanKindProducer, ap.tag,
+		opentracing.Tag{Key: "topic", Value: topic})
+
+	pm, err := createProducerMessageFromCloudEvent(ctx, sp, topic, msg)
+	if err != nil {
+		ap.statusCountInc(messageCreationErrors, topic)
+		trace.SpanError(sp)
+		return err
+	}
+
+	ap.statusCountInc(messageSent, topic)
 	ap.asyncProd.Input() <- pm
 	trace.SpanSuccess(sp)
 

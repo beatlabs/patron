@@ -17,11 +17,9 @@ import (
 )
 
 const (
-	asyncProducerComponent = "kafka-async-producer"
-	syncProducerComponent  = "kafka-sync-producer"
-	messageCreationErrors  = "creation-errors"
-	messageSendErrors      = "send-errors"
-	messageSent            = "sent"
+	messageCreationErrors = "creation-errors"
+	messageSendErrors     = "send-errors"
+	messageSent           = "sent"
 )
 
 var messageStatus *prometheus.CounterVec
@@ -29,6 +27,7 @@ var messageStatus *prometheus.CounterVec
 // Producer interface for Kafka.
 type Producer interface {
 	Send(ctx context.Context, msg *Message) error
+	SendCloudEvent(ctx context.Context, topic string, msg *cloudevents.Event) error
 	Close() error
 }
 
@@ -66,10 +65,9 @@ func init() {
 
 // Message abstraction of a Kafka message.
 type Message struct {
-	topic    string
-	body     interface{}
-	key      *string
-	cloudEvt *cloudevents.Event
+	topic string
+	body  interface{}
+	key   *string
 }
 
 // NewMessage creates a new message.
@@ -97,17 +95,6 @@ func NewMessageWithKey(topic string, body interface{}, key string) (*Message, er
 	return &Message{topic: topic, body: body, key: &key}, nil
 }
 
-func MessageFromCloudEvent(topic string, evt *cloudevents.Event) (*Message, error) {
-	if topic == "" {
-		return nil, errTopicEmpty
-	}
-	if evt == nil {
-		return nil, errors.New("cloud event is nil")
-	}
-
-	return &Message{topic: topic, cloudEvt: evt}, nil
-}
-
 func (p *baseProducer) statusCountInc(status, topic string) {
 	p.messageStatus.WithLabelValues(status, topic, p.deliveryType).Inc()
 }
@@ -130,16 +117,7 @@ func (p *baseProducer) createProducerMessage(ctx context.Context, msg *Message, 
 	}
 	headersCarrier.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 
-	if msg.cloudEvt == nil {
-		return p.createProducerMessageBase(headersCarrier, msg)
-	}
-	return createProducerMessageFromCloudEvent(ctx, headersCarrier, msg)
-}
-
-func (p *baseProducer) createProducerMessageBase(headerCarrier kafkaHeadersCarrier,
-	msg *Message) (*sarama.ProducerMessage, error) {
-
-	headerCarrier.Set(encoding.ContentTypeHeader, p.contentType)
+	headersCarrier.Set(encoding.ContentTypeHeader, p.contentType)
 
 	var key sarama.Encoder
 	if msg.key != nil {
@@ -155,16 +133,23 @@ func (p *baseProducer) createProducerMessageBase(headerCarrier kafkaHeadersCarri
 		Topic:   msg.topic,
 		Key:     key,
 		Value:   sarama.ByteEncoder(b),
-		Headers: headerCarrier,
+		Headers: headersCarrier,
 	}, nil
 }
 
-func createProducerMessageFromCloudEvent(ctx context.Context, headerCarrier kafkaHeadersCarrier,
-	msg *Message) (*sarama.ProducerMessage, error) {
+func createProducerMessageFromCloudEvent(ctx context.Context, sp opentracing.Span, topic string,
+	msg *cloudevents.Event) (*sarama.ProducerMessage, error) {
 
-	kafkaMsg := &sarama.ProducerMessage{Topic: msg.topic}
+	headerCarrier := kafkaHeadersCarrier{}
+	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &headerCarrier)
+	if err != nil {
+		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)
+	}
+	headerCarrier.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 
-	err := kafka_sarama.WriteProducerMessage(ctx, (*binding.EventMessage)(msg.cloudEvt), kafkaMsg)
+	kafkaMsg := &sarama.ProducerMessage{Topic: topic}
+
+	err = kafka_sarama.WriteProducerMessage(ctx, (*binding.EventMessage)(msg), kafkaMsg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CloudEventKafka message: %w", err)
 	}

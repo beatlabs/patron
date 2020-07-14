@@ -6,8 +6,13 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/trace"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+)
+
+const (
+	syncProducerComponent = "kafka-sync-producer"
 )
 
 // SyncProducer is a synchronous Kafka producer.
@@ -38,6 +43,32 @@ func (p *SyncProducer) Send(ctx context.Context, msg *Message) error {
 	}
 
 	p.statusCountInc(messageSent, msg.topic)
+	trace.SpanSuccess(sp)
+
+	return nil
+}
+
+// Send a CloudEvent message to a topic.
+func (p *SyncProducer) SendCloudEvent(ctx context.Context, topic string, msg *cloudevents.Event) error {
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(syncProducerComponent, topic),
+		syncProducerComponent, ext.SpanKindProducer, p.tag,
+		opentracing.Tag{Key: "topic", Value: topic})
+
+	pm, err := createProducerMessageFromCloudEvent(ctx, sp, topic, msg)
+	if err != nil {
+		p.statusCountInc(messageCreationErrors, topic)
+		trace.SpanError(sp)
+		return err
+	}
+
+	_, _, err = p.syncProd.SendMessage(pm)
+	if err != nil {
+		p.statusCountInc(messageCreationErrors, topic)
+		trace.SpanError(sp)
+		return err
+	}
+
+	p.statusCountInc(messageSent, topic)
 	trace.SpanSuccess(sp)
 
 	return nil

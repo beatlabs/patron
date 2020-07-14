@@ -14,6 +14,8 @@ import (
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/google/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -39,7 +41,8 @@ func TestNewSyncProducer_Success(t *testing.T) {
 }
 
 func TestAsyncProducer_SendMessage_Close(t *testing.T) {
-	msg := client.NewMessage(clientTopic, "TEST")
+	msg, err := client.NewMessage(clientTopic, "TEST")
+	require.NoError(t, err)
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
@@ -64,7 +67,8 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 }
 
 func TestSyncProducer_SendMessage_Close(t *testing.T) {
-	msg := client.NewMessage(clientTopic, "TEST")
+	msg, err := client.NewMessage(clientTopic, "TEST")
+	require.NoError(t, err)
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
@@ -135,6 +139,71 @@ func TestSyncProducer_SendMessage_WithKey(t *testing.T) {
 		"version":   "dev",
 	}
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+}
+
+func TestAsyncProducer_SendCloudEventMessage_Close(t *testing.T) {
+	evt, err := createCloudEvent()
+	require.NoError(t, err)
+	mtr := mocktracer.New()
+	defer mtr.Reset()
+	opentracing.SetGlobalTracer(mtr)
+	ap, chErr, err := client.NewBuilder(Brokers()).WithVersion(sarama.V2_1_0_0.String()).CreateAsync()
+	assert.NoError(t, err)
+	assert.NotNil(t, ap)
+	assert.NotNil(t, chErr)
+	err = ap.SendCloudEvent(context.Background(), clientTopic, evt)
+	assert.NoError(t, err)
+	assert.NoError(t, ap.Close())
+	assert.Len(t, mtr.FinishedSpans(), 1)
+
+	expected := map[string]interface{}{
+		"component": "kafka-async-producer",
+		"error":     false,
+		"span.kind": ext.SpanKindEnum("producer"),
+		"topic":     clientTopic,
+		"type":      "async",
+		"version":   "dev",
+	}
+	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+}
+
+func TestSyncProducer_SendCloudEventMessage_Close(t *testing.T) {
+	evt, err := createCloudEvent()
+	require.NoError(t, err)
+	mtr := mocktracer.New()
+	defer mtr.Reset()
+	opentracing.SetGlobalTracer(mtr)
+	p, err := client.NewBuilder(Brokers()).WithVersion(sarama.V2_1_0_0.String()).CreateSync()
+	require.NoError(t, err)
+	assert.NotNil(t, p)
+	err = p.SendCloudEvent(context.Background(), clientTopic, evt)
+	assert.NoError(t, err)
+	assert.NoError(t, p.Close())
+	assert.Len(t, mtr.FinishedSpans(), 1)
+
+	expected := map[string]interface{}{
+		"component": "kafka-sync-producer",
+		"error":     false,
+		"span.kind": ext.SpanKindEnum("producer"),
+		"topic":     clientTopic,
+		"type":      "sync",
+		"version":   "dev",
+	}
+	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+}
+
+func createCloudEvent() (*cloudevents.Event, error) {
+	data := map[string]interface{}{"Id": 1, "Name": "John Doe"}
+	evt := cloudevents.NewEvent()
+	evt.SetID(uuid.New().String())
+	evt.SetSource("test")
+	evt.SetType("testEvent")
+	evt.SetTime(time.Now().UTC())
+	err := evt.SetData(cloudevents.ApplicationJSON, data)
+	if err != nil {
+		return nil, err
+	}
+	return &evt, nil
 }
 
 func TestAsyncProducerActiveBrokers(t *testing.T) {

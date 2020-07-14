@@ -156,7 +156,7 @@ func createProducerMessageFromCloudEvent(ctx context.Context, sp opentracing.Spa
 
 	kafkaMsg.Headers = append(kafkaMsg.Headers, headerCarrier...)
 
-	return nil, nil
+	return kafkaMsg, nil
 }
 
 type kafkaHeadersCarrier []sarama.RecordHeader

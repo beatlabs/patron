@@ -1,3 +1,4 @@
+// Package kafka provides consumer abstractions and base functionality with included tracing capabilities.
 package kafka
 
 import (
@@ -15,7 +16,7 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

@@ -1,3 +1,4 @@
+// Package sql provides a client with included tracing capabilities.
 package sql
 
 import (
@@ -8,7 +9,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 

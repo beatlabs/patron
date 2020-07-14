@@ -1,3 +1,4 @@
+// Package log provides logging abstractions.
 package log
 
 import (

@@ -122,7 +122,6 @@ func (ab *Builder) WithEncoder(enc encoding.EncodeFunc, contentType string) *Bui
 
 // CreateAsync constructs the AsyncProducer component by applying the gathered properties.
 func (ab *Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
-
 	if len(ab.errors) > 0 {
 		return nil, nil, patronErrors.Aggregate(ab.errors...)
 	}

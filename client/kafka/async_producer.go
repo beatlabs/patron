@@ -1,3 +1,4 @@
+// Package kafka provides a client with included tracing capabilities.
 package kafka
 
 import (
@@ -7,7 +8,7 @@ import (
 	"github.com/beatlabs/patron/trace"
 
 	"github.com/Shopify/sarama"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 

@@ -15,7 +15,6 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-
 	routesBuilder := phttp.NewRoutesBuilder().
 		Append(phttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).MethodGet())
 
@@ -25,7 +24,7 @@ func TestNewServer(t *testing.T) {
 		})
 	}
 
-	var httpBuilderAllErrors = errors.New("name is required\n" +
+	httpBuilderAllErrors := errors.New("name is required\n" +
 		"routes builder is nil\n" +
 		"provided middlewares slice was empty\n" +
 		"alive check func provided was nil\n" +

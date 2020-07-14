@@ -1,3 +1,4 @@
+// Package simple provides a simple consumer implementation without consumer groups.
 package simple
 
 import (

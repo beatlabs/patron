@@ -110,7 +110,6 @@ func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 
 // Create constructs the Component applying
 func (cb *Builder) Create() (*Component, error) {
-
 	if len(cb.errors) > 0 {
 		return nil, patronErrors.Aggregate(cb.errors...)
 	}
@@ -129,7 +128,6 @@ func (cb *Builder) Create() (*Component, error) {
 
 // Run starts the consumer processing loop messages.
 func (c *Component) Run(ctx context.Context) error {
-
 	var err error
 
 	for i := 0; i <= c.retries; i++ {
@@ -151,7 +149,6 @@ func (c *Component) Run(ctx context.Context) error {
 }
 
 func (c *Component) processing(ctx context.Context) error {
-
 	cns, err := c.cf.Create()
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %w", err)

@@ -1,3 +1,4 @@
+// Package async provides async consumer abstractions and component.
 package async
 
 import (

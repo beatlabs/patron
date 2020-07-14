@@ -1,3 +1,4 @@
+// Package auth provides abstractions for concrete implementations.
 package auth
 
 import (

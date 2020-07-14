@@ -1,3 +1,4 @@
+// Package grpc provides a gRPC component with included observability.
 package grpc
 
 import (

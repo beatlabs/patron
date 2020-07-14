@@ -1,3 +1,4 @@
+// Package zerolog is a concrete implementation of the log abstractions.
 package zerolog
 
 import (

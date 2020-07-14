@@ -1,3 +1,4 @@
+// Package http provides a client with included tracing capabilities.
 package http
 
 import (

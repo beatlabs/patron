@@ -1,3 +1,4 @@
+// Package json is a concrete implementation of the encoding abstractions.
 package json
 
 import (

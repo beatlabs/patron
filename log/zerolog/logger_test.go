@@ -146,7 +146,6 @@ func TestLog_Level(t *testing.T) {
 var t int
 
 func Benchmark_LoggingEnabled(b *testing.B) {
-
 	var bf bytes.Buffer
 	zl := zerolog.New(&bf)
 	l := NewLogger(&zl, log.DebugLevel, f)
@@ -159,7 +158,6 @@ func Benchmark_LoggingEnabled(b *testing.B) {
 }
 
 func Benchmark_LoggingDisabled(b *testing.B) {
-
 	var bf bytes.Buffer
 	zl := zerolog.New(&bf)
 	l := NewLogger(&zl, log.NoLevel, f)
@@ -174,7 +172,6 @@ func Benchmark_LoggingDisabled(b *testing.B) {
 var bl log.Logger
 
 func Benchmark_Sub(b *testing.B) {
-
 	var bf bytes.Buffer
 	zl := zerolog.New(&bf)
 	l := NewLogger(&zl, log.NoLevel, f)

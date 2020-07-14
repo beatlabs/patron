@@ -1,5 +1,9 @@
 name: CI
-on: [pull_request]
+on: 
+  push:
+    branches:
+      - master
+  pull_request:     
 jobs:
   build:
     name: CI
@@ -28,4 +32,3 @@ jobs:
         run: |
           bash <(curl -s https://codecov.io/bash)
         
-

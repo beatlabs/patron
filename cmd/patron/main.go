@@ -135,7 +135,7 @@ func createReadme(gd *genData) error {
 
 func goMod(gd *genData) error {
 	log.Print("setup go module support")
-	// #nosec
+	// #nosec G204
 	out, err := exec.Command("go", "mod", "init", gd.Module).CombinedOutput()
 	log.Print(string(out))
 	if err != nil {

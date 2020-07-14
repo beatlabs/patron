@@ -48,7 +48,7 @@ func (p *SyncProducer) Send(ctx context.Context, msg *Message) error {
 	return nil
 }
 
-// SendSendCloudEvent to the topic.
+// SendCloudEvent to the topic.
 func (p *SyncProducer) SendCloudEvent(ctx context.Context, topic string, msg *cloudevents.Event) error {
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(syncProducerComponent, topic),
 		syncProducerComponent, ext.SpanKindProducer, p.tag,

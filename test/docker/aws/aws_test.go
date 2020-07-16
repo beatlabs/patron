@@ -23,6 +23,8 @@ const (
 	testSnsRegion    = "eu-west-1"
 	testSNSTopic     = "test-topic"
 	testSQSQueueName = "test-publish-message"
+	snsPort          = "4575/tcp"
+	sqsPort          = "4576/tcp"
 )
 
 var (
@@ -111,11 +113,11 @@ func create(expiration time.Duration) (*awsRuntime, error) {
 }
 
 func (s *awsRuntime) getSNSEndpoint() string {
-	return fmt.Sprintf("http://localhost:%s", s.Resources()[0].GetPort("4575/tcp"))
+	return fmt.Sprintf("http://localhost:%s", s.Resources()[0].GetPort(snsPort))
 }
 
 func (s *awsRuntime) getSQSEndpoint() string {
-	return fmt.Sprintf("http://localhost:%s", s.Resources()[0].GetPort("4576/tcp"))
+	return fmt.Sprintf("http://localhost:%s", s.Resources()[0].GetPort(sqsPort))
 }
 
 func createSNSTopic(api snsiface.SNSAPI, topic string) (string, error) {

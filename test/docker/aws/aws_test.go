@@ -79,17 +79,22 @@ func create(expiration time.Duration) (*awsRuntime, error) {
 		return nil, fmt.Errorf("could not start mysql: %w", err)
 	}
 
+	var snsStarted bool
+
 	// wait until the container is ready
 	err = runtime.Pool().Retry(func() error {
-		snsAPI, err := createSNSAPI(runtime.getSNSEndpoint())
-		if err != nil {
-			return err
-		}
+		if !snsStarted {
+			snsAPI, err := createSNSAPI(runtime.getSNSEndpoint())
+			if err != nil {
+				return err
+			}
 
-		_, err = createSNSTopic(snsAPI, testSNSTopic)
-		if err != nil {
-			return err
+			_, err = createSNSTopic(snsAPI, testSNSTopic)
+			if err != nil {
+				return err
+			}
 		}
+		snsStarted = true
 
 		sqsAPI, err := createSQSAPI(runtime.getSQSEndpoint())
 		if err != nil {

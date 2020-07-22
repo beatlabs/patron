@@ -25,7 +25,7 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 		prepareResponse(w, ct)
 
 		f := extractFields(r)
-		for k, v := range extractParams(r) {
+		for k, v := range ExtractParams(r) {
 			f[k] = v
 		}
 
@@ -169,7 +169,8 @@ func prepareResponse(w http.ResponseWriter, ct string) {
 	w.Header().Set(encoding.ContentTypeHeader, ct)
 }
 
-func extractParams(r *http.Request) map[string]string {
+// ExtractParams extracts dynamic URL parameters using httprouter's functionality
+func ExtractParams(r *http.Request) map[string]string {
 	par := httprouter.ParamsFromContext(r.Context())
 	if len(par) == 0 {
 		return make(map[string]string)

@@ -1,3 +1,4 @@
+// Package es provides a client with included tracing capabilities.
 package es
 
 import (
@@ -10,10 +11,10 @@ import (
 	"strings"
 
 	"github.com/beatlabs/patron/trace"
-	"github.com/elastic/go-elasticsearch/v8"
+	elasticsearch "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/elastic/go-elasticsearch/v8/estransport"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 

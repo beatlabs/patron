@@ -1,3 +1,4 @@
+// Package kafka provides consumer abstractions and base functionality with included tracing capabilities.
 package kafka
 
 import (
@@ -6,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/async"
@@ -14,7 +16,7 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -31,6 +33,9 @@ const (
 var topicPartitionOffsetDiff *prometheus.GaugeVec
 var messageStatus *prometheus.CounterVec
 var messageConfirmation *prometheus.CounterVec
+
+// TimeExtractor defines a function extracting a time from a Kafka message.
+type TimeExtractor func(*sarama.ConsumerMessage) (time.Time, error)
 
 // TopicPartitionOffsetDiffGaugeSet creates a new Gauge that measures partition offsets.
 func TopicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high, offset int64) {
@@ -84,10 +89,13 @@ func init() {
 
 // ConsumerConfig is the common configuration of patron kafka consumers.
 type ConsumerConfig struct {
-	Brokers      []string
-	Buffer       int
-	DecoderFunc  encoding.DecodeRawFunc
-	SaramaConfig *sarama.Config
+	Brokers               []string
+	Buffer                int
+	DecoderFunc           encoding.DecodeRawFunc
+	DurationBasedConsumer bool
+	DurationOffset        time.Duration
+	TimeExtractor         func(*sarama.ConsumerMessage) (time.Time, error)
+	SaramaConfig          *sarama.Config
 }
 
 type message struct {

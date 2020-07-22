@@ -1,3 +1,5 @@
+DOCKER = docker
+
 default: test
 
 test: fmtcheck
@@ -21,7 +23,7 @@ fmtcheck:
 	@sh -c "'$(CURDIR)/script/gofmtcheck.sh'"
 
 lint: fmtcheck
-	golangci-lint run -E golint,gofmt,unparam,goconst,prealloc,stylecheck,unconvert --exclude-use-default=false --build-tags integration
+	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.28.1 golangci-lint run --enable golint,gofmt,gosec,unparam,goconst,prealloc,stylecheck,unconvert --exclude-use-default=false --deadline=5m  --build-tags integration
 
 deeplint: fmtcheck
 	golangci-lint run --enable-all --exclude-use-default=false -D dupl --build-tags integration

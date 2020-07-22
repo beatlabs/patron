@@ -25,6 +25,7 @@ const (
 	zookeeperPort = "2181"
 	simpleTopic1  = "simpleTopic1"
 	simpleTopic2  = "simpleTopic2"
+	simpleTopic3  = "simpleTopic3"
 	groupTopic1   = "groupTopic1"
 	groupTopic2   = "groupTopic2"
 )
@@ -36,7 +37,7 @@ func TestMain(m *testing.M) {
 		getTopic(groupTopic1),
 		getTopic(groupTopic2),
 	}
-	k, err := create(60*time.Second, topics...)
+	k, err := create(120*time.Second, topics...)
 	if err != nil {
 		fmt.Printf("could not create kafka runtime: %v\n", err)
 		os.Exit(1)
@@ -188,6 +189,8 @@ func consumeMessages(consumer async.Consumer, expectedMessageCount int) ([]strin
 
 	for {
 		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		case msg := <-ch:
 			received = append(received, string(msg.Payload()))
 			expectedMessageCount--

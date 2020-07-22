@@ -1,3 +1,4 @@
+// Package grpc provides a client implementation for gRPC with tracing included.
 package grpc
 
 import (
@@ -6,7 +7,7 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

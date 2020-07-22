@@ -1,3 +1,4 @@
+// Package correlation provides support for correlation id's and propagation.
 package correlation
 
 import (

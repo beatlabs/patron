@@ -1,3 +1,4 @@
+// Package validation provides validation implementations.
 package validation
 
 import "strings"

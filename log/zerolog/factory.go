@@ -35,7 +35,7 @@ func (sh sourceHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
 	e.Str(k, v)
 }
 
-func sourceFields(skip int) (key string, src string, ok bool) {
+func sourceFields(skip int) (key, src string, ok bool) {
 	_, file, line, ok := runtime.Caller(skip)
 	if !ok {
 		return

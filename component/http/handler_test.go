@@ -284,3 +284,25 @@ func Test_extractParams(t *testing.T) {
 	router.ServeHTTP(httptest.NewRecorder(), req)
 	assert.Equal(t, "1", fields["id"])
 }
+
+func Test_extractParamsRawRoute(t *testing.T) {
+	r, err := http.NewRequest(http.MethodGet, "/users/42/status/online", nil)
+	assert.NoError(t, err)
+	r.Header.Set(encoding.ContentTypeHeader, json.Type)
+	r.Header.Set(encoding.AcceptHeader, json.Type)
+	var fields map[string]string
+
+	proc := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fields = ExtractParams(r)
+	})
+
+	router := httprouter.New()
+	route, err := NewRawRouteBuilder("/users/:id/status/:status", proc).MethodGet().Build()
+	assert.NoError(t, err)
+	router.HandlerFunc(route.method, route.path, route.handler)
+	router.ServeHTTP(httptest.NewRecorder(), r)
+
+	assert.Equal(t, "42", fields["id"])
+	assert.Equal(t, "online", fields["status"])
+
+}

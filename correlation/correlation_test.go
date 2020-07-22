@@ -29,5 +29,4 @@ func TestIDFromContext(t *testing.T) {
 func TestContextWithID(t *testing.T) {
 	ctx := ContextWithID(context.Background(), "123")
 	assert.Equal(t, "123", ctx.Value(idKey).(string))
-
 }

@@ -1,3 +1,4 @@
+// Package redis provides a client with included tracing capabilities.
 package redis
 
 import (
@@ -6,7 +7,7 @@ import (
 
 	"github.com/beatlabs/patron/trace"
 	"github.com/go-redis/redis/v7"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 

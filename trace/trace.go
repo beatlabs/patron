@@ -1,3 +1,4 @@
+// Package trace provides trace support and helper methods.
 package trace
 
 import (

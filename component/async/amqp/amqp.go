@@ -1,3 +1,4 @@
+// Package amqp provides consumer implementation with included tracing capabilities.
 package amqp
 
 import (
@@ -22,13 +23,11 @@ const (
 	consumerComponent = "amqp-consumer"
 )
 
-var (
-	defaultCfg = amqp.Config{
-		Dial: func(network, addr string) (net.Conn, error) {
-			return net.DialTimeout(network, addr, 30*time.Second)
-		},
-	}
-)
+var defaultCfg = amqp.Config{
+	Dial: func(network, addr string) (net.Conn, error) {
+		return net.DialTimeout(network, addr, 30*time.Second)
+	},
+}
 
 type message struct {
 	span    opentracing.Span
@@ -90,7 +89,6 @@ func NewExchange(name, kind string) (*Exchange, error) {
 		kind != amqp.ExchangeFanout &&
 		kind != amqp.ExchangeTopic &&
 		kind != amqp.ExchangeHeaders {
-
 		return nil, fmt.Errorf("AMQP Exchange type is invalid, one of [%s, %s, %s, %s] is required",
 			amqp.ExchangeDirect,
 			amqp.ExchangeFanout,
@@ -125,7 +123,6 @@ func New(url, queue string, exchange Exchange, oo ...OptionFunc) (*Factory, erro
 
 // Create a new consumer.
 func (f *Factory) Create() (async.Consumer, error) {
-
 	c := &consumer{
 		url:      f.url,
 		queue:    f.queue,

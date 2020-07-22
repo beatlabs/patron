@@ -1,3 +1,4 @@
+// Package protobuf is a concrete implementation of the encoding abstractions.
 package protobuf
 
 import (

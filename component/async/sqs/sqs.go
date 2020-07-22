@@ -1,3 +1,4 @@
+// Package sqs provides consumer implementation with included tracing capabilities.
 package sqs
 
 import (

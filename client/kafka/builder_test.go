@@ -123,7 +123,6 @@ func TestEncoder(t *testing.T) {
 }
 
 func TestBrokers(t *testing.T) {
-
 	type args struct {
 		brokers []string
 	}

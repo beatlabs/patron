@@ -288,7 +288,7 @@ func (s stubQueue) GetQueueAttributesRequest(*sqs.GetQueueAttributesInput) (*req
 	panic("implement me")
 }
 
-//nolint:golint
+//nolint
 func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, error) {
 	if s.getQueueURLErr != nil {
 		return nil, s.getQueueURLErr
@@ -298,12 +298,12 @@ func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, e
 	}, nil
 }
 
-//nolint:golint
+//nolint
 func (s stubQueue) GetQueueUrlWithContext(aws.Context, *sqs.GetQueueUrlInput, ...request.Option) (*sqs.GetQueueUrlOutput, error) {
 	panic("implement me")
 }
 
-//nolint:golint
+//nolint
 func (s stubQueue) GetQueueUrlRequest(*sqs.GetQueueUrlInput) (*request.Request, *sqs.GetQueueUrlOutput) {
 	panic("implement me")
 }

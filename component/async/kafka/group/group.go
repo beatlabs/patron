@@ -1,3 +1,4 @@
+// Package group provides a consumer group implementation.
 package group
 
 import (
@@ -10,7 +11,7 @@ import (
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Factory definition of a consumer factory.

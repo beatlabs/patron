@@ -13,6 +13,11 @@ import (
 	"text/template"
 )
 
+const (
+	filePermission      = 0664
+	directoryPermission = 0775
+)
+
 type genData struct {
 	Name   string
 	Module string
@@ -113,7 +118,7 @@ func setupGit() error {
 
 func createGitIgnore() error {
 	log.Printf("copying .gitignore")
-	return ioutil.WriteFile("README.md", gitIgnoreContent(), 0664)
+	return ioutil.WriteFile("README.md", gitIgnoreContent(), filePermission)
 }
 
 func createDockerfile(gd *genData) error {
@@ -121,15 +126,16 @@ func createDockerfile(gd *genData) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile("Dockerfile", buf, 0664)
+	return ioutil.WriteFile("Dockerfile", buf, filePermission)
 }
 
 func createReadme(gd *genData) error {
-	return ioutil.WriteFile("README.md", readmeContent(gd), 0664)
+	return ioutil.WriteFile("README.md", readmeContent(gd), filePermission)
 }
 
 func goMod(gd *genData) error {
 	log.Print("setup go module support")
+	// #nosec G204
 	out, err := exec.Command("go", "mod", "init", gd.Module).CombinedOutput()
 	log.Print(string(out))
 	if err != nil {
@@ -154,7 +160,7 @@ func goMod(gd *genData) error {
 
 func createPathAndChdir(gd *genData) error {
 	log.Printf("create folder: %s", gd.Path)
-	err := os.MkdirAll(gd.Path, 0775)
+	err := os.MkdirAll(gd.Path, directoryPermission)
 	if err != nil {
 		return err
 	}
@@ -166,7 +172,7 @@ func createPathAndChdir(gd *genData) error {
 func createMain(gd *genData) error {
 	folder := fmt.Sprintf("cmd/%s", gd.Name)
 	log.Printf("create folder: %s", folder)
-	err := os.MkdirAll(folder, 0775)
+	err := os.MkdirAll(folder, directoryPermission)
 	if err != nil {
 		return err
 	}
@@ -177,7 +183,7 @@ func createMain(gd *genData) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(file, buf, 0664)
+	return ioutil.WriteFile(file, buf, filePermission)
 }
 
 func gitCommit() error {

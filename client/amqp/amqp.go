@@ -1,3 +1,4 @@
+// Package amqp provides a client with included tracing capabilities.
 package amqp
 
 import (
@@ -56,13 +57,11 @@ type Publisher interface {
 	Close(ctx context.Context) error
 }
 
-var (
-	defaultCfg = amqp.Config{
-		Dial: func(network, addr string) (net.Conn, error) {
-			return net.DialTimeout(network, addr, 30*time.Second)
-		},
-	}
-)
+var defaultCfg = amqp.Config{
+	Dial: func(network, addr string) (net.Conn, error) {
+		return net.DialTimeout(network, addr, 30*time.Second)
+	},
+}
 
 // TracedPublisher defines a RabbitMQ publisher with tracing instrumentation.
 type TracedPublisher struct {
@@ -77,7 +76,6 @@ type TracedPublisher struct {
 // - exchange type: fanout
 // - notifications are not handled at this point TBD.
 func NewPublisher(url, exc string, oo ...OptionFunc) (*TracedPublisher, error) {
-
 	if url == "" {
 		return nil, errors.New("url is required")
 	}

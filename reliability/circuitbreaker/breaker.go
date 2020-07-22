@@ -1,3 +1,4 @@
+// Package circuitbreaker provides a circuit breaker pattern implementation.
 package circuitbreaker
 
 import (
@@ -78,7 +79,6 @@ type CircuitBreaker struct {
 
 // New constructor.
 func New(name string, s Setting) (*CircuitBreaker, error) {
-
 	if name == "" {
 		return nil, errors.New("name is required")
 	}

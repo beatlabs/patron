@@ -1,3 +1,4 @@
+// Package lru is the concrete implementation of the cache abstraction.
 package lru
 
 import (

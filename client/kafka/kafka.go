@@ -21,9 +21,7 @@ const (
 	messageSent            = "sent"
 )
 
-var (
-	messageStatus *prometheus.CounterVec
-)
+var messageStatus *prometheus.CounterVec
 
 // Producer interface for Kafka.
 type Producer interface {

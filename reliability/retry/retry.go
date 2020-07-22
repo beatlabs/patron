@@ -1,3 +1,4 @@
+// Package retry provides a retry pattern implementation.
 package retry
 
 import (

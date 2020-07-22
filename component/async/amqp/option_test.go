@@ -8,7 +8,6 @@ import (
 )
 
 func TestBuffer(t *testing.T) {
-
 	type args struct {
 		buf int
 	}

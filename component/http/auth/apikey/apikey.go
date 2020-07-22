@@ -1,3 +1,4 @@
+// Package apikey is a concrete implementation of the auth abstractions.
 package apikey
 
 import (

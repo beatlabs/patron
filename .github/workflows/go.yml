@@ -1,5 +1,9 @@
 name: CI
-on: [pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 jobs:
   build:
     name: CI
@@ -10,20 +14,8 @@ jobs:
         with:
           go-version: 1.13
 
-      - name: Install tools
-        run: |
-          mkdir -p $HOME/bin 
-          curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $HOME/bin v1.18.0
-          echo ::add-path::$HOME/bin
-
       - name: Check out source code
         uses: actions/checkout@v2
-
-      - name: Docker Compose Up
-        run: docker-compose up -d
-    
-      - name: Check running containers
-        run: docker ps -a
 
       - name: Running CI
         run: make ci
@@ -33,5 +25,3 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CodeCovToken }}
         run: |
           bash <(curl -s https://codecov.io/bash)
-        
-

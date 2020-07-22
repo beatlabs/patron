@@ -1,3 +1,4 @@
+// Package redis is the concrete implementation of the cache abstraction.
 package redis
 
 import (

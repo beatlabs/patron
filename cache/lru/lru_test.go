@@ -7,7 +7,6 @@ import (
 )
 
 func TestNew(t *testing.T) {
-
 	tests := []struct {
 		name    string
 		size    int

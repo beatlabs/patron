@@ -1,3 +1,4 @@
+// Package encoding provides abstractions for concrete encoding implementations.
 package encoding
 
 import (

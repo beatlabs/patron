@@ -22,7 +22,6 @@ var logSetupOnce sync.Once
 
 // SetupLogging sets up the default metrics logging.
 func SetupLogging(name, version string) error {
-
 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
 	if !ok {
 		lvl = string(log.InfoLevel)
@@ -113,8 +112,8 @@ func (s *service) setupDefaultTracing(name, version string) error {
 	if !ok {
 		tp = jaeger.SamplerTypeProbabilistic
 	}
-	var prmVal = 0.0
-	var prm = "0.0"
+	prmVal := 0.0
+	prm := "0.0"
 
 	if prm, ok := os.LookupEnv("PATRON_JAEGER_SAMPLER_PARAM"); ok {
 		prmVal, err = strconv.ParseFloat(prm, 64)
@@ -129,7 +128,7 @@ func (s *service) setupDefaultTracing(name, version string) error {
 
 func (s *service) createHTTPComponent() (Component, error) {
 	var err error
-	var portVal = int64(50000)
+	portVal := int64(50000)
 	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
 	if ok {
 		portVal, err = strconv.ParseInt(port, 10, 64)

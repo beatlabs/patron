@@ -1,3 +1,4 @@
+// Package docker provides abstractions to help starting docker containers.
 package docker
 
 import (

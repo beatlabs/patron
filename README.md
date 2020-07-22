@@ -257,7 +257,7 @@ The client can control the cache with the appropriate Headers
 returns the cached instance only if the age of the instance is lower than the max-age parameter.
 This parameter is bounded from below by the server option `minAge`.
 This is to avoid chatty clients with no cache control policy (or very aggressive max-age policy) to effectively disable the cache
-- `min-fesh=?` 
+- `min-fresh=?` 
  
 returns the cached instance if the time left for expiration is lower than the provided parameter.
 This parameter is bounded from above by the server option `maxFresh`.

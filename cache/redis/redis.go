@@ -27,7 +27,10 @@ func New(ctx context.Context, opt Options) (*Cache, error) {
 // Get executes a lookup and returns whether a key exists in the cache along with its value.
 func (c *Cache) Get(key string) (interface{}, bool, error) {
 	res, err := c.rdb.Do(c.ctx, "get", key).Result()
-	if err == redis.Nil || err != nil {
+	if err != nil {
+		if err == redis.Nil { // cache miss
+			return nil, false, nil
+		}
 		return nil, false, err
 	}
 	return res, true, nil

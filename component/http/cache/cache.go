@@ -1,3 +1,4 @@
+// Package cache provides a cache control and implementation components for http routes.
 package cache
 
 import (

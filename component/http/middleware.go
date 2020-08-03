@@ -3,24 +3,29 @@ package http
 import (
 	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/beatlabs/patron/component/http/auth"
+	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	tracinglog "github.com/opentracing/opentracing-go/log"
 )
 
 const (
 	serverComponent = "http-server"
+	fieldNameError  = "error"
 )
 
 type responseWriter struct {
 	status              int
 	statusHeaderWritten bool
+	payload             []byte
 	writer              http.ResponseWriter
 }
 
@@ -33,18 +38,20 @@ func (w *responseWriter) Status() int {
 	return w.status
 }
 
-// Header returns the header.
+// Header returns the Header.
 func (w *responseWriter) Header() http.Header {
 	return w.writer.Header()
 }
 
-// Write to the internal ResponseWriter and sets the status if not set already.
+// Write to the internal responseWriter and sets the status if not set already.
 func (w *responseWriter) Write(d []byte) (int, error) {
 
 	value, err := w.writer.Write(d)
 	if err != nil {
 		return value, err
 	}
+
+	w.payload = d
 
 	if !w.statusHeaderWritten {
 		w.status = http.StatusOK
@@ -54,7 +61,7 @@ func (w *responseWriter) Write(d []byte) (int, error) {
 	return value, err
 }
 
-// WriteHeader writes the internal header and saves the status for retrieval.
+// WriteHeader writes the internal Header and saves the status for retrieval.
 func (w *responseWriter) WriteHeader(code int) {
 	w.status = code
 	w.writer.WriteHeader(code)
@@ -117,8 +124,27 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 			sp, r := span(path, corID, r)
 			lw := newResponseWriter(w)
 			next.ServeHTTP(lw, r)
-			finishSpan(sp, lw.Status())
+			finishSpan(sp, lw.Status(), lw.payload)
 			logRequestResponse(corID, lw, r)
+		})
+	}
+}
+
+// NewCachingMiddleware creates a cache layer as a middleware
+// when used as part of a middleware chain any middleware later in the chain,
+// will not be executed, but the headers it appends will be part of the cache
+func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet {
+				next.ServeHTTP(w, r)
+				return
+			}
+			err := cache.Handler(w, r, rc, next)
+			if err != nil {
+				log.Errorf("error encountered in the caching middleware: %v", err)
+				return
+			}
 		})
 	}
 }
@@ -181,7 +207,14 @@ func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request)
 	if err != nil && err != opentracing.ErrSpanContextNotFound {
 		log.Errorf("failed to extract HTTP span: %v", err)
 	}
-	sp := opentracing.StartSpan(opName(r.Method, path), ext.RPCServerOption(ctx))
+
+	strippedPath, err := stripQueryString(path)
+	if err != nil {
+		log.Warnf("unable to strip query string %q: %v", path, err)
+		strippedPath = path
+	}
+
+	sp := opentracing.StartSpan(opName(r.Method, strippedPath), ext.RPCServerOption(ctx))
 	ext.HTTPMethod.Set(sp, r.Method)
 	ext.HTTPUrl.Set(sp, r.URL.String())
 	ext.Component.Set(sp, serverComponent)
@@ -190,9 +223,27 @@ func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request)
 	return sp, r.WithContext(opentracing.ContextWithSpan(r.Context(), sp))
 }
 
-func finishSpan(sp opentracing.Span, code int) {
+// stripQueryString returns a path without the query string
+func stripQueryString(path string) (string, error) {
+	u, err := url.Parse(path)
+	if err != nil {
+		return "", err
+	}
+
+	if len(u.RawQuery) == 0 {
+		return path, nil
+	}
+
+	return path[:len(path)-len(u.RawQuery)-1], nil
+}
+
+func finishSpan(sp opentracing.Span, code int, payload []byte) {
 	ext.HTTPStatusCode.Set(sp, uint16(code))
-	ext.Error.Set(sp, code >= http.StatusInternalServerError)
+	isError := code >= http.StatusInternalServerError
+	if isError && len(payload) != 0 {
+		sp.LogFields(tracinglog.String(fieldNameError, string(payload)))
+	}
+	ext.Error.Set(sp, isError)
 	sp.Finish()
 }
 

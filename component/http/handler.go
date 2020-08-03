@@ -17,7 +17,7 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		ct, dec, enc, err := determineEncoding(r)
+		ct, dec, enc, err := determineEncoding(r.Header)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnsupportedMediaType), http.StatusUnsupportedMediaType)
 			return
@@ -29,14 +29,18 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 			f[k] = v
 		}
 
+		// TODO : for cached responses this becomes inconsistent, to be fixed in #160
+		// the corID will be passed to all consecutive responses
+		// if it was missing from the initial request
 		corID := getOrSetCorrelationID(r.Header)
 		ctx := correlation.ContextWithID(r.Context(), corID)
 		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 		ctx = log.WithContext(ctx, logger)
 
-		h := extractHeaders(r)
+		h := extractHeaders(r.Header)
 
 		req := NewRequest(f, r.Body, h, dec)
+
 		rsp, err := hnd(ctx, req)
 		if err != nil {
 			handleError(logger, w, enc, err)
@@ -50,9 +54,9 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 	}
 }
 
-func determineEncoding(r *http.Request) (string, encoding.DecodeFunc, encoding.EncodeFunc, error) {
-	cth, cok := r.Header[encoding.ContentTypeHeader]
-	ach, aok := r.Header[encoding.AcceptHeader]
+func determineEncoding(h http.Header) (string, encoding.DecodeFunc, encoding.EncodeFunc, error) {
+	cth, cok := h[encoding.ContentTypeHeader]
+	ach, aok := h[encoding.AcceptHeader]
 
 	// No headers default to JSON
 	if !cok && !aok {
@@ -74,7 +78,7 @@ func determineEncoding(r *http.Request) (string, encoding.DecodeFunc, encoding.E
 			dec = protobuf.Decode
 			ct = protobuf.Type
 		default:
-			return "", nil, nil, errors.New("content type header not supported")
+			return "", nil, nil, errors.New("content type Header not supported")
 		}
 	}
 
@@ -93,7 +97,7 @@ func determineEncoding(r *http.Request) (string, encoding.DecodeFunc, encoding.E
 			}
 			ct = protobuf.Type
 		default:
-			return "", nil, nil, errors.New("accept header not supported")
+			return "", nil, nil, errors.New("accept Header not supported")
 		}
 	}
 
@@ -109,10 +113,10 @@ func extractFields(r *http.Request) map[string]string {
 	return f
 }
 
-func extractHeaders(r *http.Request) map[string]string {
+func extractHeaders(header http.Header) Header {
 	h := make(map[string]string)
 
-	for name, values := range r.Header {
+	for name, values := range header {
 		for _, value := range values {
 			if len(value) > 0 {
 				h[strings.ToUpper(name)] = value
@@ -137,12 +141,14 @@ func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *Response, enc en
 		w.WriteHeader(http.StatusCreated)
 	}
 
+	propagateHeaders(rsp.Header, w.Header())
+
 	_, err = w.Write(p)
 	return err
 }
 
 func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
-	// Assert error to type Error in order to leverage the code and payload values that such errors contain.
+	// Assert error to type Error in order to leverage the code and Payload values that such errors contain.
 	if err, ok := err.(*Error); ok {
 		p, encErr := enc(err.payload)
 		if encErr != nil {
@@ -151,11 +157,11 @@ func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFu
 		}
 		w.WriteHeader(err.code)
 		if _, err := w.Write(p); err != nil {
-			logger.Errorf("failed to write response: %v", err)
+			logger.Errorf("failed to write Response: %v", err)
 		}
 		return
 	}
-	// Using http.Error helper hijacks the content type header of the response returning plain text payload.
+	// Using http.Error helper hijacks the content type Header of the Response returning plain text Payload.
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 

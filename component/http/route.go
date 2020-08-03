@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/component/http/auth"
+	httpcache "github.com/beatlabs/patron/component/http/cache"
 	errs "github.com/beatlabs/patron/errors"
 )
 
@@ -46,6 +48,7 @@ type RouteBuilder struct {
 	middlewares   []MiddlewareFunc
 	authenticator auth.Authenticator
 	handler       http.HandlerFunc
+	routeCache    *httpcache.RouteCache
 	errors        []error
 }
 
@@ -70,6 +73,16 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 		rb.errors = append(rb.errors, errors.New("authenticator is nil"))
 	}
 	rb.authenticator = auth
+	return rb
+}
+
+// WithRouteCache adds a cache to the corresponding route
+func (rb *RouteBuilder) WithRouteCache(cache cache.TTLCache, ageBounds httpcache.Age) *RouteBuilder {
+
+	rc, ee := httpcache.NewRouteCache(cache, ageBounds)
+
+	rb.routeCache = rc
+	rb.errors = append(rb.errors, ee...)
 	return rb
 }
 
@@ -146,6 +159,13 @@ func (rb *RouteBuilder) Build() (Route, error) {
 	if len(rb.middlewares) > 0 {
 		middlewares = append(middlewares, rb.middlewares...)
 	}
+	// cache middleware is always last, so that it caches only the headers of the handler
+	if rb.routeCache != nil {
+		if rb.method != http.MethodGet {
+			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
+		}
+		middlewares = append(middlewares, NewCachingMiddleware(rb.routeCache))
+	}
 
 	return Route{
 		path:        rb.path,
@@ -173,17 +193,17 @@ func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 // NewRouteBuilder constructor.
 func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 
-	var err error
+	var ee []error
+
+	if path == "" {
+		ee = append(ee, errors.New("path is empty"))
+	}
 
 	if processor == nil {
-		err = errors.New("processor is nil")
+		ee = append(ee, errors.New("processor is nil"))
 	}
 
-	rb := NewRawRouteBuilder(path, handler(processor))
-	if err != nil {
-		rb.errors = append(rb.errors, err)
-	}
-	return rb
+	return &RouteBuilder{path: path, errors: ee, handler: handler(processor)}
 }
 
 // RoutesBuilder creates a list of routes.

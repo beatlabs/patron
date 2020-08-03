@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 		getTopic(groupTopic1),
 		getTopic(groupTopic2),
 	}
-	k, err := create(60*time.Second, topics...)
+	k, err := create(120*time.Second, topics...)
 	if err != nil {
 		fmt.Printf("could not create kafka runtime: %v\n", err)
 		os.Exit(1)

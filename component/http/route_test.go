@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/beatlabs/patron/component/http/auth"
+	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -159,6 +160,16 @@ func TestRouteBuilder_WithAuth(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRouteBuilder_WithRouteCacheNil(t *testing.T) {
+
+	rb := NewRawRouteBuilder("/", func(writer http.ResponseWriter, request *http.Request) {}).
+		WithRouteCache(nil, cache.Age{Max: 1})
+
+	assert.Len(t, rb.errors, 1)
+	assert.EqualError(t, rb.errors[0], "route cache is nil")
+
 }
 
 func TestRouteBuilder_Build(t *testing.T) {

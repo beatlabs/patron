@@ -30,11 +30,11 @@ func Test_extractHeaders(t *testing.T) {
 	r, err := http.NewRequest("GET", "/test", nil)
 	r.Header.Set("X-HEADER-1", "all capsssss")
 	r.Header.Set("X-HEADER-1", "all caps")
-	r.Header.Set("x-header-2", "all lower")
+	r.Header.Set("x-Header-2", "all lower")
 	r.Header.Set("X-hEadEr-3", "all mixed")
 	r.Header.Set("X-ACME", "")
 	assert.NoError(t, err)
-	h := extractHeaders(r)
+	h := extractHeaders(r.Header)
 	assert.Len(t, h, 3)
 	assert.Equal(t, "all caps", h["X-HEADER-1"])
 	assert.Equal(t, "all lower", h["X-HEADER-2"])
@@ -60,14 +60,14 @@ func Test_determineEncoding(t *testing.T) {
 		{"success protobuf, missing accept", args{req: request(t, protobuf.Type, "")}, protobuf.Decode, protobuf.Encode, protobuf.Type, false},
 		{"success protobuf, missing content type", args{req: request(t, "", protobuf.Type)}, protobuf.Decode, protobuf.Encode, protobuf.Type, false},
 		{"wrong accept", args{req: request(t, json.Type, "xxx")}, nil, nil, json.TypeCharset, true},
-		{"missing content header, defaults json", args{req: request(t, "", json.TypeCharset)}, json.Decode, json.Encode, json.TypeCharset, false},
+		{"missing content Header, defaults json", args{req: request(t, "", json.TypeCharset)}, json.Decode, json.Encode, json.TypeCharset, false},
 		{"missing headers, defaults json", args{req: request(t, "", "")}, json.Decode, json.Encode, json.TypeCharset, false},
 		{"accept */*, defaults to json", args{req: request(t, json.TypeCharset, "*/*")}, json.Decode, json.Encode, json.TypeCharset, false},
 		{"wrong content", args{req: request(t, "application/xml", json.TypeCharset)}, nil, nil, json.TypeCharset, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ct, got, got1, err := determineEncoding(tt.args.req)
+			ct, got, got1, err := determineEncoding(tt.args.req.Header)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)
@@ -109,7 +109,7 @@ func Test_getOrSetCorrelationID(t *testing.T) {
 		"with id":        {args: args{hdr: withID}},
 		"without id":     {args: args{hdr: withoutID}},
 		"with empty id":  {args: args{hdr: withEmptyID}},
-		"missing header": {args: args{hdr: missingHeader}},
+		"missing Header": {args: args{hdr: missingHeader}},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -183,7 +183,7 @@ func Test_handleError(t *testing.T) {
 		{"service unavailable error", args{err: NewServiceUnavailableError(), enc: json.Encode}, http.StatusServiceUnavailable},
 		{"internal server error", args{err: NewError(), enc: json.Encode}, http.StatusInternalServerError},
 		{"default error", args{err: errors.New("Test"), enc: json.Encode}, http.StatusInternalServerError},
-		{"payload encoding error", args{err: NewErrorWithCodeAndPayload(http.StatusBadRequest, make(chan int)), enc: json.Encode}, http.StatusInternalServerError},
+		{"Payload encoding error", args{err: NewErrorWithCodeAndPayload(http.StatusBadRequest, make(chan int)), enc: json.Encode}, http.StatusInternalServerError},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

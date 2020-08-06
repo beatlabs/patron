@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -15,10 +14,11 @@ import (
 )
 
 const (
-	httpPort         = 50000
-	httpReadTimeout  = 5 * time.Second
-	httpWriteTimeout = 10 * time.Second
-	httpIdleTimeout  = 120 * time.Second
+	httpPort            = 50000
+	httpReadTimeout     = 5 * time.Second
+	httpWriteTimeout    = 10 * time.Second
+	httpIdleTimeout     = 120 * time.Second
+	shutdownGracePeriod = 5 * time.Second
 )
 
 var (
@@ -30,11 +30,12 @@ var (
 
 // Component implementation of HTTP.
 type Component struct {
-	ac               AliveCheckFunc
-	rc               ReadyCheckFunc
-	httpPort         int
-	httpReadTimeout  time.Duration
-	httpWriteTimeout time.Duration
+	ac                  AliveCheckFunc
+	rc                  ReadyCheckFunc
+	httpPort            int
+	httpReadTimeout     time.Duration
+	httpWriteTimeout    time.Duration
+	shutdownGracePeriod time.Duration
 	sync.Mutex
 	routes      []Route
 	middlewares []MiddlewareFunc
@@ -47,14 +48,16 @@ func (c *Component) Run(ctx context.Context) error {
 	c.Lock()
 	log.Debug("applying tracing to routes")
 	chFail := make(chan error)
-	srv := c.createHTTPServer(ctx)
+	srv := c.createHTTPServer()
 	go c.listenAndServe(srv, chFail)
 	c.Unlock()
 
 	select {
 	case <-ctx.Done():
 		log.Info("shutting down component")
-		return srv.Shutdown(ctx)
+		tctx, cancel := context.WithTimeout(context.Background(), c.shutdownGracePeriod)
+		defer cancel()
+		return srv.Shutdown(tctx)
 	case err := <-chFail:
 		return err
 	}
@@ -70,7 +73,7 @@ func (c *Component) listenAndServe(srv *http.Server, ch chan<- error) {
 	ch <- srv.ListenAndServe()
 }
 
-func (c *Component) createHTTPServer(ctx context.Context) *http.Server {
+func (c *Component) createHTTPServer() *http.Server {
 	log.Debugf("adding %d routes", len(c.routes))
 	router := httprouter.New()
 	for _, route := range c.routes {
@@ -93,25 +96,23 @@ func (c *Component) createHTTPServer(ctx context.Context) *http.Server {
 		WriteTimeout: c.httpWriteTimeout,
 		IdleTimeout:  httpIdleTimeout,
 		Handler:      routerAfterMiddleware,
-		BaseContext: func(net.Listener) context.Context {
-			return ctx
-		},
 	}
 }
 
 // Builder gathers all required and optional properties, in order
 // to construct an HTTP component.
 type Builder struct {
-	ac               AliveCheckFunc
-	rc               ReadyCheckFunc
-	httpPort         int
-	httpReadTimeout  time.Duration
-	httpWriteTimeout time.Duration
-	routesBuilder    *RoutesBuilder
-	middlewares      []MiddlewareFunc
-	certFile         string
-	keyFile          string
-	errors           []error
+	ac                  AliveCheckFunc
+	rc                  ReadyCheckFunc
+	httpPort            int
+	httpReadTimeout     time.Duration
+	httpWriteTimeout    time.Duration
+	shutdownGracePeriod time.Duration
+	routesBuilder       *RoutesBuilder
+	middlewares         []MiddlewareFunc
+	certFile            string
+	keyFile             string
+	errors              []error
 }
 
 // NewBuilder initiates the HTTP component builder chain.
@@ -120,13 +121,14 @@ type Builder struct {
 func NewBuilder() *Builder {
 	var errs []error
 	return &Builder{
-		ac:               DefaultAliveCheck,
-		rc:               DefaultReadyCheck,
-		httpPort:         httpPort,
-		httpReadTimeout:  httpReadTimeout,
-		httpWriteTimeout: httpWriteTimeout,
-		routesBuilder:    NewRoutesBuilder(),
-		errors:           errs,
+		ac:                  DefaultAliveCheck,
+		rc:                  DefaultReadyCheck,
+		httpPort:            httpPort,
+		httpReadTimeout:     httpReadTimeout,
+		httpWriteTimeout:    httpWriteTimeout,
+		shutdownGracePeriod: shutdownGracePeriod,
+		routesBuilder:       NewRoutesBuilder(),
+		errors:              errs,
 	}
 }
 
@@ -190,6 +192,18 @@ func (cb *Builder) WithWriteTimeout(wt time.Duration) *Builder {
 	return cb
 }
 
+// WithShutdownGracePeriod sets the Shutdown Grace Period for the HTTP component.
+func (cb *Builder) WithShutdownGracePeriod(gp time.Duration) *Builder {
+	if gp <= 0*time.Second {
+		cb.errors = append(cb.errors, errors.New("negative or zero shutdown grace period provided"))
+	} else {
+		log.Infof("setting shutdown grace period")
+		cb.httpWriteTimeout = gp
+	}
+
+	return cb
+}
+
 // WithPort sets the port used by the HTTP component.
 func (cb *Builder) WithPort(p int) *Builder {
 	if p <= 0 || p > 65535 {
@@ -243,14 +257,15 @@ func (cb *Builder) Create() (*Component, error) {
 	}
 
 	return &Component{
-		ac:               cb.ac,
-		rc:               cb.rc,
-		httpPort:         cb.httpPort,
-		httpReadTimeout:  cb.httpReadTimeout,
-		httpWriteTimeout: cb.httpWriteTimeout,
-		routes:           routes,
-		middlewares:      cb.middlewares,
-		certFile:         cb.certFile,
-		keyFile:          cb.keyFile,
+		ac:                  cb.ac,
+		rc:                  cb.rc,
+		httpPort:            cb.httpPort,
+		httpReadTimeout:     cb.httpReadTimeout,
+		httpWriteTimeout:    cb.httpWriteTimeout,
+		shutdownGracePeriod: cb.shutdownGracePeriod,
+		routes:              routes,
+		middlewares:         cb.middlewares,
+		certFile:            cb.certFile,
+		keyFile:             cb.keyFile,
 	}, nil
 }

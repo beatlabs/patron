@@ -63,8 +63,7 @@ func Test_createHTTPServer(t *testing.T) {
 		httpReadTimeout:  5 * time.Second,
 		httpWriteTimeout: 10 * time.Second,
 	}
-	ctx := context.Background()
-	s := cmp.createHTTPServer(ctx)
+	s := cmp.createHTTPServer()
 	assert.NotNil(t, s)
 	assert.Equal(t, ":10000", s.Addr)
 	assert.Equal(t, 5*time.Second, s.ReadTimeout)
@@ -93,6 +92,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		p        int
 		rt       time.Duration
 		wt       time.Duration
+		gp       time.Duration
 		rb       *RoutesBuilder
 		mm       []MiddlewareFunc
 		c        string
@@ -105,6 +105,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			p:   httpPort,
 			rt:  httpReadTimeout,
 			wt:  httpIdleTimeout,
+			gp:  shutdownGracePeriod,
 			rb:  rb,
 			mm: []MiddlewareFunc{
 				NewRecoveryMiddleware(),
@@ -120,6 +121,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			p:        -1,
 			rt:       -10 * time.Second,
 			wt:       -20 * time.Second,
+			gp:       -15 * time.Second,
 			rb:       nil,
 			mm:       []MiddlewareFunc{},
 			c:        "",
@@ -132,7 +134,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			gotHTTPComponent, err := NewBuilder().WithAliveCheckFunc(tc.acf).WithReadyCheckFunc(tc.rcf).
 				WithPort(tc.p).WithReadTimeout(tc.rt).WithWriteTimeout(tc.wt).WithRoutesBuilder(tc.rb).
-				WithMiddlewares(tc.mm...).WithSSL(tc.c, tc.k).Create()
+				WithMiddlewares(tc.mm...).WithSSL(tc.c, tc.k).WithShutdownGracePeriod(tc.gp).Create()
 
 			if len(tc.wantErrs) > 0 {
 				assert.EqualError(t, err, errs.Aggregate(tc.wantErrs...).Error())

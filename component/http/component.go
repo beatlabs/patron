@@ -198,7 +198,7 @@ func (cb *Builder) WithShutdownGracePeriod(gp time.Duration) *Builder {
 		cb.errors = append(cb.errors, errors.New("negative or zero shutdown grace period provided"))
 	} else {
 		log.Infof("setting shutdown grace period")
-		cb.httpWriteTimeout = gp
+		cb.shutdownGracePeriod = gp
 	}
 
 	return cb

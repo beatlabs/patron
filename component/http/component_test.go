@@ -82,6 +82,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		errors.New("route builder is nil"),
 		errors.New("empty list of middlewares provided"),
 		errors.New("invalid cert or key provided"),
+		errors.New("negative or zero shutdown grace period provided"),
 	}
 
 	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet())

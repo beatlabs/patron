@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"runtime/debug"
 	"strings"
 
 	"github.com/beatlabs/patron/component/http/auth"
@@ -87,7 +88,7 @@ func NewRecoveryMiddleware() MiddlewareFunc {
 						err = errors.New("unknown panic")
 					}
 					_ = err
-					log.Errorf("recovering from an error %v", err)
+					log.Errorf("recovering from an error: %v: %s", err, string(debug.Stack()))
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				}
 			}()

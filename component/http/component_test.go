@@ -9,6 +9,7 @@ import (
 
 	errs "github.com/beatlabs/patron/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBuilderWithoutOptions(t *testing.T) {
@@ -68,6 +69,31 @@ func Test_createHTTPServer(t *testing.T) {
 	assert.Equal(t, ":10000", s.Addr)
 	assert.Equal(t, 5*time.Second, s.ReadTimeout)
 	assert.Equal(t, 10*time.Second, s.WriteTimeout)
+}
+
+func TestBuilder_WithShutdownGracePeriod(t *testing.T) {
+	testCases := map[string]struct {
+		gp     time.Duration
+		expErr string
+	}{
+		"success":     {gp: 10 * time.Second},
+		"wrong value": {gp: -10 * time.Second, expErr: "negative or zero shutdown grace period provided\n"},
+	}
+
+	for name, tt := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			cc, err := NewBuilder().WithShutdownGracePeriod(tt.gp).Create()
+			if tt.expErr != "" {
+				assert.EqualError(t, err, tt.expErr)
+				assert.Nil(t, cc)
+			} else {
+				assert.NoError(t, err)
+				require.NotNil(t, cc)
+				assert.Equal(t, tt.gp, cc.shutdownGracePeriod)
+			}
+		})
+	}
 }
 
 func Test_createHTTPServerUsingBuilder(t *testing.T) {

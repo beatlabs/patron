@@ -56,7 +56,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 
 	cc := kafka.ConsumerConfig{
 		Brokers:      f.brokers,
-		Buffer:       0,
+		Buffer:       config.ChannelBufferSize,
 		SaramaConfig: config,
 	}
 

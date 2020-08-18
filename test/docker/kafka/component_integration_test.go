@@ -12,25 +12,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"
-	"github.com/stretchr/testify/suite"
 )
 
-type KafkaComponentTestSuite struct {
-	suite.Suite
-}
-
-func TestKafkaComponentTestSuite(t *testing.T) {
-	suite.Run(t, new(KafkaComponentTestSuite))
-}
-
-func (s *KafkaComponentTestSuite) TestKafkaComponent_Success() {
+func TestKafkaComponent_Success(t *testing.T) {
 	// Timeout the test if it takes too long
-	timeoutTimer := testTimeout(s, 15*time.Second)
+	timeoutTimer := testTimeout(t, 15*time.Second)
 
 	// Test parameters
 	numOfMessagesToSend := 100
@@ -42,12 +37,12 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_Success() {
 	processorFunc := func(msg async.Message) error {
 		var msgContent string
 		err := msg.Decode(&msgContent)
-		s.NoError(err)
+		assert.NoError(t, err)
 		actualSuccessfulMessages = append(actualSuccessfulMessages, msgContent)
 		consumerWG.Done()
 		return nil
 	}
-	component := s.NewComponent(successTopic, 3, processorFunc)
+	component := NewComponent(t, successTopic, 3, processorFunc)
 
 	// Run Patron with the kafka component
 	patronContext, patronCancel := context.WithCancel(context.Background())
@@ -57,7 +52,7 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_Success() {
 		err := patron.New(successTopic, "0").
 			WithComponents(component).
 			Run(patronContext)
-		s.Require().NoError(err)
+		require.NoError(t, err)
 		patronWG.Done()
 	}()
 
@@ -66,10 +61,10 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_Success() {
 	producerWG.Add(1)
 	go func() {
 		producer, err := NewProducer()
-		s.Require().NoError(err)
+		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic, Value: sarama.StringEncoder(strconv.Itoa(i))})
-			s.Require().NoError(err)
+			require.NoError(t, err)
 		}
 		producerWG.Done()
 	}()
@@ -83,7 +78,7 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_Success() {
 	for i := 0; i < numOfMessagesToSend; i++ {
 		expectedMessages[i] = strconv.Itoa(i + 1)
 	}
-	s.Equal(expectedMessages, actualSuccessfulMessages)
+	assert.Equal(t, expectedMessages, actualSuccessfulMessages)
 
 	// Shutdown Patron and wait for it to finish
 	patronCancel()
@@ -93,9 +88,9 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_Success() {
 	timeoutTimer.Stop()
 }
 
-func (s *KafkaComponentTestSuite) TestKafkaComponent_FailAllRetries() {
+func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	// Timeout the test if it takes too long
-	timeoutTimer := testTimeout(s, 15*time.Second)
+	timeoutTimer := testTimeout(t, 15*time.Second)
 
 	// Test parameters
 	numOfMessagesToSend := 100
@@ -107,10 +102,10 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_FailAllRetries() {
 	processorFunc := func(msg async.Message) error {
 		var msgContentStr string
 		err := msg.Decode(&msgContentStr)
-		s.NoError(err)
+		assert.NoError(t, err)
 
 		msgIndex, err := strconv.Atoi(msgContentStr)
-		s.NoError(err)
+		assert.NoError(t, err)
 
 		if msgIndex == errAtIndex {
 			atomic.AddInt32(&actualNumOfRuns, 1)
@@ -120,17 +115,17 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_FailAllRetries() {
 		return nil
 	}
 	numOfRetries := uint(3)
-	component := s.NewComponent(failAllRetriesTopic, numOfRetries, processorFunc)
+	component := NewComponent(t, failAllRetriesTopic, numOfRetries, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
 		producer, err := NewProducer()
-		s.Require().NoError(err)
+		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAllRetriesTopic, Value: sarama.StringEncoder(strconv.Itoa(i))})
-			s.Require().NoError(err)
+			require.NoError(t, err)
 		}
 		producerWG.Done()
 	}()
@@ -139,7 +134,7 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_FailAllRetries() {
 	err := patron.New(failAllRetriesTopic, "0").
 		WithComponents(component).
 		Run(context.Background())
-	s.Error(err)
+	assert.Error(t, err)
 
 	// Wait for the producer & consumer to finish
 	producerWG.Wait()
@@ -149,16 +144,16 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_FailAllRetries() {
 	for i := 0; i < errAtIndex-1; i++ {
 		expectedMessages[i] = i + 1
 	}
-	s.Equal(expectedMessages, actualSuccessfulMessages)
-	s.Equal(int32(numOfRetries+1), actualNumOfRuns)
+	assert.Equal(t, expectedMessages, actualSuccessfulMessages)
+	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
 
 	// Make sure the timeout timer is stopped
 	timeoutTimer.Stop()
 }
 
-func (s *KafkaComponentTestSuite) TestKafkaComponent_FailOnceAndRetry() {
+func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	// Timeout the test if it takes too long
-	timeoutTimer := testTimeout(s, 15*time.Second)
+	timeoutTimer := testTimeout(t, 15*time.Second)
 
 	// Test parameters
 	numOfMessagesToSend := 100
@@ -171,7 +166,7 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_FailOnceAndRetry() {
 	processorFunc := func(msg async.Message) error {
 		var msgContent string
 		err := msg.Decode(&msgContent)
-		s.NoError(err)
+		assert.NoError(t, err)
 
 		if msgContent == "50" && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
 			return errors.New("expected error")
@@ -180,17 +175,17 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_FailOnceAndRetry() {
 		actualMessages = append(actualMessages, msgContent)
 		return nil
 	}
-	component := s.NewComponent(failAndRetryTopic, 3, processorFunc)
+	component := NewComponent(t, failAndRetryTopic, 3, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
 		producer, err := NewProducer()
-		s.Require().NoError(err)
+		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic, Value: sarama.StringEncoder(strconv.Itoa(i))})
-			s.Require().NoError(err)
+			require.NoError(t, err)
 		}
 		producerWG.Done()
 	}()
@@ -203,7 +198,7 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_FailOnceAndRetry() {
 		err := patron.New(failAndRetryTopic, "0").
 			WithComponents(component).
 			Run(patronContext)
-		s.Require().NoError(err)
+		require.NoError(t, err)
 		patronWG.Done()
 	}()
 
@@ -220,13 +215,13 @@ func (s *KafkaComponentTestSuite) TestKafkaComponent_FailOnceAndRetry() {
 	for i := 0; i < numOfMessagesToSend; i++ {
 		expectedMessages[i] = strconv.Itoa(i + 1)
 	}
-	s.Equal(expectedMessages, actualMessages)
+	assert.Equal(t, expectedMessages, actualMessages)
 
 	// Make sure the timeout timer is stopped
 	timeoutTimer.Stop()
 }
 
-func (s *KafkaComponentTestSuite) NewComponent(name string, retries uint, processorFunc func(message async.Message) error) *async.Component {
+func NewComponent(t *testing.T, name string, retries uint, processorFunc func(message async.Message) error) *async.Component {
 	decode := func(data []byte, v interface{}) error {
 		tmp := string(data)
 		p := v.(*string)
@@ -240,22 +235,22 @@ func (s *KafkaComponentTestSuite) NewComponent(name string, retries uint, proces
 		[]string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)},
 		kafka.Decoder(decode),
 		kafka.Start(sarama.OffsetOldest))
-	s.Require().NoError(err)
+	require.NoError(t, err)
 
 	cmp, err := async.New(name, factory, processorFunc).
 		WithRetries(retries).
 		WithRetryWait(200 * time.Millisecond).
 		WithFailureStrategy(async.NackExitStrategy).
 		Create()
-	s.Require().NoError(err)
+	require.NoError(t, err)
 
 	return cmp
 }
 
-func testTimeout(s *KafkaComponentTestSuite, timeout time.Duration) *time.Timer {
-	testName := s.T().Name()
+func testTimeout(t *testing.T, timeout time.Duration) *time.Timer {
+	testName := t.Name()
 	timeoutTimer := time.AfterFunc(timeout, func() {
-		s.FailNowf("Timed out: test %s took more then %v to complete", testName, timeout)
+		assert.FailNowf(t, "Timed out: test %s took more then %v to complete", testName, timeout)
 	})
 	return timeoutTimer
 }

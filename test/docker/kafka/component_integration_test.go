@@ -39,7 +39,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 		consumerWG.Done()
 		return nil
 	}
-	component := NewComponent(t, successTopic, 3, processorFunc)
+	component := newComponent(t, successTopic, 3, processorFunc)
 
 	// Run Patron with the kafka component
 	patronContext, patronCancel := context.WithCancel(context.Background())
@@ -106,7 +106,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 		return nil
 	}
 	numOfRetries := uint(3)
-	component := NewComponent(t, failAllRetriesTopic, numOfRetries, processorFunc)
+	component := newComponent(t, failAllRetriesTopic, numOfRetries, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
@@ -160,7 +160,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 		actualMessages = append(actualMessages, msgContent)
 		return nil
 	}
-	component := NewComponent(t, failAndRetryTopic, 3, processorFunc)
+	component := newComponent(t, failAndRetryTopic, 3, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
@@ -203,7 +203,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	assert.Equal(t, expectedMessages, actualMessages)
 }
 
-func NewComponent(t *testing.T, name string, retries uint, processorFunc func(message async.Message) error) *async.Component {
+func newComponent(t *testing.T, name string, retries uint, processorFunc func(message async.Message) error) *async.Component {
 	decode := func(data []byte, v interface{}) error {
 		tmp := string(data)
 		p := v.(*string)

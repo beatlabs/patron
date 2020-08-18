@@ -24,9 +24,6 @@ import (
 )
 
 func TestKafkaComponent_Success(t *testing.T) {
-	// Timeout the test if it takes too long
-	timeoutTimer := testTimeout(t, 15*time.Second)
-
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -83,15 +80,9 @@ func TestKafkaComponent_Success(t *testing.T) {
 	// Shutdown Patron and wait for it to finish
 	patronCancel()
 	patronWG.Wait()
-
-	// Make sure the timeout timer is stopped
-	timeoutTimer.Stop()
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {
-	// Timeout the test if it takes too long
-	timeoutTimer := testTimeout(t, 15*time.Second)
-
 	// Test parameters
 	numOfMessagesToSend := 100
 	errAtIndex := 50
@@ -146,15 +137,9 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	}
 	assert.Equal(t, expectedMessages, actualSuccessfulMessages)
 	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
-
-	// Make sure the timeout timer is stopped
-	timeoutTimer.Stop()
 }
 
 func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
-	// Timeout the test if it takes too long
-	timeoutTimer := testTimeout(t, 15*time.Second)
-
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -216,9 +201,6 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 		expectedMessages[i] = strconv.Itoa(i + 1)
 	}
 	assert.Equal(t, expectedMessages, actualMessages)
-
-	// Make sure the timeout timer is stopped
-	timeoutTimer.Stop()
 }
 
 func NewComponent(t *testing.T, name string, retries uint, processorFunc func(message async.Message) error) *async.Component {
@@ -245,12 +227,4 @@ func NewComponent(t *testing.T, name string, retries uint, processorFunc func(me
 	require.NoError(t, err)
 
 	return cmp
-}
-
-func testTimeout(t *testing.T, timeout time.Duration) *time.Timer {
-	testName := t.Name()
-	timeoutTimer := time.AfterFunc(timeout, func() {
-		assert.FailNowf(t, "Timed out: test %s took more then %v to complete", testName, timeout)
-	})
-	return timeoutTimer
 }

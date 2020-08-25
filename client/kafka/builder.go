@@ -28,7 +28,7 @@ const (
 	WaitForAll RequiredAcks = -1
 )
 
-const fieldSetMsg = "Setting property '%v' for '%v'"
+const fieldSetMsg = "setting kafka property '%v' to '%v'"
 
 // Builder gathers all required and optional properties, in order
 // to construct a Kafka AsyncProducer/SyncProducer.
@@ -68,7 +68,7 @@ func (ab *Builder) WithTimeout(dial time.Duration) *Builder {
 		return ab
 	}
 	ab.cfg.Net.DialTimeout = dial
-	log.Info(fieldSetMsg, "dial timeout", dial)
+	log.Infof(fieldSetMsg, "dial timeout", dial)
 	return ab
 }
 
@@ -83,7 +83,7 @@ func (ab *Builder) WithVersion(version string) *Builder {
 		ab.errors = append(ab.errors, errors.New("failed to parse kafka version"))
 		return ab
 	}
-	log.Info(fieldSetMsg, "version", version)
+	log.Infof(fieldSetMsg, "version", version)
 	ab.cfg.Version = v
 
 	return ab
@@ -96,7 +96,7 @@ func (ab *Builder) WithRequiredAcksPolicy(ack RequiredAcks) *Builder {
 		ab.errors = append(ab.errors, errors.New("invalid value for required acks policy provided"))
 		return ab
 	}
-	log.Info(fieldSetMsg, "required acks", ack)
+	log.Infof(fieldSetMsg, "required acks", ack)
 	ab.cfg.Producer.RequiredAcks = sarama.RequiredAcks(ack)
 	return ab
 }
@@ -107,13 +107,13 @@ func (ab *Builder) WithEncoder(enc encoding.EncodeFunc, contentType string) *Bui
 	if enc == nil {
 		ab.errors = append(ab.errors, errors.New("encoder is nil"))
 	} else {
-		log.Info(fieldSetMsg, "encoder", enc)
+		log.Infof(fieldSetMsg, "encoder", enc)
 		ab.enc = enc
 	}
 	if contentType == "" {
 		ab.errors = append(ab.errors, errors.New("content type is empty"))
 	} else {
-		log.Info(fieldSetMsg, "content type", contentType)
+		log.Infof(fieldSetMsg, "content type", contentType)
 		ab.contentType = contentType
 	}
 

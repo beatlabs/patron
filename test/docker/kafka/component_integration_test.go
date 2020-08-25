@@ -46,7 +46,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		err := patron.New(successTopic, "0").
+		err := patron.New(successTopic, "0", "").
 			WithComponents(component).
 			Run(patronContext)
 		require.NoError(t, err)
@@ -122,7 +122,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	}()
 
 	// Run Patron with the component - no need for goroutine since we expect it to stop after the retries fail
-	err := patron.New(failAllRetriesTopic, "0").
+	err := patron.New(failAllRetriesTopic, "0", "").
 		WithComponents(component).
 		Run(context.Background())
 	assert.Error(t, err)
@@ -180,7 +180,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		err := patron.New(failAndRetryTopic, "0").
+		err := patron.New(failAndRetryTopic, "0", "").
 			WithComponents(component).
 			Run(patronContext)
 		require.NoError(t, err)

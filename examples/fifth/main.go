@@ -51,8 +51,9 @@ func init() {
 func main() {
 	name := "fifth"
 	version := "1.0.0"
+	env := "qaco"
 
-	err := patron.SetupLogging(name, version)
+	err := patron.SetupLogging(name, version, env)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
@@ -85,7 +86,7 @@ func main() {
 
 	// Run the server
 	ctx := context.Background()
-	err = patron.New(name, version).WithComponents(sqsCmp.cmp).Run(ctx)
+	err = patron.New(name, version, env).WithComponents(sqsCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service: %v", err)
 	}

@@ -21,7 +21,7 @@ import (
 var logSetupOnce sync.Once
 
 // SetupLogging sets up the default metrics logging.
-func SetupLogging(name, version string) error {
+func SetupLogging(name, version, env string) error {
 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
 	if !ok {
 		lvl = string(log.InfoLevel)
@@ -35,6 +35,7 @@ func SetupLogging(name, version string) error {
 	f := map[string]interface{}{
 		"srv":  name,
 		"ver":  version,
+		"env":  env,
 		"host": hostname,
 	}
 	logSetupOnce.Do(func() {
@@ -189,6 +190,7 @@ type Builder struct {
 	errors        []error
 	name          string
 	version       string
+	env           string
 	cps           []Component
 	routesBuilder *http.RoutesBuilder
 	middlewares   []http.MiddlewareFunc
@@ -201,7 +203,7 @@ type Builder struct {
 // New initiates the Service builder chain.
 // The builder contains default values for Alive/Ready checks,
 // the SIGHUP handler and its version.
-func New(name, version string) *Builder {
+func New(name, version, env string) *Builder {
 	var errs []error
 
 	if name == "" {
@@ -210,11 +212,15 @@ func New(name, version string) *Builder {
 	if version == "" {
 		version = "dev"
 	}
+	if env == "" {
+		env = "unspecified"
+	}
 
 	return &Builder{
 		errors:        errs,
 		name:          name,
 		version:       version,
+		env:           env,
 		acf:           http.DefaultAliveCheck,
 		rcf:           http.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),
@@ -310,7 +316,7 @@ func (b *Builder) build() (*service, error) {
 		sighupHandler: b.sighupHandler,
 	}
 
-	err := SetupLogging(b.name, b.version)
+	err := SetupLogging(b.name, b.version, b.env)
 	if err != nil {
 		return nil, err
 	}

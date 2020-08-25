@@ -43,8 +43,9 @@ func init() {
 func main() {
 	name := "second"
 	version := "1.0.0"
+	env := "qaco"
 
-	err := patron.SetupLogging(name, version)
+	err := patron.SetupLogging(name, version, env)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
@@ -64,7 +65,7 @@ func main() {
 		Append(patronhttp.NewRouteBuilder("/", httpCmp.second).MethodGet().WithTrace().WithAuth(auth))
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithRoutesBuilder(routesBuilder).Run(ctx)
+	err = patron.New(name, version, env).WithRoutesBuilder(routesBuilder).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

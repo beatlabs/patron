@@ -35,6 +35,7 @@ func TestNewServer(t *testing.T) {
 	tests := map[string]struct {
 		name          string
 		version       string
+		env           string
 		cps           []Component
 		routesBuilder *phttp.RoutesBuilder
 		middlewares   []phttp.MiddlewareFunc
@@ -46,6 +47,7 @@ func TestNewServer(t *testing.T) {
 		"success": {
 			name:          "test",
 			version:       "dev",
+			env:           "qaco",
 			cps:           []Component{&testComponent{}, &testComponent{}},
 			routesBuilder: routesBuilder,
 			middlewares:   []phttp.MiddlewareFunc{middleware},
@@ -80,7 +82,7 @@ func TestNewServer(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotService, gotErr := New(tt.name, tt.version).
+			gotService, gotErr := New(tt.name, tt.version, tt.env).
 				WithRoutesBuilder(tt.routesBuilder).
 				WithMiddlewares(tt.middlewares...).
 				WithAliveCheck(tt.acf).
@@ -131,7 +133,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
 			assert.NoError(t, err)
-			err = New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Run(tt.ctx)
+			err = New("test", "", "").WithComponents(tt.cp, tt.cp, tt.cp).Run(tt.ctx)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -164,7 +166,7 @@ func TestServer_SetupTracing(t *testing.T) {
 				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", tt.port)
 				assert.NoError(t, err)
 			}
-			s, err := New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
+			s, err := New("test", "", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
 			assert.NoError(t, err)
 			err = s.run(tt.ctx)
 			assert.NoError(t, err)
@@ -173,7 +175,7 @@ func TestServer_SetupTracing(t *testing.T) {
 }
 
 func TestBuilder_WithComponentsTwice(t *testing.T) {
-	bld := New("test", "").WithComponents(&testComponent{}).WithComponents(&testComponent{})
+	bld := New("test", "", "").WithComponents(&testComponent{}).WithComponents(&testComponent{})
 	assert.Len(t, bld.cps, 2)
 }
 
@@ -201,7 +203,7 @@ func TestBuild_FailingConditions(t *testing.T) {
 				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
 				assert.NoError(t, err)
 			}
-			err := New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).Run(tt.ctx)
+			err := New("test", "", "").WithComponents(tt.cp, tt.cp, tt.cp).Run(tt.ctx)
 			assert.Error(t, err)
 		})
 	}

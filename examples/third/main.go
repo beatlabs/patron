@@ -45,9 +45,8 @@ func init() {
 func main() {
 	name := "third"
 	version := "1.0.0"
-	env := "qaco"
 
-	err := patron.SetupLogging(name, version, env)
+	err := patron.SetupLogging(name, version)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
@@ -59,7 +58,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = patron.New(name, version, env).WithComponents(kafkaCmp.cmp).Run(ctx)
+	err = patron.New(name, version).WithComponents(kafkaCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

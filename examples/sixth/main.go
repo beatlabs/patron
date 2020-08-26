@@ -52,9 +52,8 @@ func (gs *greeterServer) SayHello(ctx context.Context, req *greeter.HelloRequest
 func main() {
 	name := "sixth"
 	version := "1.0.0"
-	env := "qaco"
 
-	err := patron.SetupLogging(name, version, env)
+	err := patron.SetupLogging(name, version)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
@@ -68,7 +67,7 @@ func main() {
 	greeter.RegisterGreeterServer(cmp.Server(), &greeterServer{})
 
 	ctx := context.Background()
-	err = patron.New(name, version, env).WithComponents(cmp).Run(ctx)
+	err = patron.New(name, version).WithComponents(cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service: %v", err)
 	}

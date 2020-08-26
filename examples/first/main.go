@@ -34,9 +34,8 @@ func init() {
 func main() {
 	name := "first"
 	version := "1.0.0"
-	env := "qaco"
 
-	err := patron.SetupLogging(name, version, env)
+	err := patron.SetupLogging(name, version)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
@@ -60,9 +59,10 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = patron.New(name, version, env).
+	err = patron.New(name, version).
 		WithRoutesBuilder(routesBuilder).
 		WithMiddlewares(middlewareCors).
+		WithFields(map[string]interface{}{"env": "staging"}).
 		WithSIGHUP(sig).
 		Run(ctx)
 	if err != nil {

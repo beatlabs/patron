@@ -34,9 +34,8 @@ func init() {
 func main() {
 	name := "seventh"
 	version := "1.0.0"
-	env := "qaco"
 
-	err := patron.SetupLogging(name, version, env)
+	err := patron.SetupLogging(name, version)
 	if err != nil {
 		fmt.Printf("failed to set up logging: %v", err)
 		os.Exit(1)
@@ -65,7 +64,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	err = patron.New(name, version, env).
+	err = patron.New(name, version).
 		WithRoutesBuilder(routesBuilder).
 		WithSIGHUP(sig).
 		Run(ctx)

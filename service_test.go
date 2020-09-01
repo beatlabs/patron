@@ -268,3 +268,28 @@ func (ts testComponent) Run(ctx context.Context) error {
 	}
 	return nil
 }
+
+func TestSetupLogging(t *testing.T) {
+	t.Run("SetupLogging", func(t *testing.T) {
+		err := SetupLogging("myService", "some_version")
+		if err != nil {
+			t.Errorf("didn't expecte error but got: %s", err)
+		}
+	})
+
+	t.Run("SetupLoggingWithFields", func(t *testing.T) {
+		err := SetupLoggingWithFields("myService", "some_version", map[string]interface{}{"env": "staging"})
+		if err != nil {
+			t.Errorf("didn't expecte error but got: %s", err)
+		}
+	})
+
+	t.Run("SetupLoggingWithFields don't override", func(t *testing.T) {
+		// this is just to increase coverage
+		// we can't assert that the field wasn't overridden as the logger isn't exposed
+		err := SetupLoggingWithFields("myService", "some_version", map[string]interface{}{"env": "staging", "srv": "differentService"})
+		if err != nil {
+			t.Errorf("didn't expecte error but got: %s", err)
+		}
+	})
+}

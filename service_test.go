@@ -213,6 +213,43 @@ func TestBuild_FailingConditions(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestServer_SetupReadWriteTimeouts(t *testing.T) {
+	tests := []struct {
+		name    string
+		cp      Component
+		ctx     context.Context
+		rt      string
+		wt      string
+		wantErr bool
+	}{
+		{name: "success wo/ setup read and write timeouts", cp: &testComponent{}, ctx: context.Background(), wantErr: false},
+		{name: "success w/ setup read and write timeouts", cp: &testComponent{}, ctx: context.Background(), rt: "60s", wt: "20s", wantErr: false},
+		{name: "failed w/ invalid write timeout", cp: &testComponent{}, ctx: context.Background(), wt: "invalid", wantErr: true},
+		{name: "failed w/ invalid read timeout", cp: &testComponent{}, ctx: context.Background(), rt: "invalid", wantErr: true},
+		{name: "failed w/ negative write timeout", cp: &testComponent{}, ctx: context.Background(), wt: "-100s", wantErr: true},
+		{name: "failed w/ zero read timeout", cp: &testComponent{}, ctx: context.Background(), rt: "0s", wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.rt != "" {
+				err := os.Setenv("PATRON_HTTP_READ_TIMEOUT", tt.rt)
+				assert.NoError(t, err)
+			}
+			if tt.wt != "" {
+				err := os.Setenv("PATRON_HTTP_WRITE_TIMEOUT", tt.wt)
+				assert.NoError(t, err)
+			}
+
+			_, err := New("test", "").WithComponents(tt.cp, tt.cp, tt.cp).build()
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func getRandomPort() string {
 	rnd := 50000 + rand.Int63n(10000)
 	return strconv.FormatInt(rnd, 10)

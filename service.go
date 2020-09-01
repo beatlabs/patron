@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/beatlabs/patron/component/http"
 	patronErrors "github.com/beatlabs/patron/errors"
@@ -140,6 +141,26 @@ func (s *service) createHTTPComponent() (Component, error) {
 	log.Infof("creating default HTTP component at port %s", port)
 
 	b := http.NewBuilder().WithPort(int(portVal))
+
+	httpReadTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
+	if ok {
+		readTimeout, err := time.ParseDuration(httpReadTimeout)
+		if err != nil {
+			return nil, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
+		}
+		b.WithReadTimeout(readTimeout)
+		log.Infof("setting up default HTTP read timeout %s", httpReadTimeout)
+	}
+
+	httpWriteTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
+	if ok {
+		writeTimeout, err := time.ParseDuration(httpWriteTimeout)
+		if err != nil {
+			return nil, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
+		}
+		b.WithWriteTimeout(writeTimeout)
+		log.Infof("setting up default HTTP write timeout %s", httpWriteTimeout)
+	}
 
 	if s.acf != nil {
 		b.WithAliveCheckFunc(s.acf)

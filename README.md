@@ -88,6 +88,7 @@ The `Service` has the role of glueing all of the above together, which are:
 The service has some default settings which can be changed via environment variables:
 
 - Service HTTP port, for setting the default HTTP components port to `50000` with `PATRON_HTTP_DEFAULT_PORT`
+- Service HTTP read and write timeout, for changing the default HTTP read and write timeout to any value, use `PATRON_HTTP_READ_TIMEOUT`, `PATRON_HTTP_WRITE_TIMEOUT` respectively. For acceptable values check [here](https://golang.org/pkg/time/#ParseDuration).
 - Log level, for setting zerolog with `INFO` log level with `PATRON_LOG_LEVEL`
 - Tracing, for setting up jaeger tracing with
   - agent host `0.0.0.0` with `PATRON_JAEGER_AGENT_HOST`

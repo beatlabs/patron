@@ -29,7 +29,7 @@ const (
 
 // SetupLogging sets up the default metrics logging.
 func SetupLogging(name, version string) error {
-	return setupLogging(name, version, nil)
+	return setupLogging(name, version, map[string]interface{}{})
 }
 
 // SetupLoggingWithFields sets up the default metrics logging with given fields.

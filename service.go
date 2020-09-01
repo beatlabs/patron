@@ -21,8 +21,23 @@ import (
 
 var logSetupOnce sync.Once
 
+const (
+	srv  = "srv"
+	ver  = "ver"
+	host = "host"
+)
+
 // SetupLogging sets up the default metrics logging.
 func SetupLogging(name, version string) error {
+	return setupLogging(name, version, map[string]interface{}{})
+}
+
+// SetupLoggingWithFields sets up the default metrics logging with given fields.
+func SetupLoggingWithFields(name, version string, fields map[string]interface{}) error {
+	return setupLogging(name, version, fields)
+}
+
+func setupLogging(name, version string, fields map[string]interface{}) error {
 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
 	if !ok {
 		lvl = string(log.InfoLevel)
@@ -34,10 +49,19 @@ func SetupLogging(name, version string) error {
 	}
 
 	f := map[string]interface{}{
-		"srv":  name,
-		"ver":  version,
-		"host": hostname,
+		srv:  name,
+		ver:  version,
+		host: hostname,
 	}
+
+	for k, v := range fields {
+		if k == srv || k == ver || k == host {
+			// don't override
+			continue
+		}
+		f[k] = v
+	}
+
 	logSetupOnce.Do(func() {
 		err = log.Setup(zerolog.Create(log.Level(lvl)), f)
 	})
@@ -210,6 +234,7 @@ type Builder struct {
 	errors        []error
 	name          string
 	version       string
+	fields        map[string]interface{}
 	cps           []Component
 	routesBuilder *http.RoutesBuilder
 	middlewares   []http.MiddlewareFunc
@@ -315,6 +340,12 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	return b
 }
 
+// WithLogFields sets key/value structured log fields to be passed to the logger.
+func (b *Builder) WithLogFields(fields map[string]interface{}) *Builder {
+	b.fields = fields
+	return b
+}
+
 // Build constructs the Patron service by applying the gathered properties.
 func (b *Builder) build() (*service, error) {
 	if len(b.errors) > 0 {
@@ -331,7 +362,7 @@ func (b *Builder) build() (*service, error) {
 		sighupHandler: b.sighupHandler,
 	}
 
-	err := SetupLogging(b.name, b.version)
+	err := SetupLoggingWithFields(b.name, b.version, b.fields)
 	if err != nil {
 		return nil, err
 	}

@@ -62,6 +62,7 @@ func main() {
 	err = patron.New(name, version).
 		WithRoutesBuilder(routesBuilder).
 		WithMiddlewares(middlewareCors).
+		WithLogFields(map[string]interface{}{"env": "staging"}).
 		WithSIGHUP(sig).
 		Run(ctx)
 	if err != nil {

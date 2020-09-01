@@ -35,6 +35,7 @@ func TestNewServer(t *testing.T) {
 	tests := map[string]struct {
 		name          string
 		version       string
+		fields        map[string]interface{}
 		cps           []Component
 		routesBuilder *phttp.RoutesBuilder
 		middlewares   []phttp.MiddlewareFunc
@@ -46,6 +47,7 @@ func TestNewServer(t *testing.T) {
 		"success": {
 			name:          "test",
 			version:       "dev",
+			fields:        map[string]interface{}{"env": "dev"},
 			cps:           []Component{&testComponent{}, &testComponent{}},
 			routesBuilder: routesBuilder,
 			middlewares:   []phttp.MiddlewareFunc{middleware},
@@ -83,6 +85,7 @@ func TestNewServer(t *testing.T) {
 			gotService, gotErr := New(tt.name, tt.version).
 				WithRoutesBuilder(tt.routesBuilder).
 				WithMiddlewares(tt.middlewares...).
+				WithLogFields(tt.fields).
 				WithAliveCheck(tt.acf).
 				WithReadyCheck(tt.rcf).
 				WithComponents(tt.cps...).
@@ -264,4 +267,29 @@ func (ts testComponent) Run(ctx context.Context) error {
 		return errors.New("failed to run component")
 	}
 	return nil
+}
+
+func TestSetupLogging(t *testing.T) {
+	t.Run("SetupLogging", func(t *testing.T) {
+		err := SetupLogging("myService", "some_version")
+		if err != nil {
+			t.Errorf("didn't expect an error but got: %s", err)
+		}
+	})
+
+	t.Run("SetupLoggingWithFields", func(t *testing.T) {
+		err := SetupLoggingWithFields("myService", "some_version", map[string]interface{}{"env": "staging"})
+		if err != nil {
+			t.Errorf("didn't expect an error but got: %s", err)
+		}
+	})
+
+	t.Run("SetupLoggingWithFields don't override", func(t *testing.T) {
+		// this is just to increase coverage
+		// we can't assert that the field wasn't overridden as the logger isn't exposed
+		err := SetupLoggingWithFields("myService", "some_version", map[string]interface{}{"env": "staging", "srv": "differentService"})
+		if err != nil {
+			t.Errorf("didn't expect an error but got: %s", err)
+		}
+	})
 }

@@ -85,7 +85,7 @@ func TestNewServer(t *testing.T) {
 			gotService, gotErr := New(tt.name, tt.version).
 				WithRoutesBuilder(tt.routesBuilder).
 				WithMiddlewares(tt.middlewares...).
-				WithFields(tt.fields).
+				WithLogFields(tt.fields).
 				WithAliveCheck(tt.acf).
 				WithReadyCheck(tt.rcf).
 				WithComponents(tt.cps...).

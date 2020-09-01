@@ -340,8 +340,8 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	return b
 }
 
-// WithFields sets key/value structured log fields to be passed to the logger.
-func (b *Builder) WithFields(fields map[string]interface{}) *Builder {
+// WithLogFields sets key/value structured log fields to be passed to the logger.
+func (b *Builder) WithLogFields(fields map[string]interface{}) *Builder {
 	b.fields = fields
 	return b
 }

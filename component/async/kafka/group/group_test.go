@@ -159,7 +159,7 @@ func (m *mockConsumerSession) MarkOffset(topic string, partition int32, offset i
 func (m *mockConsumerSession) ResetOffset(topic string, partition int32, offset int64, metadata string) {
 }
 func (m *mockConsumerSession) MarkMessage(msg *sarama.ConsumerMessage, metadata string) {}
-func (m *mockConsumerSession) Context() context.Context                                 { return nil }
+func (m *mockConsumerSession) Context() context.Context                                 { return context.Background() }
 
 func TestHandler_ConsumeClaim(t *testing.T) {
 

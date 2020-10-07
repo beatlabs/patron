@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
 )
 
 // OptionFunc definition for configuring the client in a functional way.
@@ -41,7 +42,7 @@ func Transport(rt http.RoundTripper) OptionFunc {
 		if rt == nil {
 			return errors.New("transport must be supplied")
 		}
-		tc.cl.Transport = rt
+		tc.cl.Transport = &nethttp.Transport{RoundTripper: rt}
 		return nil
 	}
 }

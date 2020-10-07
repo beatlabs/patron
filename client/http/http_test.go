@@ -29,6 +29,8 @@ func TestTracedClient_Do(t *testing.T) {
 	assert.NoError(t, err)
 	cb, err := New(CircuitBreaker("test", circuitbreaker.Setting{}))
 	assert.NoError(t, err)
+	ct, err := New(Transport(&http.Transport{}))
+	assert.NoError(t, err)
 	req, err := http.NewRequest("GET", ts.URL, nil)
 	assert.NoError(t, err)
 	reqErr, err := http.NewRequest("GET", "", nil)
@@ -48,6 +50,7 @@ func TestTracedClient_Do(t *testing.T) {
 	}{
 		{name: "respose", args: args{c: c, req: req}, wantErr: false, wantOpName: opName},
 		{name: "response with circuit breaker", args: args{c: cb, req: req}, wantErr: false, wantOpName: opName},
+		{name: "respose with custom transport", args: args{c: ct, req: req}, wantErr: false, wantOpName: opName},
 		{name: "error", args: args{c: cb, req: reqErr}, wantErr: true, wantOpName: opNameError},
 		{name: "error with circuit breaker", args: args{c: cb, req: reqErr}, wantErr: true, wantOpName: opNameError},
 	}
@@ -78,9 +81,10 @@ func TestNew(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "success", args: args{oo: []OptionFunc{Timeout(time.Second), CircuitBreaker("test", circuitbreaker.Setting{})}}, wantErr: false},
+		{name: "success", args: args{oo: []OptionFunc{Timeout(time.Second), CircuitBreaker("test", circuitbreaker.Setting{}), Transport(&http.Transport{})}}, wantErr: false},
 		{name: "failure, invalid timeout", args: args{oo: []OptionFunc{Timeout(0 * time.Second)}}, wantErr: true},
 		{name: "failure, invalid circuit breaker", args: args{[]OptionFunc{CircuitBreaker("", circuitbreaker.Setting{})}}, wantErr: true},
+		{name: "failure, invalid transport", args: args{[]OptionFunc{Transport(nil)}}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

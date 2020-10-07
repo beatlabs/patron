@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +14,7 @@ func TestTransport(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
-	assert.Equal(t, transport, client.cl.Transport)
+	assert.Equal(t, &nethttp.Transport{RoundTripper: transport}, client.cl.Transport)
 }
 
 func TestTransport_Nil(t *testing.T) {

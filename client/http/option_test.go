@@ -15,3 +15,10 @@ func TestTransport(t *testing.T) {
 	assert.NotNil(t, client)
 	assert.Equal(t, transport, client.cl.Transport)
 }
+
+func TestTransport_Nil(t *testing.T) {
+	client, err := New(Transport(nil))
+
+	assert.Nil(t, client)
+	assert.Error(t, err, "transport must be supplied")
+}

@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
@@ -30,6 +31,17 @@ func CircuitBreaker(name string, set circuitbreaker.Setting) OptionFunc {
 			return fmt.Errorf("failed to set circuit breaker: %w", err)
 		}
 		tc.cb = cb
+		return nil
+	}
+}
+
+// Transport option for setting the Transport for the client.
+func Transport(rt http.RoundTripper) OptionFunc {
+	return func(tc *TracedClient) error {
+		if rt == nil {
+			return errors.New("transport must be supplied")
+		}
+		tc.cl.Transport = rt
 		return nil
 	}
 }

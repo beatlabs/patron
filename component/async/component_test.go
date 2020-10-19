@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -75,12 +76,13 @@ func TestNew(t *testing.T) {
 }
 
 type proxyBuilder struct {
-	proc      mockProcessor
-	cnr       mockConsumer
-	cf        ConsumerFactory
-	fs        FailStrategy
-	retries   int
-	retryWait time.Duration
+	proc        mockProcessor
+	cnr         mockConsumer
+	cf          ConsumerFactory
+	fs          FailStrategy
+	retries     int
+	retryWait   time.Duration
+	concurrency uint
 }
 
 func run(ctx context.Context, t *testing.T, builder *proxyBuilder) error {
@@ -92,6 +94,7 @@ func run(ctx context.Context, t *testing.T, builder *proxyBuilder) error {
 		WithFailureStrategy(builder.fs).
 		WithRetries(uint(builder.retries)).
 		WithRetryWait(builder.retryWait).
+		WithConcurrency(builder.concurrency).
 		Create()
 	assert.NoError(t, err)
 	return cmp.Run(ctx)
@@ -204,6 +207,41 @@ func TestRun_ProcessError_WithNackError(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), errNack.Error()))
 	assert.Equal(t, 1, builder.proc.execs)
+}
+
+// TestRun_ParallelProcessError_WithNackError expects a PROC ERROR
+// from an error producing processor
+// but due to the concurrency setting, it will continue processing other messages
+func TestRun_ParallelProcessError_WithNackError(t *testing.T) {
+	builder := proxyBuilder{
+		proc: mockProcessor{errReturn: true},
+		cnr: mockConsumer{
+			chMsg: make(chan Message, 10),
+			chErr: make(chan error, 10),
+		},
+		fs:          NackStrategy,
+		concurrency: 10,
+	}
+
+	ctx, cnl := context.WithCancel(context.Background())
+	builder.cnr.chMsg <- &mockMessage{ctx: ctx, nackError: true}
+	ch := make(chan bool)
+	go func() {
+		assert.NoError(t, run(ctx, t, &builder))
+		ch <- true
+	}()
+	time.Sleep(10 * time.Millisecond)
+	cnl()
+
+	select {
+	case _, ok := <-builder.cnr.chErr:
+		if ok {
+			assert.Fail(t, "we don't expect an error , given our ack failure strategy setup")
+		}
+	default:
+		assert.True(t, <-ch)
+	}
+	assert.Equal(t, 1, builder.proc.GetExecs())
 }
 
 // TestRun_Process_Error_AckStrategy expects a PROC ERROR
@@ -431,16 +469,25 @@ func (mm *mockMessage) Payload() []byte {
 type mockProcessor struct {
 	errReturn bool
 	execs     int
+	mux       sync.Mutex
 }
 
 var errProcess = errors.New("PROC ERROR")
 
 func (mp *mockProcessor) Process(msg Message) error {
+	mp.mux.Lock()
+	defer mp.mux.Unlock()
 	mp.execs++
 	if mp.errReturn {
 		return errProcess
 	}
 	return nil
+}
+
+func (mp *mockProcessor) GetExecs() int {
+	mp.mux.Lock()
+	defer mp.mux.Unlock()
+	return mp.execs
 }
 
 type mockConsumerFactory struct {

@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const propSetMSG = "property '%s' set for '%s'"
@@ -40,6 +41,8 @@ type Component struct {
 	cf           ConsumerFactory
 	retries      int
 	retryWait    time.Duration
+	concurrency  int
+	jobs         chan Message
 }
 
 // Builder gathers all required properties in order to construct a component
@@ -51,6 +54,7 @@ type Builder struct {
 	cf           ConsumerFactory
 	retries      uint
 	retryWait    time.Duration
+	concurrency  uint
 }
 
 // New initializes a new builder for a component with the given name
@@ -95,6 +99,15 @@ func (cb *Builder) WithRetries(retries uint) *Builder {
 	return cb
 }
 
+// WithConcurrency specifies the number of worker goroutines for processing messages in parallel
+// default value is '1'
+// do NOT enable concurrency value for in-order consumers, such as Kafka or FIFO SQS
+func (cb *Builder) WithConcurrency(concurrency uint) *Builder {
+	log.Infof(propSetMSG, "concurrency", cb.name)
+	cb.concurrency = concurrency
+	return cb
+}
+
 // WithRetryWait specifies the duration for the component to wait between retries
 // default value is '0'
 // it will append an error to the builder if the value is smaller than '0'.
@@ -121,6 +134,14 @@ func (cb *Builder) Create() (*Component, error) {
 		failStrategy: cb.failStrategy,
 		retries:      int(cb.retries),
 		retryWait:    cb.retryWait,
+		concurrency:  int(cb.concurrency),
+		jobs:         make(chan Message),
+	}
+
+	if cb.concurrency > 1 {
+		for w := 1; w <= c.concurrency; w++ {
+			go c.worker(c.jobs)
+		}
 	}
 
 	return c, nil
@@ -145,6 +166,7 @@ func (c *Component) Run(ctx context.Context) error {
 		}
 	}
 
+	close(c.jobs)
 	return err
 }
 
@@ -169,7 +191,7 @@ func (c *Component) processing(ctx context.Context) error {
 		select {
 		case msg := <-chMsg:
 			log.FromContext(msg.Context()).Debug("consumer received a new message")
-			err := c.processMessage(msg)
+			err := c.dispatchMessage(msg)
 			if err != nil {
 				return err
 			}
@@ -184,13 +206,26 @@ func (c *Component) processing(ctx context.Context) error {
 	}
 }
 
+func (c *Component) dispatchMessage(msg Message) error {
+	if c.concurrency > 1 {
+		c.jobs <- msg
+		return nil // a message failure is safe to ignore in parallel message consumption
+	}
+	return c.processMessage(msg)
+}
+
 func (c *Component) processMessage(msg Message) error {
 	err := c.proc(msg)
 	if err != nil {
 		return c.executeFailureStrategy(msg, err)
 	}
-
 	return msg.Ack()
+}
+
+func (c *Component) worker(messages <-chan Message) {
+	for msg := range messages {
+		_ = c.processMessage(msg)
+	}
 }
 
 var errInvalidFS = errors.New("invalid failure strategy")

@@ -8,14 +8,15 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
-	patronSQS "github.com/beatlabs/patron/client/sqs"
-	sqsConsumer "github.com/beatlabs/patron/component/async/sqs"
-	"github.com/beatlabs/patron/correlation"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	patronSQS "github.com/beatlabs/patron/client/sqs"
+	sqsConsumer "github.com/beatlabs/patron/component/async/sqs"
+	"github.com/beatlabs/patron/correlation"
 )
 
 type message struct {
@@ -37,7 +38,13 @@ func Test_SQS_Consume(t *testing.T) {
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
 
-	factory, err := sqsConsumer.NewFactory(api, queueName)
+	factory, err := sqsConsumer.NewFactory(
+		api,
+		queueName,
+		sqsConsumer.MaxMessages(10),
+		sqsConsumer.PollWaitSeconds(20),
+		sqsConsumer.VisibilityTimeout(30),
+	)
 	require.NoError(t, err)
 	cns, err := factory.Create()
 	require.NoError(t, err)
@@ -70,7 +77,21 @@ func Test_SQS_Consume(t *testing.T) {
 		}
 	}()
 
-	assert.Equal(t, sent, <-chReceived)
+	received := <-chReceived
+	containsID := func(id string) bool {
+		for _, msg := range received {
+			if msg.ID == id {
+				return true
+			}
+		}
+		return false
+	}
+
+	assert.Equal(t, len(sent), len(received))
+	// cannot assert equality on arrays, SQS does not guarantee message order
+	assert.True(t, containsID("1"))
+	assert.True(t, containsID("2"))
+	assert.True(t, containsID("3"))
 	assert.Len(t, mtr.FinishedSpans(), 3)
 
 	for _, span := range mtr.FinishedSpans() {

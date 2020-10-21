@@ -176,7 +176,7 @@ func (c *Component) processing(ctx context.Context) error {
 		if !cns.OutOfOrder() {
 			return fmt.Errorf("async component creation: cannot create in-order component with concurrency > 1")
 		}
-		if cns.Strategy() == NackExitStrategy {
+		if c.failStrategy == NackExitStrategy {
 			return fmt.Errorf("async component creation: NackExitStrategy is not compatible with concurrency > 1")
 		}
 	}

@@ -44,7 +44,6 @@ type ConsumerFactory interface {
 type Consumer interface {
 	Consume(context.Context) (<-chan Message, <-chan error, error)
 	OutOfOrder() bool
-	Strategy() FailStrategy
 	Close() error
 }
 

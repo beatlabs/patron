@@ -468,16 +468,16 @@ func (mm *mockMessage) Payload() []byte {
 
 type mockProcessor struct {
 	errReturn bool
-	execs     int
 	mux       sync.Mutex
+	execs     int
 }
 
 var errProcess = errors.New("PROC ERROR")
 
 func (mp *mockProcessor) Process(msg Message) error {
 	mp.mux.Lock()
-	defer mp.mux.Unlock()
 	mp.execs++
+	mp.mux.Unlock()
 	if mp.errReturn {
 		return errProcess
 	}

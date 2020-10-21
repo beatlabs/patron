@@ -25,7 +25,7 @@ func TestMaxMessages(t *testing.T) {
 			expectedErr: "max messages should be between 1 and 10",
 		},
 		"over max message size": {
-			args:        args{maxMessages: aws.Int64(0)},
+			args:        args{maxMessages: aws.Int64(11)},
 			expectedErr: "max messages should be between 1 and 10",
 		},
 	}

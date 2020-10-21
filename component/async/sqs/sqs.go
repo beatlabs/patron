@@ -215,7 +215,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			if sqsCtx.Err() != nil {
 				return
 			}
-			log.Debugf("Consume: polling SQS queue %s for %d messages", c.queueName, *c.maxMessages)
+			log.Debugf("consume: polling SQS queue %s for %d messages", c.queueName, *c.maxMessages)
 			output, err := c.queue.ReceiveMessageWithContext(sqsCtx, &sqs.ReceiveMessageInput{
 				QueueUrl:            &c.queueURL,
 				MaxNumberOfMessages: c.maxMessages,

@@ -11,16 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
-	"github.com/google/uuid"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
+	"github.com/google/uuid"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type messageState string

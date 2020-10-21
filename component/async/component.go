@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const propSetMSG = "property '%s' set for '%s'"

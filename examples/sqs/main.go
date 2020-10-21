@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/async"
 	patronsqs "github.com/beatlabs/patron/component/async/sqs"

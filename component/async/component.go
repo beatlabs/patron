@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const propSetMSG = "property '%s' set for '%s'"
@@ -171,6 +172,14 @@ func (c *Component) Run(ctx context.Context) error {
 
 func (c *Component) processing(ctx context.Context) error {
 	cns, err := c.cf.Create()
+	if c.concurrency > 1 {
+		if !cns.OutOfOrder() {
+			return fmt.Errorf("async component creation: cannot create in-order component with concurrency > 1")
+		}
+		if cns.Strategy() == NackExitStrategy {
+			return fmt.Errorf("async component creation: NackExitStrategy is not compatible with concurrency > 1")
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %w", err)
 	}

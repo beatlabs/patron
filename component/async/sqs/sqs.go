@@ -202,6 +202,10 @@ type consumer struct {
 	cnl               context.CancelFunc
 }
 
+func (c *consumer) OutOfOrder() bool {
+	return true
+}
+
 // Consume messages from SQS and send them to the channel.
 func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan error, error) {
 	chMsg := make(chan async.Message)

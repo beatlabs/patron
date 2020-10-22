@@ -29,20 +29,33 @@ const (
 
 // SetupLogging sets up the default metrics logging.
 func SetupLogging(name, version string) error {
-	return setupLogging(name, version, map[string]interface{}{})
+	return setupLogging(name, version, map[string]interface{}{}, zerolog.Create(lookupLogLevel()))
 }
 
 // SetupLoggingWithFields sets up the default metrics logging with given fields.
 func SetupLoggingWithFields(name, version string, fields map[string]interface{}) error {
-	return setupLogging(name, version, fields)
+	return setupLogging(name, version, fields, zerolog.Create(lookupLogLevel()))
 }
 
-func setupLogging(name, version string, fields map[string]interface{}) error {
+// SetupLogging sets up the default metrics logging.
+func SetupCustomLogging(name, version string, loggerFactory log.FactoryFunc) error {
+	return setupLogging(name, version, map[string]interface{}{}, loggerFactory)
+}
+
+// SetupLoggingWithFields sets up the default metrics logging with given fields.
+func SetupCustomLoggingWithFields(name, version string, fields map[string]interface{}, loggerFactory log.FactoryFunc) error {
+	return setupLogging(name, version, fields, loggerFactory)
+}
+
+func lookupLogLevel() log.Level {
 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
 	if !ok {
-		lvl = string(log.InfoLevel)
+		return log.InfoLevel
 	}
+	return log.Level(lvl)
+}
 
+func setupLogging(name, version string, fields map[string]interface{}, loggerFactory log.FactoryFunc) error {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return fmt.Errorf("failed to get hostname: %w", err)
@@ -63,7 +76,7 @@ func setupLogging(name, version string, fields map[string]interface{}) error {
 	}
 
 	logSetupOnce.Do(func() {
-		err = log.Setup(zerolog.Create(log.Level(lvl)), f)
+		err = log.Setup(loggerFactory, f)
 	})
 
 	return err

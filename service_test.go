@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"testing"
 
 	phttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/log/zerolog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -270,26 +272,81 @@ func (ts testComponent) Run(ctx context.Context) error {
 }
 
 func TestSetupLogging(t *testing.T) {
-	t.Run("SetupLogging", func(t *testing.T) {
-		err := SetupLogging("myService", "some_version")
-		if err != nil {
-			t.Errorf("didn't expect an error but got: %s", err)
-		}
-	})
+	// given
+	resetLogSetupOnce()
 
-	t.Run("SetupLoggingWithFields", func(t *testing.T) {
-		err := SetupLoggingWithFields("myService", "some_version", map[string]interface{}{"env": "staging"})
-		if err != nil {
-			t.Errorf("didn't expect an error but got: %s", err)
-		}
-	})
+	// when
+	err := SetupLogging("myService", "some_version")
 
-	t.Run("SetupLoggingWithFields don't override", func(t *testing.T) {
-		// this is just to increase coverage
-		// we can't assert that the field wasn't overridden as the logger isn't exposed
-		err := SetupLoggingWithFields("myService", "some_version", map[string]interface{}{"env": "staging", "srv": "differentService"})
-		if err != nil {
-			t.Errorf("didn't expect an error but got: %s", err)
-		}
-	})
+	// then
+	assert.NoError(t, err)
+}
+
+func TestSetupLoggingWithFields(t *testing.T) {
+	// given
+	resetLogSetupOnce()
+
+	// when
+	err := SetupLoggingWithFields("myService", "some_version", map[string]interface{}{"env": "staging"})
+
+	// then
+	assert.NoError(t, err)
+}
+
+type mockLogFactory struct {
+	wasCalled bool
+	ff        map[string]interface{}
+}
+
+func (mf *mockLogFactory) factory() log.FactoryFunc {
+	return func(ff map[string]interface{}) log.Logger {
+		mf.wasCalled = true
+		mf.ff = ff
+		return zerolog.Create(log.DebugLevel)(ff)
+	}
+}
+
+func TestSetupLogging_WithCustomFactory(t *testing.T) {
+	// given
+	mockFactory := mockLogFactory{wasCalled: false}
+	resetLogSetupOnce()
+
+	// when
+	err := SetupCustomLogging("myService", "some_version", mockFactory.factory())
+
+	// then
+	assert.NoError(t, err)
+	assert.True(t, mockFactory.wasCalled)
+}
+
+func TestSetupLoggingWithFields_WithCustomFactory(t *testing.T) {
+	// given
+	mockFactory := mockLogFactory{wasCalled: false}
+	resetLogSetupOnce()
+
+	// when
+	err := SetupCustomLoggingWithFields("myService", "some_version", map[string]interface{}{"env": "staging"}, mockFactory.factory())
+
+	//then
+	assert.NoError(t, err)
+	assert.True(t, mockFactory.wasCalled)
+}
+
+func TestSetupLoggingWithFields_DontOverride(t *testing.T) {
+	// given
+	mockFactory := mockLogFactory{wasCalled: false}
+	resetLogSetupOnce()
+
+	serviceName := "myService"
+	// when
+	err := SetupCustomLoggingWithFields(serviceName, "some_version", map[string]interface{}{"env": "staging", "srv": "differentService"}, mockFactory.factory())
+
+	//then
+	assert.NoError(t, err)
+	assert.True(t, mockFactory.wasCalled)
+	assert.Equal(t, serviceName, mockFactory.ff["srv"])
+}
+
+func resetLogSetupOnce() {
+	logSetupOnce = sync.Once{}
 }

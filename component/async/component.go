@@ -128,27 +128,6 @@ func (cb *Builder) Create() (*Component, error) {
 
 // Run starts the consumer processing loop messages.
 func (c *Component) Run(ctx context.Context) error {
-	var err error
-
-	for i := 0; i <= c.retries; i++ {
-		err = c.processing(ctx)
-		if err == nil {
-			return nil
-		}
-		if ctx.Err() == context.Canceled {
-			break
-		}
-		consumerErrorsInc(c.name)
-		if c.retries > 0 {
-			log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, err)
-			time.Sleep(c.retryWait)
-		}
-	}
-
-	return err
-}
-
-func (c *Component) processing(ctx context.Context) error {
 	cns, err := c.cf.Create()
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %w", err)
@@ -165,21 +144,38 @@ func (c *Component) processing(ctx context.Context) error {
 		return fmt.Errorf("failed to get consumer channels: %w", err)
 	}
 
+	retry := 0
 	for {
 		select {
-		case msg := <-chMsg:
-			log.FromContext(msg.Context()).Debug("consumer received a new message")
-			err := c.processMessage(msg)
-			if err != nil {
-				return err
-			}
 		case <-ctx.Done():
 			if ctx.Err() != context.Canceled {
 				log.Warnf("closing consumer: %v", ctx.Err())
 			}
 			return cns.Close()
+		case msg := <-chMsg:
+			log.FromContext(msg.Context()).Debug("consumer received a new message")
+			err := c.processMessage(msg)
+			if err == nil {
+				retry = 0
+			} else {
+				consumerErrorsInc(c.name)
+				log.Errorf("process error, retry %d/%d with %v wait: %v", retry, c.retries, c.retryWait, err)
+				if retry < c.retries {
+					time.Sleep(c.retryWait)
+					retry += 1
+				} else {
+					return err
+				}
+			}
 		case err := <-chErr:
-			return fmt.Errorf("an error occurred during message consumption: %w", err)
+			consumerErrorsInc(c.name)
+			log.Errorf("consume error, retry %d/%d with %v wait: %v", retry, c.retries, c.retryWait, err)
+			if retry < c.retries {
+				time.Sleep(c.retryWait)
+				retry += 1
+			} else {
+				return err
+			}
 		}
 	}
 }

@@ -307,18 +307,34 @@ func TestRun_ConsumeError(t *testing.T) {
 // before exiting the execution
 func TestRun_ConsumeError_WithRetry(t *testing.T) {
 	retries := 3
-	cf := &mockConsumerFactory{errRet: true}
+	// cf := &mockConsumerFactory{errRet: true}
 	builder := proxyBuilder{
-		cf:        cf,
+		// cf:        cf,
+		cnr: mockConsumer{
+			chMsg: make(chan Message),
+			chErr: make(chan error),
+		},
 		retries:   retries,
 		retryWait: 2 * time.Millisecond,
 	}
 
+	go func() {
+		builder.cnr.chErr <- errConsumer
+		builder.cnr.chErr <- errConsumer
+		builder.cnr.chErr <- errConsumer
+		// a successful message will reset the retry counter.
+		builder.cnr.chMsg <- &mockMessage{ctx: context.Background()}
+		builder.cnr.chErr <- errConsumer
+		builder.cnr.chErr <- errConsumer
+		builder.cnr.chErr <- errConsumer
+		builder.cnr.chErr <- errConsumer
+		// after a 4th consecutive error the component should return the error.
+	}()
 	err := run(context.Background(), t, &builder)
 
 	assert.Error(t, err)
-	assert.True(t, retries <= cf.execs)
-	assert.Equal(t, 0, builder.proc.execs)
+	assert.True(t, strings.Contains(err.Error(), errConsumer.Error()))
+	assert.Equal(t, 1, builder.proc.execs)
 }
 
 // TestRun_ConsumeError_WithRetry_AndContextCancel will retry after a consumer error

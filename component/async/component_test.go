@@ -307,9 +307,7 @@ func TestRun_ConsumeError(t *testing.T) {
 // before exiting the execution
 func TestRun_ConsumeError_WithRetry(t *testing.T) {
 	retries := 3
-	// cf := &mockConsumerFactory{errRet: true}
 	builder := proxyBuilder{
-		// cf:        cf,
 		cnr: mockConsumer{
 			chMsg: make(chan Message),
 			chErr: make(chan error),

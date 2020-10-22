@@ -162,7 +162,7 @@ func (c *Component) Run(ctx context.Context) error {
 				log.Errorf("process error, retry %d/%d with %v wait: %v", retry, c.retries, c.retryWait, err)
 				if retry < c.retries {
 					time.Sleep(c.retryWait)
-					retry += 1
+					retry++
 				} else {
 					return err
 				}
@@ -172,7 +172,7 @@ func (c *Component) Run(ctx context.Context) error {
 			log.Errorf("consume error, retry %d/%d with %v wait: %v", retry, c.retries, c.retryWait, err)
 			if retry < c.retries {
 				time.Sleep(c.retryWait)
-				retry += 1
+				retry++
 			} else {
 				return err
 			}

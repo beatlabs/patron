@@ -155,6 +155,7 @@ func assertRouteBuilder(t *testing.T, arg arg, routeBuilder *RouteBuilder, cache
 }
 
 func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
+	ce := make(chan error, 1)
 
 	cc := newTestingCache()
 	cc.instant = httpcache.NowSeconds
@@ -182,7 +183,7 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
 	port := 50023
-	runRoute(ctx, t, routeBuilder, port)
+	runRoute(ctx, t, routeBuilder, ce, port)
 
 	assertResponse(ctx, t, []http.Response{
 		{
@@ -219,11 +220,12 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	assert.Equal(t, 2, postWrapper.invocations)
 
 	assert.Equal(t, executions, uint32(1))
-
 	cln()
+	assert.NoError(t, <-ce)
 }
 
 func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
+	ce := make(chan error, 1)
 
 	cc := newTestingCache()
 	cc.instant = httpcache.NowSeconds
@@ -255,7 +257,7 @@ func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
 	port := 50023
-	runRoute(ctx, t, routeBuilder, port)
+	runRoute(ctx, t, routeBuilder, ce, port)
 
 	assertResponse(ctx, t, []http.Response{
 		{
@@ -295,7 +297,7 @@ func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
 	assert.Equal(t, executions, uint32(1))
 
 	cln()
-
+	assert.NoError(t, <-ce)
 }
 
 type middlewareWrapper struct {
@@ -316,6 +318,7 @@ func newMiddlewareWrapper(middlewareFunc func(w http.ResponseWriter, r *http.Req
 }
 
 func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
+	ce := make(chan error, 1)
 
 	cc := newTestingCache()
 	cc.instant = httpcache.NowSeconds
@@ -344,7 +347,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	ctx, cln := context.WithTimeout(context.Background(), 5*time.Second)
 
 	port := 50024
-	runRoute(ctx, t, routeBuilder, port)
+	runRoute(ctx, t, routeBuilder, ce, port)
 
 	assertResponse(ctx, t, []http.Response{
 		{
@@ -381,7 +384,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	assert.Equal(t, executions, uint32(1))
 
 	cln()
-
+	assert.NoError(t, <-ce)
 }
 
 type bodyReader struct {
@@ -402,15 +405,15 @@ func (br *bodyReader) Close() error {
 	return nil
 }
 
-func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, port int) {
+func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, ce chan error, port int) {
 	cmp, err := NewBuilder().WithRoutesBuilder(NewRoutesBuilder().Append(routeBuilder)).WithPort(port).Create()
 
 	assert.NoError(t, err)
 	assert.NotNil(t, cmp)
 
 	go func() {
-		err = cmp.Run(ctx)
-		assert.NoError(t, err)
+		ce <- cmp.Run(ctx)
+		close(ce)
 	}()
 
 	var lwg sync.WaitGroup

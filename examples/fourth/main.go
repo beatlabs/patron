@@ -38,11 +38,11 @@ const (
 	awsToken  = "token"
 
 	// SQS config
-	awsSQSEndpoint = "http://localhost:4576"
+	awsSQSEndpoint = "http://localhost:4566"
 	awsSQSQueue    = "patron"
 
 	// SNS config
-	awsSNSEndpoint = "http://localhost:4575"
+	awsSNSEndpoint = "http://localhost:4566"
 	awsSNSTopic    = "patron-topic"
 )
 

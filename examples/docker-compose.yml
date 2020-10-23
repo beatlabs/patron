@@ -1,8 +1,8 @@
-version: '2'
+version: '2.1'
 
 services:
   jaeger:
-    image: jaegertracing/all-in-one
+    image: jaegertracing/all-in-one:1.20.0
     environment:
       - COLLECTOR_ZIPKIN_HTTP_PORT=9411
     networks:
@@ -23,7 +23,7 @@ services:
       - "6831:6831/udp"
       - "6832:6832/udp"
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v2.22.0
     networks:
       examplenw:
         aliases:
@@ -48,7 +48,7 @@ services:
       - "15672:15672"
       - "5672:5672"
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:6.0.0
     hostname: "zookeeper"
     networks:
       examplenw:
@@ -62,7 +62,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:6.0.0
     hostname: "kafka"
     networks:
       examplenw:
@@ -82,7 +82,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
   pg:
-    image:  postgres
+    image:  postgres:13
     hostname: "pg"
     networks:
       examplenw:
@@ -95,15 +95,14 @@ services:
     environment:
       - POSTGRES_PASSWORD=test123
   localstack:
-    image: localstack/localstack
+    image: localstack/localstack:0.12.0
     hostname: localstack
     networks:
       examplenw:
         aliases:
           - localstack
     ports:
-      - "4567-4584:4567-4584"
-      - "8090:8080"
+      - "4566:4566"
     environment:
       - LOCALSTACK_SERVICES=sqs,sns
       - LOCALSTACK_DEBUG=1
@@ -114,7 +113,7 @@ services:
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
   redis:
-    image: 'bitnami/redis'
+    image: bitnami/redis:6.0
     hostname: 'redis'
     environment:
     - ALLOW_EMPTY_PASSWORD=yes

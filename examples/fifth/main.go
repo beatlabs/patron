@@ -26,7 +26,7 @@ const (
 	awsID          = "test"
 	awsSecret      = "test"
 	awsToken       = "token"
-	awsSQSEndpoint = "http://localhost:4576"
+	awsSQSEndpoint = "http://localhost:4566"
 	awsSQSQueue    = "patron"
 )
 

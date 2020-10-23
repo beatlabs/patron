@@ -210,8 +210,7 @@ func TestRun_ProcessError_WithNackError(t *testing.T) {
 }
 
 // TestRun_ParallelProcessError_WithNackError expects a PROC ERROR
-// from an error producing processor
-// but due to the concurrency setting, it will continue processing other messages
+// same as TestRun_ProcessError_WithNackError, just with concurrency
 func TestRun_ParallelProcessError_WithNackError(t *testing.T) {
 	builder := proxyBuilder{
 		proc: mockProcessor{errReturn: true},
@@ -223,25 +222,14 @@ func TestRun_ParallelProcessError_WithNackError(t *testing.T) {
 		concurrency: 10,
 	}
 
-	ctx, cnl := context.WithCancel(context.Background())
+	ctx := context.Background()
 	builder.cnr.chMsg <- &mockMessage{ctx: ctx, nackError: true}
-	ch := make(chan bool)
-	go func() {
-		assert.NoError(t, run(ctx, t, &builder))
-		ch <- true
-	}()
-	time.Sleep(10 * time.Millisecond)
-	cnl()
 
-	select {
-	case _, ok := <-builder.cnr.chErr:
-		if ok {
-			assert.Fail(t, "we don't expect an error , given our ack failure strategy setup")
-		}
-	default:
-		assert.True(t, <-ch)
-	}
-	assert.Equal(t, 1, builder.proc.GetExecs())
+	err := run(ctx, t, &builder)
+
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), errNack.Error()))
+	assert.Equal(t, 1, builder.proc.execs)
 }
 
 // TestRun_Process_Error_AckStrategy expects a PROC ERROR
@@ -511,6 +499,10 @@ type mockConsumer struct {
 	clsError     bool
 	chMsg        chan Message
 	chErr        chan error
+}
+
+func (mc *mockConsumer) OutOfOrder() bool {
+	return true
 }
 
 func (mc *mockConsumer) SetTimeout(timeout time.Duration) {

@@ -43,6 +43,7 @@ type Component struct {
 	retryWait    time.Duration
 	concurrency  int
 	jobs         chan Message
+	jobErr       chan error
 }
 
 // Builder gathers all required properties in order to construct a component
@@ -136,11 +137,12 @@ func (cb *Builder) Create() (*Component, error) {
 		retryWait:    cb.retryWait,
 		concurrency:  int(cb.concurrency),
 		jobs:         make(chan Message),
+		jobErr:       make(chan error),
 	}
 
 	if cb.concurrency > 1 {
 		for w := 1; w <= c.concurrency; w++ {
-			go c.worker(c.jobs)
+			go c.worker()
 		}
 	}
 
@@ -172,13 +174,8 @@ func (c *Component) Run(ctx context.Context) error {
 
 func (c *Component) processing(ctx context.Context) error {
 	cns, err := c.cf.Create()
-	if c.concurrency > 1 {
-		if !cns.OutOfOrder() {
-			return fmt.Errorf("async component creation: cannot create in-order component with concurrency > 1")
-		}
-		if c.failStrategy == NackExitStrategy {
-			return fmt.Errorf("async component creation: NackExitStrategy is not compatible with concurrency > 1")
-		}
+	if c.concurrency > 1 && !cns.OutOfOrder() {
+		return fmt.Errorf("async component creation: cannot create in-order component with concurrency > 1")
 	}
 	if err != nil {
 		return fmt.Errorf("failed to create consumer: %w", err)
@@ -210,6 +207,8 @@ func (c *Component) processing(ctx context.Context) error {
 			return cns.Close()
 		case err := <-chErr:
 			return fmt.Errorf("an error occurred during message consumption: %w", err)
+		case err := <-c.jobErr:
+			return fmt.Errorf("an error occurred during concurrent message consumption: %w", err)
 		}
 	}
 }
@@ -217,7 +216,7 @@ func (c *Component) processing(ctx context.Context) error {
 func (c *Component) dispatchMessage(msg Message) error {
 	if c.concurrency > 1 {
 		c.jobs <- msg
-		return nil // a message failure is safe to ignore in parallel message consumption
+		return nil
 	}
 	return c.processMessage(msg)
 }
@@ -230,9 +229,12 @@ func (c *Component) processMessage(msg Message) error {
 	return msg.Ack()
 }
 
-func (c *Component) worker(messages <-chan Message) {
-	for msg := range messages {
-		_ = c.processMessage(msg)
+func (c *Component) worker() {
+	for msg := range c.jobs {
+		err := c.processMessage(msg)
+		if err != nil {
+			c.jobErr <- err
+		}
 	}
 }
 

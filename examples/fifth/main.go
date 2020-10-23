@@ -52,9 +52,9 @@ func main() {
 	name := "fifth"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version)
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
@@ -62,7 +62,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to dial grpc connection: %v", err)
 	}
-	defer cc.Close()
+	defer func() {
+		_ = cc.Close()
+	}()
 
 	greeter := greeter.NewGreeterClient(cc)
 
@@ -85,7 +87,7 @@ func main() {
 
 	// Run the server
 	ctx := context.Background()
-	err = patron.New(name, version).WithComponents(sqsCmp.cmp).Run(ctx)
+	err = service.WithComponents(sqsCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service: %v", err)
 	}

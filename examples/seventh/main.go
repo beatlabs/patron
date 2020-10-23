@@ -9,7 +9,7 @@ import (
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/cache/redis"
-	patronhttp "github.com/beatlabs/patron/component/http"
+	"github.com/beatlabs/patron/component/http"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
 )
 
@@ -35,9 +35,9 @@ func main() {
 	name := "seventh"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version, patron.TextLogger())
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
@@ -49,8 +49,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewRouteBuilder("/", seventh).
+	routesBuilder := http.NewRoutesBuilder().
+		Append(http.NewRouteBuilder("/", seventh).
 			WithRouteCache(cache, httpcache.Age{
 				// we wont allow to override the cache more than once per 15 seconds
 				Min: 15 * time.Second,
@@ -64,7 +64,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	err = patron.New(name, version).
+	err = service.
 		WithRoutesBuilder(routesBuilder).
 		WithSIGHUP(sig).
 		Run(ctx)
@@ -75,9 +75,9 @@ func main() {
 
 // seventh gives the 7 minute interval of the current unix timestamp
 // since the response will be the same for the next 7 minutes, it s a good use-case to apply caching
-func seventh(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
+func seventh(_ context.Context, _ *http.Request) (*http.Response, error) {
 	now := time.Now()
 	minutes := now.Unix() / 60
 	minuteInterval := minutes / 7
-	return patronhttp.NewResponse(fmt.Sprintf("current unix 7-minute interval is (%d) called at %v", minuteInterval, now.Unix())), nil
+	return http.NewResponse(fmt.Sprintf("current unix 7-minute interval is (%d) called at %v", minuteInterval, now.Unix())), nil
 }

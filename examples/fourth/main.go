@@ -68,9 +68,9 @@ func main() {
 	name := "fourth"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version)
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
@@ -124,7 +124,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithComponents(amqpCmp.cmp).Run(ctx)
+	err = service.WithComponents(amqpCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

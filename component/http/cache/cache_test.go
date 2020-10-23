@@ -10,17 +10,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/log/zerolog"
+	"github.com/beatlabs/patron/log/std"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
-
-	err := log.Setup(zerolog.Create(log.DebugLevel), make(map[string]interface{}))
-
+	err := log.Setup(std.New(os.Stderr, log.DebugLevel, make(map[string]interface{})))
 	if err != nil {
 		os.Exit(1)
 	}
@@ -28,11 +25,9 @@ func TestMain(m *testing.M) {
 	exitVal := m.Run()
 
 	os.Exit(exitVal)
-
 }
 
 func TestExtractCacheHeaders(t *testing.T) {
-
 	type caheRequestCondition struct {
 		noCache         bool
 		forceCache      bool
@@ -128,7 +123,6 @@ func TestExtractCacheHeaders(t *testing.T) {
 		assert.Equal(t, param.cfg.validators, len(cfg.validators))
 		assert.Equal(t, param.cfg.expiryValidator, cfg.expiryValidator != nil)
 	}
-
 }
 
 type routeConfig struct {
@@ -193,7 +187,6 @@ func testHeaderWithWarning(maxAge int64, warning string) map[string]string {
 }
 
 func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 1 * time.Second, Max: 10 * time.Second},
@@ -273,7 +266,6 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 // No cache age configuration
 // this effectively disables the cache
 func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		// this means , without client control headers we will always return a non-cached Response
@@ -338,7 +330,6 @@ func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 }
 
 func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 5 * time.Second, Max: 10 * time.Second},
@@ -435,7 +426,6 @@ func TestCache_WithConstantMaxAgeHeader(t *testing.T) {
 }
 
 func TestCache_WithMaxAgeHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Max: 30 * time.Second},
@@ -531,7 +521,6 @@ func TestCache_WithMaxAgeHeaders(t *testing.T) {
 }
 
 func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Max: 5 * time.Second},
@@ -576,7 +565,6 @@ func TestMinAgeCache_WithHighMaxAgeHeaders(t *testing.T) {
 }
 
 func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Max: 30 * time.Second},
@@ -623,7 +611,6 @@ func TestNoMinAgeCache_WithLowMaxAgeHeaders(t *testing.T) {
 }
 
 func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 5 * time.Second, Max: 30 * time.Second},
@@ -704,7 +691,6 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 }
 
 func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
@@ -800,7 +786,6 @@ func TestCache_WithConstantMinFreshHeaders(t *testing.T) {
 }
 
 func TestNoMaxFreshCache_WithLargeMinFreshHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
@@ -844,7 +829,6 @@ func TestNoMaxFreshCache_WithLargeMinFreshHeaders(t *testing.T) {
 }
 
 func TestMaxAgeCache_WithMinFreshHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		// Note  this is a bad config
@@ -890,7 +874,6 @@ func TestMaxAgeCache_WithMinFreshHeaders(t *testing.T) {
 }
 
 func TestCache_WithMixedHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 5 * time.Second, Max: 10 * time.Second},
@@ -986,7 +969,6 @@ func TestCache_WithMixedHeaders(t *testing.T) {
 }
 
 func TestCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
-
 	hndErr := errors.New("error encountered on handler")
 
 	rc := routeConfig{
@@ -1037,7 +1019,6 @@ func TestCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 }
 
 func TestCache_WithHandlerErr(t *testing.T) {
-
 	hndErr := errors.New("error encountered on handler")
 
 	rc := routeConfig{
@@ -1071,7 +1052,6 @@ func TestCache_WithHandlerErr(t *testing.T) {
 }
 
 func TestCache_WithCacheGetErr(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
@@ -1115,7 +1095,8 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 					},
 				},
 			},
-		}}
+		},
+	}
 	assertCache(t, args)
 
 	assert.Equal(t, 2, cacheImpl.getCount)
@@ -1123,7 +1104,6 @@ func TestCache_WithCacheGetErr(t *testing.T) {
 }
 
 func TestCache_WithCacheSetErr(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
@@ -1176,7 +1156,6 @@ func TestCache_WithCacheSetErr(t *testing.T) {
 }
 
 func TestCache_WithMixedPaths(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
@@ -1278,7 +1257,6 @@ func TestCache_WithMixedPaths(t *testing.T) {
 }
 
 func TestCache_WithMixedRequestParameters(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
@@ -1364,7 +1342,6 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 }
 
 func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Max: 10 * time.Second},
@@ -1409,7 +1386,6 @@ func TestZeroAgeCache_WithNoCacheHeaders(t *testing.T) {
 }
 
 func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 2 * time.Second, Max: 10 * time.Second},
@@ -1471,7 +1447,6 @@ func TestMinAgeCache_WithNoCacheHeaders(t *testing.T) {
 }
 
 func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Max: 10 * time.Second},
@@ -1516,7 +1491,6 @@ func TestZeroAgeCache_WithNoStoreHeaders(t *testing.T) {
 }
 
 func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 2 * time.Second, Max: 10 * time.Second},
@@ -1578,7 +1552,6 @@ func TestMinAgeCache_WithNoStoreHeaders(t *testing.T) {
 }
 
 func TestCache_WithForceCacheHeaders(t *testing.T) {
-
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
@@ -1623,7 +1596,6 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 }
 
 func assertCache(t *testing.T, args [][]testArgs) {
-
 	monitor = &testMetrics{}
 
 	// create a test request handler
@@ -1725,7 +1697,6 @@ func assertHeader(t *testing.T, key string, expected map[string]string, actual h
 	} else {
 		assert.Equal(t, expected[key], actual[key][0])
 	}
-
 }
 
 func assertMetrics(t *testing.T, expected, actual testMetrics) {
@@ -1824,7 +1795,6 @@ func (m *testMetrics) init(path string) {
 		m.values = make(map[string]*metricState)
 	}
 	if _, exists := m.values[path]; !exists {
-
 		m.values[path] = &metricState{}
 	}
 }

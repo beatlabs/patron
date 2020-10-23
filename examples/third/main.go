@@ -46,9 +46,9 @@ func main() {
 	name := "third"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version, patron.TextLogger())
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
@@ -58,7 +58,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithComponents(kafkaCmp.cmp).Run(ctx)
+	err = service.WithComponents(kafkaCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}
@@ -70,7 +70,6 @@ type kafkaComponent struct {
 }
 
 func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*kafkaComponent, error) {
-
 	kafkaCmp := kafkaComponent{}
 
 	cf, err := group.New(name, groupID, []string{topic}, []string{broker}, kafka.Decoder(json.DecodeRaw))

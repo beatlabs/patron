@@ -44,9 +44,9 @@ func main() {
 	name := "second"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version, patron.LogFields(map[string]interface{}{"env": "staging"}))
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
@@ -64,7 +64,7 @@ func main() {
 		Append(patronhttp.NewRouteBuilder("/", httpCmp.second).MethodGet().WithTrace().WithAuth(auth))
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithRoutesBuilder(routesBuilder).Run(ctx)
+	err = service.WithRoutesBuilder(routesBuilder).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}
@@ -75,7 +75,7 @@ type httpComponent struct {
 	topic string
 }
 
-func newHTTPComponent(kafkaBroker, topic, url string) (*httpComponent, error) {
+func newHTTPComponent(kafkaBroker, topic, _ string) (*httpComponent, error) {
 	prd, chErr, err := kafka.NewBuilder([]string{kafkaBroker}).CreateAsync()
 	if err != nil {
 		return nil, err
@@ -90,7 +90,6 @@ func newHTTPComponent(kafkaBroker, topic, url string) (*httpComponent, error) {
 }
 
 func (hc *httpComponent) second(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
-
 	var u examples.User
 	err := req.Decode(&u)
 	if err != nil {

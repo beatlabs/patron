@@ -11,15 +11,6 @@ import (
 	"github.com/beatlabs/patron/log"
 )
 
-const (
-	awsRegion      = "eu-west-1"
-	awsID          = "test"
-	awsSecret      = "test"
-	awsToken       = "token"
-	awsSQSEndpoint = "http://localhost:4576"
-	awsSQSQueue    = "patron"
-)
-
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
@@ -43,7 +34,6 @@ type greeterServer struct {
 }
 
 func (gs *greeterServer) SayHello(ctx context.Context, req *greeter.HelloRequest) (*greeter.HelloReply, error) {
-
 	log.FromContext(ctx).Infof("request received: %v", req.String())
 
 	return &greeter.HelloReply{Message: fmt.Sprintf("Hello, %s %s!", req.GetFirstname(), req.GetLastname())}, nil
@@ -53,9 +43,9 @@ func main() {
 	name := "sixth"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version, patron.TextLogger())
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
@@ -67,7 +57,7 @@ func main() {
 	greeter.RegisterGreeterServer(cmp.Server(), &greeterServer{})
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithComponents(cmp).Run(ctx)
+	err = service.WithComponents(cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service: %v", err)
 	}

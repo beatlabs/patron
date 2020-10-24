@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
@@ -121,12 +123,13 @@ func TestFactory_Create(t *testing.T) {
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, got)
+				require.NotNil(t, got)
 				consumer, ok := got.(*consumer)
 				assert.True(t, ok, "consumer is not of type group.consumer")
 				assert.Equal(t, tt.fields.brokers, consumer.config.Brokers)
 				assert.Equal(t, tt.fields.topics, consumer.topics)
 				assert.True(t, strings.HasSuffix(consumer.config.SaramaConfig.ClientID, tt.fields.clientName))
+				assert.False(t, got.OutOfOrder())
 			}
 		})
 	}
@@ -154,12 +157,12 @@ type mockConsumerSession struct{}
 func (m *mockConsumerSession) Claims() map[string][]int32 { return nil }
 func (m *mockConsumerSession) MemberID() string           { return "" }
 func (m *mockConsumerSession) GenerationID() int32        { return 0 }
-func (m *mockConsumerSession) MarkOffset(topic string, partition int32, offset int64, metadata string) {
+func (m *mockConsumerSession) MarkOffset(string, int32, int64, string) {
 }
-func (m *mockConsumerSession) ResetOffset(topic string, partition int32, offset int64, metadata string) {
+func (m *mockConsumerSession) ResetOffset(string, int32, int64, string) {
 }
-func (m *mockConsumerSession) MarkMessage(msg *sarama.ConsumerMessage, metadata string) {}
-func (m *mockConsumerSession) Context() context.Context                                 { return context.Background() }
+func (m *mockConsumerSession) MarkMessage(*sarama.ConsumerMessage, string) {}
+func (m *mockConsumerSession) Context() context.Context                    { return context.Background() }
 
 func TestHandler_ConsumeClaim(t *testing.T) {
 

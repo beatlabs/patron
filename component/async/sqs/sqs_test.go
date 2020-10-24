@@ -97,6 +97,7 @@ func TestFactory_Create(t *testing.T) {
 	assert.Nil(t, cons.visibilityTimeout)
 	assert.Equal(t, 10*time.Second, cons.statsInterval)
 	assert.Nil(t, cons.cnl)
+	assert.True(t, cons.OutOfOrder())
 }
 
 func Test_consumer_Consume(t *testing.T) {

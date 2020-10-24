@@ -5,6 +5,7 @@ import (
 
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -91,7 +92,8 @@ func TestFactory_Create(t *testing.T) {
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, got)
+				require.NotNil(t, got)
+				assert.False(t, got.OutOfOrder())
 			}
 		})
 	}

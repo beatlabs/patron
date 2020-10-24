@@ -77,20 +77,8 @@ func Test_SQS_Consume(t *testing.T) {
 	}()
 
 	received := <-chReceived
-	containsID := func(id string) bool {
-		for _, msg := range received {
-			if msg.ID == id {
-				return true
-			}
-		}
-		return false
-	}
 
-	assert.Equal(t, len(sent), len(received))
-	// cannot assert equality on arrays, SQS does not guarantee message order
-	assert.True(t, containsID("1"))
-	assert.True(t, containsID("2"))
-	assert.True(t, containsID("3"))
+	assert.ElementsMatch(t, sent, received)
 	assert.Len(t, mtr.FinishedSpans(), 3)
 
 	for _, span := range mtr.FinishedSpans() {

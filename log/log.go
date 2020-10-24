@@ -4,6 +4,7 @@ package log
 import (
 	"context"
 	"errors"
+	"sync"
 )
 
 // The Level type definition.
@@ -26,6 +27,21 @@ const (
 	NoLevel Level = ""
 )
 
+var levelOrder = map[Level]int{
+	DebugLevel: 0,
+	InfoLevel:  1,
+	WarnLevel:  2,
+	ErrorLevel: 3,
+	FatalLevel: 4,
+	PanicLevel: 5,
+	NoLevel:    6,
+}
+
+// LevelOrder returns the numerical order of the level.
+func LevelOrder(lvl Level) int {
+	return levelOrder[lvl]
+}
+
 // Logger interface definition of a logger.
 type Logger interface {
 	Sub(map[string]interface{}) Logger
@@ -46,22 +62,20 @@ type Logger interface {
 
 type ctxKey struct{}
 
-// FactoryFunc function type for creating loggers.
-type FactoryFunc func(map[string]interface{}) Logger
-
-var logger Logger = &nilLogger{}
+var (
+	logger Logger = &nilLogger{}
+	once   sync.Once
+)
 
 // Setup logging by providing a logger factory.
-func Setup(f FactoryFunc, fls map[string]interface{}) error {
-	if f == nil {
-		return errors.New("factory is nil")
+func Setup(l Logger) error {
+	if l == nil {
+		return errors.New("logger is nil")
 	}
+	once.Do(func() {
+		logger = l
+	})
 
-	if fls == nil {
-		fls = make(map[string]interface{})
-	}
-
-	logger = f(fls)
 	return nil
 }
 
@@ -146,19 +160,9 @@ func Debugf(msg string, args ...interface{}) {
 	logger.Debugf(msg, args...)
 }
 
-var levelPriorities = map[Level]int{
-	DebugLevel: 0,
-	InfoLevel:  1,
-	WarnLevel:  2,
-	ErrorLevel: 3,
-	FatalLevel: 4,
-	PanicLevel: 5,
-	NoLevel:    6,
-}
-
 // Enabled shows if the logger logs for the given level.
 func Enabled(l Level) bool {
-	return levelPriorities[logger.Level()] <= levelPriorities[l]
+	return levelOrder[logger.Level()] <= levelOrder[l]
 }
 
 type nilLogger struct{}
@@ -169,51 +173,51 @@ func (nl *nilLogger) Sub(map[string]interface{}) Logger {
 }
 
 // Panic logging.
-func (nl *nilLogger) Panic(args ...interface{}) {
+func (nl *nilLogger) Panic(_ ...interface{}) {
 }
 
 // Panicf logging.
-func (nl *nilLogger) Panicf(msg string, args ...interface{}) {
+func (nl *nilLogger) Panicf(_ string, _ ...interface{}) {
 }
 
 // Fatal logging.
-func (nl *nilLogger) Fatal(args ...interface{}) {
+func (nl *nilLogger) Fatal(_ ...interface{}) {
 }
 
 // Fatalf logging.
-func (nl *nilLogger) Fatalf(msg string, args ...interface{}) {
+func (nl *nilLogger) Fatalf(_ string, _ ...interface{}) {
 }
 
 // Error logging.
-func (nl *nilLogger) Error(args ...interface{}) {
+func (nl *nilLogger) Error(_ ...interface{}) {
 }
 
 // Errorf logging.
-func (nl *nilLogger) Errorf(msg string, args ...interface{}) {
+func (nl *nilLogger) Errorf(_ string, _ ...interface{}) {
 }
 
 // Warn logging.
-func (nl *nilLogger) Warn(args ...interface{}) {
+func (nl *nilLogger) Warn(_ ...interface{}) {
 }
 
 // Warnf logging.
-func (nl *nilLogger) Warnf(msg string, args ...interface{}) {
+func (nl *nilLogger) Warnf(_ string, _ ...interface{}) {
 }
 
 // Info logging.
-func (nl *nilLogger) Info(args ...interface{}) {
+func (nl *nilLogger) Info(_ ...interface{}) {
 }
 
 // Infof logging.
-func (nl *nilLogger) Infof(msg string, args ...interface{}) {
+func (nl *nilLogger) Infof(_ string, _ ...interface{}) {
 }
 
 // Debug logging.
-func (nl *nilLogger) Debug(args ...interface{}) {
+func (nl *nilLogger) Debug(_ ...interface{}) {
 }
 
 // Debugf logging.
-func (nl *nilLogger) Debugf(msg string, args ...interface{}) {
+func (nl *nilLogger) Debugf(_ string, _ ...interface{}) {
 }
 
 // Level returns the debug level of the nil logger.

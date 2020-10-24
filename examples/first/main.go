@@ -16,15 +16,11 @@ import (
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/log/std"
 )
 
 func init() {
-	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
-	if err != nil {
-		fmt.Printf("failed to set log level env var: %v", err)
-		os.Exit(1)
-	}
-	err = os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
+	err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
 		fmt.Printf("failed to set sampler env vars: %v", err)
 		os.Exit(1)
@@ -35,9 +31,11 @@ func main() {
 	name := "first"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	logger := std.New(os.Stderr, log.DebugLevel, map[string]interface{}{"env": "staging"})
+
+	service, err := patron.New(name, version, patron.Logger(logger))
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
@@ -54,15 +52,14 @@ func main() {
 		})
 	}
 	sig := func() {
-		fmt.Println("exit gracefully...")
+		log.Info("exit gracefully...")
 		os.Exit(0)
 	}
 
 	ctx := context.Background()
-	err = patron.New(name, version).
+	err = service.
 		WithRoutesBuilder(routesBuilder).
 		WithMiddlewares(middlewareCors).
-		WithLogFields(map[string]interface{}{"env": "staging"}).
 		WithSIGHUP(sig).
 		Run(ctx)
 	if err != nil {
@@ -71,7 +68,6 @@ func main() {
 }
 
 func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
-
 	timing, err := DoTimingRequest(ctx)
 	if err != nil {
 		log.FromContext(ctx).Infof("first: failed to get timing information %v: could it be that the seventh service is not running ?", err)
@@ -131,7 +127,7 @@ func DoTimingRequest(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("failed to decode timing response body: %w", err)
 	}
 
-	var rgx = regexp.MustCompile(`\((.*?)\)`)
+	rgx := regexp.MustCompile(`\((.*?)\)`)
 	timeInstance := rgx.FindStringSubmatch(string(tb))
 	if len(timeInstance) == 1 {
 		return "", fmt.Errorf("could not match timeinstance from response %s", string(tb))

@@ -10,15 +10,15 @@ import (
 
 func TestSetup(t *testing.T) {
 	tests := map[string]struct {
-		f       FactoryFunc
+		logger  Logger
 		wantErr bool
 	}{
-		"failure with nil factory": {nil, true},
-		"success":                  {func(map[string]interface{}) Logger { return nil }, false},
+		"failure with nil loggers": {logger: nil, wantErr: true},
+		"success":                  {logger: &nilLogger{}, wantErr: false},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := Setup(tt.f, nil)
+			err := Setup(tt.logger)
 			if tt.wantErr {
 				assert.Error(t, err, "expected error")
 			} else {
@@ -203,51 +203,51 @@ func (t *testLogger) Sub(map[string]interface{}) Logger {
 	return t
 }
 
-func (t *testLogger) Panic(args ...interface{}) {
+func (t *testLogger) Panic(_ ...interface{}) {
 	t.panicCount++
 }
 
-func (t *testLogger) Panicf(msg string, args ...interface{}) {
+func (t *testLogger) Panicf(_ string, _ ...interface{}) {
 	t.panicCount++
 }
 
-func (t *testLogger) Fatal(args ...interface{}) {
+func (t *testLogger) Fatal(_ ...interface{}) {
 	t.fatalCount++
 }
 
-func (t *testLogger) Fatalf(msg string, args ...interface{}) {
+func (t *testLogger) Fatalf(_ string, _ ...interface{}) {
 	t.fatalCount++
 }
 
-func (t *testLogger) Error(args ...interface{}) {
+func (t *testLogger) Error(_ ...interface{}) {
 	t.errorCount++
 }
 
-func (t *testLogger) Errorf(msg string, args ...interface{}) {
+func (t *testLogger) Errorf(_ string, _ ...interface{}) {
 	t.errorCount++
 }
 
-func (t *testLogger) Warn(args ...interface{}) {
+func (t *testLogger) Warn(_ ...interface{}) {
 	t.warnCount++
 }
 
-func (t *testLogger) Warnf(msg string, args ...interface{}) {
+func (t *testLogger) Warnf(_ string, _ ...interface{}) {
 	t.warnCount++
 }
 
-func (t *testLogger) Info(args ...interface{}) {
+func (t *testLogger) Info(_ ...interface{}) {
 	t.infoCount++
 }
 
-func (t *testLogger) Infof(msg string, args ...interface{}) {
+func (t *testLogger) Infof(_ string, _ ...interface{}) {
 	t.infoCount++
 }
 
-func (t *testLogger) Debug(args ...interface{}) {
+func (t *testLogger) Debug(_ ...interface{}) {
 	t.debugCount++
 }
 
-func (t *testLogger) Debugf(msg string, args ...interface{}) {
+func (t *testLogger) Debugf(_ string, _ ...interface{}) {
 	t.debugCount++
 }
 

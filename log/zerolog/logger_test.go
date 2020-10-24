@@ -2,11 +2,18 @@ package zerolog
 
 import (
 	"bytes"
+	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/beatlabs/patron/log"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	logMsg  = "testing"
+	logMsgf = "testing 1"
 )
 
 var f = map[string]interface{}{"key": "value"}
@@ -23,114 +30,110 @@ func TestNewLogger(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.NotNil(t, NewLogger(&zerolog.Logger{}, tt.lvl, tt.f))
+			assert.NotNil(t, New(&zerolog.Logger{}, tt.lvl, tt.f))
 		})
 	}
 }
 
 func TestLogger_Sub(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
+	l := New(&b, log.DebugLevel, f)
 	sl := l.Sub(map[string]interface{}{"subkey1": "subval1"})
 	assert.NotNil(t, sl)
-	sl.Debug("testing")
-	assert.Equal(t, "{\"lvl\":\"debug\",\"key\":\"value\",\"subkey1\":\"subval1\",\"msg\":\"testing\"}\n", b.String())
+	sl.Debug(logMsg)
+	assertLog(t, b, log.DebugLevel, logMsg)
+	assert.Contains(t, b.String(), `"subkey1":"subval1"`, b.String())
 }
 
 func TestLogger_Sub_NoFields(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
+	l := New(&b, log.DebugLevel, f)
 	sl := l.Sub(nil)
 	assert.NotNil(t, sl)
-	sl.Debug("testing")
-	assert.Equal(t, "{\"lvl\":\"debug\",\"key\":\"value\",\"msg\":\"testing\"}\n", b.String())
+	sl.Debug(logMsg)
+	assertLog(t, b, log.DebugLevel, logMsg)
 }
 
 func TestLogger_Panic(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
-	assert.Panics(t, func() { l.Panic("testing") })
-	assert.Equal(t, "{\"lvl\":\"panic\",\"key\":\"value\",\"msg\":\"testing\"}\n", b.String())
+	l := New(&b, log.DebugLevel, f)
+	assert.Panics(t, func() { l.Panic(logMsg) })
+	assertLog(t, b, log.PanicLevel, logMsg)
 }
 
 func TestLogger_Panicf(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
+	l := New(&b, log.PanicLevel, f)
 	assert.Panics(t, func() { l.Panicf("testing %d", 1) })
-	assert.Equal(t, "{\"lvl\":\"panic\",\"key\":\"value\",\"msg\":\"testing 1\"}\n", b.String())
+	assertLog(t, b, log.PanicLevel, logMsgf)
 }
 
 func TestLogger_Error(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
-	l.Error("testing")
-	assert.Equal(t, "{\"lvl\":\"error\",\"key\":\"value\",\"msg\":\"testing\"}\n", b.String())
+	l := New(&b, log.ErrorLevel, f)
+	l.Error(logMsg)
+	assertLog(t, b, log.ErrorLevel, logMsg)
 }
 
 func TestLogger_Errorf(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
+	l := New(&b, log.ErrorLevel, f)
 	l.Errorf("testing %d", 1)
-	assert.Equal(t, "{\"lvl\":\"error\",\"key\":\"value\",\"msg\":\"testing 1\"}\n", b.String())
+	assertLog(t, b, log.ErrorLevel, logMsgf)
 }
 
 func TestLogger_Warn(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
-	l.Warn("testing")
-	assert.Equal(t, "{\"lvl\":\"warn\",\"key\":\"value\",\"msg\":\"testing\"}\n", b.String())
+	l := New(&b, log.WarnLevel, f)
+	l.Warn(logMsg)
+	assertLog(t, b, log.WarnLevel, logMsg)
 }
 
 func TestLogger_Warnf(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
+	l := New(&b, log.WarnLevel, f)
 	l.Warnf("testing %d", 1)
-	assert.Equal(t, "{\"lvl\":\"warn\",\"key\":\"value\",\"msg\":\"testing 1\"}\n", b.String())
+	assertLog(t, b, log.WarnLevel, logMsgf)
 }
 
 func TestLogger_Info(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
-	l.Info("testing")
-	assert.Equal(t, "{\"lvl\":\"info\",\"key\":\"value\",\"msg\":\"testing\"}\n", b.String())
+	l := New(&b, log.InfoLevel, f)
+	l.Info(logMsg)
+	assertLog(t, b, log.InfoLevel, logMsg)
 }
 
 func TestLogger_Infof(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
+	l := New(&b, log.InfoLevel, f)
 	l.Infof("testing %d", 1)
-	assert.Equal(t, "{\"lvl\":\"info\",\"key\":\"value\",\"msg\":\"testing 1\"}\n", b.String())
+	assertLog(t, b, log.InfoLevel, logMsgf)
 }
 
 func TestLogger_Debug(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
-	l.Debug("testing")
-	assert.Equal(t, "{\"lvl\":\"debug\",\"key\":\"value\",\"msg\":\"testing\"}\n", b.String())
+	l := New(&b, log.DebugLevel, f)
+	l.Debug(logMsg)
+	assertLog(t, b, log.DebugLevel, logMsg)
 }
 
 func TestLogger_Debugf(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
-	l := NewLogger(&zl, log.DebugLevel, f)
+	l := New(&b, log.DebugLevel, f)
 	l.Debugf("testing %d", 1)
-	assert.Equal(t, "{\"lvl\":\"debug\",\"key\":\"value\",\"msg\":\"testing 1\"}\n", b.String())
+	assertLog(t, b, log.DebugLevel, logMsgf)
+}
+
+func assertLog(t *testing.T, b bytes.Buffer, lvl log.Level, msg string) {
+	assert.Contains(t, b.String(), fmt.Sprintf(`"lvl":"%s"`, lvl), b.String())
+	assert.Contains(t, b.String(), `"key":"value"`, b.String())
+	assert.Contains(t, b.String(), fmt.Sprintf(`"msg":"%s"`, msg), b.String())
+	assert.Regexp(t, regexp.MustCompile(`"time":".*"`), b.String())
+	assert.Regexp(t, regexp.MustCompile(`"src":"zerolog/logger_test.go:.*"`), b.String())
 }
 
 func TestLog_Level(t *testing.T) {
 	var b bytes.Buffer
-	zl := zerolog.New(&b)
 	testCases := []log.Level{
 		log.DebugLevel,
 		log.InfoLevel,
@@ -138,7 +141,7 @@ func TestLog_Level(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(string(tc), func(t *testing.T) {
-			assert.Equal(t, tc, NewLogger(&zl, tc, f).Level())
+			assert.Equal(t, tc, New(&b, tc, f).Level())
 		})
 	}
 }
@@ -147,9 +150,10 @@ var t int
 
 func Benchmark_LoggingEnabled(b *testing.B) {
 	var bf bytes.Buffer
-	zl := zerolog.New(&bf)
-	l := NewLogger(&zl, log.DebugLevel, f)
+	l := New(&bf, log.DebugLevel, f)
 	l.Debugf("testing %d", 1)
+	b.ReportAllocs()
+	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
 		l.Debugf("testing %d", 1)
@@ -159,9 +163,10 @@ func Benchmark_LoggingEnabled(b *testing.B) {
 
 func Benchmark_LoggingDisabled(b *testing.B) {
 	var bf bytes.Buffer
-	zl := zerolog.New(&bf)
-	l := NewLogger(&zl, log.NoLevel, f)
+	l := New(&bf, log.NoLevel, f)
 	l.Debugf("testing %d", 1)
+	b.ReportAllocs()
+	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
 		l.Debugf("testing %d", 1)
@@ -173,8 +178,7 @@ var bl log.Logger
 
 func Benchmark_Sub(b *testing.B) {
 	var bf bytes.Buffer
-	zl := zerolog.New(&bf)
-	l := NewLogger(&zl, log.NoLevel, f)
+	l := New(&bf, log.NoLevel, f)
 	ff := map[string]interface{}{"subkey1": "subval1"}
 	b.ReportAllocs()
 	b.ResetTimer()

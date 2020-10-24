@@ -54,8 +54,9 @@ func (l *Logger) Sub(ff map[string]interface{}) log.Logger {
 	if ff == nil {
 		return l
 	}
-	sl := l.logger.With().Fields(ff).Logger()
-	return &Logger{logger: &sl, level: l.level}
+	logger := l.logger.With().Fields(ff).Logger()
+	loggerf := l.loggerf.With().Fields(ff).Logger()
+	return &Logger{logger: &logger, loggerf: &loggerf, level: l.level}
 }
 
 // Panic logging.

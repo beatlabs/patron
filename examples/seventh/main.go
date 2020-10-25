@@ -50,14 +50,13 @@ func main() {
 	}
 
 	routesBuilder := http.NewRoutesBuilder().
-		Append(http.NewRouteBuilder("/", seventh).
+		Append(http.NewGetRouteBuilder("/", seventh).
 			WithRouteCache(cache, httpcache.Age{
 				// we wont allow to override the cache more than once per 15 seconds
 				Min: 15 * time.Second,
 				// by default we might send stale response for up to 1 minute
 				Max: 60 * time.Second,
-			}).
-			MethodGet())
+			}))
 
 	sig := func() {
 		fmt.Println("exit gracefully...")

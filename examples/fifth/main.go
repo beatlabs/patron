@@ -58,7 +58,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cc, err := patrongrpc.Dial("localhost:50006", grpc.WithInsecure(), grpc.WithBlock())
+	cc, err := patrongrpc.Dial("localhost:50006", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("failed to dial grpc connection: %v", err)
 	}

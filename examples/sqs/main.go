@@ -42,9 +42,9 @@ func main() {
 	name := "sqs"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version)
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 	ctx := context.Background()
@@ -54,9 +54,7 @@ func main() {
 		log.Fatalf("failed to create sqs component: %v", err)
 	}
 
-	err = patron.New(name, version).
-		WithComponents(sqsComponent).
-		Run(ctx)
+	err = service.WithComponents(sqsComponent).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service: %v", err)
 	}

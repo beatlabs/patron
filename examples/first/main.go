@@ -39,7 +39,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	routesBuilder := patronhttp.NewRoutesBuilder().Append(patronhttp.NewRouteBuilder("/", first).MethodPost())
+	routesBuilder := patronhttp.NewRoutesBuilder().Append(patronhttp.NewPostRouteBuilder("/", first))
 
 	// Setup a simple CORS middleware
 	middlewareCors := func(h http.Handler) http.Handler {

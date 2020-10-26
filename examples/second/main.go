@@ -61,7 +61,7 @@ func main() {
 	}
 
 	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewRouteBuilder("/", httpCmp.second).MethodGet().WithTrace().WithAuth(auth))
+		Append(patronhttp.NewGetRouteBuilder("/", httpCmp.second).WithTrace().WithAuth(auth))
 
 	ctx := context.Background()
 	err = service.WithRoutesBuilder(routesBuilder).Run(ctx)

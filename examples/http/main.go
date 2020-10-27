@@ -108,7 +108,7 @@ func httpHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Resp
 
 // DoIntervalRequest is a helper method to make a request to the http-cache example service from other examples
 func DoIntervalRequest(ctx context.Context) (string, error) {
-	request, err := http.NewRequest("GET", "http://localhost:50006/", nil)
+	request, err := http.NewRequest("GET", "http://localhost:50007/", nil)
 	if err != nil {
 		return "", fmt.Errorf("failed create route request: %w", err)
 	}

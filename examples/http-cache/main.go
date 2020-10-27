@@ -24,7 +24,7 @@ func init() {
 		fmt.Printf("failed to set sampler env vars: %v", err)
 		os.Exit(1)
 	}
-	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50006")
+	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50007")
 	if err != nil {
 		fmt.Printf("failed to set default patron port env vars: %v", err)
 		os.Exit(1)

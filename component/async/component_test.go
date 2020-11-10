@@ -128,7 +128,6 @@ func TestRun_ReturnsError(t *testing.T) {
 	}
 	err := run(context.Background(), t, &builder)
 
-	assert.Error(t, err)
 	assert.True(t, errors.Is(err, errConsumer))
 	assert.Equal(t, 0, builder.proc.execs)
 }
@@ -345,7 +344,6 @@ func TestRun_ConsumeError(t *testing.T) {
 	builder.cnr.chErr <- errConsumer
 	err := run(ctx, t, &builder)
 
-	assert.Error(t, err)
 	assert.True(t, errors.Is(err, errConsumer))
 	assert.Equal(t, 0, builder.proc.execs)
 }

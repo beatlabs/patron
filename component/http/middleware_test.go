@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"golang.org/x/time/rate"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -30,6 +31,10 @@ func panicMiddleware(v interface{}) MiddlewareFunc {
 			panic(v)
 		})
 	}
+}
+
+func getMockLimiter() *rate.Limiter {
+	return rate.NewLimiter(1, 1)
 }
 
 func TestMiddlewareChain(t *testing.T) {
@@ -92,6 +97,7 @@ func TestMiddlewares(t *testing.T) {
 		{"auth middleware false", args{next: handler, mws: []MiddlewareFunc{NewAuthMiddleware(&MockAuthenticator{success: false})}}, 401, "Unauthorized\n"},
 		{"auth middleware error", args{next: handler, mws: []MiddlewareFunc{NewAuthMiddleware(&MockAuthenticator{err: errors.New("auth error")})}}, 500, "Internal Server Error\n"},
 		{"tracing middleware", args{next: handler, mws: []MiddlewareFunc{NewLoggingTracingMiddleware("/index")}}, 202, ""},
+		{"rate limiting middleware", args{next: handler, mws: []MiddlewareFunc{NewRateLimitingMiddleWare(getMockLimiter())}}, 202, ""},
 		{"recovery middleware from panic 1", args{next: handler, mws: []MiddlewareFunc{NewRecoveryMiddleware(), panicMiddleware("error")}}, 500, "Internal Server Error\n"},
 		{"recovery middleware from panic 2", args{next: handler, mws: []MiddlewareFunc{NewRecoveryMiddleware(), panicMiddleware(errors.New("error"))}}, 500, "Internal Server Error\n"},
 		{"recovery middleware from panic 3", args{next: handler, mws: []MiddlewareFunc{NewRecoveryMiddleware(), panicMiddleware(-1)}}, 500, "Internal Server Error\n"},

@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"golang.org/x/time/rate"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -127,6 +128,21 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 			next.ServeHTTP(lw, r)
 			finishSpan(sp, lw.Status(), lw.payload)
 			logRequestResponse(corID, lw, r)
+		})
+	}
+}
+
+// NewRateLimitingMiddleWare creates a MiddlewareFunc that adds a rate limit to a route.
+func NewRateLimitingMiddleWare(limiter *rate.Limiter) MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !limiter.Allow() {
+				log.Info("Limiting requests...")
+				http.Error(w, "Requests greater than limit", http.StatusTooManyRequests)
+				return
+			}
+			next.ServeHTTP(w, r)
+
 		})
 	}
 }

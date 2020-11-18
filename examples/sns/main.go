@@ -38,11 +38,11 @@ const (
 	awsToken  = "token"
 
 	// SQS config
-	awsSQSEndpoint = "http://localhost:4576"
+	awsSQSEndpoint = "http://localhost:4566"
 	awsSQSQueue    = "patron"
 
 	// SNS config
-	awsSNSEndpoint = "http://localhost:4575"
+	awsSNSEndpoint = "http://localhost:4566"
 	awsSNSTopic    = "patron-topic"
 )
 
@@ -65,12 +65,12 @@ func init() {
 }
 
 func main() {
-	name := "fourth"
+	name := "sns"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version)
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
@@ -124,7 +124,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	err = patron.New(name, version).WithComponents(amqpCmp.cmp).Run(ctx)
+	err = service.WithComponents(amqpCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

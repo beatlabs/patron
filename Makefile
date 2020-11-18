@@ -6,7 +6,7 @@ test: fmtcheck
 	go test ./... -cover -race -timeout 60s
 
 testint: fmtcheck
-	go test ./... -race -cover -tags=integration -timeout 60s -count=1
+	go test ./... -race -cover -tags=integration -timeout 120s -count=1
 
 cover: fmtcheck
 	go test ./... -coverpkg=./... -coverprofile=coverage.txt -tags=integration -covermode=atomic && \

@@ -61,3 +61,37 @@ func TestNewSyncProducer_Option_Failure(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, got)
 }
+
+func TestNewMessageWithHeader(t *testing.T) {
+	tests := []struct {
+		name                 string
+		data                 []byte
+		setHeaderKeys        []string
+		setHeaderValues      []string
+		expectedHeaderKeys   []string
+		expectedHeaderValues []string
+	}{
+		{name: "2-headers", data: []byte("TEST"),
+			setHeaderKeys: []string{"header1", "header2"}, setHeaderValues: []string{"value1", "value2"},
+			expectedHeaderKeys: []string{"header1", "header2"}, expectedHeaderValues: []string{"value1", "value2"}},
+		{name: "2-headers", data: []byte("TEST"),
+			setHeaderKeys: []string{"header1", "header1"}, setHeaderValues: []string{"value1", "value2"},
+			expectedHeaderKeys: []string{"header1", "header1"}, expectedHeaderValues: []string{"value1", "value2"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := NewMessage("TOPIC", tt.data)
+
+			// set message headers
+			for i := 0; i < len(tt.setHeaderKeys); i++ {
+				msg.SetHeader(tt.setHeaderKeys[i], tt.setHeaderValues[i])
+			}
+
+			// verify
+			for i := 0; i < len(tt.expectedHeaderKeys); i++ {
+				assert.Equal(t, string(msg.headers[i].Key), tt.expectedHeaderKeys[i])
+				assert.Equal(t, string(msg.headers[i].Value), tt.expectedHeaderValues[i])
+			}
+		})
+	}
+}

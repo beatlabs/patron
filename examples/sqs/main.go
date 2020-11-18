@@ -26,7 +26,7 @@ const (
 	awsID          = "test"
 	awsSecret      = "test"
 	awsToken       = "token"
-	awsSQSEndpoint = "http://localhost:4576"
+	awsSQSEndpoint = "http://localhost:4566"
 	awsSQSQueue    = "patron"
 )
 
@@ -49,20 +49,22 @@ func init() {
 }
 
 func main() {
-	name := "fifth"
+	name := "sqs"
 	version := "1.0.0"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version)
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
-	cc, err := patrongrpc.Dial("localhost:50006", grpc.WithInsecure(), grpc.WithBlock())
+	cc, err := patrongrpc.Dial("localhost:50006", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("failed to dial grpc connection: %v", err)
 	}
-	defer cc.Close()
+	defer func() {
+		_ = cc.Close()
+	}()
 
 	greeter := greeter.NewGreeterClient(cc)
 
@@ -85,7 +87,7 @@ func main() {
 
 	// Run the server
 	ctx := context.Background()
-	err = patron.New(name, version).WithComponents(sqsCmp.cmp).Run(ctx)
+	err = service.WithComponents(sqsCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service: %v", err)
 	}
@@ -126,13 +128,13 @@ func (ac *sqsComponent) Process(msg async.Message) error {
 	}
 
 	logger := log.FromContext(msg.Context())
-	logger.Infof("request processed: %v, sending request to sixth service", u.String())
+	logger.Infof("request processed: %v, sending request to the gRPC service", u.String())
 
 	reply, err := ac.greeter.SayHello(msg.Context(), &greeter.HelloRequest{Firstname: u.GetFirstname(), Lastname: u.GetLastname()})
 	if err != nil {
 		logger.Errorf("failed to send request: %v", err)
 	}
 
-	logger.Infof("Reply from sixth service: %s", reply.GetMessage())
+	logger.Infof("Reply from the gRPC service: %s", reply.GetMessage())
 	return nil
 }

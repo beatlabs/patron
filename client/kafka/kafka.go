@@ -47,9 +47,10 @@ var (
 
 // Message abstraction of a Kafka message.
 type Message struct {
-	topic string
-	body  interface{}
-	key   *string
+	topic   string
+	body    interface{}
+	key     *string
+	headers kafkaHeadersCarrier
 }
 
 func init() {
@@ -68,6 +69,13 @@ func init() {
 // NewMessage creates a new message.
 func NewMessage(t string, b interface{}) *Message {
 	return &Message{topic: t, body: b}
+}
+
+// SetHeader allows to set a message header.
+// Multiple headers with the same key are supported.
+// Headers are only set if Kafka is version 0.11+
+func (m *Message) SetHeader(key, value string) {
+	m.headers.Set(key, value)
 }
 
 // NewMessageWithKey creates a new message with an associated key.
@@ -93,7 +101,7 @@ func (p *baseProducer) ActiveBrokers() []string {
 }
 
 func (p *baseProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
-	c := kafkaHeadersCarrier{}
+	c := msg.headers
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)

@@ -22,11 +22,11 @@ scrape_configs:
   - job_name: 'prometheus'
     static_configs:
     - targets: ['localhost:9090']
-  - job_name: 'second'
+  - job_name: 'kafka'
     scrape_interval: 5s
     static_configs:
     - targets: ['host.docker.internal:50001']
-  - job_name: 'third'
+  - job_name: 'amqp'
     scrape_interval: 5s
     static_configs:
     - targets: ['host.docker.internal:50002']

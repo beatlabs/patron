@@ -40,8 +40,8 @@ The processing will be kicked of by sending a request to the HTTP component. The
 
 - receives a raw http request
 - returns the 7th minute unix interval for the current server time
-- first makes a request to seventh
-- seventh responds with the timing information
+- http makes a request to the http-cache service
+- the http-cache service responds with the 7th minute interval information
 
 Since tracing instrumentation is in place we can observer the flow in Jaeger.
 
@@ -70,13 +70,13 @@ When the services started with Docker Compose are ready, you will need to start 
 examples in order:
 
 ```shell
-go run examples/seventh/main.go
-go run examples/first/main.go
-go run examples/second/main.go
-go run examples/third/main.go
-go run examples/fourth/main.go
-go run examples/fifth/main.go
-go run examples/sixth/main.go examples/sixth/greeter.pb.go
+go run examples/http-cache/main.go
+go run examples/http/main.go
+go run examples/kafka/main.go
+go run examples/amqp/main.go
+go run examples/sns/main.go
+go run examples/sqs/main.go
+go run examples/grpc/main.go examples/grpc/greeter.pb.go
 ```
 
 and then send a sample request:

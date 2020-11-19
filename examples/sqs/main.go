@@ -49,7 +49,7 @@ func init() {
 }
 
 func main() {
-	name := "fifth"
+	name := "sqs"
 	version := "1.0.0"
 
 	service, err := patron.New(name, version)
@@ -128,13 +128,13 @@ func (ac *sqsComponent) Process(msg async.Message) error {
 	}
 
 	logger := log.FromContext(msg.Context())
-	logger.Infof("request processed: %v, sending request to sixth service", u.String())
+	logger.Infof("request processed: %v, sending request to the gRPC service", u.String())
 
 	reply, err := ac.greeter.SayHello(msg.Context(), &greeter.HelloRequest{Firstname: u.GetFirstname(), Lastname: u.GetLastname()})
 	if err != nil {
 		logger.Errorf("failed to send request: %v", err)
 	}
 
-	logger.Infof("Reply from sixth service: %s", reply.GetMessage())
+	logger.Infof("Reply from the gRPC service: %s", reply.GetMessage())
 	return nil
 }

@@ -148,12 +148,12 @@ On the client side, we inject a `UnaryInterceptor` which handles tracing and log
 
 Detailed examples can be found in the [examples](/examples) folder with the following components involved:
 
-- [HTTP Component, HTTP Tracing, HTTP middleware](/examples/first/main.go)
-- [Kafka Component, HTTP Component, HTTP Authentication, Kafka Tracing](/examples/second/main.go)
-- [Kafka Component, AMQP Tracing](/examples/third/main.go)
-- [AMQP Component, AWS SNS](/examples/fourth/main.go)
-- [AWS SQS](/examples/fifth/main.go)
-- [gRPC](/examples/sixth/main.go)
+- [HTTP Component, HTTP Tracing, HTTP middleware](/examples/http/main.go)
+- [Kafka Component, HTTP Component, HTTP Authentication, Kafka Tracing](/examples/kafka/main.go)
+- [Kafka Component, AMQP Tracing](/examples/amqp/main.go)
+- [AMQP Component, AWS SNS](/examples/sns/main.go)
+- [AWS SQS](/examples/sqs/main.go)
+- [gRPC](/examples/grpc/main.go)
 
 ## Processors
 

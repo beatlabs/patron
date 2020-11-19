@@ -86,14 +86,14 @@ var (
 func main() {
 	name := "name"
 
-	err := patron.SetupLogging(name, version)
+	service, err := patron.New(name, version, patron.TextLogger())
 	if err != nil {
-		fmt.Printf("failed to set up logging: %v", err)
+		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
 	ctx := context.Background()
-	err = patron.New(name, version).Run(ctx)
+	err = service.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

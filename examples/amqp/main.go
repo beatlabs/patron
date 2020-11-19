@@ -43,7 +43,7 @@ func init() {
 }
 
 func main() {
-	name := "third"
+	name := "amqp"
 	version := "1.0.0"
 
 	service, err := patron.New(name, version, patron.TextLogger())

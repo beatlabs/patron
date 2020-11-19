@@ -65,7 +65,7 @@ func init() {
 }
 
 func main() {
-	name := "fourth"
+	name := "sns"
 	version := "1.0.0"
 
 	service, err := patron.New(name, version)

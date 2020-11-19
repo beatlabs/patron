@@ -206,6 +206,60 @@ func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return &RouteBuilder{path: path, errors: ee, handler: handler(processor)}
 }
 
+// NewGetRouteBuilder constructor
+func NewGetRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
+
+	return NewRouteBuilder(path, processor).MethodGet()
+}
+
+// NewHeadRouteBuilder constructor.
+func NewHeadRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
+
+	return NewRouteBuilder(path, processor).MethodHead()
+}
+
+// NewPostRouteBuilder constructor.
+func NewPostRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
+
+	return NewRouteBuilder(path, processor).MethodPost()
+}
+
+// NewPutRouteBuilder constructor.
+func NewPutRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
+
+	return NewRouteBuilder(path, processor).MethodPut()
+}
+
+// NewPatchRouteBuilder constructor.
+func NewPatchRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
+
+	return NewRouteBuilder(path, processor).MethodPatch()
+}
+
+// NewDeleteRouteBuilder constructor.
+func NewDeleteRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
+
+	return NewRouteBuilder(path, processor).MethodDelete()
+}
+
+// NewConnectRouteBuilder constructor.
+func NewConnectRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
+
+	return NewRouteBuilder(path, processor).MethodConnect()
+}
+
+// NewOptionsRouteBuilder constructor.
+func NewOptionsRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
+
+	return NewRouteBuilder(path, processor).MethodOptions()
+}
+
+// NewTraceRouteBuilder constructor.
+func NewTraceRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
+
+	return NewRouteBuilder(path, processor).MethodTrace()
+}
+
 // RoutesBuilder creates a list of routes.
 type RoutesBuilder struct {
 	routes []Route

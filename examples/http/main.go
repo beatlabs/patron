@@ -28,7 +28,7 @@ func init() {
 }
 
 func main() {
-	name := "first"
+	name := "httpHandler"
 	version := "1.0.0"
 
 	logger := std.New(os.Stderr, log.DebugLevel, map[string]interface{}{"env": "staging"})
@@ -39,7 +39,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	routesBuilder := patronhttp.NewRoutesBuilder().Append(patronhttp.NewRouteBuilder("/", first).MethodPost())
+	routesBuilder := patronhttp.NewRoutesBuilder().Append(patronhttp.NewPostRouteBuilder("/", httpHandler))
 
 	// Setup a simple CORS middleware
 	middlewareCors := func(h http.Handler) http.Handler {
@@ -67,12 +67,12 @@ func main() {
 	}
 }
 
-func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
-	timing, err := DoTimingRequest(ctx)
+func httpHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
+	interval, err := DoIntervalRequest(ctx)
 	if err != nil {
-		log.FromContext(ctx).Infof("first: failed to get timing information %v: could it be that the seventh service is not running ?", err)
+		log.FromContext(ctx).Infof("httpHandler: failed to get interval information %v: could it be that the http-cache service is not running ?", err)
 	} else {
-		log.FromContext(ctx).Infof("first: pipeline initiated at: %s", timing)
+		log.FromContext(ctx).Infof("httpHandler: pipeline initiated at: %s", interval)
 	}
 
 	var u examples.User
@@ -87,28 +87,28 @@ func first(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, 
 		return nil, fmt.Errorf("failed create request: %w", err)
 	}
 
-	secondRouteReq, err := http.NewRequest("GET", "http://localhost:50001", bytes.NewReader(b))
+	kafkaRouteReq, err := http.NewRequest("GET", "http://localhost:50001", bytes.NewReader(b))
 	if err != nil {
 		return nil, fmt.Errorf("failed create request: %w", err)
 	}
-	secondRouteReq.Header.Add("Content-Type", protobuf.Type)
-	secondRouteReq.Header.Add("Accept", protobuf.Type)
-	secondRouteReq.Header.Add("Authorization", "Apikey 123456")
+	kafkaRouteReq.Header.Add("Content-Type", protobuf.Type)
+	kafkaRouteReq.Header.Add("Accept", protobuf.Type)
+	kafkaRouteReq.Header.Add("Authorization", "Apikey 123456")
 	cl, err := clienthttp.New(clienthttp.Timeout(5 * time.Second))
 	if err != nil {
 		return nil, err
 	}
-	rsp, err := cl.Do(ctx, secondRouteReq)
+	rsp, err := cl.Do(ctx, kafkaRouteReq)
 	if err != nil {
-		return nil, fmt.Errorf("failed to post to second service: %w", err)
+		return nil, fmt.Errorf("failed to post to kafka service: %w", err)
 	}
 	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	return patronhttp.NewResponse(fmt.Sprintf("got %s from second HTTP route", rsp.Status)), nil
+	return patronhttp.NewResponse(fmt.Sprintf("got %s from kafka HTTP route", rsp.Status)), nil
 }
 
-// DoTimingRequest is a helper method to make a request to the seventh example service from other examples
-func DoTimingRequest(ctx context.Context) (string, error) {
-	request, err := http.NewRequest("GET", "http://localhost:50006/", nil)
+// DoIntervalRequest is a helper method to make a request to the http-cache example service from other examples
+func DoIntervalRequest(ctx context.Context) (string, error) {
+	request, err := http.NewRequest("GET", "http://localhost:50007/", nil)
 	if err != nil {
 		return "", fmt.Errorf("failed create route request: %w", err)
 	}
@@ -119,12 +119,12 @@ func DoTimingRequest(ctx context.Context) (string, error) {
 
 	response, err := cl.Do(ctx, request)
 	if err != nil {
-		return "", fmt.Errorf("failed create get to seventh service: %w", err)
+		return "", fmt.Errorf("failed create get to http-cache service: %w", err)
 	}
 
 	tb, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return "", fmt.Errorf("failed to decode timing response body: %w", err)
+		return "", fmt.Errorf("failed to decode http-cache response body: %w", err)
 	}
 
 	rgx := regexp.MustCompile(`\((.*?)\)`)

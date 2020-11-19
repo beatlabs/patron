@@ -235,8 +235,9 @@ func TestRun_ParallelProcessError_WithNackError(t *testing.T) {
 	builder := proxyBuilder{
 		proc: mockProcessor{errReturn: true},
 		cnr: mockConsumer{
-			chMsg: make(chan Message, 10),
-			chErr: make(chan error, 10),
+			chMsg:      make(chan Message, 10),
+			chErr:      make(chan error, 10),
+			outOfOrder: true,
 		},
 		fs:          NackStrategy,
 		concurrency: 10,

@@ -21,9 +21,7 @@ type sqsConfig struct {
 	region   string
 }
 
-// Override these values and make sure you have credentials and a session token in your ~/.aws/credentials file.
-// Then set the appropriate value to an AWS_PROFILE env var when running this example.
-// The assumed role needs to have access to the queue.
+// Make sure localstack is running locally, or point to actual queue on AWS
 var sampleConfig = sqsConfig{
 	endpoint: "http://localhost:4566",
 	name:     "sandbox-payin",

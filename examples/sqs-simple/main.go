@@ -25,7 +25,7 @@ type sqsConfig struct {
 // Then set the appropriate value to an AWS_PROFILE env var when running this example.
 // The assumed role needs to have access to the queue.
 var sampleConfig = sqsConfig{
-	endpoint: "https://sqs.eu-west-1.amazonaws.com/315266612443/sandbox-payin",
+	endpoint: "http://localhost:4566",
 	name:     "sandbox-payin",
 	region:   "eu-west-1",
 }

@@ -152,7 +152,8 @@ Detailed examples can be found in the [examples](/examples) folder with the foll
 - [Kafka Component, HTTP Component, HTTP Authentication, Kafka Tracing](/examples/kafka/main.go)
 - [Kafka Component, AMQP Tracing](/examples/amqp/main.go)
 - [AMQP Component, AWS SNS](/examples/sns/main.go)
-- [AWS SQS](/examples/sqs/main.go)
+- [AWS SQS consumer performing gRPC request](/examples/sqs/main.go)
+- [AWS SQS consumer, highly customised](/examples/sqs-simple/main.go)
 - [gRPC](/examples/grpc/main.go)
 
 ## Processors

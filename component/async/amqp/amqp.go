@@ -157,6 +157,10 @@ type consumer struct {
 	conn     *amqp.Connection
 }
 
+func (c *consumer) OutOfOrder() bool {
+	return true
+}
+
 // Consume starts of consuming a AMQP queue.
 func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan error, error) {
 	deliveries, err := c.consume()

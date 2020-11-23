@@ -11,7 +11,7 @@ import (
 	patronSQS "github.com/beatlabs/patron/client/sqs"
 	sqsConsumer "github.com/beatlabs/patron/component/async/sqs"
 	"github.com/beatlabs/patron/correlation"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +37,13 @@ func Test_SQS_Consume(t *testing.T) {
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
 
-	factory, err := sqsConsumer.NewFactory(api, queueName)
+	factory, err := sqsConsumer.NewFactory(
+		api,
+		queueName,
+		sqsConsumer.MaxMessages(10),
+		sqsConsumer.PollWaitSeconds(20),
+		sqsConsumer.VisibilityTimeout(30),
+	)
 	require.NoError(t, err)
 	cns, err := factory.Create()
 	require.NoError(t, err)
@@ -70,7 +76,9 @@ func Test_SQS_Consume(t *testing.T) {
 		}
 	}()
 
-	assert.Equal(t, sent, <-chReceived)
+	received := <-chReceived
+
+	assert.ElementsMatch(t, sent, received)
 	assert.Len(t, mtr.FinishedSpans(), 3)
 
 	for _, span := range mtr.FinishedSpans() {

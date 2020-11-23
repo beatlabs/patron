@@ -23,3 +23,6 @@ gotestsum-report.xml
 
 # coverage file
 coverage.txt
+
+# patron binaries
+/cmd/patron/patron

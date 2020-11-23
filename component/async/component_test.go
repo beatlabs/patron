@@ -3,11 +3,12 @@ package async
 import (
 	"context"
 	"errors"
-	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -75,12 +76,13 @@ func TestNew(t *testing.T) {
 }
 
 type proxyBuilder struct {
-	proc      mockProcessor
-	cnr       mockConsumer
-	cf        ConsumerFactory
-	fs        FailStrategy
-	retries   int
-	retryWait time.Duration
+	proc        mockProcessor
+	cnr         mockConsumer
+	cf          ConsumerFactory
+	fs          FailStrategy
+	retries     int
+	retryWait   time.Duration
+	concurrency uint
 }
 
 func run(ctx context.Context, t *testing.T, builder *proxyBuilder) error {
@@ -92,9 +94,31 @@ func run(ctx context.Context, t *testing.T, builder *proxyBuilder) error {
 		WithFailureStrategy(builder.fs).
 		WithRetries(uint(builder.retries)).
 		WithRetryWait(builder.retryWait).
+		WithConcurrency(builder.concurrency).
 		Create()
 	assert.NoError(t, err)
 	return cmp.Run(ctx)
+}
+
+// TestCreate_ReturnsError expects an error when concurrency > 1 and component does not allow out of order processing
+func TestCreate_ReturnsError(t *testing.T) {
+	cnr := mockConsumer{}
+	builder := proxyBuilder{
+		cnr:         cnr,
+		cf:          &mockConsumerFactory{c: &cnr},
+		concurrency: 2,
+	}
+	cmp, err := New("test", builder.cf, builder.proc.Process).
+		WithFailureStrategy(builder.fs).
+		WithRetries(uint(builder.retries)).
+		WithRetryWait(builder.retryWait).
+		WithConcurrency(builder.concurrency).
+		Create()
+	require.NotNil(t, cmp)
+	require.NoError(t, err)
+	got := cmp.processing(context.Background())
+	want := "async component creation: cannot create in-order component with concurrency > 1"
+	assert.EqualError(t, got, want)
 }
 
 // TestRun_ReturnsError expects a consumer consume Error
@@ -104,8 +128,7 @@ func TestRun_ReturnsError(t *testing.T) {
 	}
 	err := run(context.Background(), t, &builder)
 
-	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), errConsumer.Error()))
+	assert.True(t, errors.Is(err, errConsumer))
 	assert.Equal(t, 0, builder.proc.execs)
 }
 
@@ -144,7 +167,7 @@ func TestRun_Process_Error_NackExitStrategy(t *testing.T) {
 	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), errProcess.Error()))
+	assert.True(t, errors.Is(err, errProcess))
 	assert.Equal(t, 1, builder.proc.execs)
 }
 
@@ -202,7 +225,31 @@ func TestRun_ProcessError_WithNackError(t *testing.T) {
 	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), errNack.Error()))
+	assert.True(t, errors.Is(err, errNack))
+	assert.Equal(t, 1, builder.proc.execs)
+}
+
+// TestRun_ParallelProcessError_WithNackError expects a PROC ERROR
+// same as TestRun_ProcessError_WithNackError, just with concurrency
+func TestRun_ParallelProcessError_WithNackError(t *testing.T) {
+	builder := proxyBuilder{
+		proc: mockProcessor{errReturn: true},
+		cnr: mockConsumer{
+			chMsg:      make(chan Message, 10),
+			chErr:      make(chan error, 10),
+			outOfOrder: true,
+		},
+		fs:          NackStrategy,
+		concurrency: 10,
+	}
+
+	ctx := context.Background()
+	builder.cnr.chMsg <- &mockMessage{ctx: ctx, nackError: true}
+
+	err := run(ctx, t, &builder)
+
+	assert.Error(t, err)
+	assert.True(t, errors.Is(err, errNack))
 	assert.Equal(t, 1, builder.proc.execs)
 }
 
@@ -260,7 +307,7 @@ func TestRun_ProcessError_WithAckError(t *testing.T) {
 	err := run(ctx, t, &builder)
 
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), errAck.Error()))
+	assert.True(t, errors.Is(err, errAck))
 	assert.Equal(t, 1, builder.proc.execs)
 }
 
@@ -298,8 +345,7 @@ func TestRun_ConsumeError(t *testing.T) {
 	builder.cnr.chErr <- errConsumer
 	err := run(ctx, t, &builder)
 
-	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), errConsumer.Error()))
+	assert.True(t, errors.Is(err, errConsumer))
 	assert.Equal(t, 0, builder.proc.execs)
 }
 
@@ -398,7 +444,7 @@ func (mm *mockMessage) Context() context.Context {
 }
 
 // Decode is not called in our tests, because the mockProcessor will ignore the message decoding
-func (mm *mockMessage) Decode(v interface{}) error {
+func (mm *mockMessage) Decode(interface{}) error {
 	return nil
 }
 
@@ -430,17 +476,26 @@ func (mm *mockMessage) Payload() []byte {
 
 type mockProcessor struct {
 	errReturn bool
+	mux       sync.Mutex
 	execs     int
 }
 
 var errProcess = errors.New("PROC ERROR")
 
-func (mp *mockProcessor) Process(msg Message) error {
+func (mp *mockProcessor) Process(Message) error {
+	mp.mux.Lock()
 	mp.execs++
+	mp.mux.Unlock()
 	if mp.errReturn {
 		return errProcess
 	}
 	return nil
+}
+
+func (mp *mockProcessor) GetExecs() int {
+	mp.mux.Lock()
+	defer mp.mux.Unlock()
+	return mp.execs
 }
 
 type mockConsumerFactory struct {
@@ -464,9 +519,11 @@ type mockConsumer struct {
 	clsError     bool
 	chMsg        chan Message
 	chErr        chan error
+	outOfOrder   bool
 }
 
-func (mc *mockConsumer) SetTimeout(timeout time.Duration) {
+func (mc *mockConsumer) OutOfOrder() bool {
+	return mc.outOfOrder
 }
 
 var errConsumer = errors.New("CONSUMER ERROR")

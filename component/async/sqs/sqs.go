@@ -135,9 +135,9 @@ type Factory struct {
 	queueName         string
 	queue             sqsiface.SQSAPI
 	queueURL          string
-	maxMessages       int64
-	pollWaitSeconds   int64
-	visibilityTimeout int64
+	maxMessages       *int64
+	pollWaitSeconds   *int64
+	visibilityTimeout *int64
 	buffer            int
 	statsInterval     time.Duration
 }
@@ -160,14 +160,12 @@ func NewFactory(queue sqsiface.SQSAPI, queueName string, oo ...OptionFunc) (*Fac
 	}
 
 	f := &Factory{
-		queueName:         queueName,
-		queueURL:          *url.QueueUrl,
-		queue:             queue,
-		maxMessages:       10,
-		pollWaitSeconds:   20,
-		visibilityTimeout: 30,
-		buffer:            0,
-		statsInterval:     10 * time.Second,
+		queueName:     queueName,
+		queueURL:      *url.QueueUrl,
+		queue:         queue,
+		maxMessages:   aws.Int64(3),
+		buffer:        0,
+		statsInterval: 10 * time.Second,
 	}
 
 	for _, o := range oo {
@@ -188,7 +186,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 		queueURL:          f.queueURL,
 		maxMessages:       f.maxMessages,
 		pollWaitSeconds:   f.pollWaitSeconds,
-		buffer:            f.buffer,
 		visibilityTimeout: f.visibilityTimeout,
 		statsInterval:     f.statsInterval,
 	}, nil
@@ -198,18 +195,21 @@ type consumer struct {
 	queueName         string
 	queueURL          string
 	queue             sqsiface.SQSAPI
-	maxMessages       int64
-	pollWaitSeconds   int64
-	visibilityTimeout int64
-	buffer            int
+	maxMessages       *int64
+	pollWaitSeconds   *int64
+	visibilityTimeout *int64
 	statsInterval     time.Duration
 	cnl               context.CancelFunc
 }
 
+func (c *consumer) OutOfOrder() bool {
+	return true
+}
+
 // Consume messages from SQS and send them to the channel.
 func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan error, error) {
-	chMsg := make(chan async.Message, c.buffer)
-	chErr := make(chan error, c.buffer)
+	chMsg := make(chan async.Message)
+	chErr := make(chan error)
 	sqsCtx, cnl := context.WithCancel(ctx)
 	c.cnl = cnl
 
@@ -218,12 +218,12 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			if sqsCtx.Err() != nil {
 				return
 			}
-			log.Debugf("polling SQS queue %s for messages", c.queueName)
+			log.Debugf("consume: polling SQS queue %s for %d messages", c.queueName, *c.maxMessages)
 			output, err := c.queue.ReceiveMessageWithContext(sqsCtx, &sqs.ReceiveMessageInput{
-				QueueUrl:            aws.String(c.queueURL),
-				MaxNumberOfMessages: aws.Int64(c.maxMessages),
-				WaitTimeSeconds:     aws.Int64(c.pollWaitSeconds),
-				VisibilityTimeout:   aws.Int64(c.visibilityTimeout),
+				QueueUrl:            &c.queueURL,
+				MaxNumberOfMessages: c.maxMessages,
+				WaitTimeSeconds:     c.pollWaitSeconds,
+				VisibilityTimeout:   c.visibilityTimeout,
 				AttributeNames: aws.StringSlice([]string{
 					sqsAttributeSentTimestamp,
 				}),
@@ -239,6 +239,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				return
 			}
 
+			log.Debugf("Consume: received %d messages", len(output.Messages))
 			messageCountInc(c.queueName, fetchedMessageState, len(output.Messages))
 
 			for _, msg := range output.Messages {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/log"
 )
 
@@ -21,7 +20,7 @@ func newDurationClient(client durationKafkaClientAPI) (durationClient, error) {
 	return durationClient{client: client}, nil
 }
 
-func (d durationClient) getTimeBasedOffsetsPerPartition(ctx context.Context, topic string, since time.Time, timeExtractor kafka.TimeExtractor) (map[int32]int64, error) {
+func (d durationClient) getTimeBasedOffsetsPerPartition(ctx context.Context, topic string, since time.Time, timeExtractor TimeExtractor) (map[int32]int64, error) {
 	partitionIDs, err := d.client.getPartitionIDs(topic)
 	if err != nil {
 		return nil, err
@@ -38,7 +37,7 @@ type partitionOffsetResponse struct {
 	err         error
 }
 
-func (d durationClient) triggerWorkers(ctx context.Context, topic string, since time.Time, timeExtractor kafka.TimeExtractor, partitionIDs []int32, responseCh chan<- partitionOffsetResponse) {
+func (d durationClient) triggerWorkers(ctx context.Context, topic string, since time.Time, timeExtractor TimeExtractor, partitionIDs []int32, responseCh chan<- partitionOffsetResponse) {
 	for _, partitionID := range partitionIDs {
 		partitionID := partitionID
 		go func() {
@@ -78,7 +77,7 @@ func (d durationClient) aggregateResponses(ctx context.Context, partitionIDs []i
 	}
 }
 
-func (d durationClient) getTimeBasedOffset(ctx context.Context, topic string, since time.Time, partitionID int32, timeExtractor kafka.TimeExtractor) (int64, error) {
+func (d durationClient) getTimeBasedOffset(ctx context.Context, topic string, since time.Time, partitionID int32, timeExtractor TimeExtractor) (int64, error) {
 	left, err := d.client.getOldestOffset(topic, partitionID)
 	if err != nil {
 		return 0, err
@@ -94,7 +93,7 @@ func (d durationClient) getTimeBasedOffset(ctx context.Context, topic string, si
 	return d.offsetBinarySearch(ctx, topic, since, partitionID, timeExtractor, left, right)
 }
 
-func (d durationClient) offsetBinarySearch(ctx context.Context, topic string, since time.Time, partitionID int32, timeExtractor kafka.TimeExtractor, left, right int64) (int64, error) {
+func (d durationClient) offsetBinarySearch(ctx context.Context, topic string, since time.Time, partitionID int32, timeExtractor TimeExtractor, left, right int64) (int64, error) {
 	for left <= right {
 		mid := left + (right-left)/2
 

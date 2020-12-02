@@ -130,7 +130,7 @@ func TestSimpleConsume_WithDurationOffset(t *testing.T) {
 	chErr := make(chan error)
 	go func() {
 		factory, err := simple.New("test1", simpleTopic3, Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromNewest(), kafka.WithDurationOffset(4*time.Hour, timestampExtractor))
+			kafka.StartFromNewest(), simple.WithDurationOffset(4*time.Hour, timestampExtractor))
 		if err != nil {
 			chErr <- err
 			return

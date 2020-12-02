@@ -89,7 +89,7 @@ func (o *observer) observe(err error) {
 }
 
 func (o *observer) log(err error) {
-	if !log.Enabled(log.DebugLevel) {
+	if !log.Enabled(log.ErrorLevel) {
 		return
 	}
 
@@ -102,7 +102,7 @@ func (o *observer) log(err error) {
 	if err != nil {
 		fields["error"] = err.Error()
 	}
-	log.Sub(fields).Debug()
+	log.Sub(fields).Error()
 }
 
 func (o *observer) messageHandled(err error) {

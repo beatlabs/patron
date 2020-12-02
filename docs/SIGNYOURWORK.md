@@ -58,3 +58,4 @@ If you want this to be automatic you can set up some aliases:
 ```
 git config --add alias.amend "commit -s --amend"
 git config --add alias.c "commit -s"
+```

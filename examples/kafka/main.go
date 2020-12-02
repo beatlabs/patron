@@ -3,22 +3,25 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/beatlabs/patron"
-	clienthttp "github.com/beatlabs/patron/client/http"
-	"github.com/beatlabs/patron/client/kafka"
-	patronhttp "github.com/beatlabs/patron/component/http"
-	"github.com/beatlabs/patron/component/http/auth/apikey"
+	"github.com/beatlabs/patron/client/amqp"
+	"github.com/beatlabs/patron/component/async"
+	"github.com/beatlabs/patron/component/async/kafka"
+	"github.com/beatlabs/patron/component/async/kafka/group"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 )
 
 const (
-	kafkaTopic  = "patron-topic"
-	kafkaBroker = "localhost:9092"
+	amqpURL      = "amqp://guest:guest@localhost:5672/"
+	amqpExchange = "patron"
+	kafkaTopic   = "patron-topic"
+	kafkaGroup   = "patron-group"
+	kafkaBroker  = "localhost:9092"
 )
 
 func init() {
@@ -32,8 +35,7 @@ func init() {
 		fmt.Printf("failed to set sampler env vars: %v", err)
 		os.Exit(1)
 	}
-
-	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50001")
+	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50002")
 	if err != nil {
 		fmt.Printf("failed to set default patron port env vars: %v", err)
 		os.Exit(1)
@@ -44,89 +46,73 @@ func main() {
 	name := "kafka"
 	version := "1.0.0"
 
-	service, err := patron.New(name, version, patron.LogFields(map[string]interface{}{"env": "staging"}))
+	service, err := patron.New(name, version, patron.TextLogger())
 	if err != nil {
 		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
 	}
 
-	httpCmp, err := newHTTPComponent(kafkaBroker, kafkaTopic, "http://localhost:50000/kafka")
+	kafkaCmp, err := newKafkaComponent(name, kafkaBroker, kafkaTopic, kafkaGroup, amqpURL, amqpExchange)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
 
-	auth, err := apikey.New(&apiKeyValidator{validKey: "123456"})
-	if err != nil {
-		log.Fatalf("failed to create authenticator %v", err)
-	}
-
-	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewGetRouteBuilder("/", httpCmp.kafkaHandler).WithTrace().WithAuth(auth))
-
 	ctx := context.Background()
-	err = service.WithRoutesBuilder(routesBuilder).Run(ctx)
+	err = service.WithComponents(kafkaCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}
 }
 
-type httpComponent struct {
-	prd   kafka.Producer
-	topic string
+type kafkaComponent struct {
+	cmp patron.Component
+	pub amqp.Publisher
 }
 
-func newHTTPComponent(kafkaBroker, topic, _ string) (*httpComponent, error) {
-	prd, chErr, err := kafka.NewBuilder([]string{kafkaBroker}).CreateAsync()
+func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*kafkaComponent, error) {
+	kafkaCmp := kafkaComponent{}
+
+	cf, err := group.New(name, groupID, []string{topic}, []string{broker}, kafka.Decoder(json.DecodeRaw))
 	if err != nil {
 		return nil, err
 	}
-	go func() {
-		for {
-			err := <-chErr
-			log.Errorf("error producing Kafka message: %v", err)
-		}
-	}()
-	return &httpComponent{prd: prd, topic: topic}, nil
+
+	cmp, err := async.New("kafka-cmp", cf, kafkaCmp.Process).
+		WithRetries(10).
+		WithRetryWait(5 * time.Second).
+		Create()
+	if err != nil {
+		return nil, err
+	}
+	kafkaCmp.cmp = cmp
+
+	pub, err := amqp.NewPublisher(amqpURL, amqpExc)
+	if err != nil {
+		return nil, err
+	}
+	kafkaCmp.pub = pub
+
+	return &kafkaCmp, nil
 }
 
-func (hc *httpComponent) kafkaHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
+func (kc *kafkaComponent) Process(msg async.Message) error {
 	var u examples.User
-	err := req.Decode(&u)
+
+	err := msg.Decode(&u)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode message: %w", err)
+		return err
 	}
 
-	googleReq, err := http.NewRequest("GET", "https://www.google.com", nil)
+	amqpMsg, err := amqp.NewProtobufMessage(&u)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request for www.google.com: %w", err)
+		return err
 	}
-	cl, err := clienthttp.New(clienthttp.Timeout(5 * time.Second))
+
+	err = kc.pub.Publish(msg.Context(), amqpMsg)
 	if err != nil {
-		return nil, err
-	}
-	_, err = cl.Do(ctx, googleReq)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get www.google.com: %w", err)
+		return err
 	}
 
-	kafkaMsg := kafka.NewMessage(hc.topic, &u)
-
-	err = hc.prd.Send(ctx, kafkaMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	return nil, nil
-}
-
-type apiKeyValidator struct {
-	validKey string
-}
-
-func (av apiKeyValidator) Validate(key string) (bool, error) {
-	if key == av.validKey {
-		return true, nil
-	}
-	return false, nil
+	log.FromContext(msg.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
+	return nil
 }

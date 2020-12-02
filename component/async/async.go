@@ -43,6 +43,7 @@ type ConsumerFactory interface {
 // Consumer interface which every specific consumer has to implement.
 type Consumer interface {
 	Consume(context.Context) (<-chan Message, <-chan error, error)
+	OutOfOrder() bool
 	Close() error
 }
 

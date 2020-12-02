@@ -92,12 +92,12 @@ func TestFactory_Create(t *testing.T) {
 	assert.NotNil(t, cons.queue)
 	assert.Equal(t, "queueName", cons.queueName)
 	assert.Equal(t, "URL", cons.queueURL)
-	assert.Equal(t, int64(10), cons.maxMessages)
-	assert.Equal(t, int64(20), cons.pollWaitSeconds)
-	assert.Equal(t, int64(30), cons.visibilityTimeout)
-	assert.Equal(t, 0, cons.buffer)
+	assert.Equal(t, aws.Int64(3), cons.maxMessages)
+	assert.Nil(t, cons.pollWaitSeconds)
+	assert.Nil(t, cons.visibilityTimeout)
 	assert.Equal(t, 10*time.Second, cons.statsInterval)
 	assert.Nil(t, cons.cnl)
+	assert.True(t, cons.OutOfOrder())
 }
 
 func Test_consumer_Consume(t *testing.T) {

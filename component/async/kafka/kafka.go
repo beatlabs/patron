@@ -34,9 +34,6 @@ var topicPartitionOffsetDiff *prometheus.GaugeVec
 var messageStatus *prometheus.CounterVec
 var messageConfirmation *prometheus.CounterVec
 
-// TimeExtractor defines a function extracting a time from a Kafka message.
-type TimeExtractor func(*sarama.ConsumerMessage) (time.Time, error)
-
 // TopicPartitionOffsetDiffGaugeSet creates a new Gauge that measures partition offsets.
 func TopicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high, offset int64) {
 	topicPartitionOffsetDiff.WithLabelValues(group, topic, strconv.FormatInt(int64(partition), 10)).Set(float64(high - offset))

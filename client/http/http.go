@@ -2,11 +2,15 @@
 package http
 
 import (
+	"compress/flate"
+	"compress/gzip"
 	"context"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/beatlabs/patron/trace"
@@ -69,6 +73,11 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 
 	ext.HTTPMethod.Set(ht.Span(), req.Method)
 	ext.HTTPUrl.Set(ht.Span(), req.URL.String())
+
+	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
+		rsp.Body = decompress(hdr, rsp)
+	}
+
 	return rsp, err
 }
 
@@ -109,4 +118,18 @@ func finishSpan(sp opentracing.Span, code int) {
 
 func opName(method, path string) string {
 	return method + " " + path
+}
+
+func decompress(hdr string, rsp *http.Response) io.ReadCloser {
+	var reader io.ReadCloser
+	switch hdr {
+	case "gzip":
+		reader, _ = gzip.NewReader(rsp.Body)
+	case "deflate":
+		reader = flate.NewReader(rsp.Body)
+	default:
+		reader = rsp.Body
+	}
+
+	return reader
 }

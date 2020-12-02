@@ -105,6 +105,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		errors.New("invalid HTTP Port provided"),
 		errors.New("negative or zero read timeout provided"),
 		errors.New("negative or zero write timeout provided"),
+		errors.New("provided deflate level value not in the [-2, 9] range"),
 		errors.New("route builder is nil"),
 		errors.New("empty list of middlewares provided"),
 		errors.New("invalid cert or key provided"),
@@ -120,6 +121,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		rt       time.Duration
 		wt       time.Duration
 		gp       time.Duration
+		dl       int
 		rb       *RoutesBuilder
 		mm       []MiddlewareFunc
 		c        string
@@ -132,6 +134,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			p:   httpPort,
 			rt:  httpReadTimeout,
 			wt:  httpIdleTimeout,
+			dl:  deflateLevel,
 			gp:  shutdownGracePeriod,
 			rb:  rb,
 			mm: []MiddlewareFunc{
@@ -149,6 +152,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			rt:       -10 * time.Second,
 			wt:       -20 * time.Second,
 			gp:       -15 * time.Second,
+			dl:       -8,
 			rb:       nil,
 			mm:       []MiddlewareFunc{},
 			c:        "",
@@ -160,7 +164,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			gotHTTPComponent, err := NewBuilder().WithAliveCheckFunc(tc.acf).WithReadyCheckFunc(tc.rcf).
-				WithPort(tc.p).WithReadTimeout(tc.rt).WithWriteTimeout(tc.wt).WithRoutesBuilder(tc.rb).
+				WithPort(tc.p).WithReadTimeout(tc.rt).WithWriteTimeout(tc.wt).WithDeflateLevel(tc.dl).WithRoutesBuilder(tc.rb).
 				WithMiddlewares(tc.mm...).WithSSL(tc.c, tc.k).WithShutdownGracePeriod(tc.gp).Create()
 
 			if len(tc.wantErrs) > 0 {

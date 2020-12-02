@@ -1,10 +1,16 @@
 package simple
 
 import (
+	"errors"
+	"reflect"
+	"runtime"
 	"testing"
+	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -91,7 +97,59 @@ func TestFactory_Create(t *testing.T) {
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, got)
+				require.NotNil(t, got)
+				assert.False(t, got.OutOfOrder())
+			}
+		})
+	}
+}
+
+func TestWithDurationOffset(t *testing.T) {
+	f := func(_ *sarama.ConsumerMessage) (time.Time, error) {
+		return time.Time{}, nil
+	}
+
+	type args struct {
+		since         time.Duration
+		timeExtractor TimeExtractor
+	}
+	testCases := map[string]struct {
+		args        args
+		expectedErr error
+	}{
+		"success": {
+			args: args{
+				since:         time.Second,
+				timeExtractor: f,
+			},
+		},
+		"error - negative since duration": {
+			args: args{
+				since:         -time.Second,
+				timeExtractor: f,
+			},
+			expectedErr: errors.New("duration must be positive"),
+		},
+		"error - nil time extractor": {
+			args: args{
+				since: time.Second,
+			},
+			expectedErr: errors.New("empty time extractor function"),
+		},
+	}
+	for name, tt := range testCases {
+		t.Run(name, func(t *testing.T) {
+			c := kafka.ConsumerConfig{}
+			err := WithDurationOffset(tt.args.since, tt.args.timeExtractor)(&c)
+			if tt.expectedErr != nil {
+				assert.EqualError(t, err, tt.expectedErr.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.True(t, c.DurationBasedConsumer)
+				assert.Equal(t, time.Second, c.DurationOffset)
+				assert.Equal(t,
+					runtime.FuncForPC(reflect.ValueOf(tt.args.timeExtractor).Pointer()).Name(),
+					runtime.FuncForPC(reflect.ValueOf(c.TimeExtractor).Pointer()).Name())
 			}
 		})
 	}

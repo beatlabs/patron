@@ -1,7 +1,10 @@
 package http
 
 import (
+	"compress/flate"
+	"compress/gzip"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -12,6 +15,7 @@ import (
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
@@ -23,6 +27,8 @@ import (
 const (
 	serverComponent = "http-server"
 	fieldNameError  = "error"
+	gzipHeader      = "gzip"
+	deflateHeader   = "deflate"
 )
 
 type responseWriter struct {
@@ -143,9 +149,81 @@ func NewRateLimitingMiddleware(limiter *rate.Limiter) MiddlewareFunc {
 				return
 			}
 			next.ServeHTTP(w, r)
-
 		})
 	}
+}
+
+type compressionResponseWriter struct {
+	io.Writer
+	http.ResponseWriter
+}
+
+// ignore checks if the given url ignored from compression or not.
+func ignore(ignoreRoutes []string, url string) bool {
+	for _, iURL := range ignoreRoutes {
+		if strings.HasPrefix(url, iURL) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// NewCompressionMiddleware initializes a compression middleware.
+// As per Section 3.5 of the HTTP/1.1 RFC, we support GZIP and Deflate as compression methods.
+// https://tools.ietf.org/html/rfc2616#section-3.5
+func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			hdr := r.Header.Get(encoding.AcceptEncodingHeader)
+
+			if !isCompressionHeader(hdr) || ignore(ignoreRoutes, r.URL.String()) {
+				next.ServeHTTP(w, r)
+				log.Debugf("url %s skipped from compression middleware", r.URL.String())
+				return
+			}
+			// explicitly specify encoding in header
+			w.Header().Set(encoding.ContentEncodingHeader, hdr)
+
+			// keep content type intact
+			respHeader := r.Header.Get(encoding.ContentTypeHeader)
+			if respHeader != "" {
+				w.Header().Set(encoding.ContentTypeHeader, respHeader)
+			}
+
+			var cw io.WriteCloser
+			var err error
+			switch hdr {
+			case gzipHeader:
+				cw = gzip.NewWriter(w)
+			case deflateHeader:
+				cw, err = flate.NewWriter(w, deflateLevel)
+				if err != nil {
+					next.ServeHTTP(w, r)
+					return
+				}
+			default:
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			defer func(cw io.WriteCloser) {
+				err := cw.Close()
+				if err != nil {
+					log.Errorf("error in deferred call to Close() method on %v compression middleware : %v", hdr, err.Error())
+				}
+			}(cw)
+
+			crw := compressionResponseWriter{Writer: cw, ResponseWriter: w}
+			next.ServeHTTP(crw, r)
+			log.Debugf("url %s used with %s compression method", r.URL.String(), hdr)
+		})
+	}
+}
+
+// Write provides write func to the writer.
+func (w compressionResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
 }
 
 // NewCachingMiddleware creates a cache layer as a middleware
@@ -173,6 +251,10 @@ func MiddlewareChain(f http.Handler, mm ...MiddlewareFunc) http.Handler {
 		f = mm[i](f)
 	}
 	return f
+}
+
+func isCompressionHeader(h string) bool {
+	return strings.Contains(h, "gzip") || strings.Contains(h, "deflate")
 }
 
 func logRequestResponse(corID string, w *responseWriter, r *http.Request) {

@@ -14,6 +14,26 @@ import (
 	"github.com/beatlabs/patron/log"
 )
 
+// TimeExtractor defines a function extracting a time from a Kafka message.
+type TimeExtractor func(*sarama.ConsumerMessage) (time.Time, error)
+
+// WithDurationOffset allows creating a consumer from a given duration.
+// It accepts a function indicating how to extract the time from a Kafka message.
+func WithDurationOffset(since time.Duration, timeExtractor TimeExtractor) kafka.OptionFunc {
+	return func(c *kafka.ConsumerConfig) error {
+		if since < 0 {
+			return errors.New("duration must be positive")
+		}
+		if timeExtractor == nil {
+			return errors.New("empty time extractor function")
+		}
+		c.DurationBasedConsumer = true
+		c.DurationOffset = since
+		c.TimeExtractor = timeExtractor
+		return nil
+	}
+}
+
 // Factory definition of a consumer factory.
 type Factory struct {
 	name    string
@@ -38,6 +58,10 @@ func New(name, topic string, brokers []string, oo ...kafka.OptionFunc) (*Factory
 	}
 
 	return &Factory{name: name, topic: topic, brokers: brokers, oo: oo}, nil
+}
+
+func (c *consumer) OutOfOrder() bool {
+	return false
 }
 
 // Create a new consumer.

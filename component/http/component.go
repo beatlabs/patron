@@ -19,6 +19,7 @@ const (
 	httpWriteTimeout    = 10 * time.Second
 	httpIdleTimeout     = 120 * time.Second
 	shutdownGracePeriod = 5 * time.Second
+	deflateLevel        = 8
 )
 
 var (
@@ -35,6 +36,8 @@ type Component struct {
 	httpPort            int
 	httpReadTimeout     time.Duration
 	httpWriteTimeout    time.Duration
+	deflateLevel        int
+	uncompressedPaths   []string
 	shutdownGracePeriod time.Duration
 	sync.Mutex
 	routes      []Route
@@ -88,6 +91,7 @@ func (c *Component) createHTTPServer() *http.Server {
 	}
 	// Add first the recovery middleware to ensure that no panic occur.
 	routerAfterMiddleware := MiddlewareChain(router, NewRecoveryMiddleware())
+	c.middlewares = append(c.middlewares, NewCompressionMiddleware(c.deflateLevel, c.uncompressedPaths...))
 	routerAfterMiddleware = MiddlewareChain(routerAfterMiddleware, c.middlewares...)
 
 	return &http.Server{
@@ -107,6 +111,8 @@ type Builder struct {
 	httpPort            int
 	httpReadTimeout     time.Duration
 	httpWriteTimeout    time.Duration
+	deflateLevel        int
+	uncompressedPaths   []string
 	shutdownGracePeriod time.Duration
 	routesBuilder       *RoutesBuilder
 	middlewares         []MiddlewareFunc
@@ -126,6 +132,8 @@ func NewBuilder() *Builder {
 		httpPort:            httpPort,
 		httpReadTimeout:     httpReadTimeout,
 		httpWriteTimeout:    httpWriteTimeout,
+		deflateLevel:        deflateLevel,
+		uncompressedPaths:   []string{"/metrics", "/alive", "ready"},
 		shutdownGracePeriod: shutdownGracePeriod,
 		routesBuilder:       NewRoutesBuilder(),
 		errors:              errs,
@@ -188,6 +196,35 @@ func (cb *Builder) WithWriteTimeout(wt time.Duration) *Builder {
 		log.Infof("setting write timeout")
 		cb.httpWriteTimeout = wt
 	}
+
+	return cb
+}
+
+// WithDeflateLevel sets the level of compression for Deflate; based on https://golang.org/pkg/compress/flate/
+// Levels range from 1 (BestSpeed) to 9 (BestCompression); higher levels typically run slower but compress more.
+// Level 0 (NoCompression) does not attempt any compression; it only adds the necessary DEFLATE framing.
+// Level -1 (DefaultCompression) uses the default compression level.
+// Level -2 (HuffmanOnly) will use Huffman compression only, giving a very fast compression for all types of input, but sacrificing considerable compression efficiency.
+func (cb *Builder) WithDeflateLevel(level int) *Builder {
+	if level < -2 || level > 9 {
+		cb.errors = append(cb.errors, errors.New("provided deflate level value not in the [-2, 9] range"))
+	} else {
+		cb.deflateLevel = level
+	}
+	return cb
+}
+
+// WithUncompressedPaths specifies which routes should be excluded from compression
+// Any trailing slashes are trimmed, so we match both /metrics/ and /metrics?seconds=30
+func (cb *Builder) WithUncompressedPaths(r ...string) *Builder {
+	res := make([]string, 0, len(r))
+	for _, e := range r {
+		for len(e) > 1 && e[len(e)-1] == '/' {
+			e = e[0 : len(e)-1]
+		}
+		res = append(res, e)
+	}
+	cb.uncompressedPaths = append(cb.uncompressedPaths, res...)
 
 	return cb
 }
@@ -262,6 +299,7 @@ func (cb *Builder) Create() (*Component, error) {
 		httpPort:            cb.httpPort,
 		httpReadTimeout:     cb.httpReadTimeout,
 		httpWriteTimeout:    cb.httpWriteTimeout,
+		deflateLevel:        cb.deflateLevel,
 		shutdownGracePeriod: cb.shutdownGracePeriod,
 		routes:              routes,
 		middlewares:         cb.middlewares,

@@ -10,6 +10,10 @@ const (
 	AcceptHeader string = "Accept"
 	// ContentTypeHeader for defining content type headers.
 	ContentTypeHeader string = "Content-Type"
+	// ContentEncodingHeader for defining content encoding headers.
+	ContentEncodingHeader string = "Content-Encoding"
+	// AcceptEncodingHeader for defining accept encoding headers, usually a compression algorithm.
+	AcceptEncodingHeader string = "Accept-Encoding"
 )
 
 // DecodeFunc function definition of a JSON decoding function.

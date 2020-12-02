@@ -45,6 +45,10 @@ func New(name, group string, topics, brokers []string, oo ...kafka.OptionFunc) (
 	return &Factory{name: name, group: group, topics: topics, brokers: brokers, oo: oo}, nil
 }
 
+func (c *consumer) OutOfOrder() bool {
+	return false
+}
+
 // Create a new consumer.
 func (f *Factory) Create() (async.Consumer, error) {
 

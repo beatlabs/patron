@@ -10,6 +10,7 @@ import (
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var validExch, _ = NewExchange("e", amqp.ExchangeDirect)
@@ -130,7 +131,8 @@ func TestFactory_Create(t *testing.T) {
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, got)
+				require.NotNil(t, got)
+				assert.True(t, got.OutOfOrder())
 			}
 		})
 	}

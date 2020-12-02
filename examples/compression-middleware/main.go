@@ -36,6 +36,12 @@ func init() {
 // $ curl -s localhost:50000/foo -H "Accept-Encoding: deflate" | wc -c
 // 1053045
 //
+// The middleware is skipped for 'uncompressed' routes, as well as /metrics, /alive and /ready
+// even if we define the relevant headers
+// $ curl -s localhost:50000/bar -H "Accept-Encoding: gzip" | wc -c
+// 1398106
+// $ curl -s localhost:50000/metrics -H "Accept-Encoding: deflate"
+//
 func main() {
 	name := "compression-middleware"
 	version := "1.0.0"
@@ -43,15 +49,15 @@ func main() {
 	service, err := patron.New(name, version)
 	handle(err)
 
-	// You could either add the compression middleware per-route, like here ...
 	routesBuilder := patronhttp.NewRoutesBuilder().
 		Append(patronhttp.NewRouteBuilder("/foo", rnd).MethodGet()).
+		Append(patronhttp.NewRouteBuilder("/bar", rnd).MethodGet()).
 		Append(patronhttp.NewRouteBuilder("/hello", hello).MethodGet())
 
-	// or pass middlewares to the HTTP component globally, like we do below
 	ctx := context.Background()
 	err = service.
 		WithRoutesBuilder(routesBuilder).
+		WithUncompressedPaths("/bar").
 		Run(ctx)
 	handle(err)
 }

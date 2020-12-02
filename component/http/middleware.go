@@ -2,11 +2,12 @@ package http
 
 import (
 	"errors"
-	"golang.org/x/time/rate"
 	"net/http"
 	"net/url"
 	"runtime/debug"
 	"strings"
+
+	"golang.org/x/time/rate"
 
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/component/http/cache"
@@ -132,8 +133,8 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 	}
 }
 
-// NewRateLimitingMiddleWare creates a MiddlewareFunc that adds a rate limit to a route.
-func NewRateLimitingMiddleWare(limiter *rate.Limiter) MiddlewareFunc {
+// NewRateLimitingMiddleware creates a MiddlewareFunc that adds a rate limit to a route.
+func NewRateLimitingMiddleware(limiter *rate.Limiter) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !limiter.Allow() {

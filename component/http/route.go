@@ -3,9 +3,10 @@ package http
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/time/rate"
 	"net/http"
 	"strings"
+
+	"golang.org/x/time/rate"
 
 	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/component/http/auth"
@@ -162,7 +163,7 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path))
 	}
 	if rb.rateLimiter != nil {
-		middlewares = append(middlewares, NewRateLimitingMiddleWare(rb.rateLimiter))
+		middlewares = append(middlewares, NewRateLimitingMiddleware(rb.rateLimiter))
 	}
 	if rb.authenticator != nil {
 		middlewares = append(middlewares, NewAuthMiddleware(rb.authenticator))

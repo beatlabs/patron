@@ -262,6 +262,42 @@ func TestServer_SetupReadWriteTimeouts(t *testing.T) {
 	}
 }
 
+func TestServer_SetupDeflateLevel(t *testing.T) {
+	tests := []struct {
+		name      string
+		component Component
+		ctx       context.Context
+		level     string
+		wantErr   bool
+	}{
+		{name: "success without setup compression deflate level", component: &testComponent{}, ctx: context.Background(), wantErr: false},
+		{name: "success with setup compression deflate level = -2", component: &testComponent{}, ctx: context.Background(), level: "-2", wantErr: false},
+		{name: "success with setup compression deflate level = 2", component: &testComponent{}, ctx: context.Background(), level: "2", wantErr: false},
+		{name: "success with setup compression deflate level = 6", component: &testComponent{}, ctx: context.Background(), level: "6", wantErr: false},
+		{name: "success with setup compression deflate level = 9", component: &testComponent{}, ctx: context.Background(), level: "9", wantErr: false},
+		{name: "failed with too small compression deflate level", component: &testComponent{}, ctx: context.Background(), level: "-3", wantErr: true},
+		{name: "failed with too big compression deflate level", component: &testComponent{}, ctx: context.Background(), level: "10", wantErr: true},
+		{name: "failed with invalid compression deflate level", component: &testComponent{}, ctx: context.Background(), level: "blah", wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.level != "" {
+				err := os.Setenv("PATRON_COMPRESSION_DEFLATE_LEVEL", tt.level)
+				assert.NoError(t, err)
+			}
+			svc, err := New("test", "", TextLogger())
+			require.NoError(t, err)
+
+			_, err = svc.WithComponents(tt.component, tt.component, tt.component).build()
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func getRandomPort() string {
 	rnd := 50000 + rand.Int63n(10000)
 	return strconv.FormatInt(rnd, 10)

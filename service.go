@@ -114,6 +114,16 @@ func (s *service) createHTTPComponent() (Component, error) {
 		log.Infof("setting up default HTTP write timeout %s", httpWriteTimeout)
 	}
 
+	deflateLevel, ok := os.LookupEnv("PATRON_COMPRESSION_DEFLATE_LEVEL")
+	if ok {
+		deflateLevelInt, err := strconv.Atoi(deflateLevel)
+		if err != nil {
+			return nil, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
+		}
+		b.WithDeflateLevel(deflateLevelInt)
+		log.Infof("setting up default HTTP deflate level  %s", deflateLevel)
+	}
+
 	if s.acf != nil {
 		b.WithAliveCheckFunc(s.acf)
 	}

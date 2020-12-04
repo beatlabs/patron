@@ -368,3 +368,130 @@ func TestNewCompressionMiddleware_Headers(t *testing.T) {
 		})
 	}
 }
+
+func TestSelectEncoding(t *testing.T) {
+	testFn := func(hdr string, expected string, isErr bool) func(t *testing.T) {
+		return func(t *testing.T) {
+			result, err := parseAcceptEncoding(hdr)
+			assert.Equal(t, isErr, err != nil)
+			assert.Equal(t, expected, result)
+		}
+	}
+
+	t.Run("*", testFn("*", "*", false))
+	t.Run("gzip", testFn("gzip", "gzip", false))
+	t.Run("deflate", testFn("deflate", "deflate", false))
+
+	t.Run("whatever, not supported", testFn("whatever", "", true))
+	t.Run("whatever, but also a star", testFn("whatever, *", "*", false))
+
+	t.Run("gzip, deflate", testFn("gzip, deflate", "gzip", false))
+	t.Run("whatever, gzip, deflate", testFn("whatever, gzip, deflate", "gzip", false))
+	t.Run("gzip, whatever, deflate", testFn("gzip, whatever, deflate", "gzip", false))
+	t.Run("gzip, deflate, whatever", testFn("gzip, deflate, whatever", "gzip", false))
+
+	t.Run("gzip,deflate", testFn("gzip,deflate", "gzip", false))
+	t.Run("gzip,whatever,deflate", testFn("gzip,whatever,deflate", "gzip", false))
+	t.Run("whatever,gzip,deflate", testFn("whatever,gzip,deflate", "gzip", false))
+	t.Run("gzip,deflate,whatever", testFn("gzip,deflate,whatever", "gzip", false))
+
+	t.Run("deflate, gzip", testFn("deflate, gzip", "deflate", false))
+	t.Run("whatever, deflate, gzip", testFn("whatever, deflate, gzip", "deflate", false))
+	t.Run("deflate, whatever, gzip", testFn("deflate, whatever, gzip", "deflate", false))
+	t.Run("deflate, gzip, whatever", testFn("deflate, gzip, whatever", "deflate", false))
+
+	t.Run("deflate,gzip", testFn("deflate, gzip", "deflate", false))
+	t.Run("whatever,deflate,gzip", testFn("whatever,deflate,gzip", "deflate", false))
+	t.Run("deflate,whatever,gzip", testFn("deflate,whatever,gzip", "deflate", false))
+	t.Run("deflate,gzip,whatever", testFn("deflate,gzip,whatever", "deflate", false))
+
+	t.Run("equal weights", testFn("gzip;q=1.0, deflate;q=1.0", "gzip", false))
+	t.Run("equal weights 2", testFn("deflate;q=1.0, gzip;q=1.0", "deflate", false))
+
+	t.Run("gzip;q=1.0, deflate;q=0.5", testFn("gzip;q=1.0, deflate;q=0.5", "gzip", false))
+	t.Run("gzip;q=1.0, deflate;q=0.5, *;q=0.2", testFn("gzip;q=1.0, deflate;q=0.5, *;q=0.2", "gzip", false))
+	t.Run("deflate;q=1.0, gzip;q=0.5", testFn("deflate;q=1.0, gzip;q=0.5", "deflate", false))
+	t.Run("deflate;q=1.0, gzip;q=0.5, *;q=0.2", testFn("deflate;q=1.0, gzip;q=0.5, *;q=0.2", "deflate", false))
+
+	t.Run("gzip;q=0.5, deflate;q=1.0", testFn("gzip;q=0.5, deflate;q=1.0", "deflate", false))
+	t.Run("gzip;q=0.5, deflate;q=1.0, *;q=0.2", testFn("gzip;q=0.5, deflate;q=1.0, *;q=0.2", "deflate", false))
+	t.Run("deflate;q=0.5, gzip;q=1.0", testFn("deflate;q=0.5, gzip;q=1.0", "gzip", false))
+	t.Run("deflate;q=0.5, gzip;q=1.0, *;q=0.2", testFn("deflate;q=0.5, gzip;q=1.0, *;q=0.2", "gzip", false))
+
+	t.Run("whatever;q=1.0, *;q=0.2", testFn("whatever;q=1.0, *;q=0.2", "*", false))
+
+	t.Run("deflate, gzip;q=1.0", testFn("deflate, gzip;q=1.0", "gzip", false))
+	t.Run("deflate;q=0.5, gzip", testFn("deflate;q=0.5, gzip", "deflate", false))
+}
+
+func TestSupported(t *testing.T) {
+	testFn := func(algorithm string, expected bool) func(t *testing.T) {
+		return func(t *testing.T) {
+			// when
+			notSupported := notSupportedCompression(algorithm)
+
+			// then
+			assert.Equal(t, notSupported, !expected)
+		}
+	}
+
+	t.Run("gzip", testFn("gzip", true))
+	t.Run("deflate", testFn("deflate", true))
+	t.Run("star", testFn("*", true))
+	t.Run("something else", testFn("something else", false))
+}
+
+func TestParseWeights(t *testing.T) {
+	testFn := func(qStr string, expected float64, isErr bool) func(t *testing.T) {
+		return func(t *testing.T) {
+			// when
+			result, err := parseWeight(qStr)
+
+			// then
+			assert.Equal(t, isErr, err != nil)
+			assert.Equal(t, expected, result)
+		}
+	}
+
+	t.Run("q=1.0", testFn("q=1.0", 1.0, false))
+	t.Run("q=0.5", testFn("q=0.5", 0.5, false))
+	t.Run("q=", testFn("q=", 0.0, true))
+	t.Run("empty string", testFn("", 0.0, true))
+}
+
+func TestSelectByWeight(t *testing.T) {
+	testFn := func(given map[float64]string, expected string, isErr bool) func(t *testing.T) {
+		return func(t *testing.T) {
+			// when
+			selected, err := selectByWeight(given)
+
+			// then
+			assert.Equal(t, isErr, err != nil)
+			assert.Equal(t, expected, selected)
+		}
+	}
+
+	t.Run("sorted", testFn(map[float64]string{1.0: "gzip", 0.5: "deflate"}, "gzip", false))
+	t.Run("not sorted", testFn(map[float64]string{0.5: "gzip", 1.0: "deflate"}, "deflate", false))
+	t.Run("empty", testFn(map[float64]string{}, "", true))
+}
+
+func TestAddWithWeight(t *testing.T) {
+	testFn := func(
+		weightedMap map[float64]string, weight float64, algorithm string,
+		expected map[float64]string) func(t *testing.T) {
+		return func(t *testing.T) {
+			// given
+
+			// when
+			addWithWeight(weightedMap, weight, algorithm)
+
+			// then
+			assert.Equal(t, expected, weightedMap)
+		}
+	}
+
+	t.Run("empty", testFn(map[float64]string{}, 1.0, "gzip", map[float64]string{1.0: "gzip"}))
+	t.Run("new", testFn(map[float64]string{1.0: "gzip"}, 0.5, "deflate", map[float64]string{1.0: "gzip", 0.5: "deflate"}))
+	t.Run("already exists", testFn(map[float64]string{1.0: "gzip"}, 1.0, "deflate", map[float64]string{1.0: "gzip"}))
+}

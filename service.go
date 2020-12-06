@@ -34,13 +34,14 @@ type Component interface {
 // service is responsible for managing and setting up everything.
 // The service will start by default a HTTP component in order to host management endpoint.
 type service struct {
-	cps           []Component
-	routesBuilder *http.RoutesBuilder
-	middlewares   []http.MiddlewareFunc
-	acf           http.AliveCheckFunc
-	rcf           http.ReadyCheckFunc
-	termSig       chan os.Signal
-	sighupHandler func()
+	cps               []Component
+	routesBuilder     *http.RoutesBuilder
+	middlewares       []http.MiddlewareFunc
+	acf               http.AliveCheckFunc
+	rcf               http.ReadyCheckFunc
+	termSig           chan os.Signal
+	sighupHandler     func()
+	uncompressedPaths []string
 }
 
 func (s *service) setupOSSignal() {
@@ -129,6 +130,10 @@ func (s *service) createHTTPComponent() (Component, error) {
 		b.WithMiddlewares(s.middlewares...)
 	}
 
+	if s.uncompressedPaths != nil {
+		b.WithUncompressedPaths(s.uncompressedPaths...)
+	}
+
 	cp, err := b.Create()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create default HTTP component: %w", err)
@@ -158,16 +163,17 @@ func (s *service) waitTermination(chErr <-chan error) error {
 // Builder gathers all required properties to
 // construct a Patron service.
 type Builder struct {
-	errors        []error
-	name          string
-	version       string
-	cps           []Component
-	routesBuilder *http.RoutesBuilder
-	middlewares   []http.MiddlewareFunc
-	acf           http.AliveCheckFunc
-	rcf           http.ReadyCheckFunc
-	termSig       chan os.Signal
-	sighupHandler func()
+	errors            []error
+	name              string
+	version           string
+	cps               []Component
+	routesBuilder     *http.RoutesBuilder
+	middlewares       []http.MiddlewareFunc
+	acf               http.AliveCheckFunc
+	rcf               http.ReadyCheckFunc
+	termSig           chan os.Signal
+	sighupHandler     func()
+	uncompressedPaths []string
 }
 
 // Config for setting up the builder.
@@ -378,6 +384,18 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	return b
 }
 
+// WithUncompressedPaths defines a list of paths which the compression middleware will skip.
+func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
+	if len(p) == 0 {
+		b.errors = append(b.errors, errors.New("provided uncompressed paths slice was empty"))
+	} else {
+		log.Infof("setting paths which for which compression will be skipped")
+		b.uncompressedPaths = p
+	}
+
+	return b
+}
+
 // Build constructs the Patron service by applying the gathered properties.
 func (b *Builder) build() (*service, error) {
 	if len(b.errors) > 0 {
@@ -385,13 +403,14 @@ func (b *Builder) build() (*service, error) {
 	}
 
 	s := service{
-		cps:           b.cps,
-		routesBuilder: b.routesBuilder,
-		middlewares:   b.middlewares,
-		acf:           b.acf,
-		rcf:           b.rcf,
-		termSig:       b.termSig,
-		sighupHandler: b.sighupHandler,
+		cps:               b.cps,
+		routesBuilder:     b.routesBuilder,
+		middlewares:       b.middlewares,
+		acf:               b.acf,
+		rcf:               b.rcf,
+		termSig:           b.termSig,
+		sighupHandler:     b.sighupHandler,
+		uncompressedPaths: b.uncompressedPaths,
 	}
 
 	httpCp, err := s.createHTTPComponent()

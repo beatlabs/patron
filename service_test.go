@@ -32,45 +32,50 @@ func TestNewServer(t *testing.T) {
 		"alive check func provided was nil\n" +
 		"ready check func provided was nil\n" +
 		"provided components slice was empty\n" +
-		"provided SIGHUP handler was nil\n"
+		"provided SIGHUP handler was nil\n" +
+		"provided uncompressed paths slice was empty\n"
 
 	tests := map[string]struct {
-		fields        map[string]interface{}
-		cps           []Component
-		routesBuilder *patronhttp.RoutesBuilder
-		middlewares   []patronhttp.MiddlewareFunc
-		acf           patronhttp.AliveCheckFunc
-		rcf           patronhttp.ReadyCheckFunc
-		sighupHandler func()
-		wantErr       string
+		fields            map[string]interface{}
+		cps               []Component
+		routesBuilder     *patronhttp.RoutesBuilder
+		middlewares       []patronhttp.MiddlewareFunc
+		acf               patronhttp.AliveCheckFunc
+		rcf               patronhttp.ReadyCheckFunc
+		sighupHandler     func()
+		uncompressedPaths []string
+		wantErr           string
 	}{
 		"success": {
-			fields:        map[string]interface{}{"env": "dev"},
-			cps:           []Component{&testComponent{}, &testComponent{}},
-			routesBuilder: routesBuilder,
-			middlewares:   []patronhttp.MiddlewareFunc{middleware},
-			acf:           patronhttp.DefaultAliveCheck,
-			rcf:           patronhttp.DefaultReadyCheck,
-			sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
-			wantErr:       "",
+			fields:            map[string]interface{}{"env": "dev"},
+			cps:               []Component{&testComponent{}, &testComponent{}},
+			routesBuilder:     routesBuilder,
+			middlewares:       []patronhttp.MiddlewareFunc{middleware},
+			acf:               patronhttp.DefaultAliveCheck,
+			rcf:               patronhttp.DefaultReadyCheck,
+			sighupHandler:     func() { log.Info("SIGHUP received: nothing setup") },
+			uncompressedPaths: []string{"/foo", "/bar"},
+			wantErr:           "",
 		},
 		"nil inputs steps": {
-			cps:           nil,
-			routesBuilder: nil,
-			middlewares:   nil,
-			acf:           nil,
-			rcf:           nil,
-			sighupHandler: nil,
-			wantErr:       httpBuilderAllErrors,
+			cps:               nil,
+			routesBuilder:     nil,
+			middlewares:       nil,
+			acf:               nil,
+			rcf:               nil,
+			sighupHandler:     nil,
+			uncompressedPaths: nil,
+			wantErr:           httpBuilderAllErrors,
 		},
 		"error in all builder steps": {
-			cps:           []Component{},
-			routesBuilder: nil,
-			middlewares:   []patronhttp.MiddlewareFunc{},
-			acf:           nil,
-			rcf:           nil,
-			sighupHandler: nil,
-			wantErr:       httpBuilderAllErrors,
+			cps:               []Component{},
+			routesBuilder:     nil,
+			middlewares:       []patronhttp.MiddlewareFunc{},
+			acf:               nil,
+			rcf:               nil,
+			sighupHandler:     nil,
+			uncompressedPaths: []string{},
+			wantErr:           httpBuilderAllErrors,
 		},
 	}
 
@@ -85,6 +90,7 @@ func TestNewServer(t *testing.T) {
 				WithReadyCheck(tt.rcf).
 				WithComponents(tt.cps...).
 				WithSIGHUP(tt.sighupHandler).
+				WithUncompressedPaths(tt.uncompressedPaths...).
 				build()
 
 			if tt.wantErr != "" {

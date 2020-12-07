@@ -445,7 +445,7 @@ func assertResponse(ctx context.Context, t *testing.T, expected []http.Response,
 	cl, err := httpclient.New()
 	assert.NoError(t, err)
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/path", port), nil)
-	req.Header.Set(encoding.AcceptEncodingHeader, "Non-GZIP") // bypass default HTTP client GZIP-ing our response
+	req.Header.Set(encoding.AcceptEncodingHeader, "*") // bypass default HTTP client GZIP-ing our response
 	assert.NoError(t, err)
 
 	for _, expectedResponse := range expected {

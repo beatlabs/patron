@@ -233,7 +233,7 @@ func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) Middlewa
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			hdr := r.Header.Get(encoding.AcceptEncodingHeader)
 
-			if !isCompressionHeader(hdr) || ignore(ignoreRoutes, r.URL.String()) {
+			if ignore(ignoreRoutes, r.URL.String()) {
 				next.ServeHTTP(w, r)
 				log.Debugf("url %s skipped from compression middleware", r.URL.String())
 				return
@@ -241,35 +241,25 @@ func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) Middlewa
 
 			selectedEncoding, err := parseAcceptEncoding(hdr)
 			if err != nil {
-				// todo if a selectedEncoding is now known by a service, it should reply 406 Not Acceptable
-				// it seems that compression middleware is a wrong place for this, it should be done somewhere else
-				// not doing anything at the moment, just don't compress
 				log.Debugf("encoding %q is not supported in compression middleware, "+
 					"and client doesn't accept anything else", hdr)
+				http.Error(w, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
+				return
 			}
 
-			if selectedEncoding != "" {
-				// tell the client what's been applied
-				w.Header().Set(encoding.ContentEncodingHeader, selectedEncoding)
-			}
-
-			// keep content type intact
-			respHeader := r.Header.Get(encoding.ContentTypeHeader)
-			if respHeader != "" {
-				w.Header().Set(encoding.ContentTypeHeader, respHeader)
-			}
-
-			var cw io.WriteCloser
-			switch hdr {
+			var writer io.WriteCloser
+			switch selectedEncoding {
 			case gzipHeader:
-				cw = gzip.NewWriter(w)
+				writer = gzip.NewWriter(w)
+				w.Header().Set(encoding.ContentEncodingHeader, gzipHeader)
 			case deflateHeader:
-				cw, err = flate.NewWriter(w, deflateLevel)
+				writer, err = flate.NewWriter(w, deflateLevel)
 				if err != nil {
 					next.ServeHTTP(w, r)
 					return
 				}
-			// `*` and an empty encoding string fall through here
+				w.Header().Set(encoding.ContentEncodingHeader, deflateHeader)
+			// `*`, `identity` and others fall through here
 			default:
 				next.ServeHTTP(w, r)
 				return
@@ -280,9 +270,9 @@ func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) Middlewa
 				if err != nil {
 					log.Errorf("error in deferred call to Close() method on %v compression middleware : %v", hdr, err.Error())
 				}
-			}(cw)
+			}(writer)
 
-			crw := compressionResponseWriter{Writer: cw, ResponseWriter: w}
+			crw := compressionResponseWriter{Writer: writer, ResponseWriter: w}
 			next.ServeHTTP(crw, r)
 			log.Debugf("url %s used with %s compression method", r.URL.String(), hdr)
 		})
@@ -319,10 +309,6 @@ func MiddlewareChain(f http.Handler, mm ...MiddlewareFunc) http.Handler {
 		f = mm[i](f)
 	}
 	return f
-}
-
-func isCompressionHeader(h string) bool {
-	return strings.Contains(h, gzipHeader) || strings.Contains(h, deflateHeader)
 }
 
 func logRequestResponse(corID string, w *responseWriter, r *http.Request) {

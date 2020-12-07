@@ -274,7 +274,7 @@ func TestNewCompressionMiddleware(t *testing.T) {
 }
 
 func TestNewCompressionMiddleware_Ignore(t *testing.T) {
-	var ceh, cth string // accept-encoding, content type
+	var ceh string // accept-encoding, content type
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(202) })
 	middleware := NewCompressionMiddleware(8, "/metrics")
@@ -294,15 +294,10 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	assert.NotNil(t, ceh)
 	assert.Equal(t, ceh, "")
 
-	cth = rc1.Header().Get("Content-Type")
-	assert.NotNil(t, cth)
-	assert.Equal(t, cth, "")
-
 	// check if other routes remains untouched
 	req2, err := http.NewRequest("GET", "/alive", nil)
 	assert.NoError(t, err)
 	req2.Header.Set("Accept-Encoding", "gzip")
-	req2.Header.Set("Content-Type", "application/json")
 
 	rc2 := httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rc2, req2)
@@ -310,62 +305,47 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	ceh = rc2.Header().Get("Content-Encoding")
 	assert.NotNil(t, ceh)
 	assert.Equal(t, "gzip", ceh)
-
-	cth = rc2.Header().Get("Content-Type")
-	assert.NotNil(t, cth)
-	assert.Equal(t, "application/json", cth)
 }
 
 func TestNewCompressionMiddleware_Headers(t *testing.T) {
-	var ceh, cth string // accept-encoding, content type
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(202) })
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+	middleware := NewCompressionMiddleware(8, "/metrics")
 
 	tests := map[string]struct {
-		cm MiddlewareFunc
+		cm               MiddlewareFunc
+		statusCode       int
+		encodingExpected string
 	}{
-		"gzip":    {cm: NewCompressionMiddleware(8, "/metrics")},
-		"deflate": {cm: NewCompressionMiddleware(8, "/metrics")},
+		"gzip":                {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
+		"deflate":             {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
+		"gzip, *":             {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
+		"deflate, *":          {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
+		"invalid, gzip, *":    {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
+		"invalid, deflate, *": {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
+		"invalid":             {cm: middleware, statusCode: http.StatusNotAcceptable, encodingExpected: ""},
+		"invalid, *":          {cm: middleware, statusCode: http.StatusOK, encodingExpected: ""},
+		"*":                   {cm: middleware, statusCode: http.StatusOK, encodingExpected: ""},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			middleware := tc.cm
-			assert.NotNil(t, middleware)
+	for encodingName, tc := range tests {
+		t.Run(fmt.Sprintf("%s: compression middleware acts according the Accept-Encoding header", encodingName), func(t *testing.T) {
+			require.NotNil(t, tc.cm)
 
-			// check if the route actually ignored
+			// given
 			req1, err := http.NewRequest("GET", "/alive", nil)
-			assert.NoError(t, err)
-			req1.Header.Set("Accept-Encoding", name)
-			req1.Header.Set("Content-Type", "text/plain")
+			require.NoError(t, err)
+			req1.Header.Set("Accept-Encoding", encodingName)
 
+			// when
 			rc1 := httptest.NewRecorder()
-			middleware(handler).ServeHTTP(rc1, req1)
+			tc.cm(handler).ServeHTTP(rc1, req1)
 
-			ceh = rc1.Header().Get("Content-Encoding")
-			assert.NotNil(t, ceh)
-			assert.Equal(t, name, ceh)
+			// then
+			assert.Equal(t, tc.statusCode, rc1.Code)
 
-			cth = rc1.Header().Get("Content-Type")
-			assert.NotNil(t, cth)
-			assert.Equal(t, "text/plain", cth)
-
-			// check if other routes remains untouched
-			req2, err := http.NewRequest("GET", "/alive", nil)
-			assert.NoError(t, err)
-			req2.Header.Set("Accept-Encoding", name)
-			req2.Header.Set("Content-Type", "application/json")
-
-			rc2 := httptest.NewRecorder()
-			middleware(handler).ServeHTTP(rc2, req2)
-
-			ceh = rc2.Header().Get("Content-Encoding")
-			assert.NotNil(t, ceh)
-			assert.Equal(t, name, ceh)
-
-			cth = rc2.Header().Get("Content-Type")
-			assert.NotNil(t, cth)
-			assert.Equal(t, "application/json", cth)
+			contentEncodingHeader := rc1.Header().Get("Content-Encoding")
+			assert.NotNil(t, contentEncodingHeader)
+			assert.Equal(t, tc.encodingExpected, contentEncodingHeader)
 		})
 	}
 }

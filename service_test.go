@@ -131,6 +131,8 @@ func TestServer_Run_Shutdown(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			defer os.Clearenv()
+
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
 			assert.NoError(t, err)
 			svc, err := New("test", "", TextLogger())
@@ -159,6 +161,8 @@ func TestServer_SetupTracing(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			defer os.Clearenv()
+
 			if tt.host != "" {
 				err := os.Setenv("PATRON_JAEGER_AGENT_HOST", tt.host)
 				assert.NoError(t, err)
@@ -198,6 +202,8 @@ func TestBuild_FailingConditions(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			defer os.Clearenv()
+
 			if tt.samplerParam != "" {
 				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tt.samplerParam)
 				assert.NoError(t, err)
@@ -215,11 +221,6 @@ func TestBuild_FailingConditions(t *testing.T) {
 				assert.NotNil(t, svc)
 			}
 		})
-		err := os.Unsetenv("PATRON_JAEGER_SAMPLER_PARAM")
-		require.NoError(t, err)
-
-		err = os.Unsetenv("PATRON_HTTP_DEFAULT_PORT")
-		require.NoError(t, err)
 	}
 }
 
@@ -241,6 +242,8 @@ func TestServer_SetupReadWriteTimeouts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			defer os.Clearenv()
+
 			if tt.rt != "" {
 				err := os.Setenv("PATRON_HTTP_READ_TIMEOUT", tt.rt)
 				assert.NoError(t, err)
@@ -281,6 +284,8 @@ func TestServer_SetupDeflateLevel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			defer os.Clearenv()
+
 			if tt.level != "" {
 				err := os.Setenv("PATRON_COMPRESSION_DEFLATE_LEVEL", tt.level)
 				assert.NoError(t, err)

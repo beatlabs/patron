@@ -166,10 +166,6 @@ func parseAcceptEncoding(header string) (string, error) {
 
 	weighted := make(map[float64]string)
 
-	addWithWeight := func(weight float64, algorithm string) {
-		addWithWeight(weighted, weight, algorithm)
-	}
-
 	algorithms := strings.Split(header, ",")
 	for _, a := range algorithms {
 		algAndWeight := strings.Split(a, ";")
@@ -180,18 +176,18 @@ func parseAcceptEncoding(header string) (string, error) {
 		}
 
 		if len(algAndWeight) != 2 {
-			addWithWeight(0.0, algorithm)
+			addWithWeight(weighted, 0.0, algorithm)
 			continue
 		}
 
 		qWeight := algAndWeight[1]
 		weight, err := parseWeight(qWeight)
 		if err != nil {
-			addWithWeight(0.0, algorithm)
+			addWithWeight(weighted, 0.0, algorithm)
 			continue
 		}
 
-		addWithWeight(weight, algorithm)
+		addWithWeight(weighted, weight, algorithm)
 	}
 
 	return selectByWeight(weighted)

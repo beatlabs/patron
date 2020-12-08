@@ -325,16 +325,19 @@ func TestNewCompressionMiddleware_Headers(t *testing.T) {
 		"invalid":             {cm: middleware, statusCode: http.StatusNotAcceptable, encodingExpected: ""},
 		"invalid, *":          {cm: middleware, statusCode: http.StatusOK, encodingExpected: ""},
 		"*":                   {cm: middleware, statusCode: http.StatusOK, encodingExpected: ""},
+		"":                    {cm: middleware, statusCode: http.StatusOK, encodingExpected: identityHeader},
+		"not present":         {cm: middleware, statusCode: http.StatusOK, encodingExpected: identityHeader},
 	}
 
 	for encodingName, tc := range tests {
-		t.Run(fmt.Sprintf("%s: compression middleware acts according the Accept-Encoding header", encodingName), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%q: compression middleware acts according the Accept-Encoding header", encodingName), func(t *testing.T) {
 			require.NotNil(t, tc.cm)
-
 			// given
 			req1, err := http.NewRequest("GET", "/alive", nil)
 			require.NoError(t, err)
-			req1.Header.Set("Accept-Encoding", encodingName)
+			if encodingName != "not present" {
+				req1.Header.Set("Accept-Encoding", encodingName)
+			}
 
 			// when
 			rc1 := httptest.NewRecorder()
@@ -357,6 +360,8 @@ func TestSelectEncoding(t *testing.T) {
 		expected     string
 		isErr        bool
 	}{
+		{given: "", expected: "identity", optionalName: "is empty but present, only identity"},
+
 		{given: "*", expected: "*"},
 		{given: "gzip", expected: "gzip"},
 		{given: "deflate", expected: "deflate"},
@@ -399,8 +404,13 @@ func TestSelectEncoding(t *testing.T) {
 
 		{given: "whatever;q=1.0, *;q=0.2", expected: "*"},
 
-		{given: "deflate, gzip;q=1.0", expected: "gzip"},
-		{given: "deflate;q=0.5, gzip", expected: "deflate"},
+		{given: "deflate, gzip;q=1.0", expected: "deflate"},
+		{given: "deflate, gzip;q=0.5", expected: "deflate"},
+
+		{given: "deflate;q=0.5, gzip", expected: "gzip"},
+
+		{given: "deflate;q=0.5, gzip;q=-0.5", expected: "deflate"},
+		{given: "deflate;q=0.5, gzip;q=1.5", expected: "gzip"},
 	}
 
 	for _, tc := range tests {
@@ -441,21 +451,21 @@ func TestParseWeights(t *testing.T) {
 	tests := []struct {
 		priorityStr string
 		expected    float64
-		isErr       bool
 	}{
 		{priorityStr: "q=1.0", expected: 1.0},
 		{priorityStr: "q=0.5", expected: 0.5},
-		{priorityStr: "q=", expected: 0.0, isErr: true},
-		{priorityStr: "", expected: 0.0, isErr: true},
+		{priorityStr: "q=-0.5", expected: 0.0},
+		{priorityStr: "q=1.5", expected: 1.0},
+		{priorityStr: "q=", expected: 1.0},
+		{priorityStr: "", expected: 1.0},
 	}
 
 	for _, tc := range tests {
-		t.Run(fmt.Sprintf("for given priority: %q, expect %f, and error = %t", tc.priorityStr, tc.expected, tc.isErr), func(t *testing.T) {
+		t.Run(fmt.Sprintf("for given priority: %q, expect %f", tc.priorityStr, tc.expected), func(t *testing.T) {
 			// when
-			result, err := parseWeight(tc.priorityStr)
+			result := parseWeight(tc.priorityStr)
 
 			// then
-			assert.Equal(t, tc.isErr, err != nil)
 			assert.Equal(t, tc.expected, result)
 		})
 	}

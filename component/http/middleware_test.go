@@ -324,6 +324,8 @@ func TestNewCompressionMiddleware_Headers(t *testing.T) {
 		"invalid, deflate, *": {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
 		"invalid":             {cm: middleware, statusCode: http.StatusNotAcceptable, encodingExpected: ""},
 		"invalid, *":          {cm: middleware, statusCode: http.StatusOK, encodingExpected: ""},
+		"identity":            {cm: middleware, statusCode: http.StatusOK, encodingExpected: identityHeader},
+		"gzip, identity":      {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
 		"*":                   {cm: middleware, statusCode: http.StatusOK, encodingExpected: ""},
 		"":                    {cm: middleware, statusCode: http.StatusOK, encodingExpected: identityHeader},
 		"not present":         {cm: middleware, statusCode: http.StatusOK, encodingExpected: identityHeader},

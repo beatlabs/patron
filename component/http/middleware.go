@@ -200,7 +200,7 @@ func addWithWeight(mapWeighted map[float64]string, weight float64, algorithm str
 }
 
 func notSupportedCompression(algorithm string) bool {
-	return gzipHeader != algorithm && deflateHeader != algorithm && anythingHeader != algorithm
+	return gzipHeader != algorithm && deflateHeader != algorithm && anythingHeader != algorithm && identityHeader != algorithm
 }
 
 // When not present, the default value is 1 according to https://developer.mozilla.org/en-US/docs/Glossary/Quality_values

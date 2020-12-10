@@ -131,12 +131,13 @@ func Test_message(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			sqsMsg := &sqs.Message{Body: aws.String(`{"key":"value"}`)}
 			m := &message{
 				queue:     tt.fields.queue,
 				queueURL:  "queueURL",
 				queueName: "queueName",
 				ctx:       context.Background(),
-				msg:       &sqs.Message{Body: aws.String(`{"key":"value"}`)},
+				msg:       sqsMsg,
 				span:      opentracing.StartSpan("test"),
 				dec:       json.DecodeRaw,
 			}
@@ -148,6 +149,7 @@ func Test_message(t *testing.T) {
 			assert.Equal(t, map[string]string{"key": "value"}, mp)
 			assert.Equal(t, "queueName", m.Source())
 			assert.Equal(t, []byte(`{"key":"value"}`), m.Payload())
+			assert.Equal(t, sqsMsg, m.Raw())
 		})
 	}
 }

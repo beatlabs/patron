@@ -68,6 +68,11 @@ func (m *message) Payload() []byte {
 	return m.del.Body
 }
 
+// Raw returns tha AMQP message.
+func (m *message) Raw() interface{} {
+	return m.del
+}
+
 // Exchange represents an AMQP exchange.
 type Exchange struct {
 	name string

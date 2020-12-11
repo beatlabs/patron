@@ -8,9 +8,9 @@ import (
 )
 
 func TestAggregate(t *testing.T) {
-	a := Aggregate(errors.New("Error 1"), errors.New("Error 2"), nil, errors.New("Error 3"))
+	a := Aggregate(errors.New("error 1"), errors.New("error 2"), nil, errors.New("error 3"))
 	assert.Len(t, a, 3)
-	assert.Equal(t, "Error 1\nError 2\nError 3\n", a.Error())
+	assert.Equal(t, "error 1\nerror 2\nerror 3\n", a.Error())
 }
 
 func TestAggregate_ReturnsNil(t *testing.T) {

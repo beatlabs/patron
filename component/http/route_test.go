@@ -19,7 +19,7 @@ type MockAuthenticator struct {
 	err     error
 }
 
-func (mo MockAuthenticator) Authenticate(req *http.Request) (bool, error) {
+func (mo MockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
 	if mo.err != nil {
 		return false, mo.err
 	}
@@ -163,13 +163,11 @@ func TestRouteBuilder_WithAuth(t *testing.T) {
 }
 
 func TestRouteBuilder_WithRouteCacheNil(t *testing.T) {
-
 	rb := NewRawRouteBuilder("/", func(writer http.ResponseWriter, request *http.Request) {}).
 		WithRouteCache(nil, cache.Age{Max: 1})
 
 	assert.Len(t, rb.errors, 1)
 	assert.EqualError(t, rb.errors[0], "route cache is nil")
-
 }
 
 func TestRouteBuilder_Build(t *testing.T) {
@@ -272,30 +270,37 @@ func TestNewHeadRouteBuilder(t *testing.T) {
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	assert.Equal(t, http.MethodHead, NewHeadRouteBuilder("/", mockProcessor).method)
 }
+
 func TestNewPostRouteBuilder(t *testing.T) {
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	assert.Equal(t, http.MethodPost, NewPostRouteBuilder("/", mockProcessor).method)
 }
+
 func TestNewPutGetRouteBuilder(t *testing.T) {
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	assert.Equal(t, http.MethodPut, NewPutRouteBuilder("/", mockProcessor).method)
 }
+
 func TestNewPatchRouteBuilder(t *testing.T) {
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	assert.Equal(t, http.MethodPatch, NewPatchRouteBuilder("/", mockProcessor).method)
 }
+
 func TestNewDeleteRouteBuilder(t *testing.T) {
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	assert.Equal(t, http.MethodDelete, NewDeleteRouteBuilder("/", mockProcessor).method)
 }
+
 func TestNewConnectRouteBuilder(t *testing.T) {
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	assert.Equal(t, http.MethodConnect, NewConnectRouteBuilder("/", mockProcessor).method)
 }
+
 func TestNewOptionsRouteBuilder(t *testing.T) {
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	assert.Equal(t, http.MethodOptions, NewOptionsRouteBuilder("/", mockProcessor).method)
 }
+
 func TestNewTraceRouteBuilder(t *testing.T) {
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	assert.Equal(t, http.MethodTrace, NewTraceRouteBuilder("/", mockProcessor).method)

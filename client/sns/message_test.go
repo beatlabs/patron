@@ -66,11 +66,11 @@ func Test_MessageBuilder_InvalidStringArrayAttribute(t *testing.T) {
 
 func Test_MessageBuilder_Build_With_Error(t *testing.T) {
 	b := NewMessageBuilder()
-	err := errors.New("an err")
-	b.err = err
+	errMsg := "an err"
+	b.err = errors.New(errMsg)
 	m, foundErr := b.Build()
 	assert.Nil(t, m)
-	assert.EqualError(t, err, foundErr.Error())
+	assert.EqualError(t, foundErr, errMsg)
 }
 
 func Test_MessageBuilder_Build_With_Invalid_attribute(t *testing.T) {
@@ -91,14 +91,14 @@ func Test_MessageBuilder_formatStringArrayAttributeValues(t *testing.T) {
 		{
 			desc: "Valid data types - (u)ints",
 			values: []interface{}{
-				42, int(42), int8(42), int16(42), int32(42), int64(42),
+				42, 42, int8(42), int16(42), int32(42), int64(42),
 				uint(42), uint8(42), uint16(42), uint32(42), uint64(42),
 			},
 			expectedOutput: `[42,42,42,42,42,42,42,42,42,42,42]`,
 		},
 		{
 			desc:           "Valid data types - floats",
-			values:         []interface{}{float32(13.37), float64(13.37), 13.37},
+			values:         []interface{}{float32(13.37), 13.37, 13.37},
 			expectedOutput: `[13.37,13.37,13.37]`,
 		},
 		{

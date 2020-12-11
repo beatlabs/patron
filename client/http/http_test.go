@@ -25,7 +25,7 @@ func TestTracedClient_Do(t *testing.T) {
 		assert.Equal(t, "true", r.Header.Get("Mockpfx-Ids-Sampled"))
 		assert.NotEmpty(t, r.Header.Get("Mockpfx-Ids-Spanid"))
 		assert.NotEmpty(t, r.Header.Get("Mockpfx-Ids-Traceid"))
-		fmt.Fprintln(w, "Hello, client")
+		_, _ = fmt.Fprintln(w, "Hello, client")
 	}))
 	defer ts.Close()
 	mtr := mocktracer.New()
@@ -133,10 +133,9 @@ func TestHTTPStartFinishSpan(t *testing.T) {
 }
 
 func TestDecompress(t *testing.T) {
-
 	const msg = "hello, client!"
 	ts1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, msg)
+		_, _ = fmt.Fprint(w, msg)
 	}))
 	defer ts1.Close()
 

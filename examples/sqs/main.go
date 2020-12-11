@@ -66,7 +66,7 @@ func main() {
 		_ = cc.Close()
 	}()
 
-	greeter := greeter.NewGreeterClient(cc)
+	greeterClient := greeter.NewGreeterClient(cc)
 
 	// Initialise SQS
 	sqsAPI := sqs.New(
@@ -80,7 +80,7 @@ func main() {
 			),
 		),
 	)
-	sqsCmp, err := createSQSComponent(sqsAPI, greeter)
+	sqsCmp, err := createSQSComponent(sqsAPI, greeterClient)
 	if err != nil {
 		log.Fatalf("failed to create sqs component: %v", err)
 	}

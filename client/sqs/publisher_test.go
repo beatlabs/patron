@@ -42,6 +42,7 @@ func Test_NewPublisher(t *testing.T) {
 				assert.Nil(t, p)
 				assert.EqualError(t, err, tC.expectedErr.Error())
 			} else {
+				assert.NotNil(t, p)
 				assert.Equal(t, tC.api, p.api)
 				assert.Equal(t, p.component, publisherComponent)
 				assert.Equal(t, p.tag, ext.SpanKindProducer)
@@ -129,7 +130,7 @@ func newStubSQSAPI(expectedOutput *sqs.SendMessageOutput, expectedErr error) *st
 	return &stubSQSAPI{output: expectedOutput, err: expectedErr}
 }
 
-func (s *stubSQSAPI) SendMessageWithContext(ctx context.Context, input *sqs.SendMessageInput, options ...request.Option) (*sqs.SendMessageOutput, error) {
+func (s *stubSQSAPI) SendMessageWithContext(_ context.Context, _ *sqs.SendMessageInput, _ ...request.Option) (*sqs.SendMessageOutput, error) {
 	return s.output, s.err
 }
 

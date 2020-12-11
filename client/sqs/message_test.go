@@ -74,11 +74,11 @@ func Test_Message_injectHeaders(t *testing.T) {
 
 func Test_MessageBuilder_Build_With_Error(t *testing.T) {
 	b := NewMessageBuilder()
-	err := errors.New("an err")
-	b.err = err
+	errMsg := "an err"
+	b.err = errors.New(errMsg)
 	m, foundErr := b.Build()
 	assert.Nil(t, m)
-	assert.EqualError(t, err, foundErr.Error())
+	assert.EqualError(t, foundErr, errMsg)
 
 	testCases := map[string]struct {
 		msgBuilder  *MessageBuilder

@@ -3,13 +3,16 @@ package http
 import (
 	"context"
 	"fmt"
-	"github.com/beatlabs/patron/encoding"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/beatlabs/patron/encoding"
 
 	"github.com/beatlabs/patron/cache"
 	httpclient "github.com/beatlabs/patron/client/http"
@@ -33,7 +36,6 @@ type arg struct {
 }
 
 func TestCachingMiddleware(t *testing.T) {
-
 	getRequest, err := http.NewRequest("GET", "/test", nil)
 	assert.NoError(t, err)
 
@@ -48,7 +50,7 @@ func TestCachingMiddleware(t *testing.T) {
 	testingCache := newTestingCache()
 	testingCache.instant = httpcache.NowSeconds
 
-	cache, errs := httpcache.NewRouteCache(testingCache, httpcache.Age{Max: 1 * time.Second})
+	routeCache, errs := httpcache.NewRouteCache(testingCache, httpcache.Age{Max: 1 * time.Second})
 	assert.Empty(t, errs)
 
 	tests := []struct {
@@ -59,24 +61,32 @@ func TestCachingMiddleware(t *testing.T) {
 		expectedBody string
 		cacheState   cacheState
 	}{
-		{"caching middleware with POST request", args{next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(202)
-			i, err := w.Write([]byte{1, 2, 3, 4})
-			assert.NoError(t, err)
-			assert.Equal(t, 4, i)
-		}), mws: []MiddlewareFunc{NewCachingMiddleware(cache)}},
-			postRequest, 202, "\x01\x02\x03\x04", cacheState{}},
-		{"caching middleware with GET request", args{next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(200)
-			i, err := w.Write([]byte{1, 2, 3, 4})
-			assert.NoError(t, err)
-			assert.Equal(t, 4, i)
-		}), mws: []MiddlewareFunc{NewCachingMiddleware(cache)}},
-			getRequest, 200, "\x01\x02\x03\x04", cacheState{
+		{
+			"caching middleware with POST request",
+			args{next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(202)
+				i, err := w.Write([]byte{1, 2, 3, 4})
+				assert.NoError(t, err)
+				assert.Equal(t, 4, i)
+			}), mws: []MiddlewareFunc{NewCachingMiddleware(routeCache)}},
+			postRequest, 202, "\x01\x02\x03\x04",
+			cacheState{},
+		},
+		{
+			"caching middleware with GET request",
+			args{next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(200)
+				i, err := w.Write([]byte{1, 2, 3, 4})
+				assert.NoError(t, err)
+				assert.Equal(t, 4, i)
+			}), mws: []MiddlewareFunc{NewCachingMiddleware(routeCache)}},
+			getRequest, 200, "\x01\x02\x03\x04",
+			cacheState{
 				setOps: 1,
 				getOps: 1,
 				size:   1,
-			}},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -89,11 +99,9 @@ func TestCachingMiddleware(t *testing.T) {
 			assertCacheState(t, *testingCache, tt.cacheState)
 		})
 	}
-
 }
 
 func TestNewRouteBuilder_WithCache(t *testing.T) {
-
 	args := []arg{
 		{
 			bop: func(routeBuilder *RouteBuilder) *RouteBuilder {
@@ -138,7 +146,6 @@ func TestNewRouteBuilder_WithCache(t *testing.T) {
 }
 
 func assertRouteBuilder(t *testing.T, arg arg, routeBuilder *RouteBuilder, cache cache.TTLCache) {
-
 	routeBuilder.WithRouteCache(cache, arg.age)
 
 	if arg.bop != nil {
@@ -358,7 +365,8 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 				"Content-Length":             {"6"},
 				"Post-Middleware-Header":     {"post"},
 				"Pre-Middleware-Header":      {"pre"},
-				"Internal-Handler-Header":    {"header"}},
+				"Internal-Handler-Header":    {"header"},
+			},
 			Body: &bodyReader{body: "\"body\""},
 		},
 		{
@@ -368,7 +376,8 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 				"Content-Length":             {"6"},
 				"Post-Middleware-Header":     {"post"},
 				"Pre-Middleware-Header":      {"pre"},
-				"Internal-Handler-Header":    {"header"}},
+				"Internal-Handler-Header":    {"header"},
+			},
 			Body: &bodyReader{body: "\"body\""},
 		},
 	}, port)
@@ -441,10 +450,10 @@ func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, ce 
 }
 
 func assertResponse(ctx context.Context, t *testing.T, expected []http.Response, port int) {
-
 	cl, err := httpclient.New()
 	assert.NoError(t, err)
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/path", port), nil)
+	require.NoError(t, err)
 	req.Header.Set(encoding.AcceptEncodingHeader, "*") // bypass default HTTP client GZIP-ing our response
 	assert.NoError(t, err)
 
@@ -469,7 +478,6 @@ func assertResponse(ctx context.Context, t *testing.T, expected []http.Response,
 		assert.Equal(t, i, j)
 		assert.Equal(t, expectedPayload, responsePayload)
 	}
-
 }
 
 func assertCacheState(t *testing.T, cache testingCache, cacheState cacheState) {

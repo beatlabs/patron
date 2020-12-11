@@ -146,6 +146,9 @@ func createSQSQueue(api sqsiface.SQSAPI) (string, error) {
 	out, err := api.CreateQueue(&sqs.CreateQueueInput{
 		QueueName: aws.String(awsSQSQueue),
 	})
+	if err != nil {
+		return "", err
+	}
 	if out.QueueUrl == nil {
 		return "", errors.New("could not create the queue")
 	}
@@ -248,6 +251,10 @@ func (ac *amqpComponent) Process(msg async.Message) error {
 		Body(string(payload)).
 		QueueURL(ac.sqsQueueURL).
 		Build()
+	if err != nil {
+		return err
+	}
+
 	_, err = ac.sqsPub.Publish(msg.Context(), *sqsMsg)
 	if err != nil {
 		return fmt.Errorf("failed to publish message to SQS: %v", err)

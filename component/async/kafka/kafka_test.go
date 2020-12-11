@@ -101,7 +101,7 @@ func TestMapHeader(t *testing.T) {
 func Test_getCorrelationID(t *testing.T) {
 	withID := []*sarama.RecordHeader{{Key: []byte(correlation.HeaderID), Value: []byte("123")}}
 	withoutID := []*sarama.RecordHeader{{Key: []byte(correlation.HeaderID), Value: []byte("")}}
-	missingHeader := []*sarama.RecordHeader{}
+	var missingHeader []*sarama.RecordHeader
 	type args struct {
 		hh []*sarama.RecordHeader
 	}
@@ -288,17 +288,17 @@ func saramaConsumerMessage(value string, header *sarama.RecordHeader) *sarama.Co
 }
 
 func versionedConsumerMessage(value string, header *sarama.RecordHeader, version uint8) *sarama.ConsumerMessage {
-	bytes := []byte(value)
+	b := []byte(value)
 
 	if version > 0 {
-		bytes = append([]byte{version}, bytes...)
+		b = append([]byte{version}, b...)
 	}
 
 	return &sarama.ConsumerMessage{
 		Topic:          "TEST_TOPIC",
 		Partition:      0,
 		Key:            []byte("key"),
-		Value:          bytes,
+		Value:          b,
 		Offset:         0,
 		Timestamp:      time.Now(),
 		BlockTimestamp: time.Now(),
@@ -335,11 +335,11 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 
 // some naive decoder implementations for testing
 
-func erroringDecoder(data []byte, v interface{}) error {
+func erroringDecoder(data []byte, _ interface{}) error {
 	return fmt.Errorf("predefined decoder error for message %s", string(data))
 }
 
-func voidDecoder(data []byte, v interface{}) error {
+func voidDecoder(_ []byte, _ interface{}) error {
 	return nil
 }
 
@@ -370,7 +370,7 @@ func combinedDecoder(data []byte, v interface{}) error {
 var process = func(counter *eventCounter, data *decodingTestData) func(message async.Message) error {
 	return func(message async.Message) error {
 		// we always assume we will decode to a slice of strings
-		values := []string{}
+		values := make([]string, 0)
 		// we assume based on our transform function, that we will be able to decode as a rule
 		if err := message.Decode(&values); err != nil {
 			counter.decodingErr++

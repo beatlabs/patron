@@ -42,7 +42,7 @@ type server struct {
 	greeter.UnimplementedGreeterServer
 }
 
-func (s *server) SayHello(ctx context.Context, in *greeter.HelloRequest) (*greeter.HelloReply, error) {
+func (s *server) SayHello(_ context.Context, in *greeter.HelloRequest) (*greeter.HelloReply, error) {
 	if in.GetFirstname() == "ERROR" {
 		return nil, errors.New("ERROR")
 	}

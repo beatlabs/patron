@@ -135,7 +135,6 @@ type eventCounter struct {
 }
 
 func TestWrongContentTypeError(t *testing.T) {
-
 	testData := decodingTestData{
 		counter: eventCounter{
 			claimErr: 1,
@@ -150,7 +149,6 @@ func TestWrongContentTypeError(t *testing.T) {
 }
 
 func TestDecodingError(t *testing.T) {
-
 	testData := decodingTestData{
 		counter: eventCounter{
 			decodingErr: 1,
@@ -165,7 +163,6 @@ func TestDecodingError(t *testing.T) {
 }
 
 func TestIncompatibleDecoder(t *testing.T) {
-
 	testData := decodingTestData{
 		counter: eventCounter{
 			decodingErr: 1,
@@ -180,7 +177,6 @@ func TestIncompatibleDecoder(t *testing.T) {
 }
 
 func TestJsonDecoder(t *testing.T) {
-
 	testData := decodingTestData{
 		counter: eventCounter{
 			messageCount: 1,
@@ -196,7 +192,6 @@ func TestJsonDecoder(t *testing.T) {
 }
 
 func TestNoDecoderNoContentType(t *testing.T) {
-
 	testData := decodingTestData{
 		counter: eventCounter{
 			claimErr: 1,
@@ -211,7 +206,6 @@ func TestNoDecoderNoContentType(t *testing.T) {
 }
 
 func TestMultipleMessagesJsonDecoder(t *testing.T) {
-
 	testData := decodingTestData{
 		counter: eventCounter{
 			decodingErr:  1,
@@ -230,7 +224,6 @@ func TestMultipleMessagesJsonDecoder(t *testing.T) {
 }
 
 func TestDefaultDecoder(t *testing.T) {
-
 	testData := decodingTestData{
 		counter: eventCounter{
 			messageCount: 1,
@@ -248,7 +241,6 @@ func TestDefaultDecoder(t *testing.T) {
 }
 
 func TestStringDecoder(t *testing.T) {
-
 	testData := decodingTestData{
 		counter: eventCounter{
 			messageCount: 1,
@@ -264,7 +256,6 @@ func TestStringDecoder(t *testing.T) {
 }
 
 func TestExoticDecoder(t *testing.T) {
-
 	testData := decodingTestData{
 		counter: eventCounter{
 			messageCount: 3,
@@ -297,7 +288,6 @@ func saramaConsumerMessage(value string, header *sarama.RecordHeader) *sarama.Co
 }
 
 func versionedConsumerMessage(value string, header *sarama.RecordHeader, version uint8) *sarama.ConsumerMessage {
-
 	bytes := []byte(value)
 
 	if version > 0 {
@@ -317,7 +307,6 @@ func versionedConsumerMessage(value string, header *sarama.RecordHeader, version
 }
 
 func testMessageClaim(t *testing.T, data decodingTestData) {
-
 	ctx := context.Background()
 
 	counter := eventCounter{}
@@ -327,11 +316,9 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 
 		if data.combinedDecoderVersion != 0 {
 			km.Value = append([]byte{byte(data.combinedDecoderVersion)}, km.Value...)
-
 		}
 
 		msg, err := ClaimMessage(ctx, km, data.decoder, nil)
-
 		if err != nil {
 			counter.claimErr++
 			continue
@@ -344,13 +331,12 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 	}
 
 	assert.Equal(t, data.counter, counter)
-
 }
 
 // some naive decoder implementations for testing
 
 func erroringDecoder(data []byte, v interface{}) error {
-	return fmt.Errorf("Predefined Decoder Error for message %s", string(data))
+	return fmt.Errorf("predefined decoder error for message %s", string(data))
 }
 
 func voidDecoder(data []byte, v interface{}) error {
@@ -361,13 +347,12 @@ func stringToSliceDecoder(data []byte, v interface{}) error {
 	if arr, ok := v.(*[]string); ok {
 		*arr = append(*arr, strings.Split(string(data), " ")...)
 	} else {
-		return fmt.Errorf("Provided object is not valid for splitting data into a slice '%v'", v)
+		return fmt.Errorf("provided object is not valid for splitting data into a slice '%v'", v)
 	}
 	return nil
 }
 
 func combinedDecoder(data []byte, v interface{}) error {
-
 	version, _ := binary.ReadUvarint(bytes.NewBuffer(data[:1]))
 
 	switch version {
@@ -389,11 +374,11 @@ var process = func(counter *eventCounter, data *decodingTestData) func(message a
 		// we assume based on our transform function, that we will be able to decode as a rule
 		if err := message.Decode(&values); err != nil {
 			counter.decodingErr++
-			return fmt.Errorf("Error encountered while decoding message from source [%v] : %v", message, err)
+			return fmt.Errorf("error encountered while decoding message from source [%v] : %v", message, err)
 		}
 		if !reflect.DeepEqual(data.dmsgs[counter.messageCount], values) {
 			counter.resultErr++
-			return fmt.Errorf("Could not verify equality for '%v' and '%v' at index '%d'", values, data.dmsgs[counter.messageCount], counter.messageCount)
+			return fmt.Errorf("could not verify equality for '%v' and '%v' at index '%d'", values, data.dmsgs[counter.messageCount], counter.messageCount)
 		}
 		counter.messageCount++
 		return nil

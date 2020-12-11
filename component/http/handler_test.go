@@ -174,13 +174,11 @@ func Test_handleSuccess(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			rsp := httptest.NewRecorder()
 
 			err := handleSuccess(rsp, tt.args.req, tt.args.rsp, tt.args.enc)
 			if tt.wantErr {
 				assert.Error(t, err)
-
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expectedStatus, rsp.Code)
@@ -205,7 +203,7 @@ func Test_handleError(t *testing.T) {
 		{"not found error", args{err: NewNotFoundError(), enc: json.Encode}, http.StatusNotFound},
 		{"service unavailable error", args{err: NewServiceUnavailableError(), enc: json.Encode}, http.StatusServiceUnavailable},
 		{"internal server error", args{err: NewError(), enc: json.Encode}, http.StatusInternalServerError},
-		{"default error", args{err: errors.New("Test"), enc: json.Encode}, http.StatusInternalServerError},
+		{"default error", args{err: errors.New("test"), enc: json.Encode}, http.StatusInternalServerError},
 		{"Payload encoding error", args{err: NewErrorWithCodeAndPayload(http.StatusBadRequest, make(chan int)), enc: json.Encode}, http.StatusInternalServerError},
 	}
 	for _, tt := range tests {
@@ -327,5 +325,4 @@ func Test_extractParamsRawRoute(t *testing.T) {
 
 	assert.Equal(t, "42", fields["id"])
 	assert.Equal(t, "online", fields["status"])
-
 }

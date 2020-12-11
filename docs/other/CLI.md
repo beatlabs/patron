@@ -9,12 +9,12 @@ The framework supplies a CLI in order to simplify repository generation with the
 
 The latest version can be installed with
 
-```go
+```bash
 go get github.com/beatlabs/patron/cmd/patron
 ```
 
 Below is an example of a service created with the cli that has a module name `github.com/beatlabs/test` and will be created in the test folder in the current directory.
 
-```go
+```bash
 patron -m "github.com/beatlabs/test" -p "test"
 ```

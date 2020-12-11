@@ -25,10 +25,10 @@ func TestSpan(t *testing.T) {
 	trace.SpanSuccess(sp)
 	rawSpan := mtr.FinishedSpans()[0]
 	assert.Equal(t, map[string]interface{}{
-		"component":    RedisComponent,
+		"component":    component,
 		"db.instance":  "localhost",
 		"db.statement": "flushdb",
-		"db.type":      RedisDBType,
+		"db.type":      dbType,
 		"error":        false,
 		"key":          "value",
 	}, rawSpan.Tags())

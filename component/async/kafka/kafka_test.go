@@ -15,7 +15,7 @@ import (
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
-	patron_json "github.com/beatlabs/patron/encoding/json"
+	patronjson "github.com/beatlabs/patron/encoding/json"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -72,7 +72,7 @@ func Test_message(t *testing.T) {
 	msg := message{
 		sess: nil,
 		ctx:  ctx,
-		dec:  patron_json.DecodeRaw,
+		dec:  patronjson.DecodeRaw,
 		span: sp,
 		msg:  cm,
 	}
@@ -231,7 +231,7 @@ func TestDefaultDecoder(t *testing.T) {
 		msgs: []*sarama.ConsumerMessage{
 			saramaConsumerMessage("[\"value\",\"key\"]", &sarama.RecordHeader{
 				Key:   []byte(encoding.ContentTypeHeader),
-				Value: []byte(patron_json.Type),
+				Value: []byte(patronjson.Type),
 			}),
 		},
 		dmsgs: [][]string{{"value", "key"}},

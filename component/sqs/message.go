@@ -53,7 +53,7 @@ func (m message) ACK() error {
 	if err != nil {
 		messageCountErrorInc(m.queueName, ackMessageState, 1)
 		trace.SpanError(m.span)
-		return nil
+		return err
 	}
 	messageCountInc(m.queueName, ackMessageState, 1)
 	trace.SpanSuccess(m.span)
@@ -69,7 +69,7 @@ type batch struct {
 	ctx       context.Context
 	queueName string
 	queueURL  string
-	queue     sqsiface.SQSAPI
+	sqsAPI    sqsiface.SQSAPI
 	messages  []Message
 }
 
@@ -85,7 +85,7 @@ func (b batch) ACK() error {
 		msgMap[msg.Message().MessageId] = msg
 	}
 
-	output, err := b.queue.DeleteMessageBatchWithContext(b.ctx, &sqs.DeleteMessageBatchInput{
+	output, err := b.sqsAPI.DeleteMessageBatchWithContext(b.ctx, &sqs.DeleteMessageBatchInput{
 		Entries:  entries,
 		QueueUrl: aws.String(b.queueURL),
 	})

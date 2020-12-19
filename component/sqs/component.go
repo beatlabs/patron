@@ -99,11 +99,11 @@ func New(name, queueName, queueURL string, sqsAPI sqsiface.SQSAPI, proc Processo
 	}
 
 	if queueName == "" {
-		return nil, errors.New("queue name is empty")
+		return nil, errors.New("sqsAPI name is empty")
 	}
 
 	if queueURL == "" {
-		return nil, errors.New("queue URL is empty")
+		return nil, errors.New("sqsAPI URL is empty")
 	}
 
 	if sqsAPI == nil {
@@ -141,8 +141,6 @@ func New(name, queueName, queueURL string, sqsAPI sqsiface.SQSAPI, proc Processo
 
 // Run starts the consumer processing loop messages.
 func (c *Component) Run(ctx context.Context) error {
-	ctx, cnl := context.WithCancel(ctx)
-
 	chErr := make(chan error)
 
 	go c.consume(ctx, chErr)
@@ -152,15 +150,13 @@ func (c *Component) Run(ctx context.Context) error {
 	for {
 		select {
 		case err := <-chErr:
-			cnl()
 			return err
 		case <-ctx.Done():
-			cnl()
 			return nil
 		case <-tickerStats.C:
 			err := c.report(ctx, c.sqsAPI, c.queueURL)
 			if err != nil {
-				log.Errorf("failed to report sqsAPI stats: %v", err)
+				log.FromContext(ctx).Errorf("failed to report sqsAPI stats: %v", err)
 			}
 		}
 	}
@@ -171,7 +167,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 
 	retries := c.retries
 
-	for retries > 0 {
+	for {
 		if ctx.Err() != nil {
 			return
 		}
@@ -189,10 +185,14 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			}),
 		})
 		if err != nil {
-			logger.Errorf("failed to receive messages: %v", err)
-			//todo: retry backoff
+			logger.Errorf("failed to receive messages: %v, sleeping for %v", err, c.retryWait)
+			time.Sleep(c.retryWait)
 			retries--
-			continue
+			if retries > 0 {
+				continue
+			}
+			chErr <- err
+			return
 		}
 		retries = c.retries
 
@@ -206,7 +206,13 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			continue
 		}
 		messageCountInc(c.queueName, fetchedMessageState, len(output.Messages))
-		btc := batch{messages: make([]Message, 0, len(output.Messages))}
+		btc := batch{
+			ctx:       ctx,
+			queueName: c.queueName,
+			queueURL:  c.queueURL,
+			sqsAPI:    c.sqsAPI,
+			messages:  make([]Message, 0, len(output.Messages)),
+		}
 
 		for _, msg := range output.Messages {
 			observerMessageAge(c.queueName, msg.Attributes)

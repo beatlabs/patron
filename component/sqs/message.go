@@ -10,6 +10,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
+// Message interface for AWS SQS message.
 type Message interface {
 	Context() context.Context
 	Message() *sqs.Message
@@ -18,6 +19,7 @@ type Message interface {
 	NACK()
 }
 
+// Batch interface for multiple AWS SQS messages.
 type Batch interface {
 	Messages() []Message
 	ACK() error
@@ -62,7 +64,7 @@ func (m message) ACK() error {
 
 func (m message) NACK() {
 	messageCountInc(m.queueName, nackMessageState, 1)
-	trace.SpanError(m.span)
+	trace.SpanSuccess(m.span)
 }
 
 type batch struct {

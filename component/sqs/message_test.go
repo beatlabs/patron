@@ -39,8 +39,13 @@ func Test_message(t *testing.T) {
 	sp, ctx := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, queueName),
 		consumerComponent, "123", nil)
 
+	id := "123"
+	body := "body"
 	sqsAPI := &stubSQSAPI{}
-	sqsMsg := &sqs.Message{}
+	sqsMsg := &sqs.Message{
+		Body:      aws.String(body),
+		MessageId: aws.String(id),
+	}
 
 	msg := message{
 		ctx:       ctx,
@@ -53,6 +58,8 @@ func Test_message(t *testing.T) {
 	assert.Equal(t, msg.Message(), sqsMsg)
 	assert.Equal(t, msg.Span(), sp)
 	assert.Equal(t, msg.Context(), ctx)
+	assert.Equal(t, msg.ID(), id)
+	assert.Equal(t, msg.Body(), []byte(body))
 }
 
 func Test_message_ACK(t *testing.T) {
@@ -272,8 +279,10 @@ type stubSQSAPI struct {
 	deleteMessageWithContextErr      error
 	deleteMessageBatchWithContextErr error
 	getQueueAttributesWithContextErr error
+	getQueueUrlWithContextErr        error
 	succeededMessage                 Message
 	failedMessage                    Message
+	queueURL                         string
 }
 
 func (s stubSQSAPI) AddPermission(*sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {
@@ -406,7 +415,10 @@ func (s stubSQSAPI) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, 
 
 // nolint
 func (s stubSQSAPI) GetQueueUrlWithContext(aws.Context, *sqs.GetQueueUrlInput, ...request.Option) (*sqs.GetQueueUrlOutput, error) {
-	panic("implement me")
+	if s.getQueueUrlWithContextErr != nil {
+		return nil, s.getQueueUrlWithContextErr
+	}
+	return &sqs.GetQueueUrlOutput{QueueUrl: aws.String(s.queueURL)}, nil
 }
 
 // nolint

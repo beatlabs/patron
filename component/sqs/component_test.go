@@ -18,7 +18,6 @@ func TestNew(t *testing.T) {
 	type args struct {
 		name      string
 		queueName string
-		queueURL  string
 		sqsAPI    sqsiface.SQSAPI
 		proc      ProcessorFunc
 		oo        []OptionFunc
@@ -31,7 +30,6 @@ func TestNew(t *testing.T) {
 			args: args{
 				name:      "name",
 				queueName: "queueName",
-				queueURL:  "queueURL",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
 				oo:        []OptionFunc{Retries(5)},
@@ -41,7 +39,6 @@ func TestNew(t *testing.T) {
 			args: args{
 				name:      "",
 				queueName: "queueName",
-				queueURL:  "queueURL",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
 				oo:        []OptionFunc{Retries(5)},
@@ -52,7 +49,6 @@ func TestNew(t *testing.T) {
 			args: args{
 				name:      "name",
 				queueName: "",
-				queueURL:  "queueURL",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
 				oo:        []OptionFunc{Retries(5)},
@@ -63,18 +59,18 @@ func TestNew(t *testing.T) {
 			args: args{
 				name:      "name",
 				queueName: "queueName",
-				queueURL:  "",
-				sqsAPI:    &stubSQSAPI{},
-				proc:      sp.process,
-				oo:        []OptionFunc{Retries(5)},
+				sqsAPI: &stubSQSAPI{
+					getQueueUrlWithContextErr: errors.New("QUEUE URL ERROR"),
+				},
+				proc: sp.process,
+				oo:   []OptionFunc{Retries(5)},
 			},
-			expectedErr: "queue URL is empty",
+			expectedErr: "failed to get queue URL: QUEUE URL ERROR",
 		},
 		"missing queue SQS API": {
 			args: args{
 				name:      "name",
 				queueName: "queueName",
-				queueURL:  "queueURL",
 				sqsAPI:    nil,
 				proc:      sp.process,
 				oo:        []OptionFunc{Retries(5)},
@@ -85,7 +81,6 @@ func TestNew(t *testing.T) {
 			args: args{
 				name:      "name",
 				queueName: "queueName",
-				queueURL:  "queueURL",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      nil,
 				oo:        []OptionFunc{Retries(5)},
@@ -96,7 +91,6 @@ func TestNew(t *testing.T) {
 			args: args{
 				name:      "name",
 				queueName: "queueName",
-				queueURL:  "queueURL",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
 				oo:        []OptionFunc{RetryWait(-1 * time.Second)},
@@ -106,7 +100,7 @@ func TestNew(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := New(tt.args.name, tt.args.queueName, tt.args.queueURL, tt.args.sqsAPI, tt.args.proc, tt.args.oo...)
+			got, err := New(tt.args.name, tt.args.queueName, tt.args.sqsAPI, tt.args.proc, tt.args.oo...)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -127,7 +121,7 @@ func TestComponent_Run_Success(t *testing.T) {
 		succeededMessage: createMessage(nil, "1"),
 		failedMessage:    createMessage(nil, "2"),
 	}
-	cmp, err := New("name", queueName, queueURL, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
+	cmp, err := New("name", queueName, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
@@ -153,7 +147,7 @@ func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
 		failedMessage:                    createMessage(nil, "2"),
 		getQueueAttributesWithContextErr: errors.New("STATS FAIL"),
 	}
-	cmp, err := New("name", queueName, queueURL, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
+	cmp, err := New("name", queueName, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
@@ -179,7 +173,7 @@ func TestComponent_Run_Error(t *testing.T) {
 		succeededMessage:             createMessage(nil, "1"),
 		failedMessage:                createMessage(nil, "2"),
 	}
-	cmp, err := New("name", queueName, queueURL, sqsAPI, sp.process, Retries(2), RetryWait(10*time.Millisecond))
+	cmp, err := New("name", queueName, sqsAPI, sp.process, Retries(2), RetryWait(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}

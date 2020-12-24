@@ -31,7 +31,7 @@ func Test_Component_Run(t *testing.T) {
 	opentracing.SetGlobalTracer(mtr)
 
 	proc := processor{t: t}
-	cmp, err := sqs.New("test-component", queueName, queue, api, proc.process)
+	cmp, err := sqs.New("test-component", queueName, api, proc.process)
 	require.NoError(t, err)
 
 	wg := sync.WaitGroup{}

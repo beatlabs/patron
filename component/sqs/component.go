@@ -93,17 +93,13 @@ type Component struct {
 }
 
 // New creates a new component with support for functional configuration.
-func New(name, queueName, queueURL string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo ...OptionFunc) (*Component, error) {
+func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo ...OptionFunc) (*Component, error) {
 	if name == "" {
 		return nil, errors.New("component name is empty")
 	}
 
 	if queueName == "" {
 		return nil, errors.New("queue name is empty")
-	}
-
-	if queueURL == "" {
-		return nil, errors.New("queue URL is empty")
 	}
 
 	if sqsAPI == nil {
@@ -114,10 +110,17 @@ func New(name, queueName, queueURL string, sqsAPI sqsiface.SQSAPI, proc Processo
 		return nil, errors.New("process function is nil")
 	}
 
+	out, err := sqsAPI.GetQueueUrlWithContext(context.Background(), &sqs.GetQueueUrlInput{
+		QueueName: aws.String(queueName),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get queue URL: %w", err)
+	}
+
 	cmp := &Component{
 		name:              name,
 		queueName:         queueName,
-		queueURL:          queueURL,
+		queueURL:          aws.StringValue(out.QueueUrl),
 		sqsAPI:            sqsAPI,
 		maxMessages:       aws.Int64(3),
 		pollWaitSeconds:   nil,
@@ -128,7 +131,6 @@ func New(name, queueName, queueURL string, sqsAPI sqsiface.SQSAPI, proc Processo
 		retryWait:         time.Second,
 	}
 
-	var err error
 	for _, optionFunc := range oo {
 		err = optionFunc(cmp)
 		if err != nil {

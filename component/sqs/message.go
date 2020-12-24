@@ -15,6 +15,10 @@ type Message interface {
 	// Context will contain the context to be used for processing.
 	// Each context will have a logger setup which can be used to create a logger from context.
 	Context() context.Context
+	// ID of the message.
+	ID() string
+	// Body of the message.
+	Body() []byte
 	// Message will contain the raw SQS message.
 	Message() *sqs.Message
 	// Span contains the tracing span of this message.
@@ -47,6 +51,14 @@ type message struct {
 
 func (m message) Context() context.Context {
 	return m.ctx
+}
+
+func (m message) ID() string {
+	return aws.StringValue(m.msg.MessageId)
+}
+
+func (m message) Body() []byte {
+	return []byte(*m.msg.Body)
 }
 
 func (m message) Span() opentracing.Span {
@@ -91,10 +103,10 @@ func (b batch) ACK() ([]Message, error) {
 
 	for _, msg := range b.messages {
 		entries = append(entries, &sqs.DeleteMessageBatchRequestEntry{
-			Id:            msg.Message().MessageId,
+			Id:            aws.String(msg.ID()),
 			ReceiptHandle: msg.Message().ReceiptHandle,
 		})
-		msgMap[aws.StringValue(msg.Message().MessageId)] = msg
+		msgMap[msg.ID()] = msg
 	}
 
 	output, err := b.sqsAPI.DeleteMessageBatchWithContext(b.ctx, &sqs.DeleteMessageBatchInput{

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -102,8 +101,7 @@ func createSQSComponent(api sqsiface.SQSAPI, greeter greeter.GreeterClient) (*sq
 		greeter: greeter,
 	}
 
-	cmp, err := patronsqs.New("sqs-cmp", awsSQSQueue, api, sqsCmp.Process, patronsqs.Retries(10),
-		patronsqs.RetryWait(10*time.Second), patronsqs.PollWaitSeconds(5))
+	cmp, err := patronsqs.New("sqs-cmp", awsSQSQueue, api, sqsCmp.Process, patronsqs.PollWaitSeconds(5))
 	if err != nil {
 		return nil, err
 	}

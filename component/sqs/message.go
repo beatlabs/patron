@@ -77,14 +77,14 @@ type batch struct {
 
 func (b batch) ACK() error {
 	entries := make([]*sqs.DeleteMessageBatchRequestEntry, 0, len(b.messages))
-	msgMap := make(map[*string]Message, len(b.messages))
+	msgMap := make(map[string]Message, len(b.messages))
 
 	for _, msg := range b.messages {
 		entries = append(entries, &sqs.DeleteMessageBatchRequestEntry{
 			Id:            msg.Message().MessageId,
 			ReceiptHandle: msg.Message().ReceiptHandle,
 		})
-		msgMap[msg.Message().MessageId] = msg
+		msgMap[aws.StringValue(msg.Message().MessageId)] = msg
 	}
 
 	output, err := b.sqsAPI.DeleteMessageBatchWithContext(b.ctx, &sqs.DeleteMessageBatchInput{
@@ -103,7 +103,7 @@ func (b batch) ACK() error {
 		messageCountInc(b.queueName, ackMessageState, len(output.Successful))
 
 		for _, suc := range output.Successful {
-			trace.SpanSuccess(msgMap[suc.Id].Span())
+			trace.SpanSuccess(msgMap[aws.StringValue(suc.Id)].Span())
 		}
 	}
 
@@ -111,7 +111,7 @@ func (b batch) ACK() error {
 		messageCountErrorInc(b.queueName, ackMessageState, len(output.Failed))
 
 		for _, fail := range output.Failed {
-			trace.SpanError(msgMap[fail.Id].Span())
+			trace.SpanError(msgMap[aws.StringValue(fail.Id)].Span())
 		}
 	}
 

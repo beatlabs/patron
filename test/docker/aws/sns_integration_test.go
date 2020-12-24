@@ -6,11 +6,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/opentracing/opentracing-go/ext"
-
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
 	"github.com/beatlabs/patron/client/sns"
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

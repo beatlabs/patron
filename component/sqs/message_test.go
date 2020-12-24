@@ -279,10 +279,11 @@ type stubSQSAPI struct {
 	deleteMessageWithContextErr      error
 	deleteMessageBatchWithContextErr error
 	getQueueAttributesWithContextErr error
-	getQueueUrlWithContextErr        error
-	succeededMessage                 Message
-	failedMessage                    Message
-	queueURL                         string
+	// nolint
+	getQueueUrlWithContextErr error
+	succeededMessage          Message
+	failedMessage             Message
+	queueURL                  string
 }
 
 func (s stubSQSAPI) AddPermission(*sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {

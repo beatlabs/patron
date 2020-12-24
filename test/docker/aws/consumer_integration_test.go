@@ -37,6 +37,7 @@ func Test_SQS_Consume(t *testing.T) {
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
 
+	// nolint
 	factory, err := sqsConsumer.NewFactory(
 		api,
 		queueName,

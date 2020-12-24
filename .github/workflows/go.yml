@@ -17,6 +17,10 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v2
 
+      - name: Cache docker images
+        uses: satackey/action-docker-layer-caching@v0.0.11
+          continue-on-error: true
+
       - name: Running CI
         run: make ci
 

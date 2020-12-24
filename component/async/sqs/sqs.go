@@ -1,4 +1,9 @@
 // Package sqs provides consumer implementation with included tracing capabilities.
+//
+// Deprecated: The SQS consumer package along with the async component is superseded by the standalone `github.com/beatlabs/component/sqs` package.
+// Please refer to the documents and the examples for the usage.
+//
+// This package is frozen and no new functionality will be added.
 package sqs
 
 import (
@@ -138,6 +143,8 @@ func (m *message) Raw() interface{} {
 }
 
 // Factory for creating SQS consumers.
+//
+// Deprecated: The SQS consumer package along with the async component is superseded by the standalone `github.com/beatlabs/component/sqs` package.
 type Factory struct {
 	queueName         string
 	queue             sqsiface.SQSAPI
@@ -150,6 +157,8 @@ type Factory struct {
 }
 
 // NewFactory creates a new consumer factory.
+//
+// Deprecated: The SQS consumer package along with the async component is superseded by the standalone `github.com/beatlabs/component/sqs` package.
 func NewFactory(queue sqsiface.SQSAPI, queueName string, oo ...OptionFunc) (*Factory, error) {
 	if queue == nil {
 		return nil, errors.New("queue is nil")

@@ -30,6 +30,7 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
     - [AWS SQS](docs/components/async/AWSSQS.md)
   - [HTTP](docs/components/HTTP.md)
   - [gRPC](docs/components/gRPC.md)
+  - [AWS SQS](docs/components/SQS.md)
 - [Clients](docs/clients/Clients.md)
 - Packages
   - [Reliability](docs/other/Reliability.md)

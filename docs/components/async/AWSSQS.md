@@ -1,5 +1,13 @@
 # AWS SQS
 
+## Deprecated
+
+The SQS consumer package along with the async component is superseded by the standalone `github.com/beatlabs/component/sqs` package.
+
+**This package is frozen and no new functionality will be added.**
+
+## Description
+
 The SQS component allows users to construct SQS consumers and handle messages under the `async.Message` abstraction. It supports JSON and Protobuf-encoded messages.
 
 The package collects Prometheus metrics regarding the queue usage. These metrics are about the message age, the queue size, the total number of messages, as well as how many of them were delayed or not visible (in flight).

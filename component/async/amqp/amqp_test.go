@@ -40,6 +40,7 @@ func Test_message(t *testing.T) {
 	assert.Error(t, m.Nack())
 	assert.Equal(t, "thequeue", m.Source())
 	assert.Equal(t, []byte(`"test"`), m.Payload())
+	assert.Equal(t, del, m.Raw())
 }
 
 func TestNewExchange(t *testing.T) {

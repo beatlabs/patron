@@ -85,6 +85,7 @@ func Test_message(t *testing.T) {
 	assert.Equal(t, "value", m["key"])
 	assert.Equal(t, "topicone", msg.Source())
 	assert.Equal(t, []byte(`{"key":"value"}`), msg.Payload())
+	assert.Equal(t, cm, msg.Raw())
 }
 
 func TestMapHeader(t *testing.T) {

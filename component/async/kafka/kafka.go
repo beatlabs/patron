@@ -30,9 +30,11 @@ const (
 	MessageDecoded = "decoded"
 )
 
-var topicPartitionOffsetDiff *prometheus.GaugeVec
-var messageStatus *prometheus.CounterVec
-var messageConfirmation *prometheus.CounterVec
+var (
+	topicPartitionOffsetDiff *prometheus.GaugeVec
+	messageStatus            *prometheus.CounterVec
+	messageConfirmation      *prometheus.CounterVec
+)
 
 // TopicPartitionOffsetDiffGaugeSet creates a new Gauge that measures partition offsets.
 func TopicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high, offset int64) {
@@ -140,9 +142,13 @@ func (m *message) Payload() []byte {
 	return m.msg.Value
 }
 
+// Raw returns tha Kafka message.
+func (m *message) Raw() interface{} {
+	return m.msg
+}
+
 // DefaultSaramaConfig function creates a sarama config object with the default configuration set up.
 func DefaultSaramaConfig(name string) (*sarama.Config, error) {
-
 	host, err := os.Hostname()
 	if err != nil {
 		return nil, errors.New("failed to get hostname")
@@ -182,7 +188,6 @@ func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.D
 }
 
 func determineDecoder(d encoding.DecodeRawFunc, msg *sarama.ConsumerMessage, sp opentracing.Span) (encoding.DecodeRawFunc, error) {
-
 	if d != nil {
 		return d, nil
 	}
@@ -194,7 +199,6 @@ func determineDecoder(d encoding.DecodeRawFunc, msg *sarama.ConsumerMessage, sp 
 	}
 
 	dec, err := async.DetermineDecoder(ct)
-
 	if err != nil {
 		trace.SpanError(sp)
 		return nil, fmt.Errorf("failed to determine decoder from message content type %v %w", ct, err)

@@ -55,5 +55,6 @@ type processor struct {
 }
 
 func (p processor) process(_ context.Context, batch sqs.Batch) {
-	require.NoError(p.t, batch.ACK())
+	_, err := batch.ACK()
+	require.NoError(p.t, err)
 }

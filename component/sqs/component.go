@@ -48,7 +48,7 @@ func init() {
 	messageAge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "component",
-			Subsystem: "sqs_consumer",
+			Subsystem: "sqs",
 			Name:      "message_age",
 			Help:      "Message age based on the SentTimestamp SQS attribute",
 		},
@@ -58,7 +58,7 @@ func init() {
 	messageCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "component",
-			Subsystem: "sqs_consumer",
+			Subsystem: "sqs",
 			Name:      "message_counter",
 			Help:      "Message counter",
 		},
@@ -68,7 +68,7 @@ func init() {
 	queueSize = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "component",
-			Subsystem: "sqs_consumer",
+			Subsystem: "sqs",
 			Name:      "queue_size",
 			Help:      "Queue size reported by AWS",
 		},

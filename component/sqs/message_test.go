@@ -69,7 +69,7 @@ func Test_message_ACK(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			m := createMessage(tt.fields.sqsAPI)
+			m := createMessage(tt.fields.sqsAPI, "1")
 			err := m.ACK()
 
 			if tt.expectedErr != "" {
@@ -102,7 +102,7 @@ func Test_message_ACK(t *testing.T) {
 func Test_message_NACK(t *testing.T) {
 	defer mockTracer.Reset()
 
-	m := createMessage(&stubSQSAPI{})
+	m := createMessage(&stubSQSAPI{}, "1")
 
 	m.NACK()
 	expected := map[string]interface{}{
@@ -120,8 +120,8 @@ func Test_batch(t *testing.T) {
 
 	sqsAPI := &stubSQSAPI{}
 
-	msg1 := createMessage(sqsAPI)
-	msg2 := createMessage(sqsAPI)
+	msg1 := createMessage(sqsAPI, "1")
+	msg2 := createMessage(sqsAPI, "2")
 
 	messages := []Message{msg1, msg2}
 
@@ -141,8 +141,8 @@ func Test_batch_NACK(t *testing.T) {
 
 	sqsAPI := &stubSQSAPI{}
 
-	msg1 := createMessage(sqsAPI)
-	msg2 := createMessage(sqsAPI)
+	msg1 := createMessage(sqsAPI, "1")
+	msg2 := createMessage(sqsAPI, "2")
 
 	messages := []Message{msg1, msg2}
 
@@ -171,8 +171,8 @@ func Test_batch_NACK(t *testing.T) {
 func Test_batch_ACK(t *testing.T) {
 	defer mockTracer.Reset()
 
-	msg1 := createMessage(nil)
-	msg2 := createMessage(nil)
+	msg1 := createMessage(nil, "1")
+	msg2 := createMessage(nil, "2")
 
 	messages := []Message{msg1, msg2}
 
@@ -248,7 +248,7 @@ func Test_batch_ACK(t *testing.T) {
 	}
 }
 
-func createMessage(sqsAPI sqsiface.SQSAPI) message {
+func createMessage(sqsAPI sqsiface.SQSAPI, id string) message {
 	sp, ctx := trace.ConsumerSpan(context.Background(), trace.ComponentOpName(consumerComponent, queueName),
 		consumerComponent, "123", nil)
 
@@ -258,7 +258,7 @@ func createMessage(sqsAPI sqsiface.SQSAPI) message {
 		queueURL:  queueURL,
 		queue:     sqsAPI,
 		msg: &sqs.Message{
-			MessageId: aws.String("123"),
+			MessageId: aws.String(id),
 		},
 		span: sp,
 	}

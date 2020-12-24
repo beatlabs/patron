@@ -124,8 +124,8 @@ func TestComponent_Run_Success(t *testing.T) {
 	sp := stubProcessor{t: t}
 
 	sqsAPI := stubSQSAPI{
-		succeededMessage: createMessage(nil),
-		failedMessage:    createMessage(nil),
+		succeededMessage: createMessage(nil, "1"),
+		failedMessage:    createMessage(nil, "2"),
 	}
 	cmp, err := New("name", queueName, queueURL, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
@@ -149,8 +149,8 @@ func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
 	sp := stubProcessor{t: t}
 
 	sqsAPI := stubSQSAPI{
-		succeededMessage:                 createMessage(nil),
-		failedMessage:                    createMessage(nil),
+		succeededMessage:                 createMessage(nil, "1"),
+		failedMessage:                    createMessage(nil, "2"),
 		getQueueAttributesWithContextErr: errors.New("STATS FAIL"),
 	}
 	cmp, err := New("name", queueName, queueURL, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
@@ -176,8 +176,8 @@ func TestComponent_Run_Error(t *testing.T) {
 
 	sqsAPI := stubSQSAPI{
 		receiveMessageWithContextErr: errors.New("FAILED FETCH"),
-		succeededMessage:             createMessage(nil),
-		failedMessage:                createMessage(nil),
+		succeededMessage:             createMessage(nil, "1"),
+		failedMessage:                createMessage(nil, "2"),
 	}
 	cmp, err := New("name", queueName, queueURL, sqsAPI, sp.process, Retries(2), RetryWait(10*time.Millisecond))
 	require.NoError(t, err)

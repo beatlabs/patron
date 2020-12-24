@@ -99,15 +99,15 @@ func New(name, queueName, queueURL string, sqsAPI sqsiface.SQSAPI, proc Processo
 	}
 
 	if queueName == "" {
-		return nil, errors.New("sqsAPI name is empty")
+		return nil, errors.New("queue name is empty")
 	}
 
 	if queueURL == "" {
-		return nil, errors.New("sqsAPI URL is empty")
+		return nil, errors.New("queue URL is empty")
 	}
 
 	if sqsAPI == nil {
-		return nil, errors.New("sqsAPI is nil nil")
+		return nil, errors.New("SQS API is nil")
 	}
 
 	if proc == nil {

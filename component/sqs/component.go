@@ -201,11 +201,12 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 		}
 
 		logger.Debugf("Consume: received %d messages", len(output.Messages))
+		messageCountInc(c.queueName, fetchedMessageState, len(output.Messages))
 
 		if len(output.Messages) == 0 {
 			continue
 		}
-		messageCountInc(c.queueName, fetchedMessageState, len(output.Messages))
+
 		btc := batch{
 			ctx:       ctx,
 			queueName: c.queueName,

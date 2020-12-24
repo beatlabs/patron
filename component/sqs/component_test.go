@@ -2,6 +2,7 @@ package sqs
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -141,6 +142,58 @@ func TestComponent_Run_Success(t *testing.T) {
 	cnl()
 	wg.Wait()
 	assert.True(t, len(mockTracer.FinishedSpans()) > 0)
+}
+
+func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
+	defer mockTracer.Reset()
+	sp := stubProcessor{t: t}
+
+	sqsAPI := stubSQSAPI{
+		succeededMessage:                 createMessage(nil),
+		failedMessage:                    createMessage(nil),
+		getQueueAttributesWithContextErr: errors.New("STATS FAIL"),
+	}
+	cmp, err := New("name", queueName, queueURL, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
+	require.NoError(t, err)
+	ctx, cnl := context.WithCancel(context.Background())
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		require.NoError(t, cmp.Run(ctx))
+		wg.Done()
+	}()
+
+	time.Sleep(1 * time.Second)
+	cnl()
+	wg.Wait()
+	assert.True(t, len(mockTracer.FinishedSpans()) > 0)
+}
+
+func TestComponent_Run_Error(t *testing.T) {
+	defer mockTracer.Reset()
+	sp := stubProcessor{t: t}
+
+	sqsAPI := stubSQSAPI{
+		receiveMessageWithContextErr: errors.New("FAILED FETCH"),
+		succeededMessage:             createMessage(nil),
+		failedMessage:                createMessage(nil),
+	}
+	cmp, err := New("name", queueName, queueURL, sqsAPI, sp.process, Retries(2), RetryWait(10*time.Millisecond))
+	require.NoError(t, err)
+	ctx, cnl := context.WithCancel(context.Background())
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		require.Error(t, cmp.Run(ctx))
+		wg.Done()
+	}()
+
+	time.Sleep(1 * time.Second)
+	cnl()
+	wg.Wait()
+	assert.True(t, len(mockTracer.FinishedSpans()) == 0)
 }
 
 type stubProcessor struct {

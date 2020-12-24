@@ -12,17 +12,27 @@ import (
 
 // Message interface for AWS SQS message.
 type Message interface {
+	// Context will contain the context to be used for processing.
+	// Each context will have a logger setup which can be used to create a logger from context.
 	Context() context.Context
+	// Message will contain the raw SQS message.
 	Message() *sqs.Message
+	// Span contains the tracing span of this message.
 	Span() opentracing.Span
+	// ACK deletes the message from the queue and completes the tracing span.
 	ACK() error
+	// NACK leaves the message in the queue and completes the tracing span.
 	NACK()
 }
 
 // Batch interface for multiple AWS SQS messages.
 type Batch interface {
+	// Messages of the batch.
 	Messages() []Message
-	ACK() error
+	// ACK deletes all messages from SQS with a single call and completes the all the message tracing spans.
+	// In case the action will not manage to ACK all the messages, a slice of the failed messages will be returned.
+	ACK() ([]Message, error)
+	// NACK leaves all messages in the queue and completes the all the message tracing spans.
 	NACK()
 }
 
@@ -75,7 +85,7 @@ type batch struct {
 	messages  []Message
 }
 
-func (b batch) ACK() error {
+func (b batch) ACK() ([]Message, error) {
 	entries := make([]*sqs.DeleteMessageBatchRequestEntry, 0, len(b.messages))
 	msgMap := make(map[string]Message, len(b.messages))
 
@@ -96,7 +106,7 @@ func (b batch) ACK() error {
 		for _, msg := range b.messages {
 			trace.SpanError(msg.Span())
 		}
-		return err
+		return nil, err
 	}
 
 	if len(output.Successful) > 0 {
@@ -109,13 +119,16 @@ func (b batch) ACK() error {
 
 	if len(output.Failed) > 0 {
 		messageCountErrorInc(b.queueName, ackMessageState, len(output.Failed))
-
+		failed := make([]Message, 0, len(output.Failed))
 		for _, fail := range output.Failed {
-			trace.SpanError(msgMap[aws.StringValue(fail.Id)].Span())
+			msg := msgMap[aws.StringValue(fail.Id)]
+			trace.SpanError(msg.Span())
+			failed = append(failed, msg)
 		}
+		return failed, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (b batch) NACK() {

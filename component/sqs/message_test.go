@@ -208,7 +208,7 @@ func Test_batch_ACK(t *testing.T) {
 				sqsAPI:    tt.fields.sqsAPI,
 				messages:  messages,
 			}
-			err := btc.ACK()
+			failed, err := btc.ACK()
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -225,6 +225,8 @@ func Test_batch_ACK(t *testing.T) {
 				mockTracer.Reset()
 			} else {
 				assert.NoError(t, err, tt)
+				assert.Len(t, failed, 1)
+				assert.Equal(t, msg1, failed[0])
 				assert.Len(t, mockTracer.FinishedSpans(), 2)
 				expectedSuccess := map[string]interface{}{
 					"component":     "sqs-consumer",

@@ -200,5 +200,6 @@ type stubProcessor struct {
 }
 
 func (sp stubProcessor) process(_ context.Context, b Batch) {
-	require.NoError(sp.t, b.ACK())
+	_, err := b.ACK()
+	require.NoError(sp.t, err)
 }

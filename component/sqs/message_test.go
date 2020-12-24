@@ -165,6 +165,86 @@ func Test_batch_NACK(t *testing.T) {
 	assert.Equal(t, expected, mockTracer.FinishedSpans()[1].Tags())
 }
 
+func Test_batch_ACK(t *testing.T) {
+	defer mockTracer.Reset()
+
+	msg1 := createMessage(nil)
+	msg2 := createMessage(nil)
+
+	messages := []Message{msg1, msg2}
+
+	sqsAPI := &stubSQSAPI{
+		batchFailedMessage:    msg2,
+		batchSucceededMessage: msg1,
+	}
+	sqsAPIError := &stubSQSAPI{
+		deleteMessageBatchWithContextErr: errors.New("AWS FAILURE"),
+	}
+
+	type fields struct {
+		sqsAPI sqsiface.SQSAPI
+	}
+	tests := map[string]struct {
+		fields      fields
+		expectedErr string
+	}{
+		"success": {
+			fields: fields{sqsAPI: sqsAPI},
+		},
+		"AWS failure": {
+			fields:      fields{sqsAPI: sqsAPIError},
+			expectedErr: "AWS FAILURE",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			btc := batch{
+				ctx:       context.Background(),
+				queueName: queueName,
+				queueURL:  queueURL,
+				sqsAPI:    tt.fields.sqsAPI,
+				messages:  messages,
+			}
+			err := btc.ACK()
+
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+				assert.Len(t, mockTracer.FinishedSpans(), 2)
+				expected := map[string]interface{}{
+					"component":     "sqs-consumer",
+					"error":         true,
+					"span.kind":     ext.SpanKindEnum("consumer"),
+					"version":       "dev",
+					"correlationID": "123",
+				}
+				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
+				assert.Equal(t, expected, mockTracer.FinishedSpans()[1].Tags())
+				mockTracer.Reset()
+			} else {
+				assert.NoError(t, err, tt)
+				assert.Len(t, mockTracer.FinishedSpans(), 2)
+				expectedSuccess := map[string]interface{}{
+					"component":     "sqs-consumer",
+					"error":         false,
+					"span.kind":     ext.SpanKindEnum("consumer"),
+					"version":       "dev",
+					"correlationID": "123",
+				}
+				assert.Equal(t, expectedSuccess, mockTracer.FinishedSpans()[0].Tags())
+				expectedFailure := map[string]interface{}{
+					"component":     "sqs-consumer",
+					"error":         true,
+					"span.kind":     ext.SpanKindEnum("consumer"),
+					"version":       "dev",
+					"correlationID": "123",
+				}
+				assert.Equal(t, expectedFailure, mockTracer.FinishedSpans()[1].Tags())
+				mockTracer.Reset()
+			}
+		})
+	}
+}
+
 func createMessage(sqsAPI sqsiface.SQSAPI) message {
 	sp, ctx := trace.ConsumerSpan(context.Background(), trace.ComponentOpName(consumerComponent, queueName),
 		consumerComponent, "123", nil)
@@ -174,14 +254,19 @@ func createMessage(sqsAPI sqsiface.SQSAPI) message {
 		queueName: queueName,
 		queueURL:  queueURL,
 		queue:     sqsAPI,
-		msg:       &sqs.Message{},
-		span:      sp,
+		msg: &sqs.Message{
+			MessageId: aws.String("123"),
+		},
+		span: sp,
 	}
 	return msg
 }
 
 type stubSQSAPI struct {
-	deleteMessageWithContextErr error
+	deleteMessageWithContextErr      error
+	deleteMessageBatchWithContextErr error
+	batchFailedMessage               Message
+	batchSucceededMessage            Message
 }
 
 func (s stubSQSAPI) AddPermission(*sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {
@@ -252,7 +337,22 @@ func (s stubSQSAPI) DeleteMessageBatch(*sqs.DeleteMessageBatchInput) (*sqs.Delet
 }
 
 func (s stubSQSAPI) DeleteMessageBatchWithContext(aws.Context, *sqs.DeleteMessageBatchInput, ...request.Option) (*sqs.DeleteMessageBatchOutput, error) {
-	panic("implement me")
+	if s.deleteMessageBatchWithContextErr != nil {
+		return nil, s.deleteMessageBatchWithContextErr
+	}
+
+	failed := []*sqs.BatchResultErrorEntry{{
+		Code:        aws.String("1"),
+		Id:          s.batchSucceededMessage.Message().MessageId,
+		Message:     aws.String("ERROR"),
+		SenderFault: aws.Bool(true),
+	}}
+	succeeded := []*sqs.DeleteMessageBatchResultEntry{{Id: s.batchFailedMessage.Message().MessageId}}
+
+	return &sqs.DeleteMessageBatchOutput{
+		Failed:     failed,
+		Successful: succeeded,
+	}, nil
 }
 
 func (s stubSQSAPI) DeleteMessageBatchRequest(*sqs.DeleteMessageBatchInput) (*request.Request, *sqs.DeleteMessageBatchOutput) {

@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -174,8 +176,8 @@ func Test_batch_ACK(t *testing.T) {
 	messages := []Message{msg1, msg2}
 
 	sqsAPI := &stubSQSAPI{
-		batchFailedMessage:    msg2,
-		batchSucceededMessage: msg1,
+		succeededMessage: msg2,
+		failedMessage:    msg1,
 	}
 	sqsAPIError := &stubSQSAPI{
 		deleteMessageBatchWithContextErr: errors.New("AWS FAILURE"),
@@ -263,10 +265,12 @@ func createMessage(sqsAPI sqsiface.SQSAPI) message {
 }
 
 type stubSQSAPI struct {
+	receiveMessageWithContextErr     error
 	deleteMessageWithContextErr      error
 	deleteMessageBatchWithContextErr error
-	batchFailedMessage               Message
-	batchSucceededMessage            Message
+	getQueueAttributesWithContextErr error
+	succeededMessage                 Message
+	failedMessage                    Message
 }
 
 func (s stubSQSAPI) AddPermission(*sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {
@@ -343,11 +347,11 @@ func (s stubSQSAPI) DeleteMessageBatchWithContext(aws.Context, *sqs.DeleteMessag
 
 	failed := []*sqs.BatchResultErrorEntry{{
 		Code:        aws.String("1"),
-		Id:          s.batchSucceededMessage.Message().MessageId,
+		Id:          s.failedMessage.Message().MessageId,
 		Message:     aws.String("ERROR"),
 		SenderFault: aws.Bool(true),
 	}}
-	succeeded := []*sqs.DeleteMessageBatchResultEntry{{Id: s.batchFailedMessage.Message().MessageId}}
+	succeeded := []*sqs.DeleteMessageBatchResultEntry{{Id: s.succeededMessage.Message().MessageId}}
 
 	return &sqs.DeleteMessageBatchOutput{
 		Failed:     failed,
@@ -376,7 +380,16 @@ func (s stubSQSAPI) GetQueueAttributes(*sqs.GetQueueAttributesInput) (*sqs.GetQu
 }
 
 func (s stubSQSAPI) GetQueueAttributesWithContext(aws.Context, *sqs.GetQueueAttributesInput, ...request.Option) (*sqs.GetQueueAttributesOutput, error) {
-	panic("implement me")
+	if s.getQueueAttributesWithContextErr != nil {
+		return nil, s.getQueueAttributesWithContextErr
+	}
+	return &sqs.GetQueueAttributesOutput{
+		Attributes: map[string]*string{
+			sqsAttributeApproximateNumberOfMessages:           aws.String("1"),
+			sqsAttributeApproximateNumberOfMessagesDelayed:    aws.String("2"),
+			sqsAttributeApproximateNumberOfMessagesNotVisible: aws.String("3"),
+		},
+	}, nil
 }
 
 func (s stubSQSAPI) GetQueueAttributesRequest(*sqs.GetQueueAttributesInput) (*request.Request, *sqs.GetQueueAttributesOutput) {
@@ -451,7 +464,30 @@ func (s stubSQSAPI) ReceiveMessage(*sqs.ReceiveMessageInput) (*sqs.ReceiveMessag
 }
 
 func (s stubSQSAPI) ReceiveMessageWithContext(aws.Context, *sqs.ReceiveMessageInput, ...request.Option) (*sqs.ReceiveMessageOutput, error) {
-	panic("implement me")
+	if s.receiveMessageWithContextErr != nil {
+		return nil, s.receiveMessageWithContextErr
+	}
+
+	return &sqs.ReceiveMessageOutput{
+		Messages: []*sqs.Message{
+			{
+				Attributes: map[string]*string{
+					sqsAttributeSentTimestamp: aws.String(strconv.FormatInt(time.Now().Unix(), 10)),
+				},
+				Body:          aws.String(`{"key":"value"}`),
+				MessageId:     s.succeededMessage.Message().MessageId,
+				ReceiptHandle: aws.String("123-123"),
+			},
+			{
+				Attributes: map[string]*string{
+					sqsAttributeSentTimestamp: aws.String(strconv.FormatInt(time.Now().Unix(), 10)),
+				},
+				Body:          aws.String(`{"key":"value"}`),
+				MessageId:     s.failedMessage.Message().MessageId,
+				ReceiptHandle: aws.String("123-123"),
+			},
+		},
+	}, nil
 }
 
 func (s stubSQSAPI) ReceiveMessageRequest(*sqs.ReceiveMessageInput) (*request.Request, *sqs.ReceiveMessageOutput) {

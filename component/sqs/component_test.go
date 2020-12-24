@@ -2,14 +2,18 @@ package sqs
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
+	sp := stubProcessor{t: t}
+
 	type args struct {
 		name      string
 		queueName string
@@ -28,7 +32,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				queueURL:  "queueURL",
 				sqsAPI:    &stubSQSAPI{},
-				proc:      stubProcFunc,
+				proc:      sp.process,
 				oo:        []OptionFunc{Retries(5)},
 			},
 		},
@@ -38,7 +42,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				queueURL:  "queueURL",
 				sqsAPI:    &stubSQSAPI{},
-				proc:      stubProcFunc,
+				proc:      sp.process,
 				oo:        []OptionFunc{Retries(5)},
 			},
 			expectedErr: "component name is empty",
@@ -49,7 +53,7 @@ func TestNew(t *testing.T) {
 				queueName: "",
 				queueURL:  "queueURL",
 				sqsAPI:    &stubSQSAPI{},
-				proc:      stubProcFunc,
+				proc:      sp.process,
 				oo:        []OptionFunc{Retries(5)},
 			},
 			expectedErr: "queue name is empty",
@@ -60,7 +64,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				queueURL:  "",
 				sqsAPI:    &stubSQSAPI{},
-				proc:      stubProcFunc,
+				proc:      sp.process,
 				oo:        []OptionFunc{Retries(5)},
 			},
 			expectedErr: "queue URL is empty",
@@ -71,7 +75,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				queueURL:  "queueURL",
 				sqsAPI:    nil,
-				proc:      stubProcFunc,
+				proc:      sp.process,
 				oo:        []OptionFunc{Retries(5)},
 			},
 			expectedErr: "SQS API is nil",
@@ -93,7 +97,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				queueURL:  "queueURL",
 				sqsAPI:    &stubSQSAPI{},
-				proc:      stubProcFunc,
+				proc:      sp.process,
 				oo:        []OptionFunc{RetryWait(-1 * time.Second)},
 			},
 			expectedErr: "retry wait time should be a positive number",
@@ -114,5 +118,35 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func stubProcFunc(context.Context, Batch) {
+func TestComponent_Run_Success(t *testing.T) {
+	defer mockTracer.Reset()
+	sp := stubProcessor{t: t}
+
+	sqsAPI := stubSQSAPI{
+		succeededMessage: createMessage(nil),
+		failedMessage:    createMessage(nil),
+	}
+	cmp, err := New("name", queueName, queueURL, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
+	require.NoError(t, err)
+	ctx, cnl := context.WithCancel(context.Background())
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		require.NoError(t, cmp.Run(ctx))
+		wg.Done()
+	}()
+
+	time.Sleep(1 * time.Second)
+	cnl()
+	wg.Wait()
+	assert.True(t, len(mockTracer.FinishedSpans()) > 0)
+}
+
+type stubProcessor struct {
+	t *testing.T
+}
+
+func (sp stubProcessor) process(_ context.Context, b Batch) {
+	require.NoError(sp.t, b.ACK())
 }

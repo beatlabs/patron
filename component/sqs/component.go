@@ -240,9 +240,9 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 	}
 }
 
-func (c *Component) report(ctx context.Context, queue sqsiface.SQSAPI, queueURL string) error {
+func (c *Component) report(ctx context.Context, sqsAPI sqsiface.SQSAPI, queueURL string) error {
 	log.Debugf("retrieve stats for SQS %s", c.queueName)
-	rsp, err := queue.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
+	rsp, err := sqsAPI.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
 		AttributeNames: []*string{
 			aws.String(sqsAttributeApproximateNumberOfMessages),
 			aws.String(sqsAttributeApproximateNumberOfMessagesDelayed),

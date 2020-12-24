@@ -51,7 +51,7 @@ func VisibilityTimeout(visibilityTimeout int64) OptionFunc {
 	}
 }
 
-// QueueStatsInterval sets the interval at which we retrieve sqsAPI stats.
+// QueueStatsInterval sets the interval at which we retrieve AWS SQS stats.
 func QueueStatsInterval(interval time.Duration) OptionFunc {
 	return func(f *Component) error {
 		if interval == 0 {

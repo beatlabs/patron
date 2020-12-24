@@ -193,7 +193,6 @@ func TestComponent_Run_Error(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	cnl()
 	wg.Wait()
-	assert.True(t, len(mockTracer.FinishedSpans()) == 0)
 }
 
 type stubProcessor struct {

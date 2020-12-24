@@ -56,6 +56,7 @@ func Test_message(t *testing.T) {
 }
 
 func Test_message_ACK(t *testing.T) {
+	defer mockTracer.Reset()
 	type fields struct {
 		sqsAPI sqsiface.SQSAPI
 	}

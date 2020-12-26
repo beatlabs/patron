@@ -5,13 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
-	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/encoding/protobuf"
-	patronErrors "github.com/beatlabs/patron/errors"
+	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -22,120 +18,67 @@ const (
 	publisherComponent = "amqp-publisher"
 )
 
-// Message abstraction for publishing.
-type Message struct {
-	contentType string
-	body        []byte
+// Publisher defines a RabbitMQ publisher with tracing instrumentation.
+type Publisher struct {
+	cfg        *amqp.Config
+	connection *amqp.Connection
+	channel    *amqp.Channel
 }
 
-// NewMessage creates a new message.
-func NewMessage(ct string, body []byte) *Message {
-	return &Message{contentType: ct, body: body}
-}
-
-// NewJSONMessage creates a new message with a JSON encoded body.
-func NewJSONMessage(d interface{}) (*Message, error) {
-	body, err := json.Encode(d)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal to JSON: %w", err)
-	}
-	return &Message{contentType: json.Type, body: body}, nil
-}
-
-// NewProtobufMessage creates a new message with a protobuf encoded body.
-func NewProtobufMessage(d interface{}) (*Message, error) {
-	body, err := protobuf.Encode(d)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal to protobuf: %w", err)
-	}
-	return &Message{contentType: protobuf.Type, body: body}, nil
-}
-
-// Publisher interface of a RabbitMQ publisher.
-type Publisher interface {
-	Publish(ctx context.Context, msg *Message) error
-	Close(ctx context.Context) error
-}
-
-var defaultCfg = amqp.Config{
-	Dial: func(network, addr string) (net.Conn, error) {
-		return net.DialTimeout(network, addr, 30*time.Second)
-	},
-}
-
-// TracedPublisher defines a RabbitMQ publisher with tracing instrumentation.
-type TracedPublisher struct {
-	cfg amqp.Config
-	cn  *amqp.Connection
-	ch  *amqp.Channel
-	exc string
-	tag opentracing.Tag
-}
-
-// NewPublisher creates a new publisher with the following defaults
-// - exchange type: fanout
-// - notifications are not handled at this point TBD.
-func NewPublisher(url, exc string, oo ...OptionFunc) (*TracedPublisher, error) {
+// New constructor.
+func New(url string, oo ...OptionFunc) (*Publisher, error) {
 	if url == "" {
 		return nil, errors.New("url is required")
 	}
 
-	if exc == "" {
-		return nil, errors.New("exchange is required")
-	}
+	var err error
+	pub := &Publisher{}
 
-	p := TracedPublisher{
-		cfg: defaultCfg,
-		exc: exc,
-		tag: opentracing.Tag{Key: "exchange", Value: exc},
-	}
-
-	for _, o := range oo {
-		err := o(&p)
+	for _, option := range oo {
+		err = option(pub)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	conn, err := amqp.DialConfig(url, p.cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open RabbitMq connection: %w", err)
+	var conn *amqp.Connection
+
+	if pub.cfg == nil {
+		conn, err = amqp.Dial(url)
+	} else {
+		conn, err = amqp.DialConfig(url, *pub.cfg)
 	}
-	p.cn = conn
+	if err != nil {
+		return nil, fmt.Errorf("failed to open connection: %w", err)
+	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return nil, fmt.Errorf("failed to open RabbitMq channel: %w", err)
-	}
-	p.ch = ch
-
-	err = ch.ExchangeDeclare(exc, amqp.ExchangeFanout, true, false, false, false, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to declare exchange: %w", err)
+		return nil, patronerrors.Aggregate(fmt.Errorf("failed to open channel: %w", err), conn.Close())
 	}
 
-	return &p, nil
+	pub.connection = conn
+	pub.channel = ch
+	return pub, nil
 }
 
 // Publish a message to a exchange.
-func (tc *TracedPublisher) Publish(ctx context.Context, msg *Message) error {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, tc.exc),
-		publisherComponent, ext.SpanKindProducer, tc.tag)
+func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error {
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, exchange),
+		publisherComponent, ext.SpanKindProducer, opentracing.Tag{Key: "exchange", Value: exchange})
 
-	p := amqp.Publishing{
-		Headers:     amqp.Table{},
-		ContentType: msg.contentType,
-		Body:        msg.body,
+	if msg.Headers == nil {
+		msg.Headers = amqp.Table{}
 	}
 
-	c := amqpHeadersCarrier(p.Headers)
+	c := amqpHeadersCarrier(msg.Headers)
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, c)
 	if err != nil {
 		return fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
-	p.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
+	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 
-	err = tc.ch.Publish(tc.exc, "", false, false, p)
+	err = tc.channel.Publish(exchange, key, mandatory, immediate, msg)
 	trace.SpanComplete(sp, err)
 	if err != nil {
 		return fmt.Errorf("failed to publish message: %w", err)
@@ -144,9 +87,9 @@ func (tc *TracedPublisher) Publish(ctx context.Context, msg *Message) error {
 	return nil
 }
 
-// Close the connection and channel of the publisher.
-func (tc *TracedPublisher) Close(_ context.Context) error {
-	return patronErrors.Aggregate(tc.ch.Close(), tc.cn.Close())
+// Close the channel and connection.
+func (tc *Publisher) Close() error {
+	return patronerrors.Aggregate(tc.channel.Close(), tc.connection.Close())
 }
 
 type amqpHeadersCarrier map[string]interface{}

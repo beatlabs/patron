@@ -1,7 +1,0 @@
-syntax = "proto2";
-package v2;
-
-message User {
-  required string Firstname = 1;
-  optional string Lastname = 2;
-}

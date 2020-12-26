@@ -1,27 +1,16 @@
 package v2
 
 import (
-	"errors"
-	"net"
-	"time"
-
 	"github.com/streadway/amqp"
 )
 
 // OptionFunc definition for configuring the publisher in a functional way.
-type OptionFunc func(*TracedPublisher) error
+type OptionFunc func(*Publisher) error
 
-// Timeout option for adjusting the timeout of the connection.
-func Timeout(timeout time.Duration) OptionFunc {
-	return func(tp *TracedPublisher) error {
-		if timeout <= 0 {
-			return errors.New("timeout must be positive")
-		}
-		tp.cfg = amqp.Config{
-			Dial: func(network, addr string) (net.Conn, error) {
-				return net.DialTimeout(network, addr, timeout)
-			},
-		}
+// Config option for providing dial configuration.
+func Config(cfg amqp.Config) OptionFunc {
+	return func(p *Publisher) error {
+		p.cfg = &cfg
 		return nil
 	}
 }

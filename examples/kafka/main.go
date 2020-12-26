@@ -7,13 +7,15 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron"
-	"github.com/beatlabs/patron/client/amqp"
+	patronamqp "github.com/beatlabs/patron/client/amqp/v2"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"
 	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
+	"github.com/streadway/amqp"
 )
 
 const (
@@ -52,7 +54,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	kafkaCmp, err := newKafkaComponent(name, kafkaBroker, kafkaTopic, kafkaGroup, amqpURL, amqpExchange)
+	pub, err := patronamqp.New(amqpURL)
+	if err != nil {
+		log.Fatalf("failed to create AMQP publisher processor %v", err)
+	}
+	defer func() {
+		if err := pub.Close(); err != nil {
+			log.Errorf("failed to close AMQP publisher: %v", err)
+		}
+	}()
+
+	kafkaCmp, err := newKafkaComponent(name, kafkaBroker, kafkaTopic, kafkaGroup, pub)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
@@ -66,11 +78,13 @@ func main() {
 
 type kafkaComponent struct {
 	cmp patron.Component
-	pub amqp.Publisher
+	pub *patronamqp.Publisher
 }
 
-func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*kafkaComponent, error) {
-	kafkaCmp := kafkaComponent{}
+func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamqp.Publisher) (*kafkaComponent, error) {
+	kafkaCmp := kafkaComponent{
+		pub: publisher,
+	}
 
 	cf, err := group.New(name, groupID, []string{topic}, []string{broker}, kafka.Decoder(json.DecodeRaw))
 	if err != nil {
@@ -86,12 +100,6 @@ func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*
 	}
 	kafkaCmp.cmp = cmp
 
-	pub, err := amqp.NewPublisher(amqpURL, amqpExc)
-	if err != nil {
-		return nil, err
-	}
-	kafkaCmp.pub = pub
-
 	return &kafkaCmp, nil
 }
 
@@ -103,12 +111,17 @@ func (kc *kafkaComponent) Process(msg async.Message) error {
 		return err
 	}
 
-	amqpMsg, err := amqp.NewProtobufMessage(&u)
+	body, err := protobuf.Encode(&u)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to encode to protobuf: %w", err)
 	}
 
-	err = kc.pub.Publish(msg.Context(), amqpMsg)
+	amqpMsg := amqp.Publishing{
+		ContentType: protobuf.Type,
+		Body:        body,
+	}
+
+	err = kc.pub.Publish(msg.Context(), amqpExchange, "", false, false, amqpMsg)
 	if err != nil {
 		return err
 	}

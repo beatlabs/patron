@@ -3,17 +3,17 @@ package redis
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/beatlabs/patron/trace"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/extra/rediscmd"
+	"github.com/go-redis/redis/v8"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 
 const (
 	component = "redis"
-	dbType    = "In-memory"
+	dbType    = "kv"
 )
 
 // Options wraps redis.Options for easier usage.
@@ -24,48 +24,51 @@ const Nil = redis.Nil
 
 // Client represents a connection with a Redis client.
 type Client struct {
-	*redis.Client
-}
-
-func (c *Client) startSpan(ctx context.Context, opName, stmt string, tags ...opentracing.Tag) (opentracing.Span, context.Context) {
-	sp, ctx := opentracing.StartSpanFromContext(ctx, opName)
-	ext.Component.Set(sp, component)
-	ext.DBType.Set(sp, dbType)
-	ext.DBInstance.Set(sp, c.Options().Addr)
-	ext.DBStatement.Set(sp, stmt)
-	for _, t := range tags {
-		sp.SetTag(t.Key, t.Value)
-	}
-	return sp, ctx
+	redis.Client
 }
 
 // New returns a new Redis client.
-func New(opt Options) *Client {
+func New(opt Options) Client {
 	clientOptions := redis.Options(opt)
-	return &Client{redis.NewClient(&clientOptions)}
+	cl := redis.NewClient(&clientOptions)
+	cl.AddHook(tracingHook{address: cl.Options().Addr})
+	return Client{Client: *cl}
 }
 
-// Do creates and processes a custom Cmd on the underlying Redis client.
-func (c *Client) Do(ctx context.Context, args ...interface{}) *redis.Cmd {
-	sp, _ := c.startSpan(ctx, "redis.Do", fmt.Sprintf("%v", args))
-	cmd := c.Client.Do(args...)
-	trace.SpanComplete(sp, cmd.Err())
-	return cmd
+type tracingHook struct {
+	address string
 }
 
-// Close closes the connection to the underlying Redis client.
-func (c *Client) Close(ctx context.Context, _ ...interface{}) error {
-	sp, _ := c.startSpan(ctx, "redis.Close", "")
-	err := c.Client.Close()
-	trace.SpanComplete(sp, err)
-	return err
+var _ redis.Hook = tracingHook{}
+
+func (th tracingHook) BeforeProcess(ctx context.Context, cmd redis.Cmder) (context.Context, error) {
+	_, ctx = startSpan(ctx, th.address, rediscmd.CmdString(cmd))
+	return ctx, nil
 }
 
-// Ping contacts the redis client, and returns 'PONG' if the client is reachable.
-// It can be used to test whether a connection is still alive, or measure latency.
-func (c *Client) Ping(ctx context.Context) *redis.StatusCmd {
-	sp, _ := c.startSpan(ctx, "redis.Ping", "")
-	cmd := c.Client.Ping()
-	trace.SpanComplete(sp, cmd.Err())
-	return cmd
+func (th tracingHook) AfterProcess(ctx context.Context, cmd redis.Cmder) error {
+	span := opentracing.SpanFromContext(ctx)
+	trace.SpanComplete(span, cmd.Err())
+	return nil
+}
+
+func (th tracingHook) BeforeProcessPipeline(ctx context.Context, cmds []redis.Cmder) (context.Context, error) {
+	_, opName := rediscmd.CmdsString(cmds)
+	_, ctx = startSpan(ctx, th.address, opName)
+	return ctx, nil
+}
+
+func (th tracingHook) AfterProcessPipeline(ctx context.Context, cmds []redis.Cmder) error {
+	span := opentracing.SpanFromContext(ctx)
+	trace.SpanComplete(span, cmds[0].Err())
+	return nil
+}
+
+func startSpan(ctx context.Context, address, opName string) (opentracing.Span, context.Context) {
+	sp, ctx := opentracing.StartSpanFromContext(ctx, opName)
+	ext.Component.Set(sp, component)
+	ext.DBType.Set(sp, dbType)
+	ext.DBInstance.Set(sp, address)
+	ext.DBStatement.Set(sp, opName)
+	return sp, ctx
 }

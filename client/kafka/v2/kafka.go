@@ -51,6 +51,7 @@ func (p *baseProducer) ActiveBrokers() []string {
 	return activeBrokerAddresses
 }
 
+// Builder definition for creating sync and async producers.
 type Builder struct {
 	brokers []string
 	cfg     *sarama.Config

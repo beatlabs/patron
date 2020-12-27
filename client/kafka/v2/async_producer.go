@@ -1,4 +1,4 @@
-// Package kafka provides a client with included tracing capabilities.
+// Package v2 provides a client with included tracing capabilities.
 package v2
 
 import (

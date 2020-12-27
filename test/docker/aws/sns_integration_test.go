@@ -6,8 +6,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/beatlabs/patron/client/sns"
+	v2 "github.com/beatlabs/patron/client/sns/v2"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -25,9 +27,12 @@ func Test_SNS_Publish_Message(t *testing.T) {
 	arn, err := createSNSTopic(api, topic)
 	require.NoError(t, err)
 	pub := createPublisher(t, api)
-	msg := createMsg(t, arn)
+	input := sns.PublishInput{
+		Message:   aws.String(topic),
+		TargetArn: aws.String(arn),
+	}
 
-	msgID, err := pub.Publish(context.Background(), msg)
+	msgID, err := pub.Publish(context.Background(), input)
 	assert.NoError(t, err)
 	assert.IsType(t, "string", msgID)
 	expected := map[string]interface{}{
@@ -39,19 +44,8 @@ func Test_SNS_Publish_Message(t *testing.T) {
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 }
 
-func createPublisher(t *testing.T, api snsiface.SNSAPI) sns.Publisher {
-	p, err := sns.NewPublisher(api)
+func createPublisher(t *testing.T, api snsiface.SNSAPI) v2.Publisher {
+	p, err := v2.New(api)
 	require.NoError(t, err)
 	return p
-}
-
-func createMsg(t *testing.T, topicArn string) sns.Message {
-	b := sns.NewMessageBuilder()
-
-	msg, err := b.
-		Message("test msg").
-		TopicArn(topicArn).
-		Build()
-	require.NoError(t, err)
-	return *msg
 }

@@ -44,7 +44,7 @@ The SQL client enhances the standard library SQL by integrating tracing capabili
 
 
 ## SNS - SQS
-The SNS and SQS clients provide a set of interfaces and structs useful for publishing messages to AWS SNS and SQS, with integrating tracing.
+The SNS and SQS clients provide wrappers useful for publishing messages to AWS SNS and SQS, with integrating tracing.
 
 **Third-party dependencies**  
 github.com/aws/aws-sdk-go v1.21.8

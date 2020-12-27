@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 const (

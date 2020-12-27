@@ -1,6 +1,6 @@
 // Package kafka provides a client with included tracing capabilities.
 //
-// Deprecated: TheKafka client package is superseded by the `github.com/beatlabs/client/kafka/v2` package.
+// Deprecated: The Kafka client package is superseded by the `github.com/beatlabs/client/kafka/v2` package.
 // Please refer to the documents and the examples for the usage.
 //
 // This package is frozen and no new functionality will be added.

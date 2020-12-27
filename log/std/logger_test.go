@@ -47,24 +47,23 @@ func TestLogger(t *testing.T) {
 	logger := New(&b, log.DebugLevel, map[string]interface{}{"name": "john doe", "age": 18})
 
 	type args struct {
-		lvl        log.Level
-		msg        string
-		args       []interface{}
-		lineNumber int
+		lvl  log.Level
+		msg  string
+		args []interface{}
 	}
 	tests := map[string]struct {
 		args args
 	}{
-		"debug":  {args: args{lvl: log.DebugLevel, args: []interface{}{"hello world"}, lineNumber: 76}},
-		"debugf": {args: args{lvl: log.DebugLevel, msg: "Hi, %s", args: []interface{}{"John"}, lineNumber: 78}},
-		"info":   {args: args{lvl: log.InfoLevel, args: []interface{}{"hello world"}, lineNumber: 82}},
-		"infof":  {args: args{lvl: log.InfoLevel, msg: "Hi, %s", args: []interface{}{"John"}, lineNumber: 84}},
-		"warn":   {args: args{lvl: log.WarnLevel, args: []interface{}{"hello world"}, lineNumber: 88}},
-		"warnf":  {args: args{lvl: log.WarnLevel, msg: "Hi, %s", args: []interface{}{"John"}, lineNumber: 90}},
-		"error":  {args: args{lvl: log.ErrorLevel, args: []interface{}{"hello world"}, lineNumber: 94}},
-		"errorf": {args: args{lvl: log.ErrorLevel, msg: "Hi, %s", args: []interface{}{"John"}, lineNumber: 96}},
-		"panic":  {args: args{lvl: log.PanicLevel, args: []interface{}{"hello world"}, lineNumber: 101}},
-		"panicf": {args: args{lvl: log.PanicLevel, msg: "Hi, %s", args: []interface{}{"John"}, lineNumber: 105}},
+		"debug":  {args: args{lvl: log.DebugLevel, args: []interface{}{"hello world"}}},
+		"debugf": {args: args{lvl: log.DebugLevel, msg: "Hi, %s", args: []interface{}{"John"}}},
+		"info":   {args: args{lvl: log.InfoLevel, args: []interface{}{"hello world"}}},
+		"infof":  {args: args{lvl: log.InfoLevel, msg: "Hi, %s", args: []interface{}{"John"}}},
+		"warn":   {args: args{lvl: log.WarnLevel, args: []interface{}{"hello world"}}},
+		"warnf":  {args: args{lvl: log.WarnLevel, msg: "Hi, %s", args: []interface{}{"John"}}},
+		"error":  {args: args{lvl: log.ErrorLevel, args: []interface{}{"hello world"}}},
+		"errorf": {args: args{lvl: log.ErrorLevel, msg: "Hi, %s", args: []interface{}{"John"}}},
+		"panic":  {args: args{lvl: log.PanicLevel, args: []interface{}{"hello world"}}},
+		"panicf": {args: args{lvl: log.PanicLevel, msg: "Hi, %s", args: []interface{}{"John"}}},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -108,20 +107,12 @@ func TestLogger(t *testing.T) {
 			}
 
 			if tt.args.msg == "" {
-				assert.Contains(t, b.String(), getMessage(tt.args.lineNumber, tt.args.lvl))
+				assert.Contains(t, b.String(), fmt.Sprintf("%s age=18 name=john doe hello world", levelMap[tt.args.lvl]))
 			} else {
-				assert.Contains(t, b.String(), getMessagef(tt.args.lineNumber, tt.args.lvl))
+				assert.Contains(t, b.String(), fmt.Sprintf("%s age=18 name=john doe Hi, John", levelMap[tt.args.lvl]))
 			}
 		})
 	}
-}
-
-func getMessage(lineNumber int, lvl log.Level) string {
-	return fmt.Sprintf("logger_test.go:%d: %s age=18 name=john doe hello world", lineNumber, levelMap[lvl])
-}
-
-func getMessagef(lineNumber int, lvl log.Level) string {
-	return fmt.Sprintf("logger_test.go:%d: %s age=18 name=john doe Hi, John", lineNumber, levelMap[lvl])
 }
 
 func TestLogger_shouldLog(t *testing.T) {

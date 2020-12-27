@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron"
 	patrongrpc "github.com/beatlabs/patron/client/grpc"
-	"github.com/beatlabs/patron/component/grpc/greeter"
 	patronsqs "github.com/beatlabs/patron/component/sqs"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
@@ -66,7 +65,7 @@ func main() {
 		_ = cc.Close()
 	}()
 
-	greeterClient := greeter.NewGreeterClient(cc)
+	greeterClient := examples.NewGreeterClient(cc)
 
 	// Initialise SQS
 	sqsAPI := sqs.New(
@@ -93,10 +92,10 @@ func main() {
 
 type sqsComponent struct {
 	cmp     patron.Component
-	greeter greeter.GreeterClient
+	greeter examples.GreeterClient
 }
 
-func createSQSComponent(api sqsiface.SQSAPI, greeter greeter.GreeterClient) (*sqsComponent, error) {
+func createSQSComponent(api sqsiface.SQSAPI, greeter examples.GreeterClient) (*sqsComponent, error) {
 	sqsCmp := sqsComponent{
 		greeter: greeter,
 	}
@@ -123,7 +122,7 @@ func (ac *sqsComponent) Process(_ context.Context, btc patronsqs.Batch) {
 		}
 
 		logger.Infof("request processed: %v, sending request to the gRPC service", u.String())
-		reply, err := ac.greeter.SayHello(msg.Context(), &greeter.HelloRequest{Firstname: u.GetFirstname(), Lastname: u.GetLastname()})
+		reply, err := ac.greeter.SayHello(msg.Context(), &examples.HelloRequest{Firstname: u.GetFirstname(), Lastname: u.GetLastname()})
 		if err != nil {
 			logger.Errorf("failed to send request: %v", err)
 			msg.NACK()

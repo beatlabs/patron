@@ -1,4 +1,4 @@
-// Package sns provides a set of common interfaces and structs for publishing messages to AWS SNS. Implementations
+// Package v2 provides a wrapper for publishing messages to AWS SNS. Implementations
 // in this package also include distributed tracing capabilities by default.
 package v2
 

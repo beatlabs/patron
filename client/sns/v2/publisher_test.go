@@ -12,40 +12,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/opentracing/opentracing-go/ext"
+	"github.com/beatlabs/patron/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func Test_NewPublisher(t *testing.T) {
-	testCases := []struct {
-		desc        string
+func Test_New(t *testing.T) {
+	testCases := map[string]struct {
 		api         snsiface.SNSAPI
 		expectedErr error
 	}{
-		{
-			desc:        "Missing API",
-			api:         nil,
-			expectedErr: errors.New("missing api"),
-		},
-		{
-			desc:        "Success",
-			api:         newStubSNSAPI(nil, nil),
-			expectedErr: nil,
-		},
+		"missing API": {api: nil, expectedErr: errors.New("missing api")},
+		"success":     {api: newStubSNSAPI(nil, nil), expectedErr: nil},
 	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			p, err := NewPublisher(tC.api)
+	for name, tC := range testCases {
+		t.Run(name, func(t *testing.T) {
+			p, err := New(tC.api)
 
 			if tC.expectedErr != nil {
-				assert.Nil(t, p)
 				assert.EqualError(t, err, tC.expectedErr.Error())
 			} else {
 				assert.NotNil(t, p)
-				assert.Equal(t, tC.api, p.api)
-				assert.Equal(t, p.component, publisherComponent)
-				assert.Equal(t, p.tag, ext.SpanKindProducer)
+				assert.NotNil(t, p.api)
 			}
 		})
 	}
@@ -54,69 +42,42 @@ func Test_NewPublisher(t *testing.T) {
 func Test_Publisher_Publish(t *testing.T) {
 	ctx := context.Background()
 
-	msg, err := NewMessageBuilder().Build()
-	require.NoError(t, err)
-
-	testCases := []struct {
-		desc          string
+	testCases := map[string]struct {
 		sns           snsiface.SNSAPI
 		expectedMsgID string
-		expectedErr   error
+		expectedErr   string
 	}{
-		{
-			desc:          "Publish error",
+		"publish error": {
 			sns:           newStubSNSAPI(nil, errors.New("publish error")),
 			expectedMsgID: "",
-			expectedErr:   errors.New("failed to publish message: publish error"),
+			expectedErr:   "failed to publish message: publish error",
 		},
-		{
-			desc:          "No message ID returned",
+		"no message ID returned": {
 			sns:           newStubSNSAPI(&sns.PublishOutput{}, nil),
 			expectedMsgID: "",
-			expectedErr:   errors.New("tried to publish a message but no message ID returned"),
+			expectedErr:   "tried to publish a message but no message ID returned",
 		},
-		{
-			desc:          "Success",
+		"success": {
 			sns:           newStubSNSAPI((&sns.PublishOutput{}).SetMessageId("msgID"), nil),
 			expectedMsgID: "msgID",
-			expectedErr:   nil,
 		},
 	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			p, err := NewPublisher(tC.sns)
+	for name, tt := range testCases {
+		t.Run(name, func(t *testing.T) {
+			p, err := New(tt.sns)
 			require.NoError(t, err)
 
-			msgID, err := p.Publish(ctx, *msg)
+			msgID, err := p.Publish(ctx, sns.PublishInput{})
 
-			assert.Equal(t, msgID, tC.expectedMsgID)
+			assert.Equal(t, msgID, tt.expectedMsgID)
 
-			if tC.expectedErr != nil {
-				assert.EqualError(t, err, tC.expectedErr.Error())
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
 			}
 		})
 	}
-}
-
-func Test_Publisher_publishOpName(t *testing.T) {
-	component := "component"
-	p := &TracedPublisher{
-		component: component,
-	}
-
-	msg, err := NewMessageBuilder().Build()
-	require.NoError(t, err)
-
-	assert.Equal(t, "component unknown", p.publishOpName(*msg))
-}
-
-func Test_snsHeadersCarrier_Set(t *testing.T) {
-	carrier := snsHeadersCarrier{}
-	carrier.Set("foo", "bar")
-
-	assert.Equal(t, "bar", carrier["foo"])
 }
 
 type stubSNSAPI struct {
@@ -145,30 +106,26 @@ func ExamplePublisher() {
 			),
 	)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	api := sns.New(sess)
 
 	// Create the publisher
-	pub, err := NewPublisher(api)
+	pub, err := New(api)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	// Create a message
-	msg, err := NewMessageBuilder().
-		Message("my message").
-		TopicArn("arn:aws:sns:eu-west-1:123456789012:MyTopic").
-		Build()
-	if err != nil {
-		panic(err)
+	input := sns.PublishInput{
+		Message:   aws.String("my message"),
+		TargetArn: nil, TopicArn: aws.String("arn:aws:sns:eu-west-1:123456789012:MyTopic"),
 	}
 
 	// Publish it
-	msgID, err := pub.Publish(context.Background(), *msg)
+	msgID, err := pub.Publish(context.Background(), input)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	fmt.Println(msgID)

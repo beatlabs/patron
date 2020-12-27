@@ -2,11 +2,13 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"os"
 	"testing"
 
+	"github.com/beatlabs/patron/examples"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -25,14 +27,18 @@ var lis *bufconn.Listener
 
 type server struct{}
 
-func (s *server) SayHello(_ context.Context, in *HelloRequest) (*HelloReply, error) {
-	return &HelloReply{Message: "Hello " + in.Name}, nil
+func (s *server) SayHelloStream(_ *examples.HelloRequest, streamServer examples.Greeter_SayHelloStreamServer) error {
+	return nil
+}
+
+func (s *server) SayHello(_ context.Context, in *examples.HelloRequest) (*examples.HelloReply, error) {
+	return &examples.HelloReply{Message: fmt.Sprintf("Hello %s %s", in.Firstname, in.Lastname)}, nil
 }
 
 func TestMain(m *testing.M) {
 	lis = bufconn.Listen(bufSize)
 	s := grpc.NewServer()
-	RegisterGreeterServer(s, &server{})
+	examples.RegisterGreeterServer(s, &server{})
 	go func() {
 		if err := s.Serve(lis); err != nil {
 			log.Fatal(err)
@@ -46,7 +52,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func bufDialer(_ context.Context, _address string) (net.Conn, error) {
+func bufDialer(_ context.Context, _ string) (net.Conn, error) {
 	return lis.Dial()
 }
 
@@ -100,10 +106,10 @@ func TestSayHello(t *testing.T) {
 		require.NoError(t, conn.Close())
 	}()
 
-	client := NewGreeterClient(conn)
-	resp, err := client.SayHello(ctx, &HelloRequest{Name: "test"})
+	client := examples.NewGreeterClient(conn)
+	resp, err := client.SayHello(ctx, &examples.HelloRequest{Firstname: "John", Lastname: "Doe"})
 	require.NoError(t, err)
-	assert.Equal(t, "Hello test", resp.GetMessage())
+	assert.Equal(t, "Hello John Doe", resp.GetMessage())
 	expected := map[string]interface{}{
 		"component": "grpc-client",
 		"error":     false,

@@ -27,7 +27,7 @@ func Test_SNS_Publish_Message(t *testing.T) {
 	arn, err := createSNSTopic(api, topic)
 	require.NoError(t, err)
 	pub := createPublisher(t, api)
-	input := sns.PublishInput{
+	input := &sns.PublishInput{
 		Message:   aws.String(topic),
 		TargetArn: aws.String(arn),
 	}

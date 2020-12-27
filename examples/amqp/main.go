@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron"
 	patronsns "github.com/beatlabs/patron/client/sns/v2"
-	patronsqs "github.com/beatlabs/patron/client/sqs"
+	patronsqs "github.com/beatlabs/patron/client/sqs/v2"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/amqp"
 	"github.com/beatlabs/patron/encoding/json"
@@ -102,7 +102,7 @@ func main() {
 	}
 
 	// Create an SQS publisher
-	sqsPub, err := patronsqs.NewPublisher(sqsAPI)
+	sqsPub, err := patronsqs.New(sqsAPI)
 	if err != nil {
 		log.Fatalf("failed to create sqs publisher: %v", err)
 	}
@@ -233,7 +233,7 @@ func (ac *amqpComponent) Process(msg async.Message) error {
 		return err
 	}
 
-	input := sns.PublishInput{
+	input := &sns.PublishInput{
 		Message:   aws.String(string(payload)),
 		TargetArn: aws.String(ac.snsTopicArn),
 	}
@@ -242,16 +242,12 @@ func (ac *amqpComponent) Process(msg async.Message) error {
 		return fmt.Errorf("failed to publish message to SNS: %v", err)
 	}
 
-	// Create a new SQS message and publish it
-	sqsMsg, err := patronsqs.NewMessageBuilder().
-		Body(string(payload)).
-		QueueURL(ac.sqsQueueURL).
-		Build()
-	if err != nil {
-		return err
+	sqsMsg := &sqs.SendMessageInput{
+		MessageBody: aws.String(string(payload)),
+		QueueUrl:    aws.String(ac.sqsQueueURL),
 	}
 
-	_, err = ac.sqsPub.Publish(msg.Context(), *sqsMsg)
+	_, err = ac.sqsPub.Publish(msg.Context(), sqsMsg)
 	if err != nil {
 		return fmt.Errorf("failed to publish message to SQS: %v", err)
 	}

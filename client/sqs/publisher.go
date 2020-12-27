@@ -32,6 +32,11 @@ type TracedPublisher struct {
 }
 
 // NewPublisher creates a new SQS publisher.
+//
+// Deprecated: The SQS client package is superseded by the `github.com/beatlabs/client/sqs/v2` package.
+// Please refer to the documents and the examples for the usage.
+//
+// This package is frozen and no new functionality will be added.
 func NewPublisher(api sqsiface.SQSAPI) (*TracedPublisher, error) {
 	if api == nil {
 		return nil, errors.New("missing api")

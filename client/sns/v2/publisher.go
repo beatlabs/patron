@@ -40,18 +40,14 @@ func New(api snsiface.SNSAPI) (Publisher, error) {
 }
 
 // Publish tries to publish a new message to SNS. It also stores tracing information.
-func (p Publisher) Publish(ctx context.Context, input sns.PublishInput) (messageID string, err error) {
+func (p Publisher) Publish(ctx context.Context, input *sns.PublishInput) (messageID string, err error) {
 	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, tracingTarget(input)), publisherComponent, ext.SpanKindProducer)
 
-	carrier := snsHeadersCarrier{}
-	err = span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier)
-	if err != nil {
-		return "", fmt.Errorf("failed to inject tracing headers: %w", err)
+	if err := injectHeaders(span, input); err != nil {
+		return "", err
 	}
 
-	injectHeaders(&input, carrier)
-
-	out, err := p.api.PublishWithContext(ctx, &input)
+	out, err := p.api.PublishWithContext(ctx, input)
 
 	trace.SpanComplete(span, err)
 	if err != nil {
@@ -72,7 +68,7 @@ func (c snsHeadersCarrier) Set(key, val string) {
 	c[key] = val
 }
 
-func tracingTarget(input sns.PublishInput) string {
+func tracingTarget(input *sns.PublishInput) string {
 	if input.TopicArn != nil {
 		return fmt.Sprintf("%s:%s", tracingTargetTopicArn, aws.StringValue(input.TopicArn))
 	}
@@ -85,9 +81,14 @@ func tracingTarget(input sns.PublishInput) string {
 }
 
 // injectHeaders injects the SNS headers carrier's headers into the message's attributes.
-func injectHeaders(input *sns.PublishInput, carrier snsHeadersCarrier) {
+func injectHeaders(span opentracing.Span, input *sns.PublishInput) error {
 	if input.MessageAttributes == nil {
 		input.MessageAttributes = make(map[string]*sns.MessageAttributeValue)
+	}
+
+	carrier := snsHeadersCarrier{}
+	if err := span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier); err != nil {
+		return fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
 	for k, v := range carrier {
@@ -96,4 +97,5 @@ func injectHeaders(input *sns.PublishInput, carrier snsHeadersCarrier) {
 			StringValue: aws.String(v.(string)),
 		}
 	}
+	return nil
 }

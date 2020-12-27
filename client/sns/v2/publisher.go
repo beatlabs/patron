@@ -86,6 +86,10 @@ func tracingTarget(input sns.PublishInput) string {
 
 // injectHeaders injects the SNS headers carrier's headers into the message's attributes.
 func injectHeaders(input *sns.PublishInput, carrier snsHeadersCarrier) {
+	if input.MessageAttributes == nil {
+		input.MessageAttributes = make(map[string]*sns.MessageAttributeValue)
+	}
+
 	for k, v := range carrier {
 		input.MessageAttributes[k] = &sns.MessageAttributeValue{
 			DataType:    aws.String(attributeDataTypeString),

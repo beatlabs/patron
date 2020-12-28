@@ -15,19 +15,20 @@ import (
 type Cmder interface {
 	Name() string
 	Args() []interface{}
+	String() string
 	stringArg(int) string
 
 	readTimeout() *time.Duration
 	readReply(rd *proto.Reader) error
 
-	setErr(error)
+	SetErr(error)
 	Err() error
 }
 
 func setCmdsErr(cmds []Cmder, e error) {
 	for _, cmd := range cmds {
 		if cmd.Err() == nil {
-			cmd.setErr(e)
+			cmd.SetErr(e)
 		}
 	}
 }
@@ -41,14 +42,17 @@ func cmdsFirstErr(cmds []Cmder) error {
 	return nil
 }
 
-func writeCmd(wr *proto.Writer, cmds ...Cmder) error {
+func writeCmds(wr *proto.Writer, cmds []Cmder) error {
 	for _, cmd := range cmds {
-		err := wr.WriteArgs(cmd.Args())
-		if err != nil {
+		if err := writeCmd(wr, cmd); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func writeCmd(wr *proto.Writer, cmd Cmder) error {
+	return wr.WriteArgs(cmd.Args())
 }
 
 func cmdString(cmd Cmder, val interface{}) string {
@@ -119,7 +123,7 @@ func (cmd *baseCmd) stringArg(pos int) string {
 	return s
 }
 
-func (cmd *baseCmd) setErr(e error) {
+func (cmd *baseCmd) SetErr(e error) {
 	cmd.err = e
 }
 
@@ -149,6 +153,10 @@ func NewCmd(args ...interface{}) *Cmd {
 	}
 }
 
+func (cmd *Cmd) String() string {
+	return cmdString(cmd, cmd.val)
+}
+
 func (cmd *Cmd) Val() interface{} {
 	return cmd.val
 }
@@ -157,7 +165,7 @@ func (cmd *Cmd) Result() (interface{}, error) {
 	return cmd.val, cmd.err
 }
 
-func (cmd *Cmd) String() (string, error) {
+func (cmd *Cmd) Text() (string, error) {
 	if cmd.err != nil {
 		return "", cmd.err
 	}
@@ -663,7 +671,7 @@ func (cmd *StringCmd) Time() (time.Time, error) {
 	if cmd.err != nil {
 		return time.Time{}, cmd.err
 	}
-	return time.Parse(time.RFC3339, cmd.Val())
+	return time.Parse(time.RFC3339Nano, cmd.Val())
 }
 
 func (cmd *StringCmd) Scan(val interface{}) error {
@@ -1003,14 +1011,20 @@ func xMessageSliceParser(rd *proto.Reader, n int64) (interface{}, error) {
 				return nil, err
 			}
 
+			var values map[string]interface{}
+
 			v, err := rd.ReadArrayReply(stringInterfaceMapParser)
 			if err != nil {
-				return nil, err
+				if err != proto.Nil {
+					return nil, err
+				}
+			} else {
+				values = v.(map[string]interface{})
 			}
 
 			msgs[i] = XMessage{
 				ID:     id,
-				Values: v.(map[string]interface{}),
+				Values: values,
 			}
 			return nil, nil
 		})
@@ -1871,6 +1885,7 @@ type CommandInfo struct {
 	Name        string
 	Arity       int8
 	Flags       []string
+	ACLFlags    []string
 	FirstKeyPos int8
 	LastKeyPos  int8
 	StepCount   int8
@@ -1920,8 +1935,14 @@ func (cmd *CommandsInfoCmd) readReply(rd *proto.Reader) error {
 }
 
 func commandInfoParser(rd *proto.Reader, n int64) (interface{}, error) {
-	if n != 6 {
-		return nil, fmt.Errorf("redis: got %d elements in COMMAND reply, wanted 6", n)
+	const numArgRedis5 = 6
+	const numArgRedis6 = 7
+
+	switch n {
+	case numArgRedis5, numArgRedis6:
+		// continue
+	default:
+		return nil, fmt.Errorf("redis: got %d elements in COMMAND reply, wanted 7", n)
 	}
 
 	var cmd CommandInfo
@@ -1979,6 +2000,28 @@ func commandInfoParser(rd *proto.Reader, n int64) (interface{}, error) {
 			cmd.ReadOnly = true
 			break
 		}
+	}
+
+	if n == numArgRedis5 {
+		return &cmd, nil
+	}
+
+	_, err = rd.ReadReply(func(rd *proto.Reader, n int64) (interface{}, error) {
+		cmd.ACLFlags = make([]string, n)
+		for i := 0; i < len(cmd.ACLFlags); i++ {
+			switch s, err := rd.ReadString(); {
+			case err == Nil:
+				cmd.ACLFlags[i] = ""
+			case err != nil:
+				return nil, err
+			default:
+				cmd.ACLFlags[i] = s
+			}
+		}
+		return nil, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &cmd, nil

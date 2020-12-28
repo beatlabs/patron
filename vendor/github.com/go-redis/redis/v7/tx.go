@@ -28,7 +28,7 @@ func (c *Client) newTx(ctx context.Context) *Tx {
 			opt:      c.opt,
 			connPool: pool.NewStickyConnPool(c.connPool.(*pool.ConnPool), true),
 		},
-		hooks: c.hooks.Clone(),
+		hooks: c.hooks.clone(),
 		ctx:   ctx,
 	}
 	tx.init()
@@ -50,7 +50,7 @@ func (c *Tx) WithContext(ctx context.Context) *Tx {
 	}
 	clone := *c
 	clone.init()
-	clone.hooks.Lock()
+	clone.hooks.lock()
 	clone.ctx = ctx
 	return &clone
 }
@@ -116,19 +116,25 @@ func (c *Tx) Unwatch(keys ...string) *StatusCmd {
 	return cmd
 }
 
-// Pipeline creates a new pipeline. It is more convenient to use Pipelined.
+// Pipeline creates a pipeline. Usually it is more convenient to use Pipelined.
 func (c *Tx) Pipeline() Pipeliner {
 	pipe := Pipeline{
 		ctx: c.ctx,
 		exec: func(ctx context.Context, cmds []Cmder) error {
-			return c.hooks.processPipeline(ctx, cmds, c.baseClient.processTxPipeline)
+			return c.hooks.processPipeline(ctx, cmds, c.baseClient.processPipeline)
 		},
 	}
 	pipe.init()
 	return &pipe
 }
 
-// Pipelined executes commands queued in the fn in a transaction.
+// Pipelined executes commands queued in the fn outside of the transaction.
+// Use TxPipelined if you need transactional behavior.
+func (c *Tx) Pipelined(fn func(Pipeliner) error) ([]Cmder, error) {
+	return c.Pipeline().Pipelined(fn)
+}
+
+// TxPipelined executes commands queued in the fn in the transaction.
 //
 // When using WATCH, EXEC will execute commands only if the watched keys
 // were not modified, allowing for a check-and-set mechanism.
@@ -136,16 +142,18 @@ func (c *Tx) Pipeline() Pipeliner {
 // Exec always returns list of commands. If transaction fails
 // TxFailedErr is returned. Otherwise Exec returns an error of the first
 // failed command or nil.
-func (c *Tx) Pipelined(fn func(Pipeliner) error) ([]Cmder, error) {
-	return c.Pipeline().Pipelined(fn)
-}
-
-// TxPipelined is an alias for Pipelined.
 func (c *Tx) TxPipelined(fn func(Pipeliner) error) ([]Cmder, error) {
-	return c.Pipelined(fn)
+	return c.TxPipeline().Pipelined(fn)
 }
 
-// TxPipeline is an alias for Pipeline.
+// TxPipeline creates a pipeline. Usually it is more convenient to use TxPipelined.
 func (c *Tx) TxPipeline() Pipeliner {
-	return c.Pipeline()
+	pipe := Pipeline{
+		ctx: c.ctx,
+		exec: func(ctx context.Context, cmds []Cmder) error {
+			return c.hooks.processTxPipeline(ctx, cmds, c.baseClient.processTxPipeline)
+		},
+	}
+	pipe.init()
+	return &pipe
 }

@@ -130,8 +130,8 @@ type Cmdable interface {
 	HKeys(key string) *StringSliceCmd
 	HLen(key string) *IntCmd
 	HMGet(key string, fields ...string) *SliceCmd
-	HMSet(key string, values ...interface{}) *IntCmd
-	HSet(key, field string, value interface{}) *BoolCmd
+	HSet(key string, values ...interface{}) *IntCmd
+	HMSet(key string, values ...interface{}) *BoolCmd
 	HSetNX(key, field string, value interface{}) *BoolCmd
 	HVals(key string) *StringSliceCmd
 	BLPop(timeout time.Duration, keys ...string) *StringSliceCmd
@@ -302,6 +302,7 @@ type Cmdable interface {
 type StatefulCmdable interface {
 	Cmdable
 	Auth(password string) *StatusCmd
+	AuthACL(username, password string) *StatusCmd
 	Select(index int) *StatusCmd
 	SwapDB(index1, index2 int) *StatusCmd
 	ClientSetName(name string) *BoolCmd
@@ -320,6 +321,15 @@ type statefulCmdable func(cmd Cmder) error
 
 func (c statefulCmdable) Auth(password string) *StatusCmd {
 	cmd := NewStatusCmd("auth", password)
+	_ = c(cmd)
+	return cmd
+}
+
+// Perform an AUTH command, using the given user and pass.
+// Should be used to authenticate the current connection with one of the connections defined in the ACL list
+// when connecting to a Redis 6.0 instance, or greater, that is using the Redis ACL system.
+func (c statefulCmdable) AuthACL(username, password string) *StatusCmd {
+	cmd := NewStatusCmd("auth", username, password)
 	_ = c(cmd)
 	return cmd
 }
@@ -969,6 +979,8 @@ func (c cmdable) HLen(key string) *IntCmd {
 	return cmd
 }
 
+// HMGet returns the values for the specified fields in the hash stored at key.
+// It returns an interface{} to distinguish between empty string and nil value.
 func (c cmdable) HMGet(key string, fields ...string) *SliceCmd {
 	args := make([]interface{}, 2+len(fields))
 	args[0] = "hmget"
@@ -981,13 +993,13 @@ func (c cmdable) HMGet(key string, fields ...string) *SliceCmd {
 	return cmd
 }
 
-// HMSet is like HSet, but accepts multiple values:
-//   - HMSet("key1", "value1", "key2", "value2")
-//   - HMSet([]string{"key1", "value1", "key2", "value2"})
-//   - HMSet(map[string]interface{}{"key1": "value1", "key2": "value2"})
+// HSet accepts values in following formats:
+//   - HMSet("myhash", "key1", "value1", "key2", "value2")
+//   - HMSet("myhash", []string{"key1", "value1", "key2", "value2"})
+//   - HMSet("myhash", map[string]interface{}{"key1": "value1", "key2": "value2"})
 //
-// Note that it uses HSET Redis command underneath because HMSET is deprecated.
-func (c cmdable) HMSet(key string, values ...interface{}) *IntCmd {
+// Note that it requires Redis v4 for multiple field/value pairs support.
+func (c cmdable) HSet(key string, values ...interface{}) *IntCmd {
 	args := make([]interface{}, 2, 2+len(values))
 	args[0] = "hset"
 	args[1] = key
@@ -997,8 +1009,13 @@ func (c cmdable) HMSet(key string, values ...interface{}) *IntCmd {
 	return cmd
 }
 
-func (c cmdable) HSet(key, field string, value interface{}) *BoolCmd {
-	cmd := NewBoolCmd("hset", key, field, value)
+// HMSet is a deprecated version of HSet left for compatibility with Redis 3.
+func (c cmdable) HMSet(key string, values ...interface{}) *BoolCmd {
+	args := make([]interface{}, 2, 2+len(values))
+	args[0] = "hmset"
+	args[1] = key
+	args = appendArgs(args, values)
+	cmd := NewBoolCmd(args...)
 	_ = c(cmd)
 	return cmd
 }
@@ -1403,7 +1420,7 @@ func (c cmdable) XRevRangeN(stream, start, stop string, count int64) *XMessageSl
 }
 
 type XReadArgs struct {
-	Streams []string
+	Streams []string // list of streams and ids, e.g. stream1 stream2 id1 id2
 	Count   int64
 	Block   time.Duration
 }
@@ -1419,6 +1436,7 @@ func (c cmdable) XRead(a *XReadArgs) *XStreamSliceCmd {
 		args = append(args, "block")
 		args = append(args, int64(a.Block/time.Millisecond))
 	}
+
 	args = append(args, "streams")
 	for _, s := range a.Streams {
 		args = append(args, s)
@@ -2534,7 +2552,7 @@ func (c cmdable) GeoAdd(key string, geoLocation ...*GeoLocation) *IntCmd {
 func (c cmdable) GeoRadius(key string, longitude, latitude float64, query *GeoRadiusQuery) *GeoLocationCmd {
 	cmd := NewGeoLocationCmd(query, "georadius_ro", key, longitude, latitude)
 	if query.Store != "" || query.StoreDist != "" {
-		cmd.setErr(errors.New("GeoRadius does not support Store or StoreDist"))
+		cmd.SetErr(errors.New("GeoRadius does not support Store or StoreDist"))
 		return cmd
 	}
 	_ = c(cmd)
@@ -2546,7 +2564,7 @@ func (c cmdable) GeoRadiusStore(key string, longitude, latitude float64, query *
 	args := geoLocationArgs(query, "georadius", key, longitude, latitude)
 	cmd := NewIntCmd(args...)
 	if query.Store == "" && query.StoreDist == "" {
-		cmd.setErr(errors.New("GeoRadiusStore requires Store or StoreDist"))
+		cmd.SetErr(errors.New("GeoRadiusStore requires Store or StoreDist"))
 		return cmd
 	}
 	_ = c(cmd)
@@ -2557,7 +2575,7 @@ func (c cmdable) GeoRadiusStore(key string, longitude, latitude float64, query *
 func (c cmdable) GeoRadiusByMember(key, member string, query *GeoRadiusQuery) *GeoLocationCmd {
 	cmd := NewGeoLocationCmd(query, "georadiusbymember_ro", key, member)
 	if query.Store != "" || query.StoreDist != "" {
-		cmd.setErr(errors.New("GeoRadiusByMember does not support Store or StoreDist"))
+		cmd.SetErr(errors.New("GeoRadiusByMember does not support Store or StoreDist"))
 		return cmd
 	}
 	_ = c(cmd)
@@ -2569,7 +2587,7 @@ func (c cmdable) GeoRadiusByMemberStore(key, member string, query *GeoRadiusQuer
 	args := geoLocationArgs(query, "georadiusbymember", key, member)
 	cmd := NewIntCmd(args...)
 	if query.Store == "" && query.StoreDist == "" {
-		cmd.setErr(errors.New("GeoRadiusByMemberStore requires Store or StoreDist"))
+		cmd.SetErr(errors.New("GeoRadiusByMemberStore requires Store or StoreDist"))
 		return cmd
 	}
 	_ = c(cmd)

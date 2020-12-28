@@ -52,7 +52,7 @@ func init() {
 			Name:      "message_age",
 			Help:      "Message age based on the SentTimestamp SQS attribute",
 		},
-		[]string{"sqsAPI"},
+		[]string{"queue"},
 	)
 	prometheus.MustRegister(messageAge)
 	messageCounter = prometheus.NewCounterVec(
@@ -62,7 +62,7 @@ func init() {
 			Name:      "message_counter",
 			Help:      "Message counter",
 		},
-		[]string{"sqsAPI", "state", "hasError"},
+		[]string{"queue", "state", "hasError"},
 	)
 	prometheus.MustRegister(messageCounter)
 	queueSize = prometheus.NewGaugeVec(
@@ -154,6 +154,7 @@ func (c *Component) Run(ctx context.Context) error {
 		case err := <-chErr:
 			return err
 		case <-ctx.Done():
+			log.FromContext(ctx).Info("context cancellation received. exiting...")
 			return nil
 		case <-tickerStats.C:
 			err := c.report(ctx, c.sqsAPI, c.queueURL)
@@ -209,38 +210,44 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			continue
 		}
 
-		btc := batch{
-			ctx:       ctx,
-			queueName: c.queueName,
-			queueURL:  c.queueURL,
-			sqsAPI:    c.sqsAPI,
-			messages:  make([]Message, 0, len(output.Messages)),
-		}
-
-		for _, msg := range output.Messages {
-			observerMessageAge(c.queueName, msg.Attributes)
-
-			corID := getCorrelationID(msg.MessageAttributes)
-
-			sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queueName),
-				consumerComponent, corID, mapHeader(msg.MessageAttributes))
-
-			ctxCh = correlation.ContextWithID(ctxCh, corID)
-			logger := log.Sub(map[string]interface{}{correlation.ID: corID})
-			ctxCh = log.WithContext(ctxCh, logger)
-
-			btc.messages = append(btc.messages, message{
-				ctx:       ctxCh,
-				queueName: c.queueName,
-				queueURL:  c.queueURL,
-				queue:     c.sqsAPI,
-				msg:       msg,
-				span:      sp,
-			})
-		}
+		btc := c.createBatch(ctx, output)
 
 		c.proc(ctx, btc)
 	}
+}
+
+func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageOutput) batch {
+	btc := batch{
+		ctx:       ctx,
+		queueName: c.queueName,
+		queueURL:  c.queueURL,
+		sqsAPI:    c.sqsAPI,
+		messages:  make([]Message, 0, len(output.Messages)),
+	}
+
+	for _, msg := range output.Messages {
+		observerMessageAge(c.queueName, msg.Attributes)
+
+		corID := getCorrelationID(msg.MessageAttributes)
+
+		sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queueName),
+			consumerComponent, corID, mapHeader(msg.MessageAttributes))
+
+		ctxCh = correlation.ContextWithID(ctxCh, corID)
+		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
+		ctxCh = log.WithContext(ctxCh, logger)
+
+		btc.messages = append(btc.messages, message{
+			ctx:       ctxCh,
+			queueName: c.queueName,
+			queueURL:  c.queueURL,
+			queue:     c.sqsAPI,
+			msg:       msg,
+			span:      sp,
+		})
+	}
+
+	return btc
 }
 
 func (c *Component) report(ctx context.Context, sqsAPI sqsiface.SQSAPI, queueURL string) error {

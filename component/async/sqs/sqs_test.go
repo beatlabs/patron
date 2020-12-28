@@ -176,62 +176,11 @@ func Test_getCorrelationID(t *testing.T) {
 }
 
 type stubQueue struct {
+	sqsiface.SQSAPI
 	getQueueURLErr                   error
 	receiveMessageWithContextErr     error
 	getQueueAttributesWithContextErr error
 	deleteMessageWithContextErr      error
-}
-
-func (s stubQueue) AddPermission(*sqs.AddPermissionInput) (*sqs.AddPermissionOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) AddPermissionWithContext(aws.Context, *sqs.AddPermissionInput, ...request.Option) (*sqs.AddPermissionOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) AddPermissionRequest(*sqs.AddPermissionInput) (*request.Request, *sqs.AddPermissionOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) ChangeMessageVisibility(*sqs.ChangeMessageVisibilityInput) (*sqs.ChangeMessageVisibilityOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ChangeMessageVisibilityWithContext(aws.Context, *sqs.ChangeMessageVisibilityInput, ...request.Option) (*sqs.ChangeMessageVisibilityOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ChangeMessageVisibilityRequest(*sqs.ChangeMessageVisibilityInput) (*request.Request, *sqs.ChangeMessageVisibilityOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) ChangeMessageVisibilityBatch(*sqs.ChangeMessageVisibilityBatchInput) (*sqs.ChangeMessageVisibilityBatchOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ChangeMessageVisibilityBatchWithContext(aws.Context, *sqs.ChangeMessageVisibilityBatchInput, ...request.Option) (*sqs.ChangeMessageVisibilityBatchOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ChangeMessageVisibilityBatchRequest(*sqs.ChangeMessageVisibilityBatchInput) (*request.Request, *sqs.ChangeMessageVisibilityBatchOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) CreateQueue(*sqs.CreateQueueInput) (*sqs.CreateQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) CreateQueueWithContext(aws.Context, *sqs.CreateQueueInput, ...request.Option) (*sqs.CreateQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) CreateQueueRequest(*sqs.CreateQueueInput) (*request.Request, *sqs.CreateQueueOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) DeleteMessage(*sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error) {
-	panic("implement me")
 }
 
 func (s stubQueue) DeleteMessageWithContext(aws.Context, *sqs.DeleteMessageInput, ...request.Option) (*sqs.DeleteMessageOutput, error) {
@@ -239,38 +188,6 @@ func (s stubQueue) DeleteMessageWithContext(aws.Context, *sqs.DeleteMessageInput
 		return nil, s.deleteMessageWithContextErr
 	}
 	return &sqs.DeleteMessageOutput{}, nil
-}
-
-func (s stubQueue) DeleteMessageRequest(*sqs.DeleteMessageInput) (*request.Request, *sqs.DeleteMessageOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) DeleteMessageBatch(*sqs.DeleteMessageBatchInput) (*sqs.DeleteMessageBatchOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) DeleteMessageBatchWithContext(aws.Context, *sqs.DeleteMessageBatchInput, ...request.Option) (*sqs.DeleteMessageBatchOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) DeleteMessageBatchRequest(*sqs.DeleteMessageBatchInput) (*request.Request, *sqs.DeleteMessageBatchOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) DeleteQueue(*sqs.DeleteQueueInput) (*sqs.DeleteQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) DeleteQueueWithContext(aws.Context, *sqs.DeleteQueueInput, ...request.Option) (*sqs.DeleteQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) DeleteQueueRequest(*sqs.DeleteQueueInput) (*request.Request, *sqs.DeleteQueueOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) GetQueueAttributes(*sqs.GetQueueAttributesInput) (*sqs.GetQueueAttributesOutput, error) {
-	panic("implement me")
 }
 
 func (s stubQueue) GetQueueAttributesWithContext(aws.Context, *sqs.GetQueueAttributesInput, ...request.Option) (*sqs.GetQueueAttributesOutput, error) {
@@ -286,10 +203,6 @@ func (s stubQueue) GetQueueAttributesWithContext(aws.Context, *sqs.GetQueueAttri
 	}, nil
 }
 
-func (s stubQueue) GetQueueAttributesRequest(*sqs.GetQueueAttributesInput) (*request.Request, *sqs.GetQueueAttributesOutput) {
-	panic("implement me")
-}
-
 //nolint
 func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, error) {
 	if s.getQueueURLErr != nil {
@@ -298,68 +211,6 @@ func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, e
 	return &sqs.GetQueueUrlOutput{
 		QueueUrl: aws.String("URL"),
 	}, nil
-}
-
-//nolint
-func (s stubQueue) GetQueueUrlWithContext(aws.Context, *sqs.GetQueueUrlInput, ...request.Option) (*sqs.GetQueueUrlOutput, error) {
-	panic("implement me")
-}
-
-//nolint
-func (s stubQueue) GetQueueUrlRequest(*sqs.GetQueueUrlInput) (*request.Request, *sqs.GetQueueUrlOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) ListDeadLetterSourceQueues(*sqs.ListDeadLetterSourceQueuesInput) (*sqs.ListDeadLetterSourceQueuesOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ListDeadLetterSourceQueuesWithContext(aws.Context, *sqs.ListDeadLetterSourceQueuesInput, ...request.Option) (*sqs.ListDeadLetterSourceQueuesOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ListDeadLetterSourceQueuesRequest(*sqs.ListDeadLetterSourceQueuesInput) (*request.Request, *sqs.ListDeadLetterSourceQueuesOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) ListQueueTags(*sqs.ListQueueTagsInput) (*sqs.ListQueueTagsOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ListQueueTagsWithContext(aws.Context, *sqs.ListQueueTagsInput, ...request.Option) (*sqs.ListQueueTagsOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ListQueueTagsRequest(*sqs.ListQueueTagsInput) (*request.Request, *sqs.ListQueueTagsOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) ListQueues(*sqs.ListQueuesInput) (*sqs.ListQueuesOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ListQueuesWithContext(aws.Context, *sqs.ListQueuesInput, ...request.Option) (*sqs.ListQueuesOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) ListQueuesRequest(*sqs.ListQueuesInput) (*request.Request, *sqs.ListQueuesOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) PurgeQueue(*sqs.PurgeQueueInput) (*sqs.PurgeQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) PurgeQueueWithContext(aws.Context, *sqs.PurgeQueueInput, ...request.Option) (*sqs.PurgeQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) PurgeQueueRequest(*sqs.PurgeQueueInput) (*request.Request, *sqs.PurgeQueueOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) ReceiveMessage(*sqs.ReceiveMessageInput) (*sqs.ReceiveMessageOutput, error) {
-	panic("implement me")
 }
 
 func (s stubQueue) ReceiveMessageWithContext(aws.Context, *sqs.ReceiveMessageInput, ...request.Option) (*sqs.ReceiveMessageOutput, error) {
@@ -378,80 +229,4 @@ func (s stubQueue) ReceiveMessageWithContext(aws.Context, *sqs.ReceiveMessageInp
 			},
 		},
 	}, nil
-}
-
-func (s stubQueue) ReceiveMessageRequest(*sqs.ReceiveMessageInput) (*request.Request, *sqs.ReceiveMessageOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) RemovePermission(*sqs.RemovePermissionInput) (*sqs.RemovePermissionOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) RemovePermissionWithContext(aws.Context, *sqs.RemovePermissionInput, ...request.Option) (*sqs.RemovePermissionOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) RemovePermissionRequest(*sqs.RemovePermissionInput) (*request.Request, *sqs.RemovePermissionOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) SendMessage(*sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) SendMessageWithContext(aws.Context, *sqs.SendMessageInput, ...request.Option) (*sqs.SendMessageOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) SendMessageRequest(*sqs.SendMessageInput) (*request.Request, *sqs.SendMessageOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) SendMessageBatch(*sqs.SendMessageBatchInput) (*sqs.SendMessageBatchOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) SendMessageBatchWithContext(aws.Context, *sqs.SendMessageBatchInput, ...request.Option) (*sqs.SendMessageBatchOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) SendMessageBatchRequest(*sqs.SendMessageBatchInput) (*request.Request, *sqs.SendMessageBatchOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) SetQueueAttributes(*sqs.SetQueueAttributesInput) (*sqs.SetQueueAttributesOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) SetQueueAttributesWithContext(aws.Context, *sqs.SetQueueAttributesInput, ...request.Option) (*sqs.SetQueueAttributesOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) SetQueueAttributesRequest(*sqs.SetQueueAttributesInput) (*request.Request, *sqs.SetQueueAttributesOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) TagQueue(*sqs.TagQueueInput) (*sqs.TagQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) TagQueueWithContext(aws.Context, *sqs.TagQueueInput, ...request.Option) (*sqs.TagQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) TagQueueRequest(*sqs.TagQueueInput) (*request.Request, *sqs.TagQueueOutput) {
-	panic("implement me")
-}
-
-func (s stubQueue) UntagQueue(*sqs.UntagQueueInput) (*sqs.UntagQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) UntagQueueWithContext(aws.Context, *sqs.UntagQueueInput, ...request.Option) (*sqs.UntagQueueOutput, error) {
-	panic("implement me")
-}
-
-func (s stubQueue) UntagQueueRequest(*sqs.UntagQueueInput) (*request.Request, *sqs.UntagQueueOutput) {
-	panic("implement me")
 }

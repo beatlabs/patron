@@ -172,7 +172,7 @@ github.com/rs/zerolog/internal/json
 github.com/sirupsen/logrus
 # github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
 github.com/streadway/amqp
-# github.com/stretchr/testify v1.4.0
+# github.com/stretchr/testify v1.6.1
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/uber/jaeger-client-go v2.22.1+incompatible
@@ -254,5 +254,5 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# gopkg.in/yaml.v2 v2.2.5
-gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+gopkg.in/yaml.v3

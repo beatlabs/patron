@@ -2,12 +2,12 @@ module github.com/beatlabs/patron
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
+	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/Shopify/sarama v1.21.0
 	github.com/aws/aws-sdk-go v1.21.8
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
@@ -28,9 +28,9 @@ require (
 	github.com/prometheus/client_golang v1.5.1
 	github.com/rs/zerolog v1.5.0
 	github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.6.1
 	github.com/uber/jaeger-client-go v2.22.1+incompatible
-	github.com/uber/jaeger-lib v2.2.0+incompatible
+	github.com/uber/jaeger-lib v2.4.0+incompatible
 	go.uber.org/atomic v1.6.0 // indirect
 	google.golang.org/grpc v1.27.1
 	gotest.tools v2.2.0+incompatible // indirect

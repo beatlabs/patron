@@ -36,7 +36,7 @@ func TestMaxMessages(t *testing.T) {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.maxMessages, tt.args.maxMessages)
+				assert.Equal(t, c.cfg.maxMessages, tt.args.maxMessages)
 			}
 		})
 	}
@@ -70,7 +70,7 @@ func TestPollWaitSeconds(t *testing.T) {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.pollWaitSeconds, tt.args.waitSeconds)
+				assert.Equal(t, c.cfg.pollWaitSeconds, tt.args.waitSeconds)
 			}
 		})
 	}
@@ -104,7 +104,7 @@ func TestVisibilityTimeout(t *testing.T) {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.visibilityTimeout, tt.args.timeout)
+				assert.Equal(t, c.cfg.visibilityTimeout, tt.args.timeout)
 			}
 		})
 	}
@@ -134,7 +134,7 @@ func TestQueueStatsInterval(t *testing.T) {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.statsInterval, tt.args.interval)
+				assert.Equal(t, c.stats.interval, tt.args.interval)
 			}
 		})
 	}
@@ -142,9 +142,9 @@ func TestQueueStatsInterval(t *testing.T) {
 
 func TestRetries(t *testing.T) {
 	c := &Component{}
-	err := Retries(10)(c)
+	err := Retries(20)(c)
 	assert.NoError(t, err)
-	assert.Equal(t, c.retries, uint(10))
+	assert.Equal(t, c.retry.count, uint(20))
 }
 
 func TestRetryWait(t *testing.T) {
@@ -171,7 +171,7 @@ func TestRetryWait(t *testing.T) {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.retryWait, tt.args.retryWait)
+				assert.Equal(t, c.retry.wait, tt.args.retryWait)
 			}
 		})
 	}

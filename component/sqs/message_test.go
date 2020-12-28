@@ -48,12 +48,14 @@ func Test_message(t *testing.T) {
 	}
 
 	msg := message{
-		ctx:       ctx,
-		queueName: queueName,
-		queueURL:  queueURL,
-		queue:     sqsAPI,
-		msg:       sqsMsg,
-		span:      sp,
+		ctx: ctx,
+		queue: queue{
+			name: queueName,
+			url:  queueURL,
+		},
+		api:  sqsAPI,
+		msg:  sqsMsg,
+		span: sp,
 	}
 	assert.Equal(t, msg.Message(), sqsMsg)
 	assert.Equal(t, msg.Span(), sp)
@@ -133,11 +135,13 @@ func Test_batch(t *testing.T) {
 	messages := []Message{msg1, msg2}
 
 	btc := batch{
-		ctx:       context.Background(),
-		queueName: queueName,
-		queueURL:  queueURL,
-		sqsAPI:    sqsAPI,
-		messages:  []Message{msg1, msg2},
+		ctx: context.Background(),
+		queue: queue{
+			name: queueName,
+			url:  queueURL,
+		},
+		sqsAPI:   sqsAPI,
+		messages: []Message{msg1, msg2},
 	}
 
 	assert.EqualValues(t, btc.Messages(), messages)
@@ -154,11 +158,13 @@ func Test_batch_NACK(t *testing.T) {
 	messages := []Message{msg1, msg2}
 
 	btc := batch{
-		ctx:       context.Background(),
-		queueName: queueName,
-		queueURL:  queueURL,
-		sqsAPI:    sqsAPI,
-		messages:  messages,
+		ctx: context.Background(),
+		queue: queue{
+			name: queueName,
+			url:  queueURL,
+		},
+		sqsAPI:   sqsAPI,
+		messages: messages,
 	}
 
 	btc.NACK()
@@ -209,11 +215,13 @@ func Test_batch_ACK(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			btc := batch{
-				ctx:       context.Background(),
-				queueName: queueName,
-				queueURL:  queueURL,
-				sqsAPI:    tt.fields.sqsAPI,
-				messages:  messages,
+				ctx: context.Background(),
+				queue: queue{
+					name: queueName,
+					url:  queueURL,
+				},
+				sqsAPI:   tt.fields.sqsAPI,
+				messages: messages,
 			}
 			failed, err := btc.ACK()
 
@@ -262,10 +270,12 @@ func createMessage(sqsAPI sqsiface.SQSAPI, id string) message {
 		consumerComponent, "123", nil)
 
 	msg := message{
-		ctx:       ctx,
-		queueName: queueName,
-		queueURL:  queueURL,
-		queue:     sqsAPI,
+		ctx: ctx,
+		queue: queue{
+			name: queueName,
+			url:  queueURL,
+		},
+		api: sqsAPI,
 		msg: &sqs.Message{
 			MessageId: aws.String(id),
 		},

@@ -84,19 +84,30 @@ func init() {
 	prometheus.MustRegister(queueSize)
 }
 
-// Component implementation of a async component.
-type Component struct {
-	name              string
-	queueName         string
-	queueURL          string
-	sqsAPI            sqsiface.SQSAPI
+type retry struct {
+	count uint
+	wait  time.Duration
+}
+
+type config struct {
 	maxMessages       *int64
 	pollWaitSeconds   *int64
 	visibilityTimeout *int64
-	statsInterval     time.Duration
-	proc              ProcessorFunc
-	retries           uint
-	retryWait         time.Duration
+}
+
+type stats struct {
+	interval time.Duration
+}
+
+// Component implementation of a async component.
+type Component struct {
+	name  string
+	queue queue
+	api   sqsiface.SQSAPI
+	cfg   config
+	proc  ProcessorFunc
+	stats stats
+	retry retry
 }
 
 // New creates a new component with support for functional configuration.
@@ -125,15 +136,23 @@ func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo 
 	}
 
 	cmp := &Component{
-		name:          name,
-		queueName:     queueName,
-		queueURL:      aws.StringValue(out.QueueUrl),
-		sqsAPI:        sqsAPI,
-		maxMessages:   aws.Int64(defaultMaxMessages),
-		statsInterval: defaultStatsInterval,
-		proc:          proc,
-		retries:       defaultRetries,
-		retryWait:     defaultRetryWait,
+		name: name,
+		queue: queue{
+			name: queueName,
+			url:  aws.StringValue(out.QueueUrl),
+		},
+		api: sqsAPI,
+		cfg: config{
+			maxMessages:       aws.Int64(defaultMaxMessages),
+			pollWaitSeconds:   nil,
+			visibilityTimeout: nil,
+		},
+		stats: stats{interval: defaultStatsInterval},
+		proc:  proc,
+		retry: retry{
+			count: defaultRetries,
+			wait:  defaultRetryWait,
+		},
 	}
 
 	for _, optionFunc := range oo {
@@ -152,7 +171,7 @@ func (c *Component) Run(ctx context.Context) error {
 
 	go c.consume(ctx, chErr)
 
-	tickerStats := time.NewTicker(c.statsInterval)
+	tickerStats := time.NewTicker(c.stats.interval)
 	defer tickerStats.Stop()
 	for {
 		select {
@@ -162,7 +181,7 @@ func (c *Component) Run(ctx context.Context) error {
 			log.FromContext(ctx).Info("context cancellation received. exiting...")
 			return nil
 		case <-tickerStats.C:
-			err := c.report(ctx, c.sqsAPI, c.queueURL)
+			err := c.report(ctx, c.api, c.queue.url)
 			if err != nil {
 				log.FromContext(ctx).Errorf("failed to report sqsAPI stats: %v", err)
 			}
@@ -173,18 +192,18 @@ func (c *Component) Run(ctx context.Context) error {
 func (c *Component) consume(ctx context.Context, chErr chan error) {
 	logger := log.FromContext(ctx)
 
-	retries := c.retries
+	retries := c.retry.count
 
 	for {
 		if ctx.Err() != nil {
 			return
 		}
-		logger.Debugf("consume: polling SQS sqsAPI %s for %d messages", c.queueName, *c.maxMessages)
-		output, err := c.sqsAPI.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
-			QueueUrl:            &c.queueURL,
-			MaxNumberOfMessages: c.maxMessages,
-			WaitTimeSeconds:     c.pollWaitSeconds,
-			VisibilityTimeout:   c.visibilityTimeout,
+		logger.Debugf("consume: polling SQS sqsAPI %s for %d messages", c.queue.name, *c.cfg.maxMessages)
+		output, err := c.api.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
+			QueueUrl:            &c.queue.url,
+			MaxNumberOfMessages: c.cfg.maxMessages,
+			WaitTimeSeconds:     c.cfg.pollWaitSeconds,
+			VisibilityTimeout:   c.cfg.visibilityTimeout,
 			AttributeNames: aws.StringSlice([]string{
 				sqsAttributeSentTimestamp,
 			}),
@@ -193,8 +212,8 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			}),
 		})
 		if err != nil {
-			logger.Errorf("failed to receive messages: %v, sleeping for %v", err, c.retryWait)
-			time.Sleep(c.retryWait)
+			logger.Errorf("failed to receive messages: %v, sleeping for %v", err, c.retry.wait)
+			time.Sleep(c.retry.wait)
 			retries--
 			if retries > 0 {
 				continue
@@ -202,14 +221,14 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			chErr <- err
 			return
 		}
-		retries = c.retries
+		retries = c.retry.count
 
 		if ctx.Err() != nil {
 			return
 		}
 
 		logger.Debugf("Consume: received %d messages", len(output.Messages))
-		messageCountInc(c.queueName, fetchedMessageState, len(output.Messages))
+		messageCountInc(c.queue.name, fetchedMessageState, len(output.Messages))
 
 		if len(output.Messages) == 0 {
 			continue
@@ -223,19 +242,18 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 
 func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageOutput) batch {
 	btc := batch{
-		ctx:       ctx,
-		queueName: c.queueName,
-		queueURL:  c.queueURL,
-		sqsAPI:    c.sqsAPI,
-		messages:  make([]Message, 0, len(output.Messages)),
+		ctx:      ctx,
+		queue:    c.queue,
+		sqsAPI:   c.api,
+		messages: make([]Message, 0, len(output.Messages)),
 	}
 
 	for _, msg := range output.Messages {
-		observerMessageAge(c.queueName, msg.Attributes)
+		observerMessageAge(c.queue.name, msg.Attributes)
 
 		corID := getCorrelationID(msg.MessageAttributes)
 
-		sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queueName),
+		sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queue.name),
 			consumerComponent, corID, mapHeader(msg.MessageAttributes))
 
 		ctxCh = correlation.ContextWithID(ctxCh, corID)
@@ -243,12 +261,11 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 		ctxCh = log.WithContext(ctxCh, logger)
 
 		btc.messages = append(btc.messages, message{
-			ctx:       ctxCh,
-			queueName: c.queueName,
-			queueURL:  c.queueURL,
-			queue:     c.sqsAPI,
-			msg:       msg,
-			span:      sp,
+			ctx:   ctxCh,
+			queue: c.queue,
+			api:   c.api,
+			msg:   msg,
+			span:  sp,
 		})
 	}
 
@@ -256,7 +273,7 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 }
 
 func (c *Component) report(ctx context.Context, sqsAPI sqsiface.SQSAPI, queueURL string) error {
-	log.Debugf("retrieve stats for SQS %s", c.queueName)
+	log.Debugf("retrieve stats for SQS %s", c.queue.name)
 	rsp, err := sqsAPI.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
 		AttributeNames: []*string{
 			aws.String(sqsAttributeApproximateNumberOfMessages),

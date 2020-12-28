@@ -40,13 +40,17 @@ type Batch interface {
 	NACK()
 }
 
+type queue struct {
+	name string
+	url  string
+}
+
 type message struct {
-	ctx       context.Context
-	queueName string
-	queueURL  string
-	queue     sqsiface.SQSAPI
-	msg       *sqs.Message
-	span      opentracing.Span
+	ctx   context.Context
+	queue queue
+	api   sqsiface.SQSAPI
+	msg   *sqs.Message
+	span  opentracing.Span
 }
 
 func (m message) Context() context.Context {
@@ -70,31 +74,30 @@ func (m message) Message() *sqs.Message {
 }
 
 func (m message) ACK() error {
-	_, err := m.queue.DeleteMessageWithContext(m.ctx, &sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(m.queueURL),
+	_, err := m.api.DeleteMessageWithContext(m.ctx, &sqs.DeleteMessageInput{
+		QueueUrl:      aws.String(m.queue.url),
 		ReceiptHandle: m.msg.ReceiptHandle,
 	})
 	if err != nil {
-		messageCountErrorInc(m.queueName, ackMessageState, 1)
+		messageCountErrorInc(m.queue.name, ackMessageState, 1)
 		trace.SpanError(m.span)
 		return err
 	}
-	messageCountInc(m.queueName, ackMessageState, 1)
+	messageCountInc(m.queue.name, ackMessageState, 1)
 	trace.SpanSuccess(m.span)
 	return nil
 }
 
 func (m message) NACK() {
-	messageCountInc(m.queueName, nackMessageState, 1)
+	messageCountInc(m.queue.name, nackMessageState, 1)
 	trace.SpanSuccess(m.span)
 }
 
 type batch struct {
-	ctx       context.Context
-	queueName string
-	queueURL  string
-	sqsAPI    sqsiface.SQSAPI
-	messages  []Message
+	ctx      context.Context
+	queue    queue
+	sqsAPI   sqsiface.SQSAPI
+	messages []Message
 }
 
 func (b batch) ACK() ([]Message, error) {
@@ -111,10 +114,10 @@ func (b batch) ACK() ([]Message, error) {
 
 	output, err := b.sqsAPI.DeleteMessageBatchWithContext(b.ctx, &sqs.DeleteMessageBatchInput{
 		Entries:  entries,
-		QueueUrl: aws.String(b.queueURL),
+		QueueUrl: aws.String(b.queue.url),
 	})
 	if err != nil {
-		messageCountErrorInc(b.queueName, ackMessageState, len(b.messages))
+		messageCountErrorInc(b.queue.name, ackMessageState, len(b.messages))
 		for _, msg := range b.messages {
 			trace.SpanError(msg.Span())
 		}
@@ -122,7 +125,7 @@ func (b batch) ACK() ([]Message, error) {
 	}
 
 	if len(output.Successful) > 0 {
-		messageCountInc(b.queueName, ackMessageState, len(output.Successful))
+		messageCountInc(b.queue.name, ackMessageState, len(output.Successful))
 
 		for _, suc := range output.Successful {
 			trace.SpanSuccess(msgMap[aws.StringValue(suc.Id)].Span())
@@ -130,7 +133,7 @@ func (b batch) ACK() ([]Message, error) {
 	}
 
 	if len(output.Failed) > 0 {
-		messageCountErrorInc(b.queueName, ackMessageState, len(output.Failed))
+		messageCountErrorInc(b.queue.name, ackMessageState, len(output.Failed))
 		failed := make([]Message, 0, len(output.Failed))
 		for _, fail := range output.Failed {
 			msg := msgMap[aws.StringValue(fail.Id)]

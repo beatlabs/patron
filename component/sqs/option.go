@@ -20,7 +20,7 @@ func MaxMessages(maxMessages int64) OptionFunc {
 		if maxMessages <= 0 || maxMessages > 10 {
 			return errors.New("max messages should be between 1 and 10")
 		}
-		c.maxMessages = &maxMessages
+		c.cfg.maxMessages = &maxMessages
 		return nil
 	}
 }
@@ -32,7 +32,7 @@ func PollWaitSeconds(pollWaitSeconds int64) OptionFunc {
 		if pollWaitSeconds < 0 || pollWaitSeconds > 20 {
 			return errors.New("poll wait seconds should be between 0 and 20")
 		}
-		c.pollWaitSeconds = &pollWaitSeconds
+		c.cfg.pollWaitSeconds = &pollWaitSeconds
 		return nil
 	}
 }
@@ -46,18 +46,18 @@ func VisibilityTimeout(visibilityTimeout int64) OptionFunc {
 		if visibilityTimeout < 0 || visibilityTimeout > twelveHoursInSeconds {
 			return fmt.Errorf("visibility timeout should be between 0 and %d seconds", twelveHoursInSeconds)
 		}
-		c.visibilityTimeout = &visibilityTimeout
+		c.cfg.visibilityTimeout = &visibilityTimeout
 		return nil
 	}
 }
 
 // QueueStatsInterval sets the interval at which we retrieve AWS SQS stats.
 func QueueStatsInterval(interval time.Duration) OptionFunc {
-	return func(f *Component) error {
+	return func(c *Component) error {
 		if interval == 0 {
 			return errors.New("sqsAPI stats interval should be a positive value")
 		}
-		f.statsInterval = interval
+		c.stats.interval = interval
 		return nil
 	}
 }
@@ -65,7 +65,7 @@ func QueueStatsInterval(interval time.Duration) OptionFunc {
 // Retries sets the error retries of the component.
 func Retries(count uint) OptionFunc {
 	return func(c *Component) error {
-		c.retries = count
+		c.retry.count = count
 		return nil
 	}
 }
@@ -76,7 +76,7 @@ func RetryWait(interval time.Duration) OptionFunc {
 		if interval <= 0 {
 			return errors.New("retry wait time should be a positive number")
 		}
-		c.retryWait = interval
+		c.retry.wait = interval
 		return nil
 	}
 }

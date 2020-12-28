@@ -18,6 +18,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	defaultStatsInterval = 10 * time.Second
+	defaultRetries       = 10
+	defaultRetryWait     = time.Second
+	defaultMaxMessages   = 3
+)
+
 // ProcessorFunc definition of a async processor.
 type ProcessorFunc func(context.Context, Batch)
 
@@ -118,17 +125,15 @@ func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo 
 	}
 
 	cmp := &Component{
-		name:              name,
-		queueName:         queueName,
-		queueURL:          aws.StringValue(out.QueueUrl),
-		sqsAPI:            sqsAPI,
-		maxMessages:       aws.Int64(3),
-		pollWaitSeconds:   nil,
-		visibilityTimeout: nil,
-		statsInterval:     10 * time.Second,
-		proc:              proc,
-		retries:           10,
-		retryWait:         time.Second,
+		name:          name,
+		queueName:     queueName,
+		queueURL:      aws.StringValue(out.QueueUrl),
+		sqsAPI:        sqsAPI,
+		maxMessages:   aws.Int64(defaultMaxMessages),
+		statsInterval: defaultStatsInterval,
+		proc:          proc,
+		retries:       defaultRetries,
+		retryWait:     defaultRetryWait,
 	}
 
 	for _, optionFunc := range oo {

@@ -11,13 +11,12 @@ import (
 )
 
 type (
-	deliveryType   string
 	deliveryStatus string
 )
 
 const (
-	deliveryTypeSync  deliveryType = "sync"
-	deliveryTypeAsync deliveryType = "async"
+	deliveryTypeSync  = "sync"
+	deliveryTypeAsync = "async"
 
 	deliveryStatusSent          deliveryStatus = "sent"
 	deliveryStatusCreationError deliveryStatus = "creation-errors"
@@ -42,8 +41,8 @@ func init() {
 	prometheus.MustRegister(messageStatus)
 }
 
-func statusCountInc(deliveryType deliveryType, status deliveryStatus, topic string) {
-	messageStatus.WithLabelValues(string(status), topic, string(deliveryType)).Inc()
+func statusCountInc(deliveryType string, status deliveryStatus, topic string) {
+	messageStatus.WithLabelValues(string(status), topic, deliveryType).Inc()
 }
 
 type baseProducer struct {

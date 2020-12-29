@@ -33,9 +33,11 @@ func Test_SQS_Consume(t *testing.T) {
 
 	sent := sendMessage(t, api, correlationID, queue, "1", "2", "3")
 
+	muTrace.Lock()
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
+	muTrace.Unlock()
 
 	// nolint
 	factory, err := sqsConsumer.NewFactory(

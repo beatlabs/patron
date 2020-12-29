@@ -19,9 +19,13 @@ import (
 
 func Test_SNS_Publish_Message(t *testing.T) {
 	const topic = "test_publish_message"
+
+	muTrace.Lock()
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
+	muTrace.Unlock()
+
 	api, err := createSNSAPI(runtime.getSNSEndpoint())
 	require.NoError(t, err)
 	arn, err := createSNSTopic(api, topic)
@@ -44,9 +48,13 @@ func Test_SNS_Publish_Message(t *testing.T) {
 
 func Test_SNS_Publish_Message_v2(t *testing.T) {
 	const topic = "test_publish_message_v2"
+
+	muTrace.Lock()
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
+	muTrace.Unlock()
+
 	api, err := createSNSAPI(runtime.getSNSEndpoint())
 	require.NoError(t, err)
 	arn, err := createSNSTopic(api, topic)

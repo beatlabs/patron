@@ -5,6 +5,7 @@ package aws
 import (
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -29,6 +30,7 @@ const (
 
 var (
 	runtime *awsRuntime
+	muTrace sync.Mutex
 )
 
 func TestMain(m *testing.M) {
@@ -73,7 +75,8 @@ func create(expiration time.Duration) (*awsRuntime, error) {
 			"AWS_ACCESS_KEY_ID=test",
 			"AWS_SECRET_ACCESS_KEY=test",
 			"AWS_DEFAULT_REGION=eu-west-1",
-		}}
+		},
+	}
 	_, err = runtime.RunWithOptions(runOptions)
 	if err != nil {
 		return nil, fmt.Errorf("could not start mysql: %w", err)

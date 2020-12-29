@@ -24,10 +24,11 @@ type sampleMsg struct {
 }
 
 func Test_SQS_Publish_Message(t *testing.T) {
-	const queueName = "test-sqs-publish"
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
+
+	const queueName = "test-sqs-publish"
 
 	api, err := createSQSAPI(runtime.getSQSEndpoint())
 	require.NoError(t, err)
@@ -72,10 +73,11 @@ func Test_SQS_Publish_Message(t *testing.T) {
 }
 
 func Test_SQS_Publish_Message_v2(t *testing.T) {
-	const queueName = "test-sqs-publish-v2"
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
+
+	const queueName = "test-sqs-publish-v2"
 
 	api, err := createSQSAPI(runtime.getSQSEndpoint())
 	require.NoError(t, err)

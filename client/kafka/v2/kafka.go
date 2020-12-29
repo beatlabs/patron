@@ -10,12 +10,22 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+type (
+	deliveryType   string
+	deliveryStatus string
+	componentType  string
+)
+
 const (
-	asyncProducerComponent = "kafka-async-producer"
-	syncProducerComponent  = "kafka-sync-producer"
-	messageCreationErrors  = "creation-errors"
-	messageSendErrors      = "send-errors"
-	messageSent            = "sent"
+	deliveryTypeSync  deliveryType = "sync"
+	deliveryTypeAsync deliveryType = "async"
+
+	deliveryStatusSent          deliveryStatus = "sent"
+	deliveryStatusCreationError deliveryStatus = "creation-errors"
+	deliveryStatusSendError     deliveryStatus = "send-errors"
+
+	componentTypeAsync = "kafka-async-producer"
+	componentTypeSync  = "kafka-sync-producer"
 )
 
 var messageStatus *prometheus.CounterVec
@@ -33,8 +43,8 @@ func init() {
 	prometheus.MustRegister(messageStatus)
 }
 
-func statusCountInc(deliveryType, status, topic string) {
-	messageStatus.WithLabelValues(status, topic, deliveryType).Inc()
+func statusCountInc(deliveryType deliveryType, status deliveryStatus, topic string) {
+	messageStatus.WithLabelValues(string(status), topic, string(deliveryType)).Inc()
 }
 
 type baseProducer struct {

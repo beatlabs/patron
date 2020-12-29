@@ -11,9 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 )
 
-const syncDeliveryType = "sync"
-
-var syncTag = opentracing.Tag{Key: "type", Value: syncDeliveryType}
+var syncTag = opentracing.Tag{Key: "type", Value: deliveryTypeSync}
 
 // SyncProducer is a synchronous Kafka producer.
 type SyncProducer struct {
@@ -23,25 +21,24 @@ type SyncProducer struct {
 
 // Send a message to a topic.
 func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (partition int32, offset int64, err error) {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(syncProducerComponent, msg.Topic),
-		syncProducerComponent, ext.SpanKindProducer, syncTag,
-		opentracing.Tag{Key: "topic", Value: msg.Topic})
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeSync, msg.Topic), componentTypeSync,
+		ext.SpanKindProducer, syncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
 
 	err = injectTracingHeaders(msg, sp)
 	if err != nil {
-		statusCountInc(syncDeliveryType, messageCreationErrors, msg.Topic)
+		statusCountInc(deliveryTypeSync, deliveryStatusCreationError, msg.Topic)
 		trace.SpanError(sp)
 		return -1, -1, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
 	partition, offset, err = p.syncProd.SendMessage(msg)
 	if err != nil {
-		statusCountInc(syncDeliveryType, messageCreationErrors, msg.Topic)
+		statusCountInc(deliveryTypeSync, deliveryStatusSendError, msg.Topic)
 		trace.SpanError(sp)
 		return -1, -1, err
 	}
 
-	statusCountInc(syncDeliveryType, messageSent, msg.Topic)
+	statusCountInc(deliveryTypeSync, deliveryStatusSent, msg.Topic)
 	trace.SpanSuccess(sp)
 	return partition, offset, nil
 }

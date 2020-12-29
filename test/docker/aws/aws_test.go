@@ -5,7 +5,6 @@ package aws
 import (
 	"fmt"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -32,7 +31,7 @@ const (
 
 var (
 	runtime *awsRuntime
-	muTrace sync.Mutex
+	mtr     *mocktracer.MockTracer
 )
 
 func TestMain(m *testing.M) {
@@ -42,6 +41,10 @@ func TestMain(m *testing.M) {
 		fmt.Printf("could not create AWS runtime: %v\n", err)
 		os.Exit(1)
 	}
+
+	mtr = mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
+	defer mtr.Reset()
 
 	exitCode := m.Run()
 
@@ -189,12 +192,4 @@ func createSQSQueue(api sqsiface.SQSAPI, queueName string) (string, error) {
 		return "", fmt.Errorf("failed to create SQS queue %s: %w", queueName, err)
 	}
 	return *out.QueueUrl, nil
-}
-
-func setupTrace() *mocktracer.MockTracer {
-	muTrace.Lock()
-	defer muTrace.Unlock()
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	return mtr
 }

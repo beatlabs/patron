@@ -16,10 +16,9 @@ import (
 )
 
 func Test_SNS_Publish_Message(t *testing.T) {
-	const topic = "test_publish_message"
-
-	mtr := setupTrace()
 	defer mtr.Reset()
+
+	const topic = "test_publish_message"
 
 	api, err := createSNSAPI(runtime.getSNSEndpoint())
 	require.NoError(t, err)
@@ -42,10 +41,9 @@ func Test_SNS_Publish_Message(t *testing.T) {
 }
 
 func Test_SNS_Publish_Message_v2(t *testing.T) {
-	const topic = "test_publish_message_v2"
-
-	mtr := setupTrace()
 	defer mtr.Reset()
+
+	const topic = "test_publish_message_v2"
 
 	api, err := createSNSAPI(runtime.getSNSEndpoint())
 	require.NoError(t, err)
@@ -71,12 +69,7 @@ func Test_SNS_Publish_Message_v2(t *testing.T) {
 }
 
 func createMsg(t *testing.T, topicArn string) v1.Message {
-	b := v1.NewMessageBuilder()
-
-	msg, err := b.
-		Message("test msg").
-		TopicArn(topicArn).
-		Build()
+	msg, err := v1.NewMessageBuilder().Message("test msg").TopicArn(topicArn).Build()
 	require.NoError(t, err)
 	return *msg
 }

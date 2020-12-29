@@ -21,6 +21,8 @@ type message struct {
 }
 
 func Test_SQS_Consume(t *testing.T) {
+	defer mtr.Reset()
+
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"
 
@@ -30,9 +32,7 @@ func Test_SQS_Consume(t *testing.T) {
 	require.NoError(t, err)
 
 	sent := sendMessage(t, api, correlationID, queue, "1", "2", "3")
-
-	mtr := setupTrace()
-	defer mtr.Reset()
+	mtr.Reset()
 
 	// nolint
 	factory, err := sqsConsumer.NewFactory(

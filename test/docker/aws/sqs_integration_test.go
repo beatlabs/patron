@@ -22,7 +22,6 @@ type sampleMsg struct {
 }
 
 func Test_SQS_Publish_Message(t *testing.T) {
-	mtr := setupTrace()
 	defer mtr.Reset()
 
 	const queueName = "test-sqs-publish"
@@ -70,7 +69,6 @@ func Test_SQS_Publish_Message(t *testing.T) {
 }
 
 func Test_SQS_Publish_Message_v2(t *testing.T) {
-	mtr := setupTrace()
 	defer mtr.Reset()
 
 	const queueName = "test-sqs-publish-v2"

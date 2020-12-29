@@ -17,6 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	patronDocker "github.com/beatlabs/patron/test/docker"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/ory/dockertest/v3"
 )
 
@@ -187,4 +189,12 @@ func createSQSQueue(api sqsiface.SQSAPI, queueName string) (string, error) {
 		return "", fmt.Errorf("failed to create SQS queue %s: %w", queueName, err)
 	}
 	return *out.QueueUrl, nil
+}
+
+func setupTrace() *mocktracer.MockTracer {
+	muTrace.Lock()
+	defer muTrace.Unlock()
+	mtr := mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
+	return mtr
 }

@@ -11,9 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	patronsqs "github.com/beatlabs/patron/client/sqs"
 	patronsqsv2 "github.com/beatlabs/patron/client/sqs/v2"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,11 +22,8 @@ type sampleMsg struct {
 }
 
 func Test_SQS_Publish_Message(t *testing.T) {
-	muTrace.Lock()
-	mtr := mocktracer.New()
+	mtr := setupTrace()
 	defer mtr.Reset()
-	opentracing.SetGlobalTracer(mtr)
-	muTrace.Unlock()
 
 	const queueName = "test-sqs-publish"
 
@@ -75,11 +70,8 @@ func Test_SQS_Publish_Message(t *testing.T) {
 }
 
 func Test_SQS_Publish_Message_v2(t *testing.T) {
-	muTrace.Lock()
-	mtr := mocktracer.New()
+	mtr := setupTrace()
 	defer mtr.Reset()
-	opentracing.SetGlobalTracer(mtr)
-	muTrace.Unlock()
 
 	const queueName = "test-sqs-publish-v2"
 

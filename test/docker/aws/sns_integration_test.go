@@ -10,9 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	v1 "github.com/beatlabs/patron/client/sns"
 	v2 "github.com/beatlabs/patron/client/sns/v2"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,11 +18,8 @@ import (
 func Test_SNS_Publish_Message(t *testing.T) {
 	const topic = "test_publish_message"
 
-	muTrace.Lock()
-	mtr := mocktracer.New()
+	mtr := setupTrace()
 	defer mtr.Reset()
-	opentracing.SetGlobalTracer(mtr)
-	muTrace.Unlock()
 
 	api, err := createSNSAPI(runtime.getSNSEndpoint())
 	require.NoError(t, err)
@@ -49,11 +44,8 @@ func Test_SNS_Publish_Message(t *testing.T) {
 func Test_SNS_Publish_Message_v2(t *testing.T) {
 	const topic = "test_publish_message_v2"
 
-	muTrace.Lock()
-	mtr := mocktracer.New()
+	mtr := setupTrace()
 	defer mtr.Reset()
-	opentracing.SetGlobalTracer(mtr)
-	muTrace.Unlock()
 
 	api, err := createSNSAPI(runtime.getSNSEndpoint())
 	require.NoError(t, err)

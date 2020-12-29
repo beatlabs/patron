@@ -11,9 +11,7 @@ import (
 	patronSQS "github.com/beatlabs/patron/client/sqs"
 	sqsConsumer "github.com/beatlabs/patron/component/async/sqs"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,11 +31,8 @@ func Test_SQS_Consume(t *testing.T) {
 
 	sent := sendMessage(t, api, correlationID, queue, "1", "2", "3")
 
-	muTrace.Lock()
-	mtr := mocktracer.New()
+	mtr := setupTrace()
 	defer mtr.Reset()
-	opentracing.SetGlobalTracer(mtr)
-	muTrace.Unlock()
 
 	// nolint
 	factory, err := sqsConsumer.NewFactory(

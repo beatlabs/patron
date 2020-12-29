@@ -13,7 +13,6 @@ import (
 type (
 	deliveryType   string
 	deliveryStatus string
-	componentType  string
 )
 
 const (

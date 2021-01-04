@@ -19,7 +19,7 @@ const (
 	httpWriteTimeout    = 10 * time.Second
 	httpIdleTimeout     = 120 * time.Second
 	shutdownGracePeriod = 5 * time.Second
-	deflateLevel        = 8
+	deflateLevel        = 6
 )
 
 var (

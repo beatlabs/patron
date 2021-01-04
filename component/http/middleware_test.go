@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -280,7 +281,7 @@ func TestNewCompressionMiddleware(t *testing.T) {
 }
 
 func TestNewCompressionMiddleware_Ignore(t *testing.T) {
-	var ceh, cth string // accept-encoding, content type
+	var ceh string // accept-encoding, content type
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(202) })
 	middleware := NewCompressionMiddleware(8, "/metrics")
@@ -300,15 +301,10 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	assert.NotNil(t, ceh)
 	assert.Equal(t, ceh, "")
 
-	cth = rc1.Header().Get("Content-Type")
-	assert.NotNil(t, cth)
-	assert.Equal(t, cth, "")
-
 	// check if other routes remains untouched
 	req2, err := http.NewRequest("GET", "/alive", nil)
 	assert.NoError(t, err)
 	req2.Header.Set("Accept-Encoding", "gzip")
-	req2.Header.Set("Content-Type", "application/json")
 
 	rc2 := httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rc2, req2)
@@ -316,62 +312,249 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	ceh = rc2.Header().Get("Content-Encoding")
 	assert.NotNil(t, ceh)
 	assert.Equal(t, "gzip", ceh)
-
-	cth = rc2.Header().Get("Content-Type")
-	assert.NotNil(t, cth)
-	assert.Equal(t, "application/json", cth)
 }
 
 func TestNewCompressionMiddleware_Headers(t *testing.T) {
-	var ceh, cth string // accept-encoding, content type
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(202) })
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+	middleware := NewCompressionMiddleware(8, "/metrics")
 
 	tests := map[string]struct {
-		cm MiddlewareFunc
+		cm               MiddlewareFunc
+		statusCode       int
+		encodingExpected string
 	}{
-		"gzip":    {cm: NewCompressionMiddleware(8, "/metrics")},
-		"deflate": {cm: NewCompressionMiddleware(8, "/metrics")},
+		"gzip":                {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
+		"deflate":             {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
+		"gzip, *":             {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
+		"deflate, *":          {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
+		"invalid, gzip, *":    {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
+		"invalid, deflate, *": {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
+		"invalid":             {cm: middleware, statusCode: http.StatusNotAcceptable, encodingExpected: ""},
+		"invalid, *":          {cm: middleware, statusCode: http.StatusOK, encodingExpected: ""},
+		"identity":            {cm: middleware, statusCode: http.StatusOK, encodingExpected: identityHeader},
+		"gzip, identity":      {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
+		"*":                   {cm: middleware, statusCode: http.StatusOK, encodingExpected: ""},
+		"":                    {cm: middleware, statusCode: http.StatusOK, encodingExpected: identityHeader},
+		"not present":         {cm: middleware, statusCode: http.StatusOK, encodingExpected: identityHeader},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			middleware := tc.cm
-			assert.NotNil(t, middleware)
-
-			// check if the route actually ignored
+	for encodingName, tc := range tests {
+		t.Run(fmt.Sprintf("%q: compression middleware acts according the Accept-Encoding header", encodingName), func(t *testing.T) {
+			require.NotNil(t, tc.cm)
+			// given
 			req1, err := http.NewRequest("GET", "/alive", nil)
-			assert.NoError(t, err)
-			req1.Header.Set("Accept-Encoding", name)
-			req1.Header.Set("Content-Type", "text/plain")
+			require.NoError(t, err)
+			if encodingName != "not present" {
+				req1.Header.Set("Accept-Encoding", encodingName)
+			}
 
+			// when
 			rc1 := httptest.NewRecorder()
-			middleware(handler).ServeHTTP(rc1, req1)
+			tc.cm(handler).ServeHTTP(rc1, req1)
 
-			ceh = rc1.Header().Get("Content-Encoding")
-			assert.NotNil(t, ceh)
-			assert.Equal(t, name, ceh)
+			// then
+			assert.Equal(t, tc.statusCode, rc1.Code)
 
-			cth = rc1.Header().Get("Content-Type")
-			assert.NotNil(t, cth)
-			assert.Equal(t, "text/plain", cth)
+			contentEncodingHeader := rc1.Header().Get("Content-Encoding")
+			assert.NotNil(t, contentEncodingHeader)
+			assert.Equal(t, tc.encodingExpected, contentEncodingHeader)
+		})
+	}
+}
 
-			// check if other routes remains untouched
-			req2, err := http.NewRequest("GET", "/alive", nil)
-			assert.NoError(t, err)
-			req2.Header.Set("Accept-Encoding", name)
-			req2.Header.Set("Content-Type", "application/json")
+func TestSelectEncoding(t *testing.T) {
+	tests := []struct {
+		optionalName string
+		given        string
+		expected     string
+		isErr        bool
+	}{
+		{given: "", expected: "identity", optionalName: "is empty but present, only identity"},
 
-			rc2 := httptest.NewRecorder()
-			middleware(handler).ServeHTTP(rc2, req2)
+		{given: "*", expected: "*"},
+		{given: "gzip", expected: "gzip"},
+		{given: "deflate", expected: "deflate"},
 
-			ceh = rc2.Header().Get("Content-Encoding")
-			assert.NotNil(t, ceh)
-			assert.Equal(t, name, ceh)
+		{given: "whatever", expected: "", isErr: true, optionalName: "whatever, not supported"},
+		{given: "whatever, *", expected: "*", optionalName: "whatever, but also a star"},
 
-			cth = rc2.Header().Get("Content-Type")
-			assert.NotNil(t, cth)
-			assert.Equal(t, "application/json", cth)
+		{given: "gzip, deflate", expected: "gzip"},
+		{given: "whatever, gzip, deflate", expected: "gzip"},
+		{given: "gzip, whatever, deflate", expected: "gzip"},
+		{given: "gzip, deflate, whatever", expected: "gzip"},
+
+		{given: "gzip,deflate", expected: "gzip"},
+		{given: "gzip,whatever,deflate", expected: "gzip"},
+		{given: "whatever,gzip,deflate", expected: "gzip"},
+		{given: "gzip,deflate,whatever", expected: "gzip"},
+
+		{given: "deflate, gzip", expected: "deflate"},
+		{given: "whatever, deflate, gzip", expected: "deflate"},
+		{given: "deflate, whatever, gzip", expected: "deflate"},
+		{given: "deflate, gzip, whatever", expected: "deflate"},
+
+		{given: "deflate, gzip", expected: "deflate"},
+		{given: "whatever,deflate,gzip", expected: "deflate"},
+		{given: "deflate,whatever,gzip", expected: "deflate"},
+		{given: "deflate,gzip,whatever", expected: "deflate"},
+
+		{given: "gzip;q=1.0, deflate;q=1.0", expected: "gzip", optionalName: "equal weights"},
+		{given: "deflate;q=1.0, gzip;q=1.0", expected: "deflate", optionalName: "equal weights 2"},
+
+		{given: "gzip;q=1.0, deflate;q=0.5", expected: "gzip"},
+		{given: "gzip;q=1.0, deflate;q=0.5, *;q=0.2", expected: "gzip"},
+		{given: "deflate;q=1.0, gzip;q=0.5", expected: "deflate"},
+		{given: "deflate;q=1.0, gzip;q=0.5, *;q=0.2", expected: "deflate"},
+
+		{given: "gzip;q=0.5, deflate;q=1.0", expected: "deflate"},
+		{given: "gzip;q=0.5, deflate;q=1.0, *;q=0.2", expected: "deflate"},
+		{given: "deflate;q=0.5, gzip;q=1.0", expected: "gzip"},
+		{given: "deflate;q=0.5, gzip;q=1.0, *;q=0.2", expected: "gzip"},
+
+		{given: "whatever;q=1.0, *;q=0.2", expected: "*"},
+
+		{given: "deflate, gzip;q=1.0", expected: "deflate"},
+		{given: "deflate, gzip;q=0.5", expected: "deflate"},
+
+		{given: "deflate;q=0.5, gzip", expected: "gzip"},
+
+		{given: "deflate;q=0.5, gzip;q=-0.5", expected: "deflate"},
+		{given: "deflate;q=0.5, gzip;q=1.5", expected: "gzip"},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("encoding %q is parsed as %s ; error is expected: %t ; %s", tc.given, tc.expected, tc.isErr, tc.optionalName), func(t *testing.T) {
+			// when
+			result, err := parseAcceptEncoding(tc.given)
+
+			// then
+			assert.Equal(t, tc.isErr, err != nil)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func TestSupported(t *testing.T) {
+	tests := []struct {
+		algorithm   string
+		isSupported bool
+	}{
+		{algorithm: "gzip", isSupported: true},
+		{algorithm: "deflate", isSupported: true},
+		{algorithm: "*", isSupported: true},
+		{algorithm: "something else", isSupported: false},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("%q check results in %t", tc.algorithm, tc.isSupported), func(t *testing.T) {
+			// when
+			result := !notSupportedCompression(tc.algorithm)
+
+			// then
+			assert.Equal(t, result, tc.isSupported)
+		})
+	}
+}
+
+func TestParseWeights(t *testing.T) {
+	tests := []struct {
+		priorityStr string
+		expected    float64
+	}{
+		{priorityStr: "q=1.0", expected: 1.0},
+		{priorityStr: "q=0.5", expected: 0.5},
+		{priorityStr: "q=-0.5", expected: 0.0},
+		{priorityStr: "q=1.5", expected: 1.0},
+		{priorityStr: "q=", expected: 1.0},
+		{priorityStr: "", expected: 1.0},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("for given priority: %q, expect %f", tc.priorityStr, tc.expected), func(t *testing.T) {
+			// when
+			result := parseWeight(tc.priorityStr)
+
+			// then
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func TestSelectByWeight(t *testing.T) {
+	tests := []struct {
+		name     string
+		given    map[float64]string
+		expected string
+		isErr    bool
+	}{
+		{
+			name:     "sorted map",
+			given:    map[float64]string{1.0: "gzip", 0.5: "deflate"},
+			expected: "gzip",
+		},
+		{
+			name:     "not sorted map",
+			given:    map[float64]string{0.5: "gzip", 1.0: "deflate"},
+			expected: "deflate",
+		},
+		{
+			name:     "empty weights map",
+			given:    map[float64]string{},
+			expected: "",
+			isErr:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// when
+			selected, err := selectByWeight(tc.given)
+
+			// then
+			assert.Equal(t, tc.isErr, err != nil)
+			assert.Equal(t, tc.expected, selected)
+		})
+	}
+}
+
+func TestAddWithWeight(t *testing.T) {
+	tests := []struct {
+		name        string
+		weightedMap map[float64]string
+		weight      float64
+		algorithm   string
+		expected    map[float64]string
+	}{
+		{
+			name:        "empty",
+			weightedMap: map[float64]string{},
+			weight:      1.0,
+			algorithm:   "gzip",
+			expected:    map[float64]string{1.0: "gzip"},
+		},
+		{
+			name:        "new",
+			weightedMap: map[float64]string{1.0: "gzip"},
+			weight:      0.5,
+			algorithm:   "deflate",
+			expected:    map[float64]string{1.0: "gzip", 0.5: "deflate"},
+		},
+		{
+			name:        "already exists",
+			weightedMap: map[float64]string{1.0: "gzip"},
+			weight:      1.0,
+			algorithm:   "deflate",
+			expected:    map[float64]string{1.0: "gzip"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// when
+			addWithWeight(tc.weightedMap, tc.weight, tc.algorithm)
+
+			// then
+			assert.Equal(t, tc.expected, tc.weightedMap)
 		})
 	}
 }

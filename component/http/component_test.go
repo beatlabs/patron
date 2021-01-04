@@ -97,9 +97,8 @@ func TestBuilder_WithShutdownGracePeriod(t *testing.T) {
 }
 
 func Test_createHTTPServerUsingBuilder(t *testing.T) {
-
-	var httpBuilderNoErrors = []error{}
-	var httpBuilderAllErrors = []error{
+	var httpBuilderNoErrors []error
+	httpBuilderAllErrors := []error{
 		errors.New("nil AliveCheckFunc was provided"),
 		errors.New("nil ReadyCheckFunc provided"),
 		errors.New("invalid HTTP Port provided"),

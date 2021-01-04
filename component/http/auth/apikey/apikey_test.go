@@ -13,7 +13,7 @@ type MockValidator struct {
 	success bool
 }
 
-func (mv MockValidator) Validate(key string) (bool, error) {
+func (mv MockValidator) Validate(_ string) (bool, error) {
 	if mv.err != nil {
 		return false, mv.err
 	}

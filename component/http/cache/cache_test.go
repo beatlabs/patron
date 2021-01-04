@@ -1819,7 +1819,7 @@ func (m *testMetrics) err(path string) {
 	m.values[path].errors++
 }
 
-func (m *testMetrics) evict(path string, context validationContext, age int64) {
+func (m *testMetrics) evict(path string, _ validationContext, _ int64) {
 	m.init(path)
 	m.values[path].evictions++
 }

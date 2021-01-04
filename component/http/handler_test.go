@@ -28,6 +28,7 @@ func Test_extractFields(t *testing.T) {
 
 func Test_extractHeaders(t *testing.T) {
 	r, err := http.NewRequest("GET", "/test", nil)
+	require.NoError(t, err)
 	r.Header.Set("X-HEADER-1", "all capsssss")
 	r.Header.Set("X-HEADER-1", "all caps")
 	r.Header.Set("x-Header-2", "all lower")
@@ -174,13 +175,11 @@ func Test_handleSuccess(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			rsp := httptest.NewRecorder()
 
 			err := handleSuccess(rsp, tt.args.req, tt.args.rsp, tt.args.enc)
 			if tt.wantErr {
 				assert.Error(t, err)
-
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expectedStatus, rsp.Code)
@@ -205,7 +204,7 @@ func Test_handleError(t *testing.T) {
 		{"not found error", args{err: NewNotFoundError(), enc: json.Encode}, http.StatusNotFound},
 		{"service unavailable error", args{err: NewServiceUnavailableError(), enc: json.Encode}, http.StatusServiceUnavailable},
 		{"internal server error", args{err: NewError(), enc: json.Encode}, http.StatusInternalServerError},
-		{"default error", args{err: errors.New("Test"), enc: json.Encode}, http.StatusInternalServerError},
+		{"default error", args{err: errors.New("test"), enc: json.Encode}, http.StatusInternalServerError},
 		{"Payload encoding error", args{err: NewErrorWithCodeAndPayload(http.StatusBadRequest, make(chan int)), enc: json.Encode}, http.StatusInternalServerError},
 	}
 	for _, tt := range tests {
@@ -222,7 +221,7 @@ type testHandler struct {
 	resp interface{}
 }
 
-func (th testHandler) Process(ctx context.Context, req *Request) (*Response, error) {
+func (th testHandler) Process(_ context.Context, _ *Request) (*Response, error) {
 	if th.err {
 		return nil, errors.New("TEST")
 	}
@@ -230,13 +229,13 @@ func (th testHandler) Process(ctx context.Context, req *Request) (*Response, err
 }
 
 func Test_handler(t *testing.T) {
-	require := require.New(t)
 	errReq, err := http.NewRequest(http.MethodGet, "/", nil)
+	require.NoError(t, err)
 	errReq.Header.Set(encoding.ContentTypeHeader, "xml")
-	require.NoError(err)
+	require.NoError(t, err)
 
 	req, err := http.NewRequest(http.MethodGet, "/", nil)
-	require.NoError(err)
+	require.NoError(t, err)
 
 	req.Header.Set(encoding.ContentTypeHeader, json.Type)
 	req.Header.Set(encoding.AcceptHeader, json.Type)
@@ -327,5 +326,4 @@ func Test_extractParamsRawRoute(t *testing.T) {
 
 	assert.Equal(t, "42", fields["id"])
 	assert.Equal(t, "online", fields["status"])
-
 }

@@ -474,6 +474,10 @@ func (mm *mockMessage) Payload() []byte {
 	return []byte{}
 }
 
+func (mm *mockMessage) Raw() interface{} {
+	return nil
+}
+
 type mockProcessor struct {
 	errReturn bool
 	mux       sync.Mutex

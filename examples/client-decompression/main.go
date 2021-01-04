@@ -33,7 +33,14 @@ func main() {
 	ctx := context.Background()
 
 	service, err := patron.New(name, version)
-	service.Run(ctx)
+	if err != nil {
+		fmt.Printf("failed to set up service: %v", err)
+		os.Exit(1)
+	}
+	err = service.Run(ctx)
+	if err != nil {
+		log.Fatalf("failed to create and run service %v", err)
+	}
 
 	cl, err := clienthttp.New(clienthttp.Timeout(1 * time.Second))
 
@@ -44,6 +51,9 @@ func main() {
 	handle(err)
 
 	gzipReq, err := http.NewRequest("GET", "http://localhost:50000/hello", nil)
+	if err != nil {
+		log.Fatalf("failed to create gzip request: %v", err)
+	}
 	gzipReq.Header.Add(encoding.AcceptEncodingHeader, "gzip")
 	rsp2, err := cl.Do(ctx, gzipReq)
 	handle(err)
@@ -51,6 +61,9 @@ func main() {
 	handle(err)
 
 	deflateReq, err := http.NewRequest("GET", "http://localhost:50000/hello", nil)
+	if err != nil {
+		log.Fatalf("failed to create deflate request: %v", err)
+	}
 	deflateReq.Header.Add(encoding.AcceptEncodingHeader, "deflate")
 	rsp3, err := cl.Do(ctx, deflateReq)
 	handle(err)
@@ -60,7 +73,6 @@ func main() {
 	fmt.Printf("Response without compression : %v\n", string(bdy1))
 	fmt.Printf("Response with GZIP compression : %v\n", string(bdy2))
 	fmt.Printf("Response with Deflate compression : %v\n", string(bdy3))
-
 }
 
 func handle(err error) {

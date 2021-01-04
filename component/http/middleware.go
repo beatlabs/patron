@@ -4,10 +4,14 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"runtime/debug"
+	"sort"
+	"strconv"
 	"strings"
 
 	"golang.org/x/time/rate"
@@ -27,8 +31,12 @@ import (
 const (
 	serverComponent = "http-server"
 	fieldNameError  = "error"
-	gzipHeader      = "gzip"
-	deflateHeader   = "deflate"
+
+	// compression algorithms
+	gzipHeader     = "gzip"
+	deflateHeader  = "deflate"
+	identityHeader = "identity"
+	anythingHeader = "*"
 )
 
 type responseWriter struct {
@@ -169,39 +177,116 @@ func ignore(ignoreRoutes []string, url string) bool {
 	return false
 }
 
+func parseAcceptEncoding(header string) (string, error) {
+	if header == "" {
+		return identityHeader, nil
+	}
+
+	if header == anythingHeader {
+		return anythingHeader, nil
+	}
+
+	weighted := make(map[float64]string)
+
+	algorithms := strings.Split(header, ",")
+	for _, a := range algorithms {
+		algAndWeight := strings.Split(a, ";")
+		algorithm := strings.TrimSpace(algAndWeight[0])
+
+		if notSupportedCompression(algorithm) {
+			continue
+		}
+
+		if len(algAndWeight) != 2 {
+			addWithWeight(weighted, 1.0, algorithm)
+			continue
+		}
+
+		weight := parseWeight(algAndWeight[1])
+		addWithWeight(weighted, weight, algorithm)
+	}
+
+	return selectByWeight(weighted)
+}
+
+func addWithWeight(mapWeighted map[float64]string, weight float64, algorithm string) {
+	if _, ok := mapWeighted[weight]; !ok {
+		mapWeighted[weight] = algorithm
+	}
+}
+
+func notSupportedCompression(algorithm string) bool {
+	return gzipHeader != algorithm && deflateHeader != algorithm && anythingHeader != algorithm && identityHeader != algorithm
+}
+
+// When not present, the default value is 1 according to https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
+// q not present or can’t be parsed -> 1.0
+// q is < 0 -> 0.0
+// q is > 1 -> 1.0
+func parseWeight(qStr string) float64 {
+	qAndWeight := strings.Split(qStr, "=")
+	if len(qAndWeight) != 2 {
+		return 1.0
+	}
+
+	parsedWeight, err := strconv.ParseFloat(qAndWeight[1], 32)
+	if err != nil {
+		return 1.0
+	}
+
+	return math.Min(1.0, math.Max(0.0, parsedWeight))
+}
+
+func selectByWeight(weighted map[float64]string) (string, error) {
+	if len(weighted) == 0 {
+		return "", fmt.Errorf("no valid compression encoding accepted by client")
+	}
+
+	keys := make([]float64, 0, len(weighted))
+	for k := range weighted {
+		keys = append(keys, k)
+	}
+	sort.Float64s(keys)
+	return weighted[keys[len(keys)-1]], nil
+}
+
 // NewCompressionMiddleware initializes a compression middleware.
 // As per Section 3.5 of the HTTP/1.1 RFC, we support GZIP and Deflate as compression methods.
-// https://tools.ietf.org/html/rfc2616#section-3.5
+// https://tools.ietf.org/html/rfc2616#section-14.3
 func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			hdr := r.Header.Get(encoding.AcceptEncodingHeader)
-
-			if !isCompressionHeader(hdr) || ignore(ignoreRoutes, r.URL.String()) {
+			if ignore(ignoreRoutes, r.URL.String()) {
 				next.ServeHTTP(w, r)
 				log.Debugf("url %s skipped from compression middleware", r.URL.String())
 				return
 			}
-			// explicitly specify encoding in header
-			w.Header().Set(encoding.ContentEncodingHeader, hdr)
 
-			// keep content type intact
-			respHeader := r.Header.Get(encoding.ContentTypeHeader)
-			if respHeader != "" {
-				w.Header().Set(encoding.ContentTypeHeader, respHeader)
+			hdr := r.Header.Get(encoding.AcceptEncodingHeader)
+			selectedEncoding, err := parseAcceptEncoding(hdr)
+			if err != nil {
+				log.Debugf("encoding %q is not supported in compression middleware, "+
+					"and client doesn't accept anything else", hdr)
+				http.Error(w, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
+				return
 			}
 
-			var cw io.WriteCloser
-			var err error
-			switch hdr {
+			var writer io.WriteCloser
+			switch selectedEncoding {
 			case gzipHeader:
-				cw = gzip.NewWriter(w)
+				writer = gzip.NewWriter(w)
+				w.Header().Set(encoding.ContentEncodingHeader, gzipHeader)
 			case deflateHeader:
-				cw, err = flate.NewWriter(w, deflateLevel)
+				writer, err = flate.NewWriter(w, deflateLevel)
 				if err != nil {
 					next.ServeHTTP(w, r)
 					return
 				}
+				w.Header().Set(encoding.ContentEncodingHeader, deflateHeader)
+			case identityHeader, "":
+				w.Header().Set(encoding.ContentEncodingHeader, identityHeader)
+				fallthrough
+			// `*`, `identity` and others must fall through here to be served without compression
 			default:
 				next.ServeHTTP(w, r)
 				return
@@ -212,9 +297,9 @@ func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) Middlewa
 				if err != nil {
 					log.Errorf("error in deferred call to Close() method on %v compression middleware : %v", hdr, err.Error())
 				}
-			}(cw)
+			}(writer)
 
-			crw := compressionResponseWriter{Writer: cw, ResponseWriter: w}
+			crw := compressionResponseWriter{Writer: writer, ResponseWriter: w}
 			next.ServeHTTP(crw, r)
 			log.Debugf("url %s used with %s compression method", r.URL.String(), hdr)
 		})
@@ -251,10 +336,6 @@ func MiddlewareChain(f http.Handler, mm ...MiddlewareFunc) http.Handler {
 		f = mm[i](f)
 	}
 	return f
-}
-
-func isCompressionHeader(h string) bool {
-	return strings.Contains(h, "gzip") || strings.Contains(h, "deflate")
 }
 
 func logRequestResponse(corID string, w *responseWriter, r *http.Request) {

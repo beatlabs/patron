@@ -39,9 +39,11 @@ const (
 	consumerComponent = "sqs-consumer"
 )
 
-var messageAge *prometheus.GaugeVec
-var messageCounter *prometheus.CounterVec
-var queueSize *prometheus.GaugeVec
+var (
+	messageAge     *prometheus.GaugeVec
+	messageCounter *prometheus.CounterVec
+	queueSize      *prometheus.GaugeVec
+)
 
 func init() {
 	messageAge = prometheus.NewGaugeVec(
@@ -128,6 +130,11 @@ func (m *message) Source() string {
 // Payload returns the message payload.
 func (m *message) Payload() []byte {
 	return []byte(*m.msg.Body)
+}
+
+// Raw returns tha SQS message.
+func (m *message) Raw() interface{} {
+	return m.msg
 }
 
 // Factory for creating SQS consumers.
@@ -312,7 +319,8 @@ func (c *consumer) reportQueueStats(ctx context.Context, queueURL string) error 
 		AttributeNames: []*string{
 			aws.String(sqsAttributeApproximateNumberOfMessages),
 			aws.String(sqsAttributeApproximateNumberOfMessagesDelayed),
-			aws.String(sqsAttributeApproximateNumberOfMessagesNotVisible)},
+			aws.String(sqsAttributeApproximateNumberOfMessagesNotVisible),
+		},
 		QueueUrl: aws.String(queueURL),
 	})
 	if err != nil {

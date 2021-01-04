@@ -14,9 +14,7 @@ import (
 )
 
 func handler(hnd ProcessorFunc) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		ct, dec, enc, err := determineEncoding(r.Header)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnsupportedMediaType), http.StatusUnsupportedMediaType)
@@ -104,7 +102,6 @@ func determineEncoding(h http.Header) (string, encoding.DecodeFunc, encoding.Enc
 }
 
 func getSingleHeaderEncoding(header string) (string, encoding.DecodeFunc, encoding.EncodeFunc, error) {
-
 	var enc encoding.EncodeFunc
 	var dec encoding.DecodeFunc
 	var ct string
@@ -132,7 +129,7 @@ func getMultiValueHeaders(header string) []string {
 
 	splitHeaders := strings.Split(header, ",")
 
-	trimmedHeaders := []string{}
+	trimmedHeaders := make([]string, 0, len(splitHeaders))
 	for _, v := range splitHeaders {
 		trimmedHeaders = append(trimmedHeaders, strings.TrimSpace(v))
 	}

@@ -47,7 +47,7 @@ func NewBuilder(brokers []string) *Builder {
 	cfg := sarama.NewConfig()
 	cfg.Version = sarama.V0_11_0_0
 
-	errs := []error{}
+	var errs []error
 	if validation.IsStringSliceEmpty(brokers) {
 		errs = append(errs, errors.New("brokers are empty or have an empty value"))
 	}

@@ -170,6 +170,10 @@ func (r *OffsetCommitRequest) version() int16 {
 	return r.Version
 }
 
+func (r *OffsetCommitRequest) headerVersion() int16 {
+	return 1
+}
+
 func (r *OffsetCommitRequest) requiredVersion() KafkaVersion {
 	switch r.Version {
 	case 1:
@@ -200,11 +204,11 @@ func (r *OffsetCommitRequest) AddBlock(topic string, partitionID int32, offset i
 func (r *OffsetCommitRequest) Offset(topic string, partitionID int32) (int64, string, error) {
 	partitions := r.blocks[topic]
 	if partitions == nil {
-		return 0, "", errors.New("No such offset")
+		return 0, "", errors.New("no such offset")
 	}
 	block := partitions[partitionID]
 	if block == nil {
-		return 0, "", errors.New("No such offset")
+		return 0, "", errors.New("no such offset")
 	}
 	return block.offset, block.metadata, nil
 }

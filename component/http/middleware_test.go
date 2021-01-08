@@ -551,3 +551,37 @@ func TestAddWithWeight(t *testing.T) {
 		})
 	}
 }
+
+func TestIsConnectionReset(t *testing.T) {
+	tests := map[string]struct {
+		err      error
+		expected bool
+	}{
+		"Broken pipe": {
+			err:      errors.New("blah blah broken pipe blah blah"),
+			expected: true,
+		},
+		"connection reset": {
+			err:      errors.New("blah blah connection reset blah blah"),
+			expected: true,
+		},
+		"read: connection reset": {
+			err:      errors.New("blah blah read: connection reset blah blah"),
+			expected: false,
+		},
+		"b00m random error": {
+			err:      errors.New("blah blah b00m random error blah blah"),
+			expected: false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// when
+			result := isErrConnectionReset(tc.err)
+
+			// then
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}

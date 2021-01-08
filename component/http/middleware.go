@@ -279,7 +279,12 @@ func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) Middlewa
 			defer func(cw io.WriteCloser) {
 				err := cw.Close()
 				if err != nil {
-					log.Errorf("error in deferred call to Close() method on %v compression middleware : %v", hdr, err.Error())
+					msgErr := fmt.Sprintf("error in deferred call to Close() method on %v compression middleware : %v", hdr, err.Error())
+					if isErrConnectionReset(err) {
+						log.Info(msgErr)
+					} else {
+						log.Error(msgErr)
+					}
 				}
 			}(writer)
 
@@ -288,6 +293,27 @@ func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) Middlewa
 			log.Debugf("url %s used with %s compression method", r.URL.String(), hdr)
 		})
 	}
+}
+
+// isErrConnectionReset detects if an error has happened due to a connection reset, broken pipe or similar.
+// Implementation is copied from AWS SDK, package request. We assume that it is a complete genuine implementation.
+func isErrConnectionReset(err error) bool {
+	errMsg := err.Error()
+
+	// See the explanation here: https://github.com/aws/aws-sdk-go/issues/2525#issuecomment-519263830
+	// It is a little bit vague, but it seems they mean that this specific error happens when we stopped reading for some reason
+	// even though there was something to read. This might have happened due to a wrong length header for example.
+	// So it might've been our error, not an error of remote server when it closes connection unexpectedly.
+	if strings.Contains(errMsg, "read: connection reset") {
+		return false
+	}
+
+	if strings.Contains(errMsg, "connection reset") ||
+		strings.Contains(errMsg, "broken pipe") {
+		return true
+	}
+
+	return false
 }
 
 // Write provides write func to the writer.

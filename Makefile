@@ -31,8 +31,7 @@ deeplint: fmtcheck
 ci: fmtcheck lint coverci
 
 modsync: fmtcheck
-	go mod tidy && \
-	go mod vendor
+	go mod tidy && go mod vendor
 
 # disallow any parallelism (-j) for Make. This is necessary since some
 # commands during the build process create temporary files that collide

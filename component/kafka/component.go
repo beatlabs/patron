@@ -105,6 +105,10 @@ func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 
 // BatchConsumer is a kafka consumer implementation that processes messages in batch
 type BatchConsumer struct {
+	name    string
+	group   string
+	topics  []string
+	brokers []string
 }
 
 // NewBatchConsumer initializes a new batch consumer

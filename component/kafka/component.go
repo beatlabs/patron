@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/component/async/kafka"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
@@ -44,17 +44,21 @@ type Builder struct {
 	group        string
 	brokers      []string
 	topics       []string
-	oo           []kafka.OptionFunc
+	saramaConfig *sarama.Config
 	proc         BatchProcessorFunc
 	failStrategy FailStrategy
+	batchSize    int
+	batchTimeout time.Duration
 	retries      uint
 	retryWait    time.Duration
-	errors       []error
+	commitSync   bool
+	errors       []error // builder errors
 }
 
 // New initializes a new builder for a kafka consumer component with the given name
-// by default the failStrategy will be NackExitStrategy.
-func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, oo ...kafka.OptionFunc) *Builder {
+// by default the failStrategy will be ExitStrategy.
+// Also by default the batch size is 1 and the batch timeout is 100ms.
+func New(name, group string, brokers, topics []string, proc BatchProcessorFunc) *Builder {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
@@ -77,13 +81,14 @@ func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, 
 	}
 
 	return &Builder{
-		name:    name,
-		group:   group,
-		brokers: brokers,
-		topics:  topics,
-		proc:    proc,
-		oo:      oo,
-		errors:  errs,
+		name:         name,
+		group:        group,
+		brokers:      brokers,
+		topics:       topics,
+		proc:         proc,
+		errors:       errs,
+		batchSize:    1,
+		batchTimeout: 100 * time.Millisecond,
 	}
 }
 
@@ -121,6 +126,55 @@ func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 	return cb
 }
 
+// WithBatching specifies the batch size and timeout of the Kafka consumer component.
+// If the size is reached then the batch of messages is processed. Otherwise if the timeout elapses
+// without new messages coming in, the messages in the buffer would get processed as a batch.
+func (cb *Builder) WithBatching(size int, timeout time.Duration) *Builder {
+	if size <= 0 {
+		cb.errors = append(cb.errors, errors.New("invalid batch size provided"))
+	} else {
+		log.Infof(propSetMSG, "batchSize", cb.name)
+		cb.batchSize = size
+	}
+
+	cb.batchTimeout = timeout
+	return cb
+}
+
+// WithSyncCommit specifies that a consumer should commit offsets at the end of processing
+// each message or batch of messages in a blocking synchronous operation.
+func (cb *Builder) WithSyncCommit() *Builder {
+	cb.commitSync = true
+	return cb
+}
+
+// WithSaramaConfig specified a sarama consumer config. Use this to set consumer config or sarama level.
+// Initialize a new sarama config:
+//    c := sarama.NewConfig()
+//
+// Set consumer offset autocommit interval:
+//    c.Consumer.Offsets.AutoCommit.Interval = duration
+//
+// Set rebalance strategy
+//    c.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
+//
+// Set timeout
+//    c.Net.DialTimeout = timeout
+//
+// Set Kafka version
+//    c.Version = version
+//
+// Set offset
+//    c.Consumer.Offsets.Initial = offset
+//    c.Consumer.Offsets.Initial = sarama.OffsetOldest
+//    c.Consumer.Offsets.Initial = sarama.OffsetNewest
+//
+// Check the sarama config documentation for more config options.
+func (cb *Builder) WithSaramaConfig(cfg *sarama.Config) *Builder {
+	cb.saramaConfig = cfg
+	return cb
+}
+
 // Create constructs the Component applying
 func (cb *Builder) Create() (*Component, error) {
 	if len(cb.errors) > 0 {
@@ -128,10 +182,15 @@ func (cb *Builder) Create() (*Component, error) {
 	}
 
 	c := &Component{
-		name:    cb.name,
-		group:   cb.group,
-		topics:  cb.topics,
-		brokers: cb.brokers,
+		name:         cb.name,
+		group:        cb.group,
+		topics:       cb.topics,
+		brokers:      cb.brokers,
+		saramaConfig: cb.saramaConfig,
+		proc:         cb.proc,
+		batchSize:    cb.batchSize,
+		batchTimeout: cb.batchTimeout,
+		commitSync:   cb.commitSync,
 	}
 
 	return c, nil
@@ -139,26 +198,26 @@ func (cb *Builder) Create() (*Component, error) {
 
 // Component is a kafka consumer implementation that processes messages in batch
 type Component struct {
-	name    string
-	group   string
-	topics  []string
-	brokers []string
+	name         string
+	group        string
+	topics       []string
+	brokers      []string
+	saramaConfig *sarama.Config
+	proc         BatchProcessorFunc
+	batchSize    int
+	batchTimeout time.Duration
+	commitSync   bool
 }
 
 // Run starts the consumer processing loop messages.
 func (c *Component) Run(ctx context.Context) error {
-	saramaCfg := sarama.NewConfig()
-	saramaCfg.Consumer.Offsets.AutoCommit.Interval = 1 * time.Second
-	saramaCfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
-	batchProcessorFunc := func(messages []*sarama.ConsumerMessage) error {
-		return nil
-	}
-	consumer := newConsumer(ctx, batchProcessorFunc, 100, 5*time.Second, false)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	client, err := sarama.NewConsumerGroup(c.brokers, c.group, saramaCfg)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	consumer := newConsumer(ctx, c.proc, c.batchSize, c.batchTimeout, c.commitSync)
+	client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 	if err != nil {
-		log.Errorf("Error creating consumer group client: %v", err)
+		log.Errorf("error creating consumer group client for kafka consumer component: %v", err)
+		return fmt.Errorf("error creating kafka consumer component: %w", err)
 	}
 
 	wg := &sync.WaitGroup{}
@@ -182,17 +241,16 @@ func (c *Component) Run(ctx context.Context) error {
 	}()
 
 	<-consumer.ready // wait for consumer to be set up
-	log.Debug("consumer ready")
+	log.Debug("kafka consumer component: consumer ready")
 
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-ctx.Done():
-		log.Infof("terminating: context cancelled")
+		log.Infof("kafka consumer component terminating: context cancelled")
 	case <-sigterm:
-		log.Infof("terminating: via signal")
+		log.Infof("kafka consumer component terminating: via signal")
 	}
-	cancel()
 	wg.Wait()
 	return client.Close()
 }
@@ -213,20 +271,20 @@ type Consumer struct {
 	// callback
 	proc BatchProcessorFunc
 
-	// commit every batch in a blocking synchronous operation
-	commitEveryBatch bool
+	// commit offsets after processing in a blocking synchronous operation
+	commitSync bool
 }
 
 func newConsumer(ctx context.Context, processorFunc BatchProcessorFunc, batchSize int, timeout time.Duration, commitEveryBatch bool) *Consumer {
 	return &Consumer{
-		ctx:              ctx,
-		batchSize:        batchSize,
-		ready:            make(chan bool),
-		ticker:           time.NewTicker(timeout),
-		msgBuf:           make([]*sarama.ConsumerMessage, 0, batchSize),
-		mu:               sync.RWMutex{},
-		proc:             processorFunc,
-		commitEveryBatch: commitEveryBatch,
+		ctx:        ctx,
+		batchSize:  batchSize,
+		ready:      make(chan bool),
+		ticker:     time.NewTicker(timeout),
+		msgBuf:     make([]*sarama.ConsumerMessage, 0, batchSize),
+		mu:         sync.RWMutex{},
+		proc:       processorFunc,
+		commitSync: commitEveryBatch,
 	}
 }
 
@@ -284,7 +342,7 @@ func (consumer *Consumer) flush(session sarama.ConsumerGroupSession) error {
 			session.MarkMessage(m, "")
 		}
 
-		if consumer.commitEveryBatch {
+		if consumer.commitSync {
 			session.Commit()
 		}
 

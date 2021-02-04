@@ -105,7 +105,7 @@ func (cb *Builder) WithFailureStrategy(fs FailStrategy) *Builder {
 	return cb
 }
 
-// WithRetries specifies the number of retries to be executed per failed batch
+// WithRetries specifies the number of retries to be executed per failed processing operation
 // default value is '0'.
 func (cb *Builder) WithRetries(retries uint) *Builder {
 	log.Infof(propSetMSG, "retries", cb.name)
@@ -113,7 +113,7 @@ func (cb *Builder) WithRetries(retries uint) *Builder {
 	return cb
 }
 
-// WithRetryWait specifies the duration for the component to wait between retrying batches
+// WithRetryWait specifies the duration for the component to wait between retrying processing of messages
 // default value is '0'
 // it will append an error to the builder if the value is smaller than '0'.
 func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
@@ -135,6 +135,13 @@ func (cb *Builder) WithBatching(size int, timeout time.Duration) *Builder {
 	} else {
 		log.Infof(propSetMSG, "batchSize", cb.name)
 		cb.batchSize = size
+	}
+
+	if timeout < 0 {
+		cb.errors = append(cb.errors, errors.New("invalid batch timeout provided"))
+	} else {
+		log.Infof(propSetMSG, "batchTimeout", cb.name)
+		cb.batchTimeout = timeout
 	}
 
 	cb.batchTimeout = timeout
@@ -190,6 +197,8 @@ func (cb *Builder) Create() (*Component, error) {
 		proc:         cb.proc,
 		batchSize:    cb.batchSize,
 		batchTimeout: cb.batchTimeout,
+		retries:      cb.retries,
+		retryWait:    cb.retryWait,
 		commitSync:   cb.commitSync,
 	}
 
@@ -206,6 +215,8 @@ type Component struct {
 	proc         BatchProcessorFunc
 	batchSize    int
 	batchTimeout time.Duration
+	retries      uint
+	retryWait    time.Duration
 	commitSync   bool
 }
 
@@ -213,7 +224,7 @@ type Component struct {
 func (c *Component) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	consumer := newConsumer(ctx, c.proc, c.batchSize, c.batchTimeout, c.commitSync)
+	consumer := newConsumerHandler(ctx, c.name, c.proc, c.batchSize, c.batchTimeout, c.retries, c.retryWait, c.commitSync)
 	client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 	if err != nil {
 		log.Errorf("error creating consumer group client for kafka consumer component: %v", err)
@@ -229,7 +240,7 @@ func (c *Component) Run(ctx context.Context) error {
 			// server-side rebalance happens, the consumer session will need to be
 			// recreated to get the new claims
 			if err := client.Consume(ctx, c.topics, consumer); err != nil {
-				log.Errorf("error from consumer: %v", err)
+				log.Errorf("error from kafka consumer: %v", err)
 			}
 
 			// check if context was cancelled, signaling that the consumer should stop
@@ -256,14 +267,19 @@ func (c *Component) Run(ctx context.Context) error {
 }
 
 // Consumer represents a sarama consumer group consumer
-type Consumer struct {
+type consumerHandler struct {
 	ctx       context.Context
+	name      string
 	batchSize int
 	ready     chan bool
 
 	// buffer
 	ticker *time.Ticker
 	msgBuf []*sarama.ConsumerMessage
+
+	// retries
+	retries   int
+	retryWait time.Duration
 
 	// lock to protect buffer operation
 	mu sync.RWMutex
@@ -275,13 +291,18 @@ type Consumer struct {
 	commitSync bool
 }
 
-func newConsumer(ctx context.Context, processorFunc BatchProcessorFunc, batchSize int, timeout time.Duration, commitEveryBatch bool) *Consumer {
-	return &Consumer{
+func newConsumerHandler(ctx context.Context, name string, processorFunc BatchProcessorFunc, batchSize int,
+	batchTimeout time.Duration, retries uint, retryWait time.Duration, commitEveryBatch bool) *consumerHandler {
+
+	return &consumerHandler{
 		ctx:        ctx,
+		name:       name,
 		batchSize:  batchSize,
 		ready:      make(chan bool),
-		ticker:     time.NewTicker(timeout),
+		ticker:     time.NewTicker(batchTimeout),
 		msgBuf:     make([]*sarama.ConsumerMessage, 0, batchSize),
+		retries:    int(retries),
+		retryWait:  retryWait,
 		mu:         sync.RWMutex{},
 		proc:       processorFunc,
 		commitSync: commitEveryBatch,
@@ -289,25 +310,25 @@ func newConsumer(ctx context.Context, processorFunc BatchProcessorFunc, batchSiz
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
-func (consumer *Consumer) Setup(sarama.ConsumerGroupSession) error {
+func (c *consumerHandler) Setup(sarama.ConsumerGroupSession) error {
 	// Mark the consumer as ready
-	close(consumer.ready)
+	close(c.ready)
 	return nil
 }
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
-func (consumer *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
+func (c *consumerHandler) Cleanup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
-func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for {
 		select {
 		case msg, ok := <-claim.Messages():
 			if ok {
 				log.Infof("message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
-				err := consumer.insertMessage(session, msg)
+				err := c.insertMessage(session, msg)
 				if err != nil {
 					return err
 				}
@@ -315,49 +336,68 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				log.Debug("messages channel closed")
 				return nil
 			}
-		case <-consumer.ticker.C:
-			consumer.mu.Lock()
-			err := consumer.flush(session)
+		case <-c.ticker.C:
+			c.mu.Lock()
+			err := c.flush(session)
 			if err != nil {
 				return err
 			}
-			consumer.mu.Unlock()
-		case <-consumer.ctx.Done():
-			if consumer.ctx.Err() != context.Canceled {
-				log.Infof("closing consumer: %v", consumer.ctx.Err())
+			c.mu.Unlock()
+		case <-c.ctx.Done():
+			if c.ctx.Err() != context.Canceled {
+				log.Infof("closing consumer: %v", c.ctx.Err())
 			}
 			return nil
 		}
 	}
 }
 
-func (consumer *Consumer) flush(session sarama.ConsumerGroupSession) error {
-	if len(consumer.msgBuf) > 0 {
-		err := consumer.proc(consumer.msgBuf)
+func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
+	var err error
+
+	if len(c.msgBuf) > 0 {
+		for i := 0; i <= c.retries; i++ {
+			err = c.proc(c.msgBuf)
+			if err == nil {
+				break
+			}
+
+			if c.ctx.Err() == context.Canceled {
+				return fmt.Errorf("context was cancelled after processing error: %w", err)
+			}
+
+			consumerErrorsInc(c.name)
+			if c.retries > 0 {
+				log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, err)
+				time.Sleep(c.retryWait)
+			}
+		}
+
 		if err != nil {
+			log.Errorf("exhausted all retries but could not process message(s)")
 			return err
 		}
 
-		for _, m := range consumer.msgBuf {
+		for _, m := range c.msgBuf {
 			session.MarkMessage(m, "")
 		}
 
-		if consumer.commitSync {
+		if c.commitSync {
 			session.Commit()
 		}
 
-		consumer.msgBuf = make([]*sarama.ConsumerMessage, 0, consumer.batchSize)
+		c.msgBuf = make([]*sarama.ConsumerMessage, 0, c.batchSize)
 	}
 
-	return nil
+	return err
 }
 
-func (consumer *Consumer) insertMessage(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) error {
-	consumer.mu.Lock()
-	defer consumer.mu.Unlock()
-	consumer.msgBuf = append(consumer.msgBuf, msg)
-	if len(consumer.msgBuf) >= consumer.batchSize {
-		return consumer.flush(session)
+func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.msgBuf = append(c.msgBuf, msg)
+	if len(c.msgBuf) >= c.batchSize {
+		return c.flush(session)
 	}
 	return nil
 }

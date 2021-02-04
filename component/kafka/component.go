@@ -1,3 +1,4 @@
+// Package kafka provides kafka component implementation.
 package kafka
 
 import (
@@ -301,17 +302,18 @@ func newConsumerHandler(ctx context.Context, name string, processorFunc BatchPro
 	commitEveryBatch bool) *consumerHandler {
 
 	return &consumerHandler{
-		ctx:        ctx,
-		name:       name,
-		batchSize:  batchSize,
-		ready:      make(chan bool),
-		ticker:     time.NewTicker(batchTimeout),
-		msgBuf:     make([]*sarama.ConsumerMessage, 0, batchSize),
-		retries:    int(retries),
-		retryWait:  retryWait,
-		mu:         sync.RWMutex{},
-		proc:       processorFunc,
-		commitSync: commitEveryBatch,
+		ctx:          ctx,
+		name:         name,
+		batchSize:    batchSize,
+		ready:        make(chan bool),
+		ticker:       time.NewTicker(batchTimeout),
+		msgBuf:       make([]*sarama.ConsumerMessage, 0, batchSize),
+		retries:      int(retries),
+		retryWait:    retryWait,
+		mu:           sync.RWMutex{},
+		proc:         processorFunc,
+		failStrategy: fs,
+		commitSync:   commitEveryBatch,
 	}
 }
 

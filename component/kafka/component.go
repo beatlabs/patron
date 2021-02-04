@@ -195,6 +195,7 @@ func (cb *Builder) Create() (*Component, error) {
 		brokers:      cb.brokers,
 		saramaConfig: cb.saramaConfig,
 		proc:         cb.proc,
+		failStrategy: cb.failStrategy,
 		batchSize:    cb.batchSize,
 		batchTimeout: cb.batchTimeout,
 		retries:      cb.retries,
@@ -213,6 +214,7 @@ type Component struct {
 	brokers      []string
 	saramaConfig *sarama.Config
 	proc         BatchProcessorFunc
+	failStrategy FailStrategy
 	batchSize    int
 	batchTimeout time.Duration
 	retries      uint
@@ -224,7 +226,7 @@ type Component struct {
 func (c *Component) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	consumer := newConsumerHandler(ctx, c.name, c.proc, c.batchSize, c.batchTimeout, c.retries, c.retryWait, c.commitSync)
+	consumer := newConsumerHandler(ctx, c.name, c.proc, c.failStrategy, c.batchSize, c.batchTimeout, c.retries, c.retryWait, c.commitSync)
 	client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 	if err != nil {
 		log.Errorf("error creating consumer group client for kafka consumer component: %v", err)
@@ -287,12 +289,16 @@ type consumerHandler struct {
 	// callback
 	proc BatchProcessorFunc
 
+	// failures strategy
+	failStrategy FailStrategy
+
 	// commit offsets after processing in a blocking synchronous operation
 	commitSync bool
 }
 
-func newConsumerHandler(ctx context.Context, name string, processorFunc BatchProcessorFunc, batchSize int,
-	batchTimeout time.Duration, retries uint, retryWait time.Duration, commitEveryBatch bool) *consumerHandler {
+func newConsumerHandler(ctx context.Context, name string, processorFunc BatchProcessorFunc, fs FailStrategy,
+	batchSize int, batchTimeout time.Duration, retries uint, retryWait time.Duration,
+	commitEveryBatch bool) *consumerHandler {
 
 	return &consumerHandler{
 		ctx:        ctx,
@@ -374,8 +380,13 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		}
 
 		if err != nil {
-			log.Errorf("exhausted all retries but could not process message(s)")
-			return err
+			switch c.failStrategy {
+			case ExitStrategy:
+				log.Errorf("exhausted all retries but could not process message(s)")
+				return err
+			case SkipStrategy:
+				log.Errorf("exhausted all retries but could not process message(s) so skipping")
+			}
 		}
 
 		for _, m := range c.msgBuf {

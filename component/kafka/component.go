@@ -10,10 +10,11 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/component/async"
+	"github.com/beatlabs/patron/component/async/kafka"
+	patronErrors "github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
 	"github.com/prometheus/client_golang/prometheus"
-	"gopkg.in/jcmturner/gokrb5.v7/config"
 )
 
 const propSetMSG = "property '%s' set for '%s'"
@@ -40,7 +41,10 @@ func consumerErrorsInc(name string) {
 // Builder gathers all required properties in order to construct a batch consumer component
 type Builder struct {
 	name         string
-	cf           async.ConsumerFactory
+	group        string
+	brokers      []string
+	topics       []string
+	oo           []kafka.OptionFunc
 	proc         BatchProcessorFunc
 	failStrategy FailStrategy
 	retries      uint
@@ -48,24 +52,38 @@ type Builder struct {
 	errors       []error
 }
 
-// New initializes a new builder for a component with the given name
+// New initializes a new builder for a kafka consumer component with the given name
 // by default the failStrategy will be NackExitStrategy.
-func New(name string, cf async.ConsumerFactory, proc BatchProcessorFunc) *Builder {
+func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, oo ...kafka.OptionFunc) *Builder {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
 	}
-	if cf == nil {
-		errs = append(errs, errors.New("consumer is required"))
+
+	if group == "" {
+		errs = append(errs, errors.New("consumer group is required"))
 	}
+
+	if validation.IsStringSliceEmpty(brokers) {
+		errs = append(errs, errors.New("brokers are empty or have an empty value"))
+	}
+
+	if validation.IsStringSliceEmpty(topics) {
+		errs = append(errs, errors.New("topics are empty or have an empty value"))
+	}
+
 	if proc == nil {
 		errs = append(errs, errors.New("work processor is required"))
 	}
+
 	return &Builder{
-		name:   name,
-		cf:     cf,
-		proc:   proc,
-		errors: errs,
+		name:    name,
+		group:   group,
+		brokers: brokers,
+		topics:  topics,
+		proc:    proc,
+		oo:      oo,
+		errors:  errs,
 	}
 }
 
@@ -103,16 +121,32 @@ func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 	return cb
 }
 
-// BatchConsumer is a kafka consumer implementation that processes messages in batch
-type BatchConsumer struct {
+// Create constructs the Component applying
+func (cb *Builder) Create() (*Component, error) {
+	if len(cb.errors) > 0 {
+		return nil, patronErrors.Aggregate(cb.errors...)
+	}
+
+	c := &Component{
+		name:    cb.name,
+		group:   cb.group,
+		topics:  cb.topics,
+		brokers: cb.brokers,
+	}
+
+	return c, nil
+}
+
+// Component is a kafka consumer implementation that processes messages in batch
+type Component struct {
 	name    string
 	group   string
 	topics  []string
 	brokers []string
 }
 
-// NewBatchConsumer initializes a new batch consumer
-func NewBatchConsumer(ctx context.Context, cfg *config.Config) {
+// Run starts the consumer processing loop messages.
+func (c *Component) Run(ctx context.Context) error {
 	saramaCfg := sarama.NewConfig()
 	saramaCfg.Consumer.Offsets.AutoCommit.Interval = 1 * time.Second
 	saramaCfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
@@ -122,7 +156,7 @@ func NewBatchConsumer(ctx context.Context, cfg *config.Config) {
 	consumer := newConsumer(ctx, batchProcessorFunc, 100, 5*time.Second, false)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	client, err := sarama.NewConsumerGroup([]string{cfg.KafkaBroker.Get()}, kafka2.ConsumerGroup(cfg.KafkaGroup.Get(), message.PassengerRelatedActionPositionTopic), saramaCfg)
+	client, err := sarama.NewConsumerGroup(c.brokers, c.group, saramaCfg)
 	if err != nil {
 		log.Errorf("Error creating consumer group client: %v", err)
 	}
@@ -135,7 +169,7 @@ func NewBatchConsumer(ctx context.Context, cfg *config.Config) {
 			// `Consume` should be called inside an infinite loop, when a
 			// server-side rebalance happens, the consumer session will need to be
 			// recreated to get the new claims
-			if err := client.Consume(ctx, []string{message.PassengerRelatedActionPositionTopic}, consumer); err != nil {
+			if err := client.Consume(ctx, c.topics, consumer); err != nil {
 				log.Errorf("error from consumer: %v", err)
 			}
 
@@ -160,9 +194,7 @@ func NewBatchConsumer(ctx context.Context, cfg *config.Config) {
 	}
 	cancel()
 	wg.Wait()
-	if err = client.Close(); err != nil {
-		log.Errorf("error closing client: %v", err)
-	}
+	return client.Close()
 }
 
 // Consumer represents a sarama consumer group consumer

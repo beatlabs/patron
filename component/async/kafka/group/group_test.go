@@ -159,6 +159,7 @@ func (m *mockConsumerSession) MemberID() string           { return "" }
 func (m *mockConsumerSession) GenerationID() int32        { return 0 }
 func (m *mockConsumerSession) MarkOffset(string, int32, int64, string) {
 }
+func (m *mockConsumerSession) Commit() {}
 func (m *mockConsumerSession) ResetOffset(string, int32, int64, string) {
 }
 func (m *mockConsumerSession) MarkMessage(*sarama.ConsumerMessage, string) {}

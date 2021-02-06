@@ -28,7 +28,6 @@ require (
 	github.com/uber/jaeger-lib v2.2.0+incompatible
 	go.uber.org/atomic v1.6.0 // indirect
 	google.golang.org/grpc v1.27.1
-	gopkg.in/jcmturner/gokrb5.v7 v7.5.0
 )
 
 go 1.13

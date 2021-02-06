@@ -12,13 +12,19 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/correlation"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/trace"
+	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const propSetMSG = "property '%s' set for '%s'"
+const (
+	propSetMSG        = "property '%s' set for '%s'"
+	consumerComponent = "kafka-consumer"
+)
 
 var consumerErrors *prometheus.CounterVec
 
@@ -161,6 +167,7 @@ func (cb *Builder) WithSyncCommit() *Builder {
 //    c := sarama.NewConfig()
 //
 // Set consumer offset autocommit interval:
+//    c.Consumer.Offsets.AutoCommit.Enable = false
 //    c.Consumer.Offsets.AutoCommit.Interval = duration
 //
 // Set rebalance strategy
@@ -364,8 +371,16 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 	var err error
 
 	if len(c.msgBuf) > 0 {
+		ctxCh, cancel := c.getContextWithCorrelation()
+		defer cancel()
+
 		for i := 0; i <= c.retries; i++ {
-			err = c.proc(c.msgBuf)
+			wrappedMessages := make([]MessageWrapper, 0, len(c.msgBuf))
+			for _, msg := range c.msgBuf {
+				wrappedMessages = append(wrappedMessages, &messageWrapper{msg: msg})
+			}
+
+			err = c.proc(ctxCh, wrappedMessages)
 			if err == nil {
 				break
 			}
@@ -405,6 +420,25 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 	return err
 }
 
+func (c *consumerHandler) getContextWithCorrelation() (context.Context, context.CancelFunc) {
+	if len(c.msgBuf) == 1 {
+		msg := c.msgBuf[0]
+		corID := getCorrelationID(msg.Headers)
+
+		_, ctxCh := trace.ConsumerSpan(c.ctx, trace.ComponentOpName(consumerComponent, msg.Topic),
+			consumerComponent, corID, mapHeader(msg.Headers))
+		ctxCh = correlation.ContextWithID(ctxCh, corID)
+		ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{correlation.ID: corID}))
+		return ctxCh, func() {}
+	}
+	ctxCh, cancel := context.WithCancel(c.ctx)
+	// generate a new correlation ID for batches larger than size 1
+	batchCorrelationID := uuid.New().String()
+	ctxCh = correlation.ContextWithID(ctxCh, batchCorrelationID)
+	ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{correlation.ID: batchCorrelationID}))
+	return ctxCh, cancel
+}
+
 func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -415,5 +449,22 @@ func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg
 	return nil
 }
 
-// BatchProcessorFunc definition of a batch async processor.
-type BatchProcessorFunc func([]*sarama.ConsumerMessage) error
+func getCorrelationID(hh []*sarama.RecordHeader) string {
+	for _, h := range hh {
+		if string(h.Key) == correlation.HeaderID {
+			if len(h.Value) > 0 {
+				return string(h.Value)
+			}
+			break
+		}
+	}
+	return uuid.New().String()
+}
+
+func mapHeader(hh []*sarama.RecordHeader) map[string]string {
+	mp := make(map[string]string)
+	for _, h := range hh {
+		mp[string(h.Key)] = string(h.Value)
+	}
+	return mp
+}

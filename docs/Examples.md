@@ -55,7 +55,7 @@ The service can be started as follows:
 go run examples/http-sec/main.go
 ```
 
-## [Kafka Service](../examples/kafka/main.go)
+## [Kafka Service](../examples/kafka-simple/main.go)
 
 The service shows how to use:
 
@@ -69,7 +69,7 @@ The service can be started as follows:
 go run examples/amqp/main.go
 ```
 
-## [AMQP Service](../examples/kafka/main.go)
+## [AMQP Service](../examples/kafka-simple/main.go)
 
 The service shows how to use:
 

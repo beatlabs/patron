@@ -6,22 +6,17 @@ import (
 	"os"
 	"time"
 
+	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/component/kafka"
+
 	"github.com/beatlabs/patron"
-	"github.com/beatlabs/patron/client/amqp"
-	"github.com/beatlabs/patron/component/async"
-	"github.com/beatlabs/patron/component/async/kafka"
-	"github.com/beatlabs/patron/component/async/kafka/group"
-	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 )
 
 const (
-	amqpURL      = "amqp://guest:guest@localhost:5672/"
-	amqpExchange = "patron"
-	kafkaTopic   = "patron-topic"
-	kafkaGroup   = "patron-group"
-	kafkaBroker  = "localhost:9092"
+	kafkaTopic  = "patron-topic"
+	kafkaGroup  = "patron-group"
+	kafkaBroker = "localhost:9092"
 )
 
 func init() {
@@ -52,7 +47,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	kafkaCmp, err := newKafkaComponent(name, kafkaBroker, kafkaTopic, kafkaGroup, amqpURL, amqpExchange)
+	kafkaCmp, err := newKafkaComponent(name, kafkaBroker, kafkaTopic, kafkaGroup)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
@@ -66,53 +61,36 @@ func main() {
 
 type kafkaComponent struct {
 	cmp patron.Component
-	pub amqp.Publisher
 }
 
-func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*kafkaComponent, error) {
+func newKafkaComponent(name, broker, topic, groupID string) (*kafkaComponent, error) {
 	kafkaCmp := kafkaComponent{}
 
-	cf, err := group.New(name, groupID, []string{topic}, []string{broker}, kafka.Decoder(json.DecodeRaw))
-	if err != nil {
-		return nil, err
-	}
+	saramaCfg := sarama.NewConfig()
+	// consumer will use WithSyncCommit so will manually commit offsets
+	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
+	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
+	saramaCfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
+	saramaCfg.Net.DialTimeout = 15 * time.Second
 
-	cmp, err := async.New("kafka-cmp", cf, kafkaCmp.Process).
-		WithRetries(10).
-		WithRetryWait(5 * time.Second).
+	cmp, err := kafka.New(name, groupID, []string{broker}, []string{topic}, kafkaCmp.Process).
+		WithBatching(1, 1*time.Second).
+		WithFailureStrategy(kafka.SkipStrategy).
+		WithRetries(3).
+		WithRetryWait(1 * time.Second).
+		WithSyncCommit().
+		WithSaramaConfig(saramaCfg).
 		Create()
+
 	if err != nil {
 		return nil, err
 	}
 	kafkaCmp.cmp = cmp
 
-	pub, err := amqp.NewPublisher(amqpURL, amqpExc)
-	if err != nil {
-		return nil, err
-	}
-	kafkaCmp.pub = pub
-
 	return &kafkaCmp, nil
 }
 
-func (kc *kafkaComponent) Process(msg async.Message) error {
-	var u examples.User
-
-	err := msg.Decode(&u)
-	if err != nil {
-		return err
-	}
-
-	amqpMsg, err := amqp.NewProtobufMessage(&u)
-	if err != nil {
-		return err
-	}
-
-	err = kc.pub.Publish(msg.Context(), amqpMsg)
-	if err != nil {
-		return err
-	}
-
-	log.FromContext(msg.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
+func (kc *kafkaComponent) Process(ctx context.Context, msgs []kafka.MessageWrapper) error {
+	log.FromContext(ctx).Infof("got batch: %+v", msgs)
 	return nil
 }

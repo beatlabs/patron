@@ -38,10 +38,8 @@ func panicMiddleware(v interface{}) MiddlewareFunc {
 func getMockLimiter(allow bool) *rate.Limiter {
 	if allow {
 		return rate.NewLimiter(1, 1)
-	} else {
-		return rate.NewLimiter(1, 0)
 	}
-
+	return rate.NewLimiter(1, 0)
 }
 
 func TestMiddlewareChain(t *testing.T) {

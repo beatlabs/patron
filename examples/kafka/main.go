@@ -6,14 +6,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/client/amqp"
+	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
-
-	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/component/kafka"
-
-	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/log"
 )
 

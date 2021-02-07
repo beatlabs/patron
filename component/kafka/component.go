@@ -5,10 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -263,15 +260,8 @@ func (c *Component) Run(ctx context.Context) error {
 
 	<-consumer.ready // wait for consumer to be set up
 	log.Debug("kafka component: consumer ready")
-
-	sigterm := make(chan os.Signal, 1)
-	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
-	select {
-	case <-ctx.Done():
-		log.Infof("kafka component terminating: context cancelled")
-	case <-sigterm:
-		log.Infof("kafka component terminating: via signal")
-	}
+	<-ctx.Done()
+	log.Infof("kafka component terminating: context cancelled")
 	wg.Wait()
 	return client.Close()
 }

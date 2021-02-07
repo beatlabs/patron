@@ -20,4 +20,5 @@ updates:
       day: "monday"
     ignore:
       - dependency-name: "github.com/julienschmidt/httprouter"
+      - dependency-name: "github.com/Shopify/sarama"
     open-pull-requests-limit: 1

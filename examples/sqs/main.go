@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -13,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron"
 	patrongrpc "github.com/beatlabs/patron/client/grpc"
-	"github.com/beatlabs/patron/component/async"
-	patronsqs "github.com/beatlabs/patron/component/async/sqs"
 	"github.com/beatlabs/patron/component/grpc/greeter"
+	patronsqs "github.com/beatlabs/patron/component/sqs"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 	"google.golang.org/grpc"
@@ -51,6 +50,7 @@ func init() {
 func main() {
 	name := "sqs"
 	version := "1.0.0"
+	ctx := context.Background()
 
 	service, err := patron.New(name, version)
 	if err != nil {
@@ -85,8 +85,6 @@ func main() {
 		log.Fatalf("failed to create sqs component: %v", err)
 	}
 
-	// Run the server
-	ctx := context.Background()
 	err = service.WithComponents(sqsCmp.cmp).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service: %v", err)
@@ -99,42 +97,55 @@ type sqsComponent struct {
 }
 
 func createSQSComponent(api sqsiface.SQSAPI, greeter greeter.GreeterClient) (*sqsComponent, error) {
-	sqsCmp := sqsComponent{}
-
-	cf, err := patronsqs.NewFactory(api, awsSQSQueue)
-	if err != nil {
-		return nil, err
+	sqsCmp := sqsComponent{
+		greeter: greeter,
 	}
 
-	cmp, err := async.New("sqs-cmp", cf, sqsCmp.Process).
-		WithRetries(10).
-		WithRetryWait(10 * time.Second).
-		Create()
+	cmp, err := patronsqs.New("sqs-cmp", awsSQSQueue, api, sqsCmp.Process, patronsqs.PollWaitSeconds(5))
 	if err != nil {
 		return nil, err
 	}
 	sqsCmp.cmp = cmp
-	sqsCmp.greeter = greeter
 
 	return &sqsCmp, nil
 }
 
-func (ac *sqsComponent) Process(msg async.Message) error {
-	var u examples.User
+func (ac *sqsComponent) Process(_ context.Context, btc patronsqs.Batch) {
+	for _, msg := range btc.Messages() {
+		logger := log.FromContext(msg.Context())
+		var u examples.User
 
-	err := msg.Decode(&u)
-	if err != nil {
-		return err
+		err := json.DecodeRaw(msg.Body(), u)
+		if err != nil {
+			logger.Errorf("failed to decode message: %v", err)
+			msg.NACK()
+			continue
+		}
+
+		logger.Infof("request processed: %v, sending request to the gRPC service", u.String())
+		reply, err := ac.greeter.SayHello(msg.Context(), &greeter.HelloRequest{Firstname: u.GetFirstname(), Lastname: u.GetLastname()})
+		if err != nil {
+			logger.Errorf("failed to send request: %v", err)
+			msg.NACK()
+		}
+
+		logger.Infof("reply from the gRPC service: %s", reply.GetMessage())
+		// We can either acknowledge the whole batch of each message individually.
+		err = msg.ACK()
+		if err != nil {
+			logger.Errorf("failed to acknowledge message with id %s: %v", msg.ID(), err)
+		}
 	}
 
-	logger := log.FromContext(msg.Context())
-	logger.Infof("request processed: %v, sending request to the gRPC service", u.String())
-
-	reply, err := ac.greeter.SayHello(msg.Context(), &greeter.HelloRequest{Firstname: u.GetFirstname(), Lastname: u.GetLastname()})
-	if err != nil {
-		logger.Errorf("failed to send request: %v", err)
-	}
-
-	logger.Infof("Reply from the gRPC service: %s", reply.GetMessage())
-	return nil
+	// logger := log.FromContext(ctx)
+	//
+	// // We can either acknowledge the whole batch of each message individually.
+	// failed, err := btc.ACK()
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// for _, msg := range failed {
+	// 	logger.Warnf("failed to acknowledge message with id: %s", msg.ID())
+	// }
 }

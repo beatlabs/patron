@@ -2,17 +2,17 @@ package patron
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"os"
 	"strconv"
 	"testing"
 
-	"github.com/beatlabs/patron/log/std"
-
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/log/std"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -133,7 +133,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 
-			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort())
+			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort(t))
 			assert.NoError(t, err)
 			svc, err := New("test", "", TextLogger())
 			require.NoError(t, err)
@@ -303,9 +303,10 @@ func TestServer_SetupDeflateLevel(t *testing.T) {
 	}
 }
 
-func getRandomPort() string {
-	rnd := 50000 + rand.Int63n(10000)
-	return strconv.FormatInt(rnd, 10)
+func getRandomPort(t *testing.T) string {
+	bg, err := rand.Int(rand.Reader, big.NewInt(10000))
+	require.NoError(t, err)
+	return strconv.FormatInt(bg.Int64(), 10)
 }
 
 type testComponent struct {

@@ -27,9 +27,10 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
   - [Async](docs/components/async/Async.md)
     - [Kafka](docs/components/async/Kafka.md)
     - [AMQP](docs/components/async/AMQP.md)
-    - [AWS SQS](docs/components/async/AWSSQS.md)
+    - [AWS SQS (deprecated)](docs/components/async/AWSSQS.md)
   - [HTTP](docs/components/HTTP.md)
   - [gRPC](docs/components/gRPC.md)
+  - [AWS SQS](docs/components/SQS.md)
 - [Clients](docs/clients/Clients.md)
 - Packages
   - [Reliability](docs/other/Reliability.md)

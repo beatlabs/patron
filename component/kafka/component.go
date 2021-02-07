@@ -326,6 +326,10 @@ func (c *consumerHandler) Setup(sarama.ConsumerGroupSession) error {
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
 func (c *consumerHandler) Cleanup(sarama.ConsumerGroupSession) error {
+	// if the strategy is to exit on failure then we cancel the context to exit the whole component
+	if c.failStrategy == ExitStrategy {
+		c.cancel()
+	}
 	return nil
 }
 
@@ -348,7 +352,6 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			c.mu.Lock()
 			err := c.flush(session)
 			if err != nil {
-				c.cancel()
 				return err
 			}
 			c.mu.Unlock()

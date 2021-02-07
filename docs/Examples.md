@@ -55,7 +55,7 @@ The service can be started as follows:
 go run examples/http-sec/main.go
 ```
 
-## [Kafka Service](../examples/kafka-simple/main.go)
+## [Kafka Service](../examples/kafka-legacy/main.go)
 
 The service shows how to use:
 
@@ -66,10 +66,24 @@ The service shows how to use:
 The service can be started as follows:
 
 ```shell
-go run examples/amqp/main.go
+go run examples/kafka/main.go
 ```
 
-## [AMQP Service](../examples/kafka-simple/main.go)
+## [Legacy Kafka Service](../examples/kafka-legacy/main.go)
+
+The service shows how to use:
+
+- Kafka with a group consumer
+- AMQP publisher
+- Textual logger
+
+The service can be started as follows:
+
+```shell
+go run examples/kafka-legacy/main.go
+```
+
+## [AMQP Service](../examples/amqp/main.go)
 
 The service shows how to use:
 
@@ -81,7 +95,7 @@ The service shows how to use:
 The service can be started as follows:
 
 ```shell
-go run examples/sns/main.go
+go run examples/amqp/main.go
 ```
 
 ## [AWS SQS Service](../examples/sqs/main.go)

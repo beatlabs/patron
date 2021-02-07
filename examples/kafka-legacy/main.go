@@ -20,7 +20,7 @@ const (
 	amqpURL      = "amqp://guest:guest@localhost:5672/"
 	amqpExchange = "patron"
 	kafkaTopic   = "patron-topic"
-	kafkaGroup   = "patron-group"
+	kafkaGroup   = "patron-group-legacy"
 	kafkaBroker  = "localhost:9092"
 )
 

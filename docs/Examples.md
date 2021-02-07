@@ -55,7 +55,7 @@ The service can be started as follows:
 go run examples/http-sec/main.go
 ```
 
-## [Kafka Service](../examples/kafka-legacy/main.go)
+## [Kafka Service](../examples/kafka/main.go)
 
 The service shows how to use:
 

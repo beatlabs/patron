@@ -234,7 +234,7 @@ type Component struct {
 func (c *Component) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	consumer := newConsumerHandler(ctx, c.name, c.proc, c.failStrategy, c.batchSize, c.batchTimeout, c.retries, c.retryWait, c.commitSync)
+	consumer := newConsumerHandler(ctx, cancel, c.name, c.proc, c.failStrategy, c.batchSize, c.batchTimeout, c.retries, c.retryWait, c.commitSync)
 	client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 	if err != nil {
 		log.Errorf("error creating consumer group client for kafka consumer component: %v", err)
@@ -262,15 +262,15 @@ func (c *Component) Run(ctx context.Context) error {
 	}()
 
 	<-consumer.ready // wait for consumer to be set up
-	log.Debug("kafka consumer component: consumer ready")
+	log.Debug("kafka component: consumer ready")
 
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-ctx.Done():
-		log.Infof("kafka consumer component terminating: context cancelled")
+		log.Infof("kafka component terminating: context cancelled")
 	case <-sigterm:
-		log.Infof("kafka consumer component terminating: via signal")
+		log.Infof("kafka component terminating: via signal")
 	}
 	wg.Wait()
 	return client.Close()
@@ -278,7 +278,9 @@ func (c *Component) Run(ctx context.Context) error {
 
 // Consumer represents a sarama consumer group consumer
 type consumerHandler struct {
-	ctx       context.Context
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	name      string
 	batchSize int
 	ready     chan bool
@@ -304,12 +306,13 @@ type consumerHandler struct {
 	commitSync bool
 }
 
-func newConsumerHandler(ctx context.Context, name string, processorFunc BatchProcessorFunc, fs FailStrategy,
-	batchSize int, batchTimeout time.Duration, retries uint, retryWait time.Duration,
+func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name string, processorFunc BatchProcessorFunc,
+	fs FailStrategy, batchSize int, batchTimeout time.Duration, retries uint, retryWait time.Duration,
 	commitEveryBatch bool) *consumerHandler {
 
 	return &consumerHandler{
 		ctx:          ctx,
+		cancel:       cancel,
 		name:         name,
 		batchSize:    batchSize,
 		ready:        make(chan bool),
@@ -355,6 +358,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			c.mu.Lock()
 			err := c.flush(session)
 			if err != nil {
+				c.cancel()
 				return err
 			}
 			c.mu.Unlock()

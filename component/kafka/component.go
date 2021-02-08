@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -21,25 +22,68 @@ import (
 const (
 	propSetMSG        = "property '%s' set for '%s'"
 	consumerComponent = "kafka-consumer"
+	subsystem         = "kafka"
+	messageReceived   = "received"
+	messageProcessed  = "processed"
+	messageErrored    = "errored"
 )
 
-var consumerErrors *prometheus.CounterVec
+var (
+	consumerErrors           *prometheus.CounterVec
+	topicPartitionOffsetDiff *prometheus.GaugeVec
+	messageStatus            *prometheus.CounterVec
+)
 
 func init() {
 	consumerErrors = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "component",
-			Subsystem: "kafka",
+			Subsystem: subsystem,
 			Name:      "consumer_errors",
 			Help:      "Consumer errors, classified by consumer name",
 		},
 		[]string{"name"},
 	)
-	prometheus.MustRegister(consumerErrors)
+
+	topicPartitionOffsetDiff = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "component",
+			Subsystem: subsystem,
+			Name:      "consumer_offset_diff",
+			Help:      "Message offset difference with high watermark, classified by topic and partition",
+		},
+		[]string{"group", "topic", "partition"},
+	)
+
+	messageStatus = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "component",
+			Subsystem: subsystem,
+			Name:      "message_status",
+			Help:      "Message status counter (received, processed, errored) classified by topic and partition",
+		}, []string{"status", "group", "topic"},
+	)
+
+	prometheus.MustRegister(
+		consumerErrors,
+		topicPartitionOffsetDiff,
+		messageStatus,
+	)
 }
 
+// consumerErrorsInc increments the number of errors encountered by a specific consumer
 func consumerErrorsInc(name string) {
 	consumerErrors.WithLabelValues(name).Inc()
+}
+
+// topicPartitionOffsetDiffGaugeSet creates a new Gauge that measures partition offsets.
+func topicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high, offset int64) {
+	topicPartitionOffsetDiff.WithLabelValues(group, topic, strconv.FormatInt(int64(partition), 10)).Set(float64(high - offset))
+}
+
+// messageStatusCountInc increments the messageStatus counter for a certain status.
+func messageStatusCountInc(status, group, topic string) {
+	messageStatus.WithLabelValues(status, group, topic).Inc()
 }
 
 // Builder gathers all required properties in order to construct a batch consumer component
@@ -231,7 +275,8 @@ type Component struct {
 func (c *Component) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	consumer := newConsumerHandler(ctx, cancel, c.name, c.proc, c.failStrategy, c.batchSize, c.batchTimeout, c.retries, c.retryWait, c.commitSync)
+	consumer := newConsumerHandler(ctx, cancel, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
+		c.batchTimeout, c.retries, c.retryWait, c.commitSync)
 	client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 	if err != nil {
 		log.Errorf("error creating consumer group client for kafka consumer component: %v", err)
@@ -271,13 +316,14 @@ type consumerHandler struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	name      string
-	batchSize int
-	ready     chan bool
+	name  string
+	group string
+	ready chan bool
 
 	// buffer
-	ticker *time.Ticker
-	msgBuf []*sarama.ConsumerMessage
+	batchSize int
+	ticker    *time.Ticker
+	msgBuf    []*sarama.ConsumerMessage
 
 	// retries
 	retries   int
@@ -296,7 +342,7 @@ type consumerHandler struct {
 	commitSync bool
 }
 
-func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name string, processorFunc BatchProcessorFunc,
+func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name, group string, processorFunc BatchProcessorFunc,
 	fs FailStrategy, batchSize uint, batchTimeout time.Duration, retries uint, retryWait time.Duration,
 	commitEveryBatch bool) *consumerHandler {
 
@@ -304,6 +350,7 @@ func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name str
 		ctx:          ctx,
 		cancel:       cancel,
 		name:         name,
+		group:        group,
 		batchSize:    int(batchSize),
 		ready:        make(chan bool),
 		ticker:       time.NewTicker(batchTimeout),
@@ -341,6 +388,8 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		case msg, ok := <-claim.Messages():
 			if ok {
 				log.Infof("message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
+				topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
+				messageStatusCountInc(messageReceived, c.group, msg.Topic)
 				err := c.insertMessage(session, msg)
 				if err != nil {
 					return err
@@ -375,6 +424,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		for i := 0; i <= c.retries; i++ {
 			wrappedMessages := make([]MessageWrapper, 0, len(c.msgBuf))
 			for _, msg := range c.msgBuf {
+				messageStatusCountInc(messageProcessed, c.group, msg.Topic)
 				wrappedMessages = append(wrappedMessages, &messageWrapper{msg: msg})
 			}
 
@@ -395,6 +445,9 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		}
 
 		if err != nil {
+			for _, msg := range c.msgBuf {
+				messageStatusCountInc(messageErrored, c.group, msg.Topic)
+			}
 			switch c.failStrategy {
 			case ExitStrategy:
 				log.Errorf("exhausted all retries but could not process message(s)")

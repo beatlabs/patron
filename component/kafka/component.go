@@ -237,6 +237,15 @@ func (cb *Builder) Create() (*Component, error) {
 		return nil, patronErrors.Aggregate(cb.errors...)
 	}
 
+	if cb.saramaConfig == nil {
+		defaultSaramaCfg, err := defaultSaramaConfig(cb.name)
+		if err != nil {
+			return nil, err
+		}
+
+		cb.saramaConfig = defaultSaramaCfg
+	}
+
 	c := &Component{
 		name:         cb.name,
 		group:        cb.group,
@@ -387,7 +396,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		select {
 		case msg, ok := <-claim.Messages():
 			if ok {
-				log.Infof("message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
+				log.Debugf("message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
 				topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
 				messageStatusCountInc(messageReceived, c.group, msg.Topic)
 				err := c.insertMessage(session, msg)

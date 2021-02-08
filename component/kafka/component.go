@@ -51,7 +51,7 @@ type Builder struct {
 	saramaConfig *sarama.Config
 	proc         BatchProcessorFunc
 	failStrategy FailStrategy
-	batchSize    int
+	batchSize    uint
 	batchTimeout time.Duration
 	retries      uint
 	retryWait    time.Duration
@@ -133,9 +133,9 @@ func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 // WithBatching specifies the batch size and timeout of the Kafka consumer component.
 // If the size is reached then the batch of messages is processed. Otherwise if the timeout elapses
 // without new messages coming in, the messages in the buffer would get processed as a batch.
-func (cb *Builder) WithBatching(size int, timeout time.Duration) *Builder {
-	if size <= 0 {
-		cb.errors = append(cb.errors, errors.New("invalid batch size provided"))
+func (cb *Builder) WithBatching(size uint, timeout time.Duration) *Builder {
+	if size == 0 {
+		cb.errors = append(cb.errors, errors.New("zero batch size provided"))
 	} else {
 		log.Infof(propSetMSG, "batchSize", cb.name)
 		cb.batchSize = size
@@ -220,7 +220,7 @@ type Component struct {
 	saramaConfig *sarama.Config
 	proc         BatchProcessorFunc
 	failStrategy FailStrategy
-	batchSize    int
+	batchSize    uint
 	batchTimeout time.Duration
 	retries      uint
 	retryWait    time.Duration
@@ -297,14 +297,14 @@ type consumerHandler struct {
 }
 
 func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name string, processorFunc BatchProcessorFunc,
-	fs FailStrategy, batchSize int, batchTimeout time.Duration, retries uint, retryWait time.Duration,
+	fs FailStrategy, batchSize uint, batchTimeout time.Duration, retries uint, retryWait time.Duration,
 	commitEveryBatch bool) *consumerHandler {
 
 	return &consumerHandler{
 		ctx:          ctx,
 		cancel:       cancel,
 		name:         name,
-		batchSize:    batchSize,
+		batchSize:    int(batchSize),
 		ready:        make(chan bool),
 		ticker:       time.NewTicker(batchTimeout),
 		msgBuf:       make([]*sarama.ConsumerMessage, 0, batchSize),

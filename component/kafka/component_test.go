@@ -3,11 +3,12 @@ package kafka
 import (
 	"context"
 	"errors"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/correlation"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,6 +43,11 @@ func TestNew(t *testing.T) {
 		{
 			name:    "success",
 			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
+			wantErr: false,
+		},
+		{
+			name:    "success, no sarama config",
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: nil},
 			wantErr: false,
 		},
 		{
@@ -111,89 +117,43 @@ func TestNew(t *testing.T) {
 	}
 }
 
-type proxyBuilder struct {
-	proc         mockProcessor
-	fs           FailStrategy
-	retries      int
-	retryWait    time.Duration
-	syncCommit   bool
-	batchSize    uint
-	batchTimeout time.Duration
-	saramaCfg    *sarama.Config
-}
-
-func run(ctx context.Context, t *testing.T, mockBroker *sarama.MockBroker, topic string, builder *proxyBuilder) error {
-	cmpb := New("test", "test-grp", []string{mockBroker.Addr()}, []string{topic}, builder.proc.Process).
-		WithFailureStrategy(builder.fs).
-		WithRetries(uint(builder.retries)).
-		WithRetryWait(builder.retryWait).
-		WithBatching(builder.batchSize, builder.batchTimeout).
-		WithSaramaConfig(builder.saramaCfg)
-
-	if builder.syncCommit {
-		cmpb.WithSyncCommit()
-	}
-
-	cmp, err := cmpb.Create()
-	assert.NoError(t, err)
-	return cmp.Run(ctx)
-}
-
-// TestRun_ReturnsError expects a consumer consume Error
-func TestRun_ReturnsErrorOnExitStrategy(t *testing.T) {
-	topic := "topicone"
-	saramaCfg, err := defaultSaramaConfig("test")
-	assert.NoError(t, err)
-	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
-	builder := proxyBuilder{
-		proc:         mockProcessor{errReturn: true, t: t},
-		fs:           ExitStrategy,
-		syncCommit:   true,
-		batchSize:    1,
-		batchTimeout: time.Second,
-		saramaCfg:    saramaCfg,
-	}
-	broker := sarama.NewMockBroker(t, 0)
-	defer broker.Close()
-	broker.SetHandlerByMap(map[string]sarama.MockResponse{
-		"MetadataRequest": sarama.NewMockMetadataResponse(t).
-			SetBroker(broker.Addr(), broker.BrokerID()).
-			SetLeader(topic, 0, broker.BrokerID()),
-		"OffsetRequest": sarama.NewMockOffsetResponse(t).
-			SetOffset(topic, 0, sarama.OffsetNewest, 2).
-			SetOffset(topic, 0, sarama.OffsetOldest, 0),
-		"FetchRequest": sarama.NewMockFetchResponse(t, 1).
-			SetMessage(topic, 0, 0, sarama.StringEncoder("{}")),
-	})
-
-	assert.NoError(t, err)
-	err = run(context.Background(), t, broker, topic, &builder)
-	assert.True(t, errors.Is(err, errProcess))
-	assert.Equal(t, 0, builder.proc.execs)
-}
-
 type mockProcessor struct {
 	errReturn bool
-	mux       sync.Mutex
-	execs     int
-	t         *testing.T
 }
 
 var errProcess = errors.New("PROC ERROR")
 
 func (mp *mockProcessor) Process(context.Context, []MessageWrapper) error {
-	mp.t.Log("addddd")
-	mp.mux.Lock()
-	mp.execs++
-	mp.mux.Unlock()
 	if mp.errReturn {
 		return errProcess
 	}
 	return nil
 }
 
-func (mp *mockProcessor) GetExecs() int {
-	mp.mux.Lock()
-	defer mp.mux.Unlock()
-	return mp.execs
+func Test_getCorrelationID(t *testing.T) {
+	corID := uuid.New().String()
+	got := getCorrelationID([]*sarama.RecordHeader{
+		{
+			Key:   []byte(correlation.HeaderID),
+			Value: []byte(corID),
+		},
+	})
+	assert.Equal(t, corID, got)
+}
+
+func Test_mapHeader(t *testing.T) {
+	mp := mapHeader([]*sarama.RecordHeader{
+		{
+			Key:   []byte("X-HEADER-1"),
+			Value: []byte("1"),
+		},
+		{
+			Key:   []byte("X-HEADER-2"),
+			Value: []byte("2"),
+		},
+	})
+	assert.Equal(t, "1", mp["X-HEADER-1"])
+	assert.Equal(t, "2", mp["X-HEADER-2"])
+	_, ok := mp["X-HEADER-3"]
+	assert.False(t, ok)
 }

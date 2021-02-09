@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -38,4 +40,10 @@ func Test_messageWrapper(t *testing.T) {
 		msg: cm,
 	}
 	assert.NotNil(t, msg.GetCorrelationID()) // a new correlation ID is generated
+}
+
+func Test_defaultSaramaConfig(t *testing.T) {
+	sc, err := defaultSaramaConfig("name")
+	assert.NoError(t, err)
+	assert.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
 }

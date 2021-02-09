@@ -49,7 +49,7 @@ func init() {
 		prometheus.GaugeOpts{
 			Namespace: "component",
 			Subsystem: subsystem,
-			Name:      "consumer_offset_diff",
+			Name:      "offset_diff",
 			Help:      "Message offset difference with high watermark, classified by topic and partition",
 		},
 		[]string{"group", "topic", "partition"},

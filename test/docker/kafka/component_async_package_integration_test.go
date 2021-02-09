@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestKafkaComponent_Success(t *testing.T) {
+func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -37,7 +37,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 		consumerWG.Done()
 		return nil
 	}
-	component := newComponent(t, successTopic, 3, processorFunc)
+	component := newKafkaAsyncPackageComponent(t, successTopic, 3, processorFunc)
 
 	// Run Patron with the kafka component
 	patronContext, patronCancel := context.WithCancel(context.Background())
@@ -80,7 +80,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 	patronWG.Wait()
 }
 
-func TestKafkaComponent_FailAllRetries(t *testing.T) {
+func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
 	// Test parameters
 	numOfMessagesToSend := 100
 	errAtIndex := 50
@@ -104,7 +104,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 		return nil
 	}
 	numOfRetries := uint(3)
-	component := newComponent(t, failAllRetriesTopic, numOfRetries, processorFunc)
+	component := newKafkaAsyncPackageComponent(t, failAllRetriesTopic, numOfRetries, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
@@ -137,7 +137,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
 }
 
-func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
+func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -158,7 +158,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 		actualMessages = append(actualMessages, msgContent)
 		return nil
 	}
-	component := newComponent(t, failAndRetryTopic, 3, processorFunc)
+	component := newKafkaAsyncPackageComponent(t, failAndRetryTopic, 3, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
@@ -201,7 +201,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	assert.Equal(t, expectedMessages, actualMessages)
 }
 
-func newComponent(t *testing.T, name string, retries uint, processorFunc func(message async.Message) error) *async.Component {
+func newKafkaAsyncPackageComponent(t *testing.T, name string, retries uint, processorFunc func(message async.Message) error) *async.Component {
 	decode := func(data []byte, v interface{}) error {
 		tmp := string(data)
 		p := v.(*string)

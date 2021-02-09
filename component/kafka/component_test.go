@@ -3,10 +3,13 @@ package kafka
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -143,4 +146,124 @@ func Test_mapHeader(t *testing.T) {
 	assert.Equal(t, "2", mp["X-HEADER-2"])
 	_, ok := mp["X-HEADER-3"]
 	assert.False(t, ok)
+}
+
+type mockConsumerClaim struct {
+	ch     chan *sarama.ConsumerMessage
+	cancel context.CancelFunc
+	mu     sync.RWMutex
+	closed bool
+}
+
+func (m *mockConsumerClaim) Messages() <-chan *sarama.ConsumerMessage {
+	m.mu.Lock()
+	if m.closed {
+		m.cancel()
+	} else {
+		close(m.ch)
+	}
+	m.closed = true
+	m.mu.Unlock()
+	return m.ch
+}
+func (m *mockConsumerClaim) Topic() string              { return "" }
+func (m *mockConsumerClaim) Partition() int32           { return 0 }
+func (m *mockConsumerClaim) InitialOffset() int64       { return 0 }
+func (m *mockConsumerClaim) HighWaterMarkOffset() int64 { return 1 }
+
+type mockConsumerSession struct{}
+
+func (m *mockConsumerSession) Claims() map[string][]int32 { return nil }
+func (m *mockConsumerSession) MemberID() string           { return "" }
+func (m *mockConsumerSession) GenerationID() int32        { return 0 }
+func (m *mockConsumerSession) MarkOffset(string, int32, int64, string) {
+}
+func (m *mockConsumerSession) Commit() {}
+func (m *mockConsumerSession) ResetOffset(string, int32, int64, string) {
+}
+func (m *mockConsumerSession) MarkMessage(*sarama.ConsumerMessage, string) {}
+func (m *mockConsumerSession) Context() context.Context                    { return context.Background() }
+
+func TestHandler_ConsumeClaim(t *testing.T) {
+
+	tests := []struct {
+		name         string
+		msgs         []*sarama.ConsumerMessage
+		proc         BatchProcessorFunc
+		failStrategy FailStrategy
+		expectError  bool
+	}{
+		{
+			name: "success",
+			msgs: saramaConsumerMessages(json.Type),
+			proc: func(context.Context, []MessageWrapper) error {
+				return nil
+			},
+			failStrategy: ExitStrategy,
+			expectError:  false,
+		},
+		{
+			name: "failure",
+			msgs: saramaConsumerMessages("mock"),
+			proc: func(context.Context, []MessageWrapper) error {
+				return errors.New("mock-error")
+			},
+			failStrategy: ExitStrategy,
+			expectError:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			h := newConsumerHandler(ctx, cancel, tt.name, "grp", tt.proc, tt.failStrategy, 1,
+				time.Second, 0, 0, true)
+
+			ch := make(chan *sarama.ConsumerMessage, len(tt.msgs))
+			for _, m := range tt.msgs {
+				ch <- m
+			}
+			err := h.ConsumeClaim(&mockConsumerSession{}, &mockConsumerClaim{ch: ch, cancel: cancel})
+
+			if tt.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func saramaConsumerMessages(ct string) []*sarama.ConsumerMessage {
+	return []*sarama.ConsumerMessage{
+		saramaConsumerMessage("value", &sarama.RecordHeader{
+			Key:   []byte(encoding.ContentTypeHeader),
+			Value: []byte(ct),
+		}),
+	}
+}
+
+func saramaConsumerMessage(value string, header *sarama.RecordHeader) *sarama.ConsumerMessage {
+	return versionedConsumerMessage(value, header, 0)
+}
+
+func versionedConsumerMessage(value string, header *sarama.RecordHeader, version uint8) *sarama.ConsumerMessage {
+
+	bytes := []byte(value)
+
+	if version > 0 {
+		bytes = append([]byte{version}, bytes...)
+	}
+
+	return &sarama.ConsumerMessage{
+		Topic:          "TEST_TOPIC",
+		Partition:      0,
+		Key:            []byte("key"),
+		Value:          bytes,
+		Offset:         0,
+		Timestamp:      time.Now(),
+		BlockTimestamp: time.Now(),
+		Headers:        []*sarama.RecordHeader{header},
+	}
 }

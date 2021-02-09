@@ -14,8 +14,9 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
-	"github.com/beatlabs/patron/component/kafka"
-	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/component/async"
+	"github.com/beatlabs/patron/component/async/kafka"
+	"github.com/beatlabs/patron/component/async/kafka/group"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,14 +29,12 @@ func TestKafkaComponent_Success(t *testing.T) {
 	actualSuccessfulMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(ctx context.Context, msgs []kafka.MessageWrapper) error {
-		for _, msg := range msgs {
-			var msgContent string
-			err := json.DecodeRaw(msg.GetConsumerMessage().Value, &msgContent)
-			assert.NoError(t, err)
-			actualSuccessfulMessages = append(actualSuccessfulMessages, msgContent)
-			consumerWG.Done()
-		}
+	processorFunc := func(msg async.Message) error {
+		var msgContent string
+		err := msg.Decode(&msgContent)
+		assert.NoError(t, err)
+		actualSuccessfulMessages = append(actualSuccessfulMessages, msgContent)
+		consumerWG.Done()
 		return nil
 	}
 	component := newComponent(t, successTopic, 3, processorFunc)
@@ -89,24 +88,21 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]int, 0)
 	actualNumOfRuns := int32(0)
-	processorFunc := func(ctx context.Context, msgs []kafka.MessageWrapper) error {
-		for _, msg := range msgs {
-			var msgContent string
-			err := json.DecodeRaw(msg.GetConsumerMessage().Value, &msgContent)
-			assert.NoError(t, err)
+	processorFunc := func(msg async.Message) error {
+		var msgContentStr string
+		err := msg.Decode(&msgContentStr)
+		assert.NoError(t, err)
 
-			msgIndex, err := strconv.Atoi(msgContent)
-			assert.NoError(t, err)
+		msgIndex, err := strconv.Atoi(msgContentStr)
+		assert.NoError(t, err)
 
-			if msgIndex == errAtIndex {
-				atomic.AddInt32(&actualNumOfRuns, 1)
-				return errors.New("expected error")
-			}
-			actualSuccessfulMessages = append(actualSuccessfulMessages, msgIndex)
+		if msgIndex == errAtIndex {
+			atomic.AddInt32(&actualNumOfRuns, 1)
+			return errors.New("expected error")
 		}
+		actualSuccessfulMessages = append(actualSuccessfulMessages, msgIndex)
 		return nil
 	}
-
 	numOfRetries := uint(3)
 	component := newComponent(t, failAllRetriesTopic, numOfRetries, processorFunc)
 
@@ -150,18 +146,16 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	actualMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(ctx context.Context, msgs []kafka.MessageWrapper) error {
-		for _, msg := range msgs {
-			var msgContent string
-			err := json.DecodeRaw(msg.GetConsumerMessage().Value, &msgContent)
-			assert.NoError(t, err)
+	processorFunc := func(msg async.Message) error {
+		var msgContent string
+		err := msg.Decode(&msgContent)
+		assert.NoError(t, err)
 
-			if msgContent == "50" && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
-				return errors.New("expected error")
-			}
-			consumerWG.Done()
-			actualMessages = append(actualMessages, msgContent)
+		if msgContent == "50" && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
+			return errors.New("expected error")
 		}
+		consumerWG.Done()
+		actualMessages = append(actualMessages, msgContent)
 		return nil
 	}
 	component := newComponent(t, failAndRetryTopic, 3, processorFunc)
@@ -207,14 +201,26 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	assert.Equal(t, expectedMessages, actualMessages)
 }
 
-func newComponent(t *testing.T, name string, retries uint, processorFunc kafka.BatchProcessorFunc) *kafka.Component {
-	broker := fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)
-	cmp, err := kafka.New(name, name+"-group", []string{broker}, []string{name}, processorFunc).
+func newComponent(t *testing.T, name string, retries uint, processorFunc func(message async.Message) error) *async.Component {
+	decode := func(data []byte, v interface{}) error {
+		tmp := string(data)
+		p := v.(*string)
+		*p = tmp
+		return nil
+	}
+	factory, err := group.New(
+		name,
+		name+"-group",
+		[]string{name},
+		[]string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)},
+		kafka.Decoder(decode),
+		kafka.Start(sarama.OffsetOldest))
+	require.NoError(t, err)
+
+	cmp, err := async.New(name, factory, processorFunc).
 		WithRetries(retries).
-		WithRetryWait(200*time.Millisecond).
-		WithBatching(10, 100*time.Millisecond).
-		WithSyncCommit().
-		WithFailureStrategy(kafka.ExitStrategy).
+		WithRetryWait(200 * time.Millisecond).
+		WithFailureStrategy(async.NackExitStrategy).
 		Create()
 	require.NoError(t, err)
 

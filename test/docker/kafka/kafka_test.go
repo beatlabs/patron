@@ -10,9 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beatlabs/patron/component/async"
-
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/log"
 	patrondocker "github.com/beatlabs/patron/test/docker"
 	"github.com/ory/dockertest/v3"

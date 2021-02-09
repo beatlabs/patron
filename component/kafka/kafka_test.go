@@ -7,6 +7,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/correlation"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,6 +41,17 @@ func Test_messageWrapper(t *testing.T) {
 		msg: cm,
 	}
 	assert.NotNil(t, msg.GetCorrelationID()) // a new correlation ID is generated
+}
+
+func Test_getCorrelationID(t *testing.T) {
+	corID := uuid.New().String()
+	got := getCorrelationID([]*sarama.RecordHeader{
+		{
+			Key:   []byte(correlation.HeaderID),
+			Value: []byte(corID),
+		},
+	})
+	assert.Equal(t, corID, got)
 }
 
 func Test_defaultSaramaConfig(t *testing.T) {

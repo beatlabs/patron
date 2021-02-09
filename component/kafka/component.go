@@ -509,18 +509,6 @@ func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg
 	return nil
 }
 
-func getCorrelationID(hh []*sarama.RecordHeader) string {
-	for _, h := range hh {
-		if string(h.Key) == correlation.HeaderID {
-			if len(h.Value) > 0 {
-				return string(h.Value)
-			}
-			break
-		}
-	}
-	return uuid.New().String()
-}
-
 func mapHeader(hh []*sarama.RecordHeader) map[string]string {
 	mp := make(map[string]string)
 	for _, h := range hh {

@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/correlation"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -128,17 +126,6 @@ func (mp *mockProcessor) Process(context.Context, []MessageWrapper) error {
 		return errProcess
 	}
 	return nil
-}
-
-func Test_getCorrelationID(t *testing.T) {
-	corID := uuid.New().String()
-	got := getCorrelationID([]*sarama.RecordHeader{
-		{
-			Key:   []byte(correlation.HeaderID),
-			Value: []byte(corID),
-		},
-	})
-	assert.Equal(t, corID, got)
 }
 
 func Test_mapHeader(t *testing.T) {

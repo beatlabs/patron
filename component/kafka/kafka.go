@@ -42,7 +42,11 @@ func (m *messageWrapper) GetConsumerMessage() *sarama.ConsumerMessage {
 // GetCorrelationID tries to fetch the correlation ID from the message headers and if the header was missing
 // it will generate a new correlation ID.
 func (m *messageWrapper) GetCorrelationID() string {
-	for _, h := range m.msg.Headers {
+	return getCorrelationID(m.msg.Headers)
+}
+
+func getCorrelationID(hh []*sarama.RecordHeader) string {
+	for _, h := range hh {
 		if string(h.Key) == correlation.HeaderID {
 			if len(h.Value) > 0 {
 				return string(h.Value)

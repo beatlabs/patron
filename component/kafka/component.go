@@ -284,7 +284,7 @@ type Component struct {
 func (c *Component) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	consumer := newConsumerHandler(ctx, cancel, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
+	handler := newConsumerHandler(ctx, cancel, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
 		c.batchTimeout, c.retries, c.retryWait, c.commitSync)
 	client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 	if err != nil {
@@ -300,7 +300,7 @@ func (c *Component) Run(ctx context.Context) error {
 			// `Consume` should be called inside an infinite loop, when a
 			// server-side rebalance happens, the consumer session will need to be
 			// recreated to get the new claims
-			if err := client.Consume(ctx, c.topics, consumer); err != nil {
+			if err := client.Consume(ctx, c.topics, handler); err != nil {
 				log.Errorf("error from kafka consumer: %v", err)
 			}
 
@@ -308,16 +308,21 @@ func (c *Component) Run(ctx context.Context) error {
 			if ctx.Err() != nil {
 				return
 			}
-			consumer.ready = make(chan bool)
+			handler.ready = make(chan bool)
 		}
 	}()
 
-	<-consumer.ready // wait for consumer to be set up
+	<-handler.ready // wait for consumer to be set up
 	log.Debug("kafka component: consumer ready")
 	<-ctx.Done()
 	log.Infof("kafka component terminating: context cancelled")
 	wg.Wait()
-	return client.Close()
+	err = client.Close()
+	if err != nil {
+		return err
+	}
+
+	return handler.err
 }
 
 // Consumer represents a sarama consumer group consumer
@@ -349,6 +354,9 @@ type consumerHandler struct {
 
 	// commit offsets after processing in a blocking synchronous operation
 	commitSync bool
+
+	// processing error
+	err error
 }
 
 func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name, group string, processorFunc BatchProcessorFunc,
@@ -460,6 +468,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 			switch c.failStrategy {
 			case ExitStrategy:
 				log.Errorf("exhausted all retries but could not process message(s)")
+				c.err = err
 				return err
 			case SkipStrategy:
 				log.Errorf("exhausted all retries but could not process message(s) so skipping")

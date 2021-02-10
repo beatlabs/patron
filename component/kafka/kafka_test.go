@@ -52,6 +52,15 @@ func Test_getCorrelationID(t *testing.T) {
 		},
 	})
 	assert.Equal(t, corID, got)
+
+	emptyCorID := ""
+	got = getCorrelationID([]*sarama.RecordHeader{
+		{
+			Key:   []byte(correlation.HeaderID),
+			Value: []byte(emptyCorID),
+		},
+	})
+	assert.NotEqual(t, emptyCorID, got)
 }
 
 func Test_defaultSaramaConfig(t *testing.T) {

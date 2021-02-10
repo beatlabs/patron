@@ -191,6 +191,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		msgs         []*sarama.ConsumerMessage
 		proc         BatchProcessorFunc
 		failStrategy FailStrategy
+		batchSize    uint
 		expectError  bool
 	}{
 		{
@@ -200,6 +201,30 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 				return nil
 			},
 			failStrategy: ExitStrategy,
+			batchSize:    1,
+			expectError:  false,
+		},
+		{
+			name: "success-batched",
+			msgs: []*sarama.ConsumerMessage{
+				saramaConsumerMessage("value", &sarama.RecordHeader{
+					Key:   []byte(encoding.ContentTypeHeader),
+					Value: []byte(json.Type),
+				}),
+				saramaConsumerMessage("{}", &sarama.RecordHeader{
+					Key:   []byte(encoding.ContentTypeHeader),
+					Value: []byte(json.Type),
+				}),
+				saramaConsumerMessage("{\"a\":\"\"}", &sarama.RecordHeader{
+					Key:   []byte(encoding.ContentTypeHeader),
+					Value: []byte(json.Type),
+				}),
+			},
+			proc: func(context.Context, []MessageWrapper) error {
+				return nil
+			},
+			failStrategy: ExitStrategy,
+			batchSize:    3,
 			expectError:  false,
 		},
 		{
@@ -209,6 +234,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 				return errors.New("mock-error")
 			},
 			failStrategy: ExitStrategy,
+			batchSize:    1,
 			expectError:  true,
 		},
 	}
@@ -217,7 +243,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			h := newConsumerHandler(ctx, cancel, tt.name, "grp", tt.proc, tt.failStrategy, 1,
+			h := newConsumerHandler(ctx, cancel, tt.name, "grp", tt.proc, tt.failStrategy, tt.batchSize,
 				time.Second, 0, 0, true)
 
 			ch := make(chan *sarama.ConsumerMessage, len(tt.msgs))
@@ -249,7 +275,6 @@ func saramaConsumerMessage(value string, header *sarama.RecordHeader) *sarama.Co
 }
 
 func versionedConsumerMessage(value string, header *sarama.RecordHeader, version uint8) *sarama.ConsumerMessage {
-
 	bytes := []byte(value)
 
 	if version > 0 {

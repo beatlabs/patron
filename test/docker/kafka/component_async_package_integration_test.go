@@ -37,14 +37,14 @@ func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 		consumerWG.Done()
 		return nil
 	}
-	component := newKafkaAsyncPackageComponent(t, successTopic, 3, processorFunc)
+	component := newKafkaAsyncPackageComponent(t, successTopic1, 3, processorFunc)
 
 	// Run Patron with the kafka component
 	patronContext, patronCancel := context.WithCancel(context.Background())
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(successTopic, "0", patron.TextLogger())
+		svc, err := patron.New(successTopic1, "0", patron.TextLogger())
 		require.NoError(t, err)
 		err = svc.WithComponents(component).Run(patronContext)
 		require.NoError(t, err)
@@ -58,7 +58,7 @@ func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 		producer, err := NewProducer()
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
-			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic, Value: sarama.StringEncoder(strconv.Itoa(i))})
+			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
 			require.NoError(t, err)
 		}
 		producerWG.Done()
@@ -104,7 +104,7 @@ func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
 		return nil
 	}
 	numOfRetries := uint(3)
-	component := newKafkaAsyncPackageComponent(t, failAllRetriesTopic, numOfRetries, processorFunc)
+	component := newKafkaAsyncPackageComponent(t, failAllRetriesTopic1, numOfRetries, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
@@ -113,14 +113,14 @@ func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
 		producer, err := NewProducer()
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
-			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAllRetriesTopic, Value: sarama.StringEncoder(strconv.Itoa(i))})
+			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAllRetriesTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
 			require.NoError(t, err)
 		}
 		producerWG.Done()
 	}()
 
 	// Run Patron with the component - no need for goroutine since we expect it to stop after the retries fail
-	svc, err := patron.New(failAllRetriesTopic, "0", patron.TextLogger())
+	svc, err := patron.New(failAllRetriesTopic1, "0", patron.TextLogger())
 	require.NoError(t, err)
 	err = svc.WithComponents(component).Run(context.Background())
 	assert.Error(t, err)
@@ -158,7 +158,7 @@ func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 		actualMessages = append(actualMessages, msgContent)
 		return nil
 	}
-	component := newKafkaAsyncPackageComponent(t, failAndRetryTopic, 3, processorFunc)
+	component := newKafkaAsyncPackageComponent(t, failAndRetryTopic1, 3, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
@@ -167,7 +167,7 @@ func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 		producer, err := NewProducer()
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
-			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic, Value: sarama.StringEncoder(strconv.Itoa(i))})
+			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
 			require.NoError(t, err)
 		}
 		producerWG.Done()
@@ -178,7 +178,7 @@ func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(failAndRetryTopic, "0", patron.TextLogger())
+		svc, err := patron.New(failAndRetryTopic1, "0", patron.TextLogger())
 		require.NoError(t, err)
 		err = svc.WithComponents(component).Run(patronContext)
 		require.NoError(t, err)

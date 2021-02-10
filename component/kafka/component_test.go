@@ -120,15 +120,26 @@ func TestNew(t *testing.T) {
 
 type mockProcessor struct {
 	errReturn bool
+	mux       sync.Mutex
+	execs     int
 }
 
 var errProcess = errors.New("PROC ERROR")
 
-func (mp *mockProcessor) Process(context.Context, []MessageWrapper) error {
+func (mp *mockProcessor) Process(_ context.Context, msgs []MessageWrapper) error {
+	mp.mux.Lock()
+	mp.execs += len(msgs)
+	mp.mux.Unlock()
 	if mp.errReturn {
 		return errProcess
 	}
 	return nil
+}
+
+func (mp *mockProcessor) GetExecs() int {
+	mp.mux.Lock()
+	defer mp.mux.Unlock()
+	return mp.execs
 }
 
 func Test_mapHeader(t *testing.T) {
@@ -150,19 +161,17 @@ func Test_mapHeader(t *testing.T) {
 
 type mockConsumerClaim struct {
 	ch     chan *sarama.ConsumerMessage
-	cancel context.CancelFunc
+	proc   *mockProcessor
 	mu     sync.RWMutex
 	closed bool
 }
 
 func (m *mockConsumerClaim) Messages() <-chan *sarama.ConsumerMessage {
 	m.mu.Lock()
-	if m.closed {
-		m.cancel()
-	} else {
+	if m.proc.GetExecs() > len(m.ch) && !m.closed {
 		close(m.ch)
+		m.closed = true
 	}
-	m.closed = true
 	m.mu.Unlock()
 	return m.ch
 }
@@ -189,16 +198,18 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 	tests := []struct {
 		name         string
 		msgs         []*sarama.ConsumerMessage
-		proc         BatchProcessorFunc
+		proc         *mockProcessor
 		failStrategy FailStrategy
+		retries      uint
+		retryWait    time.Duration
 		batchSize    uint
 		expectError  bool
 	}{
 		{
 			name: "success",
 			msgs: saramaConsumerMessages(json.Type),
-			proc: func(context.Context, []MessageWrapper) error {
-				return nil
+			proc: &mockProcessor{
+				errReturn: false,
 			},
 			failStrategy: ExitStrategy,
 			batchSize:    1,
@@ -207,34 +218,48 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		{
 			name: "success-batched",
 			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("value", &sarama.RecordHeader{
+				saramaConsumerMessage("1", &sarama.RecordHeader{
 					Key:   []byte(encoding.ContentTypeHeader),
 					Value: []byte(json.Type),
 				}),
-				saramaConsumerMessage("{}", &sarama.RecordHeader{
+				saramaConsumerMessage("2", &sarama.RecordHeader{
 					Key:   []byte(encoding.ContentTypeHeader),
 					Value: []byte(json.Type),
 				}),
-				saramaConsumerMessage("{\"a\":\"\"}", &sarama.RecordHeader{
+				saramaConsumerMessage("3", &sarama.RecordHeader{
 					Key:   []byte(encoding.ContentTypeHeader),
 					Value: []byte(json.Type),
 				}),
 			},
-			proc: func(context.Context, []MessageWrapper) error {
-				return nil
+			proc: &mockProcessor{
+				errReturn: false,
 			},
 			failStrategy: ExitStrategy,
-			batchSize:    3,
+			batchSize:    10,
 			expectError:  false,
 		},
 		{
 			name: "failure",
 			msgs: saramaConsumerMessages("mock"),
-			proc: func(context.Context, []MessageWrapper) error {
-				return errors.New("mock-error")
+			proc: &mockProcessor{
+				errReturn: true,
 			},
 			failStrategy: ExitStrategy,
 			batchSize:    1,
+			retries:      1,
+			retryWait:    100 * time.Millisecond,
+			expectError:  true,
+		},
+		{
+			name: "failure-skip",
+			msgs: saramaConsumerMessages("mock"),
+			proc: &mockProcessor{
+				errReturn: true,
+			},
+			failStrategy: SkipStrategy,
+			batchSize:    1,
+			retries:      1,
+			retryWait:    100 * time.Millisecond,
 			expectError:  true,
 		},
 	}
@@ -243,20 +268,23 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			h := newConsumerHandler(ctx, cancel, tt.name, "grp", tt.proc, tt.failStrategy, tt.batchSize,
-				time.Second, 0, 0, true)
+			h := newConsumerHandler(ctx, cancel, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
+				10*time.Millisecond, tt.retries, tt.retryWait, true)
 
 			ch := make(chan *sarama.ConsumerMessage, len(tt.msgs))
 			for _, m := range tt.msgs {
 				ch <- m
 			}
-			err := h.ConsumeClaim(&mockConsumerSession{}, &mockConsumerClaim{ch: ch, cancel: cancel})
+			session := &mockConsumerSession{}
+			err := h.ConsumeClaim(session, &mockConsumerClaim{ch: ch, proc: tt.proc})
+			_ = h.Cleanup(session)
 
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
+			assert.Equal(t, len(tt.msgs)+(int(tt.retries)*len(tt.msgs)), tt.proc.GetExecs())
 		})
 	}
 }

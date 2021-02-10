@@ -5,9 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ory/dockertest/docker"
-
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
 )
 
 // Runtime wraps dockertest functionality into a reusable component.

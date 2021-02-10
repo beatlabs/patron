@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ory/dockertest/docker"
+	"github.com/ory/dockertest/v3/docker"
 
 	patronDocker "github.com/beatlabs/patron/test/docker"
 	// Integration test.
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 )
 
 const (

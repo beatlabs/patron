@@ -208,6 +208,10 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 }
 
 func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc kafka.BatchProcessorFunc) *kafka.Component {
+	saramaCfg := sarama.NewConfig()
+	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
+	saramaCfg.Version = sarama.V2_6_0_0
+
 	broker := fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)
 	cmp, err := kafka.New(name, name+"-group", []string{broker}, []string{name}, processorFunc).
 		WithRetries(retries).
@@ -215,6 +219,7 @@ func newComponent(t *testing.T, name string, retries uint, batchSize uint, proce
 		WithBatching(batchSize, 100*time.Millisecond).
 		WithSyncCommit().
 		WithFailureStrategy(kafka.ExitStrategy).
+		WithSaramaConfig(saramaCfg).
 		Create()
 	require.NoError(t, err)
 

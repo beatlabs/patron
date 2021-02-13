@@ -3,6 +3,7 @@ package http
 import (
 	"compress/flate"
 	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -132,7 +133,7 @@ func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
 
 // NewLoggingTracingMiddleware creates a MiddlewareFunc that continues a tracing span and finishes it.
 // It also logs the HTTP request on debug logging level
-func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
+func NewLoggingTracingMiddleware(path string, statusCodeLogger statusCodeLoggerHandler) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			corID := getOrSetCorrelationID(r.Header)
@@ -141,6 +142,7 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
 			next.ServeHTTP(lw, r)
 			finishSpan(sp, lw.Status(), lw.payload)
 			logRequestResponse(corID, lw, r)
+			statusCodeErrorLogging(r.Context(), statusCodeLogger, lw.Status(), lw.payload, path)
 		})
 	}
 }
@@ -371,6 +373,16 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 		},
 	}
 	log.Sub(info).Debug()
+}
+
+func statusCodeErrorLogging(ctx context.Context, statusCodeLogger statusCodeLoggerHandler, statusCode int, payload []byte, path string) {
+	if !log.Enabled(log.ErrorLevel) {
+		return
+	}
+
+	if statusCodeLogger.shouldLog(statusCode) {
+		log.FromContext(ctx).Errorf("%s %d error: %v", path, statusCode, string(payload))
+	}
 }
 
 func getOrSetCorrelationID(h http.Header) string {

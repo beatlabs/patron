@@ -101,8 +101,11 @@ func (o *observer) log(err error) {
 	}
 	if err != nil {
 		fields["error"] = err.Error()
+		log.Sub(fields).Error()
+		return
 	}
-	log.Sub(fields).Error()
+
+	log.Sub(fields).Debug()
 }
 
 func (o *observer) messageHandled(err error) {

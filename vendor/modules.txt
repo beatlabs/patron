@@ -52,8 +52,8 @@ github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
 # github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
-# github.com/cenkalti/backoff v2.2.1+incompatible
-github.com/cenkalti/backoff
+# github.com/cenkalti/backoff/v3 v3.0.0
+github.com/cenkalti/backoff/v3
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
 # github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c
@@ -102,16 +102,19 @@ github.com/hashicorp/golang-lru/simplelru
 github.com/jmespath/go-jmespath
 # github.com/julienschmidt/httprouter v1.2.0
 github.com/julienschmidt/httprouter
-# github.com/konsorten/go-windows-terminal-sequences v1.0.1
+# github.com/konsorten/go-windows-terminal-sequences v1.0.2
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/moby/term v0.0.0-20200915141129-7f0af18e79f2
+github.com/moby/term
+github.com/moby/term/windows
 # github.com/opencontainers/go-digest v1.0.0-rc1
 github.com/opencontainers/go-digest
 # github.com/opencontainers/image-spec v1.0.1
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v0.1.1
+# github.com/opencontainers/runc v1.0.0-rc9
 github.com/opencontainers/runc/libcontainer/user
 # github.com/opentracing-contrib/go-stdlib v0.0.0-20180313041242-367231351874
 github.com/opentracing-contrib/go-stdlib/nethttp
@@ -120,32 +123,30 @@ github.com/opentracing/opentracing-go
 github.com/opentracing/opentracing-go/ext
 github.com/opentracing/opentracing-go/log
 github.com/opentracing/opentracing-go/mocktracer
-# github.com/ory/dockertest v3.3.5+incompatible
-github.com/ory/dockertest
-github.com/ory/dockertest/docker
-github.com/ory/dockertest/docker/opts
-github.com/ory/dockertest/docker/pkg/archive
-github.com/ory/dockertest/docker/pkg/fileutils
-github.com/ory/dockertest/docker/pkg/homedir
-github.com/ory/dockertest/docker/pkg/idtools
-github.com/ory/dockertest/docker/pkg/ioutils
-github.com/ory/dockertest/docker/pkg/jsonmessage
-github.com/ory/dockertest/docker/pkg/longpath
-github.com/ory/dockertest/docker/pkg/mount
-github.com/ory/dockertest/docker/pkg/pools
-github.com/ory/dockertest/docker/pkg/stdcopy
-github.com/ory/dockertest/docker/pkg/system
-github.com/ory/dockertest/docker/pkg/term
-github.com/ory/dockertest/docker/pkg/term/windows
-github.com/ory/dockertest/docker/types
-github.com/ory/dockertest/docker/types/blkiodev
-github.com/ory/dockertest/docker/types/container
-github.com/ory/dockertest/docker/types/filters
-github.com/ory/dockertest/docker/types/mount
-github.com/ory/dockertest/docker/types/network
-github.com/ory/dockertest/docker/types/registry
-github.com/ory/dockertest/docker/types/strslice
-github.com/ory/dockertest/docker/types/versions
+# github.com/ory/dockertest/v3 v3.6.3
+github.com/ory/dockertest/v3
+github.com/ory/dockertest/v3/docker
+github.com/ory/dockertest/v3/docker/opts
+github.com/ory/dockertest/v3/docker/pkg/archive
+github.com/ory/dockertest/v3/docker/pkg/fileutils
+github.com/ory/dockertest/v3/docker/pkg/homedir
+github.com/ory/dockertest/v3/docker/pkg/idtools
+github.com/ory/dockertest/v3/docker/pkg/ioutils
+github.com/ory/dockertest/v3/docker/pkg/jsonmessage
+github.com/ory/dockertest/v3/docker/pkg/longpath
+github.com/ory/dockertest/v3/docker/pkg/mount
+github.com/ory/dockertest/v3/docker/pkg/pools
+github.com/ory/dockertest/v3/docker/pkg/stdcopy
+github.com/ory/dockertest/v3/docker/pkg/system
+github.com/ory/dockertest/v3/docker/types
+github.com/ory/dockertest/v3/docker/types/blkiodev
+github.com/ory/dockertest/v3/docker/types/container
+github.com/ory/dockertest/v3/docker/types/filters
+github.com/ory/dockertest/v3/docker/types/mount
+github.com/ory/dockertest/v3/docker/types/network
+github.com/ory/dockertest/v3/docker/types/registry
+github.com/ory/dockertest/v3/docker/types/strslice
+github.com/ory/dockertest/v3/docker/types/versions
 # github.com/pierrec/lz4 v2.0.5+incompatible
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32

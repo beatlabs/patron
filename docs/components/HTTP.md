@@ -161,6 +161,20 @@ func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) Middlewa
 
 ```
 
+### Error Logging
+
+It is possible to configure specific status codes that, if returned by an HTTP handler, the response's error will be logged.
+
+This configuration must be done using the `PATRON_HTTP_STATUS_ERROR_LOGGING` environment variable. The syntax of this variable is based on PostgreSQL syntax and allows providing ranges.
+
+For example, setting this environment variable to `409;[500,600)` that an error will be logged if an HTTP handler returns either:
+* A status code 409
+* A status code greater or equal than 500 (the bracket represents the inclusion) and strictly smaller than 600 (the parenthesis represents the exclusion)
+
+Be it a specific status code or a range; each element must be delimited with `;`.
+
+To enable error logging, we enable route tracing (`WithTrace` option).
+
 ## HTTP Routes
 
 Each HTTP component can contain several routes. These are injected through the `RoutesBuilder`

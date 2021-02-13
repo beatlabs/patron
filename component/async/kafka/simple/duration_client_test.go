@@ -117,6 +117,35 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 				0: 0,
 			},
 		},
+		"success - with invalid message": {
+			globalTimeout: time.Second,
+			client: client(topic).
+				partitionIDs([]int32{0}, nil).
+				partition(0, partitionConfig{
+					oldest: offset{offset: 0},
+					newest: offset{offset: 10},
+					messages: map[int64]messageAtOffset{
+						0: {
+							msg: &sarama.ConsumerMessage{Timestamp: since.Add(1 * time.Hour)},
+						},
+						1: {
+							msg: invalidMessage,
+						},
+						2: {
+							msg: &sarama.ConsumerMessage{Timestamp: since.Add(3 * time.Hour)},
+						},
+						3: {
+							msg: &sarama.ConsumerMessage{Timestamp: since.Add(4 * time.Hour)},
+						},
+						4: {
+							msg: &sarama.ConsumerMessage{Timestamp: since.Add(5 * time.Hour)},
+						},
+					},
+				}).build(),
+			expectedOffsets: map[int32]int64{
+				0: 2,
+			},
+		},
 		"success - all outside": {
 			globalTimeout: time.Second,
 			client: client(topic).
@@ -213,21 +242,6 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 					newest: offset{err: errors.New("foo")},
 				}).build(),
 			expectedErr: errors.New("foo"),
-		},
-		"error - invalid message": {
-			globalTimeout: time.Second,
-			client: client(topic).
-				partitionIDs([]int32{0}, nil).
-				partition(0, partitionConfig{
-					oldest: offset{offset: 0},
-					newest: offset{offset: 10},
-					messages: map[int64]messageAtOffset{
-						4: {
-							msg: invalidMessage,
-						},
-					},
-				}).build(),
-			expectedErr: errors.New("error while executing comparator: empty time"),
 		},
 		"error - get message offset": {
 			globalTimeout: time.Second,

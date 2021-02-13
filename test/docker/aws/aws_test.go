@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	patronDocker "github.com/beatlabs/patron/test/docker"
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 )
 
 const (

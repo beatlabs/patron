@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"golang.org/x/time/rate"
@@ -150,6 +151,12 @@ func (rb *RouteBuilder) MethodTrace() *RouteBuilder {
 
 // Build a route.
 func (rb *RouteBuilder) Build() (Route, error) {
+	cfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
+	statusCodeLogger, err := newStatusCodeLoggerHandler(cfg)
+	if err != nil {
+		return Route{}, fmt.Errorf("failed to parse status codes %q: %w", cfg, err)
+	}
+
 	if len(rb.errors) > 0 {
 		return Route{}, errs.Aggregate(rb.errors...)
 	}
@@ -160,7 +167,7 @@ func (rb *RouteBuilder) Build() (Route, error) {
 
 	var middlewares []MiddlewareFunc
 	if rb.trace {
-		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path))
+		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path, statusCodeLogger))
 	}
 	if rb.rateLimiter != nil {
 		middlewares = append(middlewares, NewRateLimitingMiddleware(rb.rateLimiter))

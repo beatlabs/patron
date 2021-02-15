@@ -9,8 +9,8 @@ import (
 
 	patronDocker "github.com/beatlabs/patron/test/docker"
 	"github.com/go-redis/redis/v8"
-	"github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
+	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
 )
 
 type redisRuntime struct {
@@ -32,7 +32,6 @@ func create(expiration time.Duration) (*redisRuntime, error) {
 		PortBindings: map[docker.Port][]docker.PortBinding{
 			"6379/tcp": {{HostIP: "", HostPort: ""}},
 		},
-		// ExposedPorts: []string{"3306/tcp", "33060/tcp"},
 		Env: []string{
 			"ALLOW_EMPTY_PASSWORD=yes",
 			"REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL",

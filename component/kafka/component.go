@@ -204,28 +204,7 @@ func (cb *Builder) WithSyncCommit() *Builder {
 	return cb
 }
 
-// WithSaramaConfig specified a sarama consumer config. Use this to set consumer config or sarama level.
-// Initialize a new sarama config:
-//    c := sarama.NewConfig()
-//
-// Set consumer offset autocommit interval:
-//    c.Consumer.Offsets.AutoCommit.Enable = false
-//    c.Consumer.Offsets.AutoCommit.Interval = duration
-//
-// Set rebalance strategy
-//    c.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
-//
-// Set timeout
-//    c.Net.DialTimeout = timeout
-//
-// Set Kafka version
-//    c.Version = version
-//
-// Set offset
-//    c.Consumer.Offsets.Initial = offset
-//    c.Consumer.Offsets.Initial = sarama.OffsetOldest
-//    c.Consumer.Offsets.Initial = sarama.OffsetNewest
-//
+// WithSaramaConfig specified a sarama consumer config. Use this to set consumer config on sarama level.
 // Check the sarama config documentation for more config options.
 func (cb *Builder) WithSaramaConfig(cfg *sarama.Config) *Builder {
 	cb.saramaConfig = cfg

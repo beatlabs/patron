@@ -27,10 +27,10 @@ func TestKafkaComponent_Success(t *testing.T) {
 	actualSuccessfulMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(ctx context.Context, msgs []kafka.MessageWrapper) error {
+	processorFunc := func(msgs []kafka.Message) error {
 		for _, msg := range msgs {
 			var msgContent string
-			err := decodeString(msg.GetConsumerMessage().Value, &msgContent)
+			err := decodeString(msg.Message().Value, &msgContent)
 			assert.NoError(t, err)
 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgContent)
 			consumerWG.Done()
@@ -88,10 +88,10 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]int, 0)
 	actualNumOfRuns := int32(0)
-	processorFunc := func(ctx context.Context, msgs []kafka.MessageWrapper) error {
+	processorFunc := func(msgs []kafka.Message) error {
 		for _, msg := range msgs {
 			var msgContent string
-			err := decodeString(msg.GetConsumerMessage().Value, &msgContent)
+			err := decodeString(msg.Message().Value, &msgContent)
 			assert.NoError(t, err)
 
 			msgIndex, err := strconv.Atoi(msgContent)
@@ -150,10 +150,10 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	actualMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(ctx context.Context, msgs []kafka.MessageWrapper) error {
+	processorFunc := func(msgs []kafka.Message) error {
 		for _, msg := range msgs {
 			var msgContent string
-			err := decodeString(msg.GetConsumerMessage().Value, &msgContent)
+			err := decodeString(msg.Message().Value, &msgContent)
 			assert.NoError(t, err)
 
 			if msgContent == "50" && atomic.CompareAndSwapInt32(&didFail, 0, 1) {

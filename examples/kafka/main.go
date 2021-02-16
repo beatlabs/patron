@@ -102,13 +102,12 @@ func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*
 	return &kafkaCmp, nil
 }
 
-func (kc *kafkaComponent) Process(ctx context.Context, msgs []kafka.MessageWrapper) error {
-	log.FromContext(ctx).Info("got batch")
+func (kc *kafkaComponent) Process(msgs []kafka.Message) error {
 	for _, msg := range msgs {
 		var u examples.User
-		err := json.DecodeRaw(msg.GetConsumerMessage().Value, &u)
+		err := json.DecodeRaw(msg.Message().Value, &u)
 		if err != nil {
-			log.FromContext(ctx).Errorf("error decoding kafka message: %w", err)
+			log.FromContext(msg.Context()).Errorf("error decoding kafka message: %w", err)
 			return err
 		}
 
@@ -117,12 +116,12 @@ func (kc *kafkaComponent) Process(ctx context.Context, msgs []kafka.MessageWrapp
 			return err
 		}
 
-		err = kc.pub.Publish(ctx, amqpMsg)
+		err = kc.pub.Publish(msg.Context(), amqpMsg)
 		if err != nil {
 			return err
 		}
 
-		log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
+		log.FromContext(msg.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
 	}
 	return nil
 }

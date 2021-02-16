@@ -9,6 +9,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go"
 )
 
 // FailStrategy type definition.
@@ -22,27 +23,39 @@ const (
 )
 
 // BatchProcessorFunc definition of a batch async processor.
-type BatchProcessorFunc func(context.Context, []MessageWrapper) error
+type BatchProcessorFunc func([]Message) error
 
-// MessageWrapper interface for wrapping messages that are handled by the kafka component.
-type MessageWrapper interface {
-	GetConsumerMessage() *sarama.ConsumerMessage
-	GetCorrelationID() string
+// Message interface for wrapping messages that are handled by the kafka component.
+type Message interface {
+	// Context will contain the context to be used for processing.
+	// Each context will have a logger setup which can be used to create a logger from context.
+	Context() context.Context
+	// Message will contain the raw Kafka message.
+	Message() *sarama.ConsumerMessage
+	// Span contains the tracing span of this message.
+	Span() opentracing.Span
 }
 
-type messageWrapper struct {
+type message struct {
+	ctx context.Context
+	sp  opentracing.Span
 	msg *sarama.ConsumerMessage
 }
 
-// GetConsumerMessage gets the raw consumer message received via the kafka component.
-func (m *messageWrapper) GetConsumerMessage() *sarama.ConsumerMessage {
+// Context will contain the context to be used for processing.
+// Each context will have a logger setup which can be used to create a logger from context.
+func (m *message) Context() context.Context {
+	return m.ctx
+}
+
+// Message will contain the raw Kafka message.
+func (m *message) Message() *sarama.ConsumerMessage {
 	return m.msg
 }
 
-// GetCorrelationID tries to fetch the correlation ID from the message headers and if the header was missing
-// it will generate a new correlation ID.
-func (m *messageWrapper) GetCorrelationID() string {
-	return getCorrelationID(m.msg.Headers)
+// Span contains the tracing span of this message.
+func (m *message) Span() opentracing.Span {
+	return m.sp
 }
 
 func getCorrelationID(hh []*sarama.RecordHeader) string {

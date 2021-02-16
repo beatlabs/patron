@@ -15,7 +15,7 @@ import (
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
-	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -435,17 +435,15 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 	var err error
 
 	if len(c.msgBuf) > 0 {
-		ctxCh, cancel := c.getContextWithCorrelation()
-		defer cancel()
+		messages := make([]Message, 0, len(c.msgBuf))
+		for _, msg := range c.msgBuf {
+			messageStatusCountInc(messageProcessed, c.group, msg.Topic)
+			ctx, sp := c.getContextWithCorrelation(msg)
+			messages = append(messages, &message{ctx: ctx, sp: sp, msg: msg})
+		}
 
 		for i := 0; i <= c.retries; i++ {
-			wrappedMessages := make([]MessageWrapper, 0, len(c.msgBuf))
-			for _, msg := range c.msgBuf {
-				messageStatusCountInc(messageProcessed, c.group, msg.Topic)
-				wrappedMessages = append(wrappedMessages, &messageWrapper{msg: msg})
-			}
-
-			err = c.proc(ctxCh, wrappedMessages)
+			err = c.proc(messages)
 			if err == nil {
 				break
 			}
@@ -462,8 +460,9 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		}
 
 		if err != nil {
-			for _, msg := range c.msgBuf {
-				messageStatusCountInc(messageErrored, c.group, msg.Topic)
+			for _, m := range messages {
+				trace.SpanError(m.Span())
+				messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 			}
 			switch c.failStrategy {
 			case ExitStrategy:
@@ -475,8 +474,9 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 			}
 		}
 
-		for _, m := range c.msgBuf {
-			session.MarkMessage(m, "")
+		for _, m := range messages {
+			session.MarkMessage(m.Message(), "")
+			trace.SpanSuccess(m.Span())
 		}
 
 		if c.commitSync {
@@ -489,23 +489,14 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 	return err
 }
 
-func (c *consumerHandler) getContextWithCorrelation() (context.Context, context.CancelFunc) {
-	if len(c.msgBuf) == 1 {
-		msg := c.msgBuf[0]
-		corID := getCorrelationID(msg.Headers)
+func (c *consumerHandler) getContextWithCorrelation(msg *sarama.ConsumerMessage) (context.Context, opentracing.Span) {
+	corID := getCorrelationID(msg.Headers)
 
-		_, ctxCh := trace.ConsumerSpan(c.ctx, trace.ComponentOpName(consumerComponent, msg.Topic),
-			consumerComponent, corID, mapHeader(msg.Headers))
-		ctxCh = correlation.ContextWithID(ctxCh, corID)
-		ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{correlation.ID: corID}))
-		return ctxCh, func() {}
-	}
-	ctxCh, cancel := context.WithCancel(c.ctx)
-	// generate a new correlation ID for batches larger than size 1
-	batchCorrelationID := uuid.New().String()
-	ctxCh = correlation.ContextWithID(ctxCh, batchCorrelationID)
-	ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{correlation.ID: batchCorrelationID}))
-	return ctxCh, cancel
+	sp, ctxCh := trace.ConsumerSpan(c.ctx, trace.ComponentOpName(consumerComponent, msg.Topic),
+		consumerComponent, corID, mapHeader(msg.Headers))
+	ctxCh = correlation.ContextWithID(ctxCh, corID)
+	ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{correlation.ID: corID}))
+	return ctxCh, sp
 }
 
 func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) error {

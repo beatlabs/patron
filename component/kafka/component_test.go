@@ -126,7 +126,7 @@ type mockProcessor struct {
 
 var errProcess = errors.New("PROC ERROR")
 
-func (mp *mockProcessor) Process(_ context.Context, msgs []MessageWrapper) error {
+func (mp *mockProcessor) Process(msgs []Message) error {
 	mp.mux.Lock()
 	mp.execs += len(msgs)
 	mp.mux.Unlock()

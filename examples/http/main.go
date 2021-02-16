@@ -39,7 +39,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	routesBuilder := patronhttp.NewRoutesBuilder().Append(patronhttp.NewPostRouteBuilder("/", httpHandler))
+	routesBuilder := patronhttp.NewRoutesBuilder().Append(patronhttp.NewPostRouteBuilder("/", httpHandler)).
+		Append(patronhttp.NewGetRouteBuilder("/", getHandler).WithRateLimiting(50, 50))
 
 	// Setup a simple CORS middleware
 	middlewareCors := func(h http.Handler) http.Handler {
@@ -65,6 +66,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}
+}
+func getHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
+	return patronhttp.NewResponse(fmt.Sprint("Testing Middleware", http.StatusOK)), nil
 }
 
 func httpHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {

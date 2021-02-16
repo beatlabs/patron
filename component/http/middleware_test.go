@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"golang.org/x/time/rate"
+
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -31,6 +33,13 @@ func panicMiddleware(v interface{}) MiddlewareFunc {
 			panic(v)
 		})
 	}
+}
+
+func getMockLimiter(allow bool) *rate.Limiter {
+	if allow {
+		return rate.NewLimiter(1, 1)
+	}
+	return rate.NewLimiter(1, 0)
 }
 
 func TestMiddlewareChain(t *testing.T) {
@@ -93,6 +102,8 @@ func TestMiddlewares(t *testing.T) {
 		{"auth middleware false", args{next: handler, mws: []MiddlewareFunc{NewAuthMiddleware(&MockAuthenticator{success: false})}}, 401, "Unauthorized\n"},
 		{"auth middleware error", args{next: handler, mws: []MiddlewareFunc{NewAuthMiddleware(&MockAuthenticator{err: errors.New("auth error")})}}, 500, "Internal Server Error\n"},
 		{"tracing middleware", args{next: handler, mws: []MiddlewareFunc{NewLoggingTracingMiddleware("/index", statusCodeLoggerHandler{})}}, 202, ""},
+		{"rate limiting middleware", args{next: handler, mws: []MiddlewareFunc{NewRateLimitingMiddleware(getMockLimiter(true))}}, 202, ""},
+		{"rate limiting middleware error", args{next: handler, mws: []MiddlewareFunc{NewRateLimitingMiddleware(getMockLimiter(false))}}, 429, "Requests greater than limit\n"},
 		{"recovery middleware from panic 1", args{next: handler, mws: []MiddlewareFunc{NewRecoveryMiddleware(), panicMiddleware("error")}}, 500, "Internal Server Error\n"},
 		{"recovery middleware from panic 2", args{next: handler, mws: []MiddlewareFunc{NewRecoveryMiddleware(), panicMiddleware(errors.New("error"))}}, 500, "Internal Server Error\n"},
 		{"recovery middleware from panic 3", args{next: handler, mws: []MiddlewareFunc{NewRecoveryMiddleware(), panicMiddleware(-1)}}, 500, "Internal Server Error\n"},

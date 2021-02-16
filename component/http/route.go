@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"golang.org/x/time/rate"
+
 	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
@@ -46,6 +48,7 @@ type RouteBuilder struct {
 	method        string
 	path          string
 	trace         bool
+	rateLimiter   *rate.Limiter
 	middlewares   []MiddlewareFunc
 	authenticator auth.Authenticator
 	handler       http.HandlerFunc
@@ -56,6 +59,12 @@ type RouteBuilder struct {
 // WithTrace enables route tracing.
 func (rb *RouteBuilder) WithTrace() *RouteBuilder {
 	rb.trace = true
+	return rb
+}
+
+// WithRateLimiting enables route rate limiting.
+func (rb *RouteBuilder) WithRateLimiting(limit float64, burst int) *RouteBuilder {
+	rb.rateLimiter = rate.NewLimiter(rate.Limit(limit), burst)
 	return rb
 }
 
@@ -159,6 +168,9 @@ func (rb *RouteBuilder) Build() (Route, error) {
 	var middlewares []MiddlewareFunc
 	if rb.trace {
 		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path, statusCodeLogger))
+	}
+	if rb.rateLimiter != nil {
+		middlewares = append(middlewares, NewRateLimitingMiddleware(rb.rateLimiter))
 	}
 	if rb.authenticator != nil {
 		middlewares = append(middlewares, NewAuthMiddleware(rb.authenticator))

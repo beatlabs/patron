@@ -162,6 +162,14 @@ func TestRouteBuilder_WithAuth(t *testing.T) {
 	}
 }
 
+func TestRouteBuilder_WithRateLimiting(t *testing.T) {
+	mockHandler := func(http.ResponseWriter, *http.Request) {}
+	rb := NewRawRouteBuilder("/", mockHandler).WithRateLimiting(1, 1)
+	assert.Len(t, rb.errors, 0)
+	assert.NotNil(t, rb.rateLimiter)
+
+}
+
 func TestRouteBuilder_WithRouteCacheNil(t *testing.T) {
 	rb := NewRawRouteBuilder("/", func(writer http.ResponseWriter, request *http.Request) {}).
 		WithRouteCache(nil, cache.Age{Max: 1})
@@ -188,7 +196,7 @@ func TestRouteBuilder_Build(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			rb := NewRouteBuilder(tt.fields.path, mockProcessor).WithTrace().WithAuth(mockAuth).WithMiddlewares(middleware)
+			rb := NewRouteBuilder(tt.fields.path, mockProcessor).WithTrace().WithAuth(mockAuth).WithMiddlewares(middleware).WithRateLimiting(5, 50)
 			if !tt.fields.missingMethod {
 				rb.MethodGet()
 			}

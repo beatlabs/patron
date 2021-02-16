@@ -159,6 +159,13 @@ func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
 // https://tools.ietf.org/html/rfc2616#section-3.5
 func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) MiddlewareFunc {
 
+
+// NewRateLimitingMiddleware creates a MiddlewareFunc that adds a rate limit to a route.
+// It uses golang in-built rate library to implement simple rate limiting 
+//"https://pkg.go.dev/golang.org/x/time/rate"
+func NewRateLimitingMiddleware(limiter *rate.Limiter) MiddlewareFunc {
+	// ..
+}
 ```
 
 ### Error Logging
@@ -486,3 +493,23 @@ improvement for big response objects.
 But this has been left out for now, due to the potentially huge number of metric objects.
 We can review according to usage or make this optional in the future.
 - improve the serialization performance for the cache response objects
+
+## Rate Limiting
+- Uses golang in-built rate library to implement simple rate limiting 
+- We could pass the limit and burst values as parameters. 
+- Limit and burst values are integers. 
+  Note: A zero Burst allows no events, unless limit == Inf. More details here - https://pkg.go.dev/golang.org/x/time/rate
+
+**Usage**
+
+- provide the rate limiting in the route builder
+```go
+NewGetRouteBuilder("/", getHandler).WithRateLimiting(limit, burst)
+```
+
+- use the rate limiting as a middleware
+```go
+NewRouteBuilder("/", handler).
+    WithMiddlewares(NewRateLimitingMiddleware(rate.NewLimiter(limit, burst))).
+    MethodGet()
+```

@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/time/rate"
+
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
@@ -143,6 +145,20 @@ func NewLoggingTracingMiddleware(path string, statusCodeLogger statusCodeLoggerH
 			finishSpan(sp, lw.Status(), lw.payload)
 			logRequestResponse(corID, lw, r)
 			statusCodeErrorLogging(r.Context(), statusCodeLogger, lw.Status(), lw.payload, path)
+		})
+	}
+}
+
+// NewRateLimitingMiddleware creates a MiddlewareFunc that adds a rate limit to a route.
+func NewRateLimitingMiddleware(limiter *rate.Limiter) MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !limiter.Allow() {
+				log.Info("Limiting requests...")
+				http.Error(w, "Requests greater than limit", http.StatusTooManyRequests)
+				return
+			}
+			next.ServeHTTP(w, r)
 		})
 	}
 }

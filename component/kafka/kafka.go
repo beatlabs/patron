@@ -7,8 +7,6 @@ import (
 	"os"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/correlation"
-	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -23,7 +21,7 @@ const (
 )
 
 // BatchProcessorFunc definition of a batch async processor.
-type BatchProcessorFunc func([]Message) error
+type BatchProcessorFunc func(Batch) error
 
 // Message interface for wrapping messages that are handled by the kafka component.
 type Message interface {
@@ -58,16 +56,19 @@ func (m *message) Span() opentracing.Span {
 	return m.sp
 }
 
-func getCorrelationID(hh []*sarama.RecordHeader) string {
-	for _, h := range hh {
-		if string(h.Key) == correlation.HeaderID {
-			if len(h.Value) > 0 {
-				return string(h.Value)
-			}
-			break
-		}
-	}
-	return uuid.New().String()
+// Batch interface for multiple AWS SQS messages.
+type Batch interface {
+	// Messages of the batch.
+	Messages() []Message
+}
+
+type batch struct {
+	messages []Message
+}
+
+// Messages of the batch.
+func (b batch) Messages() []Message {
+	return b.messages
 }
 
 // defaultSaramaConfig function creates a sarama config object with the default configuration set up.

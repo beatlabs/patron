@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -126,9 +128,9 @@ type mockProcessor struct {
 
 var errProcess = errors.New("PROC ERROR")
 
-func (mp *mockProcessor) Process(msgs []Message) error {
+func (mp *mockProcessor) Process(batch Batch) error {
 	mp.mux.Lock()
-	mp.execs += len(msgs)
+	mp.execs += len(batch.Messages())
 	mp.mux.Unlock()
 	if mp.errReturn {
 		return errProcess
@@ -319,4 +321,24 @@ func versionedConsumerMessage(value string, header *sarama.RecordHeader, version
 		BlockTimestamp: time.Now(),
 		Headers:        []*sarama.RecordHeader{header},
 	}
+}
+
+func Test_getCorrelationID(t *testing.T) {
+	corID := uuid.New().String()
+	got := getCorrelationID([]*sarama.RecordHeader{
+		{
+			Key:   []byte(correlation.HeaderID),
+			Value: []byte(corID),
+		},
+	})
+	assert.Equal(t, corID, got)
+
+	emptyCorID := ""
+	got = getCorrelationID([]*sarama.RecordHeader{
+		{
+			Key:   []byte(correlation.HeaderID),
+			Value: []byte(emptyCorID),
+		},
+	})
+	assert.NotEqual(t, emptyCorID, got)
 }

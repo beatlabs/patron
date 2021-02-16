@@ -102,8 +102,8 @@ func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*
 	return &kafkaCmp, nil
 }
 
-func (kc *kafkaComponent) Process(msgs []kafka.Message) error {
-	for _, msg := range msgs {
+func (kc *kafkaComponent) Process(batch kafka.Batch) error {
+	for _, msg := range batch.Messages() {
 		var u examples.User
 		err := json.DecodeRaw(msg.Message().Value, &u)
 		if err != nil {

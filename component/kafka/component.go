@@ -15,6 +15,7 @@ import (
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -443,7 +444,8 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		}
 
 		for i := 0; i <= c.retries; i++ {
-			err = c.proc(messages)
+			btc := &batch{messages: messages}
+			err = c.proc(btc)
 			if err == nil {
 				break
 			}
@@ -507,6 +509,18 @@ func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg
 		return c.flush(session)
 	}
 	return nil
+}
+
+func getCorrelationID(hh []*sarama.RecordHeader) string {
+	for _, h := range hh {
+		if string(h.Key) == correlation.HeaderID {
+			if len(h.Value) > 0 {
+				return string(h.Value)
+			}
+			break
+		}
+	}
+	return uuid.New().String()
 }
 
 func mapHeader(hh []*sarama.RecordHeader) map[string]string {

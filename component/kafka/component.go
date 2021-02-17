@@ -464,7 +464,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 			session.Commit()
 		}
 
-		c.msgBuf = make([]*sarama.ConsumerMessage, 0, c.batchSize)
+		c.msgBuf = c.msgBuf[:0]
 	}
 
 	return err

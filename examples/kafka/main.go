@@ -72,7 +72,7 @@ func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*
 	kafkaCmp := kafkaComponent{}
 
 	saramaCfg := sarama.NewConfig()
-	// consumer will use WithSyncCommit so will manually commit offsets
+	// batches will be responsible for committing
 	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	saramaCfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
@@ -84,7 +84,6 @@ func newKafkaComponent(name, broker, topic, groupID, amqpURL, amqpExc string) (*
 		WithFailureStrategy(kafka.SkipStrategy).
 		WithRetries(3).
 		WithRetryWait(1 * time.Second).
-		WithSyncCommit().
 		WithSaramaConfig(saramaCfg).
 		Create()
 
@@ -123,5 +122,6 @@ func (kc *kafkaComponent) Process(batch kafka.Batch) error {
 
 		log.FromContext(msg.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
 	}
+	batch.Commit()
 	return nil
 }

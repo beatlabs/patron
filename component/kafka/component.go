@@ -100,7 +100,6 @@ type Builder struct {
 	batchTimeout time.Duration
 	retries      uint
 	retryWait    time.Duration
-	commitSync   bool
 	errors       []error // builder errors
 }
 
@@ -197,13 +196,6 @@ func (cb *Builder) WithBatching(size uint, timeout time.Duration) *Builder {
 	return cb
 }
 
-// WithSyncCommit specifies that a consumer should commit offsets at the end of processing
-// each message or batch of messages in a blocking synchronous operation.
-func (cb *Builder) WithSyncCommit() *Builder {
-	cb.commitSync = true
-	return cb
-}
-
 // WithSaramaConfig specified a sarama consumer config. Use this to set consumer config on sarama level.
 // Check the sarama config documentation for more config options.
 func (cb *Builder) WithSaramaConfig(cfg *sarama.Config) *Builder {
@@ -238,7 +230,6 @@ func (cb *Builder) Create() (*Component, error) {
 		batchTimeout: cb.batchTimeout,
 		retries:      cb.retries,
 		retryWait:    cb.retryWait,
-		commitSync:   cb.commitSync,
 	}
 
 	return c, nil
@@ -257,7 +248,6 @@ type Component struct {
 	batchTimeout time.Duration
 	retries      uint
 	retryWait    time.Duration
-	commitSync   bool
 }
 
 // Run starts the consumer processing loop messages.
@@ -265,7 +255,7 @@ func (c *Component) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	handler := newConsumerHandler(ctx, cancel, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
-		c.batchTimeout, c.retries, c.retryWait, c.commitSync)
+		c.batchTimeout, c.retries, c.retryWait)
 	client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 	if err != nil {
 		log.Errorf("error creating consumer group client for kafka consumer component: %v", err)
@@ -332,16 +322,12 @@ type consumerHandler struct {
 	// failures strategy
 	failStrategy FailStrategy
 
-	// commit offsets after processing in a blocking synchronous operation
-	commitSync bool
-
 	// processing error
 	err error
 }
 
 func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name, group string, processorFunc BatchProcessorFunc,
-	fs FailStrategy, batchSize uint, batchTimeout time.Duration, retries uint, retryWait time.Duration,
-	commitEveryBatch bool) *consumerHandler {
+	fs FailStrategy, batchSize uint, batchTimeout time.Duration, retries uint, retryWait time.Duration) *consumerHandler {
 
 	return &consumerHandler{
 		ctx:          ctx,
@@ -357,7 +343,6 @@ func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name, gr
 		mu:           sync.RWMutex{},
 		proc:         processorFunc,
 		failStrategy: fs,
-		commitSync:   commitEveryBatch,
 	}
 }
 
@@ -423,7 +408,11 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		}
 
 		for i := 0; i <= c.retries; i++ {
-			btc := &batch{messages: messages}
+			btc := &batch{
+				messages:            messages,
+				commitFunc:          commit(session),
+				markBatchOffsetFunc: markBatchOffset(session),
+			}
 			err = c.proc(btc)
 			if err == nil {
 				break
@@ -456,12 +445,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		}
 
 		for _, m := range messages {
-			session.MarkMessage(m.Message(), "")
 			trace.SpanSuccess(m.Span())
-		}
-
-		if c.commitSync {
-			session.Commit()
 		}
 
 		c.msgBuf = c.msgBuf[:0]
@@ -488,6 +472,20 @@ func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg
 		return c.flush(session)
 	}
 	return nil
+}
+
+func commit(session sarama.ConsumerGroupSession) commitFunc {
+	return func() {
+		session.Commit()
+	}
+}
+
+func markBatchOffset(session sarama.ConsumerGroupSession) markBatchOffsetFunc {
+	return func(messages []Message) {
+		for _, m := range messages {
+			session.MarkMessage(m.Message(), "")
+		}
+	}
 }
 
 func getCorrelationID(hh []*sarama.RecordHeader) string {

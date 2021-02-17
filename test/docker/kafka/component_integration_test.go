@@ -35,6 +35,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgContent)
 			consumerWG.Done()
 		}
+		batch.Commit()
 		return nil
 	}
 	component := newComponent(t, successTopic2, 3, 10, processorFunc)
@@ -103,6 +104,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 			}
 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgIndex)
 		}
+		batch.Commit()
 		return nil
 	}
 
@@ -162,6 +164,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 			consumerWG.Done()
 			actualMessages = append(actualMessages, msgContent)
 		}
+		batch.Commit()
 		return nil
 	}
 	component := newComponent(t, failAndRetryTopic2, 3, 1, processorFunc)
@@ -217,7 +220,6 @@ func newComponent(t *testing.T, name string, retries uint, batchSize uint, proce
 		WithRetries(retries).
 		WithRetryWait(200*time.Millisecond).
 		WithBatching(batchSize, 100*time.Millisecond).
-		WithSyncCommit().
 		WithFailureStrategy(kafka.ExitStrategy).
 		WithSaramaConfig(saramaCfg).
 		Create()

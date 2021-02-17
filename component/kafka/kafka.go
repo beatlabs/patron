@@ -20,7 +20,7 @@ const (
 	SkipStrategy
 )
 
-// BatchProcessorFunc definition of a batch async processor.
+// BatchProcessorFunc definition of a batch async processor function.
 type BatchProcessorFunc func(Batch) error
 
 // Message interface for wrapping messages that are handled by the kafka component.
@@ -60,15 +60,41 @@ func (m *message) Span() opentracing.Span {
 type Batch interface {
 	// Messages of the batch.
 	Messages() []Message
+	// Commit marks and then commits the batch offset in a synchronous blocking operation.
+	Commit()
+	// MarkBatchOffset marks the batch offset in an asynchronous operation.
+	// AutoCommit needs to be turned on in order to actually commits offset.
+	// This can be done by setting Consumer.Offsets.AutoCommit.Enable = true in the sarama configuration.
+	// It is true by default.
+	MarkBatchOffset()
 }
 
+// commitFunc definition of the batch commit function.
+type commitFunc func()
+
+// markBatchOffsetFunc definition of the batch mark offset function.
+type markBatchOffsetFunc func(messages []Message)
+
 type batch struct {
-	messages []Message
+	messages            []Message
+	commitFunc          commitFunc
+	markBatchOffsetFunc markBatchOffsetFunc
 }
 
 // Messages of the batch.
 func (b batch) Messages() []Message {
 	return b.messages
+}
+
+// Commit marks and then commits the batch offset in a synchronous blocking operation.
+func (b batch) Commit() {
+	b.MarkBatchOffset()
+	b.commitFunc()
+}
+
+// MarkBatchOffset the batch offset in an asynchronous operation.
+func (b batch) MarkBatchOffset() {
+	b.markBatchOffsetFunc(b.messages)
 }
 
 // defaultSaramaConfig function creates a sarama config object with the default configuration set up.

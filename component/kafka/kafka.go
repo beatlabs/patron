@@ -62,11 +62,11 @@ type Batch interface {
 	Messages() []Message
 	// Commit marks and then commits the batch offset in a synchronous blocking operation.
 	Commit()
-	// MarkBatchOffset marks the batch offset in an asynchronous operation.
+	// MarkOffset marks the batch offset in an asynchronous operation.
 	// AutoCommit needs to be turned on in order to actually commits offset.
 	// This can be done by setting Consumer.Offsets.AutoCommit.Enable = true in the sarama configuration.
 	// It is true by default.
-	MarkBatchOffset()
+	MarkOffset()
 }
 
 // commitFunc definition of the batch commit function.
@@ -76,9 +76,9 @@ type commitFunc func()
 type markBatchOffsetFunc func(messages []Message)
 
 type batch struct {
-	messages            []Message
-	commitFunc          commitFunc
-	markBatchOffsetFunc markBatchOffsetFunc
+	messages       []Message
+	commitFunc     commitFunc
+	markOffsetFunc markBatchOffsetFunc
 }
 
 // Messages of the batch.
@@ -88,13 +88,13 @@ func (b batch) Messages() []Message {
 
 // Commit marks and then commits the batch offset in a synchronous blocking operation.
 func (b batch) Commit() {
-	b.MarkBatchOffset()
+	b.MarkOffset()
 	b.commitFunc()
 }
 
-// MarkBatchOffset the batch offset in an asynchronous operation.
-func (b batch) MarkBatchOffset() {
-	b.markBatchOffsetFunc(b.messages)
+// MarkOffset marks the batch offset in an asynchronous operation.
+func (b batch) MarkOffset() {
+	b.markOffsetFunc(b.messages)
 }
 
 // defaultSaramaConfig function creates a sarama config object with the default configuration set up.

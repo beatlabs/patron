@@ -409,9 +409,9 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 
 		for i := 0; i <= c.retries; i++ {
 			btc := &batch{
-				messages:            messages,
-				commitFunc:          commit(session),
-				markBatchOffsetFunc: markBatchOffset(session),
+				messages:       messages,
+				commitFunc:     commit(session),
+				markOffsetFunc: markBatchOffset(session),
 			}
 			err = c.proc(btc)
 			if err == nil {

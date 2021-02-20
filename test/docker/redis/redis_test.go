@@ -34,7 +34,6 @@ func create(expiration time.Duration) (*redisRuntime, error) {
 		},
 		Env: []string{
 			"ALLOW_EMPTY_PASSWORD=yes",
-			"REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL",
 		},
 	}
 	_, err = runtime.RunWithOptions(runOptions)

@@ -44,6 +44,7 @@ type message struct {
 	ctx     context.Context
 	span    opentracing.Span
 	msg     amqp.Delivery
+	queue   string
 	requeue bool
 }
 
@@ -70,11 +71,13 @@ func (m message) Message() amqp.Delivery {
 func (m message) ACK() error {
 	err := m.msg.Ack(false)
 	trace.SpanComplete(m.span, err)
+	messageCountInc(m.queue, ackMessageState, err)
 	return err
 }
 
 func (m message) NACK() error {
 	err := m.msg.Nack(false, m.requeue)
+	messageCountInc(m.queue, nackMessageState, err)
 	trace.SpanComplete(m.span, err)
 	return err
 }

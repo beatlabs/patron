@@ -15,8 +15,11 @@ import (
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/streadway/amqp"
 )
+
+type messageState string
 
 const (
 	defaultBatchCount        = 1
@@ -24,9 +27,53 @@ const (
 	defaultHeartbeat         = 10 * time.Second
 	defaultConnectionTimeout = 30 * time.Second
 	defaultLocale            = "en_US"
+	defaultStatsInterval     = 5 * time.Second
 
 	consumerComponent = "amqp-consumer"
+
+	ackMessageState     messageState = "ACK"
+	nackMessageState    messageState = "NACK"
+	fetchedMessageState messageState = "FETCHED"
 )
+
+var (
+	messageAge     *prometheus.GaugeVec
+	messageCounter *prometheus.CounterVec
+	queueSize      *prometheus.GaugeVec
+)
+
+func init() {
+	messageAge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "component",
+			Subsystem: "amqp",
+			Name:      "message_age",
+			Help:      "Message age based on the AMQP timestamp",
+		},
+		[]string{"queue"},
+	)
+	prometheus.MustRegister(messageAge)
+	messageCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "component",
+			Subsystem: "amqp",
+			Name:      "message_counter",
+			Help:      "Message counter by state and error",
+		},
+		[]string{"queue", "state", "hasError"},
+	)
+	prometheus.MustRegister(messageCounter)
+	queueSize = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "component",
+			Subsystem: "amqp",
+			Name:      "queue_size",
+			Help:      "Queue size reported by AMQP",
+		},
+		[]string{"queue"},
+	)
+	prometheus.MustRegister(queueSize)
+}
 
 // ProcessorFunc definition of a async processor.
 type ProcessorFunc func(context.Context, Batch)
@@ -34,6 +81,10 @@ type ProcessorFunc func(context.Context, Batch)
 type batchConfig struct {
 	count   uint
 	timeout time.Duration
+}
+
+type stats struct {
+	interval time.Duration
 }
 
 // Component implementation of a async component.
@@ -44,6 +95,7 @@ type Component struct {
 	requeue  bool
 	proc     ProcessorFunc
 	batchCfg batchConfig
+	statsCfg stats
 	cfg      amqp.Config
 	traceTag opentracing.Tag
 	mu       sync.Mutex
@@ -84,6 +136,9 @@ func New(name, url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Compon
 				return net.DialTimeout(network, addr, defaultConnectionTimeout)
 			},
 		},
+		statsCfg: stats{
+			interval: defaultStatsInterval,
+		},
 		mu: sync.Mutex{},
 	}
 
@@ -114,6 +169,8 @@ func (c *Component) Run(ctx context.Context) error {
 
 	batchTimeout := time.NewTicker(c.batchCfg.timeout)
 	defer batchTimeout.Stop()
+	tickerStats := time.NewTicker(c.statsCfg.interval)
+	defer tickerStats.Stop()
 
 	btc := &batch{
 		ctx:      ctx,
@@ -127,12 +184,23 @@ func (c *Component) Run(ctx context.Context) error {
 			return nil
 		case delivery := <-sub.deliveries:
 			log.Debugf("processing message %d", delivery.DeliveryTag)
+			observeReceivedMessageStats(c.queue, delivery.Timestamp)
 			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
 			log.Debugf("batch timeout expired, sending batch")
 			c.sendBatch(ctx, btc)
+		case <-tickerStats.C:
+			err := c.stats(sub)
+			if err != nil {
+				log.FromContext(ctx).Errorf("failed to report sqsAPI stats: %v", err)
+			}
 		}
 	}
+}
+
+func observeReceivedMessageStats(queue string, timestamp time.Time) {
+	messageAge.WithLabelValues(queue).Set(time.Now().UTC().Sub(timestamp).Seconds())
+	messageCountInc(queue, fetchedMessageState, nil)
 }
 
 type subscription struct {
@@ -190,6 +258,7 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 		span:    sp,
 		msg:     delivery,
 		requeue: c.requeue,
+		queue:   c.queue,
 	}
 }
 
@@ -211,6 +280,16 @@ func (c *Component) sendBatch(ctx context.Context, btc *batch) {
 	btc = initBatch(ctx, c.batchCfg.count)
 }
 
+func (c *Component) stats(sub subscription) error {
+	q, err := sub.channel.QueueInspect(c.queue)
+	if err != nil {
+		return err
+	}
+
+	queueSize.WithLabelValues(c.queue).Set(float64(q.Messages))
+	return nil
+}
+
 func initBatch(ctx context.Context, count uint) *batch {
 	return &batch{
 		ctx:      ctx,
@@ -218,16 +297,13 @@ func initBatch(ctx context.Context, count uint) *batch {
 	}
 }
 
-// func observerMessageAge(queue string, attributes map[string]*string) {
-// }
-//
-// func messageCountInc(queue string, state messageState, count int) {
-// 	messageCounter.WithLabelValues(queue, string(state), "false").Add(float64(count))
-// }
-//
-// func messageCountErrorInc(queue string, state messageState, count int) {
-// 	messageCounter.WithLabelValues(queue, string(state), "true").Add(float64(count))
-// }
+func messageCountInc(queue string, state messageState, err error) {
+	hasError := "false"
+	if err != nil {
+		hasError = "true"
+	}
+	messageCounter.WithLabelValues(queue, string(state), hasError).Inc()
+}
 
 func mapHeader(hh amqp.Table) map[string]string {
 	mp := make(map[string]string)

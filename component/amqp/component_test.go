@@ -14,7 +14,6 @@ func TestNew(t *testing.T) {
 	}
 
 	type args struct {
-		name  string
 		url   string
 		queue string
 		proc  ProcessorFunc
@@ -26,26 +25,14 @@ func TestNew(t *testing.T) {
 	}{
 		"success": {
 			args: args{
-				name:  "name",
 				url:   "url",
 				queue: "queue",
 				proc:  proc,
 				oo:    []OptionFunc{Batching(5, 5*time.Millisecond)},
 			},
 		},
-		"missing name": {
-			args: args{
-				name:  "",
-				url:   "url",
-				queue: "queueName",
-				proc:  proc,
-				oo:    []OptionFunc{Batching(5, 5*time.Millisecond)},
-			},
-			expectedErr: "component name is empty",
-		},
 		"missing url": {
 			args: args{
-				name:  "name",
 				url:   "",
 				queue: "queue",
 				proc:  proc,
@@ -55,7 +42,6 @@ func TestNew(t *testing.T) {
 		},
 		"missing queue": {
 			args: args{
-				name:  "name",
 				url:   "url",
 				queue: "",
 				proc:  proc,
@@ -65,7 +51,6 @@ func TestNew(t *testing.T) {
 		},
 		"missing process function": {
 			args: args{
-				name:  "name",
 				url:   "url",
 				queue: "queue",
 				proc:  nil,
@@ -75,7 +60,6 @@ func TestNew(t *testing.T) {
 		},
 		"batching option fails": {
 			args: args{
-				name:  "name",
 				url:   "url",
 				queue: "queue",
 				proc:  proc,
@@ -86,7 +70,7 @@ func TestNew(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := New(tt.args.name, tt.args.url, tt.args.queue, tt.args.proc, tt.args.oo...)
+			got, err := New(tt.args.url, tt.args.queue, tt.args.proc, tt.args.oo...)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

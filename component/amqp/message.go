@@ -87,7 +87,7 @@ type batch struct {
 	messages []Message
 }
 
-func (b batch) ACK() ([]Message, error) {
+func (b *batch) ACK() ([]Message, error) {
 	var errors []error
 	var failed []Message
 
@@ -102,7 +102,7 @@ func (b batch) ACK() ([]Message, error) {
 	return failed, patronerrors.Aggregate(errors...)
 }
 
-func (b batch) NACK() ([]Message, error) {
+func (b *batch) NACK() ([]Message, error) {
 	var errors []error
 	var failed []Message
 
@@ -117,6 +117,14 @@ func (b batch) NACK() ([]Message, error) {
 	return failed, patronerrors.Aggregate(errors...)
 }
 
-func (b batch) Messages() []Message {
+func (b *batch) Messages() []Message {
 	return b.messages
+}
+
+func (b *batch) append(msg *message) {
+	b.messages = append(b.messages, msg)
+}
+
+func (b *batch) reset() {
+	b.messages = b.messages[:0]
 }

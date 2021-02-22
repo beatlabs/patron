@@ -89,7 +89,6 @@ type stats struct {
 
 // Component implementation of a async component.
 type Component struct {
-	name     string
 	url      string
 	queue    string
 	requeue  bool
@@ -102,11 +101,7 @@ type Component struct {
 }
 
 // New creates a new component with support for functional configuration.
-func New(name, url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Component, error) {
-	if name == "" {
-		return nil, errors.New("component name is empty")
-	}
-
+func New(url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Component, error) {
 	if url == "" {
 		return nil, errors.New("url is empty")
 	}
@@ -120,7 +115,6 @@ func New(name, url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Compon
 	}
 
 	cmp := &Component{
-		name:     name,
 		url:      url,
 		queue:    queue,
 		proc:     proc,
@@ -181,7 +175,7 @@ func (c *Component) Run(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			log.FromContext(ctx).Info("context cancellation received. exiting...")
-			return nil
+			return sub.close()
 		case delivery := <-sub.deliveries:
 			log.Debugf("processing message %d", delivery.DeliveryTag)
 			observeReceivedMessageStats(c.queue, delivery.Timestamp)
@@ -267,9 +261,9 @@ func (c *Component) processBatch(ctx context.Context, msg *message, btc *batch) 
 	defer c.mu.Unlock()
 	btc.messages = append(btc.messages, msg)
 
-	if len(btc.messages) == int(c.batchCfg.count) {
+	if len(btc.messages) >= int(c.batchCfg.count) {
 		c.proc(ctx, btc)
-		btc = initBatch(ctx, c.batchCfg.count)
+		btc.reset()
 	}
 }
 
@@ -277,7 +271,7 @@ func (c *Component) sendBatch(ctx context.Context, btc *batch) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.proc(ctx, btc)
-	btc = initBatch(ctx, c.batchCfg.count)
+	btc.reset()
 }
 
 func (c *Component) stats(sub subscription) error {
@@ -288,13 +282,6 @@ func (c *Component) stats(sub subscription) error {
 
 	queueSize.WithLabelValues(c.queue).Set(float64(q.Messages))
 	return nil
-}
-
-func initBatch(ctx context.Context, count uint) *batch {
-	return &batch{
-		ctx:      ctx,
-		messages: make([]Message, 0, count),
-	}
 }
 
 func messageCountInc(queue string, state messageState, err error) {

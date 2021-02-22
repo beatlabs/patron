@@ -11,7 +11,7 @@ import (
 func TestAMQPConfig(t *testing.T) {
 	cfg := amqp.Config{Locale: "123"}
 	c := &Component{}
-	assert.NoError(t, AMQPConfig(cfg)(c))
+	assert.NoError(t, Config(cfg)(c))
 	assert.Equal(t, cfg, c.cfg)
 }
 
@@ -38,6 +38,31 @@ func TestBatching(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, c.batchCfg.count, tt.args.count)
 				assert.Equal(t, c.batchCfg.timeout, tt.args.timeout)
+			}
+		})
+	}
+}
+
+func TestStatsInterval(t *testing.T) {
+	type args struct {
+		interval time.Duration
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success":          {args: args{interval: 2 * time.Millisecond}},
+		"invalid interval": {args: args{interval: -3}, expectedErr: "stats interval should be a positive number"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			c := &Component{}
+			err := StatsInterval(tt.args.interval)(c)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, c.statsCfg.interval, tt.args.interval)
 			}
 		})
 	}

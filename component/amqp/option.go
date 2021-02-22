@@ -27,10 +27,21 @@ func Batching(count uint, timeout time.Duration) OptionFunc {
 	}
 }
 
-// AMQPConfig option for setting AMQP configuration.
-func AMQPConfig(cfg amqp.Config) OptionFunc {
+// Config option for setting AMQP configuration.
+func Config(cfg amqp.Config) OptionFunc {
 	return func(c *Component) error {
 		c.cfg = cfg
+		return nil
+	}
+}
+
+// StatsInterval option for setting the interval to retrieve statistics.
+func StatsInterval(interval time.Duration) OptionFunc {
+	return func(c *Component) error {
+		if interval <= 0 {
+			return errors.New("stats interval should be a positive number")
+		}
+		c.statsCfg.interval = interval
 		return nil
 	}
 }

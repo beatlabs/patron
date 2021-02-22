@@ -21,7 +21,6 @@ import (
 )
 
 const (
-	propSetMSG        = "property '%s' set for '%s'"
 	consumerComponent = "kafka-consumer"
 	subsystem         = "kafka"
 	messageReceived   = "received"

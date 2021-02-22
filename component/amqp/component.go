@@ -259,7 +259,7 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 func (c *Component) processBatch(ctx context.Context, msg *message, btc *batch) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	btc.messages = append(btc.messages, msg)
+	btc.append(msg)
 
 	if len(btc.messages) >= int(c.batchCfg.count) {
 		c.proc(ctx, btc)

@@ -7,11 +7,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
 	clienthttp "github.com/beatlabs/patron/client/http"
-	"github.com/beatlabs/patron/client/kafka"
+	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/auth/apikey"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 )
@@ -71,12 +73,12 @@ func main() {
 }
 
 type httpComponent struct {
-	prd   kafka.Producer
+	prd   *v2.AsyncProducer
 	topic string
 }
 
 func newHTTPComponent(kafkaBroker, topic, _ string) (*httpComponent, error) {
-	prd, chErr, err := kafka.NewBuilder([]string{kafkaBroker}).CreateAsync()
+	prd, chErr, err := v2.New([]string{kafkaBroker}).CreateAsync()
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +111,15 @@ func (hc *httpComponent) kafkaHandler(ctx context.Context, req *patronhttp.Reque
 		return nil, fmt.Errorf("failed to get www.google.com: %w", err)
 	}
 
-	kafkaMsg := kafka.NewMessage(hc.topic, &u)
+	b, err := json.Encode(u)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode message: %w", err)
+	}
+
+	kafkaMsg := &sarama.ProducerMessage{
+		Topic: hc.topic,
+		Value: sarama.ByteEncoder(b),
+	}
 
 	err = hc.prd.Send(ctx, kafkaMsg)
 	if err != nil {

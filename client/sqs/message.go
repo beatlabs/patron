@@ -17,6 +17,11 @@ type MessageBuilder struct {
 }
 
 // NewMessageBuilder creates a new MessageBuilder that helps creating messages.
+//
+// Deprecated: The SQS client package is superseded by the `github.com/beatlabs/client/sqs/v2` package.
+// Please refer to the documents and the examples for the usage.
+//
+// This package is frozen and no new functionality will be added.
 func NewMessageBuilder() *MessageBuilder {
 	return &MessageBuilder{
 		input: &sqs.SendMessageInput{

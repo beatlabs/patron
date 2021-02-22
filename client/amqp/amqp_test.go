@@ -3,9 +3,9 @@ package amqp
 import (
 	"testing"
 
-	"github.com/golang/protobuf/proto"
-
+	"github.com/beatlabs/patron/examples"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestNewMessage(t *testing.T) {
@@ -24,7 +24,7 @@ func TestNewJSONMessage(t *testing.T) {
 }
 
 func TestNewProtobufMessage(t *testing.T) {
-	u := User{
+	u := examples.User{
 		Firstname: proto.String("John"),
 		Lastname:  proto.String("Doe"),
 	}
@@ -32,7 +32,7 @@ func TestNewProtobufMessage(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "application/x-protobuf", m.contentType)
 	assert.Len(t, m.body, 11)
-	u = User{}
+	u = examples.User{}
 	_, err = NewProtobufMessage(&u)
 	assert.Error(t, err)
 }

@@ -44,7 +44,6 @@ func (c *headersCarrier) Set(key, val string) {
 
 func unaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn,
 	invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-
 	span, ctx := trace.ChildSpan(ctx, trace.ComponentOpName(componentName, method), componentName, ext.SpanKindProducer,
 		ext.SpanKindProducer)
 

@@ -1,4 +1,9 @@
 // Package amqp provides a client with included tracing capabilities.
+//
+// Deprecated: The AMQP client package is superseded by the `github.com/beatlabs/client/amqp/v2` package.
+// Please refer to the documents and the examples for the usage.
+//
+// This package is frozen and no new functionality will be added.
 package amqp
 
 import (
@@ -75,6 +80,11 @@ type TracedPublisher struct {
 // NewPublisher creates a new publisher with the following defaults
 // - exchange type: fanout
 // - notifications are not handled at this point TBD.
+//
+// Deprecated: The AMQP client package is superseded by the `github.com/beatlabs/client/amqp/v2` package.
+// Please refer to the documents and the examples for the usage.
+//
+// This package is frozen and no new functionality will be added.
 func NewPublisher(url, exc string, oo ...OptionFunc) (*TracedPublisher, error) {
 	if url == "" {
 		return nil, errors.New("url is required")

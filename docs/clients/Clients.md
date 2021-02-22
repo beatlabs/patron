@@ -13,7 +13,7 @@ Patron provides an HTTP client which integrates tracing into all outgoing reques
 
 
 ## AMQP
-The AMQP client allows users to connect to a RabbitMQ instance and publish JSON or Protobuf messages using a fan-out exchange. The published messages have integrated tracing headers by default. Users can configure the timeout for connecting to the RabbitMQ instance.
+The AMQP client allows users to connect to a RabbitMQ instance and publish messages. The published messages have integrated tracing headers by default. Users can configure every aspect of the connection.
 
 **Third-party dependencies**  
 github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
@@ -26,7 +26,7 @@ google.golang.org/grpc v1.27.1
 
 
 ## Kafka
-The Kafka client allows users to create a synchronous or asynchronous Kafka producer and publish Kafka messages with tracing headers. The builder pattern allows users to configure the Kafka version, the dial timeout, the RequiredAcks policy, as well as the encoder used to serialize the messages.
+The Kafka client allows users to create a synchronous or asynchronous Kafka producer and publish Kafka messages with tracing headers. The builder pattern allows users to configure every aspect of the connection.
 
 **Third-party dependencies**  
 github.com/Shopify/sarama v1.21.0
@@ -44,7 +44,7 @@ The SQL client enhances the standard library SQL by integrating tracing capabili
 
 
 ## SNS - SQS
-The SNS and SQS clients provide a set of interfaces and structs useful for publishing messages to AWS SNS and SQS, with integrating tracing.
+The SNS and SQS clients provide wrappers useful for publishing messages to AWS SNS and SQS, with integrating tracing.
 
 **Third-party dependencies**  
 github.com/aws/aws-sdk-go v1.21.8

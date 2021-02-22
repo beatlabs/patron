@@ -5,61 +5,54 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/beatlabs/patron/examples"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/stretchr/testify/assert"
-
-	"github.com/golang/protobuf/proto"
 )
 
 func TestEncodeDecode(t *testing.T) {
-	test := Test{
-		Label: proto.String("hello"),
-		Type:  proto.Int32(17),
-		Reps:  []int64{1, 2, 3},
+	user1 := examples.User{
+		Firstname: proto.String("John"),
+		Lastname:  proto.String("Doe"),
 	}
-	test2 := Test{}
-	test3 := Test{}
+	user2 := examples.User{}
+	user3 := examples.User{}
 
-	b, err := Encode(&test)
+	b, err := Encode(&user1)
 	assert.NoError(t, err)
-	err = DecodeRaw(b, &test2)
+	err = DecodeRaw(b, &user2)
 	assert.NoError(t, err)
-	assert.Equal(t, test.GetLabel(), test2.GetLabel())
-	assert.Equal(t, test.GetType(), test2.GetType())
-	assert.Equal(t, test.GetReps(), test2.GetReps())
+	assert.Equal(t, user1.GetFirstname(), user2.GetFirstname())
+	assert.Equal(t, user1.GetLastname(), user2.GetLastname())
 
 	r := bytes.NewReader(b)
-	err = Decode(r, &test3)
+	err = Decode(r, &user3)
 	assert.NoError(t, err)
-	assert.Equal(t, test.GetLabel(), test3.GetLabel())
-	assert.Equal(t, test.GetType(), test3.GetType())
-	assert.Equal(t, test.GetReps(), test3.GetReps())
+	assert.Equal(t, user1.GetFirstname(), user3.GetFirstname())
+	assert.Equal(t, user1.GetLastname(), user3.GetLastname())
 }
 
 func TestDecodeError(t *testing.T) {
-	test := Test{}
-	err := Decode(errReader(0), &test)
+	user := examples.User{}
+	err := Decode(errReader(0), &user)
 	assert.Error(t, err)
 }
 
 func TestProtobuf(t *testing.T) {
-	test := Test{
-		Label: proto.String("hello"),
-		Type:  proto.Int32(17),
-		Reps:  []int64{1, 2, 3},
+	user1 := examples.User{
+		Firstname: proto.String("John"),
+		Lastname:  proto.String("Doe"),
 	}
 
-	test1 := Test{
-		Type: nil,
-	}
+	user2 := examples.User{}
 
-	assert.Equal(t, "", test1.GetLabel())
-	assert.Equal(t, int32(0), test1.GetType())
-	assert.Equal(t, []int64(nil), test1.GetReps())
+	assert.Equal(t, "", user2.GetFirstname())
+	assert.Equal(t, "", user2.GetLastname())
 
-	test.XXX_DiscardUnknown()
-	test.XXX_Merge(&test1)
-	assert.Equal(t, "label:\"hello\" type:17 reps:1 reps:2 reps:3 ", test.String())
-	b, c := test.Descriptor()
+	user1.XXX_DiscardUnknown()
+	user1.XXX_Merge(&user2)
+	assert.Equal(t, `Firstname:"John" Lastname:"Doe" `, user1.String())
+	b, c := user1.Descriptor()
 	assert.NotEmpty(t, b)
 	assert.Len(t, c, 1)
 }

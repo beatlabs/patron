@@ -16,6 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	patronDocker "github.com/beatlabs/patron/test/docker"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/ory/dockertest/v3"
 )
 
@@ -29,6 +31,7 @@ const (
 
 var (
 	runtime *awsRuntime
+	mtr     *mocktracer.MockTracer
 )
 
 func TestMain(m *testing.M) {
@@ -38,6 +41,10 @@ func TestMain(m *testing.M) {
 		fmt.Printf("could not create AWS runtime: %v\n", err)
 		os.Exit(1)
 	}
+
+	mtr = mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
+	defer mtr.Reset()
 
 	exitCode := m.Run()
 
@@ -73,7 +80,8 @@ func create(expiration time.Duration) (*awsRuntime, error) {
 			"AWS_ACCESS_KEY_ID=test",
 			"AWS_SECRET_ACCESS_KEY=test",
 			"AWS_DEFAULT_REGION=eu-west-1",
-		}}
+		},
+	}
 	_, err = runtime.RunWithOptions(runOptions)
 	if err != nil {
 		return nil, fmt.Errorf("could not start mysql: %w", err)

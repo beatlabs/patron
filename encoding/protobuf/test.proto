@@ -1,8 +1,0 @@
-syntax = "proto2";
-package protobuf;
-
-message Test {
-  required string label = 1;
-  optional int32 type = 2;
-  repeated int64 reps = 3;
-}

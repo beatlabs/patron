@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beatlabs/patron/component/grpc/greeter"
+	"github.com/beatlabs/patron/examples"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -39,28 +39,28 @@ func TestCreate(t *testing.T) {
 }
 
 type server struct {
-	greeter.UnimplementedGreeterServer
+	examples.UnimplementedGreeterServer
 }
 
-func (s *server) SayHello(_ context.Context, in *greeter.HelloRequest) (*greeter.HelloReply, error) {
+func (s *server) SayHello(_ context.Context, in *examples.HelloRequest) (*examples.HelloReply, error) {
 	if in.GetFirstname() == "ERROR" {
 		return nil, errors.New("ERROR")
 	}
-	return &greeter.HelloReply{Message: "Hello " + in.GetFirstname()}, nil
+	return &examples.HelloReply{Message: "Hello " + in.GetFirstname()}, nil
 }
 
-func (s *server) SayHelloStream(req *greeter.HelloRequest, srv greeter.Greeter_SayHelloStreamServer) error {
+func (s *server) SayHelloStream(req *examples.HelloRequest, srv examples.Greeter_SayHelloStreamServer) error {
 	if req.GetFirstname() == "ERROR" {
 		return errors.New("ERROR")
 	}
 
-	return srv.Send(&greeter.HelloReply{Message: "Hello " + req.GetFirstname()})
+	return srv.Send(&examples.HelloReply{Message: "Hello " + req.GetFirstname()})
 }
 
 func TestComponent_Run_Unary(t *testing.T) {
 	cmp, err := New(60000).Create()
 	require.NoError(t, err)
-	greeter.RegisterGreeterServer(cmp.Server(), &server{})
+	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())
 	chDone := make(chan struct{})
 	go func() {
@@ -69,7 +69,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 	}()
 	conn, err := grpc.Dial("localhost:60000", grpc.WithInsecure(), grpc.WithBlock())
 	require.NoError(t, err)
-	c := greeter.NewGreeterClient(conn)
+	c := examples.NewGreeterClient(conn)
 
 	type args struct {
 		requestName string
@@ -83,7 +83,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			r, err := c.SayHello(ctx, &greeter.HelloRequest{Firstname: tt.args.requestName})
+			r, err := c.SayHello(ctx, &examples.HelloRequest{Firstname: tt.args.requestName})
 			if tt.expErr != "" {
 				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, r)
@@ -101,7 +101,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 func TestComponent_Run_Stream(t *testing.T) {
 	cmp, err := New(60000).Create()
 	require.NoError(t, err)
-	greeter.RegisterGreeterServer(cmp.Server(), &server{})
+	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())
 	chDone := make(chan struct{})
 	go func() {
@@ -110,7 +110,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 	}()
 	conn, err := grpc.Dial("localhost:60000", grpc.WithInsecure(), grpc.WithBlock())
 	require.NoError(t, err)
-	c := greeter.NewGreeterClient(conn)
+	c := examples.NewGreeterClient(conn)
 
 	type args struct {
 		requestName string
@@ -124,7 +124,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			client, err := c.SayHelloStream(ctx, &greeter.HelloRequest{Firstname: tt.args.requestName})
+			client, err := c.SayHelloStream(ctx, &examples.HelloRequest{Firstname: tt.args.requestName})
 			assert.NoError(t, err)
 			resp, err := client.Recv()
 			if tt.expErr != "" {

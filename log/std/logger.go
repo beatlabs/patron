@@ -213,12 +213,12 @@ func (l *Logger) shouldLog(lvl patronLog.Level) bool {
 
 func output(logger *log.Logger, args ...interface{}) string {
 	msg := fmt.Sprint(args...)
-	_ = logger.Output(3, msg)
+	_ = logger.Output(4, msg)
 	return msg
 }
 
 func outputf(logger *log.Logger, msg string, args ...interface{}) string {
 	fmtMsg := fmt.Sprintf(msg, args...)
-	_ = logger.Output(3, fmtMsg)
+	_ = logger.Output(4, fmtMsg)
 	return fmtMsg
 }

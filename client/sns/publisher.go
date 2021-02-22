@@ -1,5 +1,10 @@
 // Package sns provides a set of common interfaces and structs for publishing messages to AWS SNS. Implementations
 // in this package also include distributed tracing capabilities by default.
+//
+// Deprecated: The SNS client package is superseded by the `github.com/beatlabs/client/sns/v2` package.
+// Please refer to the documents and the examples for the usage.
+//
+// This package is frozen and no new functionality will be added.
 package sns
 
 import (
@@ -34,6 +39,11 @@ type TracedPublisher struct {
 }
 
 // NewPublisher creates a new SNS publisher.
+//
+// Deprecated: The SNS client package is superseded by the `github.com/beatlabs/client/sns/v2` package.
+// Please refer to the documents and the examples for the usage.
+//
+// This package is frozen and no new functionality will be added.
 func NewPublisher(api snsiface.SNSAPI) (*TracedPublisher, error) {
 	if api == nil {
 		return nil, errors.New("missing api")

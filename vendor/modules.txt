@@ -58,6 +58,8 @@ github.com/cespare/xxhash/v2
 github.com/containerd/continuity/pathdriver
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
+# github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f
+github.com/dgryski/go-rendezvous
 # github.com/docker/go-connections v0.4.0
 github.com/docker/go-connections/nat
 # github.com/docker/go-units v0.4.0
@@ -73,17 +75,20 @@ github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi
 github.com/elastic/go-elasticsearch/v8/estransport
 github.com/elastic/go-elasticsearch/v8/internal/version
-# github.com/go-redis/redis/v7 v7.0.0-beta.5
-github.com/go-redis/redis/v7
-github.com/go-redis/redis/v7/internal
-github.com/go-redis/redis/v7/internal/consistenthash
-github.com/go-redis/redis/v7/internal/hashtag
-github.com/go-redis/redis/v7/internal/pool
-github.com/go-redis/redis/v7/internal/proto
-github.com/go-redis/redis/v7/internal/util
+# github.com/go-redis/redis/extra/rediscmd v0.2.0
+github.com/go-redis/redis/extra/rediscmd
+# github.com/go-redis/redis/v8 v8.5.0
+github.com/go-redis/redis/v8
+github.com/go-redis/redis/v8/internal
+github.com/go-redis/redis/v8/internal/hashtag
+github.com/go-redis/redis/v8/internal/hscan
+github.com/go-redis/redis/v8/internal/pool
+github.com/go-redis/redis/v8/internal/proto
+github.com/go-redis/redis/v8/internal/rand
+github.com/go-redis/redis/v8/internal/util
 # github.com/go-sql-driver/mysql v1.5.0
 github.com/go-sql-driver/mysql
-# github.com/golang/protobuf v1.3.2
+# github.com/golang/protobuf v1.4.2
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
@@ -186,7 +191,7 @@ github.com/rs/zerolog/internal/json
 github.com/sirupsen/logrus
 # github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
 github.com/streadway/amqp
-# github.com/stretchr/testify v1.6.0
+# github.com/stretchr/testify v1.6.1
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/uber/jaeger-client-go v2.22.1+incompatible
@@ -211,12 +216,26 @@ github.com/uber/jaeger-client-go/utils
 # github.com/uber/jaeger-lib v2.2.0+incompatible
 github.com/uber/jaeger-lib/metrics
 github.com/uber/jaeger-lib/metrics/prometheus
+# go.opentelemetry.io/otel v0.16.0
+go.opentelemetry.io/otel
+go.opentelemetry.io/otel/codes
+go.opentelemetry.io/otel/internal
+go.opentelemetry.io/otel/internal/baggage
+go.opentelemetry.io/otel/internal/global
+go.opentelemetry.io/otel/internal/trace/noop
+go.opentelemetry.io/otel/label
+go.opentelemetry.io/otel/metric
+go.opentelemetry.io/otel/metric/number
+go.opentelemetry.io/otel/metric/registry
+go.opentelemetry.io/otel/propagation
+go.opentelemetry.io/otel/trace
+go.opentelemetry.io/otel/unit
 # go.uber.org/atomic v1.6.0
 go.uber.org/atomic
 # golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 golang.org/x/crypto/md4
 golang.org/x/crypto/pbkdf2
-# golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+# golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -226,7 +245,7 @@ golang.org/x/net/internal/socks
 golang.org/x/net/internal/timeseries
 golang.org/x/net/proxy
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
+# golang.org/x/sys v0.0.0-20210112080510-489259a85091
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
@@ -237,7 +256,7 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 golang.org/x/time/rate
-# google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
+# google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.27.1
 google.golang.org/grpc
@@ -276,6 +295,37 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
+google.golang.org/grpc/test/bufconn
+# google.golang.org/protobuf v1.25.0
+google.golang.org/protobuf/encoding/prototext
+google.golang.org/protobuf/encoding/protowire
+google.golang.org/protobuf/internal/descfmt
+google.golang.org/protobuf/internal/descopts
+google.golang.org/protobuf/internal/detrand
+google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/messageset
+google.golang.org/protobuf/internal/encoding/tag
+google.golang.org/protobuf/internal/encoding/text
+google.golang.org/protobuf/internal/errors
+google.golang.org/protobuf/internal/fieldsort
+google.golang.org/protobuf/internal/filedesc
+google.golang.org/protobuf/internal/filetype
+google.golang.org/protobuf/internal/flags
+google.golang.org/protobuf/internal/genid
+google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/pragma
+google.golang.org/protobuf/internal/set
+google.golang.org/protobuf/internal/strs
+google.golang.org/protobuf/internal/version
+google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protoreflect
+google.golang.org/protobuf/reflect/protoregistry
+google.golang.org/protobuf/runtime/protoiface
+google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/types/known/anypb
+google.golang.org/protobuf/types/known/durationpb
+google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/jcmturner/aescts.v1 v1.0.1
 gopkg.in/jcmturner/aescts.v1
 # gopkg.in/jcmturner/dnsutils.v1 v1.0.1

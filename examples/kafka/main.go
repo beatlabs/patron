@@ -93,13 +93,18 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 	saramaCfg.Net.DialTimeout = 15 * time.Second
 	saramaCfg.Version = sarama.V2_6_0_0
 
-	cmp, err := kafka.New(name, groupID, []string{broker}, []string{topic}, kafkaCmp.Process).
-		WithBatching(1, 1*time.Second).
-		WithFailureStrategy(kafka.SkipStrategy).
-		WithRetries(3).
-		WithRetryWait(1 * time.Second).
-		WithSaramaConfig(saramaCfg).
-		Create()
+	cmp, err := kafka.New(
+		name,
+		groupID,
+		[]string{broker},
+		[]string{topic},
+		kafkaCmp.Process,
+		kafka.FailureStrategy(kafka.SkipStrategy),
+		kafka.BatchSize(1),
+		kafka.BatchTimeout(1*time.Second),
+		kafka.Retries(3),
+		kafka.RetryWait(1*time.Second),
+		kafka.SaramaConfig(saramaCfg))
 
 	if err != nil {
 		return nil, err

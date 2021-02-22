@@ -29,6 +29,14 @@ const (
 	messageErrored    = "errored"
 )
 
+const (
+	defaultRetries         = 0
+	defaultRetryWait       = 0
+	defaultBatchSize       = 1
+	defaultBatchTimeout    = 100 * time.Millisecond
+	defaultFailureStrategy = ExitStrategy
+)
+
 var (
 	consumerErrors           *prometheus.CounterVec
 	topicPartitionOffsetDiff *prometheus.GaugeVec
@@ -87,26 +95,11 @@ func messageStatusCountInc(status, group, topic string) {
 	messageStatus.WithLabelValues(status, group, topic).Inc()
 }
 
-// Builder gathers all required properties in order to construct a batch consumer component
-type Builder struct {
-	name         string
-	group        string
-	brokers      []string
-	topics       []string
-	saramaConfig *sarama.Config
-	proc         BatchProcessorFunc
-	failStrategy FailStrategy
-	batchSize    uint
-	batchTimeout time.Duration
-	retries      uint
-	retryWait    time.Duration
-	errors       []error // builder errors
-}
-
-// New initializes a new builder for a kafka consumer component with the given name
-// by default the failStrategy will be ExitStrategy.
-// Also by default the batch size is 1 and the batch timeout is 100ms.
-func New(name, group string, brokers, topics []string, proc BatchProcessorFunc) *Builder {
+// New initializes a new builder for a kafka consumer component with the given name.
+// The default failure strategy is the ExitStrategy.
+// The default batch size is 1 and the batch timeout is 100ms.
+// The default number of retries is 0 and the retry wait is 0.
+func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, oo ...OptionFunc) (*Component, error) {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
@@ -128,111 +121,37 @@ func New(name, group string, brokers, topics []string, proc BatchProcessorFunc) 
 		errs = append(errs, errors.New("work processor is required"))
 	}
 
-	return &Builder{
+	if len(errs) > 0 {
+		return nil, patronErrors.Aggregate(errs...)
+	}
+
+	defaultSaramaCfg, err := defaultSaramaConfig(name)
+	if err != nil {
+		return nil, err
+	}
+
+	cmp := &Component{
 		name:         name,
 		group:        group,
 		brokers:      brokers,
 		topics:       topics,
 		proc:         proc,
-		errors:       errs,
-		batchSize:    1,
-		batchTimeout: 100 * time.Millisecond,
-	}
-}
-
-// WithFailureStrategy defines the failure strategy to be used
-// default value is ExitStrategy
-// it will append an error to the builder if the strategy is not one of the pre-defined ones.
-func (cb *Builder) WithFailureStrategy(fs FailStrategy) *Builder {
-	if fs > SkipStrategy || fs < ExitStrategy {
-		cb.errors = append(cb.errors, errors.New("invalid failure strategy provided"))
-	} else {
-		log.Infof(propSetMSG, "failure strategy", cb.name)
-		cb.failStrategy = fs
-	}
-	return cb
-}
-
-// WithRetries specifies the number of retries to be executed per failed processing operation
-// default value is '0'.
-func (cb *Builder) WithRetries(retries uint) *Builder {
-	log.Infof(propSetMSG, "retries", cb.name)
-	cb.retries = retries
-	return cb
-}
-
-// WithRetryWait specifies the duration for the component to wait between retrying processing of messages
-// default value is '0'
-// it will append an error to the builder if the value is smaller than '0'.
-func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
-	if retryWait < 0 {
-		cb.errors = append(cb.errors, errors.New("invalid retry wait provided"))
-	} else {
-		log.Infof(propSetMSG, "retryWait", cb.name)
-		cb.retryWait = retryWait
-	}
-	return cb
-}
-
-// WithBatching specifies the batch size and timeout of the Kafka consumer component.
-// If the size is reached then the batch of messages is processed. Otherwise if the timeout elapses
-// without new messages coming in, the messages in the buffer would get processed as a batch.
-func (cb *Builder) WithBatching(size uint, timeout time.Duration) *Builder {
-	if size == 0 {
-		cb.errors = append(cb.errors, errors.New("zero batch size provided"))
-	} else {
-		log.Infof(propSetMSG, "batchSize", cb.name)
-		cb.batchSize = size
+		retries:      defaultRetries,
+		retryWait:    defaultRetryWait,
+		batchSize:    defaultBatchSize,
+		batchTimeout: defaultBatchTimeout,
+		failStrategy: defaultFailureStrategy,
+		saramaConfig: defaultSaramaCfg,
 	}
 
-	if timeout < 0 {
-		cb.errors = append(cb.errors, errors.New("invalid batch timeout provided"))
-	} else {
-		log.Infof(propSetMSG, "batchTimeout", cb.name)
-		cb.batchTimeout = timeout
-	}
-
-	cb.batchTimeout = timeout
-	return cb
-}
-
-// WithSaramaConfig specified a sarama consumer config. Use this to set consumer config on sarama level.
-// Check the sarama config documentation for more config options.
-func (cb *Builder) WithSaramaConfig(cfg *sarama.Config) *Builder {
-	cb.saramaConfig = cfg
-	return cb
-}
-
-// Create constructs the Component applying
-func (cb *Builder) Create() (*Component, error) {
-	if len(cb.errors) > 0 {
-		return nil, patronErrors.Aggregate(cb.errors...)
-	}
-
-	if cb.saramaConfig == nil {
-		defaultSaramaCfg, err := defaultSaramaConfig(cb.name)
+	for _, optionFunc := range oo {
+		err = optionFunc(cmp)
 		if err != nil {
 			return nil, err
 		}
-
-		cb.saramaConfig = defaultSaramaCfg
 	}
 
-	c := &Component{
-		name:         cb.name,
-		group:        cb.group,
-		topics:       cb.topics,
-		brokers:      cb.brokers,
-		saramaConfig: cb.saramaConfig,
-		proc:         cb.proc,
-		failStrategy: cb.failStrategy,
-		batchSize:    cb.batchSize,
-		batchTimeout: cb.batchTimeout,
-		retries:      cb.retries,
-		retryWait:    cb.retryWait,
-	}
-
-	return c, nil
+	return cmp, nil
 }
 
 // Component is a kafka consumer implementation that processes messages in batch

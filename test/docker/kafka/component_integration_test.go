@@ -216,13 +216,18 @@ func newComponent(t *testing.T, name string, retries uint, batchSize uint, proce
 	saramaCfg.Version = sarama.V2_6_0_0
 
 	broker := fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)
-	cmp, err := kafka.New(name, name+"-group", []string{broker}, []string{name}, processorFunc).
-		WithRetries(retries).
-		WithRetryWait(200*time.Millisecond).
-		WithBatching(batchSize, 100*time.Millisecond).
-		WithFailureStrategy(kafka.ExitStrategy).
-		WithSaramaConfig(saramaCfg).
-		Create()
+	cmp, err := kafka.New(
+		name,
+		name+"-group",
+		[]string{broker},
+		[]string{name},
+		processorFunc,
+		kafka.FailureStrategy(kafka.ExitStrategy),
+		kafka.BatchSize(batchSize),
+		kafka.BatchTimeout(100*time.Millisecond),
+		kafka.Retries(retries),
+		kafka.RetryWait(200*time.Millisecond),
+		kafka.SaramaConfig(saramaCfg))
 	require.NoError(t, err)
 
 	return cmp

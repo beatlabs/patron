@@ -76,7 +76,7 @@ func init() {
 }
 
 // ProcessorFunc definition of a async processor.
-type ProcessorFunc func(context.Context, Batch)
+type ProcessorFunc func(Batch)
 
 type batchConfig struct {
 	count   uint
@@ -174,19 +174,19 @@ func (c *Component) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			log.FromContext(ctx).Info("context cancellation received. exiting...")
+			log.Info("context cancellation received. exiting...")
 			return sub.close()
 		case delivery := <-sub.deliveries:
 			log.Debugf("processing message %d", delivery.DeliveryTag)
 			observeReceivedMessageStats(c.queue, delivery.Timestamp)
-			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
+			c.processBatch(c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
 			log.Debugf("batch timeout expired, sending batch")
-			c.sendBatch(ctx, btc)
+			c.sendBatch(btc)
 		case <-tickerStats.C:
 			err := c.stats(sub)
 			if err != nil {
-				log.FromContext(ctx).Errorf("failed to report sqsAPI stats: %v", err)
+				log.Errorf("failed to report sqsAPI stats: %v", err)
 			}
 		}
 	}
@@ -201,9 +201,13 @@ type subscription struct {
 	conn       *amqp.Connection
 	channel    *amqp.Channel
 	deliveries <-chan amqp.Delivery
+	closed     bool
 }
 
-func (s subscription) close() error {
+func (s *subscription) close() error {
+	if s.closed {
+		return nil
+	}
 	var ee []error
 	if s.channel != nil {
 		ee = append(ee, s.channel.Close())
@@ -211,6 +215,7 @@ func (s subscription) close() error {
 	if s.conn != nil {
 		ee = append(ee, s.conn.Close())
 	}
+	s.closed = true
 	return patronerrors.Aggregate(ee...)
 }
 
@@ -256,21 +261,21 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 	}
 }
 
-func (c *Component) processBatch(ctx context.Context, msg *message, btc *batch) {
+func (c *Component) processBatch(msg *message, btc *batch) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	btc.append(msg)
 
 	if len(btc.messages) >= int(c.batchCfg.count) {
-		c.proc(ctx, btc)
+		c.proc(btc)
 		btc.reset()
 	}
 }
 
-func (c *Component) sendBatch(ctx context.Context, btc *batch) {
+func (c *Component) sendBatch(btc *batch) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.proc(ctx, btc)
+	c.proc(btc)
 	btc.reset()
 }
 

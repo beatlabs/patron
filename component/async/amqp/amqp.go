@@ -1,4 +1,9 @@
 // Package amqp provides consumer implementation with included tracing capabilities.
+//
+// Deprecated: The AMQP consumer package along with the async component is superseded by the standalone `github.com/beatlabs/component/amqp` package.
+// Please refer to the documents and the examples for the usage.
+//
+// This package is frozen and no new functionality will be added.
 package amqp
 
 import (
@@ -81,6 +86,8 @@ type Exchange struct {
 
 // NewExchange validates its input and creates a new Exchange.
 // name should be a non empty string, kind should be one of: [direct, fanout, topic, headers].
+//
+// Deprecated: The AMQP consumer package along with the async component is superseded by the standalone `github.com/beatlabs/component/amqp` package.
 func NewExchange(name, kind string) (*Exchange, error) {
 	if name == "" {
 		return nil, errors.New("AMQP Exchange name is required")
@@ -114,6 +121,8 @@ type Factory struct {
 }
 
 // New constructor.
+//
+// Deprecated: The AMQP consumer package along with the async component is superseded by the standalone `github.com/beatlabs/component/amqp` package.
 func New(url, queue string, exchange Exchange, oo ...OptionFunc) (*Factory, error) {
 	if url == "" {
 		return nil, errors.New("AMQP url is required")

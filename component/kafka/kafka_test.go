@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -21,11 +22,15 @@ func Test_messageWrapper(t *testing.T) {
 		Topic: "topicone",
 		Value: []byte(`{"key":"value"}`),
 	}
+	ctx := context.Background()
 	msg := message{
+		ctx: ctx,
 		msg: cm,
 	}
 
+	msgCtx := msg.Context()
 	consumerMessage := msg.Message()
+	assert.Equal(t, ctx, msgCtx)
 	assert.NotNil(t, consumerMessage)
 	assert.Equal(t, "topicone", consumerMessage.Topic)
 	assert.Equal(t, []byte(`{"key":"value"}`), consumerMessage.Value)

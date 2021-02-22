@@ -56,7 +56,7 @@ func BatchSize(size uint) OptionFunc {
 func BatchTimeout(timeout time.Duration) OptionFunc {
 	return func(c *Component) error {
 		if timeout < 0 {
-			return errors.New("invalid batch timeout provided")
+			return errors.New("batch timeout should greater than or equal to zero")
 		}
 		c.batchTimeout = timeout
 		return nil

@@ -43,6 +43,15 @@ func TestBatching(t *testing.T) {
 	}
 }
 
+func TestRetry(t *testing.T) {
+	retryCount := uint(5)
+	retryDelay := 2 * time.Second
+	c := &Component{}
+	assert.NoError(t, Retry(retryCount, retryDelay)(c))
+	assert.Equal(t, retryCount, c.retryCfg.count)
+	assert.Equal(t, retryDelay, c.retryCfg.delay)
+}
+
 func TestStatsInterval(t *testing.T) {
 	type args struct {
 		interval time.Duration

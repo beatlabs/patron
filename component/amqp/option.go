@@ -27,6 +27,15 @@ func Batching(count uint, timeout time.Duration) OptionFunc {
 	}
 }
 
+// Retry option for setting up retries.
+func Retry(count uint, delay time.Duration) OptionFunc {
+	return func(c *Component) error {
+		c.retryCfg.count = count
+		c.retryCfg.delay = delay
+		return nil
+	}
+}
+
 // Config option for setting AMQP configuration.
 func Config(cfg amqp.Config) OptionFunc {
 	return func(c *Component) error {

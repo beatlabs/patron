@@ -28,6 +28,8 @@ const (
 	defaultConnectionTimeout = 30 * time.Second
 	defaultLocale            = "en_US"
 	defaultStatsInterval     = 5 * time.Second
+	defaultRetryCount        = 10
+	defaultRetryDelay        = 5 * time.Second
 
 	consumerComponent = "amqp-consumer"
 
@@ -83,7 +85,12 @@ type batchConfig struct {
 	timeout time.Duration
 }
 
-type stats struct {
+type retryConfig struct {
+	count uint
+	delay time.Duration
+}
+
+type statsConfig struct {
 	interval time.Duration
 }
 
@@ -94,7 +101,8 @@ type Component struct {
 	requeue  bool
 	proc     ProcessorFunc
 	batchCfg batchConfig
-	statsCfg stats
+	statsCfg statsConfig
+	retryCfg retryConfig
 	cfg      amqp.Config
 	traceTag opentracing.Tag
 	mu       sync.Mutex
@@ -130,8 +138,12 @@ func New(url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Component, e
 				return net.DialTimeout(network, addr, defaultConnectionTimeout)
 			},
 		},
-		statsCfg: stats{
+		statsCfg: statsConfig{
 			interval: defaultStatsInterval,
+		},
+		retryCfg: retryConfig{
+			count: defaultRetryCount,
+			delay: defaultRetryDelay,
 		},
 		mu: sync.Mutex{},
 	}
@@ -150,17 +162,42 @@ func New(url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Component, e
 
 // Run starts the consumer processing loop messages.
 func (c *Component) Run(ctx context.Context) error {
-	sub, err := c.subscribe()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err := sub.close()
-		if err != nil {
-			log.Errorf("failed to close amqp channel/connection: %v", err)
-		}
-	}()
+	count := c.retryCfg.count
 
+	var err error
+
+	for count > 0 {
+		sub, err := c.subscribe()
+		if err != nil {
+			log.Warnf("failed to subscribe to queue: %v, waiting for %v to reconnect", err, c.retryCfg.delay)
+			time.Sleep(c.retryCfg.delay)
+			count--
+			continue
+		}
+		count = c.retryCfg.count
+
+		err = c.processLoop(ctx, sub)
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			closeSubscription(sub)
+			return nil
+		}
+		log.Warnf("process loop failure: %v, waiting for %v to reconnect", err, c.retryCfg.delay)
+		time.Sleep(c.retryCfg.delay)
+		count--
+		closeSubscription(sub)
+	}
+	return err
+}
+
+func closeSubscription(sub subscription) {
+	err := sub.close()
+	if err != nil {
+		log.Errorf("failed to close amqp channel/connection: %v", err)
+	}
+	log.Debug("amqp subscription closed")
+}
+
+func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 	batchTimeout := time.NewTicker(c.batchCfg.timeout)
 	defer batchTimeout.Stop()
 	tickerStats := time.NewTicker(c.statsCfg.interval)
@@ -175,8 +212,11 @@ func (c *Component) Run(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			log.Info("context cancellation received. exiting...")
-			return sub.close()
-		case delivery := <-sub.deliveries:
+			return ctx.Err()
+		case delivery, ok := <-sub.deliveries:
+			if !ok {
+				return errors.New("subscription channel closed")
+			}
 			log.Debugf("processing message %d", delivery.DeliveryTag)
 			observeReceivedMessageStats(c.queue, delivery.Timestamp)
 			c.processBatch(c.createMessage(ctx, delivery), btc)

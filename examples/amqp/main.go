@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -17,7 +18,6 @@ import (
 	patronsns "github.com/beatlabs/patron/client/sns/v2"
 	patronsqs "github.com/beatlabs/patron/client/sqs/v2"
 	patronamqp "github.com/beatlabs/patron/component/amqp"
-	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
@@ -102,7 +102,7 @@ func main() {
 	name := "amqp"
 	version := "1.0.0"
 
-	service, err := patron.New(name, version)
+	service, err := patron.New(name, version, patron.TextLogger())
 	if err != nil {
 		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
@@ -222,7 +222,7 @@ func newAmqpComponent(url, queue, snsTopicArn string, snsPub patronsns.Publisher
 		sqsQueueURL: sqsQueueURL,
 	}
 
-	cmp, err := patronamqp.New(url, queue, amqpCmp.Process2)
+	cmp, err := patronamqp.New(url, queue, amqpCmp.Process, patronamqp.Retry(10, 1*time.Second))
 	if err != nil {
 		return nil, err
 	}
@@ -232,43 +232,7 @@ func newAmqpComponent(url, queue, snsTopicArn string, snsPub patronsns.Publisher
 	return &amqpCmp, nil
 }
 
-func (ac *amqpComponent) Process(msg async.Message) error {
-	var u examples.User
-
-	err := msg.Decode(&u)
-	if err != nil {
-		return err
-	}
-
-	payload, err := json.Encode(u)
-	if err != nil {
-		return err
-	}
-
-	input := &sns.PublishInput{
-		Message:   aws.String(string(payload)),
-		TargetArn: aws.String(ac.snsTopicArn),
-	}
-	_, err = ac.snsPub.Publish(msg.Context(), input)
-	if err != nil {
-		return fmt.Errorf("failed to publish message to SNS: %v", err)
-	}
-
-	sqsMsg := &sqs.SendMessageInput{
-		MessageBody: aws.String(string(payload)),
-		QueueUrl:    aws.String(ac.sqsQueueURL),
-	}
-
-	_, err = ac.sqsPub.Publish(msg.Context(), sqsMsg)
-	if err != nil {
-		return fmt.Errorf("failed to publish message to SQS: %v", err)
-	}
-
-	log.FromContext(msg.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	return nil
-}
-
-func (ac *amqpComponent) Process2(batch patronamqp.Batch) {
+func (ac *amqpComponent) Process(batch patronamqp.Batch) {
 	for _, msg := range batch.Messages() {
 		logger := log.FromContext(msg.Context())
 

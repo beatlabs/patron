@@ -193,7 +193,6 @@ func (c *Component) Run(ctx context.Context) error {
 			log.Info("kafka component terminating: context cancelled or deadline exceeded")
 			break
 		}
-		handler.ready = make(chan bool)
 	}
 
 	err = client.Close()
@@ -211,7 +210,6 @@ type consumerHandler struct {
 
 	name  string
 	group string
-	ready chan bool
 
 	// buffer
 	batchSize int
@@ -244,7 +242,6 @@ func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name, gr
 		name:         name,
 		group:        group,
 		batchSize:    int(batchSize),
-		ready:        make(chan bool),
 		ticker:       time.NewTicker(batchTimeout),
 		msgBuf:       make([]*sarama.ConsumerMessage, 0, batchSize),
 		retries:      int(retries),
@@ -257,8 +254,6 @@ func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name, gr
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
 func (c *consumerHandler) Setup(sarama.ConsumerGroupSession) error {
-	// Mark the consumer as ready
-	close(c.ready)
 	return nil
 }
 

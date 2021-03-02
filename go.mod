@@ -1,7 +1,7 @@
 module github.com/beatlabs/patron
 
 require (
-	github.com/Shopify/sarama v1.27.0
+	github.com/Shopify/sarama v1.28.0
 	github.com/aws/aws-sdk-go v1.36.15
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c // indirect
@@ -20,7 +20,7 @@ require (
 	github.com/prometheus/client_golang v1.5.1
 	github.com/rs/zerolog v1.5.0
 	github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.22.1+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible
 	go.uber.org/atomic v1.6.0 // indirect

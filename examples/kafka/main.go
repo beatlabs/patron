@@ -120,7 +120,6 @@ func (kc *kafkaComponent) Process(batch kafka.Batch) error {
 		err := json.DecodeRaw(msg.Message().Value, &u)
 		if err != nil {
 			log.FromContext(msg.Context()).Errorf("error decoding kafka message: %w", err)
-			batch.MarkOffset() // mark offset in sarama in case of decode issue to skip message
 			return err
 		}
 

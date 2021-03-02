@@ -401,6 +401,7 @@ func getCorrelationID(hh []*sarama.RecordHeader) string {
 			break
 		}
 	}
+	log.Debug("correlation header not found, creating new correlation UUID")
 	return uuid.New().String()
 }
 

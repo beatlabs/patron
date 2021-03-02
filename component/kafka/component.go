@@ -180,34 +180,25 @@ func (c *Component) Run(ctx context.Context) error {
 		return fmt.Errorf("error creating kafka consumer component: %w", err)
 	}
 
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			// `Consume` should be called inside an infinite loop, when a
-			// server-side rebalance happens, the consumer session will need to be
-			// recreated to get the new claims
-			if err := client.Consume(ctx, c.topics, handler); err != nil {
-				log.Errorf("error from kafka consumer: %v", err)
-			}
-
-			// check if context was cancelled, signaling that the consumer should stop
-			if ctx.Err() != nil {
-				return
-			}
-			handler.ready = make(chan bool)
+	for {
+		// `Consume` should be called inside an infinite loop, when a
+		// server-side rebalance happens, the consumer session will need to be
+		// recreated to get the new claims
+		if err := client.Consume(ctx, c.topics, handler); err != nil {
+			log.Errorf("error from kafka consumer: %v", err)
 		}
-	}()
 
-	<-handler.ready // wait for consumer to be set up
-	log.Debug("kafka component: consumer ready")
-	<-ctx.Done()
-	log.Infof("kafka component terminating: context cancelled")
-	wg.Wait()
+		// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
+		if ctx.Err() != nil {
+			log.Infof("kafka component terminating: context cancelled or deadline exceeded")
+			break
+		}
+		handler.ready = make(chan bool)
+	}
+
 	err = client.Close()
 	if err != nil {
-		return err
+		log.Errorf("error closing kafka consumer: %v", err)
 	}
 
 	return handler.err

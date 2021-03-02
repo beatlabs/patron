@@ -168,7 +168,7 @@ type Component struct {
 	retryWait    time.Duration
 }
 
-// Run starts the consumer processing loop messages.
+// Run starts the consumer processing loop to process messages from Kafka.
 func (c *Component) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -190,7 +190,7 @@ func (c *Component) Run(ctx context.Context) error {
 
 		// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
 		if ctx.Err() != nil {
-			log.Infof("kafka component terminating: context cancelled or deadline exceeded")
+			log.Info("kafka component terminating: context cancelled or deadline exceeded")
 			break
 		}
 		handler.ready = make(chan bool)

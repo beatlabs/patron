@@ -176,8 +176,7 @@ func (c *Component) Run(ctx context.Context) error {
 		c.batchTimeout, c.retries, c.retryWait)
 	client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 	if err != nil {
-		log.Errorf("error creating consumer group client for kafka consumer component: %v", err)
-		return fmt.Errorf("error creating kafka consumer component: %w", err)
+		return fmt.Errorf("error creating consumer group client for kafka component: %w", err)
 	}
 
 	for {

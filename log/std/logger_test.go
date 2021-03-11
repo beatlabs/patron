@@ -175,6 +175,28 @@ func TestLogger_shouldLog(t *testing.T) {
 	}
 }
 
+func TestLogger_shouldNotLog(t *testing.T) {
+	var b bytes.Buffer
+	logger := New(&b, log.NoLevel, map[string]interface{}{"name": "john doe", "age": 18})
+
+	logger.Debug("123")
+	logger.Debugf("123 %s", "123")
+	logger.Info("123")
+	logger.Infof("123 %s", "123")
+	logger.Warn("123")
+	logger.Warnf("123 %s", "123")
+	logger.Warn("123")
+	logger.Warnf("123 %s", "123")
+	logger.Error("123")
+	logger.Errorf("123 %s", "123")
+	logger.Fatal("123")
+	logger.Fatalf("123 %s", "123")
+	logger.Panic("123")
+	logger.Panicf("123 %s", "123")
+
+	assert.Empty(t, b.String())
+}
+
 var buf bytes.Buffer
 
 func BenchmarkLogger(b *testing.B) {

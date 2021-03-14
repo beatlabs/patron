@@ -79,6 +79,12 @@ func init() {
 // ProcessorFunc definition of a async processor.
 type ProcessorFunc func(context.Context, Batch)
 
+type queueConfig struct {
+	url     string
+	queue   string
+	requeue bool
+}
+
 type batchConfig struct {
 	count   uint
 	timeout time.Duration
@@ -95,9 +101,7 @@ type statsConfig struct {
 
 // Component implementation of a async component.
 type Component struct {
-	url      string
-	queue    string
-	requeue  bool
+	queueCfg queueConfig
 	proc     ProcessorFunc
 	batchCfg batchConfig
 	statsCfg statsConfig
@@ -121,8 +125,11 @@ func New(url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Component, e
 	}
 
 	cmp := &Component{
-		url:      url,
-		queue:    queue,
+		queueCfg: queueConfig{
+			url:     url,
+			queue:   queue,
+			requeue: true,
+		},
 		proc:     proc,
 		traceTag: opentracing.Tag{Key: "queue", Value: queue},
 		batchCfg: batchConfig{
@@ -212,7 +219,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 				return errors.New("subscription channel closed")
 			}
 			log.Debugf("processing message %d", delivery.DeliveryTag)
-			observeReceivedMessageStats(c.queue, delivery.Timestamp)
+			observeReceivedMessageStats(c.queueCfg.queue, delivery.Timestamp)
 			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
 			log.Debugf("batch timeout expired, sending batch")
@@ -254,9 +261,9 @@ func (s *subscription) close() error {
 }
 
 func (c *Component) subscribe() (subscription, error) {
-	conn, err := amqp.DialConfig(c.url, c.cfg)
+	conn, err := amqp.DialConfig(c.queueCfg.url, c.cfg)
 	if err != nil {
-		return subscription{}, fmt.Errorf("failed to dial @ %s: %w", c.url, err)
+		return subscription{}, fmt.Errorf("failed to dial @ %s: %w", c.queueCfg.url, err)
 	}
 	sub := subscription{conn: conn}
 
@@ -269,7 +276,7 @@ func (c *Component) subscribe() (subscription, error) {
 	tag := uuid.New().String()
 	log.Infof("consuming messages for tag %s", tag)
 
-	deliveries, err := ch.Consume(c.queue, tag, false, false, false, false, nil)
+	deliveries, err := ch.Consume(c.queueCfg.queue, tag, false, false, false, false, nil)
 	if err != nil {
 		return subscription{}, patronerrors.Aggregate(ch.Close(), conn.Close(), fmt.Errorf("failed initialize amqp consumer: %w", err))
 	}
@@ -280,7 +287,7 @@ func (c *Component) subscribe() (subscription, error) {
 
 func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *message {
 	corID := getCorrelationID(delivery.Headers)
-	sp, ctxMsg := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queue),
+	sp, ctxMsg := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queueCfg.queue),
 		consumerComponent, corID, mapHeader(delivery.Headers), c.traceTag)
 
 	ctxMsg = correlation.ContextWithID(ctxMsg, corID)
@@ -290,8 +297,8 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 		ctx:     ctxMsg,
 		span:    sp,
 		msg:     delivery,
-		requeue: c.requeue,
-		queue:   c.queue,
+		requeue: c.queueCfg.requeue,
+		queue:   c.queueCfg.queue,
 	}
 }
 
@@ -313,12 +320,12 @@ func (c *Component) processAndResetBatch(ctx context.Context, btc *batch) {
 }
 
 func (c *Component) stats(sub subscription) error {
-	q, err := sub.channel.QueueInspect(c.queue)
+	q, err := sub.channel.QueueInspect(c.queueCfg.queue)
 	if err != nil {
 		return err
 	}
 
-	queueSize.WithLabelValues(c.queue).Set(float64(q.Messages))
+	queueSize.WithLabelValues(c.queueCfg.queue).Set(float64(q.Messages))
 	return nil
 }
 

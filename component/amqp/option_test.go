@@ -52,6 +52,12 @@ func TestRetry(t *testing.T) {
 	assert.Equal(t, retryDelay, c.retryCfg.delay)
 }
 
+func TestRequeue(t *testing.T) {
+	c := &Component{}
+	assert.NoError(t, Requeue(false)(c))
+	assert.False(t, c.queueCfg.requeue)
+}
+
 func TestStatsInterval(t *testing.T) {
 	type args struct {
 		interval time.Duration

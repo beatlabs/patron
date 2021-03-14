@@ -54,3 +54,11 @@ func StatsInterval(interval time.Duration) OptionFunc {
 		return nil
 	}
 }
+
+// Requeue option for adjusting the requeue policy of a message.
+func Requeue(requeue bool) OptionFunc {
+	return func(c *Component) error {
+		c.queueCfg.requeue = requeue
+		return nil
+	}
+}

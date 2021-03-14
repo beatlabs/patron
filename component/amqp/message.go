@@ -83,7 +83,6 @@ func (m message) NACK() error {
 }
 
 type batch struct {
-	ctx      context.Context
 	messages []Message
 }
 

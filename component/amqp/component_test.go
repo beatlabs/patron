@@ -1,6 +1,7 @@
 package amqp
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	proc := func(b Batch) {
+	proc := func(_ context.Context, b Batch) {
 		_, _ = b.ACK()
 	}
 

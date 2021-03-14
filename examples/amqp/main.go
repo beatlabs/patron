@@ -232,8 +232,11 @@ func newAmqpComponent(url, queue, snsTopicArn string, snsPub patronsns.Publisher
 	return &amqpCmp, nil
 }
 
-func (ac *amqpComponent) Process(batch patronamqp.Batch) {
+func (ac *amqpComponent) Process(ctx context.Context, batch patronamqp.Batch) {
 	for _, msg := range batch.Messages() {
+		if ctx.Err() != nil {
+			log.FromContext(ctx).Info("context cancelled, exiting process function")
+		}
 		logger := log.FromContext(msg.Context())
 
 		var u examples.User

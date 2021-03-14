@@ -78,7 +78,7 @@ func init() {
 }
 
 // ProcessorFunc definition of a async processor.
-type ProcessorFunc func(Batch)
+type ProcessorFunc func(context.Context, Batch)
 
 type batchConfig struct {
 	count   uint
@@ -203,10 +203,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 	tickerStats := time.NewTicker(c.statsCfg.interval)
 	defer tickerStats.Stop()
 
-	btc := &batch{
-		ctx:      ctx,
-		messages: make([]Message, 0, c.batchCfg.count),
-	}
+	btc := &batch{messages: make([]Message, 0, c.batchCfg.count)}
 
 	for {
 		select {
@@ -219,10 +216,10 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 			}
 			log.Debugf("processing message %d", delivery.DeliveryTag)
 			observeReceivedMessageStats(c.queue, delivery.Timestamp)
-			c.processBatch(c.createMessage(ctx, delivery), btc)
+			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
 			log.Debugf("batch timeout expired, sending batch")
-			c.sendBatch(btc)
+			c.sendBatch(ctx, btc)
 		case <-tickerStats.C:
 			err := c.stats(sub)
 			if err != nil {
@@ -301,21 +298,21 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 	}
 }
 
-func (c *Component) processBatch(msg *message, btc *batch) {
+func (c *Component) processBatch(ctx context.Context, msg *message, btc *batch) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	btc.append(msg)
 
 	if len(btc.messages) >= int(c.batchCfg.count) {
-		c.proc(btc)
+		c.proc(ctx, btc)
 		btc.reset()
 	}
 }
 
-func (c *Component) sendBatch(btc *batch) {
+func (c *Component) sendBatch(ctx context.Context, btc *batch) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.proc(btc)
+	c.proc(ctx, btc)
 	btc.reset()
 }
 

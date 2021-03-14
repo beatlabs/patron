@@ -153,10 +153,7 @@ func Test_batch_Messages(t *testing.T) {
 	msg2 := createMessage("2", ackSuccess)
 	messages := []Message{msg1, msg2}
 
-	btc := batch{
-		ctx:      context.Background(),
-		messages: messages,
-	}
+	btc := batch{messages: messages}
 	assert.Equal(t, messages, btc.Messages())
 }
 
@@ -167,10 +164,7 @@ func Test_batch_ACK(t *testing.T) {
 	msg1 := createMessage("1", ackSuccess)
 	msg2 := createMessage("2", ackFailure)
 
-	btc := batch{
-		ctx:      context.Background(),
-		messages: []Message{msg1, msg2},
-	}
+	btc := batch{messages: []Message{msg1, msg2}}
 
 	got, err := btc.ACK()
 	assert.EqualError(t, err, "ERROR\n")
@@ -185,10 +179,7 @@ func Test_batch_NACK(t *testing.T) {
 	msg1 := createMessage("1", nackSuccess)
 	msg2 := createMessage("2", nackFailure)
 
-	btc := batch{
-		ctx:      context.Background(),
-		messages: []Message{msg1, msg2},
-	}
+	btc := batch{messages: []Message{msg1, msg2}}
 
 	got, err := btc.NACK()
 	assert.EqualError(t, err, "ERROR\n")

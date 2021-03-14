@@ -304,14 +304,17 @@ func (c *Component) processBatch(ctx context.Context, msg *message, btc *batch) 
 	btc.append(msg)
 
 	if len(btc.messages) >= int(c.batchCfg.count) {
-		c.proc(ctx, btc)
-		btc.reset()
+		c.processAndResetBatch(ctx, btc)
 	}
 }
 
 func (c *Component) sendBatch(ctx context.Context, btc *batch) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.processAndResetBatch(ctx, btc)
+}
+
+func (c *Component) processAndResetBatch(ctx context.Context, btc *batch) {
 	c.proc(ctx, btc)
 	btc.reset()
 }

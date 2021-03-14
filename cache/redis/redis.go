@@ -43,7 +43,7 @@ func (c *Cache) Set(key string, value interface{}) error {
 
 // Purge evicts all keys present in the cache.
 func (c *Cache) Purge() error {
-	return c.rdb.Do(c.ctx, "flushdb").Err()
+	return c.rdb.FlushAll(c.ctx).Err()
 }
 
 // Remove evicts a specific key from the cache.

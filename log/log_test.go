@@ -8,6 +8,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestLevelOrder(t *testing.T) {
+	type args struct {
+		lvl Level
+	}
+	tests := map[string]struct {
+		args args
+		want int
+	}{
+		"debug":    {args: args{lvl: DebugLevel}, want: 0},
+		"info":     {args: args{lvl: InfoLevel}, want: 1},
+		"warn":     {args: args{lvl: WarnLevel}, want: 2},
+		"error":    {args: args{lvl: ErrorLevel}, want: 3},
+		"fatal":    {args: args{lvl: FatalLevel}, want: 4},
+		"panic":    {args: args{lvl: PanicLevel}, want: 5},
+		"no level": {args: args{lvl: NoLevel}, want: 6},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tt.want, LevelOrder(tt.args.lvl))
+		})
+	}
+}
+
 func TestSetup(t *testing.T) {
 	tests := map[string]struct {
 		logger  Logger
@@ -162,6 +185,25 @@ func TestLog_Level(t *testing.T) {
 			assert.Equal(t, tc.enabled, Enabled(tc.against))
 		})
 	}
+}
+
+func Test_nilLogger(t *testing.T) {
+	l := &nilLogger{}
+	l.Panic("test")
+	l.Panicf("test", "123")
+	l.Fatal("test", "123")
+	l.Fatalf("test", "123")
+	l.Error("test")
+	l.Errorf("test", "123")
+	l.Warn("test")
+	l.Warnf("test", "123")
+	l.Info("test")
+	l.Infof("test", "123")
+	l.Debug("test")
+	l.Debugf("test", "123")
+
+	assert.Equal(t, l, l.Sub(map[string]interface{}{}))
+	assert.Equal(t, DebugLevel, l.Level())
 }
 
 var bCtx context.Context

@@ -22,6 +22,7 @@ type sampleMsg struct {
 }
 
 func Test_SQS_Publish_Message(t *testing.T) {
+	mtr.Reset()
 	defer mtr.Reset()
 
 	const queueName = "test-sqs-publish"

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"sync"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
@@ -105,7 +104,6 @@ type Component struct {
 	retryCfg retryConfig
 	cfg      amqp.Config
 	traceTag opentracing.Tag
-	mu       sync.Mutex
 }
 
 // New creates a new component with support for functional configuration.
@@ -145,7 +143,6 @@ func New(url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Component, e
 			count: defaultRetryCount,
 			delay: defaultRetryDelay,
 		},
-		mu: sync.Mutex{},
 	}
 
 	var err error
@@ -299,8 +296,6 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 }
 
 func (c *Component) processBatch(ctx context.Context, msg *message, btc *batch) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	btc.append(msg)
 
 	if len(btc.messages) >= int(c.batchCfg.count) {
@@ -309,8 +304,6 @@ func (c *Component) processBatch(ctx context.Context, msg *message, btc *batch) 
 }
 
 func (c *Component) sendBatch(ctx context.Context, btc *batch) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	c.processAndResetBatch(ctx, btc)
 }
 

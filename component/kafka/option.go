@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/beatlabs/patron/log"
+
 	"github.com/Shopify/sarama"
 )
 
@@ -67,7 +69,22 @@ func BatchTimeout(timeout time.Duration) OptionFunc {
 // Check the sarama config documentation for more config options.
 func SaramaConfig(cfg *sarama.Config) OptionFunc {
 	return func(c *Component) error {
+		if cfg == nil {
+			return errors.New("nil sarama configuration provided")
+		}
 		c.saramaConfig = cfg
+		return nil
+	}
+}
+
+// CommitSync instructs the consumer to commit offsets in a blocking operation after processing every batch of messages
+func CommitSync() OptionFunc {
+	return func(c *Component) error {
+		if c.saramaConfig != nil && c.saramaConfig.Consumer.Offsets.AutoCommit.Enable {
+			// redundant commits warning
+			log.Warn("consumer is set to commit offsets after processing each batch and auto-commit is enabled")
+		}
+		c.commitSync = true
 		return nil
 	}
 }

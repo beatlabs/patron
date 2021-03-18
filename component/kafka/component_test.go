@@ -17,7 +17,7 @@ import (
 
 func TestNew(t *testing.T) {
 	saramaCfg := sarama.NewConfig()
-	// batches will be responsible for committing
+	// consumer will commit every batch in a blocking operation
 	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	saramaCfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
@@ -112,7 +112,8 @@ func TestNew(t *testing.T) {
 				RetryWait(tt.args.retryWait),
 				BatchSize(tt.args.batchSize),
 				BatchTimeout(tt.args.batchTimeout),
-				SaramaConfig(tt.args.saramaCfg))
+				SaramaConfig(tt.args.saramaCfg),
+				CommitSync())
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)
@@ -139,7 +140,6 @@ func (mp *mockProcessor) Process(batch Batch) error {
 	if mp.errReturn {
 		return errProcess
 	}
-	batch.Commit()
 	return nil
 }
 
@@ -276,7 +276,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			h := newConsumerHandler(ctx, cancel, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
-				10*time.Millisecond, tt.retries, tt.retryWait)
+				10*time.Millisecond, tt.retries, tt.retryWait, true)
 
 			ch := make(chan *sarama.ConsumerMessage, len(tt.msgs))
 			for _, m := range tt.msgs {

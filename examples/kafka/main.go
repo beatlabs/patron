@@ -104,7 +104,8 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 		kafka.BatchTimeout(1*time.Second),
 		kafka.Retries(3),
 		kafka.RetryWait(1*time.Second),
-		kafka.SaramaConfig(saramaCfg))
+		kafka.SaramaConfig(saramaCfg),
+		kafka.CommitSync())
 
 	if err != nil {
 		return nil, err
@@ -140,6 +141,5 @@ func (kc *kafkaComponent) Process(batch kafka.Batch) error {
 
 		log.FromContext(msg.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
 	}
-	batch.Commit()
 	return nil
 }

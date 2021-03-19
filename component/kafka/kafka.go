@@ -36,7 +36,7 @@ type Message interface {
 }
 
 // NewMessage initializes a new message which is an implementation of the kafka Message interface
-func NewMessage(ctx context.Context, sp opentracing.Span, msg *sarama.ConsumerMessage) *message {
+func NewMessage(ctx context.Context, sp opentracing.Span, msg *sarama.ConsumerMessage) Message {
 	return &message{
 		ctx: ctx,
 		sp:  sp,
@@ -73,7 +73,7 @@ type Batch interface {
 }
 
 // NewBatch initializes a new batch of messages returning an instance of the implementation of the kafka Batch interface
-func NewBatch(messages []Message) *batch {
+func NewBatch(messages []Message) Batch {
 	return &batch{
 		messages: messages,
 	}

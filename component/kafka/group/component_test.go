@@ -50,9 +50,9 @@ func TestNew(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "success, no sarama config",
+			name:    "failed, no sarama config",
 			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, retryWait: 2, batchTimeout: time.Second, fs: kafka.ExitStrategy, saramaCfg: nil},
-			wantErr: false,
+			wantErr: true,
 		},
 		{
 			name:    "failed, missing name",

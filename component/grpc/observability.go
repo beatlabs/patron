@@ -48,6 +48,7 @@ func init() {
 			Help:      "Latency of a completed RPC on the server.",
 		},
 		[]string{"grpc_type", "grpc_service", "grpc_method", "grpc_code"})
+	prometheus.MustRegister(rpcLatencyMetric)
 }
 
 type observer struct {

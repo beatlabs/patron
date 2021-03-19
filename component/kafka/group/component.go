@@ -1,4 +1,4 @@
-// Package kafka provides kafka component implementation.
+// Package group provides kafka consumer group component implementation.
 package group
 
 import (

@@ -1,3 +1,4 @@
+// Package kafka provides some shared interfaces for the Kafka components.
 package kafka
 
 import (

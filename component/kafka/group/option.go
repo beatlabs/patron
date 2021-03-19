@@ -1,21 +1,21 @@
-package kafka
+package group
 
 import (
 	"errors"
 	"time"
 
-	"github.com/beatlabs/patron/log"
-
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/component/kafka"
+	"github.com/beatlabs/patron/log"
 )
 
 // OptionFunc definition for configuring the component in a functional way.
 type OptionFunc func(*Component) error
 
 // FailureStrategy sets the strategy to follow for the component when it encounters an error.
-func FailureStrategy(fs FailStrategy) OptionFunc {
+func FailureStrategy(fs kafka.FailStrategy) OptionFunc {
 	return func(c *Component) error {
-		if fs > SkipStrategy || fs < ExitStrategy {
+		if fs > kafka.SkipStrategy || fs < kafka.ExitStrategy {
 			return errors.New("invalid failure strategy provided")
 		}
 		c.failStrategy = fs

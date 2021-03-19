@@ -34,6 +34,15 @@ type Message interface {
 	Span() opentracing.Span
 }
 
+// NewMessage initializes a new message which is an implementation of the kafka Message interface
+func NewMessage(ctx context.Context, sp opentracing.Span, msg *sarama.ConsumerMessage) *message {
+	return &message{
+		ctx: ctx,
+		sp:  sp,
+		msg: msg,
+	}
+}
+
 type message struct {
 	ctx context.Context
 	sp  opentracing.Span
@@ -62,6 +71,13 @@ type Batch interface {
 	Messages() []Message
 }
 
+// NewBatch initializes a new batch of messages returning an instance of the implementation of the kafka Batch interface
+func NewBatch(messages []Message) *batch {
+	return &batch{
+		messages: messages,
+	}
+}
+
 type batch struct {
 	messages []Message
 }
@@ -71,8 +87,8 @@ func (b batch) Messages() []Message {
 	return b.messages
 }
 
-// defaultSaramaConfig function creates a sarama config object with the default configuration set up.
-func defaultSaramaConfig(name string) (*sarama.Config, error) {
+// DefaultSaramaConfig function creates a sarama config object with the default configuration set up.
+func DefaultSaramaConfig(name string) (*sarama.Config, error) {
 	host, err := os.Hostname()
 	if err != nil {
 		return nil, errors.New("failed to get hostname")

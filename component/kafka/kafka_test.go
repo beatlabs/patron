@@ -36,8 +36,8 @@ func Test_messageWrapper(t *testing.T) {
 	assert.Equal(t, []byte(`{"key":"value"}`), consumerMessage.Value)
 }
 
-func Test_defaultSaramaConfig(t *testing.T) {
-	sc, err := defaultSaramaConfig("name")
+func Test_DefaultSaramaConfig(t *testing.T) {
+	sc, err := DefaultSaramaConfig("name")
 	assert.NoError(t, err)
 	assert.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/beatlabs/patron"
 	patronamqp "github.com/beatlabs/patron/client/amqp/v2"
 	"github.com/beatlabs/patron/component/kafka"
+	"github.com/beatlabs/patron/component/kafka/group"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
@@ -93,19 +94,19 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 	saramaCfg.Net.DialTimeout = 15 * time.Second
 	saramaCfg.Version = sarama.V2_6_0_0
 
-	cmp, err := kafka.New(
+	cmp, err := group.New(
 		name,
 		groupID,
 		[]string{broker},
 		[]string{topic},
 		kafkaCmp.Process,
-		kafka.FailureStrategy(kafka.SkipStrategy),
-		kafka.BatchSize(1),
-		kafka.BatchTimeout(1*time.Second),
-		kafka.Retries(3),
-		kafka.RetryWait(1*time.Second),
-		kafka.SaramaConfig(saramaCfg),
-		kafka.CommitSync())
+		group.FailureStrategy(kafka.SkipStrategy),
+		group.BatchSize(1),
+		group.BatchTimeout(1*time.Second),
+		group.Retries(3),
+		group.RetryWait(1*time.Second),
+		group.SaramaConfig(saramaCfg),
+		group.CommitSync())
 
 	if err != nil {
 		return nil, err

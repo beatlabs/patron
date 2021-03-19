@@ -15,6 +15,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/kafka"
+	"github.com/beatlabs/patron/component/kafka/group"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -207,25 +208,25 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	assert.Equal(t, expectedMessages, actualMessages)
 }
 
-func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc kafka.BatchProcessorFunc) *kafka.Component {
+func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc kafka.BatchProcessorFunc) *group.Component {
 	saramaCfg := sarama.NewConfig()
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	saramaCfg.Version = sarama.V2_6_0_0
 
 	broker := fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)
-	cmp, err := kafka.New(
+	cmp, err := group.New(
 		name,
 		name+"-group",
 		[]string{broker},
 		[]string{name},
 		processorFunc,
-		kafka.FailureStrategy(kafka.ExitStrategy),
-		kafka.BatchSize(batchSize),
-		kafka.BatchTimeout(100*time.Millisecond),
-		kafka.Retries(retries),
-		kafka.RetryWait(200*time.Millisecond),
-		kafka.SaramaConfig(saramaCfg),
-		kafka.CommitSync())
+		group.FailureStrategy(kafka.ExitStrategy),
+		group.BatchSize(batchSize),
+		group.BatchTimeout(100*time.Millisecond),
+		group.Retries(retries),
+		group.RetryWait(200*time.Millisecond),
+		group.SaramaConfig(saramaCfg),
+		group.CommitSync())
 	require.NoError(t, err)
 
 	return cmp

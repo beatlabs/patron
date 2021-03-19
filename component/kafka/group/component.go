@@ -1,5 +1,5 @@
 // Package kafka provides kafka component implementation.
-package kafka
+package group
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/correlation"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
@@ -33,7 +34,7 @@ const (
 	defaultRetryWait       = 0
 	defaultBatchSize       = 1
 	defaultBatchTimeout    = 100 * time.Millisecond
-	defaultFailureStrategy = ExitStrategy
+	defaultFailureStrategy = kafka.ExitStrategy
 )
 
 var (
@@ -98,7 +99,7 @@ func messageStatusCountInc(status, group, topic string) {
 // The default failure strategy is the ExitStrategy.
 // The default batch size is 1 and the batch timeout is 100ms.
 // The default number of retries is 0 and the retry wait is 0.
-func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, oo ...OptionFunc) (*Component, error) {
+func New(name, group string, brokers, topics []string, proc kafka.BatchProcessorFunc, oo ...OptionFunc) (*Component, error) {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
@@ -124,7 +125,7 @@ func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, 
 		return nil, patronErrors.Aggregate(errs...)
 	}
 
-	defaultSaramaCfg, err := defaultSaramaConfig(name)
+	defaultSaramaCfg, err := kafka.DefaultSaramaConfig(name)
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +161,8 @@ type Component struct {
 	topics       []string
 	brokers      []string
 	saramaConfig *sarama.Config
-	proc         BatchProcessorFunc
-	failStrategy FailStrategy
+	proc         kafka.BatchProcessorFunc
+	failStrategy kafka.FailStrategy
 	batchSize    uint
 	batchTimeout time.Duration
 	retries      uint
@@ -224,10 +225,10 @@ type consumerHandler struct {
 	mu sync.RWMutex
 
 	// callback
-	proc BatchProcessorFunc
+	proc kafka.BatchProcessorFunc
 
 	// failures strategy
-	failStrategy FailStrategy
+	failStrategy kafka.FailStrategy
 
 	// committing after every batch
 	commitSync bool
@@ -236,8 +237,8 @@ type consumerHandler struct {
 	err error
 }
 
-func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name, group string, processorFunc BatchProcessorFunc,
-	fs FailStrategy, batchSize uint, batchTimeout time.Duration, retries uint, retryWait time.Duration,
+func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name, group string, processorFunc kafka.BatchProcessorFunc,
+	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, retries uint, retryWait time.Duration,
 	commitSync bool) *consumerHandler {
 
 	return &consumerHandler{
@@ -266,7 +267,7 @@ func (c *consumerHandler) Setup(sarama.ConsumerGroupSession) error {
 func (c *consumerHandler) Cleanup(sarama.ConsumerGroupSession) error {
 	// if the strategy is to exit on failure then we cancel the context to exit the whole component
 	// and thus prevent the Consume loop from picking up the message again
-	if c.failStrategy == ExitStrategy {
+	if c.failStrategy == kafka.ExitStrategy {
 		c.cancel()
 	}
 	return nil
@@ -309,17 +310,15 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 	var err error
 
 	if len(c.msgBuf) > 0 {
-		messages := make([]Message, 0, len(c.msgBuf))
+		messages := make([]kafka.Message, 0, len(c.msgBuf))
 		for _, msg := range c.msgBuf {
 			messageStatusCountInc(messageProcessed, c.group, msg.Topic)
 			ctx, sp := c.getContextWithCorrelation(msg)
-			messages = append(messages, &message{ctx: ctx, sp: sp, msg: msg})
+			messages = append(messages, kafka.NewMessage(ctx, sp, msg))
 		}
 
 		for i := 0; i <= c.retries; i++ {
-			btc := &batch{
-				messages: messages,
-			}
+			btc := kafka.NewBatch(messages)
 			err = c.proc(btc)
 			if err == nil {
 				break
@@ -342,11 +341,11 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 				messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 			}
 			switch c.failStrategy {
-			case ExitStrategy:
+			case kafka.ExitStrategy:
 				log.Errorf("exhausted all retries but could not process message(s)")
 				c.err = err
 				return err
-			case SkipStrategy:
+			case kafka.SkipStrategy:
 				log.Errorf("exhausted all retries but could not process message(s) so skipping")
 			}
 		}

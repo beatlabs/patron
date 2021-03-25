@@ -330,22 +330,9 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 			if c.ctx.Err() == context.Canceled {
 				return fmt.Errorf("context was cancelled after processing error: %w", err)
 			}
-			switch c.failStrategy {
-			case kafka.ExitStrategy:
-				for _, m := range messages {
-					trace.SpanError(m.Span())
-					messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
-				}
-				log.Errorf("could not process message(s)")
-				c.err = err
+			err := c.executeFailureStrategy(messages, err)
+			if err != nil {
 				return err
-			case kafka.SkipStrategy:
-				for _, m := range messages {
-					trace.SpanError(m.Span())
-					messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
-					messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
-				}
-				log.Errorf("could not process message(s) so skipping with error: %v", err)
 			}
 		}
 
@@ -361,6 +348,27 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		c.msgBuf = c.msgBuf[:0]
 	}
 
+	return nil
+}
+
+func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err error) error {
+	switch c.failStrategy {
+	case kafka.ExitStrategy:
+		for _, m := range messages {
+			trace.SpanError(m.Span())
+			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
+		}
+		log.Errorf("could not process message(s)")
+		c.err = err
+		return err
+	case kafka.SkipStrategy:
+		for _, m := range messages {
+			trace.SpanError(m.Span())
+			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
+			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
+		}
+		log.Errorf("could not process message(s) so skipping with error: %v", err)
+	}
 	return nil
 }
 

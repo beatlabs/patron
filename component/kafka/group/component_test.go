@@ -208,8 +208,6 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		msgs         []*sarama.ConsumerMessage
 		proc         *mockProcessor
 		failStrategy kafka.FailStrategy
-		retries      uint
-		retryWait    time.Duration
 		batchSize    uint
 		expectError  bool
 	}{
@@ -254,8 +252,6 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			},
 			failStrategy: kafka.ExitStrategy,
 			batchSize:    1,
-			retries:      1,
-			retryWait:    100 * time.Millisecond,
 			expectError:  true,
 		},
 		{
@@ -266,8 +262,6 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			},
 			failStrategy: kafka.SkipStrategy,
 			batchSize:    1,
-			retries:      1,
-			retryWait:    100 * time.Millisecond,
 			expectError:  true,
 		},
 	}
@@ -276,8 +270,8 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			h := newConsumerHandler(ctx, cancel, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
-				10*time.Millisecond, tt.retries, tt.retryWait, true)
+			h := newConsumerHandler(ctx, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
+				10*time.Millisecond, true)
 
 			ch := make(chan *sarama.ConsumerMessage, len(tt.msgs))
 			for _, m := range tt.msgs {
@@ -292,7 +286,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-			assert.Equal(t, len(tt.msgs)+(int(tt.retries)*len(tt.msgs)), tt.proc.GetExecs())
+			assert.Equal(t, len(tt.msgs), tt.proc.GetExecs())
 		})
 	}
 }

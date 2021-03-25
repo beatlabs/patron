@@ -103,8 +103,8 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 		group.FailureStrategy(kafka.SkipStrategy),
 		group.BatchSize(1),
 		group.BatchTimeout(1*time.Second),
-		group.Retries(3),
-		group.RetryWait(1*time.Second),
+		group.Retries(10),
+		group.RetryWait(3*time.Second),
 		group.SaramaConfig(saramaCfg),
 		group.CommitSync())
 

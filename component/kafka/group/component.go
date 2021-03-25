@@ -27,6 +27,7 @@ const (
 	messageReceived   = "received"
 	messageProcessed  = "processed"
 	messageErrored    = "errored"
+	messageSkipped    = "skipped"
 )
 
 const (
@@ -174,40 +175,60 @@ type Component struct {
 func (c *Component) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	handler := newConsumerHandler(ctx, cancel, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
-		c.batchTimeout, c.retries, c.retryWait, c.commitSync)
-	client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
-	if err != nil {
-		return fmt.Errorf("error creating consumer group client for kafka component: %w", err)
-	}
 
-	for {
-		// `Consume` should be called inside an infinite loop, when a
-		// server-side rebalance happens, the consumer session will need to be
-		// recreated to get the new claims
-		if err := client.Consume(ctx, c.topics, handler); err != nil {
-			log.Errorf("error from kafka consumer: %v", err)
+	var componentError error
+
+	retries := int(c.retries)
+	for i := 0; i <= retries; i++ {
+		handler := newConsumerHandler(ctx, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
+			c.batchTimeout, c.commitSync)
+
+		client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
+		if err != nil {
+			componentError = err
+			log.Errorf("error creating consumer group client for kafka component: %v", err)
 		}
 
-		// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
-		if ctx.Err() != nil {
-			log.Info("kafka component terminating: context cancelled or deadline exceeded")
-			break
+		if client != nil {
+			// `Consume` should be called inside an infinite loop, when a
+			// server-side rebalance happens, the consumer session will need to be
+			// recreated to get the new claims
+			if err := client.Consume(ctx, c.topics, handler); err != nil {
+				log.Errorf("error from kafka consumer: %v", err)
+			}
+
+			// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
+			if ctx.Err() != nil {
+				log.Infof("kafka component terminating: context cancelled or deadline exceeded")
+				break
+			}
+
+			err = client.Close()
+			if err != nil {
+				log.Errorf("error closing kafka consumer: %v", err)
+			}
+		}
+
+		consumerErrorsInc(c.name)
+		if c.retries > 0 {
+			log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, err)
+			time.Sleep(c.retryWait)
+		}
+
+		// If there is no component error which is a result of not being able to initialize the consumer
+		// then the handler errored while processing a message. This faulty message is then the reason
+		// behind the component failure.
+		if i == retries && componentError == nil {
+			componentError = handler.err
 		}
 	}
 
-	err = client.Close()
-	if err != nil {
-		log.Errorf("error closing kafka consumer: %v", err)
-	}
-
-	return handler.err
+	return componentError
 }
 
 // Consumer represents a sarama consumer group consumer
 type consumerHandler struct {
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx context.Context
 
 	name  string
 	group string
@@ -216,10 +237,6 @@ type consumerHandler struct {
 	batchSize int
 	ticker    *time.Ticker
 	msgBuf    []*sarama.ConsumerMessage
-
-	// retries
-	retries   int
-	retryWait time.Duration
 
 	// lock to protect buffer operation
 	mu sync.RWMutex
@@ -237,20 +254,16 @@ type consumerHandler struct {
 	err error
 }
 
-func newConsumerHandler(ctx context.Context, cancel context.CancelFunc, name, group string, processorFunc kafka.BatchProcessorFunc,
-	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, retries uint, retryWait time.Duration,
-	commitSync bool) *consumerHandler {
+func newConsumerHandler(ctx context.Context, name, group string, processorFunc kafka.BatchProcessorFunc,
+	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync bool) *consumerHandler {
 
 	return &consumerHandler{
 		ctx:          ctx,
-		cancel:       cancel,
 		name:         name,
 		group:        group,
 		batchSize:    int(batchSize),
 		ticker:       time.NewTicker(batchTimeout),
 		msgBuf:       make([]*sarama.ConsumerMessage, 0, batchSize),
-		retries:      int(retries),
-		retryWait:    retryWait,
 		mu:           sync.RWMutex{},
 		proc:         processorFunc,
 		failStrategy: fs,
@@ -265,11 +278,6 @@ func (c *consumerHandler) Setup(sarama.ConsumerGroupSession) error {
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
 func (c *consumerHandler) Cleanup(sarama.ConsumerGroupSession) error {
-	// if the strategy is to exit on failure then we cancel the context to exit the whole component
-	// and thus prevent the Consume loop from picking up the message again
-	if c.failStrategy == kafka.ExitStrategy {
-		c.cancel()
-	}
 	return nil
 }
 
@@ -307,8 +315,6 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 }
 
 func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
-	var err error
-
 	if len(c.msgBuf) > 0 {
 		messages := make([]kafka.Message, 0, len(c.msgBuf))
 		for _, msg := range c.msgBuf {
@@ -317,36 +323,29 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 			messages = append(messages, kafka.NewMessage(ctx, sp, msg))
 		}
 
-		for i := 0; i <= c.retries; i++ {
-			btc := kafka.NewBatch(messages)
-			err = c.proc(btc)
-			if err == nil {
-				break
-			}
+		btc := kafka.NewBatch(messages)
+		err := c.proc(btc)
 
+		if err != nil {
 			if c.ctx.Err() == context.Canceled {
 				return fmt.Errorf("context was cancelled after processing error: %w", err)
 			}
-
-			consumerErrorsInc(c.name)
-			if c.retries > 0 {
-				log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, err)
-				time.Sleep(c.retryWait)
-			}
-		}
-
-		if err != nil {
-			for _, m := range messages {
-				trace.SpanError(m.Span())
-				messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
-			}
 			switch c.failStrategy {
 			case kafka.ExitStrategy:
-				log.Errorf("exhausted all retries but could not process message(s)")
+				for _, m := range messages {
+					trace.SpanError(m.Span())
+					messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
+				}
+				log.Errorf("could not process message(s)")
 				c.err = err
 				return err
 			case kafka.SkipStrategy:
-				log.Errorf("exhausted all retries but could not process message(s) so skipping")
+				for _, m := range messages {
+					trace.SpanError(m.Span())
+					messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
+					messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
+				}
+				log.Errorf("could not process message(s) so skipping with error: %v", err)
 			}
 		}
 
@@ -362,7 +361,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		c.msgBuf = c.msgBuf[:0]
 	}
 
-	return err
+	return nil
 }
 
 func (c *consumerHandler) getContextWithCorrelation(msg *sarama.ConsumerMessage) (context.Context, opentracing.Span) {

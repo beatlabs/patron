@@ -262,7 +262,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			},
 			failStrategy: kafka.SkipStrategy,
 			batchSize:    1,
-			expectError:  true,
+			expectError:  false,
 		},
 	}
 

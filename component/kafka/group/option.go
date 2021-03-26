@@ -13,6 +13,10 @@ import (
 type OptionFunc func(*Component) error
 
 // FailureStrategy sets the strategy to follow for the component when it encounters an error.
+// The kafka.ExitStrategy will fail the component, if there are Retries > 0 then the component will reconnect and retry
+// the failed message.
+// The kafka.SkipStrategy will skip the message on failure. If a client wants to retry a message before failing then
+// this needs to be handled in the kafka.BatchProcessorFunc.
 func FailureStrategy(fs kafka.FailStrategy) OptionFunc {
 	return func(c *Component) error {
 		if fs > kafka.SkipStrategy || fs < kafka.ExitStrategy {
@@ -23,7 +27,10 @@ func FailureStrategy(fs kafka.FailStrategy) OptionFunc {
 	}
 }
 
-// Retries sets the error retries of the component.
+// Retries sets the number of time a component should retry in case of an error.
+// These retries are useful when there are temporary connection issues, re-balancing, in the case
+// where a message batch fails to be processed and the failure strategy is set to kafka.ExitStrategy
+// or if there is any other reason that the component needs to reconnect.
 func Retries(count uint) OptionFunc {
 	return func(c *Component) error {
 		c.retries = count

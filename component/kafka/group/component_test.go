@@ -278,6 +278,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 				ch <- m
 			}
 			session := &mockConsumerSession{}
+			_ = h.Setup(session)
 			err := h.ConsumeClaim(session, &mockConsumerClaim{ch: ch, proc: tt.proc})
 			_ = h.Cleanup(session)
 

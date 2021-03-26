@@ -175,7 +175,10 @@ type Component struct {
 func (c *Component) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	return c.processing(ctx)
+}
 
+func (c *Component) processing(ctx context.Context) error {
 	var componentError error
 
 	retries := int(c.retries)
@@ -222,7 +225,6 @@ func (c *Component) Run(ctx context.Context) error {
 			componentError = handler.err
 		}
 	}
-
 	return componentError
 }
 

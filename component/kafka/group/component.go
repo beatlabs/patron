@@ -214,6 +214,9 @@ func (c *Component) processing(ctx context.Context) error {
 
 		consumerErrorsInc(c.name)
 		if c.retries > 0 {
+			if handler.processedMessages {
+				i = 0
+			}
 			log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, err)
 			time.Sleep(c.retryWait)
 		}
@@ -238,10 +241,6 @@ type consumerHandler struct {
 	// buffer
 	batchSize int
 	ticker    *time.Ticker
-	msgBuf    []*sarama.ConsumerMessage
-
-	// lock to protect buffer operation
-	mu sync.RWMutex
 
 	// callback
 	proc kafka.BatchProcessorFunc
@@ -252,8 +251,15 @@ type consumerHandler struct {
 	// committing after every batch
 	commitSync bool
 
+	// lock to protect buffer operation
+	mu     sync.RWMutex
+	msgBuf []*sarama.ConsumerMessage
+
 	// processing error
 	err error
+
+	// whether the handler has processed any messages
+	processedMessages bool
 }
 
 func newConsumerHandler(ctx context.Context, name, group string, processorFunc kafka.BatchProcessorFunc,
@@ -337,6 +343,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 			}
 		}
 
+		c.processedMessages = true
 		for _, m := range messages {
 			trace.SpanSuccess(m.Span())
 			session.MarkMessage(m.Message(), "")

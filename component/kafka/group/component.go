@@ -31,8 +31,8 @@ const (
 )
 
 const (
-	defaultRetries         = 0
-	defaultRetryWait       = 0
+	defaultRetries         = 3
+	defaultRetryWait       = 10 * time.Second
 	defaultBatchSize       = 1
 	defaultBatchTimeout    = 100 * time.Millisecond
 	defaultFailureStrategy = kafka.ExitStrategy

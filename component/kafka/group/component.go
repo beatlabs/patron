@@ -327,7 +327,6 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 
 		btc := kafka.NewBatch(messages)
 		err := c.proc(btc)
-
 		if err != nil {
 			if c.ctx.Err() == context.Canceled {
 				return fmt.Errorf("context was cancelled after processing error: %w", err)

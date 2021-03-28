@@ -303,10 +303,10 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		case <-c.ticker.C:
 			c.mu.Lock()
 			err := c.flush(session)
+			c.mu.Unlock()
 			if err != nil {
 				return err
 			}
-			c.mu.Unlock()
 		case <-c.ctx.Done():
 			if c.ctx.Err() != context.Canceled {
 				log.Infof("closing consumer: %v", c.ctx.Err())

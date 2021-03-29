@@ -376,6 +376,9 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
 		}
 		log.Errorf("could not process message(s) so skipping with error: %v", err)
+	default:
+		log.Errorf("unknown failure strategy executed")
+		return fmt.Errorf("unknown failure strategy: %v", c.failStrategy)
 	}
 	return nil
 }

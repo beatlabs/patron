@@ -25,7 +25,7 @@ require (
 	github.com/uber/jaeger-lib v2.2.0+incompatible
 	go.uber.org/atomic v1.6.0 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
-	google.golang.org/grpc v1.27.1
+	google.golang.org/grpc v1.36.1
 	google.golang.org/protobuf v1.25.0
 )
 

@@ -17,19 +17,19 @@ import (
 	"github.com/beatlabs/patron"
 	patronsns "github.com/beatlabs/patron/client/sns/v2"
 	patronsqs "github.com/beatlabs/patron/client/sqs/v2"
-	"github.com/beatlabs/patron/component/async"
-	"github.com/beatlabs/patron/component/async/amqp"
+	patronamqp "github.com/beatlabs/patron/component/amqp"
 	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
-	oamqp "github.com/streadway/amqp"
+	"github.com/streadway/amqp"
 )
 
 const (
 	amqpURL          = "amqp://guest:guest@localhost:5672/"
 	amqpQueue        = "patron"
 	amqpExchangeName = "patron"
-	amqpExchangeType = oamqp.ExchangeFanout
+	amqpExchangeType = amqp.ExchangeFanout
 
 	// Shared AWS config
 	awsRegion = "eu-west-1"
@@ -62,13 +62,47 @@ func init() {
 		fmt.Printf("failed to set default patron port env vars: %v", err)
 		os.Exit(1)
 	}
+
+	// Setup queue and exchange if not already done.
+	err = setupQueueAndExchange()
+	if err != nil {
+		fmt.Printf("failed to set up queue and exchange: %v", err)
+		os.Exit(1)
+	}
+}
+
+func setupQueueAndExchange() error {
+	conn, err := amqp.Dial(amqpURL)
+	if err != nil {
+		return err
+	}
+	channel, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+
+	err = channel.ExchangeDeclare(amqpExchangeName, amqpExchangeType, true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+
+	q, err := channel.QueueDeclare(amqpQueue, true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+
+	err = channel.QueueBind(q.Name, "", amqpExchangeName, false, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func main() {
 	name := "amqp"
 	version := "1.0.0"
 
-	service, err := patron.New(name, version)
+	service, err := patron.New(name, version, patron.TextLogger())
 	if err != nil {
 		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
@@ -108,17 +142,7 @@ func main() {
 	}
 
 	// Initialise the AMQP component
-	amqpCmp, err := newAmqpComponent(
-		amqpURL,
-		amqpQueue,
-		amqpExchangeName,
-		amqpExchangeType,
-		[]string{"bind.one.*", "bind.two.*"},
-		snsTopicArn,
-		snsPub,
-		sqsPub,
-		sqsQueueURL,
-	)
+	amqpCmp, err := newAmqpComponent(amqpURL, amqpQueue, snsTopicArn, snsPub, sqsPub, sqsQueueURL)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
@@ -189,8 +213,8 @@ type amqpComponent struct {
 	sqsQueueURL string
 }
 
-func newAmqpComponent(url, queue, exchangeName, exchangeType string, bindings []string, snsTopicArn string, snsPub patronsns.Publisher,
-	sqsPub patronsqs.Publisher, sqsQueueURL string) (*amqpComponent, error) {
+func newAmqpComponent(url, queue, snsTopicArn string, snsPub patronsns.Publisher, sqsPub patronsqs.Publisher,
+	sqsQueueURL string) (*amqpComponent, error) {
 	amqpCmp := amqpComponent{
 		snsTopicArn: snsTopicArn,
 		snsPub:      snsPub,
@@ -198,60 +222,70 @@ func newAmqpComponent(url, queue, exchangeName, exchangeType string, bindings []
 		sqsQueueURL: sqsQueueURL,
 	}
 
-	exchange, err := amqp.NewExchange(exchangeName, exchangeType)
+	cmp, err := patronamqp.New(url, queue, amqpCmp.Process, patronamqp.Retry(10, 1*time.Second))
 	if err != nil {
 		return nil, err
 	}
 
-	cf, err := amqp.New(url, queue, *exchange, amqp.Bindings(bindings...))
-	if err != nil {
-		return nil, err
-	}
-
-	cmp, err := async.New("amqp-cmp", cf, amqpCmp.Process).
-		WithRetries(10).
-		WithRetryWait(10 * time.Second).
-		Create()
-	if err != nil {
-		return nil, err
-	}
 	amqpCmp.cmp = cmp
 
 	return &amqpCmp, nil
 }
 
-func (ac *amqpComponent) Process(msg async.Message) error {
-	var u examples.User
+func (ac *amqpComponent) Process(ctx context.Context, batch patronamqp.Batch) {
+	for _, msg := range batch.Messages() {
+		if ctx.Err() != nil {
+			log.FromContext(ctx).Info("context cancelled, exiting process function")
+		}
+		logger := log.FromContext(msg.Context())
 
-	err := msg.Decode(&u)
-	if err != nil {
-		return err
-	}
+		var u examples.User
 
-	payload, err := json.Encode(u)
-	if err != nil {
-		return err
-	}
+		err := protobuf.DecodeRaw(msg.Body(), &u)
+		if err != nil {
+			logger.Errorf("failed to decode message: %v", err)
+			err = msg.NACK()
+			if err != nil {
+				logger.Errorf("failed to NACK message: %v", err)
+			}
+		}
 
-	input := &sns.PublishInput{
-		Message:   aws.String(string(payload)),
-		TargetArn: aws.String(ac.snsTopicArn),
-	}
-	_, err = ac.snsPub.Publish(msg.Context(), input)
-	if err != nil {
-		return fmt.Errorf("failed to publish message to SNS: %v", err)
-	}
+		payload, err := json.Encode(u)
+		if err != nil {
+			logger.Errorf("failed to encode message: %v", err)
+			err = msg.NACK()
+			if err != nil {
+				logger.Errorf("failed to NACK message: %v", err)
+			}
+		}
 
-	sqsMsg := &sqs.SendMessageInput{
-		MessageBody: aws.String(string(payload)),
-		QueueUrl:    aws.String(ac.sqsQueueURL),
-	}
+		input := &sns.PublishInput{
+			Message:   aws.String(string(payload)),
+			TargetArn: aws.String(ac.snsTopicArn),
+		}
+		_, err = ac.snsPub.Publish(msg.Context(), input)
+		if err != nil {
+			logger.Errorf("failed to publish message to SNS: %v", err)
+			err = msg.NACK()
+			if err != nil {
+				logger.Errorf("failed to NACK message: %v", err)
+			}
+		}
 
-	_, err = ac.sqsPub.Publish(msg.Context(), sqsMsg)
-	if err != nil {
-		return fmt.Errorf("failed to publish message to SQS: %v", err)
-	}
+		sqsMsg := &sqs.SendMessageInput{
+			MessageBody: aws.String(string(payload)),
+			QueueUrl:    aws.String(ac.sqsQueueURL),
+		}
 
-	log.FromContext(msg.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	return nil
+		_, err = ac.sqsPub.Publish(msg.Context(), sqsMsg)
+		if err != nil {
+			logger.Errorf("failed to publish message to SQS: %v", err)
+			err = msg.NACK()
+			if err != nil {
+				logger.Errorf("failed to NACK message: %v", err)
+			}
+		}
+
+		logger.Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
+	}
 }

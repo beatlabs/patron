@@ -134,7 +134,7 @@ type mockProcessor struct {
 
 var errProcess = errors.New("PROC ERROR")
 
-func (mp *mockProcessor) Process(batch kafka.Batch) error {
+func (mp *mockProcessor) Process(_ context.Context, batch kafka.Batch) error {
 	mp.mux.Lock()
 	mp.execs += len(batch.Messages())
 	mp.mux.Unlock()
@@ -202,7 +202,6 @@ func (m *mockConsumerSession) MarkMessage(*sarama.ConsumerMessage, string) {}
 func (m *mockConsumerSession) Context() context.Context                    { return context.Background() }
 
 func TestHandler_ConsumeClaim(t *testing.T) {
-
 	tests := []struct {
 		name         string
 		msgs         []*sarama.ConsumerMessage

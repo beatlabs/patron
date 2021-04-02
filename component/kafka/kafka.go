@@ -22,7 +22,7 @@ const (
 )
 
 // BatchProcessorFunc definition of a batch async processor function.
-type BatchProcessorFunc func(Batch) error
+type BatchProcessorFunc func(context.Context, Batch) error
 
 // Message interface for wrapping messages that are handled by the kafka component.
 type Message interface {

@@ -107,7 +107,6 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 		group.RetryWait(3*time.Second),
 		group.SaramaConfig(saramaCfg),
 		group.CommitSync())
-
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +115,7 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 	return &kafkaCmp, nil
 }
 
-func (kc *kafkaComponent) Process(batch kafka.Batch) error {
+func (kc *kafkaComponent) Process(_ context.Context, batch kafka.Batch) error {
 	for _, msg := range batch.Messages() {
 		var u examples.User
 		err := json.DecodeRaw(msg.Message().Value, &u)

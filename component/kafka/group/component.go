@@ -268,7 +268,6 @@ type consumerHandler struct {
 
 func newConsumerHandler(ctx context.Context, name, group string, processorFunc kafka.BatchProcessorFunc,
 	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync bool) *consumerHandler {
-
 	return &consumerHandler{
 		ctx:          ctx,
 		name:         name,
@@ -336,7 +335,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		}
 
 		btc := kafka.NewBatch(messages)
-		err := c.proc(btc)
+		err := c.proc(c.ctx, btc)
 		if err != nil {
 			if c.ctx.Err() == context.Canceled {
 				return fmt.Errorf("context was cancelled after processing error: %w", err)

@@ -28,7 +28,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 	actualSuccessfulMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(batch kafka.Batch) error {
+	processorFunc := func(_ context.Context, batch kafka.Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)
@@ -89,7 +89,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]int, 0)
 	actualNumOfRuns := int32(0)
-	processorFunc := func(batch kafka.Batch) error {
+	processorFunc := func(_ context.Context, batch kafka.Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)
@@ -151,7 +151,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	actualMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(batch kafka.Batch) error {
+	processorFunc := func(_ context.Context, batch kafka.Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)

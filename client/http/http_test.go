@@ -77,10 +77,8 @@ func TestTracedClient_Do(t *testing.T) {
 			assert.Equal(t, tt.wantOpName, sp.OperationName)
 			mtr.Reset()
 			// Test counters.
-			assert.Equal(t, tt.wantCounter, testutil.CollectAndCount(reqTotalMetric))
-			assert.Equal(t, tt.wantCounter, testutil.CollectAndCount(reqLatencyMetric))
-			reqTotalMetric.Reset()
-			reqLatencyMetric.Reset()
+			assert.Equal(t, tt.wantCounter, testutil.CollectAndCount(reqDurationMetrics))
+			reqDurationMetrics.Reset()
 		})
 	}
 }

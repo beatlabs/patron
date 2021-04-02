@@ -27,32 +27,20 @@ const (
 )
 
 var (
-	reqTotalMetric   *prometheus.CounterVec
-	reqLatencyMetric *prometheus.HistogramVec
+	reqDurationMetrics *prometheus.HistogramVec
 )
 
 func init() {
-	reqTotalMetric = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "client",
-			Subsystem: "http",
-			Name:      "requests_total",
-			Help:      "Total number of HTTP requests sent by the client.",
-		},
-		[]string{"method", "url", "status_code"},
-	)
-	prometheus.MustRegister(reqTotalMetric)
-
-	reqLatencyMetric = prometheus.NewHistogramVec(
+	reqDurationMetrics = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: "client",
 			Subsystem: "http",
-			Name:      "requests_latency",
-			Help:      "Latency of a completed HTTP requests by the client.",
+			Name:      "request_duration_seconds",
+			Help:      "HTTP requests completed by the client.",
 		},
 		[]string{"method", "url", "status_code"},
 	)
-	prometheus.MustRegister(reqLatencyMetric)
+	prometheus.MustRegister(reqDurationMetrics)
 }
 
 // Client interface of a HTTP client.
@@ -102,8 +90,9 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 		ext.Error.Set(ht.Span(), true)
 	} else {
 		ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
-		reqTotalMetric.WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).Inc()
-		reqLatencyMetric.WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).Observe(time.Since(start).Seconds())
+		reqDurationMetrics.
+			WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).
+			Observe(time.Since(start).Seconds())
 	}
 
 	ext.HTTPMethod.Set(ht.Span(), req.Method)

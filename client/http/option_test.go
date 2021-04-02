@@ -23,13 +23,3 @@ func TestTransport_Nil(t *testing.T) {
 	assert.Nil(t, client)
 	assert.Error(t, err, "transport must be supplied")
 }
-
-func TestWithMetrics(t *testing.T) {
-	client, err := New()
-	assert.NoError(t, err)
-	assert.False(t, client.metricsEnabled)
-
-	client, err = New(WithMetrics())
-	assert.NoError(t, err)
-	assert.True(t, client.metricsEnabled)
-}

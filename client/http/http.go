@@ -62,9 +62,8 @@ type Client interface {
 
 // TracedClient defines a HTTP client with tracing integrated.
 type TracedClient struct {
-	cl             *http.Client
-	cb             *circuitbreaker.CircuitBreaker
-	metricsEnabled bool
+	cl *http.Client
+	cb *circuitbreaker.CircuitBreaker
 }
 
 // New creates a new HTTP client.
@@ -103,10 +102,8 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 		ext.Error.Set(ht.Span(), true)
 	} else {
 		ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
-		if tc.metricsEnabled {
-			reqTotalMetric.WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).Inc()
-			reqLatencyMetric.WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).Observe(time.Since(start).Seconds())
-		}
+		reqTotalMetric.WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).Inc()
+		reqLatencyMetric.WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).Observe(time.Since(start).Seconds())
 	}
 
 	ext.HTTPMethod.Set(ht.Span(), req.Method)

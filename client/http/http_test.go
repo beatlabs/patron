@@ -32,9 +32,9 @@ func TestTracedClient_Do(t *testing.T) {
 	defer ts.Close()
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
-	c, err := New(WithMetrics())
+	c, err := New()
 	assert.NoError(t, err)
-	cb, err := New(CircuitBreaker("test", circuitbreaker.Setting{}), WithMetrics())
+	cb, err := New(CircuitBreaker("test", circuitbreaker.Setting{}))
 	assert.NoError(t, err)
 	ct, err := New(Transport(&http.Transport{}))
 	assert.NoError(t, err)
@@ -58,7 +58,7 @@ func TestTracedClient_Do(t *testing.T) {
 	}{
 		{name: "response", args: args{c: c, req: req}, wantErr: false, wantOpName: opName, wantCounter: 1},
 		{name: "response with circuit breaker", args: args{c: cb, req: req}, wantErr: false, wantOpName: opName, wantCounter: 1},
-		{name: "response with custom transport", args: args{c: ct, req: req}, wantErr: false, wantOpName: opName, wantCounter: 0},
+		{name: "response with custom transport", args: args{c: ct, req: req}, wantErr: false, wantOpName: opName, wantCounter: 1},
 		{name: "error", args: args{c: cb, req: reqErr}, wantErr: true, wantOpName: opNameError, wantCounter: 0},
 		{name: "error with circuit breaker", args: args{c: cb, req: reqErr}, wantErr: true, wantOpName: opNameError, wantCounter: 0},
 	}

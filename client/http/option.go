@@ -46,3 +46,11 @@ func Transport(rt http.RoundTripper) OptionFunc {
 		return nil
 	}
 }
+
+// WithMetrics option for enabling client metrics.
+func WithMetrics() OptionFunc {
+	return func(tc *TracedClient) error {
+		tc.metricsEnabled = true
+		return nil
+	}
+}

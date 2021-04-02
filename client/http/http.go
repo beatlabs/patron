@@ -7,21 +7,53 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/opentracing-contrib/go-stdlib/nethttp"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing-contrib/go-stdlib/nethttp"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 )
 
 const (
 	clientComponent = "http-client"
 )
+
+var (
+	reqTotalMetric   *prometheus.CounterVec
+	reqLatencyMetric *prometheus.HistogramVec
+)
+
+func init() {
+	reqTotalMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "client",
+			Subsystem: "http",
+			Name:      "requests_total",
+			Help:      "Total number of HTTP requests sent by the client.",
+		},
+		[]string{"method", "url", "status_code"},
+	)
+	prometheus.MustRegister(reqTotalMetric)
+
+	reqLatencyMetric = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "client",
+			Subsystem: "http",
+			Name:      "requests_latency",
+			Help:      "Latency of a completed HTTP requests by the client.",
+		},
+		[]string{"method", "url", "status_code"},
+	)
+	prometheus.MustRegister(reqLatencyMetric)
+}
 
 // Client interface of a HTTP client.
 type Client interface {
@@ -30,8 +62,9 @@ type Client interface {
 
 // TracedClient defines a HTTP client with tracing integrated.
 type TracedClient struct {
-	cl *http.Client
-	cb *circuitbreaker.CircuitBreaker
+	cl             *http.Client
+	cb             *circuitbreaker.CircuitBreaker
+	metricsEnabled bool
 }
 
 // New creates a new HTTP client.
@@ -64,11 +97,16 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 
 	req.Header.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 
+	start := time.Now()
 	rsp, err := tc.do(req)
 	if err != nil {
 		ext.Error.Set(ht.Span(), true)
 	} else {
 		ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
+		if tc.metricsEnabled {
+			reqTotalMetric.WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).Inc()
+			reqLatencyMetric.WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).Observe(time.Since(start).Seconds())
+		}
 	}
 
 	ext.HTTPMethod.Set(ht.Span(), req.Method)

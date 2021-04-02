@@ -3,7 +3,6 @@ module github.com/beatlabs/patron
 require (
 	github.com/Shopify/sarama v1.28.0
 	github.com/aws/aws-sdk-go v1.36.15
-	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c // indirect
 	github.com/elastic/go-elasticsearch/v8 v8.0.0-20190731061900-ea052088db25

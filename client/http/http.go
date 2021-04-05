@@ -89,9 +89,10 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 	if err != nil {
 		ext.Error.Set(ht.Span(), true)
 	} else {
+
 		ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
 		reqDurationMetrics.
-			WithLabelValues(req.Method, req.URL.Path, strconv.Itoa(rsp.StatusCode)).
+			WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
 			Observe(time.Since(start).Seconds())
 	}
 

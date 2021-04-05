@@ -85,23 +85,24 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 	req.Header.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 
 	start := time.Now()
+
 	rsp, err := tc.do(req)
-	if err != nil {
-		ext.Error.Set(ht.Span(), true)
-	} else {
-		ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
-		reqDurationMetrics.
-			WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
-			Observe(time.Since(start).Seconds())
-	}
 
 	ext.HTTPMethod.Set(ht.Span(), req.Method)
 	ext.HTTPUrl.Set(ht.Span(), req.URL.String())
 
-	if rsp != nil {
-		if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
-			rsp.Body = decompress(hdr, rsp)
-		}
+	if err != nil {
+		ext.Error.Set(ht.Span(), true)
+		return rsp, err
+	}
+
+	ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
+	reqDurationMetrics.
+		WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
+		Observe(time.Since(start).Seconds())
+
+	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
+		rsp.Body = decompress(hdr, rsp)
 	}
 
 	return rsp, err

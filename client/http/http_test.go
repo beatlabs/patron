@@ -42,6 +42,7 @@ func TestTracedClient_Do(t *testing.T) {
 	assert.NoError(t, err)
 	reqErr, err := http.NewRequest("GET", "", nil)
 	assert.NoError(t, err)
+	reqErr.Header.Set(encoding.AcceptEncodingHeader, "gzip")
 	opName := opName("GET", ts.URL)
 	opNameError := "HTTP GET"
 

@@ -89,7 +89,6 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 	if err != nil {
 		ext.Error.Set(ht.Span(), true)
 	} else {
-
 		ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
 		reqDurationMetrics.
 			WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
@@ -99,8 +98,10 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 	ext.HTTPMethod.Set(ht.Span(), req.Method)
 	ext.HTTPUrl.Set(ht.Span(), req.URL.String())
 
-	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
-		rsp.Body = decompress(hdr, rsp)
+	if rsp != nil {
+		if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
+			rsp.Body = decompress(hdr, rsp)
+		}
 	}
 
 	return rsp, err

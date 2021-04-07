@@ -208,11 +208,11 @@ func (c *Component) processing(ctx context.Context) error {
 					break
 				}
 			}
-		}
 
-		err = client.Close()
-		if err != nil {
-			log.Errorf("error closing kafka consumer: %v", err)
+			err = client.Close()
+			if err != nil {
+				log.Errorf("error closing kafka consumer: %v", err)
+			}
 		}
 
 		consumerErrorsInc(c.name)

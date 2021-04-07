@@ -193,7 +193,14 @@ func (c *Component) processing(ctx context.Context) error {
 		}
 
 		if client != nil {
+			log.Infof("consuming messages from topics '%#v' using group '%s'", c.topics, c.group)
 			for {
+				// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
+				if ctx.Err() != nil {
+					log.Infof("kafka component terminating: context cancelled or deadline exceeded")
+					return componentError
+				}
+
 				// `Consume` should be called inside an infinite loop, when a
 				// server-side re-balance happens, the consumer session will need to be
 				// recreated to get the new claims
@@ -216,12 +223,6 @@ func (c *Component) processing(ctx context.Context) error {
 		}
 
 		consumerErrorsInc(c.name)
-
-		// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
-		if ctx.Err() != nil {
-			log.Infof("kafka component terminating: context cancelled or deadline exceeded")
-			break
-		}
 
 		if c.retries > 0 {
 			if handler.processedMessages {
@@ -249,6 +250,7 @@ func (c *Component) processing(ctx context.Context) error {
 			componentError = fmt.Errorf("message processing failure exhausted %d retries: %w", i, handler.err)
 		}
 	}
+
 	return componentError
 }
 

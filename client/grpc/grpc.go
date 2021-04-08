@@ -76,7 +76,7 @@ func unaryInterceptor(target string) grpc.UnaryClientInterceptor {
 		carrier := headersCarrier{Ctx: ctx}
 		err := span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier)
 		if err != nil {
-			log.Errorf("failed to inject tracing headers: %v", err)
+			log.FromContext(ctx).Errorf("failed to inject tracing headers: %v", err)
 		}
 
 		corID := correlation.IDFromContext(carrier.Ctx)

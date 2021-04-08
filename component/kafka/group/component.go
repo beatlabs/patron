@@ -193,13 +193,27 @@ func (c *Component) processing(ctx context.Context) error {
 		}
 
 		if client != nil {
-			// `Consume` should be called inside a loop, when a
-			// server-side re-balance happens, the consumer session will need to be
-			// recreated to get the new claims
-			err := client.Consume(ctx, c.topics, handler)
-			componentError = err
-			if err != nil {
-				log.Errorf("error from kafka consumer: %v", err)
+			log.Infof("consuming messages from topics '%#v' using group '%s'", c.topics, c.group)
+			for {
+				// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
+				if ctx.Err() != nil {
+					log.Infof("kafka component terminating: context cancelled or deadline exceeded")
+					return componentError
+				}
+
+				// `Consume` should be called inside an infinite loop, when a
+				// server-side re-balance happens, the consumer session will need to be
+				// recreated to get the new claims
+				err := client.Consume(ctx, c.topics, handler)
+				componentError = err
+				if err != nil {
+					log.Errorf("error from kafka consumer: %v", err)
+					break
+				}
+
+				if handler.err != nil {
+					break
+				}
 			}
 
 			err = client.Close()
@@ -210,19 +224,23 @@ func (c *Component) processing(ctx context.Context) error {
 
 		consumerErrorsInc(c.name)
 
-		// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
-		if ctx.Err() != nil {
-			log.Infof("kafka component terminating: context cancelled or deadline exceeded")
-			break
-		}
-
 		if c.retries > 0 {
 			if handler.processedMessages {
 				i = 0
-				componentError = nil
 			}
+
+			// if no component error has already been set, it is probably a handler error
+			if componentError == nil {
+				componentError = handler.err
+			}
+
 			log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, componentError)
 			time.Sleep(c.retryWait)
+
+			if i < retries {
+				// set the component error to nil to ready for the next iteration
+				componentError = nil
+			}
 		}
 
 		// If there is no component error which is a result of not being able to initialize the consumer
@@ -232,6 +250,7 @@ func (c *Component) processing(ctx context.Context) error {
 			componentError = fmt.Errorf("message processing failure exhausted %d retries: %w", i, handler.err)
 		}
 	}
+
 	return componentError
 }
 

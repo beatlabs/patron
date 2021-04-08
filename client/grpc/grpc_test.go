@@ -115,32 +115,28 @@ func TestSayHello(t *testing.T) {
 
 	client := examples.NewGreeterClient(conn)
 
-	tt := []struct {
-		name        string
+	tt := map[string]struct {
 		req         *examples.HelloRequest
 		wantErr     bool
 		wantCode    codes.Code
 		wantMsg     string
 		wantCounter int
 	}{
-		{
-			name:        "ok",
+		"ok": {
 			req:         &examples.HelloRequest{Firstname: "John"},
 			wantErr:     false,
 			wantCode:    codes.OK,
 			wantMsg:     "Hello John!",
 			wantCounter: 1,
 		},
-		{
-			name:        "invalid",
+		"invalid": {
 			req:         &examples.HelloRequest{},
 			wantErr:     true,
 			wantCode:    codes.InvalidArgument,
 			wantMsg:     "first name cannot be empty",
 			wantCounter: 1,
 		},
-		{
-			name:        "internal",
+		"internal": {
 			req:         nil, /* oops */
 			wantErr:     true,
 			wantCode:    codes.Internal,
@@ -149,8 +145,8 @@ func TestSayHello(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
+	for n, tc := range tt {
+		t.Run(n, func(t *testing.T) {
 			res, err := client.SayHello(ctx, tc.req)
 			if tc.wantErr {
 				require.Nil(t, res)

@@ -8,14 +8,18 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	elasticsearch "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/elastic/go-elasticsearch/v8/estransport"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -31,13 +35,27 @@ const (
 	cmpName = "go-elasticsearch"
 )
 
+var reqDurationMetrics *prometheus.HistogramVec
+
+func init() {
+	reqDurationMetrics = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "client",
+			Subsystem: "elasticsearch",
+			Name:      "request_duration_seconds",
+			Help:      "Elasticsearch requests completed by the client.",
+		},
+		[]string{"method", "url", "status_code"},
+	)
+	prometheus.MustRegister(reqDurationMetrics)
+}
+
 type tracingInfo struct {
 	user  string
 	hosts []string
 }
 
 func (t *tracingInfo) startSpan(req *http.Request) (opentracing.Span, error) {
-
 	if req == nil {
 		return nil, fmt.Errorf("request is empty")
 	}
@@ -87,15 +105,23 @@ type transportClient struct {
 func (c *transportClient) Perform(req *http.Request) (*http.Response, error) {
 	sp, err := c.startSpan(req)
 	if err != nil {
-		return nil, err
+		log.FromContext(req.Context()).Errorf("failed to start span: %v", err)
 	}
+	start := time.Now()
 	rsp, err := c.client.Perform(req)
 	if err != nil || rsp == nil {
 		trace.SpanError(sp)
 		return rsp, err
 	}
-	endSpan(sp, rsp)
+
+	observeResponse(req, sp, rsp, start)
 	return rsp, nil
+}
+
+func observeResponse(req *http.Request, sp opentracing.Span, rsp *http.Response, start time.Time) {
+	endSpan(sp, rsp)
+	reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
+		Observe(time.Since(start).Seconds())
 }
 
 // Config is a wrapper for elasticsearch.Config

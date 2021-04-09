@@ -18,9 +18,8 @@ const (
 	deliveryTypeSync  = "sync"
 	deliveryTypeAsync = "async"
 
-	deliveryStatusSent          deliveryStatus = "sent"
-	deliveryStatusCreationError deliveryStatus = "creation-errors"
-	deliveryStatusSendError     deliveryStatus = "send-errors"
+	deliveryStatusSent      deliveryStatus = "sent"
+	deliveryStatusSendError deliveryStatus = "send-errors"
 
 	componentTypeAsync = "kafka-async-producer"
 	componentTypeSync  = "kafka-sync-producer"

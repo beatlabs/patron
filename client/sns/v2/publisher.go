@@ -6,13 +6,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
+	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -24,6 +28,21 @@ const (
 	tracingTargetTopicArn  = "topic-arn"
 	tracingTargetTargetArn = "target-arn"
 )
+
+var cmdDurationMetrics *prometheus.HistogramVec
+
+func init() {
+	cmdDurationMetrics = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "client",
+			Subsystem: "sns",
+			Name:      "publish_duration_seconds",
+			Help:      "AWS SNS publish completed by the client.",
+		},
+		[]string{"topic", "success"},
+	)
+	prometheus.MustRegister(cmdDurationMetrics)
+}
 
 // Publisher is an implementation of the Publisher interface with added distributed tracing capabilities.
 type Publisher struct {
@@ -44,12 +63,13 @@ func (p Publisher) Publish(ctx context.Context, input *sns.PublishInput) (messag
 	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, tracingTarget(input)), publisherComponent, ext.SpanKindProducer)
 
 	if err := injectHeaders(span, input); err != nil {
-		return "", err
+		log.FromContext(ctx).Warnf("failed to inject tracing header: %v", err)
 	}
 
-	out, err := p.api.PublishWithContext(ctx, input)
+	start := time.Now()
 
-	trace.SpanComplete(span, err)
+	out, err := p.api.PublishWithContext(ctx, input)
+	observePublish(span, start, *input.TopicArn, err)
 	if err != nil {
 		return "", fmt.Errorf("failed to publish message: %w", err)
 	}
@@ -98,4 +118,9 @@ func injectHeaders(span opentracing.Span, input *sns.PublishInput) error {
 		}
 	}
 	return nil
+}
+
+func observePublish(span opentracing.Span, start time.Time, topic string, err error) {
+	trace.SpanComplete(span, err)
+	cmdDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
 }

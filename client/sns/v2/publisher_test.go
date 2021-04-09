@@ -72,7 +72,9 @@ func Test_Publisher_Publish(t *testing.T) {
 			p, err := New(tt.sns)
 			require.NoError(t, err)
 
-			msgID, err := p.Publish(ctx, &sns.PublishInput{})
+			msgID, err := p.Publish(ctx, &sns.PublishInput{
+				TopicArn: aws.String("123"),
+			})
 
 			assert.Equal(t, msgID, tt.expectedMsgID)
 

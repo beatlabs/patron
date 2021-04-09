@@ -29,10 +29,10 @@ const (
 	tracingTargetTargetArn = "target-arn"
 )
 
-var cmdDurationMetrics *prometheus.HistogramVec
+var publishDurationMetrics *prometheus.HistogramVec
 
 func init() {
-	cmdDurationMetrics = prometheus.NewHistogramVec(
+	publishDurationMetrics = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: "client",
 			Subsystem: "sns",
@@ -41,7 +41,7 @@ func init() {
 		},
 		[]string{"topic", "success"},
 	)
-	prometheus.MustRegister(cmdDurationMetrics)
+	prometheus.MustRegister(publishDurationMetrics)
 }
 
 // Publisher is an implementation of the Publisher interface with added distributed tracing capabilities.
@@ -122,5 +122,5 @@ func injectHeaders(span opentracing.Span, input *sns.PublishInput) error {
 
 func observePublish(span opentracing.Span, start time.Time, topic string, err error) {
 	trace.SpanComplete(span, err)
-	cmdDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
+	publishDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
 }

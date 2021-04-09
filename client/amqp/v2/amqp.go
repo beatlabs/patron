@@ -5,18 +5,37 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/beatlabs/patron/correlation"
 	patronerrors "github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/streadway/amqp"
 )
 
 const (
 	publisherComponent = "amqp-publisher"
 )
+
+var publishDurationMetrics *prometheus.HistogramVec
+
+func init() {
+	publishDurationMetrics = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "client",
+			Subsystem: "amqp",
+			Name:      "publish_duration_seconds",
+			Help:      "AMQP publish completed by the client.",
+		},
+		[]string{"exchange", "success"},
+	)
+	prometheus.MustRegister(publishDurationMetrics)
+}
 
 // Publisher defines a RabbitMQ publisher with tracing instrumentation.
 type Publisher struct {
@@ -72,14 +91,16 @@ func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandator
 	}
 
 	c := amqpHeadersCarrier(msg.Headers)
-	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, c)
-	if err != nil {
-		return fmt.Errorf("failed to inject tracing headers: %w", err)
+
+	if err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, c); err != nil {
+		log.FromContext(ctx).Errorf("failed to inject tracing headers: %v", err)
 	}
 	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 
-	err = tc.channel.Publish(exchange, key, mandatory, immediate, msg)
-	trace.SpanComplete(sp, err)
+	start := time.Now()
+	err := tc.channel.Publish(exchange, key, mandatory, immediate, msg)
+
+	observePublish(sp, start, exchange, err)
 	if err != nil {
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
@@ -97,4 +118,9 @@ type amqpHeadersCarrier map[string]interface{}
 // Set implements Set() of opentracing.TextMapWriter.
 func (c amqpHeadersCarrier) Set(key, val string) {
 	c[key] = val
+}
+
+func observePublish(span opentracing.Span, start time.Time, exchange string, err error) {
+	trace.SpanComplete(span, err)
+	publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
 }

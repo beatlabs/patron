@@ -290,7 +290,7 @@ func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *
 	sp, _ := db.startSpan(ctx, op, query)
 	start := time.Now()
 	row := db.db.QueryRowContext(ctx, query, args...)
-	observeDuration(sp, start, op, row.Err())
+	observeDuration(sp, start, op, nil)
 	return row
 }
 
@@ -370,7 +370,7 @@ func (s *Stmt) QueryRow(ctx context.Context, args ...interface{}) *sql.Row {
 	sp, _ := s.startSpan(ctx, op, s.query)
 	start := time.Now()
 	row := s.stmt.QueryRowContext(ctx, args...)
-	observeDuration(sp, start, op, row.Err())
+	observeDuration(sp, start, op, nil)
 	return row
 }
 
@@ -437,7 +437,7 @@ func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *
 	sp, _ := tx.startSpan(ctx, op, query)
 	start := time.Now()
 	row := tx.tx.QueryRowContext(ctx, query, args...)
-	observeDuration(sp, start, op, row.Err())
+	observeDuration(sp, start, op, nil)
 	return row
 }
 

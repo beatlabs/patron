@@ -135,6 +135,8 @@ func assertLog(t *testing.T, b bytes.Buffer, lvl log.Level, msg string) {
 	assert.Contains(t, b.String(), `"key":"value"`, b.String())
 	assert.Contains(t, b.String(), fmt.Sprintf(`"msg":"%s"`, msg), b.String())
 	assert.Regexp(t, regexp.MustCompile(`"time":".*"`), b.String())
+	// Although the sources do not make sense, if we change them they will report wrong locations in the service.
+	// Pls leave them as they are.
 	if lvl == log.PanicLevel {
 		assert.Regexp(t, regexp.MustCompile(`"src":"assert/assertions.go:.*"`), b.String())
 	} else {

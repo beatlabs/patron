@@ -8,14 +8,18 @@ import (
 	"os"
 	"testing"
 
-	"github.com/beatlabs/patron/examples"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
+
+	"github.com/beatlabs/patron/examples"
 )
 
 const (
@@ -27,12 +31,15 @@ var lis *bufconn.Listener
 
 type server struct{}
 
-func (s *server) SayHelloStream(_ *examples.HelloRequest, streamServer examples.Greeter_SayHelloStreamServer) error {
-	return nil
+func (s *server) SayHelloStream(_ *examples.HelloRequest, _ examples.Greeter_SayHelloStreamServer) error {
+	return status.Error(codes.Unavailable, "streaming not supported")
 }
 
-func (s *server) SayHello(_ context.Context, in *examples.HelloRequest) (*examples.HelloReply, error) {
-	return &examples.HelloReply{Message: fmt.Sprintf("Hello %s %s", in.Firstname, in.Lastname)}, nil
+func (s *server) SayHello(_ context.Context, req *examples.HelloRequest) (*examples.HelloReply, error) {
+	if req.Firstname == "" {
+		return nil, status.Error(codes.InvalidArgument, "first name cannot be empty")
+	}
+	return &examples.HelloReply{Message: fmt.Sprintf("Hello %s!", req.Firstname)}, nil
 }
 
 func TestMain(m *testing.M) {
@@ -97,24 +104,77 @@ func TestDialContext(t *testing.T) {
 
 func TestSayHello(t *testing.T) {
 	mtr := mocktracer.New()
-	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
+
 	ctx := context.Background()
-	conn, err := DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
+	conn, err := DialContext(ctx, target, grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
 	require.NoError(t, err)
 	defer func() {
 		require.NoError(t, conn.Close())
 	}()
 
 	client := examples.NewGreeterClient(conn)
-	resp, err := client.SayHello(ctx, &examples.HelloRequest{Firstname: "John", Lastname: "Doe"})
-	require.NoError(t, err)
-	assert.Equal(t, "Hello John Doe", resp.GetMessage())
-	expected := map[string]interface{}{
-		"component": "grpc-client",
-		"error":     false,
-		"span.kind": ext.SpanKindEnum("producer"),
-		"version":   "dev",
+
+	tt := map[string]struct {
+		req         *examples.HelloRequest
+		wantErr     bool
+		wantCode    codes.Code
+		wantMsg     string
+		wantCounter int
+	}{
+		"ok": {
+			req:         &examples.HelloRequest{Firstname: "John"},
+			wantErr:     false,
+			wantCode:    codes.OK,
+			wantMsg:     "Hello John!",
+			wantCounter: 1,
+		},
+		"invalid": {
+			req:         &examples.HelloRequest{},
+			wantErr:     true,
+			wantCode:    codes.InvalidArgument,
+			wantMsg:     "first name cannot be empty",
+			wantCounter: 1,
+		},
+		"internal": {
+			req:         nil, /* oops */
+			wantErr:     true,
+			wantCode:    codes.Internal,
+			wantMsg:     "grpc: error while marshaling: proto: Marshal called with nil",
+			wantCounter: 1,
+		},
 	}
-	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+	for n, tc := range tt {
+		t.Run(n, func(t *testing.T) {
+			res, err := client.SayHello(ctx, tc.req)
+			if tc.wantErr {
+				require.Nil(t, res)
+				require.Error(t, err)
+
+				rpcStatus, ok := status.FromError(err)
+				require.True(t, ok)
+				require.Equal(t, tc.wantCode, rpcStatus.Code())
+				require.Equal(t, tc.wantMsg, rpcStatus.Message())
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, res)
+				require.Equal(t, tc.wantMsg, res.GetMessage())
+			}
+
+			// Tracing
+			wantSpanTags := map[string]interface{}{
+				"component": "grpc-client",
+				"version":   "dev",
+				"span.kind": ext.SpanKindEnum("producer"),
+				"error":     tc.wantErr,
+			}
+			assert.Equal(t, wantSpanTags, mtr.FinishedSpans()[0].Tags())
+			mtr.Reset()
+
+			// Metrics
+			assert.Equal(t, tc.wantCounter, testutil.CollectAndCount(rpcDurationMetrics))
+			rpcDurationMetrics.Reset()
+		})
+	}
 }

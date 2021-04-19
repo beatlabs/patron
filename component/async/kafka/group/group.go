@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/async"
@@ -25,7 +26,6 @@ type Factory struct {
 
 // New constructor.
 func New(name, group string, topics, brokers []string, oo ...kafka.OptionFunc) (*Factory, error) {
-
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
@@ -51,9 +51,7 @@ func (c *consumer) OutOfOrder() bool {
 
 // Create a new consumer.
 func (f *Factory) Create() (async.Consumer, error) {
-
 	config, err := kafka.DefaultSaramaConfig(f.name)
-
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +114,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 		return nil, nil, fmt.Errorf("failed to create consumer: %w", err)
 	}
 	c.cg = cg
-	log.Infof("consuming messages from topics '%#v' using group '%s'", c.topics, c.group)
+	log.Infof("consuming messages from topics '%s' using group '%s'", strings.Join(c.topics, ","), c.group)
 
 	chMsg := make(chan async.Message, c.config.Buffer)
 	chErr := make(chan error, c.config.Buffer)

@@ -38,8 +38,8 @@ type Logger struct {
 
 // New creates a new logger.
 func New(out io.Writer, lvl log.Level, f map[string]interface{}) log.Logger {
-	zl := zerolog.New(out).With().Timestamp().Logger().Hook(sourceHook{skip: 4})
-	zlf := zerolog.New(out).With().Timestamp().Logger().Hook(sourceHook{skip: 5})
+	zl := zerolog.New(out).With().Timestamp().Logger().Hook(sourceHook{skip: 6})
+	zlf := zerolog.New(out).With().Timestamp().Logger().Hook(sourceHook{skip: 7})
 
 	if len(f) == 0 {
 		f = make(map[string]interface{})

@@ -136,7 +136,7 @@ func TestSyncProducer_SendMessages_Close_v2(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, p)
 	msg1 := &sarama.ProducerMessage{
-		Topic: "batch",
+		Topic: clientTopic,
 		Value: sarama.StringEncoder("TEST1"),
 	}
 	msg2 := &sarama.ProducerMessage{
@@ -152,7 +152,7 @@ func TestSyncProducer_SendMessages_Close_v2(t *testing.T) {
 		"component": "kafka-sync-producer",
 		"error":     false,
 		"span.kind": ext.SpanKindEnum("producer"),
-		"topic":     clientTopic,
+		"topic":     "batch",
 		"type":      "sync",
 		"version":   "dev",
 	}

@@ -128,6 +128,37 @@ func TestSyncProducer_SendMessage_Close_v2(t *testing.T) {
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 }
 
+func TestSyncProducer_SendMessages_Close_v2(t *testing.T) {
+	mtr := mocktracer.New()
+	defer mtr.Reset()
+	opentracing.SetGlobalTracer(mtr)
+	p, err := v2.New(Brokers()).Create()
+	require.NoError(t, err)
+	assert.NotNil(t, p)
+	msg1 := &sarama.ProducerMessage{
+		Topic: "batch",
+		Value: sarama.StringEncoder("TEST1"),
+	}
+	msg2 := &sarama.ProducerMessage{
+		Topic: clientTopic,
+		Value: sarama.StringEncoder("TEST2"),
+	}
+	err = p.SendBatch(context.Background(), []*sarama.ProducerMessage{msg1, msg2})
+	assert.NoError(t, err)
+	assert.NoError(t, p.Close())
+	assert.Len(t, mtr.FinishedSpans(), 1)
+
+	expected := map[string]interface{}{
+		"component": "kafka-sync-producer",
+		"error":     false,
+		"span.kind": ext.SpanKindEnum("producer"),
+		"topic":     clientTopic,
+		"type":      "sync",
+		"version":   "dev",
+	}
+	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+}
+
 func TestSyncProducer_SendMessage_Close_v1(t *testing.T) {
 	mtr := mocktracer.New()
 	defer mtr.Reset()

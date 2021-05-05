@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Shopify/sarama"
@@ -10,6 +11,8 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
+
+const batchTarget = "batch"
 
 var syncTag = opentracing.Tag{Key: "type", Value: deliveryTypeSync}
 
@@ -26,21 +29,49 @@ func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (p
 
 	err = injectTracingHeaders(msg, sp)
 	if err != nil {
-		statusCountInc(deliveryTypeSync, deliveryStatusCreationError, msg.Topic)
+		statusCountAdd(deliveryTypeSync, deliveryStatusCreationError, msg.Topic, 1)
 		trace.SpanError(sp)
 		return -1, -1, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
 	partition, offset, err = p.syncProd.SendMessage(msg)
 	if err != nil {
-		statusCountInc(deliveryTypeSync, deliveryStatusSendError, msg.Topic)
+		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
 		return -1, -1, err
 	}
 
-	statusCountInc(deliveryTypeSync, deliveryStatusSent, msg.Topic)
+	statusCountAdd(deliveryTypeSync, deliveryStatusSent, msg.Topic, 1)
 	trace.SpanSuccess(sp)
 	return partition, offset, nil
+}
+
+// SendBatch sends a batch to a topic.
+func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.ProducerMessage) error {
+	if len(messages) == 0 {
+		return errors.New("messages are empty or nil")
+	}
+
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeSync, batchTarget), componentTypeSync,
+		ext.SpanKindProducer, syncTag, opentracing.Tag{Key: "topic", Value: batchTarget})
+
+	for _, msg := range messages {
+		if err := injectTracingHeaders(msg, sp); err != nil {
+			statusCountAdd(deliveryTypeSync, deliveryStatusCreationError, batchTarget, len(messages))
+			trace.SpanError(sp)
+			return fmt.Errorf("failed to inject tracing headers: %w", err)
+		}
+	}
+
+	if err := p.syncProd.SendMessages(messages); err != nil {
+		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, batchTarget, len(messages))
+		trace.SpanError(sp)
+		return err
+	}
+
+	statusCountAdd(deliveryTypeSync, deliveryStatusSent, batchTarget, len(messages))
+	trace.SpanSuccess(sp)
+	return nil
 }
 
 // Close shuts down the producer and waits for any buffered messages to be

@@ -41,8 +41,8 @@ func init() {
 	prometheus.MustRegister(messageStatus)
 }
 
-func statusCountInc(deliveryType string, status deliveryStatus, topic string) {
-	messageStatus.WithLabelValues(string(status), topic, deliveryType).Inc()
+func statusCountAdd(deliveryType string, status deliveryStatus, topic string, cnt int) {
+	messageStatus.WithLabelValues(string(status), topic, deliveryType).Add(float64(cnt))
 }
 
 type baseProducer struct {

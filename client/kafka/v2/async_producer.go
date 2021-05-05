@@ -28,13 +28,13 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) 
 
 	err := injectTracingHeaders(msg, sp)
 	if err != nil {
-		statusCountInc(deliveryTypeAsync, deliveryStatusCreationError, msg.Topic)
+		statusCountAdd(deliveryTypeAsync, deliveryStatusCreationError, msg.Topic, 1)
 		trace.SpanError(sp)
 		return fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
 	ap.asyncProd.Input() <- msg
-	statusCountInc(deliveryTypeAsync, deliveryStatusSent, msg.Topic)
+	statusCountAdd(deliveryTypeAsync, deliveryStatusSent, msg.Topic, 1)
 	trace.SpanSuccess(sp)
 	return nil
 }
@@ -47,7 +47,7 @@ func injectTracingHeaders(msg *sarama.ProducerMessage, sp opentracing.Span) erro
 
 func (ap *AsyncProducer) propagateError(chErr chan<- error) {
 	for pe := range ap.asyncProd.Errors() {
-		statusCountInc(deliveryTypeAsync, deliveryStatusSendError, pe.Msg.Topic)
+		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, pe.Msg.Topic, 1)
 		chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
 }

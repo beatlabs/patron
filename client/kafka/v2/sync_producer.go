@@ -29,7 +29,7 @@ func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (p
 
 	err = injectTracingHeaders(msg, sp)
 	if err != nil {
-		statusCountAdd(deliveryTypeSync, deliveryStatusCreationError, msg.Topic, 1)
+		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
 		return -1, -1, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
@@ -57,7 +57,7 @@ func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.Produce
 
 	for _, msg := range messages {
 		if err := injectTracingHeaders(msg, sp); err != nil {
-			statusCountAdd(deliveryTypeSync, deliveryStatusCreationError, batchTarget, len(messages))
+			statusCountAdd(deliveryTypeSync, deliveryStatusSendError, batchTarget, len(messages))
 			trace.SpanError(sp)
 			return fmt.Errorf("failed to inject tracing headers: %w", err)
 		}

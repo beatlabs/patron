@@ -28,7 +28,7 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) 
 
 	err := injectTracingHeaders(msg, sp)
 	if err != nil {
-		statusCountAdd(deliveryTypeAsync, deliveryStatusCreationError, msg.Topic, 1)
+		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
 		return fmt.Errorf("failed to inject tracing headers: %w", err)
 	}

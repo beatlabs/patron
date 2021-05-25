@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
@@ -102,6 +103,16 @@ func (o *observer) log(err error) {
 	}
 	if err != nil {
 		fields["error"] = err.Error()
+
+		if ef, ok := err.(errors.WithFields); ok {
+			for k, v := range ef.Fields() {
+				// don't overwrite existing fields
+				if _, found := fields[k]; !found {
+					fields[k] = v
+				}
+			}
+		}
+
 		log.Sub(fields).Error()
 		return
 	}

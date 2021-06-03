@@ -39,8 +39,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	routesBuilder := patronhttp.NewRoutesBuilder().Append(patronhttp.NewPostRouteBuilder("/", httpHandler)).
-		Append(patronhttp.NewGetRouteBuilder("/", getHandler).WithRateLimiting(50, 50))
+	routesBuilder := patronhttp.NewRoutesBuilder().
+		Append(patronhttp.NewFileServer("/frontend/*path", "examples/http/public", "examples/http/public/index.html")).
+		Append(patronhttp.NewPostRouteBuilder("/api", httpHandler)).
+		Append(patronhttp.NewGetRouteBuilder("/api", getHandler).WithRateLimiting(50, 50))
 
 	// Setup a simple CORS middleware
 	middlewareCors := func(h http.Handler) http.Handler {

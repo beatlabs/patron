@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -305,6 +306,39 @@ func Test_extractParams(t *testing.T) {
 	router.HandlerFunc(route.method, route.path, route.handler)
 	router.ServeHTTP(httptest.NewRecorder(), req)
 	assert.Equal(t, "1", fields["id"])
+}
+
+func Test_fileserverHandler(t *testing.T) {
+	router := httprouter.New()
+	path := "/frontend/*path"
+	route, err := NewFileServer(path, "testdata", "testdata/index.html").Build()
+	require.NoError(t, err)
+	router.HandlerFunc(route.method, route.path, route.handler)
+
+	assert.Equal(t, path, route.Path())
+	assert.Equal(t, http.MethodGet, route.Method())
+	tests := map[string]struct {
+		expectedResponse string
+		path             string
+	}{
+		"success":  {path: "/frontend/existing.html", expectedResponse: "existing"},
+		"fallback": {path: "/frontend/missing-file", expectedResponse: "fallback"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// the only way to test do we get the same handler that we provided initially, is to run it explicitly,
+			// since all we have in Route itself is a wrapper function
+			req, err := http.NewRequest(http.MethodGet, tt.path, nil)
+			require.NoError(t, err)
+
+			wr := httptest.NewRecorder()
+			router.ServeHTTP(wr, req)
+			br, err := ioutil.ReadAll(wr.Body)
+			require.NoError(t, err)
+
+			assert.Equal(t, tt.expectedResponse, string(br))
+		})
+	}
 }
 
 func Test_extractParamsRawRoute(t *testing.T) {

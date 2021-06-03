@@ -6,6 +6,7 @@
   * [HTTP Routes](#http-routes)
     * [HTTP Method](#http-method)
     * [Processor](#processor)
+    * [File Server](#file-server)
     * [Raw RouteBuilder Constructor](#raw-routebuilder-constructor)
     * [Middlewares per Route](#middlewares-per-route)
     * [Security](#security)
@@ -303,6 +304,27 @@ The `Response` model contains the following properties (which are provided when 
 
 - Payload, which may hold a struct of type `interface{}`
 
+### File Server
+
+```go
+// NewFileServer constructor.
+func NewFileServer(path string, assetsDir string, fallbackPath string) *RouteBuilder {
+	// ...
+}
+```
+
+The File Server exposes files from the filesystem to be accessed from the service. <br />
+It has baked in support for Single Page Applications or 404 pages by providing a fallback path
+
+Routes using the file server has to follow a pattern, by convention this path has to end in `*path`.
+
+```go
+http.NewFileServer("/some-path/*path", "...", "...")
+```
+
+The path is used to resolve where in the filesystem we should serve the file from. If no file is found we will serve the fallback path.
+
+
 ### Raw RouteBuilder Constructor
 
 ```go
@@ -313,7 +335,7 @@ func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 ```
 
 The Raw Route Builder allows for lower level processing of the request and response objects. 
-It s main difference with the Route Builder is the processing function. Which in this case is the `native` go http handler func.
+It's main difference with the Route Builder is the processing function. Which in this case is the `native` go http handler func.
 
 ```go
 // The HandlerFunc type is an adapter to allow the use of

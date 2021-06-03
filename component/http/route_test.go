@@ -269,6 +269,37 @@ func TestNewRouteBuilder(t *testing.T) {
 	}
 }
 
+func TestNewFileserver(t *testing.T) {
+	type args struct {
+		path         string
+		assetsDir    string
+		fallbackPath string
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success":                     {args: args{path: "/", assetsDir: "testdata", fallbackPath: "testdata/index.html"}},
+		"invalid path":                {args: args{path: "", assetsDir: "testdata", fallbackPath: "testdata/index.html"}, expectedErr: "path is empty"},
+		"invalid assets path":         {args: args{path: "/", assetsDir: "", fallbackPath: "testdata/index.html"}, expectedErr: "assets path is empty"},
+		"invalid fallback path":       {args: args{path: "/", assetsDir: "testdata", fallbackPath: ""}, expectedErr: "fallback path is empty"},
+		"assets path doesn't exist":   {args: args{path: "/", assetsDir: "", fallbackPath: "testdata/index.html"}, expectedErr: "assets path is empty"},
+		"fallback path doesn't exist": {args: args{path: "/", assetsDir: "testdata", fallbackPath: "testdata/missing.html"}, expectedErr: "fallback file doesn't exist"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			rb := NewFileServer(tt.args.path, tt.args.assetsDir, tt.args.fallbackPath)
+
+			if tt.expectedErr != "" {
+				assert.Len(t, rb.errors, 1)
+				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+			} else {
+				assert.Len(t, rb.errors, 0)
+			}
+		})
+	}
+}
+
 func TestNewGetRouteBuilder(t *testing.T) {
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	assert.Equal(t, http.MethodGet, NewGetRouteBuilder("/", mockProcessor).method)

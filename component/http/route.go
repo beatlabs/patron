@@ -7,12 +7,11 @@ import (
 	"os"
 	"strings"
 
-	"golang.org/x/time/rate"
-
 	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
 	errs "github.com/beatlabs/patron/errors"
+	"golang.org/x/time/rate"
 )
 
 // Route definition of a HTTP route.
@@ -192,6 +191,62 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		handler:     rb.handler,
 		middlewares: middlewares,
 	}, nil
+}
+
+// NewFileServer constructor.
+func NewFileServer(path string, assetsDir string, fallbackPath string) *RouteBuilder {
+	var ee []error
+
+	if path == "" {
+		ee = append(ee, errors.New("path is empty"))
+	}
+
+	if assetsDir == "" {
+		ee = append(ee, errors.New("assets path is empty"))
+	} else {
+		_, err := os.Stat(assetsDir)
+		if os.IsNotExist(err) {
+			ee = append(ee, errors.New("assets directory doesn't exist"))
+		} else if err != nil {
+			ee = append(ee, fmt.Errorf("error while checking assets dir: %w", err))
+		}
+	}
+
+	if fallbackPath == "" {
+		ee = append(ee, errors.New("fallback path is empty"))
+	} else {
+		_, err := os.Stat(fallbackPath)
+		if os.IsNotExist(err) {
+			ee = append(ee, errors.New("fallback file doesn't exist"))
+		} else if err != nil {
+			ee = append(ee, fmt.Errorf("error while checking fallback file: %w", err))
+		}
+	}
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		params := ExtractParams(r)
+
+		// get the absolute path to prevent directory traversal
+		path := fmt.Sprintf("%s%s", assetsDir, params["path"])
+
+		// check whether a file exists at the given path
+		info, err := os.Stat(path)
+		if os.IsNotExist(err) || info.IsDir() {
+			// file does not exist, serve index.html
+			http.ServeFile(w, r, fallbackPath)
+			return
+		} else if err != nil {
+			// if we got an error (that wasn't that the file doesn't exist) stating the
+			// file, return a 500 internal server error and stop
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		// otherwise, use server the specific file directly from the filesystem.
+		http.ServeFile(w, r, path)
+	}
+
+	return &RouteBuilder{path: path, errors: ee, handler: handler, method: http.MethodGet}
 }
 
 // NewRawRouteBuilder constructor.

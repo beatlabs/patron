@@ -53,7 +53,7 @@ func TestNewServer(t *testing.T) {
 			middlewares:       []patronhttp.MiddlewareFunc{middleware},
 			acf:               patronhttp.DefaultAliveCheck,
 			rcf:               patronhttp.DefaultReadyCheck,
-			sighupHandler:     func() { log.Debug("SIGHUP received: nothing setup") },
+			sighupHandler:     func() { log.Info("SIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
 			wantErr:           "",
 		},

@@ -91,7 +91,7 @@ func (s *service) createHTTPComponent() (Component, error) {
 		}
 	}
 	port = strconv.FormatInt(portVal, 10)
-	log.Infof("creating default HTTP component at port %s", port)
+	log.Debugf("creating default HTTP component at port %s", port)
 
 	b := http.NewBuilder().WithPort(int(portVal))
 
@@ -102,7 +102,7 @@ func (s *service) createHTTPComponent() (Component, error) {
 			return nil, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
 		}
 		b.WithReadTimeout(readTimeout)
-		log.Infof("setting up default HTTP read timeout %s", httpReadTimeout)
+		log.Debugf("setting up default HTTP read timeout %s", httpReadTimeout)
 	}
 
 	httpWriteTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
@@ -112,7 +112,7 @@ func (s *service) createHTTPComponent() (Component, error) {
 			return nil, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
 		}
 		b.WithWriteTimeout(writeTimeout)
-		log.Infof("setting up default HTTP write timeout %s", httpWriteTimeout)
+		log.Debugf("setting up default HTTP write timeout %s", httpWriteTimeout)
 	}
 
 	deflateLevel, ok := os.LookupEnv("PATRON_COMPRESSION_DEFLATE_LEVEL")
@@ -122,7 +122,7 @@ func (s *service) createHTTPComponent() (Component, error) {
 			return nil, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
 		}
 		b.WithDeflateLevel(deflateLevelInt)
-		log.Infof("setting up default HTTP deflate level  %s", deflateLevel)
+		log.Debugf("setting up default HTTP deflate level  %s", deflateLevel)
 	}
 
 	if s.acf != nil {
@@ -166,7 +166,9 @@ func (s *service) waitTermination(chErr <-chan error) error {
 				return nil
 			}
 		case err := <-chErr:
-			log.Info("component error received")
+			if err != nil {
+				log.Info("component error received")
+			}
 			return err
 		}
 	}
@@ -255,7 +257,7 @@ func New(name, version string, options ...Option) (*Builder, error) {
 		acf:           http.DefaultAliveCheck,
 		rcf:           http.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),
-		sighupHandler: func() { log.Info("SIGHUP received: nothing setup") },
+		sighupHandler: func() { log.Debug("SIGHUP received: nothing setup") },
 	}, nil
 }
 
@@ -331,7 +333,7 @@ func setupTracing(name, version string) error {
 		}
 	}
 
-	log.Infof("setting up default tracing %s, %s with param %f", agent, tp, prmVal)
+	log.Debugf("setting up default tracing %s, %s with param %f", agent, tp, prmVal)
 	return trace.Setup(name, version, agent, tp, prmVal, buckets)
 }
 
@@ -340,7 +342,7 @@ func (b *Builder) WithRoutesBuilder(rb *http.RoutesBuilder) *Builder {
 	if rb == nil {
 		b.errors = append(b.errors, errors.New("routes builder is nil"))
 	} else {
-		log.Info("setting routes builder")
+		log.Debug("setting routes builder")
 		b.routesBuilder = rb
 	}
 
@@ -352,7 +354,7 @@ func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {
 	if len(mm) == 0 {
 		b.errors = append(b.errors, errors.New("provided middlewares slice was empty"))
 	} else {
-		log.Info("setting middlewares")
+		log.Debug("setting middlewares")
 		b.middlewares = append(b.middlewares, mm...)
 	}
 
@@ -364,7 +366,7 @@ func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder {
 	if acf == nil {
 		b.errors = append(b.errors, errors.New("alive check func provided was nil"))
 	} else {
-		log.Info("setting alive check func")
+		log.Debug("setting alive check func")
 		b.acf = acf
 	}
 
@@ -376,7 +378,7 @@ func (b *Builder) WithReadyCheck(rcf http.ReadyCheckFunc) *Builder {
 	if rcf == nil {
 		b.errors = append(b.errors, errors.New("ready check func provided was nil"))
 	} else {
-		log.Info("setting ready check func")
+		log.Debug("setting ready check func")
 		b.rcf = rcf
 	}
 
@@ -388,7 +390,7 @@ func (b *Builder) WithComponents(cc ...Component) *Builder {
 	if len(cc) == 0 {
 		b.errors = append(b.errors, errors.New("provided components slice was empty"))
 	} else {
-		log.Info("setting components")
+		log.Debug("setting components")
 		b.cps = append(b.cps, cc...)
 	}
 
@@ -400,7 +402,7 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	if handler == nil {
 		b.errors = append(b.errors, errors.New("provided SIGHUP handler was nil"))
 	} else {
-		log.Info("setting SIGHUP handler func")
+		log.Debug("setting SIGHUP handler func")
 		b.sighupHandler = handler
 	}
 
@@ -412,7 +414,7 @@ func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
 	if len(p) == 0 {
 		b.errors = append(b.errors, errors.New("provided uncompressed paths slice was empty"))
 	} else {
-		log.Infof("setting paths which for which compression will be skipped")
+		log.Debug("setting paths which for which compression will be skipped")
 		b.uncompressedPaths = p
 	}
 

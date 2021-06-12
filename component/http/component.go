@@ -57,7 +57,7 @@ func (c *Component) Run(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		log.Info("shutting down component")
+		log.Info("shutting down HTTP component")
 		tctx, cancel := context.WithTimeout(context.Background(), c.shutdownGracePeriod)
 		defer cancel()
 		return srv.Shutdown(tctx)
@@ -68,11 +68,11 @@ func (c *Component) Run(ctx context.Context) error {
 
 func (c *Component) listenAndServe(srv *http.Server, ch chan<- error) {
 	if c.certFile != "" && c.keyFile != "" {
-		log.Infof("HTTPS component listening on port %d", c.httpPort)
+		log.Debugf("HTTPS component listening on port %d", c.httpPort)
 		ch <- srv.ListenAndServeTLS(c.certFile, c.keyFile)
 	}
 
-	log.Infof("HTTP component listening on port %d", c.httpPort)
+	log.Debugf("HTTP component listening on port %d", c.httpPort)
 	ch <- srv.ListenAndServe()
 }
 
@@ -145,7 +145,7 @@ func (cb *Builder) WithSSL(c, k string) *Builder {
 	if c == "" || k == "" {
 		cb.errors = append(cb.errors, errors.New("invalid cert or key provided"))
 	} else {
-		log.Info("setting cert file and key")
+		log.Debug("setting cert file and key")
 		cb.certFile = c
 		cb.keyFile = k
 	}
@@ -158,7 +158,7 @@ func (cb *Builder) WithRoutesBuilder(rb *RoutesBuilder) *Builder {
 	if rb == nil {
 		cb.errors = append(cb.errors, errors.New("route builder is nil"))
 	} else {
-		log.Info("setting route builder")
+		log.Debug("setting route builder")
 		cb.routesBuilder = rb
 	}
 	return cb
@@ -169,7 +169,7 @@ func (cb *Builder) WithMiddlewares(mm ...MiddlewareFunc) *Builder {
 	if len(mm) == 0 {
 		cb.errors = append(cb.errors, errors.New("empty list of middlewares provided"))
 	} else {
-		log.Info("setting middlewares")
+		log.Debug("setting middlewares")
 		cb.middlewares = append(cb.middlewares, mm...)
 	}
 
@@ -181,7 +181,7 @@ func (cb *Builder) WithReadTimeout(rt time.Duration) *Builder {
 	if rt <= 0*time.Second {
 		cb.errors = append(cb.errors, errors.New("negative or zero read timeout provided"))
 	} else {
-		log.Infof("setting read timeout")
+		log.Debug("setting read timeout")
 		cb.httpReadTimeout = rt
 	}
 
@@ -193,7 +193,7 @@ func (cb *Builder) WithWriteTimeout(wt time.Duration) *Builder {
 	if wt <= 0*time.Second {
 		cb.errors = append(cb.errors, errors.New("negative or zero write timeout provided"))
 	} else {
-		log.Infof("setting write timeout")
+		log.Debug("setting write timeout")
 		cb.httpWriteTimeout = wt
 	}
 
@@ -234,7 +234,7 @@ func (cb *Builder) WithShutdownGracePeriod(gp time.Duration) *Builder {
 	if gp <= 0*time.Second {
 		cb.errors = append(cb.errors, errors.New("negative or zero shutdown grace period provided"))
 	} else {
-		log.Infof("setting shutdown grace period")
+		log.Debug("setting shutdown grace period")
 		cb.shutdownGracePeriod = gp
 	}
 
@@ -246,7 +246,7 @@ func (cb *Builder) WithPort(p int) *Builder {
 	if p <= 0 || p > 65535 {
 		cb.errors = append(cb.errors, errors.New("invalid HTTP Port provided"))
 	} else {
-		log.Infof("setting port")
+		log.Debug("setting port")
 		cb.httpPort = p
 	}
 
@@ -258,7 +258,7 @@ func (cb *Builder) WithAliveCheckFunc(acf AliveCheckFunc) *Builder {
 	if acf == nil {
 		cb.errors = append(cb.errors, errors.New("nil AliveCheckFunc was provided"))
 	} else {
-		log.Infof("setting aliveness check")
+		log.Debug("setting aliveness check")
 		cb.ac = acf
 	}
 
@@ -270,7 +270,7 @@ func (cb *Builder) WithReadyCheckFunc(rcf ReadyCheckFunc) *Builder {
 	if rcf == nil {
 		cb.errors = append(cb.errors, errors.New("nil ReadyCheckFunc provided"))
 	} else {
-		log.Infof("setting readiness check")
+		log.Debug("setting readiness check")
 		cb.rc = rcf
 	}
 

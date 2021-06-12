@@ -262,7 +262,7 @@ func (c *consumer) consume() (<-chan amqp.Delivery, error) {
 	c.ch = ch
 
 	c.tag = uuid.New().String()
-	log.Infof("consuming messages for tag %s", c.tag)
+	log.Debugf("consuming messages for tag %s", c.tag)
 
 	err = ch.ExchangeDeclare(c.exchange.name, c.exchange.kind, true, false, false, false, nil)
 	if err != nil {

@@ -102,7 +102,7 @@ func sampleSqs() (*async.Component, error) {
 }
 
 func messageHandler(message async.Message) error {
-	log.Info("Received message, payload:", string(message.Payload()))
+	log.Debugf("Received message, payload:", string(message.Payload()))
 	time.Sleep(3 * time.Second) // useful to see concurrency in action
 	return nil
 }

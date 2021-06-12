@@ -63,7 +63,6 @@ func (w *responseWriter) Header() http.Header {
 
 // Write to the internal responseWriter and sets the status if not set already.
 func (w *responseWriter) Write(d []byte) (int, error) {
-
 	value, err := w.writer.Write(d)
 	if err != nil {
 		return value, err
@@ -154,7 +153,7 @@ func NewRateLimitingMiddleware(limiter *rate.Limiter) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !limiter.Allow() {
-				log.Info("Limiting requests...")
+				log.Debug("Limiting requests...")
 				http.Error(w, "Requests greater than limit", http.StatusTooManyRequests)
 				return
 			}

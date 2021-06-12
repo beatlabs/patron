@@ -274,7 +274,7 @@ func (c *Component) subscribe() (subscription, error) {
 	sub.channel = ch
 
 	tag := uuid.New().String()
-	log.Infof("consuming messages for tag %s", tag)
+	log.Debugf("consuming messages for tag %s", tag)
 
 	deliveries, err := ch.Consume(c.queueCfg.queue, tag, false, false, false, false, nil)
 	if err != nil {

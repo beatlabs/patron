@@ -63,7 +63,7 @@ func main() {
 		})
 	}
 	sig := func() {
-		log.Debug("exit gracefully...")
+		log.Info("exit gracefully...")
 		os.Exit(0)
 	}
 

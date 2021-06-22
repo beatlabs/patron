@@ -114,7 +114,7 @@ func (ac *sqsComponent) Process(_ context.Context, btc patronsqs.Batch) {
 		logger := log.FromContext(msg.Context())
 		var u examples.User
 
-		err := json.DecodeRaw(msg.Body(), u)
+		err := json.DecodeRaw(msg.Body(), &u)
 		if err != nil {
 			logger.Errorf("failed to decode message: %v", err)
 			msg.NACK()
@@ -129,16 +129,17 @@ func (ac *sqsComponent) Process(_ context.Context, btc patronsqs.Batch) {
 		}
 
 		logger.Infof("reply from the gRPC service: %s", reply.GetMessage())
-		// We can either acknowledge the whole batch of each message individually.
+		// We can either acknowledge the whole batch or each message individually.
 		err = msg.ACK()
 		if err != nil {
 			logger.Errorf("failed to acknowledge message with id %s: %v", msg.ID(), err)
 		}
 	}
 
+	// The commented code below can be used to acknowledge batch of messages instead of each single message
 	// logger := log.FromContext(ctx)
 	//
-	// // We can either acknowledge the whole batch of each message individually.
+	// // We can either acknowledge the whole batch or each message individually.
 	// failed, err := btc.ACK()
 	// if err != nil {
 	// 	return err

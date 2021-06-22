@@ -1,0 +1,42 @@
+@startuml
+
+actor u as "user"
+
+node HttpSvc as "http service\n(http/main.go)"
+node HttpCacheSvc as "http cache service\n(http-cache/main.go)"
+node HttpSecSvc as "http service\n(http-sec/main.go)"
+database Redis as "In memory\nredis cache"
+
+node kafkaSvc as "kafka consumer\n(kafka/main.go)"
+node amqpSvc as "amqp consumer\n(amqp/main.go)"
+node sqsSvc as "sqs consumer\n(sqs/main.go)"
+node grpcSvc as "grpc service\n(sqs/main.go)"
+
+rectangle "Kafka\n(docker-compose: kafka)" {
+    queue kafkaTopic as "patron-topic"
+}
+
+rectangle "RabbitMq\n(docker-compose: rabbitmq)" {
+    queue amqpQueue as "patron"
+}
+
+rectangle "SQS\n(docker-compose: localstack)" {
+    queue sqsQueue as "patron (queue)"
+    queue snsTopic as "patron-topic"
+}
+
+
+u <-> HttpSvc : POST\nHTTP\nJSON
+HttpSvc <--> HttpSecSvc : protobuf payload \nautheticated\n HTTP request
+HttpSvc <-> HttpCacheSvc : GET HTTP
+HttpCacheSvc <-> Redis :  read Memory Cache
+HttpSecSvc .> kafkaTopic : async push
+kafkaTopic ..> kafkaSvc : Consumes
+kafkaSvc ..> amqpQueue : Publishes
+amqpQueue .> amqpSvc : Consumes
+amqpSvc .> sqsQueue : Publishes
+amqpSvc ..> snsTopic : Publishes
+snsTopic ..> sqsQueue : Routes
+sqsQueue ..> sqsSvc: Consumes
+sqsSvc <-> grpcSvc : GRPC sync request
+@enduml

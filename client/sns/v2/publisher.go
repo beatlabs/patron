@@ -67,9 +67,13 @@ func (p Publisher) Publish(ctx context.Context, input *sns.PublishInput) (messag
 	}
 
 	start := time.Now()
-
 	out, err := p.api.PublishWithContext(ctx, input)
-	observePublish(span, start, *input.TopicArn, err)
+	if input.TopicArn != nil {
+		observePublish(span, start, *input.TopicArn, err)
+	}
+	if input.TargetArn != nil {
+		observePublish(span, start, *input.TargetArn, err)
+	}
 	if err != nil {
 		return "", fmt.Errorf("failed to publish message: %w", err)
 	}

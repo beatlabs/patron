@@ -15,9 +15,9 @@ import (
 
 const (
 	httpPort            = 50000
-	httpReadTimeout     = 5 * time.Second
-	httpWriteTimeout    = 10 * time.Second
-	httpIdleTimeout     = 120 * time.Second
+	httpReadTimeout     = 30 * time.Second
+	httpWriteTimeout    = 60 * time.Second
+	httpIdleTimeout     = 240 * time.Second
 	shutdownGracePeriod = 5 * time.Second
 	deflateLevel        = 6
 )

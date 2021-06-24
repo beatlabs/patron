@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -319,8 +320,19 @@ func setupTracing(name, version string) error {
 		prmVal = tmpVal
 	}
 
+	var buckets []float64
+	if b, ok := os.LookupEnv("PATRON_JAEGER_DEFAULT_BUCKETS"); ok {
+		for _, bs := range strings.Split(b, ",") {
+			val, err := strconv.ParseFloat(strings.TrimSpace(bs), 64)
+			if err != nil {
+				return fmt.Errorf("env var for jaeger default buckets contains invalid value: %v", err)
+			}
+			buckets = append(buckets, val)
+		}
+	}
+
 	log.Infof("setting up default tracing %s, %s with param %f", agent, tp, prmVal)
-	return trace.Setup(name, version, agent, tp, prmVal)
+	return trace.Setup(name, version, agent, tp, prmVal, buckets)
 }
 
 // WithRoutesBuilder adds routes builder to the default HTTP component.

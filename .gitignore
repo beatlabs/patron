@@ -26,3 +26,6 @@ coverage.txt
 
 # patron binaries
 /cmd/patron/patron
+
+# tmp folder used in examples for storing logging, binaries and pids
+examples/tmp/

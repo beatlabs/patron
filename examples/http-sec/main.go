@@ -52,7 +52,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	httpCmp, err := newHTTPComponent(kafkaBroker, kafkaTopic, "http://localhost:50000/kafka")
+	asyncComp, err := newAsyncKafkaProducer(kafkaBroker, kafkaTopic)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
@@ -63,7 +63,7 @@ func main() {
 	}
 
 	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewGetRouteBuilder("/", httpCmp.kafkaHandler).WithTrace().WithAuth(auth))
+		Append(patronhttp.NewGetRouteBuilder("/", asyncComp.forwardToKafkaHandler).WithTrace().WithAuth(auth))
 
 	ctx := context.Background()
 	err = service.WithRoutesBuilder(routesBuilder).Run(ctx)
@@ -72,12 +72,13 @@ func main() {
 	}
 }
 
-type httpComponent struct {
+type kafkaProducer struct {
 	prd   *v2.AsyncProducer
 	topic string
 }
 
-func newHTTPComponent(kafkaBroker, topic, _ string) (*httpComponent, error) {
+// newAsyncKafkaProducer creates a new asynchronous kafka producer client
+func newAsyncKafkaProducer(kafkaBroker, topic string) (*kafkaProducer, error) {
 	prd, chErr, err := v2.New([]string{kafkaBroker}).CreateAsync()
 	if err != nil {
 		return nil, err
@@ -88,10 +89,12 @@ func newHTTPComponent(kafkaBroker, topic, _ string) (*httpComponent, error) {
 			log.Errorf("error producing Kafka message: %v", err)
 		}
 	}()
-	return &httpComponent{prd: prd, topic: topic}, nil
+	return &kafkaProducer{prd: prd, topic: topic}, nil
 }
 
-func (hc *httpComponent) kafkaHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
+// forwardToKafkaHandler is an http handler that decodes the input request and
+// publishes the decoded content as a message into a kafka topic (also does an HTTP GET request to google.com)
+func (hc *kafkaProducer) forwardToKafkaHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
 	var u examples.User
 	err := req.Decode(&u)
 	if err != nil {

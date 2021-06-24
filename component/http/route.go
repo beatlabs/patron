@@ -206,7 +206,7 @@ func NewFileServer(path string, assetsDir string, fallbackPath string) *RouteBui
 	} else {
 		_, err := os.Stat(assetsDir)
 		if os.IsNotExist(err) {
-			ee = append(ee, errors.New("assets directory doesn't exist"))
+			ee = append(ee, fmt.Errorf("assets directory [%s] doesn't exist", path))
 		} else if err != nil {
 			ee = append(ee, fmt.Errorf("error while checking assets dir: %w", err))
 		}
@@ -217,7 +217,7 @@ func NewFileServer(path string, assetsDir string, fallbackPath string) *RouteBui
 	} else {
 		_, err := os.Stat(fallbackPath)
 		if os.IsNotExist(err) {
-			ee = append(ee, errors.New("fallback file doesn't exist"))
+			ee = append(ee, fmt.Errorf("fallback file [%s] doesn't exist", fallbackPath))
 		} else if err != nil {
 			ee = append(ee, fmt.Errorf("error while checking fallback file: %w", err))
 		}

@@ -284,7 +284,7 @@ func TestNewFileserver(t *testing.T) {
 		"invalid assets path":         {args: args{path: "/", assetsDir: "", fallbackPath: "testdata/index.html"}, expectedErr: "assets path is empty"},
 		"invalid fallback path":       {args: args{path: "/", assetsDir: "testdata", fallbackPath: ""}, expectedErr: "fallback path is empty"},
 		"assets path doesn't exist":   {args: args{path: "/", assetsDir: "", fallbackPath: "testdata/index.html"}, expectedErr: "assets path is empty"},
-		"fallback path doesn't exist": {args: args{path: "/", assetsDir: "testdata", fallbackPath: "testdata/missing.html"}, expectedErr: "fallback file doesn't exist"},
+		"fallback path doesn't exist": {args: args{path: "/", assetsDir: "testdata", fallbackPath: "testdata/missing.html"}, expectedErr: "fallback file [testdata/missing.html] doesn't exist"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

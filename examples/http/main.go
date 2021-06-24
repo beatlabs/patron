@@ -19,11 +19,19 @@ import (
 	"github.com/beatlabs/patron/log/std"
 )
 
+var assestsFoder string
+
 func init() {
 	err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
 		fmt.Printf("failed to set sampler env vars: %v", err)
 		os.Exit(1)
+	}
+	// allows to run from any folder the 'go run examples/http/main.go'
+	var ok bool
+	assestsFoder, ok = os.LookupEnv("PATRON_EXAMPLE_ASSETS_FOLDER")
+	if !ok {
+		assestsFoder = "examples/http/public"
 	}
 }
 
@@ -40,7 +48,7 @@ func main() {
 	}
 
 	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewFileServer("/frontend/*path", "examples/http/public", "examples/http/public/index.html")).
+		Append(patronhttp.NewFileServer("/frontend/*path", assestsFoder, assestsFoder+"/index.html")).
 		Append(patronhttp.NewPostRouteBuilder("/api", httpHandler)).
 		Append(patronhttp.NewGetRouteBuilder("/api", getHandler).WithRateLimiting(50, 50))
 
@@ -69,10 +77,11 @@ func main() {
 		log.Fatalf("failed to create and run service %v", err)
 	}
 }
-func getHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
+func getHandler(_ context.Context, _ *patronhttp.Request) (*patronhttp.Response, error) {
 	return patronhttp.NewResponse(fmt.Sprint("Testing Middleware", http.StatusOK)), nil
 }
 
+// httpHandler proxies the inbound JSON HTTP request to a protobuf HTTP request
 func httpHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
 	interval, err := DoIntervalRequest(ctx)
 	if err != nil {
@@ -93,23 +102,23 @@ func httpHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Resp
 		return nil, fmt.Errorf("failed create request: %w", err)
 	}
 
-	kafkaRouteReq, err := http.NewRequest("GET", "http://localhost:50001", bytes.NewReader(b))
+	httpRequest, err := http.NewRequest("GET", "http://localhost:50001", bytes.NewReader(b))
 	if err != nil {
 		return nil, fmt.Errorf("failed create request: %w", err)
 	}
-	kafkaRouteReq.Header.Add("Content-Type", protobuf.Type)
-	kafkaRouteReq.Header.Add("Accept", protobuf.Type)
-	kafkaRouteReq.Header.Add("Authorization", "Apikey 123456")
+	httpRequest.Header.Add("Content-Type", protobuf.Type)
+	httpRequest.Header.Add("Accept", protobuf.Type)
+	httpRequest.Header.Add("Authorization", "Apikey 123456")
 	cl, err := clienthttp.New(clienthttp.Timeout(5 * time.Second))
 	if err != nil {
 		return nil, err
 	}
-	rsp, err := cl.Do(ctx, kafkaRouteReq)
+	rsp, err := cl.Do(ctx, httpRequest)
 	if err != nil {
-		return nil, fmt.Errorf("failed to post to kafka service: %w", err)
+		return nil, fmt.Errorf("failed to perform http request with protobuf payload: %w", err)
 	}
 	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	return patronhttp.NewResponse(fmt.Sprintf("got %s from kafka HTTP route", rsp.Status)), nil
+	return patronhttp.NewResponse(fmt.Sprintf("got %s from HTTP route", rsp.Status)), nil
 }
 
 // DoIntervalRequest is a helper method to make a request to the http-cache example service from other examples

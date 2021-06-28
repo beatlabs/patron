@@ -18,7 +18,7 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/ory/dockertest/v3 v3.6.3
 	github.com/prometheus/client_golang v1.5.1
-	github.com/rs/zerolog v1.5.0
+	github.com/rs/zerolog v1.23.0
 	github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
 	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.22.1+incompatible

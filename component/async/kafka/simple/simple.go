@@ -44,7 +44,6 @@ type Factory struct {
 
 // New constructor.
 func New(name, topic string, brokers []string, oo ...kafka.OptionFunc) (*Factory, error) {
-
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
@@ -66,7 +65,6 @@ func (c *consumer) OutOfOrder() bool {
 
 // Create a new consumer.
 func (f *Factory) Create() (async.Consumer, error) {
-
 	config, err := kafka.DefaultSaramaConfig(f.name)
 	if err != nil {
 		return nil, err
@@ -124,7 +122,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	chMsg := make(chan async.Message, c.config.Buffer)
 	chErr := make(chan error, c.config.Buffer)
 
-	log.Infof("consuming messages from topic '%s' without using consumer group", c.topic)
+	log.Debugf("consuming messages from topic '%s' without using consumer group", c.topic)
 	var pcs []sarama.PartitionConsumer
 
 	pcs, err := c.partitions(ctx)
@@ -170,7 +168,6 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 }
 
 func (c *consumer) partitionsFromOffset(_ context.Context) ([]sarama.PartitionConsumer, error) {
-
 	ms, err := sarama.NewConsumer(c.config.Brokers, c.config.SaramaConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create simple consumer: %w", err)

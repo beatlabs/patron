@@ -32,7 +32,7 @@ var (
 )
 
 // Setup tracing by providing all necessary parameters.
-func Setup(name, ver, agent, typ string, prm float64) error {
+func Setup(name, ver, agent, typ string, prm float64, buckets []float64) error {
 	if ver != "" {
 		Version = ver
 	}
@@ -49,7 +49,9 @@ func Setup(name, ver, agent, typ string, prm float64) error {
 		},
 	}
 	time.Sleep(100 * time.Millisecond)
-	metricsFactory := prometheus.New()
+	metricsFactory := prometheus.New(
+		prometheus.WithBuckets(buckets),
+	)
 	opts := metrics.NSOptions{Name: name, Tags: nil}
 	tr, clsTemp, err := cfg.NewTracer(
 		config.Logger(jaegerLoggerAdapter{}),

@@ -107,9 +107,9 @@ func TestLogger(t *testing.T) {
 			}
 
 			if tt.args.msg == "" {
-				assert.Contains(t, b.String(), fmt.Sprintf("%s age=18 name=john doe hello world", levelMap[tt.args.lvl]))
+				assert.Contains(t, b.String(), fmt.Sprintf("lvl=%s age=18 name=john doe hello world", levelMap[tt.args.lvl]))
 			} else {
-				assert.Contains(t, b.String(), fmt.Sprintf("%s age=18 name=john doe Hi, John", levelMap[tt.args.lvl]))
+				assert.Contains(t, b.String(), fmt.Sprintf("lvl=%s age=18 name=john doe Hi, John", levelMap[tt.args.lvl]))
 			}
 		})
 	}

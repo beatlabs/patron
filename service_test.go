@@ -149,15 +149,17 @@ func TestServer_Run_Shutdown(t *testing.T) {
 
 func TestServer_SetupTracing(t *testing.T) {
 	tests := []struct {
-		name string
-		cp   Component
-		host string
-		port string
+		name    string
+		cp      Component
+		host    string
+		port    string
+		buckets string
 	}{
 		{name: "success w/ empty tracing vars", cp: &testComponent{}},
 		{name: "success w/ empty tracing host", cp: &testComponent{}, port: "6831"},
 		{name: "success w/ empty tracing port", cp: &testComponent{}, host: "127.0.0.1"},
 		{name: "success", cp: &testComponent{}, host: "127.0.0.1", port: "6831"},
+		{name: "success w/ custom default buckets", cp: &testComponent{}, host: "127.0.0.1", port: "6831", buckets: ".1, .3"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -169,6 +171,10 @@ func TestServer_SetupTracing(t *testing.T) {
 			}
 			if tt.port != "" {
 				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", tt.port)
+				assert.NoError(t, err)
+			}
+			if tt.buckets != "" {
+				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.buckets)
 				assert.NoError(t, err)
 			}
 			svc, err := New("test", "", TextLogger())
@@ -192,12 +198,14 @@ func TestBuild_FailingConditions(t *testing.T) {
 	tests := map[string]struct {
 		samplerParam string
 		port         string
+		buckets      string
 		expectedErr  string
 	}{
 		"success with wrong w/ port":             {port: "foo"},
 		"success with wrong w/ overflowing port": {port: "153000"},
 		"failure w/ sampler param":               {samplerParam: "foo", expectedErr: "env var for jaeger sampler param is not valid: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
 		"failure w/ overflowing sampler param":   {samplerParam: "8", expectedErr: "cannot initialize jaeger tracer: invalid Param for probabilistic sampler; expecting value between 0 and 1, received 8"},
+		"failure w/ custom default buckets":      {samplerParam: "1", buckets: "foo", expectedErr: "env var for jaeger default buckets contains invalid value: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
 	}
 
 	for name, tt := range tests {
@@ -212,6 +220,11 @@ func TestBuild_FailingConditions(t *testing.T) {
 				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
 				assert.NoError(t, err)
 			}
+			if tt.buckets != "" {
+				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.buckets)
+				assert.NoError(t, err)
+			}
+
 			svc, err := New("test", "", TextLogger())
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

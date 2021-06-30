@@ -73,7 +73,7 @@ func (ab *Builder) WithTimeout(dial time.Duration) *Builder {
 		return ab
 	}
 	ab.cfg.Net.DialTimeout = dial
-	log.Infof(fieldSetMsg, "dial timeout", dial)
+	log.Debugf(fieldSetMsg, "dial timeout", dial)
 	return ab
 }
 
@@ -88,7 +88,7 @@ func (ab *Builder) WithVersion(version string) *Builder {
 		ab.errors = append(ab.errors, errors.New("failed to parse kafka version"))
 		return ab
 	}
-	log.Infof(fieldSetMsg, "version", version)
+	log.Debugf(fieldSetMsg, "version", version)
 	ab.cfg.Version = v
 
 	return ab
@@ -101,7 +101,7 @@ func (ab *Builder) WithRequiredAcksPolicy(ack RequiredAcks) *Builder {
 		ab.errors = append(ab.errors, errors.New("invalid value for required acks policy provided"))
 		return ab
 	}
-	log.Infof(fieldSetMsg, "required acks", ack)
+	log.Debugf(fieldSetMsg, "required acks", ack)
 	ab.cfg.Producer.RequiredAcks = sarama.RequiredAcks(ack)
 	return ab
 }
@@ -112,13 +112,13 @@ func (ab *Builder) WithEncoder(enc encoding.EncodeFunc, contentType string) *Bui
 	if enc == nil {
 		ab.errors = append(ab.errors, errors.New("encoder is nil"))
 	} else {
-		log.Infof(fieldSetMsg, "encoder", enc)
+		log.Debugf(fieldSetMsg, "encoder", enc)
 		ab.enc = enc
 	}
 	if contentType == "" {
 		ab.errors = append(ab.errors, errors.New("content type is empty"))
 	} else {
-		log.Infof(fieldSetMsg, "content type", contentType)
+		log.Debugf(fieldSetMsg, "content type", contentType)
 		ab.contentType = contentType
 	}
 

@@ -85,7 +85,7 @@ func (cb *Builder) WithFailureStrategy(fs FailStrategy) *Builder {
 	if fs > AckStrategy || fs < NackExitStrategy {
 		cb.errors = append(cb.errors, errors.New("invalid strategy provided"))
 	} else {
-		log.Infof(propSetMSG, "failure strategy", cb.name)
+		log.Debugf(propSetMSG, "failure strategy", cb.name)
 		cb.failStrategy = fs
 	}
 	return cb
@@ -94,7 +94,7 @@ func (cb *Builder) WithFailureStrategy(fs FailStrategy) *Builder {
 // WithRetries specifies the retry events number for the component
 // default value is '0'.
 func (cb *Builder) WithRetries(retries uint) *Builder {
-	log.Infof(propSetMSG, "retries", cb.name)
+	log.Debugf(propSetMSG, "retries", cb.name)
 	cb.retries = retries
 	return cb
 }
@@ -103,7 +103,7 @@ func (cb *Builder) WithRetries(retries uint) *Builder {
 // default value is '1'
 // do NOT enable concurrency value for in-order consumers, such as Kafka or FIFO SQS
 func (cb *Builder) WithConcurrency(concurrency uint) *Builder {
-	log.Infof(propSetMSG, "concurrency", cb.name)
+	log.Debugf(propSetMSG, "concurrency", cb.name)
 	cb.concurrency = concurrency
 	return cb
 }
@@ -115,7 +115,7 @@ func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 	if retryWait < 0 {
 		cb.errors = append(cb.errors, errors.New("invalid retry wait provided"))
 	} else {
-		log.Infof(propSetMSG, "retryWait", cb.name)
+		log.Debugf(propSetMSG, "retryWait", cb.name)
 		cb.retryWait = retryWait
 	}
 	return cb

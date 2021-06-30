@@ -193,7 +193,7 @@ func (c *Component) processing(ctx context.Context) error {
 		}
 
 		if client != nil {
-			log.Infof("consuming messages from topics '%#v' using group '%s'", c.topics, c.group)
+			log.Debugf("consuming messages from topics '%#v' using group '%s'", c.topics, c.group)
 			for {
 				// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
 				if ctx.Err() != nil {

@@ -77,6 +77,7 @@ func main() {
 		log.Fatalf("failed to create and run service %v", err)
 	}
 }
+
 func getHandler(_ context.Context, _ *patronhttp.Request) (*patronhttp.Response, error) {
 	return patronhttp.NewResponse(fmt.Sprint("Testing Middleware", http.StatusOK)), nil
 }

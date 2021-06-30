@@ -79,7 +79,7 @@ func createFieldsLine(fields map[string]interface{}) string {
 }
 
 func createLogger(out io.Writer, lvl patronLog.Level, fieldLine string) *log.Logger {
-	logger := log.New(out, levelMap[lvl]+" "+fieldLine, log.LstdFlags|log.Lmicroseconds|log.LUTC|log.Lmsgprefix|log.Lshortfile)
+	logger := log.New(out, "lvl="+levelMap[lvl]+" "+fieldLine, log.LstdFlags|log.Lmicroseconds|log.LUTC|log.Lmsgprefix)
 	return logger
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -84,6 +85,8 @@ func main() {
 			log.Fatalf("Svc %s does not contain the regular expression %s in the metrics", svc, re)
 		}
 	}
+
+	fmt.Printf("Successful E2E test\n")
 }
 
 func containsRegex(resp *http.Response, re string) bool {

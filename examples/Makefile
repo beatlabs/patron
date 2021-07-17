@@ -1,6 +1,10 @@
 DOCKER_COMPOSE = docker-compose
 
-default: examples-run
+default: e2e
+
+# e2e triggers the examples-run and than stop the processes
+e2e: examples-run
+	$(MAKE) stop && echo "Successful E2E"
 
 # runs the query that will flow across all of the services
 examples-run: start-svcs
@@ -33,4 +37,4 @@ start: start-infra start-svcs
 # under parallel conditions.
 .NOTPARALLEL:
 
-.PHONY: examples-run start-svcs start-svcs stop stop-svcs stop-infra start
+.PHONY: e2e examples-run start-svcs start-svcs stop stop-svcs stop-infra start

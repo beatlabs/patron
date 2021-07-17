@@ -36,10 +36,7 @@ modsync: fmtcheck
 	go mod tidy && \
 	go mod vendor
 
-examples: example-run
-	$(MAKE) -C examples stop
-
-example-run:
+examples:
 	$(MAKE) -C examples
 
 # disallow any parallelism (-j) for Make. This is necessary since some

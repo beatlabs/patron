@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -156,6 +157,7 @@ func getAWSSession(endpoint string) *session.Session {
 		if err == nil {
 			return s
 		}
+		time.Sleep(1 * time.Second)
 	}
 	// this will panic if error is not null
 	return session.Must(s, err)

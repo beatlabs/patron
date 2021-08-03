@@ -35,6 +35,7 @@ type Component interface {
 // service is responsible for managing and setting up everything.
 // The service will start by default a HTTP component in order to host management endpoint.
 type service struct {
+	name              string
 	cps               []Component
 	routesBuilder     *http.RoutesBuilder
 	middlewares       []http.MiddlewareFunc
@@ -67,6 +68,7 @@ func (s *service) run(ctx context.Context) error {
 		}(cp)
 	}
 
+	log.FromContext(ctx).Infof("service %s started", s.name)
 	ee := make([]error, 0, len(s.cps))
 	ee = append(ee, s.waitTermination(chErr))
 	cnl()
@@ -428,6 +430,7 @@ func (b *Builder) build() (*service, error) {
 	}
 
 	s := service{
+		name:              b.name,
 		cps:               b.cps,
 		routesBuilder:     b.routesBuilder,
 		middlewares:       b.middlewares,

@@ -215,10 +215,8 @@ func Test_handleError(t *testing.T) {
 			rsp := httptest.NewRecorder()
 			handleError(log.Sub(nil), rsp, tt.args.enc, tt.args.err)
 			assert.Equal(t, tt.expectedCode, rsp.Code)
-			if tt.expectedHeaders != nil {
-				for k, v := range tt.expectedHeaders {
-					assert.Equal(t, v, rsp.Header().Get(k))
-				}
+			for k, v := range tt.expectedHeaders {
+				assert.Equal(t, v, rsp.Header().Get(k))
 			}
 		})
 	}

@@ -188,6 +188,9 @@ func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFu
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+		for k, v := range err.headers {
+			w.Header().Set(k, v)
+		}
 		w.WriteHeader(err.code)
 		if _, err := w.Write(p); err != nil {
 			logger.Errorf("failed to write Response: %v", err)

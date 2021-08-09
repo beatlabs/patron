@@ -155,15 +155,25 @@ func main() {
 }
 
 func getAWSSession(endpoint string) *session.Session {
-	return session.Must(
-		session.NewSession(
+
+	// 15 attempts 1 seconds separated to retrieve valid session
+	var s *session.Session = nil
+	var err error = nil
+	for i := 0; i < 15; i++ {
+		s, err = session.NewSession(
 			&aws.Config{
 				Region:      aws.String(awsRegion),
 				Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
 			},
 			&aws.Config{Endpoint: aws.String(endpoint)},
-		),
-	)
+		)
+		if err == nil {
+			return s
+		}
+		time.Sleep(1 * time.Second)
+	}
+	// this will panic if error is not null
+	return session.Must(s, err)
 }
 
 func createSQSQueue(api sqsiface.SQSAPI) (string, error) {

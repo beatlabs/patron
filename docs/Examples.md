@@ -180,6 +180,41 @@ After all services have been started successfully we can send a request and see 
 
 After that head over to [jaeger](http://localhost:16686/search) and [prometheus](http://localhost:9090/graph).
 
+## Taking a shortcut:
+
+You can see that the `examples` folder contains also a `Makefile`. Instead of executing all the above-mentioned commands
+yourself you could also simply change your directory to the `examples` folder and run:
+
+```bash
+$ make
+```
+
+By doing that you will start the infrastructure containers, start the example services with their logs redirected 
+to `examples/tmp/log` (there you can check if any of the services fail to start). 
+
+```bash
+$ ls -1 examples/tmp/log/*
+examples/tmp/log/http-amqp-svc.log
+examples/tmp/log/http-cache-svc.log
+examples/tmp/log/http-grpc-svc.log
+examples/tmp/log/http-kafka-svc.log
+examples/tmp/log/http-sec-svc.log
+examples/tmp/log/http-sqs-svc.log
+examples/tmp/log/http-svc.log
+```
+
+You will also find a file under `examples/tmp/pid.txt` which is a repository of the pids of your services:
+
+```bash
+$ cat examples/tmp/pid.txt 
+27733|http-cache-svc
+28920|http-svc
+29738|http-sec-svc
+29875|http-kafka-svc
+30047|http-amqp-svc
+30191|http-sqs-svc
+30315|http-grpc-svc
+```
 
 ## [Compression Middleware](../examples/compression-middleware)
 The compression-middleware example showcases the compression middleware with a /foo route that returns some random data.

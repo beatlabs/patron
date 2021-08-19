@@ -176,7 +176,7 @@ github.com/jcmturner/rpc/v2/mstypes
 github.com/jcmturner/rpc/v2/ndr
 # github.com/jmespath/go-jmespath v0.4.0
 github.com/jmespath/go-jmespath
-# github.com/julienschmidt/httprouter v1.2.0
+# github.com/julienschmidt/httprouter v1.3.0
 github.com/julienschmidt/httprouter
 # github.com/klauspost/compress v1.11.7
 github.com/klauspost/compress/fse

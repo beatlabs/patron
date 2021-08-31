@@ -2,8 +2,6 @@ package kafka
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -36,12 +34,6 @@ func Test_messageWrapper(t *testing.T) {
 	assert.NotNil(t, consumerMessage)
 	assert.Equal(t, "topicone", consumerMessage.Topic)
 	assert.Equal(t, []byte(`{"key":"value"}`), consumerMessage.Value)
-}
-
-func Test_DefaultSaramaConfig(t *testing.T) {
-	sc, err := DefaultSaramaConfig("name")
-	assert.NoError(t, err)
-	assert.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
 }
 
 func Test_NewBatch(t *testing.T) {

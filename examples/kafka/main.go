@@ -87,6 +87,8 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 	}
 
 	saramaCfg := sarama.NewConfig()
+	// consistent reads only
+	saramaCfg.Consumer.IsolationLevel = sarama.ReadCommitted
 	// batches will be responsible for committing
 	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest

@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/encoding"
@@ -81,6 +82,14 @@ func TestNew(t *testing.T) {
 }
 
 func TestFactory_Create(t *testing.T) {
+	t.Parallel()
+
+	cfgOpt := func(cc *kafka.ConsumerConfig) error {
+		var err error
+		cc.SaramaConfig, err = v2.DefaultConsumerSaramaConfig("test-consumer", false)
+		return err
+	}
+
 	type fields struct {
 		clientName string
 		topics     []string
@@ -96,6 +105,7 @@ func TestFactory_Create(t *testing.T) {
 				clientName: "clientA",
 				topics:     []string{"topicA"},
 				brokers:    []string{"192.168.1.1"},
+				oo:         []kafka.OptionFunc{cfgOpt},
 			},
 			wantErr: false,
 		},
@@ -104,13 +114,24 @@ func TestFactory_Create(t *testing.T) {
 				clientName: "clientB",
 				topics:     []string{"topicA"},
 				brokers:    []string{"192.168.1.1"},
-				oo:         []kafka.OptionFunc{kafka.Buffer(-100)},
+				oo:         []kafka.OptionFunc{cfgOpt, kafka.Buffer(-100)},
+			},
+			wantErr: true,
+		},
+		"failed with missing Sarama configuration": {
+			fields: fields{
+				clientName: "clientB",
+				topics:     []string{"topicA"},
+				brokers:    []string{"192.168.1.1"},
+				oo:         []kafka.OptionFunc{},
 			},
 			wantErr: true,
 		},
 	}
 	for testName, tt := range tests {
 		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
 			f := &Factory{
 				name:    tt.fields.clientName,
 				topics:  tt.fields.topics,
@@ -230,7 +251,11 @@ func versionedConsumerMessage(value string, header *sarama.RecordHeader, version
 }
 
 func TestConsumer_ConsumeFailedBroker(t *testing.T) {
-	f, err := New("name", "group", []string{"topic"}, []string{"1", "2"})
+	f, err := New("name", "group", []string{"topic"}, []string{"1", "2"}, func(cc *kafka.ConsumerConfig) error {
+		var err error
+		cc.SaramaConfig, err = v2.DefaultConsumerSaramaConfig("test-consumer", false)
+		return err
+	})
 	assert.NoError(t, err)
 	c, err := f.Create()
 	assert.NoError(t, err)

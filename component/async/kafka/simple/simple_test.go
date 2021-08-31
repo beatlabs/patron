@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -72,6 +73,11 @@ func TestNew(t *testing.T) {
 }
 
 func TestFactory_Create(t *testing.T) {
+	cfgOpt := func(cc *kafka.ConsumerConfig) error {
+		var err error
+		cc.SaramaConfig, err = v2.DefaultConsumerSaramaConfig("test-consumer", false)
+		return err
+	}
 	type fields struct {
 		oo []kafka.OptionFunc
 	}
@@ -80,7 +86,7 @@ func TestFactory_Create(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{name: "success", wantErr: false},
+		{name: "success", wantErr: false, fields: fields{oo: []kafka.OptionFunc{cfgOpt}}},
 		{name: "failed with invalid option", fields: fields{oo: []kafka.OptionFunc{kafka.Buffer(-100)}}, wantErr: true},
 	}
 	for _, tt := range tests {

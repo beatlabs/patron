@@ -49,17 +49,10 @@ func (c *consumer) OutOfOrder() bool {
 	return false
 }
 
-// Create a new consumer.
+// Create a new asynchronous group consumer.
 func (f *Factory) Create() (async.Consumer, error) {
-	config, err := kafka.DefaultSaramaConfig(f.name)
-	if err != nil {
-		return nil, err
-	}
-
 	cc := kafka.ConsumerConfig{
-		Brokers:      f.brokers,
-		Buffer:       config.ChannelBufferSize,
-		SaramaConfig: config,
+		Brokers: f.brokers,
 	}
 
 	c := &consumer{
@@ -69,12 +62,18 @@ func (f *Factory) Create() (async.Consumer, error) {
 		config:   cc,
 	}
 
+	var err error
 	for _, o := range f.oo {
 		err = o(&c.config)
 		if err != nil {
 			return nil, fmt.Errorf("could not apply OptionFunc to consumer : %w", err)
 		}
 	}
+
+	if c.config.SaramaConfig == nil {
+		return nil, errors.New("no Sarama configuration specified")
+	}
+	cc.Buffer = c.config.SaramaConfig.ChannelBufferSize
 
 	return c, nil
 }

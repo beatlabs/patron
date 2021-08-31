@@ -32,6 +32,7 @@ The Kafka client allows users to create a synchronous or asynchronous Kafka prod
 **Third-party dependencies**  
 github.com/Shopify/sarama v1.30.0
 
+Each instance of a producer or consumer requires the specification of Sarama configuration; you can use `v2.DefaultConsumerSaramaConfig` and `v2.DefaultProducerSaramaConfig` for sane defaults.
 
 ## Redis
 The Redis client allows users to connect to a Redis instance and execute commands. The connection can be configured using [`redis.Options`](https://github.com/go-redis/redis/blob/v7/options.go).

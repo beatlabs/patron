@@ -73,8 +73,8 @@ func BatchTimeout(timeout time.Duration) OptionFunc {
 	}
 }
 
-// SaramaConfig specifies a sarama consumer config. Use this to set consumer config on sarama level.
-// Check the sarama config documentation for more config options.
+// SaramaConfig specifies a Sarama consumer config. Use this to set consumer config on Sarama level.
+// Check the Sarama config documentation for more config options.
 func SaramaConfig(cfg *sarama.Config) OptionFunc {
 	return func(c *Component) error {
 		if cfg == nil {

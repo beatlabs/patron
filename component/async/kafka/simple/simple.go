@@ -76,17 +76,10 @@ func (c *consumer) OutOfOrder() bool {
 	return false
 }
 
-// Create a new consumer.
+// Create a new asynchronous consumer.
 func (f *Factory) Create() (async.Consumer, error) {
-	config, err := kafka.DefaultSaramaConfig(f.name)
-	if err != nil {
-		return nil, err
-	}
-
 	cc := kafka.ConsumerConfig{
-		Brokers:      f.brokers,
-		Buffer:       1000,
-		SaramaConfig: config,
+		Brokers: f.brokers,
 	}
 
 	c := &consumer{
@@ -95,12 +88,18 @@ func (f *Factory) Create() (async.Consumer, error) {
 	}
 	c.partitions = c.partitionsFromOffset
 
+	var err error
 	for _, o := range f.oo {
 		err = o(&c.config)
 		if err != nil {
 			return nil, err
 		}
 	}
+
+	if c.config.SaramaConfig == nil {
+		return nil, errors.New("no Sarama configuration specified")
+	}
+	c.config.Buffer = c.config.SaramaConfig.ChannelBufferSize
 
 	if c.config.DurationBasedConsumer {
 		c.partitions = c.partitionsSinceDuration

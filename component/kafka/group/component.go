@@ -126,11 +126,6 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 		return nil, patronErrors.Aggregate(errs...)
 	}
 
-	defaultSaramaCfg, err := kafka.DefaultSaramaConfig(name)
-	if err != nil {
-		return nil, err
-	}
-
 	cmp := &Component{
 		name:         name,
 		group:        group,
@@ -142,14 +137,17 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 		batchSize:    defaultBatchSize,
 		batchTimeout: defaultBatchTimeout,
 		failStrategy: defaultFailureStrategy,
-		saramaConfig: defaultSaramaCfg,
 	}
 
 	for _, optionFunc := range oo {
-		err = optionFunc(cmp)
+		err := optionFunc(cmp)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if cmp.saramaConfig == nil {
+		return nil, errors.New("sarama configuration option is required")
 	}
 
 	return cmp, nil
@@ -202,7 +200,7 @@ func (c *Component) processing(ctx context.Context) error {
 				}
 
 				// `Consume` should be called inside an infinite loop, when a
-				// server-side re-balance happens, the consumer session will need to be
+				// server-side rebalance happens, the consumer session will need to be
 				// recreated to get the new claims
 				err := client.Consume(ctx, c.topics, handler)
 				componentError = err
@@ -254,7 +252,7 @@ func (c *Component) processing(ctx context.Context) error {
 	return componentError
 }
 
-// Consumer represents a sarama consumer group consumer
+// Consumer represents a Sarama consumer group consumer
 type consumerHandler struct {
 	ctx context.Context
 

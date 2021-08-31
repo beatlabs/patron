@@ -1,10 +1,13 @@
 package v2
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBuilder_Create(t *testing.T) {
@@ -50,4 +53,26 @@ func TestBuilder_CreateAsync(t *testing.T) {
 			assert.Nil(t, chErr)
 		})
 	}
+}
+
+func Test_DefaultConsumerSaramaConfig(t *testing.T) {
+	sc, err := DefaultConsumerSaramaConfig("name", true)
+	require.NoError(t, err)
+	require.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
+	require.Equal(t, sarama.ReadCommitted, sc.Consumer.IsolationLevel)
+
+	sc, err = DefaultConsumerSaramaConfig("name", false)
+	require.NoError(t, err)
+	require.NotEqual(t, sarama.ReadCommitted, sc.Consumer.IsolationLevel)
+}
+
+func TestDefaultProducerSaramaConfig(t *testing.T) {
+	sc, err := DefaultProducerSaramaConfig("name", true)
+	require.NoError(t, err)
+	require.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
+	require.True(t, sc.Producer.Idempotent)
+
+	sc, err = DefaultProducerSaramaConfig("name", false)
+	require.NoError(t, err)
+	require.False(t, sc.Producer.Idempotent)
 }

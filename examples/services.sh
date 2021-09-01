@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # directory of this script
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
@@ -34,7 +36,7 @@ function stop_running_processes {
       pid=$(echo "${line}" | cut -d '|' -f1);
       svc=$(echo "${line}" | cut -d '|' -f2);
       echo "killing service ${svc} with pid ${pid}"
-      kill "${pid}"
+      kill "${pid}" || true
     done < "${pid_file}"
     rm "${pid_file}"
   fi

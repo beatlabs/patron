@@ -18,6 +18,18 @@ const (
 
 var f = map[string]interface{}{"key": "value"}
 
+func init() {
+	// use a fixed-skip source hook
+	// it correctly identifies these tests'
+	// source lines, matching behavior with non-test use-cases
+	defaultSourceHook = &sourceHookWithSkip{
+		skip: 4,
+	}
+	defaultSourceHookWithFormat = &sourceHookWithSkip{
+		skip: 5,
+	}
+}
+
 func TestNewLogger(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -135,13 +147,7 @@ func assertLog(t *testing.T, b bytes.Buffer, lvl log.Level, msg string) {
 	assert.Contains(t, b.String(), `"key":"value"`, b.String())
 	assert.Contains(t, b.String(), fmt.Sprintf(`"msg":"%s"`, msg), b.String())
 	assert.Regexp(t, regexp.MustCompile(`"time":".*"`), b.String())
-	// Although the sources do not make sense, if we change them they will report wrong locations in the service.
-	// Pls leave them as they are.
-	if lvl == log.PanicLevel {
-		assert.Regexp(t, regexp.MustCompile(`"src":"assert/assertions.go:.*"`), b.String())
-	} else {
-		assert.Regexp(t, regexp.MustCompile(`"src":"runtime/asm_amd64.s:.*"`), b.String())
-	}
+	assert.Regexp(t, regexp.MustCompile(`"src":"zerolog/logger_test.go:.*"`), b.String())
 }
 
 func TestLog_Level(t *testing.T) {

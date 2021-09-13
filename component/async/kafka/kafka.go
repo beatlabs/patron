@@ -95,6 +95,7 @@ type ConsumerConfig struct {
 	DurationOffset        time.Duration
 	TimeExtractor         func(*sarama.ConsumerMessage) (time.Time, error)
 	SaramaConfig          *sarama.Config
+	NotificationChannel   chan<- struct{}
 }
 
 type message struct {

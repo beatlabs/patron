@@ -91,7 +91,7 @@ func TestCachingMiddleware(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rc := httptest.NewRecorder()
-			rw := newResponseWriter(rc)
+			rw := newResponseWriter(rc, true)
 			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, tt.r)
 			assert.Equal(t, tt.expectedCode, rw.Status())

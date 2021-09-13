@@ -46,7 +46,8 @@ func (r Route) Handler() http.HandlerFunc {
 type RouteBuilder struct {
 	method        string
 	path          string
-	trace         bool
+	jaegerTrace   bool
+	statusTrace   bool
 	rateLimiter   *rate.Limiter
 	middlewares   []MiddlewareFunc
 	authenticator auth.Authenticator
@@ -55,9 +56,17 @@ type RouteBuilder struct {
 	errors        []error
 }
 
-// WithTrace enables route tracing.
+// WithTrace enables route tracing that uses Jaeger/OpenTracing.
+// It requires Jaeger enabled on the Patron service.
 func (rb *RouteBuilder) WithTrace() *RouteBuilder {
-	rb.trace = true
+	rb.jaegerTrace = true
+	return rb
+}
+
+// WithStatusTrace enables response tracing of status codes via Prometheus.
+// It does not use Jaeger/OpenTracing.
+func (rb *RouteBuilder) WithStatusTrace() *RouteBuilder {
+	rb.statusTrace = true
 	return rb
 }
 
@@ -150,6 +159,7 @@ func (rb *RouteBuilder) MethodTrace() *RouteBuilder {
 
 // Build a route.
 func (rb *RouteBuilder) Build() (Route, error) {
+	// parse a list of HTTP numeric status codes that must be logged
 	cfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
 	statusCodeLogger, err := newStatusCodeLoggerHandler(cfg)
 	if err != nil {
@@ -165,8 +175,13 @@ func (rb *RouteBuilder) Build() (Route, error) {
 	}
 
 	var middlewares []MiddlewareFunc
-	if rb.trace {
+	if rb.jaegerTrace {
+		// uses Jaeger/OpenTracing and Patron's response logging
 		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path, statusCodeLogger))
+	}
+	if rb.statusTrace {
+		// uses a custom Patron metric for HTTP responses (with complete status code) and Patron's response logging
+		middlewares = append(middlewares, NewStatusTracingMiddleware(rb.method, rb.path, statusCodeLogger))
 	}
 	if rb.rateLimiter != nil {
 		middlewares = append(middlewares, NewRateLimitingMiddleware(rb.rateLimiter))

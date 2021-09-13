@@ -1,9 +1,9 @@
 package http
 
 import (
+	"bytes"
 	"compress/flate"
 	"compress/gzip"
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +14,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"golang.org/x/time/rate"
 
@@ -27,6 +29,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	tracinglog "github.com/opentracing/opentracing-go/log"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -43,12 +46,13 @@ const (
 type responseWriter struct {
 	status              int
 	statusHeaderWritten bool
-	payload             []byte
+	capturePayload      bool
+	responsePayload     bytes.Buffer
 	writer              http.ResponseWriter
 }
 
-func newResponseWriter(w http.ResponseWriter) *responseWriter {
-	return &responseWriter{status: -1, statusHeaderWritten: false, writer: w}
+func newResponseWriter(w http.ResponseWriter, capturePayload bool) *responseWriter {
+	return &responseWriter{status: -1, statusHeaderWritten: false, writer: w, capturePayload: capturePayload}
 }
 
 // Status returns the http response status.
@@ -68,7 +72,9 @@ func (w *responseWriter) Write(d []byte) (int, error) {
 		return value, err
 	}
 
-	w.payload = d
+	if w.capturePayload {
+		w.responsePayload.Write(d)
+	}
 
 	if !w.statusHeaderWritten {
 		w.status = http.StatusOK
@@ -133,17 +139,74 @@ func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
 }
 
 // NewLoggingTracingMiddleware creates a MiddlewareFunc that continues a tracing span and finishes it.
-// It also logs the HTTP request on debug logging level
+// It uses Jaeger and OpenTracing and will also log the HTTP request on debug level if configured so.
 func NewLoggingTracingMiddleware(path string, statusCodeLogger statusCodeLoggerHandler) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			corID := getOrSetCorrelationID(r.Header)
 			sp, r := span(path, corID, r)
-			lw := newResponseWriter(w)
+			lw := newResponseWriter(w, true)
 			next.ServeHTTP(lw, r)
-			finishSpan(sp, lw.Status(), lw.payload)
+			finishSpan(sp, lw.Status(), &lw.responsePayload)
 			logRequestResponse(corID, lw, r)
-			statusCodeErrorLogging(r.Context(), statusCodeLogger, lw.Status(), lw.payload, path)
+			if log.Enabled(log.ErrorLevel) && statusCodeLogger.shouldLog(lw.status) {
+				log.FromContext(r.Context()).Errorf("%s %d error: %v", path, lw.status, lw.responsePayload.String())
+			}
+		})
+	}
+}
+
+var (
+	httpStatusTracingInit          sync.Once
+	httpStatusTracingHandledMetric *prometheus.CounterVec
+	httpStatusTracingLatencyMetric *prometheus.HistogramVec
+)
+
+func initHTTPServerMetrics() {
+	httpStatusTracingHandledMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "component",
+			Subsystem: "http",
+			Name:      "handled_total",
+			Help:      "Total number of HTTP responses served by the server.",
+		},
+		[]string{"method", "path", "status_code"},
+	)
+	prometheus.MustRegister(httpStatusTracingHandledMetric)
+	httpStatusTracingLatencyMetric = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "component",
+			Subsystem: "http",
+			Name:      "handled_seconds",
+			Help:      "Latency of a completed HTTP response served by the server.",
+		},
+		[]string{"method", "path", "status_code"})
+	prometheus.MustRegister(httpStatusTracingLatencyMetric)
+}
+
+// NewStatusTracingMiddleware creates a MiddlewareFunc that captures status code and duration metrics about the responses returned.
+// It does not use Jaeger nor OpenTracing but will also log the HTTP request on debug level if configured so.
+func NewStatusTracingMiddleware(method, path string, statusCodeLogger statusCodeLoggerHandler) MiddlewareFunc {
+	// register Promethus metrics on first use
+	httpStatusTracingInit.Do(initHTTPServerMetrics)
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			now := time.Now()
+			corID := getOrSetCorrelationID(r.Header)
+			logErrors := log.Enabled(log.ErrorLevel)
+			lw := newResponseWriter(w, logErrors)
+			next.ServeHTTP(lw, r)
+
+			// collect metrics about HTTP server-side handling and latency
+			status := strconv.Itoa(lw.Status())
+			httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
+			httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
+
+			logRequestResponse(corID, lw, r)
+			if logErrors && statusCodeLogger.shouldLog(lw.status) {
+				log.FromContext(r.Context()).Errorf("%s %d error: %v", path, lw.status, lw.responsePayload.String())
+			}
 		})
 	}
 }
@@ -434,16 +497,6 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 	log.Sub(info).Debug()
 }
 
-func statusCodeErrorLogging(ctx context.Context, statusCodeLogger statusCodeLoggerHandler, statusCode int, payload []byte, path string) {
-	if !log.Enabled(log.ErrorLevel) {
-		return
-	}
-
-	if statusCodeLogger.shouldLog(statusCode) {
-		log.FromContext(ctx).Errorf("%s %d error: %v", path, statusCode, string(payload))
-	}
-}
-
 func getOrSetCorrelationID(h http.Header) string {
 	cor, ok := h[correlation.HeaderID]
 	if !ok {
@@ -499,11 +552,11 @@ func stripQueryString(path string) (string, error) {
 	return path[:len(path)-len(u.RawQuery)-1], nil
 }
 
-func finishSpan(sp opentracing.Span, code int, payload []byte) {
+func finishSpan(sp opentracing.Span, code int, responsePayload *bytes.Buffer) {
 	ext.HTTPStatusCode.Set(sp, uint16(code))
 	isError := code >= http.StatusInternalServerError
-	if isError && len(payload) != 0 {
-		sp.LogFields(tracinglog.String(fieldNameError, string(payload)))
+	if isError && responsePayload.Len() != 0 {
+		sp.LogFields(tracinglog.String(fieldNameError, responsePayload.String()))
 	}
 	ext.Error.Set(sp, isError)
 	sp.Finish()

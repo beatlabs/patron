@@ -332,7 +332,7 @@ func setupJaegerTracing(name, version string) error {
 	return trace.Setup(name, version, agent, tp, prmVal, buckets)
 }
 
-// WithoutJaeger disables Jaeger integration
+// WithoutJaeger disables Jaeger integration.
 func (b *Builder) WithoutJaeger() *Builder {
 	log.Debug("disabling Jaeger integration")
 	b.enableJaeger = false

@@ -190,6 +190,7 @@ type Builder struct {
 	termSig           chan os.Signal
 	sighupHandler     func()
 	uncompressedPaths []string
+	enableJaeger      bool
 }
 
 // Config for setting up the builder.
@@ -247,7 +248,7 @@ func New(name, version string, options ...Option) (*Builder, error) {
 		option(&cfg)
 	}
 
-	err := setupObservability(name, version, cfg.fields, cfg.logger)
+	err := setupLogging(cfg.fields, cfg.logger)
 	if err != nil {
 		return nil, err
 	}
@@ -260,6 +261,7 @@ func New(name, version string, options ...Option) (*Builder, error) {
 		rcf:           http.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),
 		sighupHandler: func() { log.Debug("SIGHUP received: nothing setup") },
+		enableJaeger:  true,
 	}, nil
 }
 
@@ -284,15 +286,6 @@ func defaultLogFields(name, version string) map[string]interface{} {
 	}
 }
 
-func setupObservability(name, version string, fields map[string]interface{}, logger log.Logger) error {
-	err := setupLogging(fields, logger)
-	if err != nil {
-		return err
-	}
-
-	return setupTracing(name, version)
-}
-
 func setupLogging(fields map[string]interface{}, logger log.Logger) error {
 	if fields != nil {
 		return log.Setup(logger.Sub(fields))
@@ -300,7 +293,7 @@ func setupLogging(fields map[string]interface{}, logger log.Logger) error {
 	return log.Setup(logger)
 }
 
-func setupTracing(name, version string) error {
+func setupJaegerTracing(name, version string) error {
 	host, ok := os.LookupEnv("PATRON_JAEGER_AGENT_HOST")
 	if !ok {
 		host = "0.0.0.0"
@@ -337,6 +330,14 @@ func setupTracing(name, version string) error {
 
 	log.Debugf("setting up default tracing %s, %s with param %f", agent, tp, prmVal)
 	return trace.Setup(name, version, agent, tp, prmVal, buckets)
+}
+
+// WithoutJaeger disables Jaeger integration
+func (b *Builder) WithoutJaeger() *Builder {
+	log.Debug("disabling Jaeger integration")
+	b.enableJaeger = false
+
+	return b
 }
 
 // WithRoutesBuilder adds routes builder to the default HTTP component.
@@ -427,6 +428,13 @@ func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
 func (b *Builder) build() (*service, error) {
 	if len(b.errors) > 0 {
 		return nil, patronErrors.Aggregate(b.errors...)
+	}
+
+	if b.enableJaeger {
+		err := setupJaegerTracing(b.name, b.version)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	s := service{

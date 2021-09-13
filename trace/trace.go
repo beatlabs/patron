@@ -48,7 +48,7 @@ func Setup(name, ver, agent, typ string, prm float64, buckets []float64) error {
 			LocalAgentHostPort:  agent,
 		},
 	}
-	time.Sleep(100 * time.Millisecond)
+
 	metricsFactory := prometheus.New(
 		prometheus.WithBuckets(buckets),
 	)

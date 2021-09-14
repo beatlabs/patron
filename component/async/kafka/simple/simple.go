@@ -301,7 +301,7 @@ func (c *consumer) partitionsSinceDuration(ctx context.Context) ([]sarama.Partit
 func (c *consumer) setLatestOffsets(client sarama.Client, partitions []int32) error {
 	offsets := make([]int64, len(partitions))
 	for i, partitionID := range partitions {
-		offset, err := client.GetOffset(c.topic, partitionID, sarama.OffsetOldest)
+		offset, err := client.GetOffset(c.topic, partitionID, sarama.OffsetNewest)
 		if err != nil {
 			return err
 		}

@@ -170,6 +170,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			latestOffset = c.latestOffsets[i]
 		}
 		go func(consumer sarama.PartitionConsumer, latestOffset int64) {
+			latestOffsetReached := false
 			for {
 				select {
 				case <-ctx.Done():
@@ -181,6 +182,11 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					chErr <- consumerError
 					return
 				case m := <-consumer.Messages():
+					if c.notif != nil && !latestOffsetReached && m.Offset >= latestOffset {
+						latestOffsetReached = true
+						wg.Done()
+					}
+
 					kafka.TopicPartitionOffsetDiffGaugeSet("", m.Topic, m.Partition, consumer.HighWaterMarkOffset(), m.Offset)
 					kafka.MessageStatusCountInc(kafka.MessageReceived, "", m.Topic)
 
@@ -192,10 +198,6 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					}
 					kafka.MessageStatusCountInc(kafka.MessageDecoded, "", m.Topic)
 					chMsg <- msg
-
-					if c.notif != nil && m.Offset == latestOffset {
-						wg.Done()
-					}
 				}
 			}
 		}(pc, latestOffset)
@@ -305,7 +307,8 @@ func (c *consumer) setLatestOffsets(client sarama.Client, partitions []int32) er
 		if err != nil {
 			return err
 		}
-		offsets[i] = offset
+		// At this stage, offset is the offset of the next message in the partition
+		offsets[i] = offset - 1
 	}
 
 	c.latestOffsets = offsets

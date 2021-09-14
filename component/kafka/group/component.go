@@ -197,7 +197,7 @@ func (c *Component) processing(ctx context.Context) error {
 			for {
 				// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
 				if ctx.Err() != nil {
-					log.Infof("kafka component terminating: context cancelled or deadline exceeded")
+					log.Infof("kafka component %s terminating: context cancelled or deadline exceeded", c.name)
 					return componentError
 				}
 

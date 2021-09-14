@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/beatlabs/patron"
@@ -19,7 +20,11 @@ import (
 	"github.com/beatlabs/patron/log/std"
 )
 
-var assestsFoder string
+const maxRequests = 1000
+
+var assetsFolder string
+var requestsCount int
+var refreshAfter int64
 
 func init() {
 	err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
@@ -29,10 +34,14 @@ func init() {
 	}
 	// allows to run from any folder the 'go run examples/http/main.go'
 	var ok bool
-	assestsFoder, ok = os.LookupEnv("PATRON_EXAMPLE_ASSETS_FOLDER")
+	assetsFolder, ok = os.LookupEnv("PATRON_EXAMPLE_ASSETS_FOLDER")
 	if !ok {
-		assestsFoder = "examples/http/public"
+		assetsFolder = "examples/http/public"
 	}
+
+	// allow a thousand requests every 10 seconds
+	requestsCount = maxRequests
+	refreshAfter = time.Now().Add(10 * time.Second).Unix()
 }
 
 func main() {
@@ -48,7 +57,7 @@ func main() {
 	}
 
 	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewFileServer("/frontend/*path", assestsFoder, assestsFoder+"/index.html")).
+		Append(patronhttp.NewFileServer("/frontend/*path", assetsFolder, assetsFolder+"/index.html")).
 		Append(patronhttp.NewPostRouteBuilder("/api", httpHandler)).
 		Append(patronhttp.NewGetRouteBuilder("/api", getHandler).WithRateLimiting(50, 50))
 
@@ -84,6 +93,17 @@ func getHandler(_ context.Context, _ *patronhttp.Request) (*patronhttp.Response,
 
 // httpHandler proxies the inbound JSON HTTP request to a protobuf HTTP request
 func httpHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
+	now := time.Now().Unix()
+	if requestsCount <= 0 && refreshAfter > now {
+		return nil, patronhttp.NewErrorWithCodeAndPayload(http.StatusTooManyRequests, "no more requests and the refresh time is in the future").
+			WithHeaders(map[string]string{"Retry-After": strconv.Itoa(int(refreshAfter))})
+	}
+
+	requestsCount--
+	if refreshAfter <= now {
+		requestsCount = maxRequests
+	}
+
 	interval, err := DoIntervalRequest(ctx)
 	if err != nil {
 		log.FromContext(ctx).Infof("httpHandler: failed to get interval information %v: could it be that the http-cache service is not running ?", err)
@@ -95,17 +115,17 @@ func httpHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Resp
 
 	err = req.Decode(&u)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode request: %w", err)
+		return nil, patronhttp.NewValidationErrorWithPayload(fmt.Sprintf("failed to decode request: %v", err))
 	}
 
 	b, err := protobuf.Encode(&u)
 	if err != nil {
-		return nil, fmt.Errorf("failed create request: %w", err)
+		return nil, patronhttp.NewErrorWithCodeAndPayload(http.StatusInternalServerError, fmt.Sprintf("failed create request: %v", err))
 	}
 
 	httpRequest, err := http.NewRequest("GET", "http://localhost:50001", bytes.NewReader(b))
 	if err != nil {
-		return nil, fmt.Errorf("failed create request: %w", err)
+		return nil, patronhttp.NewErrorWithCodeAndPayload(http.StatusInternalServerError, fmt.Sprintf("failed create request: %v", err))
 	}
 	httpRequest.Header.Add("Content-Type", protobuf.Type)
 	httpRequest.Header.Add("Accept", protobuf.Type)
@@ -116,7 +136,7 @@ func httpHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Resp
 	}
 	rsp, err := cl.Do(ctx, httpRequest)
 	if err != nil {
-		return nil, fmt.Errorf("failed to perform http request with protobuf payload: %w", err)
+		return nil, patronhttp.NewErrorWithCodeAndPayload(http.StatusInternalServerError, fmt.Sprintf("failed to perform http request with protobuf payload: %v", err))
 	}
 	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
 	return patronhttp.NewResponse(fmt.Sprintf("got %s from HTTP route", rsp.Status)), nil

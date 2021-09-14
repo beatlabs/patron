@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -68,17 +69,7 @@ func main() {
 	greeterClient := examples.NewGreeterClient(cc)
 
 	// Initialise SQS
-	sqsAPI := sqs.New(
-		session.Must(
-			session.NewSession(
-				&aws.Config{
-					Region:      aws.String(awsRegion),
-					Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
-				},
-				&aws.Config{Endpoint: aws.String(awsSQSEndpoint)},
-			),
-		),
-	)
+	sqsAPI := sqs.New(getAWSSession(awsSQSEndpoint))
 	sqsCmp, err := createSQSComponent(sqsAPI, greeterClient)
 	if err != nil {
 		log.Fatalf("failed to create sqs component: %v", err)
@@ -148,4 +139,26 @@ func (ac *sqsComponent) Process(_ context.Context, btc patronsqs.Batch) {
 	// for _, msg := range failed {
 	// 	logger.Warnf("failed to acknowledge message with id: %s", msg.ID())
 	// }
+}
+
+func getAWSSession(endpoint string) *session.Session {
+
+	// 15 attempts 1 seconds separated to retrieve valid session
+	var s *session.Session = nil
+	var err error = nil
+	for i := 0; i < 15; i++ {
+		s, err = session.NewSession(
+			&aws.Config{
+				Region:      aws.String(awsRegion),
+				Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
+			},
+			&aws.Config{Endpoint: aws.String(endpoint)},
+		)
+		if err == nil {
+			return s
+		}
+		time.Sleep(1 * time.Second)
+	}
+	// this will panic if error is not null
+	return session.Must(s, err)
 }

@@ -1,10 +1,20 @@
 package http
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestError_WithHeaders(t *testing.T) {
+	header := "Retry-After"
+	err := NewErrorWithCodeAndPayload(http.StatusTooManyRequests, "wait").
+		WithHeaders(map[string]string{header: "1628002707"})
+	assert.EqualError(t, err, "HTTP error with code: 429 payload: wait")
+	assert.Equal(t, 429, err.code)
+	assert.Equal(t, "1628002707", err.headers[header])
+}
 
 func TestValidationError(t *testing.T) {
 	err := NewValidationError()

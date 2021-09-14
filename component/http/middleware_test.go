@@ -284,6 +284,98 @@ func TestNewCompressionMiddleware(t *testing.T) {
 	}
 }
 
+func TestNewCompressionMiddlewareServer(t *testing.T) {
+	tests := []struct {
+		cm               MiddlewareFunc
+		status           int
+		acceptEncoding   string
+		expectedEncoding string
+	}{
+		{
+			status:           200,
+			acceptEncoding:   "gzip",
+			expectedEncoding: "gzip",
+			cm:               NewCompressionMiddleware(8),
+		},
+		{
+			status:           201,
+			acceptEncoding:   "gzip",
+			expectedEncoding: "gzip",
+			cm:               NewCompressionMiddleware(8),
+		},
+		{
+			status:           204,
+			acceptEncoding:   "gzip",
+			expectedEncoding: "",
+			cm:               NewCompressionMiddleware(8),
+		},
+		{
+			status:           304,
+			acceptEncoding:   "gzip",
+			expectedEncoding: "",
+			cm:               NewCompressionMiddleware(8),
+		},
+		{
+			status:           404,
+			acceptEncoding:   "gzip",
+			expectedEncoding: "gzip",
+			cm:               NewCompressionMiddleware(8),
+		},
+		{
+			status:           200,
+			acceptEncoding:   "deflate",
+			expectedEncoding: "deflate",
+			cm:               NewCompressionMiddleware(8),
+		},
+		{
+			status:           201,
+			acceptEncoding:   "deflate",
+			expectedEncoding: "deflate",
+			cm:               NewCompressionMiddleware(8),
+		},
+		{
+			status:           204,
+			acceptEncoding:   "deflate",
+			expectedEncoding: "",
+			cm:               NewCompressionMiddleware(8),
+		},
+		{
+			status:           304,
+			acceptEncoding:   "deflate",
+			expectedEncoding: "",
+			cm:               NewCompressionMiddleware(8),
+		},
+		{
+			status:           404,
+			acceptEncoding:   "deflate",
+			expectedEncoding: "deflate",
+			cm:               NewCompressionMiddleware(8),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("%d - %s", tc.status, tc.expectedEncoding), func(t *testing.T) {
+
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.status)
+			})
+
+			compressionMiddleware := tc.cm
+			assert.NotNil(t, compressionMiddleware)
+			s := httptest.NewServer(compressionMiddleware(handler))
+			defer s.Close()
+
+			req, err := http.NewRequest("GET", s.URL, nil)
+			assert.NoError(t, err)
+			req.Header.Set("Accept-Encoding", tc.acceptEncoding)
+
+			resp, err := s.Client().Do(req)
+			assert.Nil(t, err)
+			assert.Equal(t, tc.expectedEncoding, resp.Header.Get("Content-Encoding"))
+		})
+	}
+}
+
 func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	var ceh string // accept-encoding, content type
 

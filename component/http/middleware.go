@@ -162,11 +162,6 @@ func NewRateLimitingMiddleware(limiter *rate.Limiter) MiddlewareFunc {
 	}
 }
 
-type compressionResponseWriter struct {
-	io.Writer
-	http.ResponseWriter
-}
-
 // ignore checks if the given url ignored from compression or not.
 func ignore(ignoreRoutes []string, url string) bool {
 	for _, iURL := range ignoreRoutes {
@@ -271,29 +266,10 @@ func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) Middlewa
 				return
 			}
 
-			var writer io.WriteCloser
-			switch selectedEncoding {
-			case gzipHeader:
-				writer = gzip.NewWriter(w)
-				w.Header().Set(encoding.ContentEncodingHeader, gzipHeader)
-			case deflateHeader:
-				writer, err = flate.NewWriter(w, deflateLevel)
-				if err != nil {
-					next.ServeHTTP(w, r)
-					return
-				}
-				w.Header().Set(encoding.ContentEncodingHeader, deflateHeader)
-			case identityHeader, "":
-				w.Header().Set(encoding.ContentEncodingHeader, identityHeader)
-				fallthrough
-			// `*`, `identity` and others must fall through here to be served without compression
-			default:
-				next.ServeHTTP(w, r)
-				return
-			}
+			dw := &dynamicCompressionResponseWriter{w, selectedEncoding, nil, 0, deflateLevel}
 
-			defer func(cw io.WriteCloser) {
-				err := cw.Close()
+			defer func(c io.Closer) {
+				err := c.Close()
 				if err != nil {
 					msgErr := fmt.Sprintf("error in deferred call to Close() method on %v compression middleware : %v", hdr, err.Error())
 					if isErrConnectionReset(err) {
@@ -302,10 +278,9 @@ func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) Middlewa
 						log.Error(msgErr)
 					}
 				}
-			}(writer)
+			}(dw)
 
-			crw := compressionResponseWriter{Writer: writer, ResponseWriter: w}
-			next.ServeHTTP(crw, r)
+			next.ServeHTTP(dw, r)
 		})
 	}
 }
@@ -331,9 +306,79 @@ func isErrConnectionReset(err error) bool {
 	return false
 }
 
-// Write provides write func to the writer.
-func (w compressionResponseWriter) Write(b []byte) (int, error) {
-	return w.Writer.Write(b)
+// bodyAllowedForStatus reports whether a given response status code
+// permits a body. See RFC 7230, section 3.3.
+// https://github.com/golang/go/blob/6551763a60ce25d171feaa69089a7f1ca60f43b6/src/net/http/transfer.go#L452-L464
+func bodyAllowedForStatus(status int) bool {
+	switch {
+	case status >= 100 && status <= 199:
+		return false
+	case status == 204:
+		return false
+	case status == 304:
+		return false
+	}
+	return true
+}
+
+// dynamicCompressionResponseWriter uses gzip/deflate compression on a response body only once the status code is known
+// so that http.ErrBodyNotAllowed can be avoided in the case of 204/304 response status.
+type dynamicCompressionResponseWriter struct {
+	http.ResponseWriter
+	Encoding     string
+	writer       io.Writer
+	statusCode   int
+	deflateLevel int
+}
+
+func (w *dynamicCompressionResponseWriter) WriteHeader(statusCode int) {
+	w.statusCode = statusCode
+
+	if w.writer == nil {
+		if !bodyAllowedForStatus(w.statusCode) {
+			// no body allowed so can't compress
+			// don't try to write compression header (1f 8b) to body to avoid http.ErrBodyNotAllowed
+			w.writer = w.ResponseWriter
+			return
+		}
+
+		switch w.Encoding {
+		case gzipHeader:
+			w.writer = gzip.NewWriter(w.ResponseWriter)
+			w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, gzipHeader)
+		case deflateHeader:
+			var err error
+			w.writer, err = flate.NewWriter(w.ResponseWriter, w.deflateLevel)
+			if err != nil {
+				w.writer = w.ResponseWriter
+			} else {
+				w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, deflateHeader)
+			}
+		case identityHeader, "":
+			w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, identityHeader)
+			fallthrough
+		// `*`, `identity` and others must fall through here to be served without compression
+		default:
+			w.writer = w.ResponseWriter
+		}
+	}
+
+	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (w *dynamicCompressionResponseWriter) Write(data []byte) (int, error) {
+	if w.statusCode == 0 {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	return w.writer.Write(data)
+}
+
+func (w *dynamicCompressionResponseWriter) Close() error {
+	if rc, ok := w.writer.(io.Closer); ok {
+		return rc.Close()
+	}
+	return nil
 }
 
 // NewCachingMiddleware creates a cache layer as a middleware

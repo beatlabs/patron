@@ -166,7 +166,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 
 	for i, pc := range pcs {
 		var latestOffset int64
-		if c.notif == nil {
+		if c.notif != nil {
 			latestOffset = c.latestOffsets[i]
 		}
 		go func(consumer sarama.PartitionConsumer, latestOffset int64) {

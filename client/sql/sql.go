@@ -493,5 +493,5 @@ func parseDSN(dsn string) DSNInfo {
 
 func observeDuration(span opentracing.Span, start time.Time, op string, err error) {
 	trace.SpanComplete(span, err)
-	opDurationMetrics.WithLabelValues(op, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
+	opDurationMetrics.WithLabelValues(op, strconv.FormatBool(err == nil)).Observe(time.Since(start).Seconds())
 }

@@ -42,7 +42,7 @@ func WithNotificationOnceReachingLatestOffset(ch chan<- struct{}) kafka.OptionFu
 		if ch == nil {
 			return errors.New("nil channel")
 		}
-		c.NotificationChannel = ch
+		c.LatestOffsetReachedChan = ch
 		return nil
 	}
 }
@@ -106,8 +106,8 @@ func (f *Factory) Create() (async.Consumer, error) {
 		c.partitions = c.partitionsSinceDuration
 	}
 
-	if c.config.NotificationChannel != nil {
-		c.notif = c.config.NotificationChannel
+	if c.config.LatestOffsetReachedChan != nil {
+		c.latestOffsetReachedChan = c.config.LatestOffsetReachedChan
 	}
 
 	return c, nil
@@ -115,13 +115,13 @@ func (f *Factory) Create() (async.Consumer, error) {
 
 // consumer members can be injected or overwritten with the usage of OptionFunc arguments.
 type consumer struct {
-	topic         string
-	cnl           context.CancelFunc
-	ms            sarama.Consumer
-	config        kafka.ConsumerConfig
-	partitions    func(context.Context) ([]sarama.PartitionConsumer, error)
-	notif         chan<- struct{}
-	latestOffsets []int64
+	topic                   string
+	cnl                     context.CancelFunc
+	ms                      sarama.Consumer
+	config                  kafka.ConsumerConfig
+	partitions              func(context.Context) ([]sarama.PartitionConsumer, error)
+	latestOffsetReachedChan chan<- struct{}
+	latestOffsets           []int64
 }
 
 // Close handles closing consumer.
@@ -155,18 +155,18 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	}
 
 	var wg sync.WaitGroup
-	if c.notif != nil {
+	if c.latestOffsetReachedChan != nil {
 		wg.Add(len(pcs))
 		go func() {
 			// Wait for all the partition consumers to have reached the latest offset before closing the input channel.
 			wg.Wait()
-			close(c.notif)
+			close(c.latestOffsetReachedChan)
 		}()
 	}
 
 	for i, pc := range pcs {
 		var latestOffset int64
-		if c.notif != nil {
+		if c.latestOffsetReachedChan != nil {
 			latestOffset = c.latestOffsets[i]
 		}
 		go func(consumer sarama.PartitionConsumer, latestOffset int64) {
@@ -182,7 +182,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					chErr <- consumerError
 					return
 				case m := <-consumer.Messages():
-					if c.notif != nil && !latestOffsetReached && m.Offset >= latestOffset {
+					if c.latestOffsetReachedChan != nil && !latestOffsetReached && m.Offset >= latestOffset {
 						latestOffsetReached = true
 						wg.Done()
 					}
@@ -233,7 +233,7 @@ func (c *consumer) partitionsFromOffset(_ context.Context) ([]sarama.PartitionCo
 		pcs[i] = pc
 	}
 
-	if c.notif != nil {
+	if c.latestOffsetReachedChan != nil {
 		err := c.setLatestOffsets(client, partitions)
 		if err != nil {
 			return nil, fmt.Errorf("failed to set latest offsets: %w", err)
@@ -290,7 +290,7 @@ func (c *consumer) partitionsSinceDuration(ctx context.Context) ([]sarama.Partit
 		pcs[i] = pc
 	}
 
-	if c.notif != nil {
+	if c.latestOffsetReachedChan != nil {
 		err := c.setLatestOffsets(client, partitions)
 		if err != nil {
 			return nil, fmt.Errorf("failed to set latest offsets: %w", err)

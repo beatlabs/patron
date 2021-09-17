@@ -183,7 +183,7 @@ func TestWithNotificationOnceReachingLatestOffset(t *testing.T) {
 				assert.EqualError(t, err, tt.expectedErr.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.args.ch, c.NotificationChannel)
+				assert.Equal(t, tt.args.ch, c.LatestOffsetReachedChan)
 			}
 		})
 	}

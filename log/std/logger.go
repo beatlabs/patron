@@ -26,7 +26,6 @@ type Logger struct {
 	level      patronLog.Level
 	fields     map[string]interface{}
 	fieldsLine string
-	out        io.Writer
 	debug      *log.Logger
 	info       *log.Logger
 	warn       *log.Logger
@@ -37,16 +36,20 @@ type Logger struct {
 
 // New constructor.
 func New(out io.Writer, lvl patronLog.Level, fields map[string]interface{}) *Logger {
+	return NewWithFlags(out, lvl, fields, log.LstdFlags|log.Lmicroseconds|log.LUTC|log.Lmsgprefix)
+}
+
+// NewWithFlags constructor.
+func NewWithFlags(out io.Writer, lvl patronLog.Level, fields map[string]interface{}, flags int) *Logger {
 	fieldsLine := createFieldsLine(fields)
 
 	return &Logger{
-		out:        out,
-		debug:      createLogger(out, patronLog.DebugLevel, fieldsLine),
-		info:       createLogger(out, patronLog.InfoLevel, fieldsLine),
-		warn:       createLogger(out, patronLog.WarnLevel, fieldsLine),
-		error:      createLogger(out, patronLog.ErrorLevel, fieldsLine),
-		panic:      createLogger(out, patronLog.PanicLevel, fieldsLine),
-		fatal:      createLogger(out, patronLog.FatalLevel, fieldsLine),
+		debug:      createLogger(out, patronLog.DebugLevel, fieldsLine, flags),
+		info:       createLogger(out, patronLog.InfoLevel, fieldsLine, flags),
+		warn:       createLogger(out, patronLog.WarnLevel, fieldsLine, flags),
+		error:      createLogger(out, patronLog.ErrorLevel, fieldsLine, flags),
+		panic:      createLogger(out, patronLog.PanicLevel, fieldsLine, flags),
+		fatal:      createLogger(out, patronLog.FatalLevel, fieldsLine, flags),
 		level:      lvl,
 		fields:     fields,
 		fieldsLine: fieldsLine,
@@ -78,8 +81,8 @@ func createFieldsLine(fields map[string]interface{}) string {
 	return sb.String()
 }
 
-func createLogger(out io.Writer, lvl patronLog.Level, fieldLine string) *log.Logger {
-	logger := log.New(out, "lvl="+levelMap[lvl]+" "+fieldLine, log.LstdFlags|log.Lmicroseconds|log.LUTC|log.Lmsgprefix)
+func createLogger(out io.Writer, lvl patronLog.Level, fieldLine string, flags int) *log.Logger {
+	logger := log.New(out, "lvl="+levelMap[lvl]+" "+fieldLine, flags)
 	return logger
 }
 
@@ -89,7 +92,11 @@ func (l *Logger) Sub(fields map[string]interface{}) patronLog.Logger {
 		fields[key] = value
 	}
 
-	return New(l.out, l.level, fields)
+	newLogger := *l
+	newLogger.fields = fields
+	newLogger.fieldsLine = createFieldsLine(fields)
+
+	return &newLogger
 }
 
 // Fatal logging.

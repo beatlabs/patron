@@ -14,6 +14,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
+	wct "github.com/weaveworks/common/tracing"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
@@ -27,16 +28,19 @@ const (
 )
 
 var (
+	defBuckets         = []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5}
 	reqDurationMetrics *prometheus.HistogramVec
 )
 
 func init() {
+
 	reqDurationMetrics = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: "client",
 			Subsystem: "http",
 			Name:      "request_duration_seconds",
 			Help:      "HTTP requests completed by the client.",
+			Buckets:   defBuckets,
 		},
 		[]string{"method", "url", "status_code"},
 	)
@@ -85,7 +89,6 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 	req.Header.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
 
 	start := time.Now()
-
 	rsp, err := tc.do(req)
 
 	ext.HTTPMethod.Set(ht.Span(), req.Method)
@@ -97,9 +100,19 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 	}
 
 	ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
-	reqDurationMetrics.
-		WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
-		Observe(time.Since(start).Seconds())
+
+	durationHistogram := reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode))
+
+	traceID, ok := wct.ExtractTraceID(ctx)
+	if ok {
+
+		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
+			time.Since(start).Seconds(), prometheus.Labels{"traceID": traceID},
+		)
+	} else {
+
+		durationHistogram.Observe(time.Since(start).Seconds())
+	}
 
 	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
 		rsp.Body = decompress(hdr, rsp)

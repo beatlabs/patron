@@ -40,6 +40,8 @@ func TestMain(m *testing.M) {
 	topics := []string{
 		getTopic(simpleTopic1),
 		getTopic(simpleTopic2),
+		getTopic(simpleTopic3),
+		getTopic(simpleTopic4),
 		getTopic(groupTopic1),
 		getTopic(groupTopic2),
 		getTopic(failAllRetriesTopic1),

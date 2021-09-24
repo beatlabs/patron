@@ -25,6 +25,7 @@ const (
 	simpleTopic1         = "simpleTopic1"
 	simpleTopic2         = "simpleTopic2"
 	simpleTopic3         = "simpleTopic3"
+	simpleTopic4         = "simpleTopic4"
 	groupTopic1          = "groupTopic1"
 	groupTopic2          = "groupTopic2"
 	successTopic1        = "successTopic1"

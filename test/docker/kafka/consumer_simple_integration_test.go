@@ -197,7 +197,7 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 			_ = consumer.Close()
 		}()
 
-		received, err := consumeMessages(consumer, 10)
+		received, err := consumeMessages(consumer, numberOfMessages)
 		if err != nil {
 			chErr <- err
 			return

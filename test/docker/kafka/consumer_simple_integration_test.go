@@ -182,7 +182,7 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 	chNotif := make(chan struct{})
 	go func() {
 		factory, err := simple.New("test4", simpleTopic4, Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromNewest(), simple.WithNotificationOnceReachingLatestOffset(chNotif))
+			kafka.StartFromOldest(), simple.WithNotificationOnceReachingLatestOffset(chNotif))
 		if err != nil {
 			chErr <- err
 			return

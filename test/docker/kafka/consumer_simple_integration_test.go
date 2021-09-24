@@ -208,10 +208,8 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	var received []string
-
 	select {
-	case received = <-chMessages:
+	case <-chMessages:
 		break
 	case err = <-chErr:
 		require.NoError(t, err)

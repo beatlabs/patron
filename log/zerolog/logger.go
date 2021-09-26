@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/beatlabs/patron/log"
@@ -23,6 +24,11 @@ var levelMap = map[log.Level]zerolog.Level{
 	log.PanicLevel: zerolog.PanicLevel,
 }
 
+var (
+	defaultSourceHook           sourceHook = sourceHookByPackagePath{packagePath: "vendor/github.com/beatlabs/"}
+	defaultSourceHookWithFormat            = defaultSourceHook
+)
+
 func init() {
 	zerolog.LevelFieldName = "lvl"
 	zerolog.MessageFieldName = "msg"
@@ -38,8 +44,8 @@ type Logger struct {
 
 // New creates a new logger.
 func New(out io.Writer, lvl log.Level, f map[string]interface{}) log.Logger {
-	zl := zerolog.New(out).With().Timestamp().Logger().Hook(sourceHook{skip: 6})
-	zlf := zerolog.New(out).With().Timestamp().Logger().Hook(sourceHook{skip: 7})
+	zl := zerolog.New(out).With().Timestamp().Logger().Hook(defaultSourceHook)
+	zlf := zerolog.New(out).With().Timestamp().Logger().Hook(defaultSourceHookWithFormat)
 
 	if len(f) == 0 {
 		f = make(map[string]interface{})
@@ -124,23 +130,76 @@ func (l *Logger) Level() log.Level {
 	return l.level
 }
 
-type sourceHook struct {
-	skip int
+type sourceHook interface {
+	Run(e *zerolog.Event, _ zerolog.Level, _ string)
 }
 
-func (sh sourceHook) Run(e *zerolog.Event, _ zerolog.Level, _ string) {
-	k, v, ok := sourceFields(sh.skip)
+var (
+	_ sourceHook = &sourceHookByPackagePath{}
+	_ sourceHook = &sourceHookWithSkip{}
+)
+
+type sourceHookByPackagePath struct {
+	packagePath string
+}
+
+func (sh sourceHookByPackagePath) Run(e *zerolog.Event, _ zerolog.Level, _ string) {
+	k, v, ok := sh.sourceFields()
 	if !ok {
 		return
 	}
 	e.Str(k, v)
 }
 
-func sourceFields(skip int) (key, src string, ok bool) {
-	_, file, line, ok := runtime.Caller(skip)
+func (sh sourceHookByPackagePath) sourceFields() (key, src string, ok bool) {
+	var file string
+	var line int
+
+	skip := 5
+	for {
+		_, file, line, ok = runtime.Caller(skip)
+		if !ok {
+			return
+		}
+
+		if !strings.Contains(file, sh.packagePath) {
+			break
+		}
+
+		skip++
+	}
+
+	// do not provide file/line number information for
+	// log lines originated by beatlabs packages
+	if strings.Contains(file, "src/runtime/") {
+		ok = false
+		return
+	}
+
+	src = getSource(file, line)
+	key = "src"
+	ok = true
+	return key, src, ok
+}
+
+type sourceHookWithSkip struct {
+	skip int
+}
+
+func (sh sourceHookWithSkip) Run(e *zerolog.Event, _ zerolog.Level, _ string) {
+	k, v, ok := sh.sourceFields()
 	if !ok {
 		return
 	}
+	e.Str(k, v)
+}
+
+func (sh sourceHookWithSkip) sourceFields() (key, src string, ok bool) {
+	_, file, line, ok := runtime.Caller(sh.skip)
+	if !ok {
+		return
+	}
+
 	src = getSource(file, line)
 	key = "src"
 	ok = true

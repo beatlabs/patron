@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/beatlabs/patron/log"
 	"github.com/stretchr/testify/assert"
@@ -22,6 +23,23 @@ func TestNewLogger(t *testing.T) {
 	assert.Equal(t, logger.fields, map[string]interface{}{"name": "john doe", "age": 18})
 	assert.Contains(t, logger.fieldsLine, "age=18")
 	assert.Contains(t, logger.fieldsLine, "name=john doe")
+}
+
+func TestNewWithFlagsLogger(t *testing.T) {
+	var b bytes.Buffer
+	logger := NewWithFlags(&b, log.InfoLevel, map[string]interface{}{"name": "john doe", "age": 18}, 0)
+	assert.NotNil(t, logger.debug)
+	assert.NotNil(t, logger.info)
+	assert.NotNil(t, logger.warn)
+	assert.NotNil(t, logger.error)
+	assert.NotNil(t, logger.fatal)
+	assert.NotNil(t, logger.panic)
+	assert.Equal(t, log.InfoLevel, logger.Level())
+	assert.Equal(t, logger.fields, map[string]interface{}{"name": "john doe", "age": 18})
+	assert.Contains(t, logger.fieldsLine, "age=18")
+	assert.Contains(t, logger.fieldsLine, "name=john doe")
+	year := time.Now().Format("2006")
+	assert.NotContains(t, logger.fieldsLine, year)
 }
 
 func TestNewSub(t *testing.T) {

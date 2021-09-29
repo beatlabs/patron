@@ -154,3 +154,37 @@ func TestWithDurationOffset(t *testing.T) {
 		})
 	}
 }
+
+func TestWithNotificationOnceReachingLatestOffset(t *testing.T) {
+	type args struct {
+		ch chan<- struct{}
+	}
+	testCases := map[string]struct {
+		args        args
+		expectedErr error
+	}{
+		"success": {
+			args: args{
+				ch: make(chan struct{}),
+			},
+		},
+		"error - nil channel": {
+			args: args{
+				ch: nil,
+			},
+			expectedErr: errors.New("nil channel"),
+		},
+	}
+	for name, tt := range testCases {
+		t.Run(name, func(t *testing.T) {
+			c := kafka.ConsumerConfig{}
+			err := WithNotificationOnceReachingLatestOffset(tt.args.ch)(&c)
+			if tt.expectedErr != nil {
+				assert.EqualError(t, err, tt.expectedErr.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.args.ch, c.LatestOffsetReachedChan)
+			}
+		})
+	}
+}

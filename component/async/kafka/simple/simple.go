@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -30,6 +31,18 @@ func WithDurationOffset(since time.Duration, timeExtractor TimeExtractor) kafka.
 		c.DurationBasedConsumer = true
 		c.DurationOffset = since
 		c.TimeExtractor = timeExtractor
+		return nil
+	}
+}
+
+// WithNotificationOnceReachingLatestOffset closes the input channel once all the partition consumers have reached the
+// latest offset.
+func WithNotificationOnceReachingLatestOffset(ch chan<- struct{}) kafka.OptionFunc {
+	return func(c *kafka.ConsumerConfig) error {
+		if ch == nil {
+			return errors.New("nil channel")
+		}
+		c.LatestOffsetReachedChan = ch
 		return nil
 	}
 }
@@ -93,16 +106,22 @@ func (f *Factory) Create() (async.Consumer, error) {
 		c.partitions = c.partitionsSinceDuration
 	}
 
+	if c.config.LatestOffsetReachedChan != nil {
+		c.latestOffsetReachedChan = c.config.LatestOffsetReachedChan
+	}
+
 	return c, nil
 }
 
 // consumer members can be injected or overwritten with the usage of OptionFunc arguments.
 type consumer struct {
-	topic      string
-	cnl        context.CancelFunc
-	ms         sarama.Consumer
-	config     kafka.ConsumerConfig
-	partitions func(context.Context) ([]sarama.PartitionConsumer, error)
+	topic                   string
+	cnl                     context.CancelFunc
+	ms                      sarama.Consumer
+	config                  kafka.ConsumerConfig
+	partitions              func(context.Context) ([]sarama.PartitionConsumer, error)
+	latestOffsetReachedChan chan<- struct{}
+	latestOffsets           []int64
 }
 
 // Close handles closing consumer.
@@ -135,8 +154,23 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 		return nil, nil, errors.New("got 0 partitions")
 	}
 
-	for _, pc := range pcs {
-		go func(consumer sarama.PartitionConsumer) {
+	var wg sync.WaitGroup
+	if c.latestOffsetReachedChan != nil {
+		wg.Add(len(pcs))
+		go func() {
+			// Wait for all the partition consumers to have reached the latest offset before closing the input channel.
+			wg.Wait()
+			close(c.latestOffsetReachedChan)
+		}()
+	}
+
+	for i, pc := range pcs {
+		var latestOffset int64
+		if c.latestOffsetReachedChan != nil {
+			latestOffset = c.latestOffsets[i]
+		}
+		go func(consumer sarama.PartitionConsumer, latestOffset int64) {
+			latestOffsetReached := false
 			for {
 				select {
 				case <-ctx.Done():
@@ -148,6 +182,11 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					chErr <- consumerError
 					return
 				case m := <-consumer.Messages():
+					if c.latestOffsetReachedChan != nil && !latestOffsetReached && m.Offset >= latestOffset {
+						latestOffsetReached = true
+						wg.Done()
+					}
+
 					kafka.TopicPartitionOffsetDiffGaugeSet("", m.Topic, m.Partition, consumer.HighWaterMarkOffset(), m.Offset)
 					kafka.MessageStatusCountInc(kafka.MessageReceived, "", m.Topic)
 
@@ -161,14 +200,19 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 					chMsg <- msg
 				}
 			}
-		}(pc)
+		}(pc, latestOffset)
 	}
 
 	return chMsg, chErr, nil
 }
 
 func (c *consumer) partitionsFromOffset(_ context.Context) ([]sarama.PartitionConsumer, error) {
-	ms, err := sarama.NewConsumer(c.config.Brokers, c.config.SaramaConfig)
+	client, err := sarama.NewClient(c.config.Brokers, c.config.SaramaConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client: %w", err)
+	}
+
+	ms, err := sarama.NewConsumerFromClient(client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create simple consumer: %w", err)
 	}
@@ -182,12 +226,18 @@ func (c *consumer) partitionsFromOffset(_ context.Context) ([]sarama.PartitionCo
 	pcs := make([]sarama.PartitionConsumer, len(partitions))
 
 	for i, partition := range partitions {
-
 		pc, err := c.ms.ConsumePartition(c.topic, partition, c.config.SaramaConfig.Consumer.Offsets.Initial)
 		if nil != err {
 			return nil, fmt.Errorf("failed to get partition consumer: %w", err)
 		}
 		pcs[i] = pc
+	}
+
+	if c.latestOffsetReachedChan != nil {
+		err := c.setLatestOffsets(client, partitions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set latest offsets: %w", err)
+		}
 	}
 
 	return pcs, nil
@@ -240,7 +290,29 @@ func (c *consumer) partitionsSinceDuration(ctx context.Context) ([]sarama.Partit
 		pcs[i] = pc
 	}
 
+	if c.latestOffsetReachedChan != nil {
+		err := c.setLatestOffsets(client, partitions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set latest offsets: %w", err)
+		}
+	}
+
 	return pcs, nil
+}
+
+func (c *consumer) setLatestOffsets(client sarama.Client, partitions []int32) error {
+	offsets := make([]int64, len(partitions))
+	for i, partitionID := range partitions {
+		offset, err := client.GetOffset(c.topic, partitionID, sarama.OffsetNewest)
+		if err != nil {
+			return err
+		}
+		// At this stage, offset is the offset of the next message in the partition
+		offsets[i] = offset - 1
+	}
+
+	c.latestOffsets = offsets
+	return nil
 }
 
 func closePartitionConsumer(cns sarama.PartitionConsumer) {

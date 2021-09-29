@@ -25,6 +25,7 @@ const (
 	simpleTopic1         = "simpleTopic1"
 	simpleTopic2         = "simpleTopic2"
 	simpleTopic3         = "simpleTopic3"
+	simpleTopic4         = "simpleTopic4"
 	groupTopic1          = "groupTopic1"
 	groupTopic2          = "groupTopic2"
 	successTopic1        = "successTopic1"
@@ -39,6 +40,8 @@ func TestMain(m *testing.M) {
 	topics := []string{
 		getTopic(simpleTopic1),
 		getTopic(simpleTopic2),
+		getTopic(simpleTopic3),
+		getTopic(simpleTopic4),
 		getTopic(groupTopic1),
 		getTopic(groupTopic2),
 		getTopic(failAllRetriesTopic1),

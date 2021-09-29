@@ -88,13 +88,14 @@ func init() {
 
 // ConsumerConfig is the common configuration of patron kafka consumers.
 type ConsumerConfig struct {
-	Brokers               []string
-	Buffer                int
-	DecoderFunc           encoding.DecodeRawFunc
-	DurationBasedConsumer bool
-	DurationOffset        time.Duration
-	TimeExtractor         func(*sarama.ConsumerMessage) (time.Time, error)
-	SaramaConfig          *sarama.Config
+	Brokers                 []string
+	Buffer                  int
+	DecoderFunc             encoding.DecodeRawFunc
+	DurationBasedConsumer   bool
+	DurationOffset          time.Duration
+	TimeExtractor           func(*sarama.ConsumerMessage) (time.Time, error)
+	SaramaConfig            *sarama.Config
+	LatestOffsetReachedChan chan<- struct{}
 }
 
 type message struct {

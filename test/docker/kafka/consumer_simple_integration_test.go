@@ -229,7 +229,7 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_NoMessages(t *te
 	chErr := make(chan error)
 	chNotif := make(chan struct{})
 	go func() {
-		factory, err := simple.New("test4", simpleTopic4, Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := simple.New("test5", simpleTopic5, Brokers(), kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromOldest(), simple.WithNotificationOnceReachingLatestOffset(chNotif))
 		if err != nil {
 			chErr <- err
@@ -246,12 +246,10 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_NoMessages(t *te
 		}()
 	}()
 
-	time.Sleep(5 * time.Second)
-
-	// At this stage, we have received all the expected messages.
-	// We should also check that the notification channel is also eventually closed.
+	// We check that the notification channel is
+	//eventually closed.
 	select {
-	case <-time.After(time.Second):
+	case <-time.After(2 * time.Second):
 		assert.FailNow(t, "notification channel not closed")
 	case _, open := <-chNotif:
 		assert.False(t, open)

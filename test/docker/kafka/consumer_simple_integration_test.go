@@ -3,6 +3,7 @@
 package kafka
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -244,17 +245,25 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_NoMessages(t *te
 		defer func() {
 			_ = consumer.Close()
 		}()
+
+		ctx, cnl := context.WithCancel(context.Background())
+		defer cnl()
+
+		_, _, err = consumer.Consume(ctx)
+		if err != nil {
+			chErr <- err
+		}
 	}()
 
-	// We check that the notification channel is
-	//eventually closed.
+	// At this stage, we have received all the expected messages.
+	// We should also check that the notification channel is also eventually closed.
 	select {
+	case err := <-chErr:
+		require.NoError(t, err)
 	case <-time.After(2 * time.Second):
 		assert.FailNow(t, "notification channel not closed")
 	case _, open := <-chNotif:
 		assert.False(t, open)
-	case err := <-chErr:
-		require.NoError(t, err)
 	}
 }
 

@@ -226,7 +226,6 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 }
 
 func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_NoMessages(t *testing.T) {
-	chMessages := make(chan []string)
 	chErr := make(chan error)
 	chNotif := make(chan struct{})
 	go func() {
@@ -249,11 +248,6 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_NoMessages(t *te
 
 	time.Sleep(5 * time.Second)
 
-	select {
-	case <-chMessages:
-		break
-	}
-
 	// At this stage, we have received all the expected messages.
 	// We should also check that the notification channel is also eventually closed.
 	select {
@@ -261,6 +255,8 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_NoMessages(t *te
 		assert.FailNow(t, "notification channel not closed")
 	case _, open := <-chNotif:
 		assert.False(t, open)
+	case err := <-chErr:
+		require.NoError(t, err)
 	}
 }
 

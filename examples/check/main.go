@@ -33,7 +33,11 @@ func main() {
 		log.Fatal(err)
 	}
 	if resp.StatusCode != http.StatusCreated {
-		log.Fatalf("Response supposed to be status code %d instead it is %d", http.StatusCreated, resp.StatusCode)
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Fatalf("Response supposed to be status code %d instead it is %d (body: %q)", http.StatusCreated, resp.StatusCode, string(body))
 	}
 
 	// wait 1 second so that metrics can be flushed to http endpoint

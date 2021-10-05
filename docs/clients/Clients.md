@@ -29,7 +29,7 @@ google.golang.org/grpc v1.27.1
 The Kafka client allows users to create a synchronous or asynchronous Kafka producer and publish Kafka messages with tracing headers. The builder pattern allows users to configure every aspect of the connection.
 
 **Third-party dependencies**  
-github.com/Shopify/sarama v1.21.0
+github.com/Shopify/sarama v1.30.0
 
 
 ## Redis

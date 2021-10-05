@@ -1,5 +1,7 @@
 module github.com/beatlabs/patron
 
+go 1.16
+
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
 	github.com/Shopify/sarama v1.28.0
@@ -29,5 +31,3 @@ require (
 	google.golang.org/grpc v1.27.1
 	google.golang.org/protobuf v1.26.0
 )
-
-go 1.13

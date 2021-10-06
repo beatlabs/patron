@@ -22,7 +22,10 @@ const (
 )
 
 func TestNewAsyncProducer_Success_v2(t *testing.T) {
-	ap, chErr, err := v2.New(Brokers()).CreateAsync()
+	saramaCfg, err := v2.DefaultProducerSaramaConfig("test-producer", true)
+	require.Nil(t, err)
+
+	ap, chErr, err := v2.New(Brokers(), saramaCfg).CreateAsync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
@@ -36,7 +39,10 @@ func TestNewAsyncProducer_Success_v1(t *testing.T) {
 }
 
 func TestNewSyncProducer_Success_v2(t *testing.T) {
-	p, err := v2.New(Brokers()).Create()
+	saramaCfg, err := v2.DefaultProducerSaramaConfig("test-producer", true)
+	require.Nil(t, err)
+
+	p, err := v2.New(Brokers(), saramaCfg).Create()
 	assert.NoError(t, err)
 	assert.NotNil(t, p)
 }
@@ -48,10 +54,13 @@ func TestNewSyncProducer_Success_v1(t *testing.T) {
 }
 
 func TestAsyncProducer_SendMessage_Close_v2(t *testing.T) {
+	saramaCfg, err := v2.DefaultProducerSaramaConfig("test-consumer", false)
+	require.Nil(t, err)
+
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
-	ap, chErr, err := v2.New(Brokers()).CreateAsync()
+	ap, chErr, err := v2.New(Brokers(), saramaCfg).CreateAsync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
@@ -101,10 +110,13 @@ func TestAsyncProducer_SendMessage_Close_v1(t *testing.T) {
 }
 
 func TestSyncProducer_SendMessage_Close_v2(t *testing.T) {
+	saramaCfg, err := v2.DefaultProducerSaramaConfig("test-producer", true)
+	require.NoError(t, err)
+
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
-	p, err := v2.New(Brokers()).Create()
+	p, err := v2.New(Brokers(), saramaCfg).Create()
 	require.NoError(t, err)
 	assert.NotNil(t, p)
 	msg := &sarama.ProducerMessage{
@@ -130,10 +142,13 @@ func TestSyncProducer_SendMessage_Close_v2(t *testing.T) {
 }
 
 func TestSyncProducer_SendMessages_Close_v2(t *testing.T) {
+	saramaCfg, err := v2.DefaultProducerSaramaConfig("test-producer", true)
+	require.NoError(t, err)
+
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
-	p, err := v2.New(Brokers()).Create()
+	p, err := v2.New(Brokers(), saramaCfg).Create()
 	require.NoError(t, err)
 	assert.NotNil(t, p)
 	msg1 := &sarama.ProducerMessage{
@@ -185,7 +200,10 @@ func TestSyncProducer_SendMessage_Close_v1(t *testing.T) {
 }
 
 func TestAsyncProducerActiveBrokers_v2(t *testing.T) {
-	ap, chErr, err := v2.New(Brokers()).CreateAsync()
+	saramaCfg, err := v2.DefaultProducerSaramaConfig("test-producer", true)
+	require.NoError(t, err)
+
+	ap, chErr, err := v2.New(Brokers(), saramaCfg).CreateAsync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
@@ -203,7 +221,10 @@ func TestAsyncProducerActiveBrokers_v1(t *testing.T) {
 }
 
 func TestSyncProducerActiveBrokers_v2(t *testing.T) {
-	ap, err := v2.New(Brokers()).Create()
+	saramaCfg, err := v2.DefaultProducerSaramaConfig("test-producer", true)
+	require.NoError(t, err)
+
+	ap, err := v2.New(Brokers(), saramaCfg).Create()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotEmpty(t, ap.ActiveBrokers())

@@ -66,17 +66,20 @@ type Builder struct {
 	errs    []error
 }
 
-// New initiates the AsyncProducer/SyncProducer builder chain without any Sarama configuration.
-// WithConfig must be called before the call to Build.
-func New(brokers []string) *Builder {
+// New initiates the AsyncProducer/SyncProducer builder chain with the specified Sarama configuration.
+func New(brokers []string, saramaConfig *sarama.Config) *Builder {
 	var ee []error
 	if validation.IsStringSliceEmpty(brokers) {
 		ee = append(ee, errors.New("brokers are empty or have an empty value"))
+	}
+	if saramaConfig == nil {
+		ee = append(ee, errors.New("no Sarama configuration specified"))
 	}
 
 	return &Builder{
 		brokers: brokers,
 		errs:    ee,
+		cfg:     saramaConfig,
 	}
 }
 
@@ -123,24 +126,10 @@ func DefaultProducerSaramaConfig(name string, idempotent bool) (*sarama.Config, 
 	return cfg, nil
 }
 
-// WithConfig allows to pass into the builder the Sarama configuration.
-func (b *Builder) WithConfig(cfg *sarama.Config) *Builder {
-	if cfg == nil {
-		b.errs = append(b.errs, errors.New("config is nil"))
-		return b
-	}
-	b.cfg = cfg
-	return b
-}
-
 // Create a new synchronous producer.
 func (b *Builder) Create() (*SyncProducer, error) {
 	if len(b.errs) > 0 {
 		return nil, patronerrors.Aggregate(b.errs...)
-	}
-
-	if b.cfg == nil {
-		return nil, errors.New("no Sarama configuration specified")
 	}
 
 	// required for any SyncProducer; 'Errors' is already true by default for both async/sync producers
@@ -166,9 +155,6 @@ func (b *Builder) Create() (*SyncProducer, error) {
 func (b Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 	if len(b.errs) > 0 {
 		return nil, nil, patronerrors.Aggregate(b.errs...)
-	}
-	if b.cfg == nil {
-		return nil, nil, errors.New("no Sarama configuration specified")
 	}
 
 	ap := &AsyncProducer{

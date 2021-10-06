@@ -15,6 +15,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
+	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"
@@ -209,11 +210,16 @@ func newKafkaAsyncPackageComponent(t *testing.T, name string, retries uint, proc
 		*p = tmp
 		return nil
 	}
+
+	saramaCfg, err := v2.DefaultConsumerSaramaConfig(name, true)
+	require.NoError(t, err)
+
 	factory, err := group.New(
 		name,
 		name+"-group",
 		[]string{name},
 		[]string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)},
+		saramaCfg,
 		kafka.Decoder(decode),
 		kafka.Start(sarama.OffsetOldest))
 	require.NoError(t, err)

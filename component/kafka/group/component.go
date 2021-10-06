@@ -100,7 +100,7 @@ func messageStatusCountInc(status, group, topic string) {
 // The default failure strategy is the ExitStrategy.
 // The default batch size is 1 and the batch timeout is 100ms.
 // The default number of retries is 0 and the retry wait is 0.
-func New(name, group string, brokers, topics []string, proc kafka.BatchProcessorFunc, oo ...OptionFunc) (*Component, error) {
+func New(name, group string, brokers, topics []string, proc kafka.BatchProcessorFunc, saramaCfg *sarama.Config, oo ...OptionFunc) (*Component, error) {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
@@ -108,6 +108,10 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 
 	if group == "" {
 		errs = append(errs, errors.New("consumer group is required"))
+	}
+
+	if saramaCfg == nil {
+		return nil, errors.New("no Sarama configuration specified")
 	}
 
 	if validation.IsStringSliceEmpty(brokers) {
@@ -137,6 +141,7 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 		batchSize:    defaultBatchSize,
 		batchTimeout: defaultBatchTimeout,
 		failStrategy: defaultFailureStrategy,
+		saramaConfig: saramaCfg,
 	}
 
 	for _, optionFunc := range oo {
@@ -144,10 +149,6 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	if cmp.saramaConfig == nil {
-		return nil, errors.New("sarama configuration option is required")
 	}
 
 	return cmp, nil

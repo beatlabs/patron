@@ -49,16 +49,21 @@ func WithNotificationOnceReachingLatestOffset(ch chan<- struct{}) kafka.OptionFu
 
 // Factory definition of a consumer factory.
 type Factory struct {
-	name    string
-	topic   string
-	brokers []string
-	oo      []kafka.OptionFunc
+	name      string
+	topic     string
+	brokers   []string
+	saramaCfg *sarama.Config
+	oo        []kafka.OptionFunc
 }
 
 // New constructor.
-func New(name, topic string, brokers []string, oo ...kafka.OptionFunc) (*Factory, error) {
+func New(name, topic string, brokers []string, saramaCfg *sarama.Config, oo ...kafka.OptionFunc) (*Factory, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
+	}
+
+	if saramaCfg == nil {
+		return nil, errors.New("no Sarama configuration specified")
 	}
 
 	if validation.IsStringSliceEmpty(brokers) {
@@ -69,7 +74,7 @@ func New(name, topic string, brokers []string, oo ...kafka.OptionFunc) (*Factory
 		return nil, errors.New("topic is required")
 	}
 
-	return &Factory{name: name, topic: topic, brokers: brokers, oo: oo}, nil
+	return &Factory{name: name, topic: topic, brokers: brokers, saramaCfg: saramaCfg, oo: oo}, nil
 }
 
 func (c *consumer) OutOfOrder() bool {
@@ -79,7 +84,9 @@ func (c *consumer) OutOfOrder() bool {
 // Create a new asynchronous consumer.
 func (f *Factory) Create() (async.Consumer, error) {
 	cc := kafka.ConsumerConfig{
-		Brokers: f.brokers,
+		Brokers:      f.brokers,
+		SaramaConfig: f.saramaCfg,
+		Buffer:       f.saramaCfg.ChannelBufferSize,
 	}
 
 	c := &consumer{
@@ -95,11 +102,6 @@ func (f *Factory) Create() (async.Consumer, error) {
 			return nil, err
 		}
 	}
-
-	if c.config.SaramaConfig == nil {
-		return nil, errors.New("no Sarama configuration specified")
-	}
-	c.config.Buffer = c.config.SaramaConfig.ChannelBufferSize
 
 	if c.config.DurationBasedConsumer {
 		c.partitions = c.partitionsSinceDuration

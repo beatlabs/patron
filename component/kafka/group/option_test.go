@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/stretchr/testify/assert"
 )
@@ -137,18 +136,4 @@ func TestBatchTimeout(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestSaramaConfig(t *testing.T) {
-	saramaCfg := sarama.NewConfig()
-	// batches will be responsible for committing
-	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
-	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
-	saramaCfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
-	saramaCfg.Net.DialTimeout = 15 * time.Second
-	saramaCfg.Version = sarama.V2_6_0_0
-	c := &Component{}
-	err := SaramaConfig(saramaCfg)(c)
-	assert.NoError(t, err)
-	assert.Equal(t, c.saramaConfig, saramaCfg)
 }

@@ -321,11 +321,7 @@ func (c *Component) getTimeBasedOffsetsPerPartition(ctx context.Context, client 
 		return nil, fmt.Errorf("failed to create Kafka duration client: %w", err)
 	}
 
-	dc, err := newDurationClient(dkc, partitions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create duration client: %w", err)
-	}
-
+	dc := newDurationClient(dkc, partitions)
 	offsets, err := dc.getTimeBasedOffsetsPerPartition(ctx, c.topic, time.Now().Add(-c.durationOffset), c.timeExtractor)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve duration offsets per partition: %w", err)

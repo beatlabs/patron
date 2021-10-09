@@ -14,8 +14,8 @@ type durationClient struct {
 	partitions []int32
 }
 
-func newDurationClient(client durationKafkaClientAPI, partitions []int32) (durationClient, error) {
-	return durationClient{client: client, partitions: partitions}, nil
+func newDurationClient(client durationKafkaClientAPI, partitions []int32) durationClient {
+	return durationClient{client: client, partitions: partitions}
 }
 
 func (d durationClient) getTimeBasedOffsetsPerPartition(ctx context.Context, topic string, since time.Time, timeExtractor TimeExtractor) (map[int32]int64, error) {

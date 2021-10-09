@@ -262,7 +262,7 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 	}
 	for name, tt := range testCases {
 		t.Run(name, func(t *testing.T) {
-			consumer, err := newDurationClient(tt.client)
+			consumer, err := newDurationClient(tt.client, []int32{0, 1, 2})
 			require.NoError(t, err)
 			ctx, cancel := context.WithTimeout(context.Background(), tt.globalTimeout)
 			defer cancel()

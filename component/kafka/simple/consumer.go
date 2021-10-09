@@ -19,6 +19,7 @@ import (
 type consumerHandler struct {
 	component *Component
 	pcs       map[int32]sarama.PartitionConsumer
+	isBatch   bool
 	ticker    *time.Ticker
 	mu        sync.Mutex
 	msgBuf    []*sarama.ConsumerMessage
@@ -40,6 +41,7 @@ func newConsumerHandler(component *Component, pcs map[int32]sarama.PartitionCons
 	return &consumerHandler{
 		component:                           component,
 		pcs:                                 pcs,
+		isBatch:                             component.batchSize != 1,
 		ticker:                              time.NewTicker(component.batchTimeout),
 		msgBuf:                              make([]*sarama.ConsumerMessage, 0, component.batchSize),
 		partitionsWithLatestOffsetUnreached: partitionsWithLatestOffsetUnreached,
@@ -57,28 +59,10 @@ func (c *consumerHandler) consume(ctx context.Context) (hasProcessedMessages boo
 		pc := pc
 		partition := partition
 		eg.Go(func() error {
-			return c.consumePartitionLoop(ctx, pc, partition)
+			return c.consumePartition(ctx, pc, partition)
 		})
 	}
 	return c.hasProcessedMessages, eg.Wait()
-}
-
-func (c *consumerHandler) consumePartitionLoop(ctx context.Context, pc sarama.PartitionConsumer, partition int32) error {
-	if c.component.notificationOnceReachingLatestOffset() {
-		latestOffset := c.component.latestOffsets[partition]
-		// We don't want to wait for consuming a message if we already know we're at the end of the stream
-		if c.startingOffsetAfterLatestOffset(latestOffset, partition) {
-			delete(c.partitionsWithLatestOffsetUnreached, partition)
-			c.wg.Done()
-		}
-	}
-
-	for {
-		err := c.consumePartition(ctx, pc, partition)
-		if err != nil {
-			return err
-		}
-	}
 }
 
 func (c *consumerHandler) waitPartitionConsumersToReachLatestOffset() {
@@ -89,11 +73,57 @@ func (c *consumerHandler) waitPartitionConsumersToReachLatestOffset() {
 	})
 }
 
+func (c *consumerHandler) consumePartition(ctx context.Context, pc sarama.PartitionConsumer, partition int32) error {
+	if c.component.notificationOnceReachingLatestOffset() {
+		latestOffset := c.component.latestOffsets[partition]
+		// We don't want to wait for consuming a message if we already know we're at the end of the stream
+		if c.startingOffsetAfterLatestOffset(latestOffset, partition) {
+			delete(c.partitionsWithLatestOffsetUnreached, partition)
+			c.wg.Done()
+		}
+	}
+
+	for {
+		var err error
+		if c.isBatch {
+			err = c.consumePartitionBatch(ctx, pc, partition)
+		} else {
+			err = c.consumePartitionUnit(ctx, pc, partition)
+		}
+		if err != nil {
+			return err
+		}
+	}
+}
+
 func (c *consumerHandler) startingOffsetAfterLatestOffset(latestOffset int64, partition int32) bool {
 	return c.component.startingOffsets[partition] >= latestOffset
 }
 
-func (c *consumerHandler) consumePartition(ctx context.Context, pc sarama.PartitionConsumer, partition int32) error {
+func (c *consumerHandler) consumePartitionUnit(ctx context.Context, pc sarama.PartitionConsumer, partition int32) error {
+	select {
+	case msg, ok := <-pc.Messages():
+		if ok {
+			log.Debugf("message claimed: value = %s, timestamp = %v, partition = %d topic = %s", string(msg.Value), msg.Timestamp, msg.Partition, msg.Topic)
+			messageStatusCountInc(messageReceived, partition, msg.Topic)
+			err := c.unit(ctx, msg)
+			if err != nil {
+				return err
+			}
+		} else {
+			log.Debug("messages channel closed")
+			return nil
+		}
+	case <-ctx.Done():
+		if ctx.Err() != context.Canceled {
+			log.Infof("closing consumer: %v", ctx)
+		}
+		return nil
+	}
+	return nil
+}
+
+func (c *consumerHandler) consumePartitionBatch(ctx context.Context, pc sarama.PartitionConsumer, partition int32) error {
 	select {
 	case msg, ok := <-pc.Messages():
 		if ok {
@@ -120,6 +150,29 @@ func (c *consumerHandler) consumePartition(ctx context.Context, pc sarama.Partit
 		}
 		return nil
 	}
+	return nil
+}
+
+func (c *consumerHandler) unit(ctx context.Context, msg *sarama.ConsumerMessage) error {
+	messageStatusCountInc(messageProcessed, msg.Partition, msg.Topic)
+	ctx, sp := c.getContextWithCorrelation(ctx, msg)
+	messages := []kafka.Message{kafka.NewMessage(ctx, sp, msg)}
+
+	btc := kafka.NewBatch(messages)
+	err := c.component.proc(btc)
+	if err != nil {
+		if ctx.Err() == context.Canceled {
+			return fmt.Errorf("context was cancelled after processing error: %w", err)
+		}
+		if err = c.executeFailureStrategy(messages, err); err != nil {
+			return err
+		}
+	}
+
+	c.updateLatestOffsetReached(messages)
+	c.hasProcessedMessages = true
+	trace.SpanSuccess(messages[0].Span())
+
 	return nil
 }
 

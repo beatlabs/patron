@@ -25,8 +25,6 @@ type consumerHandler struct {
 	// Whether the handler has processed any messages
 	hasProcessedMessages bool
 	// WithNotificationOnceReachingLatestOffset option
-	once                                sync.Once
-	wg                                  sync.WaitGroup
 	partitionsWithLatestOffsetUnreached map[int32]struct{}
 	notificationAlreadySent             bool
 }
@@ -48,11 +46,6 @@ func newConsumerHandler(component *Component, pcs map[int32]sarama.PartitionCons
 }
 
 func (c *consumerHandler) consume(ctx context.Context) (hasProcessedMessages bool, err error) {
-	if c.component.notificationOnceReachingLatestOffset() {
-		c.wg.Add(len(c.pcs))
-		go c.waitPartitionConsumersToReachLatestOffset()
-	}
-
 	eg, ctx := errgroup.WithContext(ctx)
 	for partition, pc := range c.pcs {
 		pc := pc
@@ -64,21 +57,13 @@ func (c *consumerHandler) consume(ctx context.Context) (hasProcessedMessages boo
 	return c.hasProcessedMessages, eg.Wait()
 }
 
-func (c *consumerHandler) waitPartitionConsumersToReachLatestOffset() {
-	c.wg.Wait()
-	// As the consumer can be retried, we have to make sure the channel is closed only once.
-	c.once.Do(func() {
-		close(c.component.latestOffsetReachedChan)
-	})
-}
-
 func (c *consumerHandler) consumePartition(ctx context.Context, ch <-chan *sarama.ConsumerMessage, partition int32) error {
 	if c.component.notificationOnceReachingLatestOffset() {
-		latestOffset := c.component.latestOffsets[partition]
 		// We don't want to wait for consuming a message if we already know we're at the end of the stream
-		if c.startingOffsetAfterLatestOffset(latestOffset, partition) {
-			delete(c.partitionsWithLatestOffsetUnreached, partition)
-			c.wg.Done()
+		if c.startingOffsetAfterLatestOffset(c.component.latestOffsets[partition], partition) {
+			c.mu.Lock()
+			c.partitionHasReachedLatestOffset(partition)
+			c.mu.Unlock()
 		}
 	}
 
@@ -97,6 +82,17 @@ func (c *consumerHandler) consumePartition(ctx context.Context, ch <-chan *saram
 
 func (c *consumerHandler) startingOffsetAfterLatestOffset(latestOffset int64, partition int32) bool {
 	return c.component.startingOffsets[partition] >= latestOffset
+}
+
+func (c *consumerHandler) partitionHasReachedLatestOffset(partition int32) {
+	delete(c.partitionsWithLatestOffsetUnreached, partition)
+	if len(c.partitionsWithLatestOffsetUnreached) == 0 {
+		c.notificationAlreadySent = true
+		// As the consumer can be retried, we have to make sure the channel is closed only once.
+		c.component.once.Do(func() {
+			close(c.component.latestOffsetReachedChan)
+		})
+	}
 }
 
 func (c *consumerHandler) consumePartitionUnit(ctx context.Context, ch <-chan *sarama.ConsumerMessage, partition int32) error {
@@ -136,7 +132,8 @@ func (c *consumerHandler) consumePartitionBatch(ctx context.Context, ch <-chan *
 				}
 			} else {
 				log.Debug("messages channel closed")
-
+				c.mu.Lock()
+				defer c.mu.Unlock()
 				if err := c.flush(ctx); err != nil {
 					return err
 				}
@@ -169,14 +166,23 @@ func (c *consumerHandler) unit(ctx context.Context, msg *sarama.ConsumerMessage)
 		if ctx.Err() == context.Canceled {
 			return fmt.Errorf("context was cancelled after processing error: %w", err)
 		}
-		if err = c.executeFailureStrategy(messages, err); err != nil {
+		c.mu.Lock()
+		err = c.executeFailureStrategy(messages, err)
+		c.mu.Unlock()
+		if err != nil {
 			return err
 		}
+	} else {
+		c.mu.Lock()
+		c.updateLatestOffsetReached(messages)
+		c.mu.Unlock()
 	}
 
-	c.updateLatestOffsetReached(messages)
-	c.hasProcessedMessages = true
 	trace.SpanSuccess(messages[0].Span())
+
+	c.mu.Lock()
+	c.hasProcessedMessages = true
+	c.mu.Unlock()
 
 	return nil
 }
@@ -212,9 +218,10 @@ func (c *consumerHandler) flush(ctx context.Context) error {
 		if err = c.executeFailureStrategy(messages, err); err != nil {
 			return err
 		}
+	} else {
+		c.updateLatestOffsetReached(messages)
 	}
 
-	c.updateLatestOffsetReached(messages)
 	c.hasProcessedMessages = true
 	for _, m := range messages {
 		trace.SpanSuccess(m.Span())
@@ -258,6 +265,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 			messageStatusCountInc(messageErrored, m.Message().Partition, m.Message().Topic)
 			messageStatusCountInc(messageSkipped, m.Message().Partition, m.Message().Topic)
 		}
+		c.updateLatestOffsetReached(messages)
 		log.Errorf("could not process message(s) so skipping with error: %v", err)
 	default:
 		log.Errorf("unknown failure strategy executed")
@@ -272,7 +280,7 @@ func (c *consumerHandler) updateLatestOffsetReached(messages []kafka.Message) {
 	}
 
 	// We consume from the end as it will be more efficient to find the latest offset
-	for i := len(messages) - 1; i >= 0; i++ {
+	for i := len(messages) - 1; i >= 0; i-- {
 		message := messages[i].Message()
 		partition := message.Partition
 		_, latestOffsetUnreached := c.partitionsWithLatestOffsetUnreached[partition]
@@ -281,10 +289,8 @@ func (c *consumerHandler) updateLatestOffsetReached(messages []kafka.Message) {
 		}
 
 		if c.latestOffsetReached(message, partition) {
-			c.wg.Done()
-			delete(c.partitionsWithLatestOffsetUnreached, partition)
-			if len(c.partitionsWithLatestOffsetUnreached) == 0 {
-				c.notificationAlreadySent = true
+			c.partitionHasReachedLatestOffset(partition)
+			if c.notificationAlreadySent {
 				return
 			}
 		}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -91,8 +92,9 @@ type Component struct {
 	timeExtractor         func(*sarama.ConsumerMessage) (time.Time, error)
 	// WithNotificationOnceReachingLatestOffset options
 	latestOffsetReachedChan chan<- struct{}
-	latestOffsets           map[int32]int64
 	startingOffsets         map[int32]int64
+	latestOffsets           map[int32]int64
+	once                    sync.Once
 }
 
 // New initializes a new simple kafka consumer component with support for functional configuration.

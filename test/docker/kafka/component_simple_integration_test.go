@@ -13,11 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beatlabs/patron/component/kafka/simple"
-
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/kafka"
+	"github.com/beatlabs/patron/component/kafka/simple"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

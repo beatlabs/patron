@@ -84,6 +84,22 @@ func TestKafkaComponentSimple_DurationOffset(t *testing.T) {
 	// Test parameters
 	numOfMessagesToReceive := 3
 
+	// Send messages to the kafka topic
+	now := time.Now()
+	messages := createTimestampPayload(
+		now.Add(-10*time.Hour),
+		now.Add(-5*time.Hour),
+		now.Add(-3*time.Hour),
+		now.Add(-2*time.Hour),
+		now.Add(-1*time.Hour),
+	)
+	producer, err := NewProducer()
+	require.NoError(t, err)
+	for _, val := range messages {
+		_, _, err := producer.SendMessage(getProducerMessage(successTopic4, val))
+		require.NoError(t, err)
+	}
+
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
@@ -112,29 +128,7 @@ func TestKafkaComponentSimple_DurationOffset(t *testing.T) {
 		patronWG.Done()
 	}()
 
-	// Send messages to the kafka topic
-	var producerWG sync.WaitGroup
-	producerWG.Add(1)
-	now := time.Now()
-	messages := createTimestampPayload(
-		now.Add(-10*time.Hour),
-		now.Add(-5*time.Hour),
-		now.Add(-3*time.Hour),
-		now.Add(-2*time.Hour),
-		now.Add(-1*time.Hour),
-	)
-	go func() {
-		producer, err := NewProducer()
-		require.NoError(t, err)
-		for _, val := range messages {
-			_, _, err := producer.SendMessage(getProducerMessage(successTopic4, val))
-			require.NoError(t, err)
-		}
-		producerWG.Done()
-	}()
-
-	// Wait for both consumer and producer to finish processing all the messages.
-	producerWG.Wait()
+	// Wait for consumer to finish processing all the messages.
 	consumerWG.Wait()
 
 	// Verify all messages were processed in the right order

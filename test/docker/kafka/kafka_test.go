@@ -35,8 +35,10 @@ const (
 	successTopic3        = "successTopic3"
 	failAllRetriesTopic1 = "failAllRetriesTopic1"
 	failAllRetriesTopic2 = "failAllRetriesTopic2"
+	failAllRetriesTopic3 = "failAllRetriesTopic3"
 	failAndRetryTopic1   = "failAndRetryTopic1"
 	failAndRetryTopic2   = "failAndRetryTopic2"
+	failAndRetryTopic3   = "failAndRetryTopic3"
 )
 
 func TestMain(m *testing.M) {

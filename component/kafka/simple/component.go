@@ -233,7 +233,7 @@ func closeConsumer(consumer sarama.Consumer) {
 func closePartitionConsumers(pcs map[int32]sarama.PartitionConsumer) {
 	for partition, pc := range pcs {
 		if err := pc.Close(); err != nil {
-			log.Errorf("failed to close partitionc consumer %d: %v", partition, err)
+			log.Errorf("failed to close partition consumer %d: %v", partition, err)
 		}
 	}
 }

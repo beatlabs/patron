@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/beatlabs/patron/log"
-
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/log"
 )
 
 type outOfRangeOffsetError struct {

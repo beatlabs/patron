@@ -295,6 +295,7 @@ func client(topic string) *clientBuilder {
 	}
 }
 
+//nolint:unparam
 func (c *clientBuilder) partitionIDs(partitions []int32, err error) *clientBuilder {
 	c.partitions = partitions
 	c.partitionsError = err

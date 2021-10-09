@@ -9,14 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/beatlabs/patron/log"
-
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/kafka"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
+	"github.com/beatlabs/patron/log"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (

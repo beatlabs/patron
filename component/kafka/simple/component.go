@@ -20,7 +20,7 @@ import (
 
 const (
 	consumerComponent = "kafka-consumer"
-	subsystem         = "kafka-simple"
+	subsystem         = "kafka_simple"
 	messageReceived   = "received"
 	messageProcessed  = "processed"
 	messageErrored    = "errored"

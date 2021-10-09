@@ -9,10 +9,8 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/kafka"
-	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -322,24 +320,4 @@ func versionedConsumerMessage(value string, header *sarama.RecordHeader, version
 		BlockTimestamp: time.Now(),
 		Headers:        []*sarama.RecordHeader{header},
 	}
-}
-
-func Test_getCorrelationID(t *testing.T) {
-	corID := uuid.New().String()
-	got := getCorrelationID([]*sarama.RecordHeader{
-		{
-			Key:   []byte(correlation.HeaderID),
-			Value: []byte(corID),
-		},
-	})
-	assert.Equal(t, corID, got)
-
-	emptyCorID := ""
-	got = getCorrelationID([]*sarama.RecordHeader{
-		{
-			Key:   []byte(correlation.HeaderID),
-			Value: []byte(emptyCorID),
-		},
-	})
-	assert.NotEqual(t, emptyCorID, got)
 }

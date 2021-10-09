@@ -8,6 +8,9 @@ import (
 	"os"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/log"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -101,4 +104,17 @@ func DefaultSaramaConfig(name string) (*sarama.Config, error) {
 	config.Version = sarama.V0_11_0_0
 
 	return config, nil
+}
+
+func GetCorrelationID(hh []*sarama.RecordHeader) string {
+	for _, h := range hh {
+		if string(h.Key) == correlation.HeaderID {
+			if len(h.Value) > 0 {
+				return string(h.Value)
+			}
+			break
+		}
+	}
+	log.Debug("correlation header not found, creating new correlation UUID")
+	return uuid.New().String()
 }

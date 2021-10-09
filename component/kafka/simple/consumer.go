@@ -11,7 +11,6 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
-	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
 )
@@ -59,7 +58,7 @@ func (c *consumerHandler) consume(ctx context.Context) (hasProcessedMessages boo
 		pc := pc
 		partition := partition
 		eg.Go(func() error {
-			return c.consumePartition(ctx, pc, partition)
+			return c.consumePartition(ctx, pc.Messages(), partition)
 		})
 	}
 	return c.hasProcessedMessages, eg.Wait()
@@ -73,7 +72,7 @@ func (c *consumerHandler) waitPartitionConsumersToReachLatestOffset() {
 	})
 }
 
-func (c *consumerHandler) consumePartition(ctx context.Context, pc sarama.PartitionConsumer, partition int32) error {
+func (c *consumerHandler) consumePartition(ctx context.Context, ch <-chan *sarama.ConsumerMessage, partition int32) error {
 	if c.component.notificationOnceReachingLatestOffset() {
 		latestOffset := c.component.latestOffsets[partition]
 		// We don't want to wait for consuming a message if we already know we're at the end of the stream
@@ -83,74 +82,80 @@ func (c *consumerHandler) consumePartition(ctx context.Context, pc sarama.Partit
 		}
 	}
 
-	for {
-		var err error
-		if c.isBatch {
-			err = c.consumePartitionBatch(ctx, pc, partition)
-		} else {
-			err = c.consumePartitionUnit(ctx, pc, partition)
-		}
-		if err != nil {
-			return err
-		}
+	var err error
+	if c.isBatch {
+		err = c.consumePartitionBatch(ctx, ch, partition)
+	} else {
+		err = c.consumePartitionUnit(ctx, ch, partition)
 	}
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *consumerHandler) startingOffsetAfterLatestOffset(latestOffset int64, partition int32) bool {
 	return c.component.startingOffsets[partition] >= latestOffset
 }
 
-func (c *consumerHandler) consumePartitionUnit(ctx context.Context, pc sarama.PartitionConsumer, partition int32) error {
-	select {
-	case msg, ok := <-pc.Messages():
-		if ok {
-			log.Debugf("message claimed: value = %s, timestamp = %v, partition = %d topic = %s", string(msg.Value), msg.Timestamp, msg.Partition, msg.Topic)
-			messageStatusCountInc(messageReceived, partition, msg.Topic)
-			err := c.unit(ctx, msg)
-			if err != nil {
-				return err
+func (c *consumerHandler) consumePartitionUnit(ctx context.Context, ch <-chan *sarama.ConsumerMessage, partition int32) error {
+	for {
+		select {
+		case msg, ok := <-ch:
+			if ok {
+				log.Debugf("message claimed: value = %s, timestamp = %v, partition = %d topic = %s", string(msg.Value), msg.Timestamp, msg.Partition, msg.Topic)
+				messageStatusCountInc(messageReceived, partition, msg.Topic)
+				err := c.unit(ctx, msg)
+				if err != nil {
+					return err
+				}
+			} else {
+				log.Debug("messages channel closed")
+				return nil
 			}
-		} else {
-			log.Debug("messages channel closed")
+		case <-ctx.Done():
+			if ctx.Err() != context.Canceled {
+				log.Infof("closing consumer: %v", ctx)
+			}
 			return nil
 		}
-	case <-ctx.Done():
-		if ctx.Err() != context.Canceled {
-			log.Infof("closing consumer: %v", ctx)
-		}
-		return nil
 	}
-	return nil
 }
 
-func (c *consumerHandler) consumePartitionBatch(ctx context.Context, pc sarama.PartitionConsumer, partition int32) error {
-	select {
-	case msg, ok := <-pc.Messages():
-		if ok {
-			log.Debugf("message claimed: value = %s, timestamp = %v, partition = %d topic = %s", string(msg.Value), msg.Timestamp, msg.Partition, msg.Topic)
-			messageStatusCountInc(messageReceived, partition, msg.Topic)
-			err := c.insertMessage(ctx, msg)
+func (c *consumerHandler) consumePartitionBatch(ctx context.Context, ch <-chan *sarama.ConsumerMessage, partition int32) error {
+	for {
+		select {
+		case msg, ok := <-ch:
+			if ok {
+				log.Debugf("message claimed: value = %s, timestamp = %v, partition = %d topic = %s", string(msg.Value), msg.Timestamp, msg.Partition, msg.Topic)
+				messageStatusCountInc(messageReceived, partition, msg.Topic)
+				err := c.insertMessage(ctx, msg)
+				if err != nil {
+					return err
+				}
+			} else {
+				log.Debug("messages channel closed")
+
+				if err := c.flush(ctx); err != nil {
+					return err
+				}
+				return nil
+			}
+		case <-c.ticker.C:
+			c.mu.Lock()
+			err := c.flush(ctx)
+			c.mu.Unlock()
 			if err != nil {
 				return err
 			}
-		} else {
-			log.Debug("messages channel closed")
+		case <-ctx.Done():
+			if ctx.Err() != context.Canceled {
+				log.Infof("closing consumer: %v", ctx)
+			}
 			return nil
 		}
-	case <-c.ticker.C:
-		c.mu.Lock()
-		err := c.flush(ctx)
-		c.mu.Unlock()
-		if err != nil {
-			return err
-		}
-	case <-ctx.Done():
-		if ctx.Err() != context.Canceled {
-			log.Infof("closing consumer: %v", ctx)
-		}
-		return nil
 	}
-	return nil
 }
 
 func (c *consumerHandler) unit(ctx context.Context, msg *sarama.ConsumerMessage) error {
@@ -221,7 +226,7 @@ func (c *consumerHandler) flush(ctx context.Context) error {
 }
 
 func (c *consumerHandler) getContextWithCorrelation(ctx context.Context, msg *sarama.ConsumerMessage) (context.Context, opentracing.Span) {
-	corID := getCorrelationID(msg.Headers)
+	corID := kafka.GetCorrelationID(msg.Headers)
 
 	sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, msg.Topic),
 		consumerComponent, corID, mapHeader(msg.Headers))
@@ -236,19 +241,6 @@ func mapHeader(rh []*sarama.RecordHeader) map[string]string {
 		mp[string(h.Key)] = string(h.Value)
 	}
 	return mp
-}
-
-func getCorrelationID(hh []*sarama.RecordHeader) string {
-	for _, h := range hh {
-		if string(h.Key) == correlation.HeaderID {
-			if len(h.Value) > 0 {
-				return string(h.Value)
-			}
-			break
-		}
-	}
-	log.Debug("correlation header not found, creating new correlation UUID")
-	return uuid.New().String()
 }
 
 func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err error) error {

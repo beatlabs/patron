@@ -16,7 +16,6 @@ import (
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
-	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -407,7 +406,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 }
 
 func (c *consumerHandler) getContextWithCorrelation(msg *sarama.ConsumerMessage) (context.Context, opentracing.Span) {
-	corID := getCorrelationID(msg.Headers)
+	corID := kafka.GetCorrelationID(msg.Headers)
 
 	sp, ctxCh := trace.ConsumerSpan(c.ctx, trace.ComponentOpName(consumerComponent, msg.Topic),
 		consumerComponent, corID, mapHeader(msg.Headers))
@@ -424,19 +423,6 @@ func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg
 		return c.flush(session)
 	}
 	return nil
-}
-
-func getCorrelationID(hh []*sarama.RecordHeader) string {
-	for _, h := range hh {
-		if string(h.Key) == correlation.HeaderID {
-			if len(h.Value) > 0 {
-				return string(h.Value)
-			}
-			break
-		}
-	}
-	log.Debug("correlation header not found, creating new correlation UUID")
-	return uuid.New().String()
 }
 
 func mapHeader(hh []*sarama.RecordHeader) map[string]string {

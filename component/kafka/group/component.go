@@ -96,7 +96,7 @@ func messageStatusCountInc(status, group, topic string) {
 	messageStatus.WithLabelValues(status, group, topic).Inc()
 }
 
-// New initializes a new  kafka consumer component with support for functional configuration.
+// New initializes a new kafka consumer component with support for functional configuration.
 // The default failure strategy is the ExitStrategy.
 // The default batch size is 1 and the batch timeout is 100ms.
 // The default number of retries is 0 and the retry wait is 0.

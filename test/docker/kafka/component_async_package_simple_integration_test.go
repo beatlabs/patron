@@ -35,14 +35,14 @@ func TestKafkaAsyncPackageSimpleComponent_Success(t *testing.T) {
 		consumerWG.Done()
 		return nil
 	}
-	component := newKafkaAsyncPackageSimpleComponent(t, successTopic1, 3, processorFunc)
+	component := newKafkaAsyncPackageSimpleComponent(t, successTopic3, 3, processorFunc)
 
 	// Run Patron with the kafka component
 	patronContext, patronCancel := context.WithCancel(context.Background())
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(successTopic1, "0", patron.TextLogger())
+		svc, err := patron.New(successTopic3, "0", patron.TextLogger())
 		require.NoError(t, err)
 		err = svc.WithComponents(component).Run(patronContext)
 		require.NoError(t, err)
@@ -56,7 +56,7 @@ func TestKafkaAsyncPackageSimpleComponent_Success(t *testing.T) {
 		producer, err := NewProducer()
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
-			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
+			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic3, Value: sarama.StringEncoder(strconv.Itoa(i))})
 			require.NoError(t, err)
 		}
 		producerWG.Done()
@@ -88,7 +88,7 @@ func newKafkaAsyncPackageSimpleComponent(t *testing.T, name string, retries uint
 	factory, err := simple.New(
 		name,
 		name,
-		[]string{name},
+		Brokers(),
 		kafka.Decoder(decode),
 		kafka.Start(sarama.OffsetOldest))
 	require.NoError(t, err)

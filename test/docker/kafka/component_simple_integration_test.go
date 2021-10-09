@@ -82,67 +82,6 @@ func TestKafkaComponentSimple_Success(t *testing.T) {
 	patronWG.Wait()
 }
 
-func TestKafkaComponentSimple_FailAllRetries(t *testing.T) {
-	// Test parameters
-	numOfMessagesToSend := 100
-	errAtIndex := 70
-
-	// Set up the kafka component
-	actualSuccessfulMessages := make([]int, 0)
-	actualNumOfRuns := int32(0)
-	processorFunc := func(batch kafka.Batch) error {
-		for _, msg := range batch.Messages() {
-			var msgContent string
-			err := decodeString(msg.Message().Value, &msgContent)
-			assert.NoError(t, err)
-
-			msgIndex, err := strconv.Atoi(msgContent)
-			assert.NoError(t, err)
-
-			if msgIndex == errAtIndex {
-				atomic.AddInt32(&actualNumOfRuns, 1)
-				return errors.New("expected error")
-			}
-			actualSuccessfulMessages = append(actualSuccessfulMessages, msgIndex)
-		}
-		return nil
-	}
-
-	numOfRetries := uint(3)
-	batchSize := uint(1)
-	component := newSimpleComponent(t, failAllRetriesTopic3, numOfRetries, batchSize, processorFunc)
-
-	// Send messages to the kafka topic
-	var producerWG sync.WaitGroup
-	producerWG.Add(1)
-	go func() {
-		producer, err := NewProducer()
-		require.NoError(t, err)
-		for i := 1; i <= numOfMessagesToSend; i++ {
-			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAllRetriesTopic3, Value: sarama.StringEncoder(strconv.Itoa(i))})
-			require.NoError(t, err)
-		}
-		producerWG.Done()
-	}()
-
-	// Run Patron with the component - no need for goroutine since we expect it to stop after the retries fail
-	svc, err := patron.New(failAllRetriesTopic3, "0", patron.LogFields(map[string]interface{}{"test": failAllRetriesTopic3}))
-	require.NoError(t, err)
-	err = svc.WithComponents(component).Run(context.Background())
-	assert.Error(t, err)
-
-	// Wait for the producer & consumer to finish
-	producerWG.Wait()
-
-	// Verify all messages were processed in the right order
-	expectedMessages := make([]int, errAtIndex-1)
-	for i := 0; i < errAtIndex-1; i++ {
-		expectedMessages[i] = i + 1
-	}
-	assert.Equal(t, expectedMessages, actualSuccessfulMessages)
-	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
-}
-
 func TestKafkaComponentSimple_FailOnceAndRetry(t *testing.T) {
 	// Test parameters
 	numOfMessagesToSend := 100

@@ -33,12 +33,12 @@ const (
 	successTopic1        = "successTopic1"
 	successTopic2        = "successTopic2"
 	successTopic3        = "successTopic3"
+	successTopic4        = "successTopic4"
+	successTopic5        = "successTopic5"
 	failAllRetriesTopic1 = "failAllRetriesTopic1"
 	failAllRetriesTopic2 = "failAllRetriesTopic2"
-	failAllRetriesTopic3 = "failAllRetriesTopic3"
 	failAndRetryTopic1   = "failAndRetryTopic1"
 	failAndRetryTopic2   = "failAndRetryTopic2"
-	failAndRetryTopic3   = "failAndRetryTopic3"
 )
 
 func TestMain(m *testing.M) {
@@ -52,13 +52,13 @@ func TestMain(m *testing.M) {
 		getTopic(groupTopic2),
 		getTopic(failAllRetriesTopic1),
 		getTopic(failAllRetriesTopic2),
-		getTopic(failAllRetriesTopic3),
 		getTopic(failAndRetryTopic1),
 		getTopic(failAndRetryTopic2),
-		getTopic(failAndRetryTopic3),
 		getTopic(successTopic1),
 		getTopic(successTopic2),
 		getTopic(successTopic3),
+		getTopic(successTopic4),
+		getTopic(successTopic5),
 	}
 	k, err := create(120*time.Second, topics...)
 	if err != nil {

@@ -98,14 +98,14 @@ func TestKafkaComponentSimple_DurationOffset(t *testing.T) {
 		}
 		return nil
 	}
-	component := newSimpleComponent(t, successTopic3, 3, 10, processorFunc, simple.DurationOffset(4*time.Hour, timestampExtractor))
+	component := newSimpleComponent(t, successTopic4, 3, 10, processorFunc, simple.DurationOffset(4*time.Hour, timestampExtractor))
 
 	// Run Patron with the kafka component
 	patronContext, patronCancel := context.WithCancel(context.Background())
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(successTopic3, "0", patron.LogFields(map[string]interface{}{"test": successTopic3}))
+		svc, err := patron.New(successTopic4, "0", patron.LogFields(map[string]interface{}{"test": successTopic4}))
 		require.NoError(t, err)
 		err = svc.WithComponents(component).Run(patronContext)
 		require.NoError(t, err)
@@ -127,7 +127,7 @@ func TestKafkaComponentSimple_DurationOffset(t *testing.T) {
 		producer, err := NewProducer()
 		require.NoError(t, err)
 		for _, val := range messages {
-			_, _, err := producer.SendMessage(getProducerMessage(simpleTopic3, val))
+			_, _, err := producer.SendMessage(getProducerMessage(successTopic4, val))
 			require.NoError(t, err)
 		}
 		producerWG.Done()
@@ -164,13 +164,13 @@ func TestKafkaComponentSimple_NotificationOnceReachingLatestOffset(t *testing.T)
 		return nil
 	}
 	chNotif := make(chan struct{})
-	component := newSimpleComponent(t, successTopic3, 3, 10, processorFunc, simple.NotificationOnceReachingLatestOffset(chNotif))
+	component := newSimpleComponent(t, successTopic5, 3, 10, processorFunc, simple.NotificationOnceReachingLatestOffset(chNotif))
 
 	// Send messages to the kafka topic
 	producer, err := NewProducer()
 	require.NoError(t, err)
 	for i := 1; i <= numOfMessagesToSend; i++ {
-		_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic3, Value: sarama.StringEncoder(strconv.Itoa(i))})
+		_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic5, Value: sarama.StringEncoder(strconv.Itoa(i))})
 		require.NoError(t, err)
 	}
 
@@ -179,7 +179,7 @@ func TestKafkaComponentSimple_NotificationOnceReachingLatestOffset(t *testing.T)
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(successTopic3, "0", patron.LogFields(map[string]interface{}{"test": successTopic3}))
+		svc, err := patron.New(successTopic5, "0", patron.LogFields(map[string]interface{}{"test": successTopic5}))
 		require.NoError(t, err)
 		err = svc.WithComponents(component).Run(patronContext)
 		require.NoError(t, err)

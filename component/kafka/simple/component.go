@@ -76,21 +76,22 @@ func init() {
 }
 
 type Component struct {
-	name         string
-	topic        string
-	brokers      []string
-	saramaConfig *sarama.Config
-	proc         kafka.BatchProcessorFunc
-	failStrategy kafka.FailStrategy
-	batchSize    uint
-	batchTimeout time.Duration
-	retries      uint
-	retryWait    time.Duration
-	// WithDurationOffset options
+	name                     string
+	topic                    string
+	brokers                  []string
+	saramaConfig             *sarama.Config
+	proc                     kafka.BatchProcessorFunc
+	failStrategy             kafka.FailStrategy
+	batchSize                uint
+	batchTimeout             time.Duration
+	retries                  uint
+	retryWait                time.Duration
+	partitionConsumerFactory func(ctx context.Context) (sarama.Client, sarama.Consumer, map[int32]sarama.PartitionConsumer, error)
+	// DurationOffset options
 	durationBasedConsumer bool
 	durationOffset        time.Duration
 	timeExtractor         func(*sarama.ConsumerMessage) (time.Time, error)
-	// WithNotificationOnceReachingLatestOffset options
+	// NotificationOnceReachingLatestOffset options
 	latestOffsetReachedChan chan<- struct{}
 	startingOffsets         map[int32]int64
 	latestOffsets           map[int32]int64
@@ -141,6 +142,8 @@ func New(name string, brokers []string, topic string, proc kafka.BatchProcessorF
 		saramaConfig: defaultSaramaCfg,
 	}
 
+	cmp.partitionConsumerFactory = cmp.createPartitionConsumers
+
 	for _, optionFunc := range oo {
 		err = optionFunc(cmp)
 		if err != nil {
@@ -155,7 +158,7 @@ func New(name string, brokers []string, topic string, proc kafka.BatchProcessorF
 func (c *Component) Run(ctx context.Context) error {
 	retries := int(c.retries)
 
-	if retries == 0 {
+	if retries == 1 {
 		return c.runWithoutRetry(ctx)
 	}
 	return c.runWithRetry(ctx, retries)
@@ -173,15 +176,22 @@ func (c *Component) runWithRetry(ctx context.Context, retries int) error {
 	var hasProcessedMessages bool
 	var err error
 
-	for i := 0; i <= retries; i++ {
+	for i := 0; ; i++ {
 		hasProcessedMessages, err = c.processing(ctx)
 		if err != nil {
 			log.Errorf("simple consumer error on topic %s: %v", c.topic, err)
 		}
 
+		if isContextDone(ctx) {
+			break
+		}
 		if hasProcessedMessages {
 			i = 0
 		}
+		if i >= retries {
+			break
+		}
+
 		log.Errorf("failed run, retry %d/%d with %v wait", i, c.retries, c.retryWait)
 		time.Sleep(c.retryWait)
 	}
@@ -189,8 +199,19 @@ func (c *Component) runWithRetry(ctx context.Context, retries int) error {
 	return err
 }
 
+func isContextDone(ctx context.Context) bool {
+	select {
+	case _, ok := <-ctx.Done():
+		if !ok {
+			return true
+		}
+	default:
+	}
+	return false
+}
+
 func (c *Component) processing(ctx context.Context) (hasProcessedMessages bool, err error) {
-	client, consumer, pcs, err := c.createPartitionConsumers(ctx)
+	client, consumer, pcs, err := c.partitionConsumerFactory(ctx)
 	if err != nil {
 		return false, fmt.Errorf("failed to create partition consumers: %w", err)
 	}

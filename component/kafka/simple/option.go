@@ -87,9 +87,9 @@ func SaramaConfig(cfg *sarama.Config) OptionFunc {
 // TimeExtractor defines a function extracting a time from a Kafka message.
 type TimeExtractor func(*sarama.ConsumerMessage) (time.Time, error)
 
-// WithDurationOffset allows creating a consumer from a given duration.
+// DurationOffset allows creating a consumer from a given duration.
 // It accepts a function indicating how to extract the time from a Kafka message.
-func WithDurationOffset(since time.Duration, timeExtractor TimeExtractor) OptionFunc {
+func DurationOffset(since time.Duration, timeExtractor TimeExtractor) OptionFunc {
 	return func(c *Component) error {
 		if since < 0 {
 			return errors.New("duration must be positive")
@@ -104,9 +104,9 @@ func WithDurationOffset(since time.Duration, timeExtractor TimeExtractor) Option
 	}
 }
 
-// WithNotificationOnceReachingLatestOffset closes the input channel once all the partition consumers have reached the
+// NotificationOnceReachingLatestOffset closes the input channel once all the partition consumers have reached the
 // latest offset.
-func WithNotificationOnceReachingLatestOffset(ch chan<- struct{}) OptionFunc {
+func NotificationOnceReachingLatestOffset(ch chan<- struct{}) OptionFunc {
 	return func(c *Component) error {
 		if ch == nil {
 			return errors.New("nil channel provided")

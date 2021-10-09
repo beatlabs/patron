@@ -170,7 +170,7 @@ func TestConsumePartition(t *testing.T) {
 				startingOffsets: startingOffsets,
 				latestOffsets:   latestOffsets,
 			},
-			expectedProcessedMessages: true,
+			expectedProcessedMessages: false,
 			expectNotifChannelClosed:  true,
 		},
 		"success - batch - failure strategy - skip": {

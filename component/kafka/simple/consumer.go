@@ -24,7 +24,7 @@ type consumerHandler struct {
 	msgBuf    []*sarama.ConsumerMessage
 	// Whether the handler has processed any messages
 	hasProcessedMessages bool
-	// WithNotificationOnceReachingLatestOffset option
+	// NotificationOnceReachingLatestOffset option
 	partitionsWithLatestOffsetUnreached map[int32]struct{}
 	notificationAlreadySent             bool
 }
@@ -173,15 +173,12 @@ func (c *consumerHandler) unit(ctx context.Context, msg *sarama.ConsumerMessage)
 		}
 	} else {
 		c.mu.Lock()
+		c.hasProcessedMessages = true
 		c.updateLatestOffsetReached(messages)
 		c.mu.Unlock()
 	}
 
 	trace.SpanSuccess(messages[0].Span())
-
-	c.mu.Lock()
-	c.hasProcessedMessages = true
-	c.mu.Unlock()
 
 	return nil
 }
@@ -202,7 +199,6 @@ func (c *consumerHandler) prt() {
 	for _, msg := range c.msgBuf {
 		s += fmt.Sprintf("%d %d; ", msg.Partition, msg.Offset)
 	}
-	fmt.Println(s)
 }
 
 func (c *consumerHandler) flush(ctx context.Context) error {

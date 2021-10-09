@@ -153,7 +153,7 @@ func TestSaramaConfig(t *testing.T) {
 	assert.Equal(t, c.saramaConfig, saramaCfg)
 }
 
-func TestWithDurationOffset(t *testing.T) {
+func TestDurationOffset(t *testing.T) {
 	type args struct {
 		since         time.Duration
 		timeExtractor TimeExtractor
@@ -189,7 +189,7 @@ func TestWithDurationOffset(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			c := &Component{}
-			err := WithDurationOffset(tt.args.since, tt.args.timeExtractor)(c)
+			err := DurationOffset(tt.args.since, tt.args.timeExtractor)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -202,7 +202,7 @@ func TestWithDurationOffset(t *testing.T) {
 	}
 }
 
-func TestWithNotificationOnceReachingLatestOffset(t *testing.T) {
+func TestNotificationOnceReachingLatestOffset(t *testing.T) {
 	type args struct {
 		ch chan<- struct{}
 	}
@@ -223,7 +223,7 @@ func TestWithNotificationOnceReachingLatestOffset(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			c := &Component{}
-			err := WithNotificationOnceReachingLatestOffset(tt.args.ch)(c)
+			err := NotificationOnceReachingLatestOffset(tt.args.ch)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {

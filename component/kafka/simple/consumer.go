@@ -194,13 +194,6 @@ func (c *consumerHandler) insertMessage(ctx context.Context, msg *sarama.Consume
 	return nil
 }
 
-func (c *consumerHandler) prt() {
-	s := fmt.Sprintf("%d: ", len(c.msgBuf))
-	for _, msg := range c.msgBuf {
-		s += fmt.Sprintf("%d %d; ", msg.Partition, msg.Offset)
-	}
-}
-
 func (c *consumerHandler) flush(ctx context.Context) error {
 	c.mu.Lock()
 	if len(c.msgBuf) == 0 {
@@ -213,7 +206,6 @@ func (c *consumerHandler) flush(ctx context.Context) error {
 		ctx, sp := c.getContextWithCorrelation(ctx, msg)
 		messages[i] = kafka.NewMessage(ctx, sp, msg)
 	}
-	c.prt()
 	c.msgBuf = c.msgBuf[:0]
 	c.mu.Unlock()
 

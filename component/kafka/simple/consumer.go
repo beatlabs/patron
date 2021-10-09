@@ -119,7 +119,15 @@ func (c *consumerHandler) consumePartitionUnit(ctx context.Context, ch <-chan *s
 	}
 }
 
-func (c *consumerHandler) consumePartitionBatch(ctx context.Context, ch <-chan *sarama.ConsumerMessage, partition int32) error {
+func (c *consumerHandler) consumePartitionBatch(ctx context.Context, ch <-chan *sarama.ConsumerMessage, partition int32) (err error) {
+	// We need to enforce flushing the buffer before to return (e.g., context cancelled but messages are still buffered)
+	defer func() {
+		errFlush := c.flush(ctx)
+		if errFlush != nil {
+			err = errFlush
+		}
+	}()
+
 	for {
 		select {
 		case msg, ok := <-ch:
@@ -132,17 +140,10 @@ func (c *consumerHandler) consumePartitionBatch(ctx context.Context, ch <-chan *
 				}
 			} else {
 				log.Debug("messages channel closed")
-				c.mu.Lock()
-				defer c.mu.Unlock()
-				if err := c.flush(ctx); err != nil {
-					return err
-				}
 				return nil
 			}
 		case <-c.ticker.C:
-			c.mu.Lock()
 			err := c.flush(ctx)
-			c.mu.Unlock()
 			if err != nil {
 				return err
 			}
@@ -166,9 +167,7 @@ func (c *consumerHandler) unit(ctx context.Context, msg *sarama.ConsumerMessage)
 		if ctx.Err() == context.Canceled {
 			return fmt.Errorf("context was cancelled after processing error: %w", err)
 		}
-		c.mu.Lock()
 		err = c.executeFailureStrategy(messages, err)
-		c.mu.Unlock()
 		if err != nil {
 			return err
 		}
@@ -189,25 +188,38 @@ func (c *consumerHandler) unit(ctx context.Context, msg *sarama.ConsumerMessage)
 
 func (c *consumerHandler) insertMessage(ctx context.Context, msg *sarama.ConsumerMessage) error {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	c.msgBuf = append(c.msgBuf, msg)
 	if len(c.msgBuf) >= int(c.component.batchSize) {
+		c.mu.Unlock()
 		return c.flush(ctx)
 	}
+	c.mu.Unlock()
 	return nil
 }
 
+func (c *consumerHandler) prt() {
+	s := fmt.Sprintf("%d: ", len(c.msgBuf))
+	for _, msg := range c.msgBuf {
+		s += fmt.Sprintf("%d %d; ", msg.Partition, msg.Offset)
+	}
+	fmt.Println(s)
+}
+
 func (c *consumerHandler) flush(ctx context.Context) error {
+	c.mu.Lock()
 	if len(c.msgBuf) == 0 {
+		c.mu.Unlock()
 		return nil
 	}
-
 	messages := make([]kafka.Message, len(c.msgBuf))
 	for i, msg := range c.msgBuf {
 		messageStatusCountInc(messageProcessed, msg.Partition, msg.Topic)
 		ctx, sp := c.getContextWithCorrelation(ctx, msg)
 		messages[i] = kafka.NewMessage(ctx, sp, msg)
 	}
+	c.prt()
+	c.msgBuf = c.msgBuf[:0]
+	c.mu.Unlock()
 
 	btc := kafka.NewBatch(messages)
 	err := c.component.proc(btc)
@@ -219,15 +231,18 @@ func (c *consumerHandler) flush(ctx context.Context) error {
 			return err
 		}
 	} else {
+		c.mu.Lock()
 		c.updateLatestOffsetReached(messages)
+		c.mu.Unlock()
 	}
 
+	c.mu.Lock()
 	c.hasProcessedMessages = true
+	c.mu.Unlock()
+
 	for _, m := range messages {
 		trace.SpanSuccess(m.Span())
 	}
-
-	c.msgBuf = c.msgBuf[:0]
 
 	return nil
 }
@@ -265,7 +280,9 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 			messageStatusCountInc(messageErrored, m.Message().Partition, m.Message().Topic)
 			messageStatusCountInc(messageSkipped, m.Message().Partition, m.Message().Topic)
 		}
+		c.mu.Lock()
 		c.updateLatestOffsetReached(messages)
+		c.mu.Unlock()
 		log.Errorf("could not process message(s) so skipping with error: %v", err)
 	default:
 		log.Errorf("unknown failure strategy executed")

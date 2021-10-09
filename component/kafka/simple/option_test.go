@@ -152,3 +152,85 @@ func TestSaramaConfig(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, c.saramaConfig, saramaCfg)
 }
+
+func TestWithDurationOffset(t *testing.T) {
+	type args struct {
+		since         time.Duration
+		timeExtractor TimeExtractor
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success": {
+			args: args{
+				since: time.Second,
+				timeExtractor: func(message *sarama.ConsumerMessage) (time.Time, error) {
+					return time.Time{}, nil
+				},
+			},
+		},
+		"invalid duration": {
+			args: args{
+				since: -time.Second,
+				timeExtractor: func(message *sarama.ConsumerMessage) (time.Time, error) {
+					return time.Time{}, nil
+				},
+			},
+			expectedErr: "duration must be positive",
+		},
+		"missing time extractor": {
+			args: args{
+				since: time.Second,
+			},
+			expectedErr: "empty time extractor function",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			c := &Component{}
+			err := WithDurationOffset(tt.args.since, tt.args.timeExtractor)(c)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				assert.NoError(t, err)
+				c.durationBasedConsumer = true
+				assert.Equal(t, c.durationOffset, tt.args.since)
+				assert.NotNil(t, c.timeExtractor)
+			}
+		})
+	}
+}
+
+func TestWithNotificationOnceReachingLatestOffset(t *testing.T) {
+	type args struct {
+		ch chan<- struct{}
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success": {
+			args: args{
+				ch: make(chan struct{}),
+			},
+		},
+		"missing channel": {
+			args:        args{},
+			expectedErr: "nil channel provided",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			c := &Component{}
+			err := WithNotificationOnceReachingLatestOffset(tt.args.ch)(c)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				assert.NoError(t, err)
+				c.durationBasedConsumer = true
+				assert.Equal(t, c.latestOffsetReachedChan, tt.args.ch)
+			}
+		})
+	}
+}

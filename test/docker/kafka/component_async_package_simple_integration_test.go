@@ -104,7 +104,7 @@ func TestKafkaAsyncPackageSimpleComponent_FailAllRetries(t *testing.T) {
 		return nil
 	}
 	numOfRetries := uint(3)
-	component := newKafkaAsyncPackageComponent(t, failAllRetriesTopic3, numOfRetries, processorFunc)
+	component := newKafkaAsyncPackageSimpleComponent(t, failAllRetriesTopic3, numOfRetries, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
@@ -158,7 +158,7 @@ func TestKafkaAsyncPackageSimpleComponent_FailOnceAndRetry(t *testing.T) {
 		actualMessages = append(actualMessages, msgContent)
 		return nil
 	}
-	component := newKafkaAsyncPackageComponent(t, failAndRetryTopic3, 3, processorFunc)
+	component := newKafkaAsyncPackageSimpleComponent(t, failAndRetryTopic3, 3, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup

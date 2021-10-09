@@ -82,12 +82,12 @@ func TestKafkaComponentSimple_Success(t *testing.T) {
 
 func TestKafkaComponentSimple_DurationOffset(t *testing.T) {
 	// Test parameters
-	numOfMessagesToSend := 5
+	numOfMessagesToReceive := 3
 
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
-	consumerWG.Add(numOfMessagesToSend)
+	consumerWG.Add(numOfMessagesToReceive)
 	processorFunc := func(batch kafka.Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string

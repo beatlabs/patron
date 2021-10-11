@@ -64,8 +64,8 @@ func BatchSize(size uint) OptionFunc {
 // without new messages coming in, the messages in the buffer would get processed as a batch.
 func BatchTimeout(timeout time.Duration) OptionFunc {
 	return func(c *Component) error {
-		if timeout < 0 {
-			return errors.New("batch timeout should greater than or equal to zero")
+		if timeout <= 0 {
+			return errors.New("batch timeout should greater than zero")
 		}
 		c.batchTimeout = timeout
 		return nil

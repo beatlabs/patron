@@ -122,7 +122,11 @@ func TestBatchTimeout(t *testing.T) {
 		},
 		"negative batch timeout": {
 			args:        args{batchTimeout: -1 * time.Second},
-			expectedErr: "batch timeout should greater than or equal to zero",
+			expectedErr: "batch timeout should greater than zero",
+		},
+		"zero batch timeout": {
+			args:        args{batchTimeout: 0 * time.Second},
+			expectedErr: "batch timeout should greater than zero",
 		},
 	}
 	for name, tt := range tests {

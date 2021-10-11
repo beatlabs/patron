@@ -67,17 +67,11 @@ func (c *consumerHandler) consumePartition(ctx context.Context, ch <-chan *saram
 		}
 	}
 
-	var err error
 	if c.isBatch {
-		err = c.consumePartitionBatch(ctx, ch, partition)
-	} else {
-		err = c.consumePartitionUnit(ctx, ch, partition)
-	}
-	if err != nil {
-		return err
+		return c.consumePartitionBatch(ctx, ch, partition)
 	}
 
-	return nil
+	return c.consumePartitionUnit(ctx, ch, partition)
 }
 
 func (c *consumerHandler) startingOffsetAfterLatestOffset(latestOffset int64, partition int32) bool {

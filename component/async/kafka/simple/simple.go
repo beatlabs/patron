@@ -56,6 +56,7 @@ type Factory struct {
 }
 
 // New constructor.
+// Deprecated: The Kafka client package is superseded by the `component/kafka/simple` package.
 func New(name, topic string, brokers []string, oo ...kafka.OptionFunc) (*Factory, error) {
 	if name == "" {
 		return nil, errors.New("name is required")

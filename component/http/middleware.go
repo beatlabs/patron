@@ -51,6 +51,12 @@ type responseWriter struct {
 	writer              http.ResponseWriter
 }
 
+var (
+	httpStatusTracingInit          sync.Once
+	httpStatusTracingHandledMetric *prometheus.CounterVec
+	httpStatusTracingLatencyMetric *prometheus.HistogramVec
+)
+
 func newResponseWriter(w http.ResponseWriter, capturePayload bool) *responseWriter {
 	return &responseWriter{status: -1, statusHeaderWritten: false, writer: w, capturePayload: capturePayload}
 }
@@ -155,12 +161,6 @@ func NewLoggingTracingMiddleware(path string, statusCodeLogger statusCodeLoggerH
 		})
 	}
 }
-
-var (
-	httpStatusTracingInit          sync.Once
-	httpStatusTracingHandledMetric *prometheus.CounterVec
-	httpStatusTracingLatencyMetric *prometheus.HistogramVec
-)
 
 func initHTTPServerMetrics() {
 	httpStatusTracingHandledMetric = prometheus.NewCounterVec(

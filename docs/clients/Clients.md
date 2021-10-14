@@ -9,8 +9,9 @@ github.com/opentracing/opentracing-go v1.1.0
 
 
 ## HTTP Client
-Patron provides an HTTP client which integrates tracing into all outgoing requests by wrapping the default `net/http` client. Users can configure the client's Timeout, RoundTripper and/or set up a circuit breaker.
-
+Patron provides an HTTP client which integrates tracing into all outgoing requests by wrapping the default `net/http` client. 
+Users can configure the client's Timeout, RoundTripper and/or set up a circuit breaker. 
+In order to propagate the traces, the HTTP request context needs to be set.
 
 ## AMQP
 The AMQP client allows users to connect to a RabbitMQ instance and publish messages. The published messages have integrated tracing headers by default. Users can configure every aspect of the connection.

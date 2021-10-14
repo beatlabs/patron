@@ -101,11 +101,6 @@ func TestRouteBuilder_WithTrace(t *testing.T) {
 	assert.True(t, rb.jaegerTrace)
 }
 
-func TestRouteBuilder_WithStatusTrace(t *testing.T) {
-	rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).WithStatusTrace()
-	assert.True(t, rb.statusTrace)
-}
-
 func TestRouteBuilder_WithMiddlewares(t *testing.T) {
 	middleware := func(next http.Handler) http.Handler { return next }
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
@@ -404,7 +399,7 @@ func TestRoute_Getters(t *testing.T) {
 
 	assert.Equal(t, path, r.Path())
 	assert.Equal(t, http.MethodPost, r.Method())
-	assert.Len(t, r.Middlewares(), 1)
+	assert.Len(t, r.Middlewares(), 2)
 
 	// the only way to test do we get the same handler that we provided initially, is to run it explicitly,
 	// since all we have in Route itself is a wrapper function

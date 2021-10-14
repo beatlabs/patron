@@ -96,7 +96,7 @@ It is possible to customize their behaviour by injecting an `http.AliveCheck` an
 
 ## Metrics
 
-The following metrics are automatically provided when using `WithStatusTrace()`:
+The following metrics are automatically provided by default:
 * `component_http_handled_total`
 * `component_http_handled_seconds`
 
@@ -164,9 +164,10 @@ func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
     // ...
 }
 
-// NewStatusTracingMiddleware creates a MiddlewareFunc that captures status code and duration metrics about the responses returned.
-// It does not use Jaeger nor OpenTracing but will also log the HTTP request on debug level if configured so.
-func NewStatusTracingMiddleware(method, path string, statusCodeLogger statusCodeLoggerHandler) MiddlewareFunc {
+// NewRequestObserverMiddleware creates a MiddlewareFunc that captures status code and duration metrics about the responses returned;
+// metrics are exposed via Prometheus.
+// This middleware is enabled by default.
+func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 	// ...
 }
 

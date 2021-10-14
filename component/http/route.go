@@ -47,7 +47,6 @@ type RouteBuilder struct {
 	method        string
 	path          string
 	jaegerTrace   bool
-	statusTrace   bool
 	rateLimiter   *rate.Limiter
 	middlewares   []MiddlewareFunc
 	authenticator auth.Authenticator
@@ -60,13 +59,6 @@ type RouteBuilder struct {
 // It requires Jaeger enabled on the Patron service.
 func (rb *RouteBuilder) WithTrace() *RouteBuilder {
 	rb.jaegerTrace = true
-	return rb
-}
-
-// WithStatusTrace enables response tracing of status codes via Prometheus.
-// It does not use Jaeger/OpenTracing.
-func (rb *RouteBuilder) WithStatusTrace() *RouteBuilder {
-	rb.statusTrace = true
 	return rb
 }
 
@@ -179,10 +171,11 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		// uses Jaeger/OpenTracing and Patron's response logging
 		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path, statusCodeLogger))
 	}
-	if rb.statusTrace {
-		// uses a custom Patron metric for HTTP responses (with complete status code) and Patron's response logging
-		middlewares = append(middlewares, NewStatusTracingMiddleware(rb.method, rb.path, statusCodeLogger))
-	}
+
+	// uses a custom Patron metric for HTTP responses (with complete status code)
+	// it does not use Jaeger/OpenTracing
+	middlewares = append(middlewares, NewRequestObserverMiddleware(rb.method, rb.path))
+
 	if rb.rateLimiter != nil {
 		middlewares = append(middlewares, NewRateLimitingMiddleware(rb.rateLimiter))
 	}

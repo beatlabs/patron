@@ -184,29 +184,23 @@ func initHTTPServerMetrics() {
 	prometheus.MustRegister(httpStatusTracingLatencyMetric)
 }
 
-// NewStatusTracingMiddleware creates a MiddlewareFunc that captures status code and duration metrics about the responses returned.
-// It does not use Jaeger nor OpenTracing but will also log the HTTP request on debug level if configured so.
-func NewStatusTracingMiddleware(method, path string, statusCodeLogger statusCodeLoggerHandler) MiddlewareFunc {
+// NewRequestObserverMiddleware creates a MiddlewareFunc that captures status code and duration metrics about the responses returned;
+// metrics are exposed via Prometheus.
+// This middleware is enabled by default.
+func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 	// register Promethus metrics on first use
 	httpStatusTracingInit.Do(initHTTPServerMetrics)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			now := time.Now()
-			corID := getOrSetCorrelationID(r.Header)
-			logErrors := log.Enabled(log.ErrorLevel)
-			lw := newResponseWriter(w, logErrors)
+			lw := newResponseWriter(w, false)
 			next.ServeHTTP(lw, r)
 
 			// collect metrics about HTTP server-side handling and latency
 			status := strconv.Itoa(lw.Status())
 			httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
 			httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
-
-			logRequestResponse(corID, lw, r)
-			if logErrors && statusCodeLogger.shouldLog(lw.status) {
-				log.FromContext(r.Context()).Errorf("%s %d error: %v", path, lw.status, lw.responsePayload.String())
-			}
 		})
 	}
 }

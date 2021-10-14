@@ -94,6 +94,22 @@ Both can return either a `200 OK` or a `503 Service Unavailable` status code (de
 
 It is possible to customize their behaviour by injecting an `http.AliveCheck` and/or an `http.ReadyCheck` `OptionFunc` to the HTTP component constructor.
 
+## Metrics
+
+The following metrics are automatically provided when using `WithStatusTrace()`:
+* `component_http_handled_total`
+* `component_http_handled_seconds`
+
+Example of the associated labels: `status_code="200"`, `method="GET"`, `path="/hello/world"`
+
+### Jaeger-provided metrics
+
+When using `WithTrace()` the following metrics are automatically provided via Jaeger (they are populated together with the spans):
+* `{microservice_name}_http_requests_total`
+* `{microservice_name}_http_requests_latency`
+
+They have labels `endpoint="GET-/hello/world"` and `status_code="2xx"`.
+
 ## HTTP Middlewares
 
 A `MiddlewareFunc` preserves the default net/http middleware pattern.
@@ -143,9 +159,15 @@ func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
 }
 
 // NewLoggingTracingMiddleware creates a MiddlewareFunc that continues a tracing span and finishes it.
-// It also logs the HTTP request on debug logging level.
+// It uses Jaeger and OpenTracing and will also log the HTTP request on debug level if configured so.
 func NewLoggingTracingMiddleware(path string) MiddlewareFunc {
     // ...
+}
+
+// NewStatusTracingMiddleware creates a MiddlewareFunc that captures status code and duration metrics about the responses returned.
+// It does not use Jaeger nor OpenTracing but will also log the HTTP request on debug level if configured so.
+func NewStatusTracingMiddleware(method, path string, statusCodeLogger statusCodeLoggerHandler) MiddlewareFunc {
+	// ...
 }
 
 // NewCachingMiddleware creates a cache layer as a middleware.

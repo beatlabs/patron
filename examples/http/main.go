@@ -22,9 +22,11 @@ import (
 
 const maxRequests = 1000
 
-var assetsFolder string
-var requestsCount int
-var refreshAfter int64
+var (
+	assetsFolder  string
+	requestsCount int
+	refreshAfter  int64
+)
 
 func init() {
 	err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
@@ -134,7 +136,7 @@ func httpHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Resp
 	if err != nil {
 		return nil, err
 	}
-	rsp, err := cl.Do(ctx, httpRequest)
+	rsp, err := cl.Do(httpRequest)
 	if err != nil {
 		return nil, patronhttp.NewErrorWithCodeAndPayload(http.StatusInternalServerError, fmt.Sprintf("failed to perform http request with protobuf payload: %v", err))
 	}
@@ -153,7 +155,7 @@ func DoIntervalRequest(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("could not create http client: %w", err)
 	}
 
-	response, err := cl.Do(ctx, request)
+	response, err := cl.Do(request)
 	if err != nil {
 		return "", fmt.Errorf("failed create get to http-cache service: %w", err)
 	}

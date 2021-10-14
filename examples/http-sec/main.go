@@ -109,7 +109,7 @@ func (hc *kafkaProducer) forwardToKafkaHandler(ctx context.Context, req *patronh
 	if err != nil {
 		return nil, err
 	}
-	_, err = cl.Do(ctx, googleReq)
+	_, err = cl.Do(googleReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get www.google.com: %w", err)
 	}

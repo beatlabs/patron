@@ -193,7 +193,7 @@ func TestRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	port := 50023
 	runRoute(ctx, t, routeBuilder, ce, port)
 
-	assertResponse(ctx, t, []http.Response{
+	assertResponse(t, []http.Response{
 		{
 			Header: map[string][]string{
 				httpcache.HeaderCacheControl: {"max-age=10"},
@@ -267,7 +267,7 @@ func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
 	port := 50023
 	runRoute(ctx, t, routeBuilder, ce, port)
 
-	assertResponse(ctx, t, []http.Response{
+	assertResponse(t, []http.Response{
 		{
 			Header: map[string][]string{
 				httpcache.HeaderCacheControl: {"max-age=10"},
@@ -357,7 +357,7 @@ func TestRawRouteCacheImplementation_WithSingleRequest(t *testing.T) {
 	port := 50024
 	runRoute(ctx, t, routeBuilder, ce, port)
 
-	assertResponse(ctx, t, []http.Response{
+	assertResponse(t, []http.Response{
 		{
 			Header: map[string][]string{
 				httpcache.HeaderCacheControl: {"max-age=10"},
@@ -438,7 +438,7 @@ func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, ce 
 			case <-ctx.Done():
 				return
 			default:
-				r, err := cl.Do(ctx, req)
+				r, err := cl.Do(req)
 				if err == nil && r != nil {
 					lwg.Done()
 					return
@@ -449,7 +449,7 @@ func runRoute(ctx context.Context, t *testing.T, routeBuilder *RouteBuilder, ce 
 	lwg.Wait()
 }
 
-func assertResponse(ctx context.Context, t *testing.T, expected []http.Response, port int) {
+func assertResponse(t *testing.T, expected []http.Response, port int) {
 	cl, err := httpclient.New()
 	assert.NoError(t, err)
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%d/path", port), nil)
@@ -458,7 +458,7 @@ func assertResponse(ctx context.Context, t *testing.T, expected []http.Response,
 	assert.NoError(t, err)
 
 	for _, expectedResponse := range expected {
-		response, err := cl.Do(ctx, req)
+		response, err := cl.Do(req)
 
 		assert.NoError(t, err)
 

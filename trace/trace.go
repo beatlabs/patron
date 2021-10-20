@@ -54,7 +54,6 @@ func Setup(name, ver, agent, typ string, prm float64, buckets []float64) error {
 	)
 	opts := metrics.NSOptions{Name: name, Tags: nil}
 	tr, clsTemp, err := cfg.NewTracer(
-		config.Logger(jaegerLoggerAdapter{}),
 		config.Observer(rpcmetrics.NewObserver(metricsFactory.Namespace(opts), rpcmetrics.DefaultNameNormalizer)),
 	)
 	if err != nil {
@@ -115,17 +114,6 @@ func ChildSpan(ctx context.Context, opName, cmp string, tags ...opentracing.Tag)
 	}
 	sp.SetTag(VersionTag, Version)
 	return sp, ctx
-}
-
-type jaegerLoggerAdapter struct {
-}
-
-func (l jaegerLoggerAdapter) Error(msg string) {
-	log.Error(msg)
-}
-
-func (l jaegerLoggerAdapter) Infof(msg string, args ...interface{}) {
-	log.Infof(msg, args...)
 }
 
 type consumerOption struct {

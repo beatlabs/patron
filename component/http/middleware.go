@@ -339,6 +339,7 @@ func (w *dynamicCompressionResponseWriter) WriteHeader(statusCode int) {
 			// no body allowed so can't compress
 			// don't try to write compression header (1f 8b) to body to avoid http.ErrBodyNotAllowed
 			w.writer = w.ResponseWriter
+			w.ResponseWriter.WriteHeader(statusCode)
 			return
 		}
 

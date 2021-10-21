@@ -3,6 +3,7 @@ package v2
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/Shopify/sarama"
 	patronerrors "github.com/beatlabs/patron/errors"
@@ -65,28 +66,64 @@ type Builder struct {
 	errs    []error
 }
 
-// New initiates the AsyncProducer/SyncProducer builder chain with the default sarama configuration.
-func New(brokers []string) *Builder {
+// New initiates the AsyncProducer/SyncProducer builder chain with the specified Sarama configuration.
+func New(brokers []string, saramaConfig *sarama.Config) *Builder {
 	var ee []error
 	if validation.IsStringSliceEmpty(brokers) {
 		ee = append(ee, errors.New("brokers are empty or have an empty value"))
 	}
+	if saramaConfig == nil {
+		ee = append(ee, errors.New("no Sarama configuration specified"))
+	}
 
 	return &Builder{
 		brokers: brokers,
-		cfg:     sarama.NewConfig(),
 		errs:    ee,
+		cfg:     saramaConfig,
 	}
 }
 
-// WithConfig allows to pass into the builder a custom sarama configuration.
-func (b *Builder) WithConfig(cfg *sarama.Config) *Builder {
-	if cfg == nil {
-		b.errs = append(b.errs, errors.New("config is nil"))
-		return b
+// DefaultConsumerSaramaConfig function creates a Sarama configuration with a client ID derived from host name and consumer name.
+func DefaultConsumerSaramaConfig(name string, readCommitted bool) (*sarama.Config, error) {
+	host, err := os.Hostname()
+	if err != nil {
+		return nil, errors.New("failed to get hostname")
 	}
-	b.cfg = cfg
-	return b
+
+	config := sarama.NewConfig()
+	config.ClientID = fmt.Sprintf("%s-%s", host, name)
+	config.Consumer.Return.Errors = true
+	config.Version = sarama.V0_11_0_0
+	if readCommitted {
+		// from Kafka documentation:
+		// Transactions were introduced in Kafka 0.11.0 wherein applications can write to multiple topics and partitions atomically. In order for this to work, consumers reading from these partitions should be configured to only read committed data. This can be achieved by by setting the isolation.level=read_committed in the consumer's configuration.
+		// In read_committed mode, the consumer will read only those transactional messages which have been successfully committed. It will continue to read non-transactional messages as before. There is no client-side buffering in read_committed mode. Instead, the end offset of a partition for a read_committed consumer would be the offset of the first message in the partition belonging to an open transaction. This offset is known as the 'Last Stable Offset'(LSO).
+		config.Consumer.IsolationLevel = sarama.ReadCommitted
+	}
+
+	return config, nil
+}
+
+// DefaultProducerSaramaConfig creates a default Sarama configuration with idempotency enabled.
+// See also:
+// * https://pkg.go.dev/github.com/Shopify/sarama#RequiredAcks
+// * https://pkg.go.dev/github.com/Shopify/sarama#Config
+func DefaultProducerSaramaConfig(name string, idempotent bool) (*sarama.Config, error) {
+	host, err := os.Hostname()
+	if err != nil {
+		return nil, errors.New("failed to get hostname")
+	}
+
+	cfg := sarama.NewConfig()
+	cfg.ClientID = fmt.Sprintf("%s-%s", host, name)
+
+	if idempotent {
+		cfg.Net.MaxOpenRequests = 1
+		cfg.Producer.Idempotent = true
+	}
+	cfg.Producer.RequiredAcks = sarama.WaitForAll
+
+	return cfg, nil
 }
 
 // Create a new synchronous producer.
@@ -95,13 +132,12 @@ func (b *Builder) Create() (*SyncProducer, error) {
 		return nil, patronerrors.Aggregate(b.errs...)
 	}
 
-	var err error
-
 	// required for any SyncProducer; 'Errors' is already true by default for both async/sync producers
 	b.cfg.Producer.Return.Successes = true
 
 	p := SyncProducer{}
 
+	var err error
 	p.prodClient, err = sarama.NewClient(b.brokers, b.cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create producer client: %w", err)
@@ -120,13 +156,13 @@ func (b Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 	if len(b.errs) > 0 {
 		return nil, nil, patronerrors.Aggregate(b.errs...)
 	}
-	var err error
 
 	ap := &AsyncProducer{
 		baseProducer: baseProducer{},
 		asyncProd:    nil,
 	}
 
+	var err error
 	ap.prodClient, err = sarama.NewClient(b.brokers, b.cfg)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create producer client: %w", err)

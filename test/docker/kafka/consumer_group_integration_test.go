@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"
 	"github.com/google/uuid"
@@ -16,12 +17,17 @@ import (
 )
 
 func TestGroupConsume(t *testing.T) {
+	t.Parallel()
+
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
 
-		factory, err := group.New("test1", uuid.New().String(), []string{groupTopic1}, Brokers(), kafka.DecoderJSON(),
+		saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-group-consumer", true)
+		require.NoError(t, err)
+
+		factory, err := group.New("test1", uuid.New().String(), []string{groupTopic1}, Brokers(), saramaCfg, kafka.DecoderJSON(),
 			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
@@ -68,12 +74,17 @@ func TestGroupConsume(t *testing.T) {
 }
 
 func TestGroupConsume_ClaimMessageError(t *testing.T) {
+	t.Parallel()
+
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
 
+		saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", true)
+		require.NoError(t, err)
+
 		// Consumer will error out in ClaimMessage as no DecoderFunc has been set
-		factory, err := group.New("test1", uuid.New().String(), []string{groupTopic2}, Brokers(),
+		factory, err := group.New("test1", uuid.New().String(), []string{groupTopic2}, Brokers(), saramaCfg,
 			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err

@@ -17,6 +17,8 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	saramaCfg := sarama.NewConfig()
 	// consumer will commit every batch in a blocking operation
 	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
@@ -86,34 +88,41 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name:    "failed, invalid retry retry timeout",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, retryWait: -2},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, retryWait: -2, saramaCfg: saramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "failed, invalid batch size",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 0, batchTimeout: time.Second, retryWait: 2},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 0, batchTimeout: time.Second, retryWait: 2, saramaCfg: saramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "failed, invalid batch timeout",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: -2, retryWait: 2},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: -2, retryWait: 2, saramaCfg: saramaCfg},
+			wantErr: true,
+		},
+		{
+			name:    "failed, no sarama configuration",
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 10, batchTimeout: time.Second, retryWait: 2, saramaCfg: nil},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := New(
 				tt.args.name,
 				tt.args.group,
 				tt.args.brokers,
 				tt.args.topics,
 				tt.args.p,
+				tt.args.saramaCfg,
 				FailureStrategy(tt.args.fs),
 				Retries(tt.args.retries),
 				RetryWait(tt.args.retryWait),
 				BatchSize(tt.args.batchSize),
 				BatchTimeout(tt.args.batchTimeout),
-				SaramaConfig(tt.args.saramaCfg),
 				CommitSync())
 			if tt.wantErr {
 				assert.Error(t, err)

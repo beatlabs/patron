@@ -8,18 +8,25 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
+	defaultSaramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", false)
+	require.Nil(t, err)
+
 	brokers := []string{"192.168.1.1"}
 	type args struct {
-		name    string
-		brokers []string
-		topic   string
-		options []kafka.OptionFunc
+		name      string
+		brokers   []string
+		topic     string
+		saramaCfg *sarama.Config
+		options   []kafka.OptionFunc
 	}
 	tests := []struct {
 		name    string
@@ -28,12 +35,12 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name:    "fails with missing name",
-			args:    args{name: "", brokers: brokers, topic: "topic1"},
+			args:    args{name: "", brokers: brokers, topic: "topic1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "fails with missing brokers",
-			args:    args{name: "test", brokers: []string{}, topic: "topic1"},
+			args:    args{name: "test", brokers: []string{}, topic: "topic1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
 		{
@@ -43,35 +50,45 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name:    "fails with two brokers - one of the is empty",
-			args:    args{name: "test", brokers: []string{" ", "broker2"}, topic: "topic1"},
+			args:    args{name: "test", brokers: []string{" ", "broker2"}, topic: "topic1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "fails with missing topics",
-			args:    args{name: "test", brokers: brokers, topic: ""},
+			args:    args{name: "test", brokers: brokers, topic: "", saramaCfg: defaultSaramaCfg},
+			wantErr: true,
+		},
+		{
+			name:    "fails with nil Sarama config",
+			args:    args{name: "test", brokers: brokers, topic: "", saramaCfg: nil},
 			wantErr: true,
 		},
 		{
 			name:    "success",
-			args:    args{name: "test", brokers: brokers, topic: "topic1"},
+			args:    args{name: "test", brokers: brokers, topic: "topic1", saramaCfg: defaultSaramaCfg},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, tt.args.topic, tt.args.brokers, tt.args.options...)
+			t.Parallel()
+
+			got, err := New(tt.args.name, tt.args.topic, tt.args.brokers, tt.args.saramaCfg, tt.args.options...)
 			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, got)
+				require.Error(t, err)
+				require.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, got)
+				require.NoError(t, err)
+				require.NotNil(t, got)
 			}
 		})
 	}
 }
 
 func TestFactory_Create(t *testing.T) {
+	saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", false)
+	require.Nil(t, err)
+
 	type fields struct {
 		oo []kafka.OptionFunc
 	}
@@ -85,12 +102,9 @@ func TestFactory_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := &Factory{
-				name:    "test",
-				topic:   "topic",
-				brokers: []string{"192.168.1.1"},
-				oo:      tt.fields.oo,
-			}
+			f, err := New("test", "topic", []string{"192.168.1.1"}, saramaCfg, tt.fields.oo...)
+			require.NoError(t, err)
+
 			got, err := f.Create()
 			if tt.wantErr {
 				assert.Error(t, err)

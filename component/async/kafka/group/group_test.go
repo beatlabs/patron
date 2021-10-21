@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/encoding"
@@ -17,13 +18,19 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
+	defaultSaramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", false)
+	require.Nil(t, err)
+
 	brokers := []string{"192.168.1.1"}
 	type args struct {
-		name    string
-		brokers []string
-		topics  []string
-		group   string
-		options []kafka.OptionFunc
+		name      string
+		brokers   []string
+		topics    []string
+		group     string
+		saramaCfg *sarama.Config
+		options   []kafka.OptionFunc
 	}
 	tests := []struct {
 		name    string
@@ -32,55 +39,62 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name:    "fails with missing name",
-			args:    args{name: "", brokers: brokers, topics: []string{"topic1"}, group: "group1"},
+			args:    args{name: "", brokers: brokers, topics: []string{"topic1"}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "fails with missing brokers",
-			args:    args{name: "test", brokers: []string{}, topics: []string{"topic1"}, group: "group1"},
+			args:    args{name: "test", brokers: []string{}, topics: []string{"topic1"}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "fails with empty broker",
-			args:    args{name: "test", brokers: []string{" "}, topics: []string{"topic1"}, group: "group1"},
+			args:    args{name: "test", brokers: []string{" "}, topics: []string{"topic1"}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "fails with missing topics",
-			args:    args{name: "test", brokers: brokers, topics: nil, group: "group1"},
+			args:    args{name: "test", brokers: brokers, topics: nil, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "fails with one empty topic",
-			args:    args{name: "test", brokers: brokers, topics: []string{"topic1", ""}, group: "group1"},
+			args:    args{name: "test", brokers: brokers, topics: []string{"topic1", ""}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "fails with missing group",
-			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: ""},
+			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: "", saramaCfg: defaultSaramaCfg},
+			wantErr: true,
+		},
+		{
+			name:    "fails with nil Sarama config",
+			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: "group1", saramaCfg: nil},
 			wantErr: true,
 		},
 		{
 			name:    "success",
-			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: "group1"},
+			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, tt.args.group, tt.args.topics, tt.args.brokers, tt.args.options...)
+			got, err := New(tt.args.name, tt.args.group, tt.args.topics, tt.args.brokers, tt.args.saramaCfg, tt.args.options...)
 			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, got)
+				require.Error(t, err)
+				require.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, got)
+				require.NoError(t, err)
+				require.NotNil(t, got)
 			}
 		})
 	}
 }
 
 func TestFactory_Create(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		clientName string
 		topics     []string
@@ -111,12 +125,14 @@ func TestFactory_Create(t *testing.T) {
 	}
 	for testName, tt := range tests {
 		t.Run(testName, func(t *testing.T) {
-			f := &Factory{
-				name:    tt.fields.clientName,
-				topics:  tt.fields.topics,
-				brokers: tt.fields.brokers,
-				oo:      tt.fields.oo,
-			}
+			t.Parallel()
+
+			saramaCfg, err := v2.DefaultConsumerSaramaConfig(tt.fields.clientName, false)
+			require.Nil(t, err)
+
+			f, err := New(tt.fields.clientName, "no-group", tt.fields.topics, tt.fields.brokers, saramaCfg, tt.fields.oo...)
+			require.NoError(t, err)
+
 			got, err := f.Create()
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -128,7 +144,7 @@ func TestFactory_Create(t *testing.T) {
 				assert.True(t, ok, "consumer is not of type group.consumer")
 				assert.Equal(t, tt.fields.brokers, consumer.config.Brokers)
 				assert.Equal(t, tt.fields.topics, consumer.topics)
-				assert.True(t, strings.HasSuffix(consumer.config.SaramaConfig.ClientID, tt.fields.clientName))
+				assert.True(t, strings.HasSuffix(consumer.config.SaramaConfig.ClientID, tt.fields.clientName), "clientID %q does not have suffix %q", consumer.config.SaramaConfig.ClientID, tt.fields.clientName)
 				assert.False(t, got.OutOfOrder())
 			}
 		})
@@ -166,6 +182,7 @@ func (m *mockConsumerSession) MarkMessage(*sarama.ConsumerMessage, string) {}
 func (m *mockConsumerSession) Context() context.Context                    { return context.Background() }
 
 func TestHandler_ConsumeClaim(t *testing.T) {
+	t.Parallel()
 
 	tests := []struct {
 		name    string
@@ -180,17 +197,19 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			chMsg := make(chan async.Message, 1)
 			h := handler{messages: chMsg, consumer: &consumer{}}
 
 			err := h.ConsumeClaim(&mockConsumerSession{}, &mockConsumerClaim{tt.msgs})
 
 			if tt.wantErr {
-				assert.Error(t, err, tt.error)
+				require.Error(t, err, tt.error)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				ch := <-chMsg
-				assert.NotNil(t, ch)
+				require.NotNil(t, ch)
 			}
 		})
 	}
@@ -230,12 +249,14 @@ func versionedConsumerMessage(value string, header *sarama.RecordHeader, version
 }
 
 func TestConsumer_ConsumeFailedBroker(t *testing.T) {
-	f, err := New("name", "group", []string{"topic"}, []string{"1", "2"})
-	assert.NoError(t, err)
+	saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", false)
+	require.NoError(t, err)
+	f, err := New("name", "group", []string{"topic"}, []string{"1", "2"}, saramaCfg)
+	require.NoError(t, err)
 	c, err := f.Create()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	chMsg, chErr, err := c.Consume(context.Background())
-	assert.Nil(t, chMsg)
-	assert.Nil(t, chErr)
-	assert.Error(t, err)
+	require.Nil(t, chMsg)
+	require.Nil(t, chErr)
+	require.Error(t, err)
 }

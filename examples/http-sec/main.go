@@ -52,7 +52,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	asyncComp, err := newAsyncKafkaProducer(kafkaBroker, kafkaTopic)
+	asyncComp, err := newAsyncKafkaProducer(kafkaBroker, kafkaTopic, true)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
@@ -78,8 +78,13 @@ type kafkaProducer struct {
 }
 
 // newAsyncKafkaProducer creates a new asynchronous kafka producer client
-func newAsyncKafkaProducer(kafkaBroker, topic string) (*kafkaProducer, error) {
-	prd, chErr, err := v2.New([]string{kafkaBroker}).CreateAsync()
+func newAsyncKafkaProducer(kafkaBroker, topic string, readCommitted bool) (*kafkaProducer, error) {
+	saramaCfg, err := v2.DefaultConsumerSaramaConfig("http-sec-consumer", readCommitted)
+	if err != nil {
+		return nil, err
+	}
+
+	prd, chErr, err := v2.New([]string{kafkaBroker}, saramaCfg).CreateAsync()
 	if err != nil {
 		return nil, err
 	}

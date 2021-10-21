@@ -3,9 +3,6 @@ package kafka
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"os"
 
 	"github.com/Shopify/sarama"
 	"github.com/opentracing/opentracing-go"
@@ -86,19 +83,4 @@ type batch struct {
 // Messages of the batch.
 func (b batch) Messages() []Message {
 	return b.messages
-}
-
-// DefaultSaramaConfig function creates a sarama config object with the default configuration set up.
-func DefaultSaramaConfig(name string) (*sarama.Config, error) {
-	host, err := os.Hostname()
-	if err != nil {
-		return nil, errors.New("failed to get hostname")
-	}
-
-	config := sarama.NewConfig()
-	config.ClientID = fmt.Sprintf("%s-%s", host, name)
-	config.Consumer.Return.Errors = true
-	config.Version = sarama.V0_11_0_0
-
-	return config, nil
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/log"
 )
@@ -69,18 +68,6 @@ func BatchTimeout(timeout time.Duration) OptionFunc {
 			return errors.New("batch timeout should greater than or equal to zero")
 		}
 		c.batchTimeout = timeout
-		return nil
-	}
-}
-
-// SaramaConfig specifies a sarama consumer config. Use this to set consumer config on sarama level.
-// Check the sarama config documentation for more config options.
-func SaramaConfig(cfg *sarama.Config) OptionFunc {
-	return func(c *Component) error {
-		if cfg == nil {
-			return errors.New("nil sarama configuration provided")
-		}
-		c.saramaConfig = cfg
 		return nil
 	}
 }

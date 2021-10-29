@@ -9,7 +9,6 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
 	patronamqp "github.com/beatlabs/patron/client/amqp/v2"
-	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/component/kafka/group"
 	"github.com/beatlabs/patron/encoding/json"
@@ -88,7 +87,7 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 	}
 
 	// create a consumer that accepts only consistent reads
-	saramaCfg, err := v2.DefaultConsumerSaramaConfig("kafka-consumer", true)
+	saramaCfg, err := kafka.DefaultConsumerSaramaConfig("kafka-consumer", true)
 	if err != nil {
 		return nil, err
 	}

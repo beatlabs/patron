@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async/kafka"
+	kafkacmp "github.com/beatlabs/patron/component/kafka"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ import (
 func TestNew(t *testing.T) {
 	t.Parallel()
 
-	defaultSaramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", false)
+	defaultSaramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-consumer", false)
 	require.Nil(t, err)
 
 	brokers := []string{"192.168.1.1"}
@@ -86,7 +86,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestFactory_Create(t *testing.T) {
-	saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", false)
+	saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-consumer", false)
 	require.Nil(t, err)
 
 	type fields struct {

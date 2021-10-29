@@ -7,20 +7,19 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
+	kafkacmp "github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
 	t.Parallel()
 
-	defaultSaramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", false)
+	defaultSaramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-consumer", false)
 	require.Nil(t, err)
 
 	brokers := []string{"192.168.1.1"}
@@ -127,7 +126,7 @@ func TestFactory_Create(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			saramaCfg, err := v2.DefaultConsumerSaramaConfig(tt.fields.clientName, false)
+			saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig(tt.fields.clientName, false)
 			require.Nil(t, err)
 
 			f, err := New(tt.fields.clientName, "no-group", tt.fields.topics, tt.fields.brokers, saramaCfg, tt.fields.oo...)
@@ -229,7 +228,6 @@ func saramaConsumerMessage(value string, header *sarama.RecordHeader) *sarama.Co
 }
 
 func versionedConsumerMessage(value string, header *sarama.RecordHeader, version uint8) *sarama.ConsumerMessage {
-
 	bytes := []byte(value)
 
 	if version > 0 {
@@ -249,7 +247,7 @@ func versionedConsumerMessage(value string, header *sarama.RecordHeader, version
 }
 
 func TestConsumer_ConsumeFailedBroker(t *testing.T) {
-	saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", false)
+	saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-consumer", false)
 	require.NoError(t, err)
 	f, err := New("name", "group", []string{"topic"}, []string{"1", "2"}, saramaCfg)
 	require.NoError(t, err)

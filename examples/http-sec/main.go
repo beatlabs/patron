@@ -13,6 +13,7 @@ import (
 	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/auth/apikey"
+	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
@@ -79,7 +80,7 @@ type kafkaProducer struct {
 
 // newAsyncKafkaProducer creates a new asynchronous kafka producer client
 func newAsyncKafkaProducer(kafkaBroker, topic string, readCommitted bool) (*kafkaProducer, error) {
-	saramaCfg, err := v2.DefaultConsumerSaramaConfig("http-sec-consumer", readCommitted)
+	saramaCfg, err := kafka.DefaultConsumerSaramaConfig("http-sec-consumer", readCommitted)
 	if err != nil {
 		return nil, err
 	}

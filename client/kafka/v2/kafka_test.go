@@ -54,17 +54,6 @@ func TestBuilder_CreateAsync(t *testing.T) {
 	}
 }
 
-func Test_DefaultConsumerSaramaConfig(t *testing.T) {
-	sc, err := DefaultConsumerSaramaConfig("name", true)
-	require.NoError(t, err)
-	require.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
-	require.Equal(t, sarama.ReadCommitted, sc.Consumer.IsolationLevel)
-
-	sc, err = DefaultConsumerSaramaConfig("name", false)
-	require.NoError(t, err)
-	require.NotEqual(t, sarama.ReadCommitted, sc.Consumer.IsolationLevel)
-}
-
 func TestDefaultProducerSaramaConfig(t *testing.T) {
 	sc, err := DefaultProducerSaramaConfig("name", true)
 	require.NoError(t, err)

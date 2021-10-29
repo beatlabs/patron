@@ -2,9 +2,12 @@ package kafka
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/stretchr/testify/require"
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/correlation"
@@ -73,4 +76,15 @@ func Test_Message(t *testing.T) {
 	assert.Equal(t, ctx, msg.Context())
 	assert.Equal(t, span, msg.Span())
 	assert.Equal(t, cm, msg.Message())
+}
+
+func Test_DefaultConsumerSaramaConfig(t *testing.T) {
+	sc, err := DefaultConsumerSaramaConfig("name", true)
+	require.NoError(t, err)
+	require.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
+	require.Equal(t, sarama.ReadCommitted, sc.Consumer.IsolationLevel)
+
+	sc, err = DefaultConsumerSaramaConfig("name", false)
+	require.NoError(t, err)
+	require.NotEqual(t, sarama.ReadCommitted, sc.Consumer.IsolationLevel)
 }

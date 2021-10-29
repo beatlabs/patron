@@ -8,10 +8,10 @@ import (
 
 	"github.com/beatlabs/patron"
 	patronamqp "github.com/beatlabs/patron/client/amqp/v2"
-	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"
+	kafkacmp "github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
@@ -87,7 +87,7 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 		pub: publisher,
 	}
 
-	saramaCfg, err := v2.DefaultConsumerSaramaConfig("kafka-legacy", false)
+	saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("kafka-legacy", false)
 	if err != nil {
 		return nil, err
 	}

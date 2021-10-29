@@ -15,10 +15,10 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
-	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"
+	kafkacmp "github.com/beatlabs/patron/component/kafka"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -211,7 +211,7 @@ func newKafkaAsyncPackageComponent(t *testing.T, name string, retries uint, proc
 		return nil
 	}
 
-	saramaCfg, err := v2.DefaultConsumerSaramaConfig(name, true)
+	saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig(name, true)
 	require.NoError(t, err)
 
 	factory, err := group.New(

@@ -15,7 +15,6 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
-	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/component/kafka/group"
 	"github.com/stretchr/testify/assert"
@@ -211,7 +210,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 }
 
 func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc kafka.BatchProcessorFunc) *group.Component {
-	saramaCfg, err := v2.DefaultConsumerSaramaConfig(name, true)
+	saramaCfg, err := kafka.DefaultConsumerSaramaConfig(name, true)
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	saramaCfg.Version = sarama.V2_6_0_0
 	require.NoError(t, err)

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/simple"
+	kafkacmp "github.com/beatlabs/patron/component/kafka"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,8 +21,7 @@ func TestSimpleConsume(t *testing.T) {
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
-
-		saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-simple-consumer", true)
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer", true)
 		require.NoError(t, err)
 
 		factory, err := simple.New("test1", simpleTopic1, Brokers(), saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
@@ -75,8 +74,7 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
-
-		saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-simple-consumer-claim", true)
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-claim", true)
 		require.NoError(t, err)
 
 		factory, err := simple.New("test1", simpleTopic2, Brokers(), saramaCfg, kafka.Version(sarama.V2_1_0_0.String()),
@@ -138,7 +136,7 @@ func TestSimpleConsume_WithDurationOffset(t *testing.T) {
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
-		saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-simple-consumer-w-duration", true)
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-w-duration", true)
 		require.NoError(t, err)
 
 		factory, err := simple.New("test1", simpleTopic3, Brokers(), saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
@@ -193,7 +191,7 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 	chErr := make(chan error)
 	chNotif := make(chan struct{})
 	go func() {
-		saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-simple-consumer-w-notif", true)
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-w-notif", true)
 		require.NoError(t, err)
 
 		factory, err := simple.New("test4", simpleTopic4, Brokers(), saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
@@ -244,7 +242,7 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_NoMessages(t *te
 	chErr := make(chan error)
 	chNotif := make(chan struct{})
 	go func() {
-		saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-simple-consumer", true)
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer", true)
 		require.NoError(t, err)
 
 		factory, err := simple.New("test5", simpleTopic5, Brokers(), saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),

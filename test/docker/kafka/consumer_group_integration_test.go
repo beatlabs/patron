@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"
+	kafkacmp "github.com/beatlabs/patron/component/kafka"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,8 +23,7 @@ func TestGroupConsume(t *testing.T) {
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
-
-		saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-group-consumer", true)
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-group-consumer", true)
 		require.NoError(t, err)
 
 		factory, err := group.New("test1", uuid.New().String(), []string{groupTopic1}, Brokers(), saramaCfg, kafka.DecoderJSON(),
@@ -79,8 +78,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
-
-		saramaCfg, err := v2.DefaultConsumerSaramaConfig("test-consumer", true)
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-consumer", true)
 		require.NoError(t, err)
 
 		// Consumer will error out in ClaimMessage as no DecoderFunc has been set

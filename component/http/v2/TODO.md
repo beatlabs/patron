@@ -1,0 +1,7 @@
+- profiling
+- metrics
+- tracing
+- logging
+- middlewares
+- cors
+- tests - obviously

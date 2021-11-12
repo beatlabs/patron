@@ -12,6 +12,9 @@ const (
 	Alive AliveStatus = 1
 	// Unresponsive represents a state defining a Unresponsive state.
 	Unresponsive AliveStatus = 2
+
+	// AlivePath of the service.
+	AlivePath = "/alive"
 )
 
 // AliveCheckFunc defines a function type for implementing a liveness check.
@@ -28,5 +31,5 @@ func aliveCheckRoute(acf AliveCheckFunc) *RouteBuilder {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	return NewRawRouteBuilder("/alive", f).MethodGet()
+	return NewRawRouteBuilder(AlivePath, f).MethodGet()
 }

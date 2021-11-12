@@ -13,11 +13,13 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/component/http"
+	v2 "github.com/beatlabs/patron/component/http/v2"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/std"
 	patronzerolog "github.com/beatlabs/patron/log/zerolog"
 	"github.com/beatlabs/patron/trace"
+	"github.com/gorilla/mux"
 	"github.com/uber/jaeger-client-go"
 )
 
@@ -44,6 +46,7 @@ type service struct {
 	termSig           chan os.Signal
 	sighupHandler     func()
 	uncompressedPaths []string
+	httpRouter        *mux.Router
 }
 
 func (s *service) setupOSSignal() {
@@ -92,39 +95,79 @@ func (s *service) createHTTPComponent() (Component, error) {
 			return nil, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
 		}
 	}
-	port = strconv.FormatInt(portVal, 10)
-	log.Debugf("creating default HTTP component at port %s", port)
+	log.Debugf("creating default HTTP component at port %", portVal)
 
-	b := http.NewBuilder().WithPort(int(portVal))
-
-	httpReadTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
-	if ok {
-		readTimeout, err := time.ParseDuration(httpReadTimeout)
-		if err != nil {
-			return nil, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
-		}
-		b.WithReadTimeout(readTimeout)
-		log.Debugf("setting up default HTTP read timeout %s", httpReadTimeout)
+	readTimeout, err := getHTTPReadTimeout()
+	if err != nil {
+		return nil, err
 	}
 
-	httpWriteTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
-	if ok {
-		writeTimeout, err := time.ParseDuration(httpWriteTimeout)
-		if err != nil {
-			return nil, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
-		}
-		b.WithWriteTimeout(writeTimeout)
-		log.Debugf("setting up default HTTP write timeout %s", httpWriteTimeout)
+	writeTimeout, err := getHTTPWriteTimeout()
+	if err != nil {
+		return nil, err
 	}
 
+	deflateLevel, err := getHTTPDeflateLevel()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.httpRouter == nil {
+		return s.createHTTPv1(int(portVal), readTimeout, writeTimeout, deflateLevel)
+	}
+
+	return s.createHTTPv2(int(portVal), readTimeout, writeTimeout, deflateLevel)
+}
+
+func getHTTPReadTimeout() (*time.Duration, error) {
+	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
+	if !ok {
+		return nil, nil
+	}
+	timeout, err := time.ParseDuration(httpTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
+	}
+	return &timeout, nil
+}
+
+func getHTTPWriteTimeout() (*time.Duration, error) {
+	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
+	if !ok {
+		return nil, nil
+	}
+	timeout, err := time.ParseDuration(httpTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
+	}
+	return &timeout, nil
+}
+
+func getHTTPDeflateLevel() (*int, error) {
 	deflateLevel, ok := os.LookupEnv("PATRON_COMPRESSION_DEFLATE_LEVEL")
-	if ok {
-		deflateLevelInt, err := strconv.Atoi(deflateLevel)
-		if err != nil {
-			return nil, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
-		}
-		b.WithDeflateLevel(deflateLevelInt)
-		log.Debugf("setting up default HTTP deflate level  %s", deflateLevel)
+	if !ok {
+		return nil, nil
+	}
+	deflateLevelInt, err := strconv.Atoi(deflateLevel)
+	if err != nil {
+		return nil, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
+	}
+	return &deflateLevelInt, nil
+}
+
+func (s *service) createHTTPv1(port int, readTimeout, writeTimeout *time.Duration, deflateLevel *int) (Component, error) {
+	b := http.NewBuilder().WithPort(port)
+
+	if readTimeout != nil {
+		b.WithReadTimeout(*readTimeout)
+	}
+
+	if writeTimeout != nil {
+		b.WithWriteTimeout(*writeTimeout)
+	}
+
+	if deflateLevel != nil {
+		b.WithDeflateLevel(*deflateLevel)
 	}
 
 	if s.acf != nil {
@@ -153,6 +196,41 @@ func (s *service) createHTTPComponent() (Component, error) {
 	}
 
 	return cp, nil
+}
+
+func (s *service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duration, deflateLevel *int) (Component, error) {
+	oo := []v2.OptionFunc{v2.Port(port)}
+
+	if readTimeout != nil {
+		oo = append(oo, v2.ReadTimeout(*readTimeout))
+	}
+
+	if writeTimeout != nil {
+		oo = append(oo, v2.WriteTimeout(*writeTimeout))
+	}
+
+	if deflateLevel != nil {
+		oo = append(oo, v2.DeflateLevel(*deflateLevel))
+	}
+
+	if s.acf != nil {
+		oo = append(oo, v2.AliveCheck(s.acf))
+	}
+
+	if s.rcf != nil {
+		oo = append(oo, v2.ReadyCheck(s.rcf))
+	}
+
+	// TODO: middlewares?
+	// if s.middlewares != nil && len(s.middlewares) > 0 {
+	// 	oo = append(oo, v2.)
+	// }
+
+	if s.uncompressedPaths != nil {
+		oo = append(oo, v2.UncompressedPaths(s.uncompressedPaths...))
+	}
+
+	return v2.New(s.httpRouter, oo...)
 }
 
 func (s *service) waitTermination(chErr <-chan error) error {
@@ -191,6 +269,7 @@ type Builder struct {
 	termSig           chan os.Signal
 	sighupHandler     func()
 	uncompressedPaths []string
+	httpRouter        *mux.Router
 }
 
 // Config for setting up the builder.
@@ -415,6 +494,18 @@ func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
 	return b
 }
 
+// WithMuxRouter replaces the default v1 HTTP component with a new component base on the gorilla mux router.
+func (b *Builder) WithMuxRouter(router *mux.Router) *Builder {
+	if router == nil {
+		b.errors = append(b.errors, errors.New("provided mux router is nil"))
+	} else {
+		log.Debug("mux router will be used with the v2 HTTP component")
+		b.httpRouter = router
+	}
+
+	return b
+}
+
 // Build constructs the Patron service by applying the gathered properties.
 func (b *Builder) build() (*service, error) {
 	if len(b.errors) > 0 {
@@ -436,6 +527,7 @@ func (b *Builder) build() (*service, error) {
 		termSig:           b.termSig,
 		sighupHandler:     b.sighupHandler,
 		uncompressedPaths: b.uncompressedPaths,
+		httpRouter:        b.httpRouter,
 	}
 
 	httpCp, err := s.createHTTPComponent()

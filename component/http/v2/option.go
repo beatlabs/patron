@@ -3,13 +3,15 @@ package v2
 import (
 	"errors"
 	"time"
+
+	patronhttp "github.com/beatlabs/patron/component/http"
 )
 
 // OptionFunc definition for configuring the component in a functional way.
 type OptionFunc func(*Component) error
 
 // AliveCheck functional option.
-func AliveCheck(acf AliveCheckFunc) OptionFunc {
+func AliveCheck(acf patronhttp.AliveCheckFunc) OptionFunc {
 	return func(cmp *Component) error {
 		if acf == nil {
 			return errors.New("alive check function was nil")
@@ -21,7 +23,7 @@ func AliveCheck(acf AliveCheckFunc) OptionFunc {
 }
 
 // ReadyCheck functional option.
-func ReadyCheck(rcf ReadyCheckFunc) OptionFunc {
+func ReadyCheck(rcf patronhttp.ReadyCheckFunc) OptionFunc {
 	return func(cmp *Component) error {
 		if rcf == nil {
 			return errors.New("ready check function was nil")
@@ -63,7 +65,7 @@ func ReadTimeout(rt time.Duration) OptionFunc {
 		if rt <= 0*time.Second {
 			return errors.New("negative or zero read timeout provided")
 		}
-		cmp.httpReadTimeout = rt
+		cmp.readTimeout = rt
 		return nil
 	}
 }
@@ -74,7 +76,7 @@ func WriteTimeout(wt time.Duration) OptionFunc {
 		if wt <= 0*time.Second {
 			return errors.New("negative or zero write timeout provided")
 		}
-		cmp.httpWriteTimeout = wt
+		cmp.writeTimeout = wt
 		return nil
 	}
 }
@@ -96,7 +98,7 @@ func Port(port int) OptionFunc {
 		if port <= 0 || port > 65535 {
 			return errors.New("invalid HTTP Port provided")
 		}
-		cmp.httpPort = port
+		cmp.port = port
 		return nil
 	}
 }

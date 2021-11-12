@@ -1,7 +1,6 @@
-- profiling
-- metrics
 - tracing
 - logging
-- middlewares
+- middlewares support and standard middlewares and chains befpore, after, etc
 - cors
 - tests - obviously
+- mux option to override the existing one

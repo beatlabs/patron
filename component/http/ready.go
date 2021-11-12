@@ -12,6 +12,9 @@ const (
 	Ready ReadyStatus = 1
 	// NotReady represents a state defining a NotReady state.
 	NotReady ReadyStatus = 2
+
+	// ReadyPath of the service.
+	ReadyPath = "/ready"
 )
 
 // ReadyCheckFunc defines a function type for implementing a readiness check.
@@ -28,5 +31,5 @@ func readyCheckRoute(rcf ReadyCheckFunc) *RouteBuilder {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	return NewRawRouteBuilder("/ready", f).MethodGet()
+	return NewRawRouteBuilder(ReadyPath, f).MethodGet()
 }

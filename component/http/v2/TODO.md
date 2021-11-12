@@ -1,6 +1,7 @@
 - tracing
 - logging
 - middlewares support and standard middlewares and chains befpore, after, etc
+- SPA support
 - cors
 - tests - obviously
 - mux option to override the existing one

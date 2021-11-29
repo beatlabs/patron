@@ -3,11 +3,11 @@ module github.com/ory/dockertest/v3
 go 1.13
 
 require (
-	github.com/Microsoft/go-winio v0.5.0
+	github.com/Microsoft/go-winio v0.5.1
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5
-	github.com/cenkalti/backoff/v4 v4.1.1
+	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6
-	github.com/docker/cli v20.10.8+incompatible
+	github.com/docker/cli v20.10.11+incompatible
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0
@@ -18,7 +18,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
-	github.com/opencontainers/image-spec v1.0.1
+	github.com/opencontainers/image-spec v1.0.2
 	github.com/opencontainers/runc v1.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1

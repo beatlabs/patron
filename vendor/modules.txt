@@ -8,7 +8,7 @@ github.com/Microsoft/go-winio
 github.com/Microsoft/go-winio/pkg/guid
 # github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5
 github.com/Nvveen/Gotty
-# github.com/Shopify/sarama v1.30.0
+# github.com/Shopify/sarama v1.30.1
 ## explicit
 github.com/Shopify/sarama
 # github.com/aws/aws-sdk-go v1.42.9

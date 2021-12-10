@@ -9,6 +9,7 @@ import (
 const complexConfig = "200;(210,212);(220,222];[230,232);[240,242]"
 
 func TestStatusCode(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		cfg        string
 		statusCode int

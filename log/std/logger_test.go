@@ -135,6 +135,7 @@ func TestLogger(t *testing.T) {
 }
 
 func TestLogger_shouldLog(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		lvl log.Level
 	}

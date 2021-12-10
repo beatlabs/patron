@@ -9,6 +9,7 @@ import (
 )
 
 func TestMaxMessages(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		maxMessages *int64
 	}
@@ -45,6 +46,7 @@ func TestMaxMessages(t *testing.T) {
 }
 
 func TestPollWaitSeconds(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		waitSeconds *int64
 	}
@@ -81,6 +83,7 @@ func TestPollWaitSeconds(t *testing.T) {
 }
 
 func TestVisibilityTimeout(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		timeout *int64
 	}
@@ -117,6 +120,7 @@ func TestVisibilityTimeout(t *testing.T) {
 }
 
 func TestQueueStatsInterval(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		interval time.Duration
 	}
@@ -156,6 +160,7 @@ func TestRetries(t *testing.T) {
 }
 
 func TestRetryWait(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		retryWait time.Duration
 	}

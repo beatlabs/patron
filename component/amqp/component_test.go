@@ -9,6 +9,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
 	proc := func(_ context.Context, b Batch) {
 		_, _ = b.ACK()
 	}

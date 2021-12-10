@@ -13,6 +13,7 @@ import (
 )
 
 func TestCreate(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		port int
 	}

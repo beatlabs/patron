@@ -27,6 +27,7 @@ func (mo MockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
 }
 
 func TestRouteBuilder_WithMethodGet(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		methodExists bool
 	}
@@ -104,6 +105,7 @@ func TestRouteBuilder_WithTrace(t *testing.T) {
 }
 
 func TestRouteBuilder_WithMiddlewares(t *testing.T) {
+	t.Parallel()
 	middleware := func(next http.Handler) http.Handler { return next }
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
 	type fields struct {
@@ -139,6 +141,7 @@ func TestRouteBuilder_WithMiddlewares(t *testing.T) {
 }
 
 func TestRouteBuilder_WithAuth(t *testing.T) {
+	t.Parallel()
 	mockAuth := &MockAuthenticator{}
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
 	type fields struct {
@@ -184,6 +187,7 @@ func TestRouteBuilder_WithRouteCacheNil(t *testing.T) {
 }
 
 func TestRouteBuilder_Build(t *testing.T) {
+	t.Parallel()
 	mockAuth := &MockAuthenticator{}
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	middleware := func(next http.Handler) http.Handler { return next }
@@ -221,6 +225,7 @@ func TestRouteBuilder_Build(t *testing.T) {
 }
 
 func TestNewRawRouteBuilder(t *testing.T) {
+	t.Parallel()
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
 	type args struct {
 		path    string
@@ -251,6 +256,7 @@ func TestNewRawRouteBuilder(t *testing.T) {
 }
 
 func TestNewRouteBuilder(t *testing.T) {
+	t.Parallel()
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	type args struct {
 		path      string
@@ -281,6 +287,7 @@ func TestNewRouteBuilder(t *testing.T) {
 }
 
 func TestNewFileserver(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		path         string
 		assetsDir    string
@@ -359,6 +366,7 @@ func TestNewTraceRouteBuilder(t *testing.T) {
 }
 
 func TestRoutesBuilder_Build(t *testing.T) {
+	t.Parallel()
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
 	validRb := NewRawRouteBuilder("/", mockHandler).MethodGet()
 	invalidRb := NewRawRouteBuilder("/", mockHandler)

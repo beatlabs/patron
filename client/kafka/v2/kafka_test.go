@@ -10,6 +10,7 @@ import (
 )
 
 func TestBuilder_Create(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		brokers []string
 		cfg     *sarama.Config
@@ -34,6 +35,7 @@ func TestBuilder_Create(t *testing.T) {
 }
 
 func TestBuilder_CreateAsync(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		brokers []string
 		cfg     *sarama.Config

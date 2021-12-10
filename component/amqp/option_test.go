@@ -16,6 +16,7 @@ func TestAMQPConfig(t *testing.T) {
 }
 
 func TestBatching(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		count   uint
 		timeout time.Duration
@@ -61,6 +62,7 @@ func TestRequeue(t *testing.T) {
 }
 
 func TestStatsInterval(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		interval time.Duration
 	}

@@ -19,6 +19,7 @@ import (
 )
 
 func TestNewFactory(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		queue     sqsiface.SQSAPI
 		queueName string
@@ -118,6 +119,7 @@ func Test_consumer_Consume(t *testing.T) {
 }
 
 func Test_message(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		queue sqsiface.SQSAPI
 	}
@@ -159,6 +161,7 @@ func Test_message(t *testing.T) {
 }
 
 func Test_getCorrelationID(t *testing.T) {
+	t.Parallel()
 	withID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: {StringValue: aws.String("123")}}
 	withoutID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: {}}
 	missingHeader := map[string]*sqs.MessageAttributeValue{}

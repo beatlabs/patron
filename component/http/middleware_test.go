@@ -185,6 +185,7 @@ func TestResponseWriter(t *testing.T) {
 }
 
 func TestStripQueryString(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		path string
 	}

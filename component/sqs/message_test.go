@@ -65,7 +65,8 @@ func Test_message(t *testing.T) {
 }
 
 func Test_message_ACK(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Parallel()
+	t.Cleanup(func() { mockTracer.Reset() })
 	type fields struct {
 		sqsAPI sqsiface.SQSAPI
 	}
@@ -184,7 +185,8 @@ func Test_batch_NACK(t *testing.T) {
 }
 
 func Test_batch_ACK(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Parallel()
+	t.Cleanup(func() { mockTracer.Reset() })
 
 	msg1 := createMessage(nil, "1")
 	msg2 := createMessage(nil, "2")

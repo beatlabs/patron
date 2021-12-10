@@ -71,6 +71,7 @@ func TestDial(t *testing.T) {
 }
 
 func TestDialContext(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		opts []grpc.DialOption
 	}

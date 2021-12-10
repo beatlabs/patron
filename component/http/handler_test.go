@@ -121,6 +121,7 @@ func request(t *testing.T, contentType, accept string) *http.Request {
 }
 
 func Test_getOrSetCorrelationID(t *testing.T) {
+	t.Parallel()
 	withID := http.Header{correlation.HeaderID: []string{"123"}}
 	withoutID := http.Header{correlation.HeaderID: []string{}}
 	withEmptyID := http.Header{correlation.HeaderID: []string{""}}
@@ -147,6 +148,7 @@ func Test_getOrSetCorrelationID(t *testing.T) {
 }
 
 func Test_handleSuccess(t *testing.T) {
+	t.Parallel()
 	get, err := http.NewRequest(http.MethodGet, "/", nil)
 	assert.NoError(t, err)
 	post, err := http.NewRequest(http.MethodPost, "/", nil)

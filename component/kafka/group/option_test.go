@@ -9,6 +9,7 @@ import (
 )
 
 func TestFailureStrategy(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		strategy kafka.FailStrategy
 	}
@@ -51,6 +52,7 @@ func TestRetries(t *testing.T) {
 }
 
 func TestRetryWait(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		retryWait time.Duration
 	}
@@ -83,6 +85,7 @@ func TestRetryWait(t *testing.T) {
 }
 
 func TestBatchSize(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		batchSize uint
 	}
@@ -115,6 +118,7 @@ func TestBatchSize(t *testing.T) {
 }
 
 func TestBatchTimeout(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		batchTimeout time.Duration
 	}

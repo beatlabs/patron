@@ -94,6 +94,7 @@ func TestMapHeader(t *testing.T) {
 }
 
 func Test_getCorrelationID(t *testing.T) {
+	t.Parallel()
 	withID := []*sarama.RecordHeader{{Key: []byte(correlation.HeaderID), Value: []byte("123")}}
 	withoutID := []*sarama.RecordHeader{{Key: []byte(correlation.HeaderID), Value: []byte("")}}
 	var missingHeader []*sarama.RecordHeader

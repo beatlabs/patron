@@ -74,6 +74,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestStart(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		optionFunc      OptionFunc
 		expectedOffsets int64

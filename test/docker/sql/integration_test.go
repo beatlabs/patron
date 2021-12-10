@@ -39,6 +39,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestOpen(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		driverName string
 	}

@@ -18,6 +18,7 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
+	t.Parallel()
 	routesBuilder := patronhttp.NewRoutesBuilder().
 		Append(patronhttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).MethodGet())
 
@@ -350,6 +351,7 @@ func (ts testComponent) Run(_ context.Context) error {
 }
 
 func TestLogFields(t *testing.T) {
+	t.Parallel()
 	defaultFields := defaultLogFields("test", "1.0")
 	fields := map[string]interface{}{"key": "value"}
 	fields1 := defaultLogFields("name1", "version1")

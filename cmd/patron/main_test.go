@@ -7,6 +7,7 @@ import (
 )
 
 func Test_getGenData(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		path   string
 		module string

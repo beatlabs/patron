@@ -8,6 +8,7 @@ import (
 )
 
 func TestIDFromContext(t *testing.T) {
+	t.Parallel()
 	ctxWith := ContextWithID(context.Background(), "123")
 	type args struct {
 		ctx context.Context

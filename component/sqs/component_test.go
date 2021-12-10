@@ -13,6 +13,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
 	sp := stubProcessor{t: t}
 
 	type args struct {

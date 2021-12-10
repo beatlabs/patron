@@ -8,6 +8,7 @@ import (
 )
 
 func TestNewRuntime(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		expiration time.Duration
 	}

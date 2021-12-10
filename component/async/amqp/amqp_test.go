@@ -146,6 +146,7 @@ func Test_mapHeader(t *testing.T) {
 }
 
 func Test_getCorrelationID(t *testing.T) {
+	t.Parallel()
 	withID := amqp.Table{correlation.HeaderID: "123"}
 	withoutID := amqp.Table{correlation.HeaderID: ""}
 	missingHeader := amqp.Table{}

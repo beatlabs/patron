@@ -93,12 +93,13 @@ func TestStart(t *testing.T) {
 	}
 
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			c := ConsumerConfig{}
 			c.SaramaConfig = sarama.NewConfig()
-			err := tt.optionFunc(&c)
+			err := tst.optionFunc(&c)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedOffsets, c.SaramaConfig.Consumer.Offsets.Initial)
+			assert.Equal(t, tst.expectedOffsets, c.SaramaConfig.Consumer.Offsets.Initial)
 		})
 	}
 }

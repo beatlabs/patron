@@ -29,14 +29,15 @@ func TestMaxMessages(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			c := &Component{}
-			err := MaxMessages(*tt.args.maxMessages)(c)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err := MaxMessages(*tst.args.maxMessages)(c)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.cfg.maxMessages, tt.args.maxMessages)
+				assert.Equal(t, c.cfg.maxMessages, tst.args.maxMessages)
 			}
 		})
 	}
@@ -63,14 +64,15 @@ func TestPollWaitSeconds(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			c := &Component{}
-			err := PollWaitSeconds(*tt.args.waitSeconds)(c)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err := PollWaitSeconds(*tst.args.waitSeconds)(c)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.cfg.pollWaitSeconds, tt.args.waitSeconds)
+				assert.Equal(t, c.cfg.pollWaitSeconds, tst.args.waitSeconds)
 			}
 		})
 	}
@@ -97,14 +99,15 @@ func TestVisibilityTimeout(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			c := &Component{}
-			err := VisibilityTimeout(*tt.args.timeout)(c)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err := VisibilityTimeout(*tst.args.timeout)(c)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.cfg.visibilityTimeout, tt.args.timeout)
+				assert.Equal(t, c.cfg.visibilityTimeout, tst.args.timeout)
 			}
 		})
 	}
@@ -127,14 +130,15 @@ func TestQueueStatsInterval(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			c := &Component{}
-			err := QueueStatsInterval(tt.args.interval)(c)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err := QueueStatsInterval(tst.args.interval)(c)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.stats.interval, tt.args.interval)
+				assert.Equal(t, c.stats.interval, tst.args.interval)
 			}
 		})
 	}
@@ -164,14 +168,15 @@ func TestRetryWait(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			c := &Component{}
-			err := RetryWait(tt.args.retryWait)(c)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err := RetryWait(tst.args.retryWait)(c)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.retry.wait, tt.args.retryWait)
+				assert.Equal(t, c.retry.wait, tst.args.retryWait)
 			}
 		})
 	}

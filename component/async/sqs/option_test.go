@@ -30,15 +30,16 @@ func TestMaxMessages(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
-			err = MaxMessages(*tt.args.maxMessages)(f)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err = MaxMessages(*tst.args.maxMessages)(f)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, f.maxMessages, tt.args.maxMessages)
+				assert.Equal(t, f.maxMessages, tst.args.maxMessages)
 			}
 		})
 	}
@@ -65,15 +66,16 @@ func TestPollWaitSeconds(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
-			err = PollWaitSeconds(*tt.args.waitSeconds)(f)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err = PollWaitSeconds(*tst.args.waitSeconds)(f)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, f.pollWaitSeconds, tt.args.waitSeconds)
+				assert.Equal(t, f.pollWaitSeconds, tst.args.waitSeconds)
 			}
 		})
 	}
@@ -100,15 +102,16 @@ func TestVisibilityTimeout(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
-			err = VisibilityTimeout(*tt.args.timeout)(f)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err = VisibilityTimeout(*tst.args.timeout)(f)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, f.visibilityTimeout, tt.args.timeout)
+				assert.Equal(t, f.visibilityTimeout, tst.args.timeout)
 			}
 		})
 	}
@@ -131,15 +134,16 @@ func TestQueueStatsInterval(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
-			err = QueueStatsInterval(tt.args.interval)(f)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err = QueueStatsInterval(tst.args.interval)(f)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, f.statsInterval, tt.args.interval)
+				assert.Equal(t, f.statsInterval, tst.args.interval)
 			}
 		})
 	}

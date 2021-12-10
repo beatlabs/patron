@@ -68,12 +68,13 @@ func Test_message_ACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			m := createMessage("1", tt.fields.acknowledger)
+			m := createMessage("1", tst.fields.acknowledger)
 			err := m.ACK()
 
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 				expected := map[string]interface{}{
 					"component":     "amqp-consumer",
 					"error":         true,
@@ -116,12 +117,13 @@ func Test_message_NACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			m := createMessage("1", tt.fields.acknowledger)
+			m := createMessage("1", tst.fields.acknowledger)
 			err := m.NACK()
 
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 				expected := map[string]interface{}{
 					"component":     "amqp-consumer",
 					"error":         true,

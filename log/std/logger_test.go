@@ -84,50 +84,51 @@ func TestLogger(t *testing.T) {
 		"panicf": {args: args{lvl: log.PanicLevel, msg: "Hi, %s", args: []interface{}{"John"}}},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			defer b.Reset()
 
-			switch tt.args.lvl {
+			switch tst.args.lvl {
 			case log.DebugLevel:
-				if tt.args.msg == "" {
-					logger.Debug(tt.args.args...)
+				if tst.args.msg == "" {
+					logger.Debug(tst.args.args...)
 				} else {
-					logger.Debugf(tt.args.msg, tt.args.args...)
+					logger.Debugf(tst.args.msg, tst.args.args...)
 				}
 			case log.InfoLevel:
-				if tt.args.msg == "" {
-					logger.Info(tt.args.args...)
+				if tst.args.msg == "" {
+					logger.Info(tst.args.args...)
 				} else {
-					logger.Infof(tt.args.msg, tt.args.args...)
+					logger.Infof(tst.args.msg, tst.args.args...)
 				}
 			case log.WarnLevel:
-				if tt.args.msg == "" {
-					logger.Warn(tt.args.args...)
+				if tst.args.msg == "" {
+					logger.Warn(tst.args.args...)
 				} else {
-					logger.Warnf(tt.args.msg, tt.args.args...)
+					logger.Warnf(tst.args.msg, tst.args.args...)
 				}
 			case log.ErrorLevel:
-				if tt.args.msg == "" {
-					logger.Error(tt.args.args...)
+				if tst.args.msg == "" {
+					logger.Error(tst.args.args...)
 				} else {
-					logger.Errorf(tt.args.msg, tt.args.args...)
+					logger.Errorf(tst.args.msg, tst.args.args...)
 				}
 			case log.PanicLevel:
-				if tt.args.msg == "" {
+				if tst.args.msg == "" {
 					assert.Panics(t, func() {
-						logger.Panic(tt.args.args...)
+						logger.Panic(tst.args.args...)
 					})
 				} else {
 					assert.Panics(t, func() {
-						logger.Panicf(tt.args.msg, tt.args.args...)
+						logger.Panicf(tst.args.msg, tst.args.args...)
 					})
 				}
 			}
 
-			if tt.args.msg == "" {
-				assert.Contains(t, b.String(), fmt.Sprintf("lvl=%s age=18 name=john doe hello world", levelMap[tt.args.lvl]))
+			if tst.args.msg == "" {
+				assert.Contains(t, b.String(), fmt.Sprintf("lvl=%s age=18 name=john doe hello world", levelMap[tst.args.lvl]))
 			} else {
-				assert.Contains(t, b.String(), fmt.Sprintf("lvl=%s age=18 name=john doe Hi, John", levelMap[tt.args.lvl]))
+				assert.Contains(t, b.String(), fmt.Sprintf("lvl=%s age=18 name=john doe Hi, John", levelMap[tst.args.lvl]))
 			}
 		})
 	}
@@ -186,9 +187,10 @@ func TestLogger_shouldLog(t *testing.T) {
 		"setup no level,passing fatal": {setupLevel: log.NoLevel, args: args{lvl: log.FatalLevel}, want: false},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			l := &Logger{level: tt.setupLevel}
-			assert.Equal(t, tt.want, l.shouldLog(tt.args.lvl))
+			l := &Logger{level: tst.setupLevel}
+			assert.Equal(t, tst.want, l.shouldLog(tst.args.lvl))
 		})
 	}
 }

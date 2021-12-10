@@ -19,17 +19,18 @@ func TestNewRuntime(t *testing.T) {
 		"wrong expiration": {args: args{expiration: -1 * time.Second}, expectedErr: "expiration value is negative"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			got, err := NewRuntime(tt.args.expiration)
-			if tt.expectedErr != "" {
+			got, err := NewRuntime(tst.args.expiration)
+			if tst.expectedErr != "" {
 				assert.Nil(t, got)
-				assert.EqualError(t, err, tt.expectedErr)
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.args.expiration, got.Expiration())
+				assert.Equal(t, tst.args.expiration, got.Expiration())
 				assert.NotNil(t, got.Pool())
 				assert.Empty(t, got.Resources())
-				assert.Equal(t, tt.args.expiration, got.pool.MaxWait)
+				assert.Equal(t, tst.args.expiration, got.pool.MaxWait)
 			}
 		})
 	}

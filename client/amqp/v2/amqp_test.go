@@ -17,10 +17,11 @@ func TestNew(t *testing.T) {
 		"fail, missing url": {args: args{}, expectedErr: "url is required"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			got, err := New(tt.args.url)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			got, err := New(tst.args.url)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)

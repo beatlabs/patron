@@ -77,12 +77,13 @@ func Test_message_ACK(t *testing.T) {
 		"failure": {fields: fields{sqsAPI: &stubSQSAPI{deleteMessageWithContextErr: errors.New("TEST")}}, expectedErr: "TEST"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			m := createMessage(tt.fields.sqsAPI, "1")
+			m := createMessage(tst.fields.sqsAPI, "1")
 			err := m.ACK()
 
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 				expected := map[string]interface{}{
 					"component":     "sqs-consumer",
 					"error":         true,
@@ -213,6 +214,7 @@ func Test_batch_ACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			btc := batch{
 				ctx: context.Background(),
@@ -220,13 +222,13 @@ func Test_batch_ACK(t *testing.T) {
 					name: queueName,
 					url:  queueURL,
 				},
-				sqsAPI:   tt.fields.sqsAPI,
+				sqsAPI:   tst.fields.sqsAPI,
 				messages: messages,
 			}
 			failed, err := btc.ACK()
 
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 				assert.Len(t, mockTracer.FinishedSpans(), 2)
 				expected := map[string]interface{}{
 					"component":     "sqs-consumer",
@@ -239,7 +241,7 @@ func Test_batch_ACK(t *testing.T) {
 				assert.Equal(t, expected, mockTracer.FinishedSpans()[1].Tags())
 				mockTracer.Reset()
 			} else {
-				assert.NoError(t, err, tt)
+				assert.NoError(t, err, tst)
 				assert.Len(t, failed, 1)
 				assert.Equal(t, msg1, failed[0])
 				assert.Len(t, mockTracer.FinishedSpans(), 2)

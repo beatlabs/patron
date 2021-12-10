@@ -35,14 +35,15 @@ func Test_getGenData(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			got, err := getGenData(tt.args.path, tt.args.module, tt.args.vendor)
-			if tt.expErr != "" {
-				assert.EqualError(t, err, tt.expErr)
+			got, err := getGenData(tst.args.path, tst.args.module, tst.args.vendor)
+			if tst.expErr != "" {
+				assert.EqualError(t, err, tst.expErr)
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, got)
+				assert.Equal(t, tst.want, got)
 			}
 		})
 	}

@@ -25,8 +25,9 @@ func TestLevelOrder(t *testing.T) {
 		"no level": {args: args{lvl: NoLevel}, want: 6},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tt.want, LevelOrder(tt.args.lvl))
+			assert.Equal(t, tst.want, LevelOrder(tst.args.lvl))
 		})
 	}
 }
@@ -40,9 +41,10 @@ func TestSetup(t *testing.T) {
 		"success":                  {logger: &nilLogger{}, wantErr: false},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			err := Setup(tt.logger)
-			if tt.wantErr {
+			err := Setup(tst.logger)
+			if tst.wantErr {
 				assert.Error(t, err, "expected error")
 			} else {
 				assert.NoError(t, err, "error not expected")
@@ -68,9 +70,10 @@ func TestFromContext(t *testing.T) {
 		"with context nil logger": {args: args{ctx: ctxWithNil}, want: logger},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			got := FromContext(tt.args.ctx)
-			assert.Equal(t, tt.want, got)
+			got := FromContext(tst.args.ctx)
+			assert.Equal(t, tst.want, got)
 		})
 	}
 }

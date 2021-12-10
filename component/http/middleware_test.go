@@ -225,13 +225,14 @@ func TestStripQueryString(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			s, err := stripQueryString(tt.args.path)
-			if tt.expectedErr != nil {
-				assert.EqualError(t, err, tt.expectedErr.Error())
+			s, err := stripQueryString(tst.args.path)
+			if tst.expectedErr != nil {
+				assert.EqualError(t, err, tst.expectedErr.Error())
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedPath, s)
+				assert.Equal(t, tst.expectedPath, s)
 			}
 		})
 	}

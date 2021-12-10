@@ -108,8 +108,9 @@ func Test_getCorrelationID(t *testing.T) {
 		"missing header": {args: args{hh: missingHeader}},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			assert.NotEmpty(t, getCorrelationID(tt.args.hh))
+			assert.NotEmpty(t, getCorrelationID(tst.args.hh))
 		})
 	}
 }

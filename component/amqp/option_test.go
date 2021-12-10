@@ -29,15 +29,16 @@ func TestBatching(t *testing.T) {
 		"invalid timeout": {args: args{count: 2, timeout: -3}, expectedErr: "timeout should be a positive number"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			c := &Component{}
-			err := Batching(tt.args.count, tt.args.timeout)(c)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err := Batching(tst.args.count, tst.args.timeout)(c)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.batchCfg.count, tt.args.count)
-				assert.Equal(t, c.batchCfg.timeout, tt.args.timeout)
+				assert.Equal(t, c.batchCfg.count, tst.args.count)
+				assert.Equal(t, c.batchCfg.timeout, tst.args.timeout)
 			}
 		})
 	}
@@ -70,14 +71,15 @@ func TestStatsInterval(t *testing.T) {
 		"invalid interval": {args: args{interval: -3}, expectedErr: "stats interval should be a positive number"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			c := &Component{}
-			err := StatsInterval(tt.args.interval)(c)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			err := StatsInterval(tst.args.interval)(c)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.statsCfg.interval, tt.args.interval)
+				assert.Equal(t, c.statsCfg.interval, tst.args.interval)
 			}
 		})
 	}

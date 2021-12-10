@@ -137,9 +137,10 @@ func Test_getOrSetCorrelationID(t *testing.T) {
 		"missing Header": {args: args{hdr: missingHeader}},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			assert.NotEmpty(t, getOrSetCorrelationID(tt.args.hdr))
-			assert.NotEmpty(t, tt.args.hdr[correlation.HeaderID][0])
+			assert.NotEmpty(t, getOrSetCorrelationID(tst.args.hdr))
+			assert.NotEmpty(t, tst.args.hdr[correlation.HeaderID][0])
 		})
 	}
 }
@@ -330,10 +331,11 @@ func Test_fileserverHandler(t *testing.T) {
 		"fallback": {path: "/frontend/missing-file", expectedResponse: "fallback"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			// the only way to test do we get the same handler that we provided initially, is to run it explicitly,
 			// since all we have in Route itself is a wrapper function
-			req, err := http.NewRequest(http.MethodGet, tt.path, nil)
+			req, err := http.NewRequest(http.MethodGet, tst.path, nil)
 			require.NoError(t, err)
 
 			wr := httptest.NewRecorder()
@@ -341,7 +343,7 @@ func Test_fileserverHandler(t *testing.T) {
 			br, err := ioutil.ReadAll(wr.Body)
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.expectedResponse, string(br))
+			assert.Equal(t, tst.expectedResponse, string(br))
 		})
 	}
 }

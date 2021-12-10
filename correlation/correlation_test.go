@@ -19,8 +19,9 @@ func TestIDFromContext(t *testing.T) {
 		"without existing id": {args: args{ctx: context.Background()}},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			got := IDFromContext(tt.args.ctx)
+			got := IDFromContext(tst.args.ctx)
 			assert.NotEmpty(t, got)
 		})
 	}

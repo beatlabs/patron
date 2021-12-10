@@ -38,15 +38,16 @@ func TestRouteBuilder_WithMethodGet(t *testing.T) {
 		"method already exists": {args: args{methodExists: true}, expectedErr: "method already set\n"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {})
-			if tt.args.methodExists {
+			if tst.args.methodExists {
 				rb.MethodGet()
 			}
 			got, err := rb.MethodGet().Build()
 
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 				assert.Equal(t, Route{}, got)
 			} else {
 				assert.NoError(t, err)
@@ -115,17 +116,18 @@ func TestRouteBuilder_WithMiddlewares(t *testing.T) {
 		"missing middleware": {fields: fields{}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			rb := NewRawRouteBuilder("/", mockHandler).MethodGet()
-			if len(tt.fields.middlewares) == 0 {
+			if len(tst.fields.middlewares) == 0 {
 				rb.WithMiddlewares()
 			} else {
-				rb.WithMiddlewares(tt.fields.middlewares...)
+				rb.WithMiddlewares(tst.fields.middlewares...)
 			}
 
-			if tt.expectedErr != "" {
+			if tst.expectedErr != "" {
 				assert.Len(t, rb.errors, 1)
-				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+				assert.EqualError(t, rb.errors[0], tst.expectedErr)
 			} else {
 				assert.Len(t, rb.errors, 0)
 				assert.Len(t, rb.middlewares, 1)
@@ -148,12 +150,13 @@ func TestRouteBuilder_WithAuth(t *testing.T) {
 		"missing middleware": {fields: fields{}, expectedErr: "authenticator is nil"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			rb := NewRawRouteBuilder("/", mockHandler).WithAuth(tt.fields.authenticator)
+			rb := NewRawRouteBuilder("/", mockHandler).WithAuth(tst.fields.authenticator)
 
-			if tt.expectedErr != "" {
+			if tst.expectedErr != "" {
 				assert.Len(t, rb.errors, 1)
-				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+				assert.EqualError(t, rb.errors[0], tst.expectedErr)
 			} else {
 				assert.Len(t, rb.errors, 0)
 				assert.NotNil(t, rb.authenticator)
@@ -194,15 +197,16 @@ func TestRouteBuilder_Build(t *testing.T) {
 		"missing method":    {fields: fields{path: "/", missingMethod: true}, expectedErr: "method is missing"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			rb := NewRouteBuilder(tt.fields.path, mockProcessor).WithTrace().WithAuth(mockAuth).WithMiddlewares(middleware).WithRateLimiting(5, 50)
-			if !tt.fields.missingMethod {
+			rb := NewRouteBuilder(tst.fields.path, mockProcessor).WithTrace().WithAuth(mockAuth).WithMiddlewares(middleware).WithRateLimiting(5, 50)
+			if !tst.fields.missingMethod {
 				rb.MethodGet()
 			}
 			got, err := rb.Build()
 
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 				assert.Equal(t, Route{}, got)
 			} else {
 				assert.NoError(t, err)
@@ -227,12 +231,13 @@ func TestNewRawRouteBuilder(t *testing.T) {
 		"invalid handler": {args: args{path: "/", handler: nil}, expectedErr: "handler is nil"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			rb := NewRawRouteBuilder(tt.args.path, tt.args.handler)
+			rb := NewRawRouteBuilder(tst.args.path, tst.args.handler)
 
-			if tt.expectedErr != "" {
+			if tst.expectedErr != "" {
 				assert.Len(t, rb.errors, 1)
-				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+				assert.EqualError(t, rb.errors[0], tst.expectedErr)
 			} else {
 				assert.Len(t, rb.errors, 0)
 			}
@@ -255,12 +260,13 @@ func TestNewRouteBuilder(t *testing.T) {
 		"invalid handler": {args: args{path: "/", processor: nil}, expectedErr: "processor is nil"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			rb := NewRouteBuilder(tt.args.path, tt.args.processor)
+			rb := NewRouteBuilder(tst.args.path, tst.args.processor)
 
-			if tt.expectedErr != "" {
+			if tst.expectedErr != "" {
 				assert.Len(t, rb.errors, 1)
-				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+				assert.EqualError(t, rb.errors[0], tst.expectedErr)
 			} else {
 				assert.Len(t, rb.errors, 0)
 			}
@@ -286,12 +292,13 @@ func TestNewFileserver(t *testing.T) {
 		"fallback path doesn't exist": {args: args{path: "/", assetsDir: "testdata", fallbackPath: "testdata/missing.html"}, expectedErr: "fallback file [testdata/missing.html] doesn't exist"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			rb := NewFileServer(tt.args.path, tt.args.assetsDir, tt.args.fallbackPath)
+			rb := NewFileServer(tst.args.path, tst.args.assetsDir, tst.args.fallbackPath)
 
-			if tt.expectedErr != "" {
+			if tst.expectedErr != "" {
 				assert.Len(t, rb.errors, 1)
-				assert.EqualError(t, rb.errors[0], tt.expectedErr)
+				assert.EqualError(t, rb.errors[0], tst.expectedErr)
 			} else {
 				assert.Len(t, rb.errors, 0)
 			}
@@ -368,15 +375,16 @@ func TestRoutesBuilder_Build(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			builder := NewRoutesBuilder()
-			for _, rb := range tt.args.rbs {
+			for _, rb := range tst.args.rbs {
 				builder.Append(rb)
 			}
 			got, err := builder.Build()
 
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)

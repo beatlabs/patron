@@ -39,13 +39,14 @@ func TestStatusCode(t *testing.T) {
 		"config error - invalid range":             {args: args{cfg: "[200,201,202]"}, expectedParsingErr: true},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			h, err := newStatusCodeLoggerHandler(tt.args.cfg)
-			if tt.expectedParsingErr {
+			h, err := newStatusCodeLoggerHandler(tst.args.cfg)
+			if tst.expectedParsingErr {
 				assert.Error(t, err)
 			} else {
-				got := h.shouldLog(tt.args.statusCode)
-				assert.Equal(t, tt.expectedResult, got)
+				got := h.shouldLog(tst.args.statusCode)
+				assert.Equal(t, tst.expectedResult, got)
 			}
 		})
 	}

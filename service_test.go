@@ -80,21 +80,22 @@ func TestNewServer(t *testing.T) {
 	}
 
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			svc, err := New("name", "1.0", LogFields(tt.fields), TextLogger())
+			svc, err := New("name", "1.0", LogFields(tst.fields), TextLogger())
 			require.NoError(t, err)
 			gotService, gotErr := svc.
-				WithRoutesBuilder(tt.routesBuilder).
-				WithMiddlewares(tt.middlewares...).
-				WithAliveCheck(tt.acf).
-				WithReadyCheck(tt.rcf).
-				WithComponents(tt.cps...).
-				WithSIGHUP(tt.sighupHandler).
-				WithUncompressedPaths(tt.uncompressedPaths...).
+				WithRoutesBuilder(tst.routesBuilder).
+				WithMiddlewares(tst.middlewares...).
+				WithAliveCheck(tst.acf).
+				WithReadyCheck(tst.rcf).
+				WithComponents(tst.cps...).
+				WithSIGHUP(tst.sighupHandler).
+				WithUncompressedPaths(tst.uncompressedPaths...).
 				build()
 
-			if tt.wantErr != "" {
-				assert.EqualError(t, gotErr, tt.wantErr)
+			if tst.wantErr != "" {
+				assert.EqualError(t, gotErr, tst.wantErr)
 				assert.Nil(t, gotService)
 			} else {
 				assert.Nil(t, gotErr)
@@ -103,17 +104,17 @@ func TestNewServer(t *testing.T) {
 
 				assert.NotEmpty(t, gotService.cps)
 				assert.NotNil(t, gotService.routesBuilder)
-				assert.Len(t, gotService.middlewares, len(tt.middlewares))
+				assert.Len(t, gotService.middlewares, len(tst.middlewares))
 				assert.NotNil(t, gotService.rcf)
 				assert.NotNil(t, gotService.acf)
 				assert.NotNil(t, gotService.termSig)
 				assert.NotNil(t, gotService.sighupHandler)
 
-				for _, comp := range tt.cps {
+				for _, comp := range tst.cps {
 					assert.Contains(t, gotService.cps, comp)
 				}
 
-				for _, middleware := range tt.middlewares {
+				for _, middleware := range tst.middlewares {
 					assert.NotNil(t, middleware)
 				}
 			}
@@ -130,6 +131,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		"failed to run": {cp: &testComponent{errorRunning: true}, wantErr: true},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 
@@ -137,8 +139,8 @@ func TestServer_Run_Shutdown(t *testing.T) {
 			assert.NoError(t, err)
 			svc, err := New("test", "", TextLogger())
 			require.NoError(t, err)
-			err = svc.WithComponents(tt.cp, tt.cp, tt.cp).Run(context.Background())
-			if tt.wantErr {
+			err = svc.WithComponents(tst.cp, tst.cp, tst.cp).Run(context.Background())
+			if tst.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
@@ -210,25 +212,26 @@ func TestBuild_FailingConditions(t *testing.T) {
 	}
 
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 
-			if tt.port != "" {
-				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
+			if tst.port != "" {
+				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tst.port)
 				require.NoError(t, err)
 			}
-			if tt.jaegerSamplerParam != "" {
-				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tt.jaegerSamplerParam)
+			if tst.jaegerSamplerParam != "" {
+				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tst.jaegerSamplerParam)
 				require.NoError(t, err)
 			}
-			if tt.jaegerBuckets != "" {
-				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.jaegerBuckets)
+			if tst.jaegerBuckets != "" {
+				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tst.jaegerBuckets)
 				require.NoError(t, err)
 			}
 
 			svc, err := New("test", "", TextLogger())
-			if tt.expectedBuildErr != "" {
-				require.EqualError(t, err, tt.expectedBuildErr)
+			if tst.expectedBuildErr != "" {
+				require.EqualError(t, err, tst.expectedBuildErr)
 				require.Nil(t, svc)
 			} else {
 				require.NoError(t, err)
@@ -240,8 +243,8 @@ func TestBuild_FailingConditions(t *testing.T) {
 			cancel()
 			err = svc.Run(ctx)
 
-			if tt.expectedRunErr != "" {
-				require.EqualError(t, err, tt.expectedRunErr)
+			if tst.expectedRunErr != "" {
+				require.EqualError(t, err, tst.expectedRunErr)
 			} else {
 				require.Equal(t, err, context.Canceled)
 			}
@@ -360,10 +363,11 @@ func TestLogFields(t *testing.T) {
 		"no overwrite": {args: args{fields: fields1}, want: Config{fields: defaultFields}},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			cfg := Config{fields: defaultFields}
-			LogFields(tt.args.fields)(&cfg)
-			assert.Equal(t, tt.want, cfg)
+			LogFields(tst.args.fields)(&cfg)
+			assert.Equal(t, tst.want, cfg)
 		})
 	}
 }

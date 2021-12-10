@@ -22,10 +22,11 @@ func TestBuilder_Create(t *testing.T) {
 		"missing config":  {args: args{brokers: []string{"123"}, cfg: nil}, expectedErr: "no Sarama configuration specified\n"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			got, err := New(tt.args.brokers, tt.args.cfg).Create()
+			got, err := New(tst.args.brokers, tst.args.cfg).Create()
 
-			require.EqualError(t, err, tt.expectedErr)
+			require.EqualError(t, err, tst.expectedErr)
 			require.Nil(t, got)
 		})
 	}
@@ -44,10 +45,11 @@ func TestBuilder_CreateAsync(t *testing.T) {
 		"missing config":  {args: args{brokers: []string{"123"}, cfg: nil}, expectedErr: "no Sarama configuration specified\n"},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			got, chErr, err := New(tt.args.brokers, tt.args.cfg).CreateAsync()
+			got, chErr, err := New(tst.args.brokers, tst.args.cfg).CreateAsync()
 
-			require.EqualError(t, err, tt.expectedErr)
+			require.EqualError(t, err, tst.expectedErr)
 			require.Nil(t, got)
 			require.Nil(t, chErr)
 		})

@@ -99,11 +99,12 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			got, err := New(tt.args.name, tt.args.queueName, tt.args.sqsAPI, tt.args.proc, tt.args.oo...)
+			got, err := New(tst.args.name, tst.args.queueName, tst.args.sqsAPI, tst.args.proc, tst.args.oo...)
 
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+			if tst.expectedErr != "" {
+				assert.EqualError(t, err, tst.expectedErr)
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)

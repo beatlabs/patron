@@ -79,6 +79,7 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := New(tt.args.name, tt.args.group, tt.args.topics, tt.args.brokers, tt.args.saramaCfg, tt.args.options...)
 			if tt.wantErr {
 				require.Error(t, err)

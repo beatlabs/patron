@@ -88,7 +88,6 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 
 // WithRouteCache adds a cache to the corresponding route
 func (rb *RouteBuilder) WithRouteCache(cache cache.TTLCache, ageBounds httpcache.Age) *RouteBuilder {
-
 	rc, ee := httpcache.NewRouteCache(cache, ageBounds)
 
 	rb.routeCache = rc
@@ -274,7 +273,6 @@ func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 
 // NewRouteBuilder constructor.
 func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	var ee []error
 
 	if path == "" {
@@ -290,55 +288,46 @@ func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 
 // NewGetRouteBuilder constructor
 func NewGetRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	return NewRouteBuilder(path, processor).MethodGet()
 }
 
 // NewHeadRouteBuilder constructor.
 func NewHeadRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	return NewRouteBuilder(path, processor).MethodHead()
 }
 
 // NewPostRouteBuilder constructor.
 func NewPostRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	return NewRouteBuilder(path, processor).MethodPost()
 }
 
 // NewPutRouteBuilder constructor.
 func NewPutRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	return NewRouteBuilder(path, processor).MethodPut()
 }
 
 // NewPatchRouteBuilder constructor.
 func NewPatchRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	return NewRouteBuilder(path, processor).MethodPatch()
 }
 
 // NewDeleteRouteBuilder constructor.
 func NewDeleteRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	return NewRouteBuilder(path, processor).MethodDelete()
 }
 
 // NewConnectRouteBuilder constructor.
 func NewConnectRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	return NewRouteBuilder(path, processor).MethodConnect()
 }
 
 // NewOptionsRouteBuilder constructor.
 func NewOptionsRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	return NewRouteBuilder(path, processor).MethodOptions()
 }
 
 // NewTraceRouteBuilder constructor.
 func NewTraceRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
-
 	return NewRouteBuilder(path, processor).MethodTrace()
 }
 
@@ -361,7 +350,6 @@ func (rb *RoutesBuilder) Append(builder *RouteBuilder) *RoutesBuilder {
 
 // Build the routes.
 func (rb *RoutesBuilder) Build() ([]Route, error) {
-
 	duplicates := make(map[string]struct{}, len(rb.routes))
 
 	for _, r := range rb.routes {

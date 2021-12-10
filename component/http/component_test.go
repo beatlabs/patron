@@ -72,6 +72,7 @@ func Test_createHTTPServer(t *testing.T) {
 }
 
 func TestBuilder_WithShutdownGracePeriod(t *testing.T) {
+	t.Parallel()
 	testCases := map[string]struct {
 		gp     time.Duration
 		expErr string

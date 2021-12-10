@@ -308,7 +308,6 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 
 	// claim and process the messages and update the counters accordingly
 	for _, km := range data.msgs {
-
 		if data.combinedDecoderVersion != 0 {
 			km.Value = append([]byte{byte(data.combinedDecoderVersion)}, km.Value...)
 		}

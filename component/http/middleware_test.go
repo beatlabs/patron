@@ -20,7 +20,7 @@ func tagMiddleware(tag string) MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write([]byte(tag))
-			//next
+			// next
 			h.ServeHTTP(w, r)
 		})
 	}
@@ -355,7 +355,6 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(fmt.Sprintf("%d - %s", tc.status, tc.expectedEncoding), func(t *testing.T) {
-
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tc.status)
 			})
@@ -689,8 +688,7 @@ func TestIsConnectionReset(t *testing.T) {
 	}
 }
 
-type failWriter struct {
-}
+type failWriter struct{}
 
 func (fw *failWriter) Header() http.Header {
 	return http.Header{}
@@ -701,7 +699,6 @@ func (fw *failWriter) Write([]byte) (int, error) {
 }
 
 func (fw *failWriter) WriteHeader(statusCode int) {
-
 }
 
 func TestSetResponseWriterStatusOnResponseFailWrite(t *testing.T) {

@@ -104,7 +104,6 @@ func TestStart(t *testing.T) {
 }
 
 func TestDecoder1(t *testing.T) {
-
 	tests := []struct {
 		name string
 		dec  encoding.DecodeRawFunc

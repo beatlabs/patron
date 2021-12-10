@@ -167,7 +167,6 @@ func TestRouteBuilder_WithRateLimiting(t *testing.T) {
 	rb := NewRawRouteBuilder("/", mockHandler).WithRateLimiting(1, 1)
 	assert.Len(t, rb.errors, 0)
 	assert.NotNil(t, rb.rateLimiter)
-
 }
 
 func TestRouteBuilder_WithRouteCacheNil(t *testing.T) {

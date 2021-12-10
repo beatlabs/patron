@@ -82,6 +82,7 @@ func TestNewServer(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			svc, err := New("name", "1.0", LogFields(tst.fields), TextLogger())
 			require.NoError(t, err)
 			gotService, gotErr := svc.
@@ -365,6 +366,7 @@ func TestLogFields(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			cfg := Config{fields: defaultFields}
 			LogFields(tst.args.fields)(&cfg)
 			assert.Equal(t, tst.want, cfg)

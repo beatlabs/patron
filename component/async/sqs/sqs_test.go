@@ -71,6 +71,7 @@ func TestNewFactory(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := NewFactory(tst.args.queue, tst.args.queueName, tst.args.oo...)
 			if tst.expectedErr != "" {
 				assert.EqualError(t, err, tst.expectedErr)
@@ -133,6 +134,7 @@ func Test_message(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			sqsMsg := &sqs.Message{Body: aws.String(`{"key":"value"}`)}
 			m := &message{
 				queue:     tst.fields.queue,
@@ -173,6 +175,7 @@ func Test_getCorrelationID(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.NotEmpty(t, getCorrelationID(tst.args.ma))
 		})
 	}

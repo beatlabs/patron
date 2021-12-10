@@ -101,6 +101,7 @@ func TestNew(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := New(tst.args.name, tst.args.queueName, tst.args.sqsAPI, tst.args.proc, tst.args.oo...)
 
 			if tst.expectedErr != "" {

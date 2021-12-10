@@ -31,6 +31,7 @@ func TestBatching(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := Batching(tst.args.count, tst.args.timeout)(c)
 			if tst.expectedErr != "" {
@@ -73,6 +74,7 @@ func TestStatsInterval(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := StatsInterval(tst.args.interval)(c)
 			if tst.expectedErr != "" {

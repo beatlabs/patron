@@ -91,6 +91,7 @@ func TestDialContext(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			gotConn, err := DialContext(context.Background(), target, tst.args.opts...)
 			if tst.expectedErr != "" {
 				assert.EqualError(t, err, tst.expectedErr)

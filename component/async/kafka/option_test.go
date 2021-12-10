@@ -95,6 +95,7 @@ func TestStart(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := ConsumerConfig{}
 			c.SaramaConfig = sarama.NewConfig()
 			err := tst.optionFunc(&c)

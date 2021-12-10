@@ -26,6 +26,7 @@ func TestCreate(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := New(tst.args.port).WithOptions(grpc.ConnectionTimeout(1 * time.Second)).Create()
 			if tst.expErr != "" {
 				assert.EqualError(t, err, tst.expErr)

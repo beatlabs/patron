@@ -24,6 +24,7 @@ func TestBuilder_Create(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := New(tst.args.brokers, tst.args.cfg).Create()
 
 			require.EqualError(t, err, tst.expectedErr)
@@ -47,6 +48,7 @@ func TestBuilder_CreateAsync(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, chErr, err := New(tst.args.brokers, tst.args.cfg).CreateAsync()
 
 			require.EqualError(t, err, tst.expectedErr)

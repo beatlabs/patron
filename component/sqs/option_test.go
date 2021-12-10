@@ -31,6 +31,7 @@ func TestMaxMessages(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := MaxMessages(*tst.args.maxMessages)(c)
 			if tst.expectedErr != "" {
@@ -66,6 +67,7 @@ func TestPollWaitSeconds(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := PollWaitSeconds(*tst.args.waitSeconds)(c)
 			if tst.expectedErr != "" {
@@ -101,6 +103,7 @@ func TestVisibilityTimeout(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := VisibilityTimeout(*tst.args.timeout)(c)
 			if tst.expectedErr != "" {
@@ -132,6 +135,7 @@ func TestQueueStatsInterval(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := QueueStatsInterval(tst.args.interval)(c)
 			if tst.expectedErr != "" {
@@ -170,6 +174,7 @@ func TestRetryWait(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := RetryWait(tst.args.retryWait)(c)
 			if tst.expectedErr != "" {

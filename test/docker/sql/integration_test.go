@@ -52,6 +52,7 @@ func TestOpen(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := sql.Open(tst.args.driverName, runtime.DSN())
 
 			if tst.expectedErr != "" {

@@ -37,6 +37,7 @@ func Test_getGenData(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := getGenData(tst.args.path, tst.args.module, tst.args.vendor)
 			if tst.expErr != "" {
 				assert.EqualError(t, err, tst.expErr)

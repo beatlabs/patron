@@ -79,6 +79,7 @@ func Test_message_ACK(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			m := createMessage(tst.fields.sqsAPI, "1")
 			err := m.ACK()
 
@@ -216,6 +217,7 @@ func Test_batch_ACK(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			btc := batch{
 				ctx: context.Background(),
 				queue: queue{

@@ -70,6 +70,7 @@ func Test_message_ACK(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			m := createMessage("1", tst.fields.acknowledger)
 			err := m.ACK()
 
@@ -119,6 +120,7 @@ func Test_message_NACK(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			m := createMessage("1", tst.fields.acknowledger)
 			err := m.NACK()
 

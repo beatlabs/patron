@@ -139,6 +139,7 @@ func Test_getOrSetCorrelationID(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.NotEmpty(t, getOrSetCorrelationID(tst.args.hdr))
 			assert.NotEmpty(t, tst.args.hdr[correlation.HeaderID][0])
 		})
@@ -177,6 +178,7 @@ func Test_handleSuccess(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			rsp := httptest.NewRecorder()
 
 			err := handleSuccess(rsp, tt.args.req, tt.args.rsp, tt.args.enc)

@@ -32,6 +32,7 @@ func TestMaxMessages(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
 			err = MaxMessages(*tst.args.maxMessages)(f)
@@ -68,6 +69,7 @@ func TestPollWaitSeconds(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
 			err = PollWaitSeconds(*tst.args.waitSeconds)(f)
@@ -104,6 +106,7 @@ func TestVisibilityTimeout(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
 			err = VisibilityTimeout(*tst.args.timeout)(f)
@@ -136,6 +139,7 @@ func TestQueueStatsInterval(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			f, err := NewFactory(&stubQueue{}, "queue")
 			require.NoError(t, err)
 			err = QueueStatsInterval(tst.args.interval)(f)

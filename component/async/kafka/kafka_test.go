@@ -110,6 +110,7 @@ func Test_getCorrelationID(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.NotEmpty(t, getCorrelationID(tst.args.hh))
 		})
 	}

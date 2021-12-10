@@ -189,6 +189,7 @@ func TestLogger_shouldLog(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			l := &Logger{level: tst.setupLevel}
 			assert.Equal(t, tst.want, l.shouldLog(tst.args.lvl))
 		})

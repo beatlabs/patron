@@ -41,6 +41,7 @@ func TestStatusCode(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			h, err := newStatusCodeLoggerHandler(tst.args.cfg)
 			if tst.expectedParsingErr {
 				assert.Error(t, err)

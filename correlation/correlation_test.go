@@ -21,6 +21,7 @@ func TestIDFromContext(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got := IDFromContext(tst.args.ctx)
 			assert.NotEmpty(t, got)
 		})

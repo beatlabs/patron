@@ -21,6 +21,7 @@ func TestNewRuntime(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := NewRuntime(tst.args.expiration)
 			if tst.expectedErr != "" {
 				assert.Nil(t, got)

@@ -30,6 +30,7 @@ func TestFailureStrategy(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := FailureStrategy(tst.args.strategy)(c)
 			if tst.expectedErr != "" {
@@ -68,6 +69,7 @@ func TestRetryWait(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := RetryWait(tst.args.retryWait)(c)
 			if tst.expectedErr != "" {
@@ -99,6 +101,7 @@ func TestBatchSize(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := BatchSize(tst.args.batchSize)(c)
 			if tst.expectedErr != "" {
@@ -130,6 +133,7 @@ func TestBatchTimeout(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := BatchTimeout(tst.args.batchTimeout)(c)
 			if tst.expectedErr != "" {

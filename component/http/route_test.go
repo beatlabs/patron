@@ -40,6 +40,7 @@ func TestRouteBuilder_WithMethodGet(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {})
 			if tst.args.methodExists {
 				rb.MethodGet()
@@ -118,6 +119,7 @@ func TestRouteBuilder_WithMiddlewares(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRawRouteBuilder("/", mockHandler).MethodGet()
 			if len(tst.fields.middlewares) == 0 {
 				rb.WithMiddlewares()
@@ -152,6 +154,7 @@ func TestRouteBuilder_WithAuth(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRawRouteBuilder("/", mockHandler).WithAuth(tst.fields.authenticator)
 
 			if tst.expectedErr != "" {
@@ -199,6 +202,7 @@ func TestRouteBuilder_Build(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRouteBuilder(tst.fields.path, mockProcessor).WithTrace().WithAuth(mockAuth).WithMiddlewares(middleware).WithRateLimiting(5, 50)
 			if !tst.fields.missingMethod {
 				rb.MethodGet()
@@ -233,6 +237,7 @@ func TestNewRawRouteBuilder(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRawRouteBuilder(tst.args.path, tst.args.handler)
 
 			if tst.expectedErr != "" {
@@ -262,6 +267,7 @@ func TestNewRouteBuilder(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRouteBuilder(tst.args.path, tst.args.processor)
 
 			if tst.expectedErr != "" {
@@ -294,6 +300,7 @@ func TestNewFileserver(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewFileServer(tst.args.path, tst.args.assetsDir, tst.args.fallbackPath)
 
 			if tst.expectedErr != "" {
@@ -377,6 +384,7 @@ func TestRoutesBuilder_Build(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			builder := NewRoutesBuilder()
 			for _, rb := range tst.args.rbs {
 				builder.Append(rb)

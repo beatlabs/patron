@@ -27,6 +27,7 @@ func TestLevelOrder(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, tst.want, LevelOrder(tst.args.lvl))
 		})
 	}
@@ -43,6 +44,7 @@ func TestSetup(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			err := Setup(tst.logger)
 			if tst.wantErr {
 				assert.Error(t, err, "expected error")
@@ -72,6 +74,7 @@ func TestFromContext(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got := FromContext(tst.args.ctx)
 			assert.Equal(t, tst.want, got)
 		})

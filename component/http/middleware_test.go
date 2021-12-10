@@ -227,6 +227,7 @@ func TestStripQueryString(t *testing.T) {
 	for name, tt := range tests {
 		tst := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			s, err := stripQueryString(tst.args.path)
 			if tst.expectedErr != nil {
 				assert.EqualError(t, err, tst.expectedErr.Error())

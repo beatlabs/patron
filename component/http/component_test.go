@@ -82,16 +82,17 @@ func TestBuilder_WithShutdownGracePeriod(t *testing.T) {
 	}
 
 	for name, tt := range testCases {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			cc, err := NewBuilder().WithShutdownGracePeriod(tt.gp).Create()
-			if tt.expErr != "" {
-				assert.EqualError(t, err, tt.expErr)
+			cc, err := NewBuilder().WithShutdownGracePeriod(tst.gp).Create()
+			if tst.expErr != "" {
+				assert.EqualError(t, err, tst.expErr)
 				assert.Nil(t, cc)
 			} else {
 				assert.NoError(t, err)
 				require.NotNil(t, cc)
-				assert.Equal(t, tt.gp, cc.shutdownGracePeriod)
+				assert.Equal(t, tst.gp, cc.shutdownGracePeriod)
 			}
 		})
 	}
@@ -161,14 +162,15 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		},
 	}
 
-	for name, tc := range tests {
+	for name, tt := range tests {
+		tst := tt
 		t.Run(name, func(t *testing.T) {
-			gotHTTPComponent, err := NewBuilder().WithAliveCheckFunc(tc.acf).WithReadyCheckFunc(tc.rcf).
-				WithPort(tc.p).WithReadTimeout(tc.rt).WithWriteTimeout(tc.wt).WithDeflateLevel(tc.dl).WithRoutesBuilder(tc.rb).
-				WithMiddlewares(tc.mm...).WithSSL(tc.c, tc.k).WithShutdownGracePeriod(tc.gp).Create()
+			gotHTTPComponent, err := NewBuilder().WithAliveCheckFunc(tst.acf).WithReadyCheckFunc(tst.rcf).
+				WithPort(tst.p).WithReadTimeout(tst.rt).WithWriteTimeout(tst.wt).WithDeflateLevel(tst.dl).WithRoutesBuilder(tst.rb).
+				WithMiddlewares(tst.mm...).WithSSL(tst.c, tst.k).WithShutdownGracePeriod(tst.gp).Create()
 
-			if len(tc.wantErrs) > 0 {
-				assert.EqualError(t, err, errs.Aggregate(tc.wantErrs...).Error())
+			if len(tst.wantErrs) > 0 {
+				assert.EqualError(t, err, errs.Aggregate(tst.wantErrs...).Error())
 				assert.Nil(t, gotHTTPComponent)
 			} else {
 				assert.NotNil(t, gotHTTPComponent)

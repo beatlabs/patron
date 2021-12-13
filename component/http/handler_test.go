@@ -69,9 +69,10 @@ func Test_determineEncoding(t *testing.T) {
 		{"multi-value accept", args{req: request(t, json.TypeCharset, "application/json, */*")}, json.Decode, json.Encode, json.TypeCharset, false},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ct, got, got1, err := determineEncoding(tt.args.req.Header)
-			if tt.wantErr {
+		tst := tt
+		t.Run(tst.name, func(t *testing.T) {
+			ct, got, got1, err := determineEncoding(tst.args.req.Header)
+			if tst.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)
 				assert.Nil(t, got1)
@@ -80,7 +81,7 @@ func Test_determineEncoding(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, got)
 				assert.NotNil(t, got1)
-				assert.Equal(t, tt.ct, ct)
+				assert.Equal(t, tst.ct, ct)
 			}
 		})
 	}
@@ -101,9 +102,10 @@ func Test_getMultiValueHeaders(t *testing.T) {
 		{"comma separated multi(3) header", "application/json,*/*,application/xml", []string{"application/json", "*/*", "application/xml"}},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			newHeaders := getMultiValueHeaders(tt.headers)
-			assert.Equal(t, tt.expectedHeaders, newHeaders)
+		tst := tt
+		t.Run(tst.name, func(t *testing.T) {
+			newHeaders := getMultiValueHeaders(tst.headers)
+			assert.Equal(t, tst.expectedHeaders, newHeaders)
 		})
 	}
 }
@@ -179,16 +181,17 @@ func Test_handleSuccess(t *testing.T) {
 		{"Encode failure", args{req: post, rsp: jsonEncodeFailRsp, enc: json.Encode}, http.StatusCreated, true},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		tst := tt
+		t.Run(tst.name, func(t *testing.T) {
 			t.Parallel()
 			rsp := httptest.NewRecorder()
 
-			err := handleSuccess(rsp, tt.args.req, tt.args.rsp, tt.args.enc)
-			if tt.wantErr {
+			err := handleSuccess(rsp, tst.args.req, tst.args.rsp, tst.args.enc)
+			if tst.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedStatus, rsp.Code)
+				assert.Equal(t, tst.expectedStatus, rsp.Code)
 			}
 		})
 	}
@@ -216,11 +219,12 @@ func Test_handleError(t *testing.T) {
 		{name: "Payload encoding error", args: args{err: NewErrorWithCodeAndPayload(http.StatusBadRequest, make(chan int)), enc: json.Encode}, expectedCode: http.StatusInternalServerError},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		tst := tt
+		t.Run(tst.name, func(t *testing.T) {
 			rsp := httptest.NewRecorder()
-			handleError(log.Sub(nil), rsp, tt.args.enc, tt.args.err)
-			assert.Equal(t, tt.expectedCode, rsp.Code)
-			for k, v := range tt.expectedHeaders {
+			handleError(log.Sub(nil), rsp, tst.args.enc, tst.args.err)
+			assert.Equal(t, tst.expectedCode, rsp.Code)
+			for k, v := range tst.expectedHeaders {
 				assert.Equal(t, v, rsp.Header().Get(k))
 			}
 		})
@@ -284,10 +288,11 @@ func Test_handler(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		tst := tt
+		t.Run(tst.name, func(t *testing.T) {
 			rsp := httptest.NewRecorder()
-			handler(tt.args.hnd).ServeHTTP(rsp, tt.args.req)
-			assert.Equal(t, tt.expectedCode, rsp.Code)
+			handler(tst.args.hnd).ServeHTTP(rsp, tst.args.req)
+			assert.Equal(t, tst.expectedCode, rsp.Code)
 		})
 	}
 }

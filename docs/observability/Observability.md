@@ -29,6 +29,3 @@ where exemplars are enabled for request duration metric.
 The result of the above steps is attached trace IDs to metrics via exemplars.
 When querying `/metrics` endpoint `curl -H "Accept: application/openmetrics-text"  <endpoint>:<port>/metrics`
 exemplars will be present in metrics entry after `#` in [Open Metrics](https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#exemplars-1) format.
-
-
-

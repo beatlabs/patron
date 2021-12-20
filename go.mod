@@ -14,15 +14,16 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.0.0 // indirect
-	github.com/opentracing-contrib/go-stdlib v0.0.0-20180313041242-367231351874
+	github.com/opentracing-contrib/go-stdlib v0.0.0-20190519235532-cf7a6c988dc9
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/ory/dockertest/v3 v3.7.0
 	github.com/prometheus/client_golang v1.5.1
 	github.com/rs/zerolog v1.5.0
-	github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
+	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	github.com/stretchr/testify v1.7.0
-	github.com/uber/jaeger-client-go v2.22.1+incompatible
+	github.com/uber/jaeger-client-go v2.28.0+incompatible
 	github.com/uber/jaeger-lib v2.4.2-0.20210604143007-135cf5605a6d+incompatible
+	github.com/weaveworks/common v0.0.0-20211109170639-0684aab3d884
 	go.uber.org/atomic v1.6.0 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 	google.golang.org/grpc v1.27.1

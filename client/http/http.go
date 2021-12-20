@@ -105,12 +105,10 @@ func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Respon
 
 	traceID, ok := wct.ExtractTraceID(ctx)
 	if ok {
-
 		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
 			time.Since(start).Seconds(), prometheus.Labels{"traceID": traceID},
 		)
 	} else {
-
 		durationHistogram.Observe(time.Since(start).Seconds())
 	}
 

@@ -9,8 +9,9 @@ github.com/opentracing/opentracing-go v1.1.0
 
 
 ## HTTP Client
-Patron provides an HTTP client which integrates tracing into all outgoing requests by wrapping the default `net/http` client. Users can configure the client's Timeout, RoundTripper and/or set up a circuit breaker.
-
+Patron provides an HTTP client which integrates tracing into all outgoing requests by wrapping the default `net/http` client. 
+Users can configure the client's Timeout, RoundTripper and/or set up a circuit breaker. 
+In order to propagate the traces, the HTTP request context needs to be set.
 
 ## AMQP
 The AMQP client allows users to connect to a RabbitMQ instance and publish messages. The published messages have integrated tracing headers by default. Users can configure every aspect of the connection.
@@ -31,6 +32,7 @@ The Kafka client allows users to create a synchronous or asynchronous Kafka prod
 **Third-party dependencies**  
 github.com/Shopify/sarama v1.30.0
 
+Each instance of a producer or consumer requires the specification of Sarama configuration; you can use `v2.DefaultConsumerSaramaConfig` and `v2.DefaultProducerSaramaConfig` for sane defaults.
 
 ## Redis
 The Redis client allows users to connect to a Redis instance and execute commands. The connection can be configured using [`redis.Options`](https://github.com/go-redis/redis/blob/v7/options.go).

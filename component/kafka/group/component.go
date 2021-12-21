@@ -99,7 +99,7 @@ func messageStatusCountInc(status, group, topic string) {
 // The default failure strategy is the ExitStrategy.
 // The default batch size is 1 and the batch timeout is 100ms.
 // The default number of retries is 0 and the retry wait is 0.
-func New(name, group string, brokers, topics []string, proc kafka.BatchProcessorFunc, oo ...OptionFunc) (*Component, error) {
+func New(name, group string, brokers, topics []string, proc kafka.BatchProcessorFunc, saramaCfg *sarama.Config, oo ...OptionFunc) (*Component, error) {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
@@ -107,6 +107,10 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 
 	if group == "" {
 		errs = append(errs, errors.New("consumer group is required"))
+	}
+
+	if saramaCfg == nil {
+		return nil, errors.New("no Sarama configuration specified")
 	}
 
 	if validation.IsStringSliceEmpty(brokers) {
@@ -125,11 +129,6 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 		return nil, patronErrors.Aggregate(errs...)
 	}
 
-	defaultSaramaCfg, err := kafka.DefaultSaramaConfig(name)
-	if err != nil {
-		return nil, err
-	}
-
 	cmp := &Component{
 		name:         name,
 		group:        group,
@@ -141,11 +140,11 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 		batchSize:    defaultBatchSize,
 		batchTimeout: defaultBatchTimeout,
 		failStrategy: defaultFailureStrategy,
-		saramaConfig: defaultSaramaCfg,
+		saramaConfig: saramaCfg,
 	}
 
 	for _, optionFunc := range oo {
-		err = optionFunc(cmp)
+		err := optionFunc(cmp)
 		if err != nil {
 			return nil, err
 		}
@@ -201,7 +200,7 @@ func (c *Component) processing(ctx context.Context) error {
 				}
 
 				// `Consume` should be called inside an infinite loop, when a
-				// server-side re-balance happens, the consumer session will need to be
+				// server-side rebalance happens, the consumer session will need to be
 				// recreated to get the new claims
 				err := client.Consume(ctx, c.topics, handler)
 				componentError = err
@@ -253,7 +252,7 @@ func (c *Component) processing(ctx context.Context) error {
 	return componentError
 }
 
-// Consumer represents a sarama consumer group consumer
+// Consumer represents a Sarama consumer group consumer
 type consumerHandler struct {
 	ctx context.Context
 

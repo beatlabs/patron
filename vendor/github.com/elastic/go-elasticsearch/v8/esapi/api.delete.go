@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -31,9 +48,8 @@ type Delete func(index string, id string, o ...func(*DeleteRequest)) (*Response,
 // DeleteRequest configures the Delete API request.
 //
 type DeleteRequest struct {
-	Index        string
-	DocumentType string
-	DocumentID   string
+	Index      string
+	DocumentID string
 
 	IfPrimaryTerm       *int
 	IfSeqNo             *int
@@ -65,17 +81,11 @@ func (r DeleteRequest) Do(ctx context.Context, transport Transport) (*Response, 
 
 	method = "DELETE"
 
-	if r.DocumentType == "" {
-		r.DocumentType = "_doc"
-	}
-
-	path.Grow(1 + len(r.Index) + 1 + len(r.DocumentType) + 1 + len(r.DocumentID))
+	path.Grow(1 + len(r.Index) + 1 + len("_doc") + 1 + len(r.DocumentID))
 	path.WriteString("/")
 	path.WriteString(r.Index)
-	if r.DocumentType != "" {
-		path.WriteString("/")
-		path.WriteString(r.DocumentType)
-	}
+	path.WriteString("/")
+	path.WriteString("_doc")
 	path.WriteString("/")
 	path.WriteString(r.DocumentID)
 
@@ -129,7 +139,10 @@ func (r DeleteRequest) Do(ctx context.Context, transport Transport) (*Response, 
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -177,14 +190,6 @@ func (f Delete) WithContext(v context.Context) func(*DeleteRequest) {
 	}
 }
 
-// WithDocumentType - the type of the document.
-//
-func (f Delete) WithDocumentType(v string) func(*DeleteRequest) {
-	return func(r *DeleteRequest) {
-		r.DocumentType = v
-	}
-}
-
 // WithIfPrimaryTerm - only perform the delete operation if the last operation that has changed the document has the specified primary term.
 //
 func (f Delete) WithIfPrimaryTerm(v int) func(*DeleteRequest) {
@@ -201,7 +206,7 @@ func (f Delete) WithIfSeqNo(v int) func(*DeleteRequest) {
 	}
 }
 
-// WithRefresh - if `true` then refresh the effected shards to make this operation visible to search, if `wait_for` then wait for a refresh to make this operation visible to search, if `false` (the default) then do nothing with refreshes..
+// WithRefresh - if `true` then refresh the affected shards to make this operation visible to search, if `wait_for` then wait for a refresh to make this operation visible to search, if `false` (the default) then do nothing with refreshes..
 //
 func (f Delete) WithRefresh(v string) func(*DeleteRequest) {
 	return func(r *DeleteRequest) {
@@ -291,5 +296,16 @@ func (f Delete) WithHeader(h map[string]string) func(*DeleteRequest) {
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f Delete) WithOpaqueID(s string) func(*DeleteRequest) {
+	return func(r *DeleteRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

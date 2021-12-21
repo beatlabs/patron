@@ -98,7 +98,8 @@ func TestNewDefaultClient(t *testing.T) {
 		URLs:      []*url.URL{expectedURL},
 		Transport: nil,
 	}
-	expectedTransport.client = estransport.New(cfg)
+	expectedTransport.client, err = estransport.New(cfg)
+	assert.NoError(t, err)
 	expectedTransport.tracingInfo.hosts = []string{defaultAddr}
 	assert.EqualValues(t, expectedTransport, transport)
 }
@@ -130,7 +131,8 @@ func TestNewClient(t *testing.T) {
 		Transport: nil,
 		Logger:    nil,
 	}
-	expectedTransport.client = estransport.New(transportCfg)
+	expectedTransport.client, err = estransport.New(transportCfg)
+	assert.NoError(t, err)
 	expectedTransport.tracingInfo.hosts = addresses
 	expectedTransport.user = user
 	assert.EqualValues(t, expectedTransport, transport)

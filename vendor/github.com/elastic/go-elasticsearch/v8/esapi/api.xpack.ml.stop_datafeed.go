@@ -1,9 +1,27 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,16 +40,21 @@ func newMLStopDatafeedFunc(t Transport) MLStopDatafeed {
 
 // ----- API Definition -------------------------------------------------------
 
-// MLStopDatafeed - http://www.elastic.co/guide/en/elasticsearch/reference/current/ml-stop-datafeed.html
+// MLStopDatafeed - Stops one or more datafeeds.
+//
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-stop-datafeed.html.
 //
 type MLStopDatafeed func(datafeed_id string, o ...func(*MLStopDatafeedRequest)) (*Response, error)
 
 // MLStopDatafeedRequest configures the ML Stop Datafeed API request.
 //
 type MLStopDatafeedRequest struct {
+	Body io.Reader
+
 	DatafeedID string
 
 	AllowNoDatafeeds *bool
+	AllowNoMatch     *bool
 	Force            *bool
 	Timeout          time.Duration
 
@@ -72,6 +95,10 @@ func (r MLStopDatafeedRequest) Do(ctx context.Context, transport Transport) (*Re
 		params["allow_no_datafeeds"] = strconv.FormatBool(*r.AllowNoDatafeeds)
 	}
 
+	if r.AllowNoMatch != nil {
+		params["allow_no_match"] = strconv.FormatBool(*r.AllowNoMatch)
+	}
+
 	if r.Force != nil {
 		params["force"] = strconv.FormatBool(*r.Force)
 	}
@@ -96,7 +123,10 @@ func (r MLStopDatafeedRequest) Do(ctx context.Context, transport Transport) (*Re
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -104,6 +134,10 @@ func (r MLStopDatafeedRequest) Do(ctx context.Context, transport Transport) (*Re
 			q.Set(k, v)
 		}
 		req.URL.RawQuery = q.Encode()
+	}
+
+	if r.Body != nil {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if len(r.Header) > 0 {
@@ -144,11 +178,27 @@ func (f MLStopDatafeed) WithContext(v context.Context) func(*MLStopDatafeedReque
 	}
 }
 
+// WithBody - The URL params optionally sent in the body.
+//
+func (f MLStopDatafeed) WithBody(v io.Reader) func(*MLStopDatafeedRequest) {
+	return func(r *MLStopDatafeedRequest) {
+		r.Body = v
+	}
+}
+
 // WithAllowNoDatafeeds - whether to ignore if a wildcard expression matches no datafeeds. (this includes `_all` string or when no datafeeds have been specified).
 //
 func (f MLStopDatafeed) WithAllowNoDatafeeds(v bool) func(*MLStopDatafeedRequest) {
 	return func(r *MLStopDatafeedRequest) {
 		r.AllowNoDatafeeds = &v
+	}
+}
+
+// WithAllowNoMatch - whether to ignore if a wildcard expression matches no datafeeds. (this includes `_all` string or when no datafeeds have been specified).
+//
+func (f MLStopDatafeed) WithAllowNoMatch(v bool) func(*MLStopDatafeedRequest) {
+	return func(r *MLStopDatafeedRequest) {
+		r.AllowNoMatch = &v
 	}
 }
 
@@ -210,5 +260,16 @@ func (f MLStopDatafeed) WithHeader(h map[string]string) func(*MLStopDatafeedRequ
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f MLStopDatafeed) WithOpaqueID(s string) func(*MLStopDatafeedRequest) {
+	return func(r *MLStopDatafeedRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

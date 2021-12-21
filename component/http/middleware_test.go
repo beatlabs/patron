@@ -71,7 +71,7 @@ func TestMiddlewareChain(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rc := httptest.NewRecorder()
-			rw := newResponseWriter(rc)
+			rw := newResponseWriter(rc, true)
 			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
@@ -111,7 +111,7 @@ func TestMiddlewares(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rc := httptest.NewRecorder()
-			rw := newResponseWriter(rc)
+			rw := newResponseWriter(rc, true)
 			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
@@ -155,7 +155,7 @@ func TestSpanLogError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mtr.Reset()
 			rc := httptest.NewRecorder()
-			rw := newResponseWriter(rc)
+			rw := newResponseWriter(rc, true)
 			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
@@ -172,7 +172,7 @@ func TestSpanLogError(t *testing.T) {
 
 func TestResponseWriter(t *testing.T) {
 	rc := httptest.NewRecorder()
-	rw := newResponseWriter(rc)
+	rw := newResponseWriter(rc, true)
 
 	_, err := rw.Write([]byte("test"))
 	assert.NoError(t, err)
@@ -685,6 +685,48 @@ func TestIsConnectionReset(t *testing.T) {
 
 			// then
 			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+type failWriter struct {
+}
+
+func (fw *failWriter) Header() http.Header {
+	return http.Header{}
+}
+
+func (fw *failWriter) Write([]byte) (int, error) {
+	return 0, fmt.Errorf("foo")
+}
+
+func (fw *failWriter) WriteHeader(statusCode int) {
+
+}
+
+func TestSetResponseWriterStatusOnResponseFailWrite(t *testing.T) {
+	failWriter := &failWriter{}
+	failDynamicCompressionResponseWriter := &dynamicCompressionResponseWriter{failWriter, "", nil, 0, deflateLevel}
+
+	tests := []struct {
+		Name           string
+		ResponseWriter *responseWriter
+	}{
+		{
+			Name:           "Failing responseWriter with http.ResponseWriter",
+			ResponseWriter: newResponseWriter(failWriter, false),
+		},
+		{
+			Name:           "Failing responseWriter with http.ResponseWriter",
+			ResponseWriter: newResponseWriter(failDynamicCompressionResponseWriter, false),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			_, err := test.ResponseWriter.Write([]byte(`"foo":"bar"`))
+			assert.Error(t, err)
+			assert.Equal(t, http.StatusOK, test.ResponseWriter.status)
 		})
 	}
 }

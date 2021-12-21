@@ -224,7 +224,7 @@ func Logger(logger log.Logger) Option {
 // TextLogger to use Go's standard logger.
 func TextLogger() Option {
 	return func(cfg *Config) {
-		cfg.logger = std.New(os.Stderr, getLogLevel(), nil)
+		cfg.logger = std.New(os.Stderr, getLogLevel(), cfg.fields)
 	}
 }
 
@@ -247,7 +247,7 @@ func New(name, version string, options ...Option) (*Builder, error) {
 		option(&cfg)
 	}
 
-	err := setupObservability(name, version, cfg.fields, cfg.logger)
+	err := setupLogging(cfg.fields, cfg.logger)
 	if err != nil {
 		return nil, err
 	}
@@ -284,15 +284,6 @@ func defaultLogFields(name, version string) map[string]interface{} {
 	}
 }
 
-func setupObservability(name, version string, fields map[string]interface{}, logger log.Logger) error {
-	err := setupLogging(fields, logger)
-	if err != nil {
-		return err
-	}
-
-	return setupTracing(name, version)
-}
-
 func setupLogging(fields map[string]interface{}, logger log.Logger) error {
 	if fields != nil {
 		return log.Setup(logger.Sub(fields))
@@ -300,7 +291,7 @@ func setupLogging(fields map[string]interface{}, logger log.Logger) error {
 	return log.Setup(logger)
 }
 
-func setupTracing(name, version string) error {
+func setupJaegerTracing(name, version string) error {
 	host, ok := os.LookupEnv("PATRON_JAEGER_AGENT_HOST")
 	if !ok {
 		host = "0.0.0.0"
@@ -427,6 +418,11 @@ func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
 func (b *Builder) build() (*service, error) {
 	if len(b.errors) > 0 {
 		return nil, patronErrors.Aggregate(b.errors...)
+	}
+
+	err := setupJaegerTracing(b.name, b.version)
+	if err != nil {
+		return nil, err
 	}
 
 	s := service{

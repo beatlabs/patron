@@ -4,7 +4,6 @@ package http
 import (
 	"compress/flate"
 	"compress/gzip"
-	"context"
 	"io"
 	"net/http"
 	"strconv"
@@ -26,9 +25,7 @@ const (
 	clientComponent = "http-client"
 )
 
-var (
-	reqDurationMetrics *prometheus.HistogramVec
-)
+var reqDurationMetrics *prometheus.HistogramVec
 
 func init() {
 	reqDurationMetrics = prometheus.NewHistogramVec(
@@ -45,7 +42,7 @@ func init() {
 
 // Client interface of a HTTP client.
 type Client interface {
-	Do(ctx context.Context, req *http.Request) (*http.Response, error)
+	Do(req *http.Request) (*http.Response, error)
 }
 
 // TracedClient defines a HTTP client with tracing integrated.
@@ -74,15 +71,14 @@ func New(oo ...OptionFunc) (*TracedClient, error) {
 	return tc, nil
 }
 
-// Do executes a HTTP request with integrated tracing and tracing propagation downstream.
-func (tc *TracedClient) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
-	req = req.WithContext(ctx)
+// Do execute an HTTP request with integrated tracing and tracing propagation downstream.
+func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 	req, ht := nethttp.TraceRequest(opentracing.GlobalTracer(), req,
 		nethttp.OperationName(opName(req.Method, req.URL.String())),
 		nethttp.ComponentName(clientComponent))
 	defer ht.Finish()
 
-	req.Header.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
+	req.Header.Set(correlation.HeaderID, correlation.IDFromContext(req.Context()))
 
 	start := time.Now()
 

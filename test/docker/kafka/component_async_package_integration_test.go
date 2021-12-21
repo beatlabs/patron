@@ -18,6 +18,7 @@ import (
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"
+	kafkacmp "github.com/beatlabs/patron/component/kafka"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -209,11 +210,16 @@ func newKafkaAsyncPackageComponent(t *testing.T, name string, retries uint, proc
 		*p = tmp
 		return nil
 	}
+
+	saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig(name, true)
+	require.NoError(t, err)
+
 	factory, err := group.New(
 		name,
 		name+"-group",
 		[]string{name},
 		[]string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)},
+		saramaCfg,
 		kafka.Decoder(decode),
 		kafka.Start(sarama.OffsetOldest))
 	require.NoError(t, err)

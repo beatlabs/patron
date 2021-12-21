@@ -86,7 +86,12 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 		pub: publisher,
 	}
 
-	saramaCfg := sarama.NewConfig()
+	// create a consumer that accepts only consistent reads
+	saramaCfg, err := kafka.DefaultConsumerSaramaConfig("kafka-consumer", true)
+	if err != nil {
+		return nil, err
+	}
+
 	// batches will be responsible for committing
 	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -100,14 +105,13 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 		[]string{broker},
 		[]string{topic},
 		kafkaCmp.Process,
+		saramaCfg,
 		group.FailureStrategy(kafka.SkipStrategy),
 		group.BatchSize(1),
 		group.BatchTimeout(1*time.Second),
 		group.Retries(10),
 		group.RetryWait(3*time.Second),
-		group.SaramaConfig(saramaCfg),
 		group.CommitSync())
-
 	if err != nil {
 		return nil, err
 	}

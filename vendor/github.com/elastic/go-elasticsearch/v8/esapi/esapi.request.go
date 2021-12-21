@@ -1,13 +1,26 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 package esapi
 
 import (
-	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strings"
 )
 
 const (
@@ -27,30 +40,5 @@ type Request interface {
 // newRequest creates an HTTP request.
 //
 func newRequest(method, path string, body io.Reader) (*http.Request, error) {
-	r := http.Request{
-		Method:     method,
-		URL:        &url.URL{Path: path},
-		Proto:      "HTTP/1.1",
-		ProtoMajor: 1,
-		ProtoMinor: 1,
-		Header:     make(http.Header),
-	}
-
-	if body != nil {
-		switch b := body.(type) {
-		case *bytes.Buffer:
-			r.Body = ioutil.NopCloser(body)
-			r.ContentLength = int64(b.Len())
-		case *bytes.Reader:
-			r.Body = ioutil.NopCloser(body)
-			r.ContentLength = int64(b.Len())
-		case *strings.Reader:
-			r.Body = ioutil.NopCloser(body)
-			r.ContentLength = int64(b.Len())
-		default:
-			r.Body = ioutil.NopCloser(body)
-		}
-	}
-
-	return &r, nil
+	return http.NewRequest(method, path, body)
 }

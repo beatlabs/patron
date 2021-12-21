@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -20,14 +37,16 @@ func newSlmGetLifecycleFunc(t Transport) SlmGetLifecycle {
 
 // ----- API Definition -------------------------------------------------------
 
-// SlmGetLifecycle - https://www.elastic.co/guide/en/elasticsearch/reference/current/slm-api.html
+// SlmGetLifecycle - Retrieves one or more snapshot lifecycle policy definitions and information about the latest snapshot attempts.
+//
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/slm-api-get-policy.html.
 //
 type SlmGetLifecycle func(o ...func(*SlmGetLifecycleRequest)) (*Response, error)
 
 // SlmGetLifecycleRequest configures the Slm Get Lifecycle API request.
 //
 type SlmGetLifecycleRequest struct {
-	PolicyID string
+	PolicyID []string
 
 	Pretty     bool
 	Human      bool
@@ -50,14 +69,14 @@ func (r SlmGetLifecycleRequest) Do(ctx context.Context, transport Transport) (*R
 
 	method = "GET"
 
-	path.Grow(1 + len("_slm") + 1 + len("policy") + 1 + len(r.PolicyID))
+	path.Grow(1 + len("_slm") + 1 + len("policy") + 1 + len(strings.Join(r.PolicyID, ",")))
 	path.WriteString("/")
 	path.WriteString("_slm")
 	path.WriteString("/")
 	path.WriteString("policy")
-	if r.PolicyID != "" {
+	if len(r.PolicyID) > 0 {
 		path.WriteString("/")
-		path.WriteString(r.PolicyID)
+		path.WriteString(strings.Join(r.PolicyID, ","))
 	}
 
 	params = make(map[string]string)
@@ -78,7 +97,10 @@ func (r SlmGetLifecycleRequest) Do(ctx context.Context, transport Transport) (*R
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -128,7 +150,7 @@ func (f SlmGetLifecycle) WithContext(v context.Context) func(*SlmGetLifecycleReq
 
 // WithPolicyID - comma-separated list of snapshot lifecycle policies to retrieve.
 //
-func (f SlmGetLifecycle) WithPolicyID(v string) func(*SlmGetLifecycleRequest) {
+func (f SlmGetLifecycle) WithPolicyID(v ...string) func(*SlmGetLifecycleRequest) {
 	return func(r *SlmGetLifecycleRequest) {
 		r.PolicyID = v
 	}
@@ -176,5 +198,16 @@ func (f SlmGetLifecycle) WithHeader(h map[string]string) func(*SlmGetLifecycleRe
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f SlmGetLifecycle) WithOpaqueID(s string) func(*SlmGetLifecycleRequest) {
+	return func(r *SlmGetLifecycleRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

@@ -401,6 +401,9 @@ func (ch *Channel) recvContent(f frame) error {
 		return ch.transition((*Channel).recvMethod)
 
 	case *bodyFrame:
+		if cap(ch.body) == 0 {
+			ch.body = make([]byte, 0, ch.header.Size)
+		}
 		ch.body = append(ch.body, frame.Body...)
 
 		if uint64(len(ch.body)) >= ch.header.Size {
@@ -456,8 +459,8 @@ func (ch *Channel) NotifyClose(c chan *Error) chan *Error {
 
 /*
 NotifyFlow registers a listener for basic.flow methods sent by the server.
-When `true` is sent on one of the listener channels, all publishers should
-pause until a `false` is sent.
+When `false` is sent on one of the listener channels, all publishers should
+pause until a `true` is sent.
 
 The server may ask the producer to pause or restart the flow of Publishings
 sent by on a channel. This is a simple flow-control mechanism that a server can
@@ -550,7 +553,7 @@ ordered Ack and Nack DeliveryTag to the respective channels.
 For strict ordering, use NotifyPublish instead.
 */
 func (ch *Channel) NotifyConfirm(ack, nack chan uint64) (chan uint64, chan uint64) {
-	confirms := ch.NotifyPublish(make(chan Confirmation, len(ack)+len(nack)))
+	confirms := ch.NotifyPublish(make(chan Confirmation, cap(ack)+cap(nack)))
 
 	go func() {
 		for c := range confirms {
@@ -889,7 +892,7 @@ and exchanges will also be restored on server restart.
 If the binding could not complete, an error will be returned and the channel
 will be closed.
 
-When noWait is true and the queue could not be bound, the channel will be
+When noWait is false and the queue could not be bound, the channel will be
 closed with an error.
 
 */
@@ -1447,12 +1450,12 @@ func (ch *Channel) TxRollback() error {
 
 /*
 Flow pauses the delivery of messages to consumers on this channel.  Channels
-are opened with flow control not active, to open a channel with paused
-deliveries immediately call this method with true after calling
+are opened with flow control active, to open a channel with paused
+deliveries immediately call this method with `false` after calling
 Connection.Channel.
 
-When active is true, this method asks the server to temporarily pause deliveries
-until called again with active as false.
+When active is `false`, this method asks the server to temporarily pause deliveries
+until called again with active as `true`.
 
 Channel.Get methods will not be affected by flow control.
 
@@ -1461,7 +1464,7 @@ the number of unacknowledged messages or bytes in flight instead.
 
 The server may also send us flow methods to throttle our publishings.  A well
 behaving publishing client should add a listener with Channel.NotifyFlow and
-pause its publishings when true is sent on that channel.
+pause its publishings when `false` is sent on that channel.
 
 Note: RabbitMQ prefers to use TCP push back to control flow for all channels on
 a connection, so under high volume scenarios, it's wise to open separate
@@ -1580,6 +1583,9 @@ multiple messages, reducing the amount of protocol messages to exchange.
 See also Delivery.Reject
 */
 func (ch *Channel) Reject(tag uint64, requeue bool) error {
+	ch.m.Lock()
+	defer ch.m.Unlock()
+
 	return ch.send(&basicReject{
 		DeliveryTag: tag,
 		Requeue:     requeue,

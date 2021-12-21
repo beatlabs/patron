@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -24,6 +41,8 @@ func newRankEvalFunc(t Transport) RankEval {
 
 // RankEval allows to evaluate the quality of ranked search results over a set of typical search queries
 //
+// This API is experimental.
+//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/search-rank-eval.html.
 //
 type RankEval func(body io.Reader, o ...func(*RankEvalRequest)) (*Response, error)
@@ -38,6 +57,7 @@ type RankEvalRequest struct {
 	AllowNoIndices    *bool
 	ExpandWildcards   string
 	IgnoreUnavailable *bool
+	SearchType        string
 
 	Pretty     bool
 	Human      bool
@@ -58,7 +78,7 @@ func (r RankEvalRequest) Do(ctx context.Context, transport Transport) (*Response
 		params map[string]string
 	)
 
-	method = "GET"
+	method = "POST"
 
 	path.Grow(1 + len(strings.Join(r.Index, ",")) + 1 + len("_rank_eval"))
 	if len(r.Index) > 0 {
@@ -82,6 +102,10 @@ func (r RankEvalRequest) Do(ctx context.Context, transport Transport) (*Response
 		params["ignore_unavailable"] = strconv.FormatBool(*r.IgnoreUnavailable)
 	}
 
+	if r.SearchType != "" {
+		params["search_type"] = r.SearchType
+	}
+
 	if r.Pretty {
 		params["pretty"] = "true"
 	}
@@ -98,7 +122,10 @@ func (r RankEvalRequest) Do(ctx context.Context, transport Transport) (*Response
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), r.Body)
+	req, err := newRequest(method, path.String(), r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -182,6 +209,14 @@ func (f RankEval) WithIgnoreUnavailable(v bool) func(*RankEvalRequest) {
 	}
 }
 
+// WithSearchType - search operation type.
+//
+func (f RankEval) WithSearchType(v string) func(*RankEvalRequest) {
+	return func(r *RankEvalRequest) {
+		r.SearchType = v
+	}
+}
+
 // WithPretty makes the response body pretty-printed.
 //
 func (f RankEval) WithPretty() func(*RankEvalRequest) {
@@ -224,5 +259,16 @@ func (f RankEval) WithHeader(h map[string]string) func(*RankEvalRequest) {
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f RankEval) WithOpaqueID(s string) func(*RankEvalRequest) {
+	return func(r *RankEvalRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

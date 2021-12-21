@@ -21,17 +21,22 @@ type Factory struct {
 	group   string
 	topics  []string
 	brokers []string
+	cfg     *sarama.Config
 	oo      []kafka.OptionFunc
 }
 
 // New constructor.
-func New(name, group string, topics, brokers []string, oo ...kafka.OptionFunc) (*Factory, error) {
+func New(name, group string, topics, brokers []string, saramaCfg *sarama.Config, oo ...kafka.OptionFunc) (*Factory, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
 
 	if group == "" {
 		return nil, errors.New("group is required")
+	}
+
+	if saramaCfg == nil {
+		return nil, errors.New("no Sarama configuration specified")
 	}
 
 	if validation.IsStringSliceEmpty(brokers) {
@@ -42,24 +47,19 @@ func New(name, group string, topics, brokers []string, oo ...kafka.OptionFunc) (
 		return nil, errors.New("topics are empty or have an empty value")
 	}
 
-	return &Factory{name: name, group: group, topics: topics, brokers: brokers, oo: oo}, nil
+	return &Factory{name: name, group: group, topics: topics, brokers: brokers, cfg: saramaCfg, oo: oo}, nil
 }
 
 func (c *consumer) OutOfOrder() bool {
 	return false
 }
 
-// Create a new consumer.
+// Create a new asynchronous group consumer.
 func (f *Factory) Create() (async.Consumer, error) {
-	config, err := kafka.DefaultSaramaConfig(f.name)
-	if err != nil {
-		return nil, err
-	}
-
 	cc := kafka.ConsumerConfig{
 		Brokers:      f.brokers,
-		Buffer:       config.ChannelBufferSize,
-		SaramaConfig: config,
+		SaramaConfig: f.cfg,
+		Buffer:       f.cfg.ChannelBufferSize,
 	}
 
 	c := &consumer{
@@ -69,6 +69,7 @@ func (f *Factory) Create() (async.Consumer, error) {
 		config:   cc,
 	}
 
+	var err error
 	for _, o := range f.oo {
 		err = o(&c.config)
 		if err != nil {

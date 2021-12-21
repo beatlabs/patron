@@ -19,8 +19,6 @@ updates:
       timezone: "Europe/Athens"
       day: "monday"
     ignore:
-      - dependency-name: "github.com/julienschmidt/httprouter"
-      - dependency-name: "github.com/Shopify/sarama"
       - dependency-name: "github.com/aws/aws-sdk-go"
         update-types: ["version-update:semver-patch"]
     open-pull-requests-limit: 1

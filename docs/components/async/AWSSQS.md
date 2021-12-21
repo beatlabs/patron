@@ -2,7 +2,7 @@
 
 ## Deprecated
 
-The SQS consumer package along with the async component is superseded by the standalone `github.com/beatlabs/component/sqs` package.
+The SQS consumer package along with the async component is superseded by the standalone `github.com/beatlabs/patron/component/sqs` package.
 
 **This package is frozen and no new functionality will be added.**
 

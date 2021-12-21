@@ -156,7 +156,7 @@ func NewClient(cfg Config) (*Client, error) {
 		cfg.Addresses = append(cfg.Addresses, addr)
 	}
 
-	esTransportClient := estransport.New(estransport.Config{
+	esTransportClient, err := estransport.New(estransport.Config{
 		URLs:     urls,
 		Username: cfg.Username,
 		Password: cfg.Password,
@@ -165,6 +165,10 @@ func NewClient(cfg Config) (*Client, error) {
 		Transport: cfg.Transport,
 		Logger:    cfg.Logger,
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	tracingInfo := tracingInfo{
 		user:  cfg.Username,
 		hosts: cfg.Addresses,

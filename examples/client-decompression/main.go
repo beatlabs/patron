@@ -45,7 +45,7 @@ func main() {
 	cl, err := clienthttp.New(clienthttp.Timeout(1 * time.Second))
 
 	noCompReq, err := http.NewRequest("GET", "http://localhost:50000/hello", nil)
-	rsp1, err := cl.Do(ctx, noCompReq)
+	rsp1, err := cl.Do(noCompReq)
 	handle(err)
 	bdy1, err := ioutil.ReadAll(rsp1.Body)
 	handle(err)
@@ -55,7 +55,7 @@ func main() {
 		log.Fatalf("failed to create gzip request: %v", err)
 	}
 	gzipReq.Header.Add(encoding.AcceptEncodingHeader, "gzip")
-	rsp2, err := cl.Do(ctx, gzipReq)
+	rsp2, err := cl.Do(gzipReq)
 	handle(err)
 	bdy2, err := ioutil.ReadAll(rsp2.Body)
 	handle(err)
@@ -65,7 +65,7 @@ func main() {
 		log.Fatalf("failed to create deflate request: %v", err)
 	}
 	deflateReq.Header.Add(encoding.AcceptEncodingHeader, "deflate")
-	rsp3, err := cl.Do(ctx, deflateReq)
+	rsp3, err := cl.Do(deflateReq)
 	handle(err)
 	bdy3, err := ioutil.ReadAll(rsp3.Body)
 	handle(err)

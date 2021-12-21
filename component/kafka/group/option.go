@@ -2,6 +2,7 @@ package group
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -23,6 +24,34 @@ func FailureStrategy(fs kafka.FailStrategy) OptionFunc {
 			return errors.New("invalid failure strategy provided")
 		}
 		c.failStrategy = fs
+		return nil
+	}
+}
+
+// CheckTopic checks whether the component-configured topics exist in the broker.
+func CheckTopic() OptionFunc {
+	return func(c *Component) error {
+		saramaConf := sarama.NewConfig()
+		client, err := sarama.NewClient(c.brokers, saramaConf)
+		if err != nil {
+			return fmt.Errorf("failed to create client: %w", err)
+		}
+		defer func() { _ = client.Close() }()
+		brokerTopics, err := client.Topics()
+		if err != nil {
+			return fmt.Errorf("failed to get topics from broker: %w", err)
+		}
+
+		topicsSet := make(map[string]struct{}, len(brokerTopics))
+		for _, topic := range brokerTopics {
+			topicsSet[topic] = struct{}{}
+		}
+
+		for _, topic := range c.topics {
+			if _, ok := topicsSet[topic]; !ok {
+				return fmt.Errorf("topic %s does not exist in broker", topic)
+			}
+		}
 		return nil
 	}
 }
@@ -69,18 +98,6 @@ func BatchTimeout(timeout time.Duration) OptionFunc {
 			return errors.New("batch timeout should greater than or equal to zero")
 		}
 		c.batchTimeout = timeout
-		return nil
-	}
-}
-
-// SaramaConfig specifies a sarama consumer config. Use this to set consumer config on sarama level.
-// Check the sarama config documentation for more config options.
-func SaramaConfig(cfg *sarama.Config) OptionFunc {
-	return func(c *Component) error {
-		if cfg == nil {
-			return errors.New("nil sarama configuration provided")
-		}
-		c.saramaConfig = cfg
 		return nil
 	}
 }

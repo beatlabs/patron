@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -30,9 +47,8 @@ type Exists func(index string, id string, o ...func(*ExistsRequest)) (*Response,
 // ExistsRequest configures the Exists API request.
 //
 type ExistsRequest struct {
-	Index        string
-	DocumentType string
-	DocumentID   string
+	Index      string
+	DocumentID string
 
 	Preference     string
 	Realtime       *bool
@@ -66,17 +82,11 @@ func (r ExistsRequest) Do(ctx context.Context, transport Transport) (*Response, 
 
 	method = "HEAD"
 
-	if r.DocumentType == "" {
-		r.DocumentType = "_doc"
-	}
-
-	path.Grow(1 + len(r.Index) + 1 + len(r.DocumentType) + 1 + len(r.DocumentID))
+	path.Grow(1 + len(r.Index) + 1 + len("_doc") + 1 + len(r.DocumentID))
 	path.WriteString("/")
 	path.WriteString(r.Index)
-	if r.DocumentType != "" {
-		path.WriteString("/")
-		path.WriteString(r.DocumentType)
-	}
+	path.WriteString("/")
+	path.WriteString("_doc")
 	path.WriteString("/")
 	path.WriteString(r.DocumentID)
 
@@ -138,7 +148,10 @@ func (r ExistsRequest) Do(ctx context.Context, transport Transport) (*Response, 
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -183,14 +196,6 @@ func (r ExistsRequest) Do(ctx context.Context, transport Transport) (*Response, 
 func (f Exists) WithContext(v context.Context) func(*ExistsRequest) {
 	return func(r *ExistsRequest) {
 		r.ctx = v
-	}
-}
-
-// WithDocumentType - the type of the document (use `_all` to fetch the first document matching the ID across all types).
-//
-func (f Exists) WithDocumentType(v string) func(*ExistsRequest) {
-	return func(r *ExistsRequest) {
-		r.DocumentType = v
 	}
 }
 
@@ -316,5 +321,16 @@ func (f Exists) WithHeader(h map[string]string) func(*ExistsRequest) {
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f Exists) WithOpaqueID(s string) func(*ExistsRequest) {
+	return func(r *ExistsRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

@@ -13,6 +13,7 @@ import (
 	v2 "github.com/beatlabs/patron/client/kafka/v2"
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/auth/apikey"
+	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
@@ -52,7 +53,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	asyncComp, err := newAsyncKafkaProducer(kafkaBroker, kafkaTopic)
+	asyncComp, err := newAsyncKafkaProducer(kafkaBroker, kafkaTopic, true)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
 	}
@@ -78,8 +79,13 @@ type kafkaProducer struct {
 }
 
 // newAsyncKafkaProducer creates a new asynchronous kafka producer client
-func newAsyncKafkaProducer(kafkaBroker, topic string) (*kafkaProducer, error) {
-	prd, chErr, err := v2.New([]string{kafkaBroker}).CreateAsync()
+func newAsyncKafkaProducer(kafkaBroker, topic string, readCommitted bool) (*kafkaProducer, error) {
+	saramaCfg, err := kafka.DefaultConsumerSaramaConfig("http-sec-consumer", readCommitted)
+	if err != nil {
+		return nil, err
+	}
+
+	prd, chErr, err := v2.New([]string{kafkaBroker}, saramaCfg).CreateAsync()
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +115,7 @@ func (hc *kafkaProducer) forwardToKafkaHandler(ctx context.Context, req *patronh
 	if err != nil {
 		return nil, err
 	}
-	_, err = cl.Do(ctx, googleReq)
+	_, err = cl.Do(googleReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get www.google.com: %w", err)
 	}

@@ -23,7 +23,7 @@ func init() {
 	// it correctly identifies these tests'
 	// source lines, matching behavior with non-test use-cases
 	defaultSourceHook = &sourceHookWithSkip{
-		skip: 4,
+		skip: 5,
 	}
 	defaultSourceHookWithFormat = &sourceHookWithSkip{
 		skip: 5,
@@ -59,8 +59,8 @@ func TestLogger_Sub(t *testing.T) {
 	assert.NotNil(t, sl.(*Logger).logger)
 
 	sl.Debug(logMsg)
-	assertLog(t, b, log.DebugLevel, logMsg)
 	assert.Contains(t, b.String(), `"subkey1":"subval1"`, b.String())
+	assertLog(t, b, log.DebugLevel, logMsg)
 }
 
 func TestLogger_Sub_NoFields(t *testing.T) {
@@ -143,11 +143,12 @@ func TestLogger_Debugf(t *testing.T) {
 }
 
 func assertLog(t *testing.T, b bytes.Buffer, lvl log.Level, msg string) {
-	assert.Contains(t, b.String(), fmt.Sprintf(`"lvl":"%s"`, lvl), b.String())
-	assert.Contains(t, b.String(), `"key":"value"`, b.String())
-	assert.Contains(t, b.String(), fmt.Sprintf(`"msg":"%s"`, msg), b.String())
-	assert.Regexp(t, regexp.MustCompile(`"time":".*"`), b.String())
-	assert.Regexp(t, regexp.MustCompile(`"src":"zerolog/logger_test.go:.*"`), b.String())
+	logMsg := b.String()
+	assert.Contains(t, logMsg, fmt.Sprintf(`"lvl":"%s"`, lvl), logMsg)
+	assert.Contains(t, logMsg, `"key":"value"`, logMsg)
+	assert.Contains(t, logMsg, fmt.Sprintf(`"msg":"%s"`, msg), logMsg)
+	assert.Regexp(t, regexp.MustCompile(`"time":".*"`), logMsg)
+	assert.Regexp(t, regexp.MustCompile(`"src":"zerolog/logger_test.go:.*"`), logMsg)
 }
 
 func TestLog_Level(t *testing.T) {

@@ -1,9 +1,27 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -30,6 +48,8 @@ type NodesReloadSecureSettings func(o ...func(*NodesReloadSecureSettingsRequest)
 // NodesReloadSecureSettingsRequest configures the Nodes Reload Secure Settings API request.
 //
 type NodesReloadSecureSettingsRequest struct {
+	Body io.Reader
+
 	NodeID []string
 
 	Timeout time.Duration
@@ -87,7 +107,10 @@ func (r NodesReloadSecureSettingsRequest) Do(ctx context.Context, transport Tran
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -95,6 +118,10 @@ func (r NodesReloadSecureSettingsRequest) Do(ctx context.Context, transport Tran
 			q.Set(k, v)
 		}
 		req.URL.RawQuery = q.Encode()
+	}
+
+	if r.Body != nil {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if len(r.Header) > 0 {
@@ -132,6 +159,14 @@ func (r NodesReloadSecureSettingsRequest) Do(ctx context.Context, transport Tran
 func (f NodesReloadSecureSettings) WithContext(v context.Context) func(*NodesReloadSecureSettingsRequest) {
 	return func(r *NodesReloadSecureSettingsRequest) {
 		r.ctx = v
+	}
+}
+
+// WithBody - An object containing the password for the elasticsearch keystore.
+//
+func (f NodesReloadSecureSettings) WithBody(v io.Reader) func(*NodesReloadSecureSettingsRequest) {
+	return func(r *NodesReloadSecureSettingsRequest) {
+		r.Body = v
 	}
 }
 
@@ -193,5 +228,16 @@ func (f NodesReloadSecureSettings) WithHeader(h map[string]string) func(*NodesRe
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f NodesReloadSecureSettings) WithOpaqueID(s string) func(*NodesReloadSecureSettingsRequest) {
+	return func(r *NodesReloadSecureSettingsRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

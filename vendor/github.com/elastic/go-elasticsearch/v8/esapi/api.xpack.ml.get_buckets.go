@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -23,7 +40,9 @@ func newMLGetBucketsFunc(t Transport) MLGetBuckets {
 
 // ----- API Definition -------------------------------------------------------
 
-// MLGetBuckets - http://www.elastic.co/guide/en/elasticsearch/reference/current/ml-get-bucket.html
+// MLGetBuckets - Retrieves anomaly detection job results for one or more buckets.
+//
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-get-bucket.html.
 //
 type MLGetBuckets func(job_id string, o ...func(*MLGetBucketsRequest)) (*Response, error)
 
@@ -64,7 +83,7 @@ func (r MLGetBucketsRequest) Do(ctx context.Context, transport Transport) (*Resp
 		params map[string]string
 	)
 
-	method = "GET"
+	method = "POST"
 
 	path.Grow(1 + len("_ml") + 1 + len("anomaly_detectors") + 1 + len(r.JobID) + 1 + len("results") + 1 + len("buckets") + 1 + len(r.Timestamp))
 	path.WriteString("/")
@@ -136,7 +155,10 @@ func (r MLGetBucketsRequest) Do(ctx context.Context, transport Transport) (*Resp
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), r.Body)
+	req, err := newRequest(method, path.String(), r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -318,5 +340,16 @@ func (f MLGetBuckets) WithHeader(h map[string]string) func(*MLGetBucketsRequest)
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f MLGetBuckets) WithOpaqueID(s string) func(*MLGetBucketsRequest) {
+	return func(r *MLGetBucketsRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

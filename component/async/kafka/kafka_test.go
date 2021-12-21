@@ -21,12 +21,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDefaultSaramaConfig(t *testing.T) {
-	sc, err := DefaultSaramaConfig("name")
-	assert.NoError(t, err)
-	assert.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
-}
-
 func Test_determineContentType(t *testing.T) {
 	type args struct {
 		hdr []*sarama.RecordHeader

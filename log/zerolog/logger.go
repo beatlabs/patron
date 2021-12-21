@@ -25,8 +25,10 @@ var levelMap = map[log.Level]zerolog.Level{
 }
 
 var (
-	defaultSourceHook           sourceHook = sourceHookByPackagePath{packagePath: "vendor/github.com/beatlabs/"}
-	defaultSourceHookWithFormat            = defaultSourceHook
+	defaultSourceHook sourceHook = sourceHookByPackagePath{
+		packagePath: "vendor/github.com/beatlabs/",
+	}
+	defaultSourceHookWithFormat = defaultSourceHook
 )
 
 func init() {

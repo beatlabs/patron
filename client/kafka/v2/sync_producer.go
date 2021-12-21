@@ -57,19 +57,19 @@ func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.Produce
 
 	for _, msg := range messages {
 		if err := injectTracingHeaders(msg, sp); err != nil {
-			statusCountAdd(deliveryTypeSync, deliveryStatusSendError, batchTarget, len(messages))
+			statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, len(messages))
 			trace.SpanError(sp)
 			return fmt.Errorf("failed to inject tracing headers: %w", err)
 		}
 	}
 
 	if err := p.syncProd.SendMessages(messages); err != nil {
-		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, batchTarget, len(messages))
+		statusCountBatchAdd(deliveryTypeSync, deliveryStatusSendError, messages)
 		trace.SpanError(sp)
 		return err
 	}
 
-	statusCountAdd(deliveryTypeSync, deliveryStatusSent, batchTarget, len(messages))
+	statusCountBatchAdd(deliveryTypeSync, deliveryStatusSent, messages)
 	trace.SpanSuccess(sp)
 	return nil
 }
@@ -85,4 +85,10 @@ func (p *SyncProducer) Close() error {
 		return fmt.Errorf("failed to close sync producer: %w", err)
 	}
 	return nil
+}
+
+func statusCountBatchAdd(deliveryType string, status deliveryStatus, messages []*sarama.ProducerMessage) {
+	for _, msg := range messages {
+		statusCountAdd(deliveryType, status, msg.Topic, 1)
+	}
 }

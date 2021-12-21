@@ -1,9 +1,27 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,6 +50,8 @@ type FieldCaps func(o ...func(*FieldCapsRequest)) (*Response, error)
 type FieldCapsRequest struct {
 	Index []string
 
+	Body io.Reader
+
 	AllowNoIndices    *bool
 	ExpandWildcards   string
 	Fields            []string
@@ -57,7 +77,7 @@ func (r FieldCapsRequest) Do(ctx context.Context, transport Transport) (*Respons
 		params map[string]string
 	)
 
-	method = "GET"
+	method = "POST"
 
 	path.Grow(1 + len(strings.Join(r.Index, ",")) + 1 + len("_field_caps"))
 	if len(r.Index) > 0 {
@@ -105,7 +125,10 @@ func (r FieldCapsRequest) Do(ctx context.Context, transport Transport) (*Respons
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -113,6 +136,10 @@ func (r FieldCapsRequest) Do(ctx context.Context, transport Transport) (*Respons
 			q.Set(k, v)
 		}
 		req.URL.RawQuery = q.Encode()
+	}
+
+	if r.Body != nil {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if len(r.Header) > 0 {
@@ -150,6 +177,14 @@ func (r FieldCapsRequest) Do(ctx context.Context, transport Transport) (*Respons
 func (f FieldCaps) WithContext(v context.Context) func(*FieldCapsRequest) {
 	return func(r *FieldCapsRequest) {
 		r.ctx = v
+	}
+}
+
+// WithBody - An index filter specified with the Query DSL.
+//
+func (f FieldCaps) WithBody(v io.Reader) func(*FieldCapsRequest) {
+	return func(r *FieldCapsRequest) {
+		r.Body = v
 	}
 }
 
@@ -243,5 +278,16 @@ func (f FieldCaps) WithHeader(h map[string]string) func(*FieldCapsRequest) {
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f FieldCaps) WithOpaqueID(s string) func(*FieldCapsRequest) {
+	return func(r *FieldCapsRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

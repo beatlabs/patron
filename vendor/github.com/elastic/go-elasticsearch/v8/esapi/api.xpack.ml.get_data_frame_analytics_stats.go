@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -21,7 +38,9 @@ func newMLGetDataFrameAnalyticsStatsFunc(t Transport) MLGetDataFrameAnalyticsSta
 
 // ----- API Definition -------------------------------------------------------
 
-// MLGetDataFrameAnalyticsStats - http://www.elastic.co/guide/en/elasticsearch/reference/current/get-dfanalytics-stats.html
+// MLGetDataFrameAnalyticsStats - Retrieves usage information for data frame analytics jobs.
+//
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/get-dfanalytics-stats.html.
 //
 type MLGetDataFrameAnalyticsStats func(o ...func(*MLGetDataFrameAnalyticsStatsRequest)) (*Response, error)
 
@@ -33,6 +52,7 @@ type MLGetDataFrameAnalyticsStatsRequest struct {
 	AllowNoMatch *bool
 	From         *int
 	Size         *int
+	Verbose      *bool
 
 	Pretty     bool
 	Human      bool
@@ -83,6 +103,10 @@ func (r MLGetDataFrameAnalyticsStatsRequest) Do(ctx context.Context, transport T
 		params["size"] = strconv.FormatInt(int64(*r.Size), 10)
 	}
 
+	if r.Verbose != nil {
+		params["verbose"] = strconv.FormatBool(*r.Verbose)
+	}
+
 	if r.Pretty {
 		params["pretty"] = "true"
 	}
@@ -99,7 +123,10 @@ func (r MLGetDataFrameAnalyticsStatsRequest) Do(ctx context.Context, transport T
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -179,6 +206,14 @@ func (f MLGetDataFrameAnalyticsStats) WithSize(v int) func(*MLGetDataFrameAnalyt
 	}
 }
 
+// WithVerbose - whether the stats response should be verbose.
+//
+func (f MLGetDataFrameAnalyticsStats) WithVerbose(v bool) func(*MLGetDataFrameAnalyticsStatsRequest) {
+	return func(r *MLGetDataFrameAnalyticsStatsRequest) {
+		r.Verbose = &v
+	}
+}
+
 // WithPretty makes the response body pretty-printed.
 //
 func (f MLGetDataFrameAnalyticsStats) WithPretty() func(*MLGetDataFrameAnalyticsStatsRequest) {
@@ -221,5 +256,16 @@ func (f MLGetDataFrameAnalyticsStats) WithHeader(h map[string]string) func(*MLGe
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f MLGetDataFrameAnalyticsStats) WithOpaqueID(s string) func(*MLGetDataFrameAnalyticsStatsRequest) {
+	return func(r *MLGetDataFrameAnalyticsStatsRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

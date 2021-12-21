@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -6,6 +23,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -31,13 +49,15 @@ type Bulk func(body io.Reader, o ...func(*BulkRequest)) (*Response, error)
 // BulkRequest configures the Bulk API request.
 //
 type BulkRequest struct {
-	Index        string
-	DocumentType string
+	Index string
 
 	Body io.Reader
 
+	DocumentType string
+
 	Pipeline            string
 	Refresh             string
+	RequireAlias        *bool
 	Routing             string
 	Source              []string
 	SourceExcludes      []string
@@ -88,6 +108,10 @@ func (r BulkRequest) Do(ctx context.Context, transport Transport) (*Response, er
 		params["refresh"] = r.Refresh
 	}
 
+	if r.RequireAlias != nil {
+		params["require_alias"] = strconv.FormatBool(*r.RequireAlias)
+	}
+
 	if r.Routing != "" {
 		params["routing"] = r.Routing
 	}
@@ -132,7 +156,10 @@ func (r BulkRequest) Do(ctx context.Context, transport Transport) (*Response, er
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), r.Body)
+	req, err := newRequest(method, path.String(), r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -208,11 +235,19 @@ func (f Bulk) WithPipeline(v string) func(*BulkRequest) {
 	}
 }
 
-// WithRefresh - if `true` then refresh the effected shards to make this operation visible to search, if `wait_for` then wait for a refresh to make this operation visible to search, if `false` (the default) then do nothing with refreshes..
+// WithRefresh - if `true` then refresh the affected shards to make this operation visible to search, if `wait_for` then wait for a refresh to make this operation visible to search, if `false` (the default) then do nothing with refreshes..
 //
 func (f Bulk) WithRefresh(v string) func(*BulkRequest) {
 	return func(r *BulkRequest) {
 		r.Refresh = v
+	}
+}
+
+// WithRequireAlias - sets require_alias for all incoming documents. defaults to unset (false).
+//
+func (f Bulk) WithRequireAlias(v bool) func(*BulkRequest) {
+	return func(r *BulkRequest) {
+		r.RequireAlias = &v
 	}
 }
 
@@ -306,5 +341,16 @@ func (f Bulk) WithHeader(h map[string]string) func(*BulkRequest) {
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f Bulk) WithOpaqueID(s string) func(*BulkRequest) {
+	return func(r *BulkRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

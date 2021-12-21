@@ -196,42 +196,54 @@ func TestBuilder_WithComponentsTwice(t *testing.T) {
 
 func TestBuild_FailingConditions(t *testing.T) {
 	tests := map[string]struct {
-		samplerParam string
-		port         string
-		buckets      string
-		expectedErr  string
+		jaegerSamplerParam string
+		port               string
+		jaegerBuckets      string
+		expectedBuildErr   string
+		expectedRunErr     string
 	}{
-		"success with wrong w/ port":             {port: "foo"},
-		"success with wrong w/ overflowing port": {port: "153000"},
-		"failure w/ sampler param":               {samplerParam: "foo", expectedErr: "env var for jaeger sampler param is not valid: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
-		"failure w/ overflowing sampler param":   {samplerParam: "8", expectedErr: "cannot initialize jaeger tracer: invalid Param for probabilistic sampler; expecting value between 0 and 1, received 8"},
-		"failure w/ custom default buckets":      {samplerParam: "1", buckets: "foo", expectedErr: "env var for jaeger default buckets contains invalid value: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
+		"failure with wrong w/ port":             {port: "foo", expectedRunErr: "env var for HTTP default port is not valid: strconv.ParseInt: parsing \"foo\": invalid syntax"},
+		"success with wrong w/ overflowing port": {port: "153000", expectedRunErr: "failed to create default HTTP component: invalid HTTP Port provided\n"},
+		"failure w/ sampler param":               {jaegerSamplerParam: "foo", expectedRunErr: "env var for jaeger sampler param is not valid: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
+		"failure w/ overflowing sampler param":   {jaegerSamplerParam: "8", expectedRunErr: "cannot initialize jaeger tracer: invalid Param for probabilistic sampler; expecting value between 0 and 1, received 8"},
+		"failure w/ custom default buckets":      {jaegerSamplerParam: "1", jaegerBuckets: "foo", expectedRunErr: "env var for jaeger default buckets contains invalid value: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
 	}
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 
-			if tt.samplerParam != "" {
-				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tt.samplerParam)
-				assert.NoError(t, err)
-			}
 			if tt.port != "" {
 				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
-			if tt.buckets != "" {
-				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.buckets)
-				assert.NoError(t, err)
+			if tt.jaegerSamplerParam != "" {
+				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tt.jaegerSamplerParam)
+				require.NoError(t, err)
+			}
+			if tt.jaegerBuckets != "" {
+				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.jaegerBuckets)
+				require.NoError(t, err)
 			}
 
 			svc, err := New("test", "", TextLogger())
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
-				assert.Nil(t, svc)
+			if tt.expectedBuildErr != "" {
+				require.EqualError(t, err, tt.expectedBuildErr)
+				require.Nil(t, svc)
 			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, svc)
+				require.NoError(t, err)
+				require.NotNil(t, svc)
+			}
+
+			// start running with a canceled context, on purpose
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			err = svc.Run(ctx)
+
+			if tt.expectedRunErr != "" {
+				require.EqualError(t, err, tt.expectedRunErr)
+			} else {
+				require.Equal(t, err, context.Canceled)
 			}
 		})
 	}

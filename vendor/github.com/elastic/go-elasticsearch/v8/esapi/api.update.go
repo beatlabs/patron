@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -32,9 +49,8 @@ type Update func(index string, id string, body io.Reader, o ...func(*UpdateReque
 // UpdateRequest configures the Update API request.
 //
 type UpdateRequest struct {
-	Index        string
-	DocumentType string
-	DocumentID   string
+	Index      string
+	DocumentID string
 
 	Body io.Reader
 
@@ -42,6 +58,7 @@ type UpdateRequest struct {
 	IfSeqNo             *int
 	Lang                string
 	Refresh             string
+	RequireAlias        *bool
 	RetryOnConflict     *int
 	Routing             string
 	Source              []string
@@ -71,21 +88,13 @@ func (r UpdateRequest) Do(ctx context.Context, transport Transport) (*Response, 
 
 	method = "POST"
 
-	if r.DocumentType == "" {
-		r.DocumentType = "_doc"
-	}
-
-	path.Grow(1 + len(r.Index) + 1 + len(r.DocumentType) + 1 + len(r.DocumentID) + 1 + len("_update"))
+	path.Grow(1 + len(r.Index) + 1 + len("_update") + 1 + len(r.DocumentID))
 	path.WriteString("/")
 	path.WriteString(r.Index)
-	if r.DocumentType != "" {
-		path.WriteString("/")
-		path.WriteString(r.DocumentType)
-	}
-	path.WriteString("/")
-	path.WriteString(r.DocumentID)
 	path.WriteString("/")
 	path.WriteString("_update")
+	path.WriteString("/")
+	path.WriteString(r.DocumentID)
 
 	params = make(map[string]string)
 
@@ -103,6 +112,10 @@ func (r UpdateRequest) Do(ctx context.Context, transport Transport) (*Response, 
 
 	if r.Refresh != "" {
 		params["refresh"] = r.Refresh
+	}
+
+	if r.RequireAlias != nil {
+		params["require_alias"] = strconv.FormatBool(*r.RequireAlias)
 	}
 
 	if r.RetryOnConflict != nil {
@@ -149,7 +162,10 @@ func (r UpdateRequest) Do(ctx context.Context, transport Transport) (*Response, 
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), r.Body)
+	req, err := newRequest(method, path.String(), r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -201,14 +217,6 @@ func (f Update) WithContext(v context.Context) func(*UpdateRequest) {
 	}
 }
 
-// WithDocumentType - the type of the document.
-//
-func (f Update) WithDocumentType(v string) func(*UpdateRequest) {
-	return func(r *UpdateRequest) {
-		r.DocumentType = v
-	}
-}
-
 // WithIfPrimaryTerm - only perform the update operation if the last operation that has changed the document has the specified primary term.
 //
 func (f Update) WithIfPrimaryTerm(v int) func(*UpdateRequest) {
@@ -233,11 +241,19 @@ func (f Update) WithLang(v string) func(*UpdateRequest) {
 	}
 }
 
-// WithRefresh - if `true` then refresh the effected shards to make this operation visible to search, if `wait_for` then wait for a refresh to make this operation visible to search, if `false` (the default) then do nothing with refreshes..
+// WithRefresh - if `true` then refresh the affected shards to make this operation visible to search, if `wait_for` then wait for a refresh to make this operation visible to search, if `false` (the default) then do nothing with refreshes..
 //
 func (f Update) WithRefresh(v string) func(*UpdateRequest) {
 	return func(r *UpdateRequest) {
 		r.Refresh = v
+	}
+}
+
+// WithRequireAlias - when true, requires destination is an alias. default is false.
+//
+func (f Update) WithRequireAlias(v bool) func(*UpdateRequest) {
+	return func(r *UpdateRequest) {
+		r.RequireAlias = &v
 	}
 }
 
@@ -339,5 +355,16 @@ func (f Update) WithHeader(h map[string]string) func(*UpdateRequest) {
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f Update) WithOpaqueID(s string) func(*UpdateRequest) {
+	return func(r *UpdateRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

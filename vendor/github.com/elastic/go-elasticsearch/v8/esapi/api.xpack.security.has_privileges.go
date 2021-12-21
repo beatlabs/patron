@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -21,7 +38,9 @@ func newSecurityHasPrivilegesFunc(t Transport) SecurityHasPrivileges {
 
 // ----- API Definition -------------------------------------------------------
 
-// SecurityHasPrivileges - https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-has-privileges.html
+// SecurityHasPrivileges - Determines whether the specified user has a specified list of privileges.
+//
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-has-privileges.html.
 //
 type SecurityHasPrivileges func(body io.Reader, o ...func(*SecurityHasPrivilegesRequest)) (*Response, error)
 
@@ -51,7 +70,7 @@ func (r SecurityHasPrivilegesRequest) Do(ctx context.Context, transport Transpor
 		params map[string]string
 	)
 
-	method = "GET"
+	method = "POST"
 
 	path.Grow(1 + len("_security") + 1 + len("user") + 1 + len(r.User) + 1 + len("_has_privileges"))
 	path.WriteString("/")
@@ -83,7 +102,10 @@ func (r SecurityHasPrivilegesRequest) Do(ctx context.Context, transport Transpor
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), r.Body)
+	req, err := newRequest(method, path.String(), r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -185,5 +207,16 @@ func (f SecurityHasPrivileges) WithHeader(h map[string]string) func(*SecurityHas
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f SecurityHasPrivileges) WithOpaqueID(s string) func(*SecurityHasPrivilegesRequest) {
+	return func(r *SecurityHasPrivilegesRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

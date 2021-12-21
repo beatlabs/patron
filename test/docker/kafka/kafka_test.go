@@ -22,6 +22,7 @@ import (
 const (
 	kafkaHost            = "localhost"
 	kafkaPort            = "9092"
+	wrongKafkaPort       = "9032"
 	zookeeperPort        = "2181"
 	simpleTopic1         = "simpleTopic1"
 	simpleTopic2         = "simpleTopic2"
@@ -35,6 +36,7 @@ const (
 	successTopic3        = "successTopic3"
 	successTopic4        = "successTopic4"
 	successTopic5        = "successTopic5"
+	successTopic3        = "successTopic3"
 	failAllRetriesTopic1 = "failAllRetriesTopic1"
 	failAllRetriesTopic2 = "failAllRetriesTopic2"
 	failAndRetryTopic1   = "failAndRetryTopic1"

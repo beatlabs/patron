@@ -1,3 +1,20 @@
+// Licensed to Elasticsearch B.V. under one or more contributor
+// license agreements. See the NOTICE file distributed with
+// this work for additional information regarding copyright
+// ownership. Elasticsearch B.V. licenses this file to you under
+// the Apache License, Version 2.0 (the "License"); you may
+// not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
 // Code generated from specification version 8.0.0: DO NOT EDIT
 
 package esapi
@@ -6,6 +23,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -21,7 +39,9 @@ func newMLUpdateDatafeedFunc(t Transport) MLUpdateDatafeed {
 
 // ----- API Definition -------------------------------------------------------
 
-// MLUpdateDatafeed - http://www.elastic.co/guide/en/elasticsearch/reference/current/ml-update-datafeed.html
+// MLUpdateDatafeed - Updates certain properties of a datafeed.
+//
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-update-datafeed.html.
 //
 type MLUpdateDatafeed func(body io.Reader, datafeed_id string, o ...func(*MLUpdateDatafeedRequest)) (*Response, error)
 
@@ -31,6 +51,11 @@ type MLUpdateDatafeedRequest struct {
 	Body io.Reader
 
 	DatafeedID string
+
+	AllowNoIndices    *bool
+	ExpandWildcards   string
+	IgnoreThrottled   *bool
+	IgnoreUnavailable *bool
 
 	Pretty     bool
 	Human      bool
@@ -65,6 +90,22 @@ func (r MLUpdateDatafeedRequest) Do(ctx context.Context, transport Transport) (*
 
 	params = make(map[string]string)
 
+	if r.AllowNoIndices != nil {
+		params["allow_no_indices"] = strconv.FormatBool(*r.AllowNoIndices)
+	}
+
+	if r.ExpandWildcards != "" {
+		params["expand_wildcards"] = r.ExpandWildcards
+	}
+
+	if r.IgnoreThrottled != nil {
+		params["ignore_throttled"] = strconv.FormatBool(*r.IgnoreThrottled)
+	}
+
+	if r.IgnoreUnavailable != nil {
+		params["ignore_unavailable"] = strconv.FormatBool(*r.IgnoreUnavailable)
+	}
+
 	if r.Pretty {
 		params["pretty"] = "true"
 	}
@@ -81,7 +122,10 @@ func (r MLUpdateDatafeedRequest) Do(ctx context.Context, transport Transport) (*
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, _ := newRequest(method, path.String(), r.Body)
+	req, err := newRequest(method, path.String(), r.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(params) > 0 {
 		q := req.URL.Query()
@@ -133,6 +177,38 @@ func (f MLUpdateDatafeed) WithContext(v context.Context) func(*MLUpdateDatafeedR
 	}
 }
 
+// WithAllowNoIndices - ignore if the source indices expressions resolves to no concrete indices (default: true).
+//
+func (f MLUpdateDatafeed) WithAllowNoIndices(v bool) func(*MLUpdateDatafeedRequest) {
+	return func(r *MLUpdateDatafeedRequest) {
+		r.AllowNoIndices = &v
+	}
+}
+
+// WithExpandWildcards - whether source index expressions should get expanded to open or closed indices (default: open).
+//
+func (f MLUpdateDatafeed) WithExpandWildcards(v string) func(*MLUpdateDatafeedRequest) {
+	return func(r *MLUpdateDatafeedRequest) {
+		r.ExpandWildcards = v
+	}
+}
+
+// WithIgnoreThrottled - ignore indices that are marked as throttled (default: true).
+//
+func (f MLUpdateDatafeed) WithIgnoreThrottled(v bool) func(*MLUpdateDatafeedRequest) {
+	return func(r *MLUpdateDatafeedRequest) {
+		r.IgnoreThrottled = &v
+	}
+}
+
+// WithIgnoreUnavailable - ignore unavailable indexes (default: false).
+//
+func (f MLUpdateDatafeed) WithIgnoreUnavailable(v bool) func(*MLUpdateDatafeedRequest) {
+	return func(r *MLUpdateDatafeedRequest) {
+		r.IgnoreUnavailable = &v
+	}
+}
+
 // WithPretty makes the response body pretty-printed.
 //
 func (f MLUpdateDatafeed) WithPretty() func(*MLUpdateDatafeedRequest) {
@@ -175,5 +251,16 @@ func (f MLUpdateDatafeed) WithHeader(h map[string]string) func(*MLUpdateDatafeed
 		for k, v := range h {
 			r.Header.Add(k, v)
 		}
+	}
+}
+
+// WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
+//
+func (f MLUpdateDatafeed) WithOpaqueID(s string) func(*MLUpdateDatafeedRequest) {
+	return func(r *MLUpdateDatafeedRequest) {
+		if r.Header == nil {
+			r.Header = make(http.Header)
+		}
+		r.Header.Set("X-Opaque-Id", s)
 	}
 }

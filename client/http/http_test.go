@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -65,7 +64,7 @@ func TestTracedClient_Do(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := tt.args.c.Do(context.Background(), tt.args.req)
+			rsp, err := tt.args.c.Do(tt.args.req)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, rsp)
@@ -200,7 +199,7 @@ func TestDecompress(t *testing.T) {
 			req, err := http.NewRequest("GET", tt.url, nil)
 			assert.NoError(t, err)
 			req.Header.Add(encoding.AcceptEncodingHeader, tt.hdr)
-			rsp, err := c.Do(context.Background(), req)
+			rsp, err := c.Do(req)
 			assert.Nil(t, err)
 
 			b, err := ioutil.ReadAll(rsp.Body)

@@ -19,13 +19,17 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/beatlabs/patron/trace"
+	wct "github.com/weaveworks/common/tracing"
 )
 
 const (
 	clientComponent = "http-client"
 )
 
-var reqDurationMetrics *prometheus.HistogramVec
+var (
+	defBuckets         = []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5}
+	reqDurationMetrics *prometheus.HistogramVec
+)
 
 func init() {
 	reqDurationMetrics = prometheus.NewHistogramVec(
@@ -93,9 +97,16 @@ func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
-	reqDurationMetrics.
-		WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
-		Observe(time.Since(start).Seconds())
+	durationHistogram := reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode))
+
+	traceID, ok := wct.ExtractTraceID(req.Context())
+	if ok {
+		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
+			time.Since(start).Seconds(), prometheus.Labels{"traceID": traceID},
+		)
+	} else {
+		durationHistogram.Observe(time.Since(start).Seconds())
+	}
 
 	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
 		rsp.Body = decompress(hdr, rsp)

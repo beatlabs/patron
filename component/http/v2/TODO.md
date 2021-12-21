@@ -1,7 +1,13 @@
-- tracing
-- logging
-- middlewares support and standard middlewares and chains befpore, after, etc
+- middlewares support and standard middlewares and chains before, after, etc
+    - CORS
+    - Logging
+    - Recovery
+    - Tracing
+    - Authentication
+    - Rate limiter middleware
+    - Compression
+    - Caching
 - SPA support
-- cors
+- CORS
 - tests - obviously
 - mux option to override the existing one

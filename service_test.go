@@ -98,7 +98,6 @@ func TestNewServer(t *testing.T) {
 				WithComponents(tt.cps...).
 				WithSIGHUP(tt.sighupHandler).
 				WithUncompressedPaths(tt.uncompressedPaths...).
-				WithHTTPv2(tt.httpV2Component).
 				build()
 
 			if tt.wantErr != "" {

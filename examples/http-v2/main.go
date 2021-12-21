@@ -30,11 +30,10 @@ func init() {
 	}
 }
 
-func main() {
-	name := "http-v2"
-	version := "1.0.0"
+var version = "1.0.0"
 
-	service, err := patron.New(name, version, patron.TextLogger())
+func main() {
+	service, err := patron.New("http-v2", version, patron.TextLogger())
 	if err != nil {
 		fmt.Printf("failed to set up service: %v", err)
 		os.Exit(1)
@@ -44,7 +43,7 @@ func main() {
 	router.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 		fmt.Fprint(rw, "Home")
-	})
+	}) //.Subrouter().Use(mwf ...mux.MiddlewareFunc)
 
 	ctx := context.Background()
 	err = service.WithMuxRouter(router).Run(ctx)

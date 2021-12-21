@@ -4,6 +4,7 @@ package http
 import (
 	"compress/flate"
 	"compress/gzip"
+	"github.com/uber/jaeger-client-go"
 	"io"
 	"net/http"
 	"strconv"
@@ -19,7 +20,6 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/beatlabs/patron/trace"
-	wct "github.com/weaveworks/common/tracing"
 )
 
 const (
@@ -99,11 +99,15 @@ func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 	ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
 	durationHistogram := reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode))
 
-	traceID, ok := wct.ExtractTraceID(req.Context())
-	if ok {
-		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-			time.Since(start).Seconds(), prometheus.Labels{"traceID": traceID},
-		)
+	spanFromCtx := opentracing.SpanFromContext(req.Context())
+	if spanFromCtx != nil {
+		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
+			durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
+				time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+			)
+		} else {
+			durationHistogram.Observe(time.Since(start).Seconds())
+		}
 	} else {
 		durationHistogram.Observe(time.Since(start).Seconds())
 	}

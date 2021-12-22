@@ -93,16 +93,15 @@ func (c *consumerHandler) consumePartitionUnit(ctx context.Context, ch <-chan *s
 	for {
 		select {
 		case msg, ok := <-ch:
-			if ok {
-				log.Debugf("message claimed: value = %s, timestamp = %v, partition = %d topic = %s", string(msg.Value), msg.Timestamp, msg.Partition, msg.Topic)
-				messageStatusCountInc(messageReceived, partition, msg.Topic)
-				err := c.unit(ctx, msg)
-				if err != nil {
-					return err
-				}
-			} else {
+			if !ok {
 				log.Debug("messages channel closed")
 				return nil
+			}
+			log.Debugf("message claimed: value = %s, timestamp = %v, partition = %d topic = %s", string(msg.Value), msg.Timestamp, msg.Partition, msg.Topic)
+			messageStatusCountInc(messageReceived, partition, msg.Topic)
+			err := c.unit(ctx, msg)
+			if err != nil {
+				return err
 			}
 		case <-ctx.Done():
 			if ctx.Err() != context.Canceled {

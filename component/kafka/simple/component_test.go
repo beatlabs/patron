@@ -71,7 +71,9 @@ func TestNew(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			comp, err := New(tt.args.name, tt.args.brokers, tt.args.topic, tt.args.proc)
+			cfg, err := kafka.DefaultConsumerSaramaConfig("test", true)
+			require.NoError(t, err)
+			comp, err := New(tt.args.name, tt.args.brokers, tt.args.topic, tt.args.proc, cfg)
 			if tt.expectedErr {
 				assert.Error(t, err)
 			} else {
@@ -163,7 +165,9 @@ func TestRun(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			component, err := New("foo", []string{"localhost"}, "topic", tt.args.procMock.record, tt.args.options...)
+			cfg, err := kafka.DefaultConsumerSaramaConfig("test", true)
+			require.NoError(t, err)
+			component, err := New("foo", []string{"localhost"}, "topic", tt.args.procMock.record, cfg, tt.args.options...)
 			require.NoError(t, err)
 			component.partitionConsumerFactory = tt.args.partitionConsumerFactory
 			err = component.Run(tt.args.ctx)

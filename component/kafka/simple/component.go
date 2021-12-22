@@ -100,7 +100,7 @@ type Component struct {
 // The default failure strategy is the ExitStrategy.
 // The default batch size is 1 and the batch timeout is 100ms.
 // The default number of retries is 0 and the retry wait is 0.
-func New(name string, brokers []string, topic string, proc kafka.BatchProcessorFunc, oo ...OptionFunc) (*Component, error) {
+func New(name string, brokers []string, topic string, proc kafka.BatchProcessorFunc, saramaCfg *sarama.Config, oo ...OptionFunc) (*Component, error) {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
@@ -122,11 +122,6 @@ func New(name string, brokers []string, topic string, proc kafka.BatchProcessorF
 		return nil, patronErrors.Aggregate(errs...)
 	}
 
-	defaultSaramaCfg, err := kafka.DefaultSaramaConfig(name)
-	if err != nil {
-		return nil, err
-	}
-
 	cmp := &Component{
 		name:         name,
 		brokers:      brokers,
@@ -137,13 +132,13 @@ func New(name string, brokers []string, topic string, proc kafka.BatchProcessorF
 		batchSize:    defaultBatchSize,
 		batchTimeout: defaultBatchTimeout,
 		failStrategy: defaultFailureStrategy,
-		saramaConfig: defaultSaramaCfg,
+		saramaConfig: saramaCfg,
 	}
 
 	cmp.partitionConsumerFactory = cmp.createPartitionConsumers
 
 	for _, optionFunc := range oo {
-		err = optionFunc(cmp)
+		err := optionFunc(cmp)
 		if err != nil {
 			return nil, err
 		}

@@ -218,11 +218,14 @@ func newSimpleComponent(t *testing.T, name string, retries uint, batchSize uint,
 		simple.SaramaConfig(saramaCfg),
 	}
 	options = append(options, oo...)
+	cfg, err := kafka.DefaultConsumerSaramaConfig("test", true)
+	require.NoError(t, err)
 	cmp, err := simple.New(
 		name,
 		[]string{broker},
 		name,
 		processorFunc,
+		cfg,
 		options...,
 	)
 	require.NoError(t, err)

@@ -39,7 +39,7 @@ func TestKafkaComponentGroup_Success(t *testing.T) {
 		}
 		return nil
 	}
-	component := newGroupComponent(t, successTopic2, 3, 10, processorFunc)
+	component := newComponent(t, successTopic2, 3, 10, processorFunc)
 
 	// Run Patron with the kafka component
 	patronContext, patronCancel := context.WithCancel(context.Background())
@@ -110,7 +110,7 @@ func TestKafkaComponentGroup_FailAllRetries(t *testing.T) {
 
 	numOfRetries := uint(3)
 	batchSize := uint(1)
-	component := newGroupComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
+	component := newComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
@@ -166,7 +166,7 @@ func TestKafkaComponentGroup_FailOnceAndRetry(t *testing.T) {
 		}
 		return nil
 	}
-	component := newGroupComponent(t, failAndRetryTopic2, 3, 1, processorFunc)
+	component := newComponent(t, failAndRetryTopic2, 3, 1, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup

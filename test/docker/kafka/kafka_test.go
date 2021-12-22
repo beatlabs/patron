@@ -36,7 +36,6 @@ const (
 	successTopic3        = "successTopic3"
 	successTopic4        = "successTopic4"
 	successTopic5        = "successTopic5"
-	successTopic3        = "successTopic3"
 	failAllRetriesTopic1 = "failAllRetriesTopic1"
 	failAllRetriesTopic2 = "failAllRetriesTopic2"
 	failAndRetryTopic1   = "failAndRetryTopic1"

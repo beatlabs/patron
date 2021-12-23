@@ -22,6 +22,7 @@ import (
 const (
 	kafkaHost            = "localhost"
 	kafkaPort            = "9092"
+	wrongKafkaPort       = "9032"
 	zookeeperPort        = "2181"
 	simpleTopic1         = "simpleTopic1"
 	simpleTopic2         = "simpleTopic2"
@@ -32,6 +33,7 @@ const (
 	groupTopic2          = "groupTopic2"
 	successTopic1        = "successTopic1"
 	successTopic2        = "successTopic2"
+	successTopic3        = "successTopic3"
 	failAllRetriesTopic1 = "failAllRetriesTopic1"
 	failAllRetriesTopic2 = "failAllRetriesTopic2"
 	failAndRetryTopic1   = "failAndRetryTopic1"
@@ -53,6 +55,7 @@ func TestMain(m *testing.M) {
 		getTopic(failAndRetryTopic2),
 		getTopic(successTopic1),
 		getTopic(successTopic2),
+		getTopic(successTopic3),
 	}
 	k, err := create(120*time.Second, topics...)
 	if err != nil {

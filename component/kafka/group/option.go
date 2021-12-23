@@ -2,8 +2,10 @@ package group
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/log"
 )
@@ -22,6 +24,34 @@ func FailureStrategy(fs kafka.FailStrategy) OptionFunc {
 			return errors.New("invalid failure strategy provided")
 		}
 		c.failStrategy = fs
+		return nil
+	}
+}
+
+// CheckTopic checks whether the component-configured topics exist in the broker.
+func CheckTopic() OptionFunc {
+	return func(c *Component) error {
+		saramaConf := sarama.NewConfig()
+		client, err := sarama.NewClient(c.brokers, saramaConf)
+		if err != nil {
+			return fmt.Errorf("failed to create client: %w", err)
+		}
+		defer func() { _ = client.Close() }()
+		brokerTopics, err := client.Topics()
+		if err != nil {
+			return fmt.Errorf("failed to get topics from broker: %w", err)
+		}
+
+		topicsSet := make(map[string]struct{}, len(brokerTopics))
+		for _, topic := range brokerTopics {
+			topicsSet[topic] = struct{}{}
+		}
+
+		for _, topic := range c.topics {
+			if _, ok := topicsSet[topic]; !ok {
+				return fmt.Errorf("topic %s does not exist in broker", topic)
+			}
+		}
 		return nil
 	}
 }

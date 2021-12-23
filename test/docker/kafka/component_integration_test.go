@@ -209,6 +209,40 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	assert.Equal(t, expectedMessages, actualMessages)
 }
 
+func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
+	// Test parameters
+	processorFunc := func(batch kafka.Batch) error {
+		return nil
+	}
+	invalidTopicName := "invalid-topic-name"
+	_, err := group.New(
+		invalidTopicName,
+		invalidTopicName+"-group",
+		[]string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)},
+		[]string{invalidTopicName},
+		processorFunc,
+		sarama.NewConfig(),
+		group.CheckTopic())
+	require.EqualError(t, err, "topic invalid-topic-name does not exist in broker")
+}
+
+func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
+	// Test parameters
+	processorFunc := func(batch kafka.Batch) error {
+		return nil
+	}
+	_, err := group.New(
+		successTopic3,
+		successTopic3+"-group",
+		[]string{fmt.Sprintf("%s:%s", kafkaHost, wrongKafkaPort)},
+		[]string{successTopic3},
+		processorFunc,
+		sarama.NewConfig(),
+		group.CheckTopic())
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "failed to create client:")
+}
+
 func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc kafka.BatchProcessorFunc) *group.Component {
 	saramaCfg, err := kafka.DefaultConsumerSaramaConfig(name, true)
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -228,7 +262,8 @@ func newComponent(t *testing.T, name string, retries uint, batchSize uint, proce
 		group.BatchTimeout(100*time.Millisecond),
 		group.Retries(retries),
 		group.RetryWait(200*time.Millisecond),
-		group.CommitSync())
+		group.CommitSync(),
+		group.CheckTopic())
 	require.NoError(t, err)
 
 	return cmp

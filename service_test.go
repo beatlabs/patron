@@ -81,23 +81,23 @@ func TestNewServer(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			svc, err := New("name", "1.0", LogFields(tst.fields), TextLogger())
+			svc, err := New("name", "1.0", LogFields(tt.fields), TextLogger())
 			require.NoError(t, err)
 			gotService, gotErr := svc.
-				WithRoutesBuilder(tst.routesBuilder).
-				WithMiddlewares(tst.middlewares...).
-				WithAliveCheck(tst.acf).
-				WithReadyCheck(tst.rcf).
-				WithComponents(tst.cps...).
-				WithSIGHUP(tst.sighupHandler).
-				WithUncompressedPaths(tst.uncompressedPaths...).
+				WithRoutesBuilder(tt.routesBuilder).
+				WithMiddlewares(tt.middlewares...).
+				WithAliveCheck(tt.acf).
+				WithReadyCheck(tt.rcf).
+				WithComponents(tt.cps...).
+				WithSIGHUP(tt.sighupHandler).
+				WithUncompressedPaths(tt.uncompressedPaths...).
 				build()
 
-			if tst.wantErr != "" {
-				assert.EqualError(t, gotErr, tst.wantErr)
+			if tt.wantErr != "" {
+				assert.EqualError(t, gotErr, tt.wantErr)
 				assert.Nil(t, gotService)
 			} else {
 				assert.Nil(t, gotErr)
@@ -106,17 +106,17 @@ func TestNewServer(t *testing.T) {
 
 				assert.NotEmpty(t, gotService.cps)
 				assert.NotNil(t, gotService.routesBuilder)
-				assert.Len(t, gotService.middlewares, len(tst.middlewares))
+				assert.Len(t, gotService.middlewares, len(tt.middlewares))
 				assert.NotNil(t, gotService.rcf)
 				assert.NotNil(t, gotService.acf)
 				assert.NotNil(t, gotService.termSig)
 				assert.NotNil(t, gotService.sighupHandler)
 
-				for _, comp := range tst.cps {
+				for _, comp := range tt.cps {
 					assert.Contains(t, gotService.cps, comp)
 				}
 
-				for _, middleware := range tst.middlewares {
+				for _, middleware := range tt.middlewares {
 					assert.NotNil(t, middleware)
 				}
 			}

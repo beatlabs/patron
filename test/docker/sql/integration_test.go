@@ -51,13 +51,13 @@ func TestOpen(t *testing.T) {
 		"failure with wrong": {args: args{driverName: "XXX"}, expectedErr: "sql: unknown driver \"XXX\" (forgotten import?)"},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := sql.Open(tst.args.driverName, runtime.DSN())
+			got, err := sql.Open(tt.args.driverName, runtime.DSN())
 
-			if tst.expectedErr != "" {
-				assert.EqualError(t, err, tst.expectedErr)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)

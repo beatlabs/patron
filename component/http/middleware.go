@@ -42,6 +42,12 @@ const (
 	anythingHeader = "*"
 )
 
+var (
+	httpStatusTracingInit          sync.Once
+	httpStatusTracingHandledMetric *prometheus.CounterVec
+	httpStatusTracingLatencyMetric *prometheus.HistogramVec
+)
+
 type responseWriter struct {
 	status              int
 	statusHeaderWritten bool
@@ -49,12 +55,6 @@ type responseWriter struct {
 	responsePayload     bytes.Buffer
 	writer              http.ResponseWriter
 }
-
-var (
-	httpStatusTracingInit          sync.Once
-	httpStatusTracingHandledMetric *prometheus.CounterVec
-	httpStatusTracingLatencyMetric *prometheus.HistogramVec
-)
 
 func newResponseWriter(w http.ResponseWriter, capturePayload bool) *responseWriter {
 	return &responseWriter{status: -1, statusHeaderWritten: false, writer: w, capturePayload: capturePayload}

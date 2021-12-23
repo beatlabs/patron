@@ -34,6 +34,7 @@ type Component struct {
 	uncompressedPaths   []string
 	shutdownGracePeriod time.Duration
 	mux                 *mux.Router
+	statusCodeLoggerCfg string
 	sync.Mutex
 	certFile string
 	keyFile  string
@@ -72,7 +73,10 @@ func New(mux *mux.Router, oo ...OptionFunc) (*Component, error) {
 func (c *Component) Run(ctx context.Context) error {
 	c.Lock()
 	chFail := make(chan error)
-	srv := c.createHTTPServer()
+	srv, err := c.createHTTPServer()
+	if err != nil {
+		return err
+	}
 	go c.listenAndServe(srv, chFail)
 	c.Unlock()
 
@@ -87,11 +91,16 @@ func (c *Component) Run(ctx context.Context) error {
 	}
 }
 
-func (c *Component) createHTTPServer() *http.Server {
+func (c *Component) createHTTPServer() (*http.Server, error) {
 	registerAliveCheckHandler(c.mux, c.aliveCheck)
 	registerReadyCheckHandler(c.mux, c.readyCheck)
 	registerMetricsHandler(c.mux)
 	registerPprofHandlers(c.mux)
+	err := registerDefaultMiddlewares(c.mux, c.statusCodeLoggerCfg)
+	if err != nil {
+		return nil, err
+	}
+
 	// router := httprouter.New()
 	// for _, route := range c.routes {
 	// 	if len(route.middlewares) > 0 {
@@ -114,7 +123,7 @@ func (c *Component) createHTTPServer() *http.Server {
 		WriteTimeout: c.writeTimeout,
 		IdleTimeout:  idleTimeout,
 		Handler:      c.mux,
-	}
+	}, nil
 }
 
 func (c *Component) listenAndServe(srv *http.Server, ch chan<- error) {

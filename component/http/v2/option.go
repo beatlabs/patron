@@ -140,3 +140,11 @@ func UncompressedPaths(r ...string) OptionFunc {
 		return nil
 	}
 }
+
+// StatusCodeLoggerConfig functional option to set up the status code logger.
+func StatusCodeLoggerConfig(cfg string) OptionFunc {
+	return func(cmp *Component) error {
+		cmp.statusCodeLoggerCfg = cfg
+		return nil
+	}
+}

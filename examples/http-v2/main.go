@@ -40,9 +40,10 @@ func main() {
 	}
 
 	router := mux.NewRouter()
+	router.NewRoute()
 	router.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusOK)
-		fmt.Fprint(rw, "Home")
+		_, _ = fmt.Fprint(rw, "Home")
 	}) //.Subrouter().Use(mwf ...mux.MiddlewareFunc)
 
 	ctx := context.Background()

@@ -26,10 +26,10 @@ func TestLevelOrder(t *testing.T) {
 		"no level": {args: args{lvl: NoLevel}, want: 6},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, tst.want, LevelOrder(tst.args.lvl))
+			assert.Equal(t, tt.want, LevelOrder(tt.args.lvl))
 		})
 	}
 }
@@ -44,11 +44,11 @@ func TestSetup(t *testing.T) {
 		"success":                  {logger: &nilLogger{}, wantErr: false},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			err := Setup(tst.logger)
-			if tst.wantErr {
+			err := Setup(tt.logger)
+			if tt.wantErr {
 				assert.Error(t, err, "expected error")
 			} else {
 				assert.NoError(t, err, "error not expected")
@@ -75,11 +75,11 @@ func TestFromContext(t *testing.T) {
 		"with context nil logger": {args: args{ctx: ctxWithNil}, want: logger},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got := FromContext(tst.args.ctx)
-			assert.Equal(t, tst.want, got)
+			got := FromContext(tt.args.ctx)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

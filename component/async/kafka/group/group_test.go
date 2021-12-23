@@ -69,11 +69,11 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := New(tst.args.name, tst.args.group, tst.args.topics, tst.args.brokers, tst.args.saramaCfg, tst.args.options...)
-			if tst.wantErr {
+			got, err := New(tt.args.name, tt.args.group, tt.args.topics, tt.args.brokers, tt.args.saramaCfg, tt.args.options...)
+			if tt.wantErr {
 				require.Error(t, err)
 				require.Nil(t, got)
 			} else {

@@ -70,13 +70,13 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := New(tst.args.url, tst.args.queue, tst.args.proc, tst.args.oo...)
+			got, err := New(tt.args.url, tt.args.queue, tt.args.proc, tt.args.oo...)
 
-			if tst.expectedErr != "" {
-				assert.EqualError(t, err, tst.expectedErr)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)

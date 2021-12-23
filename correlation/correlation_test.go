@@ -20,10 +20,10 @@ func TestIDFromContext(t *testing.T) {
 		"without existing id": {args: args{ctx: context.Background()}},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got := IDFromContext(tst.args.ctx)
+			got := IDFromContext(tt.args.ctx)
 			assert.NotEmpty(t, got)
 		})
 	}

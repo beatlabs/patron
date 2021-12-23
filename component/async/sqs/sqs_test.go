@@ -70,12 +70,12 @@ func TestNewFactory(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := NewFactory(tst.args.queue, tst.args.queueName, tst.args.oo...)
-			if tst.expectedErr != "" {
-				assert.EqualError(t, err, tst.expectedErr)
+			got, err := NewFactory(tt.args.queue, tt.args.queueName, tt.args.oo...)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)
@@ -134,12 +134,12 @@ func Test_message(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			sqsMsg := &sqs.Message{Body: aws.String(`{"key":"value"}`)}
 			m := &message{
-				queue:     tst.fields.queue,
+				queue:     tt.fields.queue,
 				queueURL:  "queueURL",
 				queueName: "queueName",
 				ctx:       context.Background(),
@@ -176,10 +176,10 @@ func Test_getCorrelationID(t *testing.T) {
 		"missing header": {args: args{ma: missingHeader}},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			assert.NotEmpty(t, getCorrelationID(tst.args.ma))
+			assert.NotEmpty(t, getCorrelationID(tt.args.ma))
 		})
 	}
 }

@@ -25,16 +25,16 @@ func TestCreate(t *testing.T) {
 		"invalid port": {args: args{port: -1}, expErr: "port is invalid: -1\n"},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := New(tst.args.port).WithOptions(grpc.ConnectionTimeout(1 * time.Second)).Create()
-			if tst.expErr != "" {
-				assert.EqualError(t, err, tst.expErr)
+			got, err := New(tt.args.port).WithOptions(grpc.ConnectionTimeout(1 * time.Second)).Create()
+			if tt.expErr != "" {
+				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tst.args.port, got.port)
+				assert.Equal(t, tt.args.port, got.port)
 				assert.NotNil(t, got.Server())
 			}
 		})
@@ -85,11 +85,11 @@ func TestComponent_Run_Unary(t *testing.T) {
 		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
-			r, err := c.SayHello(ctx, &examples.HelloRequest{Firstname: tst.args.requestName})
-			if tst.expErr != "" {
-				assert.EqualError(t, err, tst.expErr)
+			r, err := c.SayHello(ctx, &examples.HelloRequest{Firstname: tt.args.requestName})
+			if tt.expErr != "" {
+				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, r)
 			} else {
 				require.NoError(t, err)
@@ -127,13 +127,13 @@ func TestComponent_Run_Stream(t *testing.T) {
 		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
-			client, err := c.SayHelloStream(ctx, &examples.HelloRequest{Firstname: tst.args.requestName})
+			client, err := c.SayHelloStream(ctx, &examples.HelloRequest{Firstname: tt.args.requestName})
 			assert.NoError(t, err)
 			resp, err := client.Recv()
-			if tst.expErr != "" {
-				assert.EqualError(t, err, tst.expErr)
+			if tt.expErr != "" {
+				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, resp)
 			} else {
 				require.NoError(t, err)

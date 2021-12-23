@@ -133,7 +133,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		"failed to run": {cp: &testComponent{errorRunning: true}, wantErr: true},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 
@@ -141,8 +141,8 @@ func TestServer_Run_Shutdown(t *testing.T) {
 			assert.NoError(t, err)
 			svc, err := New("test", "", TextLogger())
 			require.NoError(t, err)
-			err = svc.WithComponents(tst.cp, tst.cp, tst.cp).Run(context.Background())
-			if tst.wantErr {
+			err = svc.WithComponents(tt.cp, tt.cp, tt.cp).Run(context.Background())
+			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
@@ -214,26 +214,26 @@ func TestBuild_FailingConditions(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 
-			if tst.port != "" {
-				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tst.port)
+			if tt.port != "" {
+				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
 				require.NoError(t, err)
 			}
-			if tst.jaegerSamplerParam != "" {
-				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tst.jaegerSamplerParam)
+			if tt.jaegerSamplerParam != "" {
+				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tt.jaegerSamplerParam)
 				require.NoError(t, err)
 			}
-			if tst.jaegerBuckets != "" {
-				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tst.jaegerBuckets)
+			if tt.jaegerBuckets != "" {
+				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.jaegerBuckets)
 				require.NoError(t, err)
 			}
 
 			svc, err := New("test", "", TextLogger())
-			if tst.expectedBuildErr != "" {
-				require.EqualError(t, err, tst.expectedBuildErr)
+			if tt.expectedBuildErr != "" {
+				require.EqualError(t, err, tt.expectedBuildErr)
 				require.Nil(t, svc)
 			} else {
 				require.NoError(t, err)
@@ -245,8 +245,8 @@ func TestBuild_FailingConditions(t *testing.T) {
 			cancel()
 			err = svc.Run(ctx)
 
-			if tst.expectedRunErr != "" {
-				require.EqualError(t, err, tst.expectedRunErr)
+			if tt.expectedRunErr != "" {
+				require.EqualError(t, err, tt.expectedRunErr)
 			} else {
 				require.Equal(t, err, context.Canceled)
 			}
@@ -366,12 +366,12 @@ func TestLogFields(t *testing.T) {
 		"no overwrite": {args: args{fields: fields1}, want: Config{fields: defaultFields}},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := Config{fields: defaultFields}
-			LogFields(tst.args.fields)(&cfg)
-			assert.Equal(t, tst.want, cfg)
+			LogFields(tt.args.fields)(&cfg)
+			assert.Equal(t, tt.want, cfg)
 		})
 	}
 }

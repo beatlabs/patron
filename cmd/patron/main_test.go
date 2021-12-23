@@ -36,16 +36,16 @@ func Test_getGenData(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := getGenData(tst.args.path, tst.args.module, tst.args.vendor)
-			if tst.expErr != "" {
-				assert.EqualError(t, err, tst.expErr)
+			got, err := getGenData(tt.args.path, tt.args.module, tt.args.vendor)
+			if tt.expErr != "" {
+				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tst.want, got)
+				assert.Equal(t, tt.want, got)
 			}
 		})
 	}

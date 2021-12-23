@@ -29,16 +29,16 @@ func TestFailureStrategy(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := FailureStrategy(tst.args.strategy)(c)
-			if tst.expectedErr != "" {
-				assert.EqualError(t, err, tst.expectedErr)
+			err := FailureStrategy(tt.args.strategy)(c)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.failStrategy, tst.args.strategy)
+				assert.Equal(t, c.failStrategy, tt.args.strategy)
 			}
 		})
 	}
@@ -69,16 +69,16 @@ func TestRetryWait(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := RetryWait(tst.args.retryWait)(c)
-			if tst.expectedErr != "" {
-				assert.EqualError(t, err, tst.expectedErr)
+			err := RetryWait(tt.args.retryWait)(c)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.retryWait, tst.args.retryWait)
+				assert.Equal(t, c.retryWait, tt.args.retryWait)
 			}
 		})
 	}
@@ -102,16 +102,16 @@ func TestBatchSize(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := BatchSize(tst.args.batchSize)(c)
-			if tst.expectedErr != "" {
-				assert.EqualError(t, err, tst.expectedErr)
+			err := BatchSize(tt.args.batchSize)(c)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.batchSize, tst.args.batchSize)
+				assert.Equal(t, c.batchSize, tt.args.batchSize)
 			}
 		})
 	}
@@ -135,16 +135,16 @@ func TestBatchTimeout(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tst := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := BatchTimeout(tst.args.batchTimeout)(c)
-			if tst.expectedErr != "" {
-				assert.EqualError(t, err, tst.expectedErr)
+			err := BatchTimeout(tt.args.batchTimeout)(c)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, c.batchTimeout, tst.args.batchTimeout)
+				assert.Equal(t, c.batchTimeout, tt.args.batchTimeout)
 			}
 		})
 	}

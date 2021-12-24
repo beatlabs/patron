@@ -31,54 +31,47 @@ func TestNew(t *testing.T) {
 		saramaCfg *sarama.Config
 		options   []kafka.OptionFunc
 	}
-	tests := []struct {
-		name    string
+	tests := map[string]struct {
 		args    args
 		wantErr bool
 	}{
-		{
-			name:    "fails with missing name",
+		"fails with missing name": {
 			args:    args{name: "", brokers: brokers, topics: []string{"topic1"}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
-		{
-			name:    "fails with missing brokers",
+		"fails with missing brokers": {
 			args:    args{name: "test", brokers: []string{}, topics: []string{"topic1"}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
-		{
-			name:    "fails with empty broker",
+		"fails with empty broker": {
 			args:    args{name: "test", brokers: []string{" "}, topics: []string{"topic1"}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
-		{
-			name:    "fails with missing topics",
+		"fails with missing topics": {
 			args:    args{name: "test", brokers: brokers, topics: nil, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
-		{
-			name:    "fails with one empty topic",
+		"fails with one empty topic": {
 			args:    args{name: "test", brokers: brokers, topics: []string{"topic1", ""}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
-		{
-			name:    "fails with missing group",
+		"fails with missing group": {
 			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: "", saramaCfg: defaultSaramaCfg},
 			wantErr: true,
 		},
-		{
-			name:    "fails with nil Sarama config",
+		"fails with nil Sarama config": {
 			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: "group1", saramaCfg: nil},
 			wantErr: true,
 		},
-		{
-			name:    "success",
+		"success": {
 			args:    args{name: "test", brokers: brokers, topics: []string{"topic1"}, group: "group1", saramaCfg: defaultSaramaCfg},
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := New(tt.args.name, tt.args.group, tt.args.topics, tt.args.brokers, tt.args.saramaCfg, tt.args.options...)
 			if tt.wantErr {
 				require.Error(t, err)

@@ -18,7 +18,6 @@ const (
 type AliveCheckFunc func() AliveStatus
 
 func aliveCheckRoute(acf AliveCheckFunc) *RouteBuilder {
-
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch acf() {
 		case Alive:

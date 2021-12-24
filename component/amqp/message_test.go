@@ -52,6 +52,7 @@ func Test_message(t *testing.T) {
 }
 
 func Test_message_ACK(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		acknowledger amqp.Acknowledger
 	}
@@ -68,7 +69,9 @@ func Test_message_ACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			m := createMessage("1", tt.fields.acknowledger)
 			err := m.ACK()
 
@@ -100,6 +103,7 @@ func Test_message_ACK(t *testing.T) {
 }
 
 func Test_message_NACK(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		acknowledger amqp.Acknowledger
 	}
@@ -116,7 +120,9 @@ func Test_message_NACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			m := createMessage("1", tt.fields.acknowledger)
 			err := m.NACK()
 

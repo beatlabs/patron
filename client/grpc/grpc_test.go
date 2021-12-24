@@ -71,6 +71,7 @@ func TestDial(t *testing.T) {
 }
 
 func TestDialContext(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		opts []grpc.DialOption
 	}
@@ -89,7 +90,9 @@ func TestDialContext(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			gotConn, err := DialContext(context.Background(), target, tt.args.opts...)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

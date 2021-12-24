@@ -9,6 +9,7 @@ import (
 const complexConfig = "200;(210,212);(220,222];[230,232);[240,242]"
 
 func TestStatusCode(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		cfg        string
 		statusCode int
@@ -39,7 +40,9 @@ func TestStatusCode(t *testing.T) {
 		"config error - invalid range":             {args: args{cfg: "[200,201,202]"}, expectedParsingErr: true},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			h, err := newStatusCodeLoggerHandler(tt.args.cfg)
 			if tt.expectedParsingErr {
 				assert.Error(t, err)

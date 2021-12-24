@@ -98,10 +98,10 @@ func create(expiration time.Duration, topics ...string) (*kafkaRuntime, error) {
 }
 
 func (k *kafkaRuntime) setup() error {
-
 	var err error
 
-	runOptions := &dockertest.RunOptions{Repository: "wurstmeister/zookeeper",
+	runOptions := &dockertest.RunOptions{
+		Repository: "wurstmeister/zookeeper",
 		PortBindings: map[docker.Port][]docker.PortBinding{
 			docker.Port(fmt.Sprintf("%s/tcp", zookeeperPort)): {{HostIP: "", HostPort: zookeeperPort}},
 			// port 22 is too generic to be used for the test
@@ -131,7 +131,8 @@ func (k *kafkaRuntime) setup() error {
 			"KAFKA_ADVERTISED_HOST_NAME=127.0.0.1",
 			fmt.Sprintf("KAFKA_CREATE_TOPICS=%s", strings.Join(k.topics, ",")),
 			fmt.Sprintf("KAFKA_ZOOKEEPER_CONNECT=%s:%s", ip, zookeeperPort),
-		}}
+		},
+	}
 
 	_, err = k.RunWithOptions(runOptions)
 	if err != nil {
@@ -200,7 +201,6 @@ func getTopic(name string) string {
 }
 
 func consumeMessages(consumer async.Consumer, expectedMessageCount int) ([]string, error) {
-
 	ctx, cnl := context.WithCancel(context.Background())
 	defer cnl()
 

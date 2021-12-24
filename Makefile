@@ -1,4 +1,4 @@
-DOCKER = docker
+ DOCKER = docker
 
 default: test
 
@@ -25,10 +25,10 @@ fmtcheck:
 	@sh -c "'$(CURDIR)/script/gofmtcheck.sh'"
 
 lint: fmtcheck
-	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.42.1 golangci-lint run -v
+	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.43.0 golangci-lint -v run -E tparallel,whitespace
 
 deeplint: fmtcheck
-	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.42.1 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
+	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.43.0 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
 
 ci: fmtcheck lint coverci
 

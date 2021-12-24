@@ -75,9 +75,7 @@ type executor func(now int64, key string) *response
 // exec is the processor func that the cache will wrap
 // rc is the route cache implementation to be used
 func handler(exec executor, rc *RouteCache) func(request *handlerRequest) (response *handlerResponse, e error) {
-
 	return func(request *handlerRequest) (handlerResponse *handlerResponse, e error) {
-
 		now := NowSeconds()
 
 		key := request.getKey()
@@ -112,7 +110,6 @@ func handler(exec executor, rc *RouteCache) func(request *handlerRequest) (respo
 // getResponse will get the appropriate Response either using the cache or the executor,
 // depending on the
 func getResponse(cfg *control, path, key string, now int64, rc *RouteCache, exec executor) *response {
-
 	if cfg.noCache {
 		return exec(now, key)
 	}
@@ -225,7 +222,6 @@ func addResponseHeaders(now int64, header http.Header, rsp *response, maxAge int
 
 // extractRequestHeaders extracts the client request headers allowing the client some control over the cache
 func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
-
 	cfg := control{
 		validators: make([]validator, 0),
 	}

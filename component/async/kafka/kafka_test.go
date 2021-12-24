@@ -94,6 +94,7 @@ func TestMapHeader(t *testing.T) {
 }
 
 func Test_getCorrelationID(t *testing.T) {
+	t.Parallel()
 	withID := []*sarama.RecordHeader{{Key: []byte(correlation.HeaderID), Value: []byte("123")}}
 	withoutID := []*sarama.RecordHeader{{Key: []byte(correlation.HeaderID), Value: []byte("")}}
 	var missingHeader []*sarama.RecordHeader
@@ -108,7 +109,9 @@ func Test_getCorrelationID(t *testing.T) {
 		"missing header": {args: args{hh: missingHeader}},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.NotEmpty(t, getCorrelationID(tt.args.hh))
 		})
 	}
@@ -308,7 +311,6 @@ func testMessageClaim(t *testing.T, data decodingTestData) {
 
 	// claim and process the messages and update the counters accordingly
 	for _, km := range data.msgs {
-
 		if data.combinedDecoderVersion != 0 {
 			km.Value = append([]byte{byte(data.combinedDecoderVersion)}, km.Value...)
 		}

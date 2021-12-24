@@ -4,6 +4,7 @@ package es
 import (
 	"bytes"
 	"fmt"
+	"github.com/uber/jaeger-client-go"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -120,8 +121,15 @@ func (c *transportClient) Perform(req *http.Request) (*http.Response, error) {
 
 func observeResponse(req *http.Request, sp opentracing.Span, rsp *http.Response, start time.Time) {
 	endSpan(sp, rsp)
-	reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
-		Observe(time.Since(start).Seconds())
+	durationHistogram := reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode))
+
+	if sctx, ok := sp.Context().(jaeger.SpanContext); ok {
+		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
+			time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+		)
+	} else {
+		durationHistogram.Observe(time.Since(start).Seconds())
+	}
 }
 
 // Config is a wrapper for elasticsearch.Config

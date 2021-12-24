@@ -26,10 +26,7 @@ const (
 	clientComponent = "http-client"
 )
 
-var (
-	defBuckets         = []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5}
-	reqDurationMetrics *prometheus.HistogramVec
-)
+var reqDurationMetrics *prometheus.HistogramVec
 
 func init() {
 	reqDurationMetrics = prometheus.NewHistogramVec(
@@ -99,15 +96,10 @@ func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 	ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
 	durationHistogram := reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode))
 
-	spanFromCtx := opentracing.SpanFromContext(req.Context())
-	if spanFromCtx != nil {
-		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
-			durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-				time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
-			)
-		} else {
-			durationHistogram.Observe(time.Since(start).Seconds())
-		}
+	if sctx, ok := ht.Span().Context().(jaeger.SpanContext); ok {
+		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
+			time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+		)
 	} else {
 		durationHistogram.Observe(time.Since(start).Seconds())
 	}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/uber/jaeger-client-go"
 	"strconv"
 	"time"
 
@@ -122,5 +123,14 @@ func (c amqpHeadersCarrier) Set(key, val string) {
 
 func observePublish(span opentracing.Span, start time.Time, exchange string, err error) {
 	trace.SpanComplete(span, err)
-	publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
+
+	durationHistogram := publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err == nil))
+
+	if sctx, ok := span.Context().(jaeger.SpanContext); ok {
+		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
+			time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+		)
+	} else {
+		durationHistogram.Observe(time.Since(start).Seconds())
+	}
 }

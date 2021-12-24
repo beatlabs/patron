@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/uber/jaeger-client-go"
 	"strconv"
 	"time"
 
@@ -103,5 +104,13 @@ func injectHeaders(span opentracing.Span, input *sqs.SendMessageInput) error {
 
 func observePublish(span opentracing.Span, start time.Time, queue string, err error) {
 	trace.SpanComplete(span, err)
-	publishDurationMetrics.WithLabelValues(queue, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
+	durationHistogram := publishDurationMetrics.WithLabelValues(queue, strconv.FormatBool(err == nil))
+
+	if sctx, ok := span.Context().(jaeger.SpanContext); ok {
+		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
+			time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+		)
+	} else {
+		durationHistogram.Observe(time.Since(start).Seconds())
+	}
 }

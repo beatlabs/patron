@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"github.com/uber/jaeger-client-go"
 	"regexp"
 	"strconv"
 	"time"
@@ -493,5 +494,13 @@ func parseDSN(dsn string) DSNInfo {
 
 func observeDuration(span opentracing.Span, start time.Time, op string, err error) {
 	trace.SpanComplete(span, err)
-	opDurationMetrics.WithLabelValues(op, strconv.FormatBool(err == nil)).Observe(time.Since(start).Seconds())
+	durationHistogram := opDurationMetrics.WithLabelValues(op, strconv.FormatBool(err == nil))
+
+	if sctx, ok := span.Context().(jaeger.SpanContext); ok {
+		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
+			time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+		)
+	} else {
+		durationHistogram.Observe(time.Since(start).Seconds())
+	}
 }

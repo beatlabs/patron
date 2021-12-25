@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -12,14 +13,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/beatlabs/patron/component/http"
+	patronhttp "github.com/beatlabs/patron/component/http"
 	v2 "github.com/beatlabs/patron/component/http/v2"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/std"
 	patronzerolog "github.com/beatlabs/patron/log/zerolog"
 	"github.com/beatlabs/patron/trace"
-	"github.com/gorilla/mux"
 	"github.com/uber/jaeger-client-go"
 )
 
@@ -39,14 +39,14 @@ type Component interface {
 type service struct {
 	name              string
 	cps               []Component
-	routesBuilder     *http.RoutesBuilder
-	middlewares       []http.MiddlewareFunc
-	acf               http.AliveCheckFunc
-	rcf               http.ReadyCheckFunc
+	routesBuilder     *patronhttp.RoutesBuilder
+	middlewares       []patronhttp.MiddlewareFunc
+	acf               patronhttp.AliveCheckFunc
+	rcf               patronhttp.ReadyCheckFunc
 	termSig           chan os.Signal
 	sighupHandler     func()
 	uncompressedPaths []string
-	httpRouter        *mux.Router
+	httpRouter        http.Handler
 }
 
 func (s *service) setupOSSignal() {
@@ -116,7 +116,7 @@ func (s *service) createHTTPComponent() (Component, error) {
 		return s.createHTTPv1(int(portVal), readTimeout, writeTimeout, deflateLevel)
 	}
 
-	return s.createHTTPv2(int(portVal), readTimeout, writeTimeout, deflateLevel)
+	return s.createHTTPv2(int(portVal), readTimeout, writeTimeout)
 }
 
 func getHTTPReadTimeout() (*time.Duration, error) {
@@ -156,7 +156,7 @@ func getHTTPDeflateLevel() (*int, error) {
 }
 
 func (s *service) createHTTPv1(port int, readTimeout, writeTimeout *time.Duration, deflateLevel *int) (Component, error) {
-	b := http.NewBuilder().WithPort(port)
+	b := patronhttp.NewBuilder().WithPort(port)
 
 	if readTimeout != nil {
 		b.WithReadTimeout(*readTimeout)
@@ -198,7 +198,7 @@ func (s *service) createHTTPv1(port int, readTimeout, writeTimeout *time.Duratio
 	return cp, nil
 }
 
-func (s *service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duration, deflateLevel *int) (Component, error) {
+func (s *service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duration) (Component, error) {
 	oo := []v2.OptionFunc{v2.Port(port)}
 
 	if readTimeout != nil {
@@ -208,30 +208,6 @@ func (s *service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duratio
 	if writeTimeout != nil {
 		oo = append(oo, v2.WriteTimeout(*writeTimeout))
 	}
-
-	if deflateLevel != nil {
-		oo = append(oo, v2.DeflateLevel(*deflateLevel))
-	}
-
-	if s.acf != nil {
-		oo = append(oo, v2.AliveCheck(s.acf))
-	}
-
-	if s.rcf != nil {
-		oo = append(oo, v2.ReadyCheck(s.rcf))
-	}
-
-	// TODO: middlewares?
-	// if s.middlewares != nil && len(s.middlewares) > 0 {
-	// 	oo = append(oo, v2.)
-	// }
-
-	if s.uncompressedPaths != nil {
-		oo = append(oo, v2.UncompressedPaths(s.uncompressedPaths...))
-	}
-
-	cfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
-	oo = append(oo, v2.StatusCodeLoggerConfig(cfg))
 
 	return v2.New(s.httpRouter, oo...)
 }
@@ -265,14 +241,14 @@ type Builder struct {
 	name              string
 	version           string
 	cps               []Component
-	routesBuilder     *http.RoutesBuilder
-	middlewares       []http.MiddlewareFunc
-	acf               http.AliveCheckFunc
-	rcf               http.ReadyCheckFunc
+	routesBuilder     *patronhttp.RoutesBuilder
+	middlewares       []patronhttp.MiddlewareFunc
+	acf               patronhttp.AliveCheckFunc
+	rcf               patronhttp.ReadyCheckFunc
 	termSig           chan os.Signal
 	sighupHandler     func()
 	uncompressedPaths []string
-	httpRouter        *mux.Router
+	httpRouter        http.Handler
 }
 
 // Config for setting up the builder.
@@ -339,8 +315,8 @@ func New(name, version string, options ...Option) (*Builder, error) {
 		errors:        make([]error, 0),
 		name:          name,
 		version:       version,
-		acf:           http.DefaultAliveCheck,
-		rcf:           http.DefaultReadyCheck,
+		acf:           patronhttp.DefaultAliveCheck,
+		rcf:           patronhttp.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),
 		sighupHandler: func() { log.Debug("SIGHUP received: nothing setup") },
 	}, nil
@@ -414,7 +390,7 @@ func setupJaegerTracing(name, version string) error {
 }
 
 // WithRoutesBuilder adds routes builder to the default HTTP component.
-func (b *Builder) WithRoutesBuilder(rb *http.RoutesBuilder) *Builder {
+func (b *Builder) WithRoutesBuilder(rb *patronhttp.RoutesBuilder) *Builder {
 	if rb == nil {
 		b.errors = append(b.errors, errors.New("routes builder is nil"))
 	} else {
@@ -426,7 +402,7 @@ func (b *Builder) WithRoutesBuilder(rb *http.RoutesBuilder) *Builder {
 }
 
 // WithMiddlewares adds generic middlewares to the default HTTP component.
-func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {
+func (b *Builder) WithMiddlewares(mm ...patronhttp.MiddlewareFunc) *Builder {
 	if len(mm) == 0 {
 		b.errors = append(b.errors, errors.New("provided middlewares slice was empty"))
 	} else {
@@ -438,7 +414,7 @@ func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {
 }
 
 // WithAliveCheck overrides the default liveness check of the default HTTP component.
-func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder {
+func (b *Builder) WithAliveCheck(acf patronhttp.AliveCheckFunc) *Builder {
 	if acf == nil {
 		b.errors = append(b.errors, errors.New("alive check func provided was nil"))
 	} else {
@@ -450,7 +426,7 @@ func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder {
 }
 
 // WithReadyCheck overrides the default readiness check of the default HTTP component.
-func (b *Builder) WithReadyCheck(rcf http.ReadyCheckFunc) *Builder {
+func (b *Builder) WithReadyCheck(rcf patronhttp.ReadyCheckFunc) *Builder {
 	if rcf == nil {
 		b.errors = append(b.errors, errors.New("ready check func provided was nil"))
 	} else {
@@ -497,13 +473,13 @@ func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
 	return b
 }
 
-// WithMuxRouter replaces the default v1 HTTP component with a new component base on the gorilla mux router.
-func (b *Builder) WithMuxRouter(router *mux.Router) *Builder {
-	if router == nil {
-		b.errors = append(b.errors, errors.New("provided mux router is nil"))
+// WithRouter replaces the default v1 HTTP component with a new component based on http.Handler.
+func (b *Builder) WithRouter(handler http.Handler) *Builder {
+	if handler == nil {
+		b.errors = append(b.errors, errors.New("provided router is nil"))
 	} else {
-		log.Debug("mux router will be used with the v2 HTTP component")
-		b.httpRouter = router
+		log.Debug("router will be used with the v2 HTTP component")
+		b.httpRouter = handler
 	}
 
 	return b
@@ -544,7 +520,7 @@ func (b *Builder) build() (*service, error) {
 }
 
 // Run starts up all service components and monitors for errors.
-// If a component returns a error the service is responsible for shutting down
+// If a component returns an error the service is responsible for shutting down
 // all components and terminate itself.
 func (b *Builder) Run(ctx context.Context) error {
 	s, err := b.build()

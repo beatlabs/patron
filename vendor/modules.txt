@@ -99,9 +99,6 @@ github.com/golang/snappy
 # github.com/google/uuid v1.3.0
 ## explicit
 github.com/google/uuid
-# github.com/gorilla/mux v1.8.0
-## explicit
-github.com/gorilla/mux
 # github.com/hashicorp/go-uuid v1.0.2
 github.com/hashicorp/go-uuid
 # github.com/hashicorp/golang-lru v0.5.4

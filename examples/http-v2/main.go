@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/beatlabs/patron"
+	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
 	"github.com/beatlabs/patron/log"
-	"github.com/gorilla/mux"
 )
 
 func init() {
@@ -39,15 +39,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	router := mux.NewRouter()
-	router.NewRoute()
-	router.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-		_, _ = fmt.Fprint(rw, "Home")
-	}) //.Subrouter().Use(mwf ...mux.MiddlewareFunc)
+	route, err := httprouter.DefaultRoute(http.MethodGet, "/api/search", func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusOK)
+		_, _ = fmt.Fprint(writer, "articles")
+	})
+
+	router, err := httprouter.New(httprouter.Routes(route))
+	if err != nil {
+		log.Fatalf("failed to router %v", err)
+	}
 
 	ctx := context.Background()
-	err = service.WithMuxRouter(router).Run(ctx)
+	err = service.WithRouter(router).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

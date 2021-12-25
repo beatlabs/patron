@@ -60,13 +60,11 @@ func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFu
 		return nil, fmt.Errorf("failed to parse status codes %q: %w", cfg, err)
 	}
 
-	options := make([]RouteOptionFunc, 0, len(oo)+1)
 	// prepend standard middlewares
-	options = append(options, Middlewares(NewRecoveryMiddleware(), NewLoggingTracingMiddleware(path, statusCodeLogger),
-		NewRequestObserverMiddleware(method, path)))
-	options = append(options, oo...)
+	oo = append([]RouteOptionFunc{Middlewares(NewRecoveryMiddleware(), NewLoggingTracingMiddleware(path, statusCodeLogger),
+		NewRequestObserverMiddleware(method, path))}, oo...)
 
-	route, err := NewRawRoute(method, path, handler, options...)
+	route, err := NewRawRoute(method, path, handler, oo...)
 	if err != nil {
 		return nil, err
 	}

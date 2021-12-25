@@ -20,8 +20,8 @@ type Route struct {
 	middlewares []MiddlewareFunc
 }
 
-// NewRoute creates a new route with functional configuration.
-func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+// NewRawRoute creates a new raw route with functional configuration.
+func NewRawRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
 	if method == "" {
 		return nil, errors.New("method is empty")
 	}
@@ -50,8 +50,8 @@ func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFu
 	return route, nil
 }
 
-// DefaultRoute returns a route that has default middlewares injected.
-func DefaultRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+// NewRoute returns a route that has default middlewares injected.
+func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
 	// TODO: we need something smarter
 	// parse a list of HTTP numeric status codes that must be logged
 	cfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
@@ -60,25 +60,22 @@ func DefaultRoute(method, path string, handler http.HandlerFunc, oo ...RouteOpti
 		return nil, fmt.Errorf("failed to parse status codes %q: %w", cfg, err)
 	}
 
-	route, err := NewRoute(method, path, handler, oo...)
+	options := make([]RouteOptionFunc, 0, len(oo)+1)
+	// prepend standard middlewares
+	options = append(options, Middlewares(NewRecoveryMiddleware(), NewLoggingTracingMiddleware(path, statusCodeLogger),
+		NewRequestObserverMiddleware(method, path)))
+	options = append(options, oo...)
+
+	route, err := NewRawRoute(method, path, handler, oo...)
 	if err != nil {
 		return nil, err
 	}
-
-	middlewares := []MiddlewareFunc{
-		NewRecoveryMiddleware(),
-		NewLoggingTracingMiddleware(path, statusCodeLogger),
-		NewRequestObserverMiddleware(method, path),
-	}
-
-	// inject default middlewares.
-	route.middlewares = append(middlewares, route.middlewares...)
 
 	return route, nil
 }
 
 func NewRecoveryGetRoute(path string, handler http.HandlerFunc) (*Route, error) {
-	return NewRoute(http.MethodGet, path, handler, Middlewares(NewRecoveryMiddleware()))
+	return NewRawRoute(http.MethodGet, path, handler, Middlewares(NewRecoveryMiddleware()))
 }
 
 // NewFileServerRoute returns a route that acts as a file server.
@@ -138,5 +135,5 @@ func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*Ro
 		http.ServeFile(w, r, path)
 	}
 
-	return NewRoute(http.MethodGet, path, handler)
+	return NewRawRoute(http.MethodGet, path, handler)
 }

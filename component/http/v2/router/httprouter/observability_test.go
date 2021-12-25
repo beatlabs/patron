@@ -8,7 +8,22 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func Test_metricRoute(t *testing.T) {
+	route := metricRoute()
+	assert.Equal(t, http.MethodGet, route.method)
+	assert.Equal(t, "/metrics", route.path)
+
+	resp := httptest.NewRecorder()
+	req, err := http.NewRequest(http.MethodGet, "/metrics", nil)
+	require.NoError(t, err)
+
+	route.handler(resp, req)
+
+	assert.Equal(t, http.StatusOK, resp.Code)
+}
 
 func Test_profilingRoutes(t *testing.T) {
 	mux := httprouter.New()

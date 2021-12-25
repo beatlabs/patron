@@ -5,7 +5,18 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+const (
+	metricsPath = "/metrics"
+)
+
+func metricRoute() *Route {
+	route, _ := NewRecoveryGetRoute(metricsPath, promhttp.Handler().ServeHTTP)
+	return route
+}
 
 func profilingRoutes() []*Route {
 	var routes []*Route

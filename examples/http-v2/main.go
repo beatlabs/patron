@@ -39,7 +39,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	route, err := httprouter.DefaultRoute(http.MethodGet, "/api/search", func(writer http.ResponseWriter, request *http.Request) {
+	route, err := httprouter.NewRoute(http.MethodGet, "/api/search", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
 		_, _ = fmt.Fprint(writer, "articles")
 	})

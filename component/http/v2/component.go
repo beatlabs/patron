@@ -59,10 +59,7 @@ func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 func (c *Component) Run(ctx context.Context) error {
 	c.Lock()
 	chFail := make(chan error)
-	srv, err := c.createHTTPServer()
-	if err != nil {
-		return err
-	}
+	srv := c.createHTTPServer()
 	go c.listenAndServe(srv, chFail)
 	c.Unlock()
 
@@ -77,14 +74,14 @@ func (c *Component) Run(ctx context.Context) error {
 	}
 }
 
-func (c *Component) createHTTPServer() (*http.Server, error) {
+func (c *Component) createHTTPServer() *http.Server {
 	return &http.Server{
 		Addr:         fmt.Sprintf(":%d", c.port),
 		ReadTimeout:  c.readTimeout,
 		WriteTimeout: c.writeTimeout,
 		IdleTimeout:  idleTimeout,
 		Handler:      c.handler,
-	}, nil
+	}
 }
 
 func (c *Component) listenAndServe(srv *http.Server, ch chan<- error) {

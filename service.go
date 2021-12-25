@@ -90,7 +90,7 @@ func (s *service) createHTTPComponent() (Component, error) {
 	portVal := int64(50000)
 	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
 	if ok {
-		portVal, err = strconv.ParseInt(port, 10, 64)
+		portVal, err = strconv.ParseInt(port, 10, 32)
 		if err != nil {
 			return nil, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
 		}

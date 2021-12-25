@@ -66,7 +66,7 @@ func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFu
 		NewRequestObserverMiddleware(method, path)))
 	options = append(options, oo...)
 
-	route, err := NewRawRoute(method, path, handler, oo...)
+	route, err := NewRawRoute(method, path, handler, options...)
 	if err != nil {
 		return nil, err
 	}

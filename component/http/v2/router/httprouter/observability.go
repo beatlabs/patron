@@ -14,7 +14,7 @@ const (
 )
 
 func metricRoute() *Route {
-	route, _ := NewRecoveryGetRoute(metricsPath, promhttp.Handler().ServeHTTP)
+	route, _ := NewRoute(http.MethodGet, metricsPath, promhttp.Handler().ServeHTTP)
 	return route
 }
 
@@ -22,7 +22,7 @@ func profilingRoutes() []*Route {
 	var routes []*Route
 
 	routeFunc := func(path string, handler http.HandlerFunc) *Route {
-		route, _ := NewRecoveryGetRoute(path, handler)
+		route, _ := NewRoute(http.MethodGet, path, handler)
 		return route
 	}
 

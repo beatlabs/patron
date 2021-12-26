@@ -35,9 +35,10 @@ func NewRawRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptio
 	}
 
 	route := &Route{
-		method:  method,
-		path:    path,
-		handler: handler,
+		method:      method,
+		path:        path,
+		handler:     handler,
+		middlewares: []MiddlewareFunc{NewRecoveryMiddleware()},
 	}
 
 	for _, option := range oo {
@@ -61,7 +62,7 @@ func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFu
 	}
 
 	// prepend standard middlewares
-	oo = append([]RouteOptionFunc{Middlewares(NewRecoveryMiddleware(), NewLoggingTracingMiddleware(path, statusCodeLogger),
+	oo = append([]RouteOptionFunc{Middlewares(NewLoggingTracingMiddleware(path, statusCodeLogger),
 		NewRequestObserverMiddleware(method, path))}, oo...)
 
 	route, err := NewRawRoute(method, path, handler, oo...)
@@ -70,10 +71,6 @@ func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFu
 	}
 
 	return route, nil
-}
-
-func NewRecoveryGetRoute(path string, handler http.HandlerFunc) (*Route, error) {
-	return NewRawRoute(http.MethodGet, path, handler, Middlewares(NewRecoveryMiddleware()))
 }
 
 // NewFileServerRoute returns a route that acts as a file server.

@@ -43,7 +43,7 @@ func aliveCheckRoute(acf AliveCheckFunc) *Route {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	route, _ := NewRecoveryGetRoute(alivePath, f)
+	route, _ := NewRoute(http.MethodGet, alivePath, f)
 	return route
 }
 
@@ -58,6 +58,6 @@ func readyCheckRoute(rcf ReadyCheckFunc) *Route {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	route, _ := NewRecoveryGetRoute(readyPath, f)
+	route, _ := NewRoute(http.MethodGet, readyPath, f)
 	return route
 }

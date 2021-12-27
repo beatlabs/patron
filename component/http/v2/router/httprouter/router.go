@@ -62,11 +62,11 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	}
 
 	for _, route := range cfg.routes {
-		middlewares := append([]middleware.Func{
+		middlewares := append(route.Middlewares(), []middleware.Func{
 			middleware.NewLoggingTracing(route.Path(), statusCodeLogger),
 			middleware.NewRequestObserver(route.Method(), route.Path()),
 			middleware.NewCompression(cfg.deflateLevel),
-		}, route.Middlewares()...)
+		}...)
 		handler := middleware.Chain(route.Handler(), middlewares...)
 		mux.Handler(route.Method(), route.Path(), handler)
 		log.Debugf("added route %s", route)

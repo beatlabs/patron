@@ -484,16 +484,12 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 	}
 
 	info := map[string]interface{}{
-		"request": map[string]interface{}{
-			"remote-address": remoteAddr,
-			"method":         r.Method,
-			"url":            r.URL,
-			"proto":          r.Proto,
-			"status":         w.Status(),
-			"referer":        r.Referer(),
-			"user-agent":     r.UserAgent(),
-			correlation.ID:   corID,
-		},
+		correlation.ID:   corID,
+		"method":         r.Method,
+		"url":            r.URL,
+		"status":         w.Status(),
+		"remote-address": remoteAddr,
+		"proto":          r.Proto,
 	}
 	log.Sub(info).Debug()
 }

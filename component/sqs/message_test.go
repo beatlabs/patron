@@ -65,7 +65,7 @@ func Test_message(t *testing.T) {
 }
 
 func Test_message_ACK(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Cleanup(func() { mockTracer.Reset() })
 	type fields struct {
 		sqsAPI sqsiface.SQSAPI
 	}
@@ -77,7 +77,9 @@ func Test_message_ACK(t *testing.T) {
 		"failure": {fields: fields{sqsAPI: &stubSQSAPI{deleteMessageWithContextErr: errors.New("TEST")}}, expectedErr: "TEST"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Cleanup(func() { mockTracer.Reset() })
 			m := createMessage(tt.fields.sqsAPI, "1")
 			err := m.ACK()
 
@@ -91,7 +93,6 @@ func Test_message_ACK(t *testing.T) {
 					"correlationID": "123",
 				}
 				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
-				mockTracer.Reset()
 			} else {
 				assert.NoError(t, err)
 				expected := map[string]interface{}{
@@ -102,7 +103,6 @@ func Test_message_ACK(t *testing.T) {
 					"correlationID": "123",
 				}
 				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
-				mockTracer.Reset()
 			}
 		})
 	}
@@ -182,7 +182,7 @@ func Test_batch_NACK(t *testing.T) {
 }
 
 func Test_batch_ACK(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Cleanup(func() { mockTracer.Reset() })
 
 	msg1 := createMessage(nil, "1")
 	msg2 := createMessage(nil, "2")
@@ -213,7 +213,9 @@ func Test_batch_ACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Cleanup(func() { mockTracer.Reset() })
 			btc := batch{
 				ctx: context.Background(),
 				queue: queue{
@@ -237,7 +239,6 @@ func Test_batch_ACK(t *testing.T) {
 				}
 				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
 				assert.Equal(t, expected, mockTracer.FinishedSpans()[1].Tags())
-				mockTracer.Reset()
 			} else {
 				assert.NoError(t, err, tt)
 				assert.Len(t, failed, 1)
@@ -259,7 +260,6 @@ func Test_batch_ACK(t *testing.T) {
 					"correlationID": "123",
 				}
 				assert.Equal(t, expectedFailure, mockTracer.FinishedSpans()[1].Tags())
-				mockTracer.Reset()
 			}
 		})
 	}

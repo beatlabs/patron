@@ -9,6 +9,7 @@ import (
 )
 
 func TestLevelOrder(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		lvl Level
 	}
@@ -25,13 +26,16 @@ func TestLevelOrder(t *testing.T) {
 		"no level": {args: args{lvl: NoLevel}, want: 6},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, tt.want, LevelOrder(tt.args.lvl))
 		})
 	}
 }
 
 func TestSetup(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		logger  Logger
 		wantErr bool
@@ -40,7 +44,9 @@ func TestSetup(t *testing.T) {
 		"success":                  {logger: &nilLogger{}, wantErr: false},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			err := Setup(tt.logger)
 			if tt.wantErr {
 				assert.Error(t, err, "expected error")
@@ -52,6 +58,7 @@ func TestSetup(t *testing.T) {
 }
 
 func TestFromContext(t *testing.T) {
+	t.Parallel()
 	logger = &nilLogger{}
 	lg := &nilLogger{}
 	ctxWith := WithContext(context.Background(), logger)
@@ -68,7 +75,9 @@ func TestFromContext(t *testing.T) {
 		"with context nil logger": {args: args{ctx: ctxWithNil}, want: logger},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got := FromContext(tt.args.ctx)
 			assert.Equal(t, tt.want, got)
 		})

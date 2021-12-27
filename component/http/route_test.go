@@ -27,6 +27,7 @@ func (mo MockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
 }
 
 func TestRouteBuilder_WithMethodGet(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		methodExists bool
 	}
@@ -38,7 +39,9 @@ func TestRouteBuilder_WithMethodGet(t *testing.T) {
 		"method already exists": {args: args{methodExists: true}, expectedErr: "method already set\n"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {})
 			if tt.args.methodExists {
 				rb.MethodGet()
@@ -102,6 +105,7 @@ func TestRouteBuilder_WithTrace(t *testing.T) {
 }
 
 func TestRouteBuilder_WithMiddlewares(t *testing.T) {
+	t.Parallel()
 	middleware := func(next http.Handler) http.Handler { return next }
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
 	type fields struct {
@@ -115,7 +119,9 @@ func TestRouteBuilder_WithMiddlewares(t *testing.T) {
 		"missing middleware": {fields: fields{}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRawRouteBuilder("/", mockHandler).MethodGet()
 			if len(tt.fields.middlewares) == 0 {
 				rb.WithMiddlewares()
@@ -135,6 +141,7 @@ func TestRouteBuilder_WithMiddlewares(t *testing.T) {
 }
 
 func TestRouteBuilder_WithAuth(t *testing.T) {
+	t.Parallel()
 	mockAuth := &MockAuthenticator{}
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
 	type fields struct {
@@ -148,7 +155,9 @@ func TestRouteBuilder_WithAuth(t *testing.T) {
 		"missing middleware": {fields: fields{}, expectedErr: "authenticator is nil"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRawRouteBuilder("/", mockHandler).WithAuth(tt.fields.authenticator)
 
 			if tt.expectedErr != "" {
@@ -167,7 +176,6 @@ func TestRouteBuilder_WithRateLimiting(t *testing.T) {
 	rb := NewRawRouteBuilder("/", mockHandler).WithRateLimiting(1, 1)
 	assert.Len(t, rb.errors, 0)
 	assert.NotNil(t, rb.rateLimiter)
-
 }
 
 func TestRouteBuilder_WithRouteCacheNil(t *testing.T) {
@@ -179,6 +187,7 @@ func TestRouteBuilder_WithRouteCacheNil(t *testing.T) {
 }
 
 func TestRouteBuilder_Build(t *testing.T) {
+	t.Parallel()
 	mockAuth := &MockAuthenticator{}
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	middleware := func(next http.Handler) http.Handler { return next }
@@ -195,7 +204,9 @@ func TestRouteBuilder_Build(t *testing.T) {
 		"missing method":    {fields: fields{path: "/", missingMethod: true}, expectedErr: "method is missing"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRouteBuilder(tt.fields.path, mockProcessor).WithTrace().WithAuth(mockAuth).WithMiddlewares(middleware).WithRateLimiting(5, 50)
 			if !tt.fields.missingMethod {
 				rb.MethodGet()
@@ -214,6 +225,7 @@ func TestRouteBuilder_Build(t *testing.T) {
 }
 
 func TestNewRawRouteBuilder(t *testing.T) {
+	t.Parallel()
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
 	type args struct {
 		path    string
@@ -228,7 +240,9 @@ func TestNewRawRouteBuilder(t *testing.T) {
 		"invalid handler": {args: args{path: "/", handler: nil}, expectedErr: "handler is nil"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRawRouteBuilder(tt.args.path, tt.args.handler)
 
 			if tt.expectedErr != "" {
@@ -242,6 +256,7 @@ func TestNewRawRouteBuilder(t *testing.T) {
 }
 
 func TestNewRouteBuilder(t *testing.T) {
+	t.Parallel()
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
 	type args struct {
 		path      string
@@ -256,7 +271,9 @@ func TestNewRouteBuilder(t *testing.T) {
 		"invalid handler": {args: args{path: "/", processor: nil}, expectedErr: "processor is nil"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewRouteBuilder(tt.args.path, tt.args.processor)
 
 			if tt.expectedErr != "" {
@@ -270,6 +287,7 @@ func TestNewRouteBuilder(t *testing.T) {
 }
 
 func TestNewFileserver(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		path         string
 		assetsDir    string
@@ -287,7 +305,9 @@ func TestNewFileserver(t *testing.T) {
 		"fallback path doesn't exist": {args: args{path: "/", assetsDir: "testdata", fallbackPath: "testdata/missing.html"}, expectedErr: "fallback file [testdata/missing.html] doesn't exist"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			rb := NewFileServer(tt.args.path, tt.args.assetsDir, tt.args.fallbackPath)
 
 			if tt.expectedErr != "" {
@@ -346,6 +366,7 @@ func TestNewTraceRouteBuilder(t *testing.T) {
 }
 
 func TestRoutesBuilder_Build(t *testing.T) {
+	t.Parallel()
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
 	validRb := NewRawRouteBuilder("/", mockHandler).MethodGet()
 	invalidRb := NewRawRouteBuilder("/", mockHandler)
@@ -369,7 +390,9 @@ func TestRoutesBuilder_Build(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			builder := NewRoutesBuilder()
 			for _, rb := range tt.args.rbs {
 				builder.Append(rb)

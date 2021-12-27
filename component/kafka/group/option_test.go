@@ -9,6 +9,7 @@ import (
 )
 
 func TestFailureStrategy(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		strategy kafka.FailStrategy
 	}
@@ -28,7 +29,9 @@ func TestFailureStrategy(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := FailureStrategy(tt.args.strategy)(c)
 			if tt.expectedErr != "" {
@@ -49,6 +52,7 @@ func TestRetries(t *testing.T) {
 }
 
 func TestRetryWait(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		retryWait time.Duration
 	}
@@ -65,7 +69,9 @@ func TestRetryWait(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := RetryWait(tt.args.retryWait)(c)
 			if tt.expectedErr != "" {
@@ -79,6 +85,7 @@ func TestRetryWait(t *testing.T) {
 }
 
 func TestBatchSize(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		batchSize uint
 	}
@@ -95,7 +102,9 @@ func TestBatchSize(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := BatchSize(tt.args.batchSize)(c)
 			if tt.expectedErr != "" {
@@ -109,6 +118,7 @@ func TestBatchSize(t *testing.T) {
 }
 
 func TestBatchTimeout(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		batchTimeout time.Duration
 	}
@@ -125,7 +135,9 @@ func TestBatchTimeout(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := BatchTimeout(tt.args.batchTimeout)(c)
 			if tt.expectedErr != "" {

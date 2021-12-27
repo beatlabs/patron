@@ -20,7 +20,7 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/streadway/amqp"
 )
 
@@ -237,7 +237,6 @@ func (c *consumer) Close() error {
 		if err != nil {
 			errChan = fmt.Errorf("failed to cancel channel of consumer %s: %w", c.tag, err)
 		}
-
 	}
 	if c.conn != nil {
 		err := c.conn.Close()

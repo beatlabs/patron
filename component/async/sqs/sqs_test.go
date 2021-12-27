@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding/json"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewFactory(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		queue     sqsiface.SQSAPI
 		queueName string
@@ -69,7 +70,9 @@ func TestNewFactory(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := NewFactory(tt.args.queue, tt.args.queueName, tt.args.oo...)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -116,6 +119,7 @@ func Test_consumer_Consume(t *testing.T) {
 }
 
 func Test_message(t *testing.T) {
+	t.Parallel()
 	type fields struct {
 		queue sqsiface.SQSAPI
 	}
@@ -130,7 +134,9 @@ func Test_message(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			sqsMsg := &sqs.Message{Body: aws.String(`{"key":"value"}`)}
 			m := &message{
 				queue:     tt.fields.queue,
@@ -155,6 +161,7 @@ func Test_message(t *testing.T) {
 }
 
 func Test_getCorrelationID(t *testing.T) {
+	t.Parallel()
 	withID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: {StringValue: aws.String("123")}}
 	withoutID := map[string]*sqs.MessageAttributeValue{correlation.HeaderID: {}}
 	missingHeader := map[string]*sqs.MessageAttributeValue{}
@@ -169,7 +176,9 @@ func Test_getCorrelationID(t *testing.T) {
 		"missing header": {args: args{ma: missingHeader}},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.NotEmpty(t, getCorrelationID(tt.args.ma))
 		})
 	}

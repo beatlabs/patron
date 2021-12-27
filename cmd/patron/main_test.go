@@ -7,6 +7,7 @@ import (
 )
 
 func Test_getGenData(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		path   string
 		module string
@@ -35,7 +36,9 @@ func Test_getGenData(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := getGenData(tt.args.path, tt.args.module, tt.args.vendor)
 			if tt.expErr != "" {
 				assert.EqualError(t, err, tt.expErr)

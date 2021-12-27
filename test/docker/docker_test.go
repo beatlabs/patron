@@ -8,6 +8,7 @@ import (
 )
 
 func TestNewRuntime(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		expiration time.Duration
 	}
@@ -19,7 +20,9 @@ func TestNewRuntime(t *testing.T) {
 		"wrong expiration": {args: args{expiration: -1 * time.Second}, expectedErr: "expiration value is negative"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := NewRuntime(tt.args.expiration)
 			if tt.expectedErr != "" {
 				assert.Nil(t, got)

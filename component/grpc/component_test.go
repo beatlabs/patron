@@ -13,6 +13,7 @@ import (
 )
 
 func TestCreate(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		port int
 	}
@@ -24,7 +25,9 @@ func TestCreate(t *testing.T) {
 		"invalid port": {args: args{port: -1}, expErr: "port is invalid: -1\n"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := New(tt.args.port).WithOptions(grpc.ConnectionTimeout(1 * time.Second)).Create()
 			if tt.expErr != "" {
 				assert.EqualError(t, err, tt.expErr)
@@ -82,6 +85,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			r, err := c.SayHello(ctx, &examples.HelloRequest{Firstname: tt.args.requestName})
 			if tt.expErr != "" {
@@ -123,6 +127,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			client, err := c.SayHelloStream(ctx, &examples.HelloRequest{Firstname: tt.args.requestName})
 			assert.NoError(t, err)

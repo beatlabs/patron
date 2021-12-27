@@ -7,6 +7,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		url string
 	}
@@ -17,7 +18,10 @@ func TestNew(t *testing.T) {
 		"fail, missing url": {args: args{}, expectedErr: "url is required"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := New(tt.args.url)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

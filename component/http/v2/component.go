@@ -20,7 +20,7 @@ const (
 	shutdownGracePeriod = 5 * time.Second
 )
 
-// Component implementation of HTTP.
+// Component implementation of an HTTP router.
 type Component struct {
 	port                int
 	readTimeout         time.Duration

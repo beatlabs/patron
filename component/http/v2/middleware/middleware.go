@@ -1,4 +1,4 @@
-package httprouter
+package middleware
 
 import (
 	"bytes"
@@ -14,10 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
-
-	"golang.org/x/time/rate"
 
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/component/http/cache"
@@ -30,6 +27,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	tracinglog "github.com/opentracing/opentracing-go/log"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -44,7 +42,6 @@ const (
 )
 
 var (
-	httpStatusTracingInit          sync.Once
 	httpStatusTracingHandledMetric *prometheus.CounterVec
 	httpStatusTracingLatencyMetric *prometheus.HistogramVec
 )
@@ -97,11 +94,33 @@ func (w *responseWriter) WriteHeader(code int) {
 	w.statusHeaderWritten = true
 }
 
-// MiddlewareFunc type declaration of middleware func.
-type MiddlewareFunc func(next http.Handler) http.Handler
+// Func type declaration of middleware func.
+type Func func(next http.Handler) http.Handler
 
-// NewRecoveryMiddleware creates a MiddlewareFunc that ensures recovery and no panic.
-func NewRecoveryMiddleware() MiddlewareFunc {
+func init() {
+	httpStatusTracingHandledMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "component",
+			Subsystem: "http",
+			Name:      "handled_total",
+			Help:      "Total number of HTTP responses served by the server.",
+		},
+		[]string{"method", "path", "status_code"},
+	)
+	prometheus.MustRegister(httpStatusTracingHandledMetric)
+	httpStatusTracingLatencyMetric = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "component",
+			Subsystem: "http",
+			Name:      "handled_seconds",
+			Help:      "Latency of a completed HTTP response served by the server.",
+		},
+		[]string{"method", "path", "status_code"})
+	prometheus.MustRegister(httpStatusTracingLatencyMetric)
+}
+
+// NewRecovery creates a Func that ensures recovery and no panic.
+func NewRecovery() Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
@@ -125,8 +144,8 @@ func NewRecoveryMiddleware() MiddlewareFunc {
 	}
 }
 
-// NewAuthMiddleware creates a MiddlewareFunc that implements authentication using an Authenticator.
-func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
+// NewAuth creates a Func that implements authentication using an Authenticator.
+func NewAuth(auth auth.Authenticator) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authenticated, err := auth.Authenticate(r)
@@ -144,11 +163,12 @@ func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
 	}
 }
 
-// NewLoggingTracingMiddleware creates a MiddlewareFunc that continues a tracing span and finishes it.
+// NewLoggingTracing creates a Func that continues a tracing span and finishes it.
 // It uses Jaeger and OpenTracing and will also log the HTTP request on debug level if configured so.
-func NewLoggingTracingMiddleware(path string, statusCodeLogger statusCodeLoggerHandler) MiddlewareFunc {
+func NewLoggingTracing(path string, statusCodeLogger statusCodeLoggerHandler) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			now := time.Now()
 			corID := getOrSetCorrelationID(r.Header)
 			sp, r := span(path, corID, r)
 			lw := newResponseWriter(w, true)
@@ -158,55 +178,16 @@ func NewLoggingTracingMiddleware(path string, statusCodeLogger statusCodeLoggerH
 			if log.Enabled(log.ErrorLevel) && statusCodeLogger.shouldLog(lw.status) {
 				log.FromContext(r.Context()).Errorf("%s %d error: %v", path, lw.status, lw.responsePayload.String())
 			}
-		})
-	}
-}
-
-func initHTTPServerMetrics() {
-	httpStatusTracingHandledMetric = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: "http",
-			Name:      "handled_total",
-			Help:      "Total number of HTTP responses served by the server.",
-		},
-		[]string{"method", "path", "status_code"},
-	)
-	prometheus.MustRegister(httpStatusTracingHandledMetric)
-	httpStatusTracingLatencyMetric = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: "component",
-			Subsystem: "http",
-			Name:      "handled_seconds",
-			Help:      "Latency of a completed HTTP response served by the server.",
-		},
-		[]string{"method", "path", "status_code"})
-	prometheus.MustRegister(httpStatusTracingLatencyMetric)
-}
-
-// NewRequestObserverMiddleware creates a MiddlewareFunc that captures status code and duration metrics about the responses returned;
-// metrics are exposed via Prometheus.
-// This middleware is enabled by default.
-func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
-	// register Promethus metrics on first use
-	httpStatusTracingInit.Do(initHTTPServerMetrics)
-
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			now := time.Now()
-			lw := newResponseWriter(w, false)
-			next.ServeHTTP(lw, r)
-
 			// collect metrics about HTTP server-side handling and latency
 			status := strconv.Itoa(lw.Status())
-			httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
-			httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
+			httpStatusTracingHandledMetric.WithLabelValues(r.Method, path, status).Inc()
+			httpStatusTracingLatencyMetric.WithLabelValues(r.Method, path, status).Observe(time.Since(now).Seconds())
 		})
 	}
 }
 
-// NewRateLimitingMiddleware creates a MiddlewareFunc that adds a rate limit to a route.
-func NewRateLimitingMiddleware(limiter *rate.Limiter) MiddlewareFunc {
+// NewRateLimiting creates a Func that adds a rate limit to a route.
+func NewRateLimiting(limiter *rate.Limiter) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !limiter.Allow() {
@@ -303,10 +284,10 @@ func selectByWeight(weighted map[float64]string) (string, error) {
 	return weighted[keys[len(keys)-1]], nil
 }
 
-// NewCompressionMiddleware initializes a compression middleware.
+// NewCompression initializes a compression middleware.
 // As per Section 3.5 of the HTTP/1.1 RFC, GZIP and Deflate compression methods are supported.
 // https://tools.ietf.org/html/rfc2616#section-14.3
-func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) MiddlewareFunc {
+func NewCompression(deflateLevel int, ignoreRoutes ...string) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ignore(ignoreRoutes, r.URL.String()) {
@@ -439,10 +420,10 @@ func (w *dynamicCompressionResponseWriter) Close() error {
 	return nil
 }
 
-// NewCachingMiddleware creates a cache layer as a middleware
+// NewCaching creates a cache layer as a middleware
 // when used as part of a middleware chain any middleware later in the chain,
 // will not be executed, but the headers it appends will be part of the cache
-func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
+func NewCaching(rc *cache.RouteCache) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != http.MethodGet {
@@ -458,8 +439,8 @@ func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
 	}
 }
 
-// MiddlewareChain chains middlewares to a handler func.
-func MiddlewareChain(f http.Handler, mm ...MiddlewareFunc) http.Handler {
+// Chain chains middlewares to a handler func.
+func Chain(f http.Handler, mm ...Func) http.Handler {
 	for i := len(mm) - 1; i >= 0; i-- {
 		f = mm[i](f)
 	}

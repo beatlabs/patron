@@ -4,13 +4,14 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/beatlabs/patron/component/http/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	route, err := NewRawRoute(http.MethodGet, "/api/", func(writer http.ResponseWriter, request *http.Request) {
+	route, err := v2.NewRoute(http.MethodGet, "/api/", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(200)
 	})
 	require.NoError(t, err)
@@ -41,13 +42,13 @@ func TestNew(t *testing.T) {
 func TestRoutes(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		routes []*Route
+		routes []*v2.Route
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{routes: profilingRoutes()}},
+		"success": {args: args{routes: []*v2.Route{{}, {}}}},
 		"fail":    {args: args{routes: nil}, expectedErr: "routes are empty"},
 	}
 	for name, tt := range tests {
@@ -68,13 +69,13 @@ func TestRoutes(t *testing.T) {
 func TestAliveCheck(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		acf AliveCheckFunc
+		acf v2.AliveCheckFunc
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{acf: func() AliveStatus { return Alive }}},
+		"success": {args: args{acf: func() v2.AliveStatus { return v2.Alive }}},
 		"fail":    {args: args{acf: nil}, expectedErr: "alive check function is nil"},
 	}
 	for name, tt := range tests {
@@ -95,13 +96,13 @@ func TestAliveCheck(t *testing.T) {
 func TestReadyCheck(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		rcf ReadyCheckFunc
+		rcf v2.ReadyCheckFunc
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{rcf: func() ReadyStatus { return Ready }}},
+		"success": {args: args{rcf: func() v2.ReadyStatus { return v2.Ready }}},
 		"fail":    {args: args{rcf: nil}, expectedErr: "ready check function is nil"},
 	}
 	for name, tt := range tests {

@@ -1,4 +1,4 @@
-package httprouter
+package middleware
 
 import (
 	"errors"

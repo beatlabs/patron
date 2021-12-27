@@ -3,23 +3,30 @@ package httprouter
 import (
 	"errors"
 
+	"github.com/beatlabs/patron/component/http/v2"
+	"github.com/beatlabs/patron/component/http/v2/middleware"
+	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
 )
+
+const defaultDeflateLevel = 6
 
 // OptionFunc definition to allow functional configuration of the router.
 type OptionFunc func(*Config) error
 
 // Config definition.
 type Config struct {
-	aliveCheckFunc AliveCheckFunc
-	readyCheckFunc ReadyCheckFunc
-	routes         []*Route
+	aliveCheckFunc v2.AliveCheckFunc
+	readyCheckFunc v2.ReadyCheckFunc
+	deflateLevel   int
+	routes         []*v2.Route
 }
 
 func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	cfg := &Config{
-		aliveCheckFunc: func() AliveStatus { return Alive },
-		readyCheckFunc: func() ReadyStatus { return Ready },
+		aliveCheckFunc: func() v2.AliveStatus { return v2.Alive },
+		readyCheckFunc: func() v2.ReadyStatus { return v2.Ready },
+		deflateLevel:   defaultDeflateLevel,
 	}
 
 	for _, option := range oo {
@@ -29,29 +36,44 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 		}
 	}
 
-	var stdRoutes []*Route
+	var stdRoutes []*v2.Route
 
 	mux := httprouter.New()
-	stdRoutes = append(stdRoutes, metricRoute())
-	stdRoutes = append(stdRoutes, profilingRoutes()...)
-	stdRoutes = append(stdRoutes, aliveCheckRoute(cfg.aliveCheckFunc))
-	stdRoutes = append(stdRoutes, readyCheckRoute(cfg.readyCheckFunc))
+	stdRoutes = append(stdRoutes, v2.MetricRoute())
+	stdRoutes = append(stdRoutes, v2.ProfilingRoutes()...)
+	stdRoutes = append(stdRoutes, v2.AliveCheckRoute(cfg.aliveCheckFunc))
+	stdRoutes = append(stdRoutes, v2.ReadyCheckRoute(cfg.readyCheckFunc))
 
 	for _, route := range stdRoutes {
-		// TODO: handle middlewares.
-		mux.HandlerFunc(route.method, route.path, route.handler)
+		handler := middleware.Chain(route.Handler(), route.Middlewares()...)
+		mux.Handler(route.Method(), route.Path(), handler)
+		log.Debugf("added route %s", route)
 	}
 
+	// TODO: we need something smarter
+	//// parse a list of HTTP numeric status codes that must be logged
+	//statusCodeLoggerCfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
+	//statusCodeLogger, err := middleware.newStatusCodeLoggerHandler(statusCodeLoggerCfg)
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to parse status codes %q: %w", cfg, err)
+	//}
+
 	for _, route := range cfg.routes {
-		// TODO: handle middlewares.
-		mux.HandlerFunc(route.method, route.path, route.handler)
+		middlewares := append([]middleware.Func{
+			middleware.NewRecovery(),
+			// middleware.NewLoggingTracing(route.path, statusCodeLogger),
+			middleware.NewCompression(cfg.deflateLevel),
+		}, route.Middlewares()...)
+		handler := middleware.Chain(route.Handler(), middlewares...)
+		mux.Handler(route.Method(), route.Path(), handler)
+		log.Debugf("added route %s", route)
 	}
 
 	return mux, nil
 }
 
 // Routes option for providing routes to the router.
-func Routes(routes ...*Route) OptionFunc {
+func Routes(routes ...*v2.Route) OptionFunc {
 	return func(cfg *Config) error {
 		if len(routes) == 0 {
 			return errors.New("routes are empty")
@@ -62,7 +84,7 @@ func Routes(routes ...*Route) OptionFunc {
 }
 
 // AliveCheck option for the router.
-func AliveCheck(acf AliveCheckFunc) OptionFunc {
+func AliveCheck(acf v2.AliveCheckFunc) OptionFunc {
 	return func(cfg *Config) error {
 		if acf == nil {
 			return errors.New("alive check function is nil")
@@ -73,12 +95,20 @@ func AliveCheck(acf AliveCheckFunc) OptionFunc {
 }
 
 // ReadyCheck option for the router.
-func ReadyCheck(rcf ReadyCheckFunc) OptionFunc {
+func ReadyCheck(rcf v2.ReadyCheckFunc) OptionFunc {
 	return func(cfg *Config) error {
 		if rcf == nil {
 			return errors.New("ready check function is nil")
 		}
 		cfg.readyCheckFunc = rcf
+		return nil
+	}
+}
+
+// DeflateLevel option for the compression middleware.
+func DeflateLevel(level int) OptionFunc {
+	return func(cfg *Config) error {
+		cfg.deflateLevel = level
 		return nil
 	}
 }

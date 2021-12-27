@@ -1,4 +1,4 @@
-package httprouter
+package v2
 
 import (
 	"net/http"
@@ -8,8 +8,21 @@ import (
 	"github.com/beatlabs/patron/cache/redis"
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
+	"github.com/beatlabs/patron/component/http/v2/middleware"
 	"github.com/stretchr/testify/assert"
 )
+
+type MockAuthenticator struct {
+	success bool
+	err     error
+}
+
+func (mo MockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
+	if mo.err != nil {
+		return false, mo.err
+	}
+	return mo.success, nil
+}
 
 func TestRateLimiting(t *testing.T) {
 	t.Parallel()
@@ -20,13 +33,13 @@ func TestRateLimiting(t *testing.T) {
 func TestRouteMiddlewares(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		mm []MiddlewareFunc
+		mm []middleware.Func
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{mm: []MiddlewareFunc{NewRecoveryMiddleware()}}},
+		"success": {args: args{mm: []middleware.Func{middleware.NewRecovery()}}},
 		"fail":    {args: args{mm: nil}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {

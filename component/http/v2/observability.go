@@ -1,4 +1,4 @@
-package httprouter
+package v2
 
 import (
 	"expvar"
@@ -13,12 +13,12 @@ const (
 	metricsPath = "/metrics"
 )
 
-func metricRoute() *Route {
+func MetricRoute() *Route {
 	route, _ := NewRoute(http.MethodGet, metricsPath, promhttp.Handler().ServeHTTP)
 	return route
 }
 
-func profilingRoutes() []*Route {
+func ProfilingRoutes() []*Route {
 	var routes []*Route
 
 	routeFunc := func(path string, handler http.HandlerFunc) *Route {

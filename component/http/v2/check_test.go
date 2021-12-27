@@ -1,4 +1,4 @@
-package httprouter
+package v2
 
 import (
 	"net/http"
@@ -20,7 +20,7 @@ func Test_aliveCheckRoute(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			route := aliveCheckRoute(tt.acf)
+			route := AliveCheckRoute(tt.acf)
 			assert.Equal(t, http.MethodGet, route.method)
 			assert.Equal(t, "/alive", route.path)
 
@@ -46,7 +46,7 @@ func Test_readyCheckRoute(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			route := readyCheckRoute(tt.rcf)
+			route := ReadyCheckRoute(tt.rcf)
 			assert.Equal(t, http.MethodGet, route.method)
 			assert.Equal(t, "/ready", route.path)
 

@@ -1,4 +1,4 @@
-package httprouter
+package v2
 
 import (
 	"fmt"
@@ -6,13 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_metricRoute(t *testing.T) {
-	route := metricRoute()
+	route := MetricRoute()
 	assert.Equal(t, http.MethodGet, route.method)
 	assert.Equal(t, "/metrics", route.path)
 
@@ -26,10 +25,11 @@ func Test_metricRoute(t *testing.T) {
 }
 
 func Test_profilingRoutes(t *testing.T) {
-	mux := httprouter.New()
+	t.Parallel()
+	mux := http.NewServeMux()
 
-	for _, route := range profilingRoutes() {
-		mux.HandlerFunc(route.method, route.path, route.handler)
+	for _, route := range ProfilingRoutes() {
+		mux.HandleFunc(route.path, route.handler)
 	}
 
 	server := httptest.NewServer(mux)

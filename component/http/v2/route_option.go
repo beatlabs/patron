@@ -1,4 +1,4 @@
-package httprouter
+package v2
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
+	"github.com/beatlabs/patron/component/http/v2/middleware"
 	errs "github.com/beatlabs/patron/errors"
 	"golang.org/x/time/rate"
 )
@@ -14,13 +15,13 @@ import (
 // RateLimiting option for setting a route rate limiter.
 func RateLimiting(limit float64, burst int) RouteOptionFunc {
 	return func(r *Route) error {
-		r.middlewares = append(r.middlewares, NewRateLimitingMiddleware(rate.NewLimiter(rate.Limit(limit), burst)))
+		r.middlewares = append(r.middlewares, middleware.NewRateLimiting(rate.NewLimiter(rate.Limit(limit), burst)))
 		return nil
 	}
 }
 
 // Middlewares option for setting the route middlewares.
-func Middlewares(mm ...MiddlewareFunc) RouteOptionFunc {
+func Middlewares(mm ...middleware.Func) RouteOptionFunc {
 	return func(r *Route) error {
 		if len(mm) == 0 {
 			return errors.New("middlewares are empty")
@@ -36,7 +37,7 @@ func Auth(auth auth.Authenticator) RouteOptionFunc {
 		if auth == nil {
 			return errors.New("authenticator is nil")
 		}
-		r.middlewares = append(r.middlewares, NewAuthMiddleware(auth))
+		r.middlewares = append(r.middlewares, middleware.NewAuth(auth))
 		return nil
 	}
 }
@@ -51,7 +52,7 @@ func Cache(cache cache.TTLCache, ageBounds httpcache.Age) RouteOptionFunc {
 		if len(ee) != 0 {
 			return errs.Aggregate(ee...)
 		}
-		r.middlewares = append(r.middlewares, NewCachingMiddleware(rc))
+		r.middlewares = append(r.middlewares, middleware.NewCaching(rc))
 		return nil
 	}
 }

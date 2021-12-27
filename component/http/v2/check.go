@@ -1,4 +1,4 @@
-package httprouter
+package v2
 
 import (
 	"net/http"
@@ -32,7 +32,7 @@ type ReadyCheckFunc func() ReadyStatus
 // AliveCheckFunc defines a function type for implementing a liveness check.
 type AliveCheckFunc func() AliveStatus
 
-func aliveCheckRoute(acf AliveCheckFunc) *Route {
+func AliveCheckRoute(acf AliveCheckFunc) *Route {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch acf() {
 		case Alive:
@@ -47,7 +47,7 @@ func aliveCheckRoute(acf AliveCheckFunc) *Route {
 	return route
 }
 
-func readyCheckRoute(rcf ReadyCheckFunc) *Route {
+func ReadyCheckRoute(rcf ReadyCheckFunc) *Route {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch rcf() {
 		case Ready:

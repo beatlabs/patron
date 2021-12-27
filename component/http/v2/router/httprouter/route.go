@@ -6,75 +6,12 @@ import (
 	"net/http"
 	"os"
 
+	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/julienschmidt/httprouter"
 )
 
-// RouteOptionFunc definition for configuring the route in a functional way.
-type RouteOptionFunc func(route *Route) error
-
-// Route definition of a HTTP route.
-type Route struct {
-	path        string
-	method      string
-	handler     http.HandlerFunc
-	middlewares []MiddlewareFunc
-}
-
-// NewRawRoute creates a new raw route with functional configuration.
-func NewRawRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
-	if method == "" {
-		return nil, errors.New("method is empty")
-	}
-
-	if path == "" {
-		return nil, errors.New("path is empty")
-	}
-
-	if handler == nil {
-		return nil, errors.New("handler is nil")
-	}
-
-	route := &Route{
-		method:      method,
-		path:        path,
-		handler:     handler,
-		middlewares: []MiddlewareFunc{NewRecoveryMiddleware()},
-	}
-
-	for _, option := range oo {
-		err := option(route)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return route, nil
-}
-
-// NewRoute returns a route that has default middlewares injected.
-func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
-	// TODO: we need something smarter
-	// parse a list of HTTP numeric status codes that must be logged
-	cfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
-	statusCodeLogger, err := newStatusCodeLoggerHandler(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse status codes %q: %w", cfg, err)
-	}
-
-	// prepend standard middlewares
-	oo = append([]RouteOptionFunc{Middlewares(NewLoggingTracingMiddleware(path, statusCodeLogger),
-		NewRequestObserverMiddleware(method, path))}, oo...)
-
-	route, err := NewRawRoute(method, path, handler, oo...)
-	if err != nil {
-		return nil, err
-	}
-
-	return route, nil
-}
-
 // NewFileServerRoute returns a route that acts as a file server.
-func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*Route, error) {
+func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*v2.Route, error) {
 	if path == "" {
 		return nil, errors.New("path is empty")
 	}
@@ -130,5 +67,5 @@ func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*Ro
 		http.ServeFile(w, r, path)
 	}
 
-	return NewRawRoute(http.MethodGet, path, handler)
+	return v2.NewRoute(http.MethodGet, path, handler)
 }

@@ -61,7 +61,6 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 
 	for _, route := range cfg.routes {
 		middlewares := append([]patronhttp.Func{
-			patronhttp.NewRecovery(),
 			// middleware.NewLoggingTracing(route.path, statusCodeLogger),
 			patronhttp.NewRequestObserver(route.Method(), route.Path()),
 			patronhttp.NewCompression(cfg.deflateLevel),

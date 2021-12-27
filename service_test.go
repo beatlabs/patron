@@ -351,7 +351,6 @@ func (ts testComponent) Run(_ context.Context) error {
 }
 
 func TestLogFields(t *testing.T) {
-	t.Parallel()
 	defaultFields := defaultLogFields("test", "1.0")
 	fields := map[string]interface{}{"key": "value"}
 	fields1 := defaultLogFields("name1", "version1")
@@ -368,7 +367,6 @@ func TestLogFields(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 			cfg := Config{fields: defaultFields}
 			LogFields(tt.args.fields)(&cfg)
 			assert.Equal(t, tt.want, cfg)

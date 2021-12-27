@@ -391,6 +391,9 @@ func setupJaegerTracing(name, version string) error {
 }
 
 // WithRoutesBuilder adds routes builder to the default HTTP component.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func (b *Builder) WithRoutesBuilder(rb *patronhttp.RoutesBuilder) *Builder {
 	if rb == nil {
 		b.errors = append(b.errors, errors.New("routes builder is nil"))
@@ -403,6 +406,9 @@ func (b *Builder) WithRoutesBuilder(rb *patronhttp.RoutesBuilder) *Builder {
 }
 
 // WithMiddlewares adds generic middlewares to the default HTTP component.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func (b *Builder) WithMiddlewares(mm ...middleware.Func) *Builder {
 	if len(mm) == 0 {
 		b.errors = append(b.errors, errors.New("provided middlewares slice was empty"))
@@ -415,6 +421,9 @@ func (b *Builder) WithMiddlewares(mm ...middleware.Func) *Builder {
 }
 
 // WithAliveCheck overrides the default liveness check of the default HTTP component.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func (b *Builder) WithAliveCheck(acf patronhttp.AliveCheckFunc) *Builder {
 	if acf == nil {
 		b.errors = append(b.errors, errors.New("alive check func provided was nil"))
@@ -427,6 +436,9 @@ func (b *Builder) WithAliveCheck(acf patronhttp.AliveCheckFunc) *Builder {
 }
 
 // WithReadyCheck overrides the default readiness check of the default HTTP component.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func (b *Builder) WithReadyCheck(rcf patronhttp.ReadyCheckFunc) *Builder {
 	if rcf == nil {
 		b.errors = append(b.errors, errors.New("ready check func provided was nil"))
@@ -462,7 +474,10 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	return b
 }
 
-// WithUncompressedPaths defines a list of paths which the compression middleware will skip.
+// WithUncompressedPaths defines a list of paths which the compre ssion middleware will skip.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
 	if len(p) == 0 {
 		b.errors = append(b.errors, errors.New("provided uncompressed paths slice was empty"))
@@ -474,7 +489,7 @@ func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
 	return b
 }
 
-// WithRouter replaces the default v1 HTTP component with a new component based on http.Handler.
+// WithRouter replaces the default v1 HTTP component with a new component v2 based on http.Handler.
 func (b *Builder) WithRouter(handler http.Handler) *Builder {
 	if handler == nil {
 		b.errors = append(b.errors, errors.New("provided router is nil"))

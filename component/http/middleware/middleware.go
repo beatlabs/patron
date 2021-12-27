@@ -159,6 +159,18 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Fu
 	}
 }
 
+func NewInjectObservability() Func {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			corID := correlation.GetOrSetHeaderID(r.Header)
+			ctx := correlation.ContextWithID(r.Context(), corID)
+			logger := log.Sub(map[string]interface{}{correlation.ID: corID})
+			ctx = log.WithContext(ctx, logger)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
 func initHTTPServerMetrics() {
 	httpStatusTracingHandledMetric = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -491,7 +503,7 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 		"remote-address": remoteAddr,
 		"proto":          r.Proto,
 	}
-	log.Sub(info).Debug()
+	log.FromContext(r.Context()).Sub(info).Debug()
 }
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {

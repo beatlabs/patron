@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/beatlabs/patron"
-	patronhttp "github.com/beatlabs/patron/component/http"
+	v2 "github.com/beatlabs/patron/component/http/v2"
+	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
 	"github.com/beatlabs/patron/log"
 )
 
@@ -49,33 +51,43 @@ func main() {
 	service, err := patron.New(name, version)
 	handle(err)
 
-	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewRouteBuilder("/foo", rnd).MethodGet()).
-		Append(patronhttp.NewRouteBuilder("/bar", rnd).MethodGet()).
-		Append(patronhttp.NewRouteBuilder("/hello", hello).MethodGet())
+	var routes v2.Routes
+	routes.Append(v2.NewGetRoute("/foo", rnd))
+	routes.Append(v2.NewGetRoute("/bar", rnd))
+	routes.Append(v2.NewGetRoute("/hello", hello))
+	rr, err := routes.Result()
+	if err != nil {
+		log.Fatalf("failed to create routes: %v", err)
+	}
+
+	router, err := httprouter.New(httprouter.Routes(rr...))
+	if err != nil {
+		log.Fatalf("failed to create http router: %v", err)
+	}
 
 	ctx := context.Background()
-	err = service.
-		WithRoutesBuilder(routesBuilder).
-		WithUncompressedPaths("/bar").
-		Run(ctx)
+	err = service.WithRouter(router).Run(ctx)
 	handle(err)
 }
 
-// creates some random data to send back
-func rnd(_ context.Context, _ *patronhttp.Request) (*patronhttp.Response, error) {
+func rnd(rw http.ResponseWriter, _ *http.Request) {
 	rand.Seed(time.Now().UnixNano())
 	data := make([]byte, 1<<20)
 	_, err := rand.Read(data)
 	if err != nil {
-		return nil, err
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	return patronhttp.NewResponse(data), nil
+	rw.WriteHeader(http.StatusCreated)
+	_, _ = rw.Write(data)
+	return
 }
 
-func hello(_ context.Context, _ *patronhttp.Request) (*patronhttp.Response, error) {
-	return patronhttp.NewResponse("hello!"), nil
+func hello(rw http.ResponseWriter, _ *http.Request) {
+	rw.WriteHeader(http.StatusCreated)
+	_, _ = rw.Write([]byte("hello!"))
+	return
 }
 
 func handle(err error) {

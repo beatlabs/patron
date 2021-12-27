@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/beatlabs/patron/component/http/middleware"
 	"github.com/beatlabs/patron/component/http/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -126,4 +127,31 @@ func TestDeflateLevel(t *testing.T) {
 	err := DeflateLevel(10)(cfg)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, cfg.deflateLevel)
+}
+
+func TestMiddlewares(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		mm []middleware.Func
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success": {args: args{mm: []middleware.Func{func(next http.Handler) http.Handler { return next }}}},
+		"fail":    {args: args{mm: nil}, expectedErr: "middlewares are empty"},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			cfg := &Config{}
+			err := Middlewares(tt.args.mm...)(cfg)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				assert.Len(t, cfg.middlewares, 1)
+			}
+		})
+	}
 }

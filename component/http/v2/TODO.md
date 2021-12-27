@@ -1,6 +1,0 @@
-- middlewares support and standard middlewares and chains before, after, etc
-    - CORS
-- SPA support
-- CORS
-- tests - obviously
-- mux option to override the existing one

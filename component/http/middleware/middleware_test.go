@@ -278,7 +278,8 @@ func TestNewCompressionMiddleware(t *testing.T) {
 		"deflate": {cm: NewCompression(8)},
 	}
 
-	for name, tc := range tests {
+	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Add("Content-Length", "123")
@@ -288,7 +289,7 @@ func TestNewCompressionMiddleware(t *testing.T) {
 			assert.NoError(t, err)
 
 			req.Header.Set("Accept-Encoding", name)
-			compressionMiddleware := tc.cm
+			compressionMiddleware := tt.cm
 			assert.NoError(t, err)
 			assert.NotNil(t, compressionMiddleware)
 
@@ -372,24 +373,25 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("%d - %s", tc.status, tc.expectedEncoding), func(t *testing.T) {
+	for _, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("%d - %s", tt.status, tt.expectedEncoding), func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(tc.status)
+				w.WriteHeader(tt.status)
 			})
 
-			compressionMiddleware := tc.cm
+			compressionMiddleware := tt.cm
 			assert.NotNil(t, compressionMiddleware)
 			s := httptest.NewServer(compressionMiddleware(handler))
 			defer s.Close()
 
 			req, err := http.NewRequest("GET", s.URL, nil)
 			assert.NoError(t, err)
-			req.Header.Set("Accept-Encoding", tc.acceptEncoding)
+			req.Header.Set("Accept-Encoding", tt.acceptEncoding)
 
 			resp, err := s.Client().Do(req)
 			assert.Nil(t, err)
-			assert.Equal(t, tc.expectedEncoding, resp.Header.Get("Content-Encoding"))
+			assert.Equal(t, tt.expectedEncoding, resp.Header.Get("Content-Encoding"))
 		})
 	}
 }

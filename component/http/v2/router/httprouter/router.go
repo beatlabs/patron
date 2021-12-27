@@ -21,12 +21,11 @@ type Config struct {
 	aliveCheckFunc v2.AliveCheckFunc
 	readyCheckFunc v2.ReadyCheckFunc
 	deflateLevel   int
+	middlewares    []middleware.Func
 	routes         []*v2.Route
 }
 
 func New(oo ...OptionFunc) (*httprouter.Router, error) {
-	// TODO: we need something smarter
-
 	cfg := &Config{
 		aliveCheckFunc: func() v2.AliveStatus { return v2.Alive },
 		readyCheckFunc: func() v2.ReadyStatus { return v2.Ready },
@@ -49,7 +48,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	stdRoutes = append(stdRoutes, v2.ReadyCheckRoute(cfg.readyCheckFunc))
 
 	for _, route := range stdRoutes {
-		handler := middleware.Chain(route.Handler(), route.Middlewares()...)
+		handler := middleware.Chain(route.Handler(), middleware.NewRecovery())
 		mux.Handler(route.Method(), route.Path(), handler)
 		log.Debugf("added route %s", route)
 	}
@@ -62,14 +61,22 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	}
 
 	for _, route := range cfg.routes {
-		middlewares := append(route.Middlewares(), []middleware.Func{
+		// add standard middlewares
+		middlewares := []middleware.Func{
+			middleware.NewRecovery(),
+			middleware.NewInjectObservability(),
 			middleware.NewLoggingTracing(route.Path(), statusCodeLogger),
 			middleware.NewRequestObserver(route.Method(), route.Path()),
 			middleware.NewCompression(cfg.deflateLevel),
-		}...)
+		}
+		// add router middlewares
+		middlewares = append(middlewares, cfg.middlewares...)
+		// add route middlewares
+		middlewares = append(middlewares, route.Middlewares()...)
+		// chain all middlewares to the handler
 		handler := middleware.Chain(route.Handler(), middlewares...)
 		mux.Handler(route.Method(), route.Path(), handler)
-		log.Debugf("added route %s", route)
+		log.Debugf("added route %s with %d middlewares", route, len(middlewares))
 	}
 
 	return mux, nil
@@ -112,6 +119,17 @@ func ReadyCheck(rcf v2.ReadyCheckFunc) OptionFunc {
 func DeflateLevel(level int) OptionFunc {
 	return func(cfg *Config) error {
 		cfg.deflateLevel = level
+		return nil
+	}
+}
+
+// Middlewares option for middlewares.
+func Middlewares(mm ...middleware.Func) OptionFunc {
+	return func(cfg *Config) error {
+		if len(mm) == 0 {
+			return errors.New("middlewares are empty")
+		}
+		cfg.middlewares = mm
 		return nil
 	}
 }

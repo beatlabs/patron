@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	patronhttp "github.com/beatlabs/patron/component/http/middleware"
+	patronerrors "github.com/beatlabs/patron/errors"
 )
 
 // RouteOptionFunc definition for configuring the route in a functional way.
@@ -53,10 +54,9 @@ func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFu
 	}
 
 	route := &Route{
-		method:      method,
-		path:        path,
-		handler:     handler,
-		middlewares: []patronhttp.Func{patronhttp.NewRecovery()},
+		method:  method,
+		path:    path,
+		handler: handler,
 	}
 
 	for _, option := range oo {
@@ -67,4 +67,73 @@ func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFu
 	}
 
 	return route, nil
+}
+
+// NewGetRoute constructor.
+func NewGetRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+	return NewRoute(http.MethodGet, path, handler, oo...)
+}
+
+// NewHeadRoute constructor.
+func NewHeadRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+	return NewRoute(http.MethodHead, path, handler, oo...)
+}
+
+// NewPostRoute constructor.
+func NewPostRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+	return NewRoute(http.MethodPost, path, handler, oo...)
+}
+
+// NewPutRoute constructor.
+func NewPutRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+	return NewRoute(http.MethodPut, path, handler, oo...)
+}
+
+// NewPatchRoute constructor.
+func NewPatchRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+	return NewRoute(http.MethodPatch, path, handler, oo...)
+}
+
+// NewDeleteRoute constructor.
+func NewDeleteRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+	return NewRoute(http.MethodDelete, path, handler, oo...)
+}
+
+// NewConnectRoute constructor.
+func NewConnectRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+	return NewRoute(http.MethodConnect, path, handler, oo...)
+}
+
+// NewOptionsRoute constructor.
+func NewOptionsRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+	return NewRoute(http.MethodOptions, path, handler, oo...)
+}
+
+// NewTraceRoute constructor.
+func NewTraceRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
+	return NewRoute(http.MethodTrace, path, handler, oo...)
+}
+
+// Routes definition.
+type Routes struct {
+	routes []*Route
+	ee     []error
+}
+
+// Append route.
+func (r *Routes) Append(route *Route, err error) {
+	if err != nil {
+		r.ee = append(r.ee, err)
+		return
+	}
+	if route == nil {
+		r.ee = append(r.ee, errors.New("route is nil"))
+		return
+	}
+	r.routes = append(r.routes, route)
+}
+
+// Result of the route aggregation.
+func (r *Routes) Result() ([]*Route, error) {
+	return r.routes, patronerrors.Aggregate(r.ee...)
 }

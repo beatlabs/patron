@@ -46,7 +46,7 @@ var (
 	httpStatusTracingLatencyMetric *prometheus.HistogramVec
 )
 
-type ResponseWriter struct {
+type responseWriter struct {
 	status              int
 	statusHeaderWritten bool
 	capturePayload      bool
@@ -54,22 +54,22 @@ type ResponseWriter struct {
 	writer              http.ResponseWriter
 }
 
-func NewResponseWriter(w http.ResponseWriter, capturePayload bool) *ResponseWriter {
-	return &ResponseWriter{status: -1, statusHeaderWritten: false, writer: w, capturePayload: capturePayload}
+func newResponseWriter(w http.ResponseWriter, capturePayload bool) *responseWriter {
+	return &responseWriter{status: -1, statusHeaderWritten: false, writer: w, capturePayload: capturePayload}
 }
 
 // Status returns the http response status.
-func (w *ResponseWriter) Status() int {
+func (w *responseWriter) Status() int {
 	return w.status
 }
 
 // Header returns the Header.
-func (w *ResponseWriter) Header() http.Header {
+func (w *responseWriter) Header() http.Header {
 	return w.writer.Header()
 }
 
-// Write to the internal ResponseWriter and sets the status if not set already.
-func (w *ResponseWriter) Write(d []byte) (int, error) {
+// Write to the internal responseWriter and sets the status if not set already.
+func (w *responseWriter) Write(d []byte) (int, error) {
 	if !w.statusHeaderWritten {
 		w.status = http.StatusOK
 		w.statusHeaderWritten = true
@@ -88,7 +88,7 @@ func (w *ResponseWriter) Write(d []byte) (int, error) {
 }
 
 // WriteHeader writes the internal Header and saves the status for retrieval.
-func (w *ResponseWriter) WriteHeader(code int) {
+func (w *responseWriter) WriteHeader(code int) {
 	w.status = code
 	w.writer.WriteHeader(code)
 	w.statusHeaderWritten = true
@@ -148,7 +148,7 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Fu
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			corID := correlation.GetOrSetHeaderID(r.Header)
 			sp, r := span(path, corID, r)
-			lw := NewResponseWriter(w, true)
+			lw := newResponseWriter(w, true)
 			next.ServeHTTP(lw, r)
 			finishSpan(sp, lw.Status(), &lw.responsePayload)
 			logRequestResponse(corID, lw, r)
@@ -191,7 +191,7 @@ func NewRequestObserver(method, path string) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			now := time.Now()
-			lw := NewResponseWriter(w, false)
+			lw := newResponseWriter(w, false)
 			next.ServeHTTP(lw, r)
 
 			// collect metrics about HTTP server-side handling and latency
@@ -473,7 +473,7 @@ func Chain(f http.Handler, mm ...Func) http.Handler {
 	return f
 }
 
-func logRequestResponse(corID string, w *ResponseWriter, r *http.Request) {
+func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 	if !log.Enabled(log.DebugLevel) {
 		return
 	}

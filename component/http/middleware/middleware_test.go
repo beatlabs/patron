@@ -82,7 +82,7 @@ func TestMiddlewareChain(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rc := httptest.NewRecorder()
-			rw := NewResponseWriter(rc, true)
+			rw := newResponseWriter(rc, true)
 			tt.args.next = Chain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
@@ -122,7 +122,7 @@ func TestMiddlewares(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rc := httptest.NewRecorder()
-			rw := NewResponseWriter(rc, true)
+			rw := newResponseWriter(rc, true)
 			tt.args.next = Chain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
@@ -166,7 +166,7 @@ func TestSpanLogError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mtr.Reset()
 			rc := httptest.NewRecorder()
-			rw := NewResponseWriter(rc, true)
+			rw := newResponseWriter(rc, true)
 			tt.args.next = Chain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
@@ -183,7 +183,7 @@ func TestSpanLogError(t *testing.T) {
 
 func TestResponseWriter(t *testing.T) {
 	rc := httptest.NewRecorder()
-	rw := NewResponseWriter(rc, true)
+	rw := newResponseWriter(rc, true)
 
 	_, err := rw.Write([]byte("test"))
 	assert.NoError(t, err)
@@ -726,15 +726,15 @@ func TestSetResponseWriterStatusOnResponseFailWrite(t *testing.T) {
 
 	tests := []struct {
 		Name           string
-		ResponseWriter *ResponseWriter
+		ResponseWriter *responseWriter
 	}{
 		{
-			Name:           "Failing ResponseWriter with http.ResponseWriter",
-			ResponseWriter: NewResponseWriter(failWriter, false),
+			Name:           "Failing responseWriter with http.responseWriter",
+			ResponseWriter: newResponseWriter(failWriter, false),
 		},
 		{
-			Name:           "Failing ResponseWriter with http.ResponseWriter",
-			ResponseWriter: NewResponseWriter(failDynamicCompressionResponseWriter, false),
+			Name:           "Failing responseWriter with http.responseWriter",
+			ResponseWriter: newResponseWriter(failDynamicCompressionResponseWriter, false),
 		},
 	}
 

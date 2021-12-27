@@ -90,7 +90,7 @@ func TestCachingMiddleware(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rc := httptest.NewRecorder()
-			rw := middleware.NewResponseWriter(rc, true)
+			rw := &stubResponseWriter{writer: rc}
 			tt.args.next = middleware.Chain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, tt.r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
@@ -553,4 +553,38 @@ func (t *testingCache) SetTTL(key string, value interface{}, ttl time.Duration) 
 
 func (t *testingCache) size() int {
 	return len(t.cache)
+}
+
+type stubResponseWriter struct {
+	status              int
+	statusHeaderWritten bool
+	writer              http.ResponseWriter
+}
+
+func (w *stubResponseWriter) Status() int {
+	return w.status
+}
+
+func (w *stubResponseWriter) Header() http.Header {
+	return w.writer.Header()
+}
+
+func (w *stubResponseWriter) Write(d []byte) (int, error) {
+	if !w.statusHeaderWritten {
+		w.status = http.StatusOK
+		w.statusHeaderWritten = true
+	}
+
+	value, err := w.writer.Write(d)
+	if err != nil {
+		return value, err
+	}
+
+	return value, err
+}
+
+func (w *stubResponseWriter) WriteHeader(code int) {
+	w.status = code
+	w.writer.WriteHeader(code)
+	w.statusHeaderWritten = true
 }

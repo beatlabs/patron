@@ -24,8 +24,7 @@ func Test_metricRoute(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.Code)
 }
 
-func Test_profilingRoutes(t *testing.T) {
-	t.Parallel()
+func TestProfilingRoutes(t *testing.T) {
 	mux := http.NewServeMux()
 
 	for _, route := range ProfilingRoutes() {

@@ -44,6 +44,9 @@ func (r Route) Handler() http.HandlerFunc {
 }
 
 // RouteBuilder for building a route.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type RouteBuilder struct {
 	method        string
 	path          string
@@ -202,6 +205,9 @@ func (rb *RouteBuilder) Build() (Route, error) {
 }
 
 // NewFileServer constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewFileServer(path string, assetsDir string, fallbackPath string) *RouteBuilder {
 	var ee []error
 
@@ -258,6 +264,9 @@ func NewFileServer(path string, assetsDir string, fallbackPath string) *RouteBui
 }
 
 // NewRawRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 	var ee []error
 
@@ -273,6 +282,9 @@ func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 }
 
 // NewRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	var ee []error
 
@@ -287,52 +299,82 @@ func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return &RouteBuilder{path: path, errors: ee, handler: handler(processor)}
 }
 
-// NewGetRouteBuilder constructor.
+// NewGetRouteBuilder constructor
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewGetRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodGet()
 }
 
 // NewHeadRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewHeadRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodHead()
 }
 
 // NewPostRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewPostRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodPost()
 }
 
 // NewPutRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewPutRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodPut()
 }
 
 // NewPatchRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewPatchRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodPatch()
 }
 
 // NewDeleteRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewDeleteRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodDelete()
 }
 
 // NewConnectRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewConnectRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodConnect()
 }
 
 // NewOptionsRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewOptionsRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodOptions()
 }
 
 // NewTraceRouteBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewTraceRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodTrace()
 }
 
 // RoutesBuilder creates a list of routes.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type RoutesBuilder struct {
 	routes []Route
 	errors []error
@@ -371,6 +413,9 @@ func (rb *RoutesBuilder) Build() ([]Route, error) {
 }
 
 // NewRoutesBuilder constructor.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewRoutesBuilder() *RoutesBuilder {
 	return &RoutesBuilder{}
 }

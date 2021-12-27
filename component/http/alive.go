@@ -5,6 +5,9 @@ import (
 )
 
 // AliveStatus type representing the liveness of the service via HTTP component.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type AliveStatus int
 
 const (
@@ -18,6 +21,9 @@ const (
 )
 
 // AliveCheckFunc defines a function type for implementing a liveness check.
+//
+// Deprecated: Pls use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type AliveCheckFunc func() AliveStatus
 
 func aliveCheckRoute(acf AliveCheckFunc) *RouteBuilder {

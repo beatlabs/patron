@@ -119,3 +119,11 @@ func TestReadyCheck(t *testing.T) {
 		})
 	}
 }
+
+func TestDeflateLevel(t *testing.T) {
+	t.Parallel()
+	cfg := &Config{}
+	err := DeflateLevel(10)(cfg)
+	assert.NoError(t, err)
+	assert.Equal(t, 10, cfg.deflateLevel)
+}

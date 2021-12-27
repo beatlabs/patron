@@ -2,10 +2,11 @@ package httprouter
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
-	patronhttp "github.com/beatlabs/patron/component/http/middleware"
+	"github.com/beatlabs/patron/component/http/middleware"
 	"github.com/beatlabs/patron/component/http/v2"
-
 	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
 )
@@ -24,6 +25,8 @@ type Config struct {
 }
 
 func New(oo ...OptionFunc) (*httprouter.Router, error) {
+	// TODO: we need something smarter
+
 	cfg := &Config{
 		aliveCheckFunc: func() v2.AliveStatus { return v2.Alive },
 		readyCheckFunc: func() v2.ReadyStatus { return v2.Ready },
@@ -46,26 +49,25 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	stdRoutes = append(stdRoutes, v2.ReadyCheckRoute(cfg.readyCheckFunc))
 
 	for _, route := range stdRoutes {
-		handler := patronhttp.Chain(route.Handler(), route.Middlewares()...)
+		handler := middleware.Chain(route.Handler(), route.Middlewares()...)
 		mux.Handler(route.Method(), route.Path(), handler)
 		log.Debugf("added route %s", route)
 	}
 
-	// TODO: we need something smarter
-	//// parse a list of HTTP numeric status codes that must be logged
-	//statusCodeLoggerCfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
-	//statusCodeLogger, err := middleware.newStatusCodeLoggerHandler(statusCodeLoggerCfg)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to parse status codes %q: %w", cfg, err)
-	//}
+	// parse a list of HTTP numeric status codes that must be logged
+	statusCodeLoggerCfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
+	statusCodeLogger, err := middleware.NewStatusCodeLoggerHandler(statusCodeLoggerCfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse status codes %s: %w", statusCodeLoggerCfg, err)
+	}
 
 	for _, route := range cfg.routes {
-		middlewares := append([]patronhttp.Func{
-			// middleware.NewLoggingTracing(route.path, statusCodeLogger),
-			patronhttp.NewRequestObserver(route.Method(), route.Path()),
-			patronhttp.NewCompression(cfg.deflateLevel),
+		middlewares := append([]middleware.Func{
+			middleware.NewLoggingTracing(route.Path(), statusCodeLogger),
+			middleware.NewRequestObserver(route.Method(), route.Path()),
+			middleware.NewCompression(cfg.deflateLevel),
 		}, route.Middlewares()...)
-		handler := patronhttp.Chain(route.Handler(), middlewares...)
+		handler := middleware.Chain(route.Handler(), middlewares...)
 		mux.Handler(route.Method(), route.Path(), handler)
 		log.Debugf("added route %s", route)
 	}

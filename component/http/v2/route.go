@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/beatlabs/patron/component/http/v2/middleware"
+	patronhttp "github.com/beatlabs/patron/component/http"
 )
 
 // RouteOptionFunc definition for configuring the route in a functional way.
@@ -15,7 +15,7 @@ type Route struct {
 	method      string
 	path        string
 	handler     http.HandlerFunc
-	middlewares []middleware.Func
+	middlewares []patronhttp.MiddlewareFunc
 }
 
 func (r Route) Method() string {
@@ -30,7 +30,7 @@ func (r Route) Handler() http.HandlerFunc {
 	return r.handler
 }
 
-func (r Route) Middlewares() []middleware.Func {
+func (r Route) Middlewares() []patronhttp.MiddlewareFunc {
 	return r.middlewares
 }
 
@@ -56,7 +56,7 @@ func NewRoute(method, path string, handler http.HandlerFunc, oo ...RouteOptionFu
 		method:      method,
 		path:        path,
 		handler:     handler,
-		middlewares: []middleware.Func{middleware.NewRecovery()},
+		middlewares: []patronhttp.MiddlewareFunc{patronhttp.NewRecoveryMiddleware()},
 	}
 
 	for _, option := range oo {

@@ -3,8 +3,9 @@ package httprouter
 import (
 	"errors"
 
+	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/v2"
-	"github.com/beatlabs/patron/component/http/v2/middleware"
+
 	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
 )
@@ -45,7 +46,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	stdRoutes = append(stdRoutes, v2.ReadyCheckRoute(cfg.readyCheckFunc))
 
 	for _, route := range stdRoutes {
-		handler := middleware.Chain(route.Handler(), route.Middlewares()...)
+		handler := patronhttp.MiddlewareChain(route.Handler(), route.Middlewares()...)
 		mux.Handler(route.Method(), route.Path(), handler)
 		log.Debugf("added route %s", route)
 	}
@@ -59,12 +60,12 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	//}
 
 	for _, route := range cfg.routes {
-		middlewares := append([]middleware.Func{
-			middleware.NewRecovery(),
+		middlewares := append([]patronhttp.MiddlewareFunc{
+			patronhttp.NewRecoveryMiddleware(),
 			// middleware.NewLoggingTracing(route.path, statusCodeLogger),
-			middleware.NewCompression(cfg.deflateLevel),
+			patronhttp.NewCompressionMiddleware(cfg.deflateLevel),
 		}, route.Middlewares()...)
-		handler := middleware.Chain(route.Handler(), middlewares...)
+		handler := patronhttp.MiddlewareChain(route.Handler(), middlewares...)
 		mux.Handler(route.Method(), route.Path(), handler)
 		log.Debugf("added route %s", route)
 	}

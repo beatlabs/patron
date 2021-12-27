@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/beatlabs/patron"
+	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
 	"github.com/beatlabs/patron/log"
 )
@@ -39,7 +40,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	route, err := httprouter.NewRoute(http.MethodGet, "/api/search", func(writer http.ResponseWriter, request *http.Request) {
+	route, err := v2.NewRoute(http.MethodGet, "/api/search", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
 		_, _ = fmt.Fprint(writer, "articles")
 	})

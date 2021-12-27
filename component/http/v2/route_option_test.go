@@ -6,9 +6,9 @@ import (
 
 	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/cache/redis"
+	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
-	"github.com/beatlabs/patron/component/http/v2/middleware"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,13 +33,13 @@ func TestRateLimiting(t *testing.T) {
 func TestRouteMiddlewares(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		mm []middleware.Func
+		mm []patronhttp.MiddlewareFunc
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{mm: []middleware.Func{middleware.NewRecovery()}}},
+		"success": {args: args{mm: []patronhttp.MiddlewareFunc{patronhttp.NewRecoveryMiddleware()}}},
 		"fail":    {args: args{mm: nil}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {

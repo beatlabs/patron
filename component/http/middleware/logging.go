@@ -18,7 +18,7 @@ type StatusCodeLoggerHandler struct {
 	codes []statusCode
 }
 
-func (s StatusCodeLoggerHandler) shouldLog(statusCode int) bool {
+func (s StatusCodeLoggerHandler) ShouldLog(statusCode int) bool {
 	for _, code := range s.codes {
 		if code.isRange() {
 			if code.rangeCodes.isIncluded(statusCode) {

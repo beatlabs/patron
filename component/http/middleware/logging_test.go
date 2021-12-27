@@ -47,7 +47,7 @@ func TestStatusCode(t *testing.T) {
 			if tt.expectedParsingErr {
 				assert.Error(t, err)
 			} else {
-				got := h.shouldLog(tt.args.statusCode)
+				got := h.ShouldLog(tt.args.statusCode)
 				assert.Equal(t, tt.expectedResult, got)
 			}
 		})
@@ -61,6 +61,6 @@ func BenchmarkName(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = h.shouldLog(403)
+		_ = h.ShouldLog(403)
 	}
 }

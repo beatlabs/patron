@@ -152,7 +152,7 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Fu
 			next.ServeHTTP(lw, r)
 			finishSpan(sp, lw.Status(), &lw.responsePayload)
 			logRequestResponse(corID, lw, r)
-			if log.Enabled(log.ErrorLevel) && statusCodeLogger.shouldLog(lw.status) {
+			if log.Enabled(log.ErrorLevel) && statusCodeLogger.ShouldLog(lw.status) {
 				log.FromContext(r.Context()).Errorf("%s %d error: %v", path, lw.status, lw.responsePayload.String())
 			}
 		})
@@ -185,7 +185,7 @@ func initHTTPServerMetrics() {
 // metrics are exposed via Prometheus.
 // This middleware is enabled by default.
 func NewRequestObserver(method, path string) Func {
-	// register Promethus metrics on first use
+	// register Prometheus metrics on first use
 	httpStatusTracingInit.Do(initHTTPServerMetrics)
 
 	return func(next http.Handler) http.Handler {

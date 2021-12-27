@@ -20,7 +20,7 @@ func RateLimiting(limit float64, burst int) RouteOptionFunc {
 	}
 }
 
-// Middlewares option for setting the route middlewares.
+// Middlewares option for setting the route optionFuncs.
 func Middlewares(mm ...patronhttp.Func) RouteOptionFunc {
 	return func(r *Route) error {
 		if len(mm) == 0 {

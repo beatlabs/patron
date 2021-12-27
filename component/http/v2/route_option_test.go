@@ -40,7 +40,7 @@ func TestRouteMiddlewares(t *testing.T) {
 		expectedErr string
 	}{
 		"success": {args: args{mm: []patronhttp.Func{patronhttp.NewRecovery()}}},
-		"fail":    {args: args{mm: nil}, expectedErr: "middlewares are empty"},
+		"fail":    {args: args{mm: nil}, expectedErr: "optionFuncs are empty"},
 	}
 	for name, tt := range tests {
 		tt := tt

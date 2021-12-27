@@ -1,4 +1,4 @@
-package http
+package middleware
 
 import (
 	"testing"
@@ -43,7 +43,7 @@ func TestStatusCode(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			h, err := newStatusCodeLoggerHandler(tt.args.cfg)
+			h, err := NewStatusCodeLoggerHandler(tt.args.cfg)
 			if tt.expectedParsingErr {
 				assert.Error(t, err)
 			} else {
@@ -55,7 +55,7 @@ func TestStatusCode(t *testing.T) {
 }
 
 func BenchmarkName(b *testing.B) {
-	h, err := newStatusCodeLoggerHandler(complexConfig)
+	h, err := NewStatusCodeLoggerHandler(complexConfig)
 	assert.NoError(b, err)
 	b.ReportAllocs()
 	b.ResetTimer()

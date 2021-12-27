@@ -30,7 +30,7 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 		// TODO : for cached responses this becomes inconsistent, to be fixed in #160
 		// the corID will be passed to all consecutive responses
 		// if it was missing from the initial request
-		corID := getOrSetCorrelationID(r.Header)
+		corID := correlation.GetOrSetHeaderID(r.Header)
 		ctx := correlation.ContextWithID(r.Context(), corID)
 		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 		ctx = log.WithContext(ctx, logger)

@@ -10,13 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/beatlabs/patron/encoding"
-
 	"github.com/beatlabs/patron/cache"
 	httpclient "github.com/beatlabs/patron/client/http"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
+	"github.com/beatlabs/patron/component/http/middleware"
+	"github.com/beatlabs/patron/encoding"
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -44,7 +43,7 @@ func TestCachingMiddleware(t *testing.T) {
 
 	type args struct {
 		next http.Handler
-		mws  []MiddlewareFunc
+		mws  []middleware.Func
 	}
 
 	testingCache := newTestingCache()
@@ -68,7 +67,7 @@ func TestCachingMiddleware(t *testing.T) {
 				i, err := w.Write([]byte{1, 2, 3, 4})
 				assert.NoError(t, err)
 				assert.Equal(t, 4, i)
-			}), mws: []MiddlewareFunc{NewCachingMiddleware(routeCache)}},
+			}), mws: []middleware.Func{middleware.NewCaching(routeCache)}},
 			postRequest, 202, "\x01\x02\x03\x04",
 			cacheState{},
 		},
@@ -79,7 +78,7 @@ func TestCachingMiddleware(t *testing.T) {
 				i, err := w.Write([]byte{1, 2, 3, 4})
 				assert.NoError(t, err)
 				assert.Equal(t, 4, i)
-			}), mws: []MiddlewareFunc{NewCachingMiddleware(routeCache)}},
+			}), mws: []middleware.Func{middleware.NewCaching(routeCache)}},
 			getRequest, 200, "\x01\x02\x03\x04",
 			cacheState{
 				setOps: 1,
@@ -91,8 +90,8 @@ func TestCachingMiddleware(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rc := httptest.NewRecorder()
-			rw := newResponseWriter(rc, true)
-			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
+			rw := middleware.NewResponseWriter(rc, true)
+			tt.args.next = middleware.Chain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, tt.r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
 			assert.Equal(t, tt.expectedBody, rc.Body.String())
@@ -256,7 +255,7 @@ func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
 	}).
 		WithMiddlewares(
 			preWrapper.middleware,
-			NewCachingMiddleware(routeCache),
+			middleware.NewCaching(routeCache),
 			postWrapper.middleware).
 		MethodGet()
 
@@ -307,7 +306,7 @@ func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
 }
 
 type middlewareWrapper struct {
-	middleware  MiddlewareFunc
+	middleware  middleware.Func
 	invocations int
 }
 

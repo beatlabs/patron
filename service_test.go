@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	patronhttp "github.com/beatlabs/patron/component/http"
+	middleware2 "github.com/beatlabs/patron/component/http/middleware"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/std"
 	"github.com/stretchr/testify/assert"
@@ -41,7 +42,7 @@ func TestNewServer(t *testing.T) {
 		fields            map[string]interface{}
 		cps               []Component
 		routesBuilder     *patronhttp.RoutesBuilder
-		middlewares       []patronhttp.MiddlewareFunc
+		middlewares       []middleware2.Func
 		acf               patronhttp.AliveCheckFunc
 		rcf               patronhttp.ReadyCheckFunc
 		sighupHandler     func()
@@ -53,7 +54,7 @@ func TestNewServer(t *testing.T) {
 			fields:            map[string]interface{}{"env": "dev"},
 			cps:               []Component{&testComponent{}, &testComponent{}},
 			routesBuilder:     routesBuilder,
-			middlewares:       []patronhttp.MiddlewareFunc{middleware},
+			middlewares:       []middleware2.Func{middleware},
 			acf:               patronhttp.DefaultAliveCheck,
 			rcf:               patronhttp.DefaultReadyCheck,
 			sighupHandler:     func() { log.Info("SIGHUP received: nothing setup") },
@@ -75,7 +76,7 @@ func TestNewServer(t *testing.T) {
 		"error in all builder steps": {
 			cps:               []Component{},
 			routesBuilder:     nil,
-			middlewares:       []patronhttp.MiddlewareFunc{},
+			middlewares:       []middleware2.Func{},
 			acf:               nil,
 			rcf:               nil,
 			sighupHandler:     nil,

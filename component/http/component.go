@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/beatlabs/patron/component/http/middleware"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
@@ -41,7 +42,7 @@ type Component struct {
 	shutdownGracePeriod time.Duration
 	sync.Mutex
 	routes      []Route
-	middlewares []MiddlewareFunc
+	middlewares []middleware.Func
 	certFile    string
 	keyFile     string
 }
@@ -81,7 +82,7 @@ func (c *Component) createHTTPServer() *http.Server {
 	router := httprouter.New()
 	for _, route := range c.routes {
 		if len(route.middlewares) > 0 {
-			h := MiddlewareChain(route.handler, route.middlewares...)
+			h := middleware.Chain(route.handler, route.middlewares...)
 			router.Handler(route.method, route.path, h)
 		} else {
 			router.HandlerFunc(route.method, route.path, route.handler)
@@ -90,9 +91,9 @@ func (c *Component) createHTTPServer() *http.Server {
 		log.Debugf("added route %s %s", route.method, route.path)
 	}
 	// Add first the recovery middleware to ensure that no panic occur.
-	routerAfterMiddleware := MiddlewareChain(router, NewRecoveryMiddleware())
-	c.middlewares = append(c.middlewares, NewCompressionMiddleware(c.deflateLevel, c.uncompressedPaths...))
-	routerAfterMiddleware = MiddlewareChain(routerAfterMiddleware, c.middlewares...)
+	routerAfterMiddleware := middleware.Chain(router, middleware.NewRecovery())
+	c.middlewares = append(c.middlewares, middleware.NewCompression(c.deflateLevel, c.uncompressedPaths...))
+	routerAfterMiddleware = middleware.Chain(routerAfterMiddleware, c.middlewares...)
 
 	return &http.Server{
 		Addr:         fmt.Sprintf(":%d", c.httpPort),
@@ -115,7 +116,7 @@ type Builder struct {
 	uncompressedPaths   []string
 	shutdownGracePeriod time.Duration
 	routesBuilder       *RoutesBuilder
-	middlewares         []MiddlewareFunc
+	middlewares         []middleware.Func
 	certFile            string
 	keyFile             string
 	errors              []error
@@ -165,7 +166,7 @@ func (cb *Builder) WithRoutesBuilder(rb *RoutesBuilder) *Builder {
 }
 
 // WithMiddlewares adds middlewares to the HTTP component.
-func (cb *Builder) WithMiddlewares(mm ...MiddlewareFunc) *Builder {
+func (cb *Builder) WithMiddlewares(mm ...middleware.Func) *Builder {
 	if len(mm) == 0 {
 		cb.errors = append(cb.errors, errors.New("empty list of middlewares provided"))
 	} else {

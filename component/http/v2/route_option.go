@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/beatlabs/patron/cache"
-	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
+	patronhttp "github.com/beatlabs/patron/component/http/middleware"
 	errs "github.com/beatlabs/patron/errors"
 	"golang.org/x/time/rate"
 )
@@ -15,13 +15,13 @@ import (
 // RateLimiting option for setting a route rate limiter.
 func RateLimiting(limit float64, burst int) RouteOptionFunc {
 	return func(r *Route) error {
-		r.middlewares = append(r.middlewares, patronhttp.NewRateLimitingMiddleware(rate.NewLimiter(rate.Limit(limit), burst)))
+		r.middlewares = append(r.middlewares, patronhttp.NewRateLimiting(rate.NewLimiter(rate.Limit(limit), burst)))
 		return nil
 	}
 }
 
 // Middlewares option for setting the route middlewares.
-func Middlewares(mm ...patronhttp.MiddlewareFunc) RouteOptionFunc {
+func Middlewares(mm ...patronhttp.Func) RouteOptionFunc {
 	return func(r *Route) error {
 		if len(mm) == 0 {
 			return errors.New("middlewares are empty")
@@ -37,7 +37,7 @@ func Auth(auth auth.Authenticator) RouteOptionFunc {
 		if auth == nil {
 			return errors.New("authenticator is nil")
 		}
-		r.middlewares = append(r.middlewares, patronhttp.NewAuthMiddleware(auth))
+		r.middlewares = append(r.middlewares, patronhttp.NewAuth(auth))
 		return nil
 	}
 }
@@ -52,7 +52,7 @@ func Cache(cache cache.TTLCache, ageBounds httpcache.Age) RouteOptionFunc {
 		if len(ee) != 0 {
 			return errs.Aggregate(ee...)
 		}
-		r.middlewares = append(r.middlewares, patronhttp.NewCachingMiddleware(rc))
+		r.middlewares = append(r.middlewares, patronhttp.NewCaching(rc))
 		return nil
 	}
 }

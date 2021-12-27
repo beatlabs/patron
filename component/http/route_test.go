@@ -10,6 +10,7 @@ import (
 
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/component/http/cache"
+	middleware2 "github.com/beatlabs/patron/component/http/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -109,13 +110,13 @@ func TestRouteBuilder_WithMiddlewares(t *testing.T) {
 	middleware := func(next http.Handler) http.Handler { return next }
 	mockHandler := func(http.ResponseWriter, *http.Request) {}
 	type fields struct {
-		middlewares []MiddlewareFunc
+		middlewares []middleware2.Func
 	}
 	tests := map[string]struct {
 		fields      fields
 		expectedErr string
 	}{
-		"success":            {fields: fields{middlewares: []MiddlewareFunc{middleware}}},
+		"success":            {fields: fields{middlewares: []middleware2.Func{middleware}}},
 		"missing middleware": {fields: fields{}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {

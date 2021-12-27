@@ -143,7 +143,7 @@ func Test_getOrSetCorrelationID(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			assert.NotEmpty(t, getOrSetCorrelationID(tt.args.hdr))
+			assert.NotEmpty(t, correlation.GetOrSetHeaderID(tt.args.hdr))
 			assert.NotEmpty(t, tt.args.hdr[correlation.HeaderID][0])
 		})
 	}

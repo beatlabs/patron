@@ -14,6 +14,7 @@ import (
 	"time"
 
 	patronhttp "github.com/beatlabs/patron/component/http"
+	"github.com/beatlabs/patron/component/http/middleware"
 	v2 "github.com/beatlabs/patron/component/http/v2"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
@@ -40,7 +41,7 @@ type service struct {
 	name              string
 	cps               []Component
 	routesBuilder     *patronhttp.RoutesBuilder
-	middlewares       []patronhttp.MiddlewareFunc
+	middlewares       []middleware.Func
 	acf               patronhttp.AliveCheckFunc
 	rcf               patronhttp.ReadyCheckFunc
 	termSig           chan os.Signal
@@ -242,7 +243,7 @@ type Builder struct {
 	version           string
 	cps               []Component
 	routesBuilder     *patronhttp.RoutesBuilder
-	middlewares       []patronhttp.MiddlewareFunc
+	middlewares       []middleware.Func
 	acf               patronhttp.AliveCheckFunc
 	rcf               patronhttp.ReadyCheckFunc
 	termSig           chan os.Signal
@@ -402,7 +403,7 @@ func (b *Builder) WithRoutesBuilder(rb *patronhttp.RoutesBuilder) *Builder {
 }
 
 // WithMiddlewares adds generic middlewares to the default HTTP component.
-func (b *Builder) WithMiddlewares(mm ...patronhttp.MiddlewareFunc) *Builder {
+func (b *Builder) WithMiddlewares(mm ...middleware.Func) *Builder {
 	if len(mm) == 0 {
 		b.errors = append(b.errors, errors.New("provided middlewares slice was empty"))
 	} else {

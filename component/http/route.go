@@ -10,6 +10,7 @@ import (
 	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
+	"github.com/beatlabs/patron/component/http/middleware"
 	errs "github.com/beatlabs/patron/errors"
 	"golang.org/x/time/rate"
 )
@@ -19,7 +20,7 @@ type Route struct {
 	path        string
 	method      string
 	handler     http.HandlerFunc
-	middlewares []MiddlewareFunc
+	middlewares []middleware.Func
 }
 
 // Path returns route path value.
@@ -33,7 +34,7 @@ func (r Route) Method() string {
 }
 
 // Middlewares returns route middlewares.
-func (r Route) Middlewares() []MiddlewareFunc {
+func (r Route) Middlewares() []middleware.Func {
 	return r.middlewares
 }
 
@@ -48,7 +49,7 @@ type RouteBuilder struct {
 	path          string
 	jaegerTrace   bool
 	rateLimiter   *rate.Limiter
-	middlewares   []MiddlewareFunc
+	middlewares   []middleware.Func
 	authenticator auth.Authenticator
 	handler       http.HandlerFunc
 	routeCache    *httpcache.RouteCache
@@ -69,7 +70,7 @@ func (rb *RouteBuilder) WithRateLimiting(limit float64, burst int) *RouteBuilder
 }
 
 // WithMiddlewares adds middlewares.
-func (rb *RouteBuilder) WithMiddlewares(mm ...MiddlewareFunc) *RouteBuilder {
+func (rb *RouteBuilder) WithMiddlewares(mm ...middleware.Func) *RouteBuilder {
 	if len(mm) == 0 {
 		rb.errors = append(rb.errors, errors.New("middlewares are empty"))
 	}
@@ -152,7 +153,7 @@ func (rb *RouteBuilder) MethodTrace() *RouteBuilder {
 func (rb *RouteBuilder) Build() (Route, error) {
 	// parse a list of HTTP numeric status codes that must be logged
 	cfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
-	statusCodeLogger, err := newStatusCodeLoggerHandler(cfg)
+	statusCodeLogger, err := middleware.NewStatusCodeLoggerHandler(cfg)
 	if err != nil {
 		return Route{}, fmt.Errorf("failed to parse status codes %q: %w", cfg, err)
 	}
@@ -165,21 +166,21 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		return Route{}, errors.New("method is missing")
 	}
 
-	var middlewares []MiddlewareFunc
+	var middlewares []middleware.Func
 	if rb.jaegerTrace {
 		// uses Jaeger/OpenTracing and Patron's response logging
-		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path, statusCodeLogger))
+		middlewares = append(middlewares, middleware.NewLoggingTracing(rb.path, statusCodeLogger))
 	}
 
 	// uses a custom Patron metric for HTTP responses (with complete status code)
 	// it does not use Jaeger/OpenTracing
-	middlewares = append(middlewares, NewRequestObserverMiddleware(rb.method, rb.path))
+	middlewares = append(middlewares, middleware.NewRequestObserver(rb.method, rb.path))
 
 	if rb.rateLimiter != nil {
-		middlewares = append(middlewares, NewRateLimitingMiddleware(rb.rateLimiter))
+		middlewares = append(middlewares, middleware.NewRateLimiting(rb.rateLimiter))
 	}
 	if rb.authenticator != nil {
-		middlewares = append(middlewares, NewAuthMiddleware(rb.authenticator))
+		middlewares = append(middlewares, middleware.NewAuth(rb.authenticator))
 	}
 	if len(rb.middlewares) > 0 {
 		middlewares = append(middlewares, rb.middlewares...)
@@ -189,7 +190,7 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		if rb.method != http.MethodGet {
 			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
 		}
-		middlewares = append(middlewares, NewCachingMiddleware(rb.routeCache))
+		middlewares = append(middlewares, middleware.NewCaching(rb.routeCache))
 	}
 
 	return Route{

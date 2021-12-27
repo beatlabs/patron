@@ -6,18 +6,18 @@ import (
 
 	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/cache/redis"
-	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
+	patronhttp "github.com/beatlabs/patron/component/http/middleware"
 	"github.com/stretchr/testify/assert"
 )
 
-type MockAuthenticator struct {
+type mockAuthenticator struct {
 	success bool
 	err     error
 }
 
-func (mo MockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
+func (mo mockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
 	if mo.err != nil {
 		return false, mo.err
 	}
@@ -33,13 +33,13 @@ func TestRateLimiting(t *testing.T) {
 func TestRouteMiddlewares(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		mm []patronhttp.MiddlewareFunc
+		mm []patronhttp.Func
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{mm: []patronhttp.MiddlewareFunc{patronhttp.NewRecoveryMiddleware()}}},
+		"success": {args: args{mm: []patronhttp.Func{patronhttp.NewRecovery()}}},
 		"fail":    {args: args{mm: nil}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {
@@ -66,7 +66,7 @@ func TestAuth(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{auth: &MockAuthenticator{}}},
+		"success": {args: args{auth: &mockAuthenticator{}}},
 		"fail":    {args: args{auth: nil}, expectedErr: "authenticator is nil"},
 	}
 	for name, tt := range tests {

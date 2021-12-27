@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/component/http/middleware"
 	errs "github.com/beatlabs/patron/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -124,7 +125,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		gp       time.Duration
 		dl       int
 		rb       *RoutesBuilder
-		mm       []MiddlewareFunc
+		mm       []middleware.Func
 		c        string
 		k        string
 		wantErrs []error
@@ -138,9 +139,8 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			dl:  deflateLevel,
 			gp:  shutdownGracePeriod,
 			rb:  rb,
-			mm: []MiddlewareFunc{
-				NewRecoveryMiddleware(),
-				panicMiddleware("error"),
+			mm: []middleware.Func{
+				middleware.NewRecovery(),
 			},
 			c:        "cert.file",
 			k:        "key.file",
@@ -155,7 +155,7 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 			gp:       -15 * time.Second,
 			dl:       -8,
 			rb:       nil,
-			mm:       []MiddlewareFunc{},
+			mm:       []middleware.Func{},
 			c:        "",
 			k:        "",
 			wantErrs: httpBuilderAllErrors,

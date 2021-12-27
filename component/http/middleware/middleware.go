@@ -1,4 +1,4 @@
-package http
+package middleware
 
 import (
 	"bytes"
@@ -17,19 +17,17 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/time/rate"
-
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
-	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	tracinglog "github.com/opentracing/opentracing-go/log"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -48,7 +46,7 @@ var (
 	httpStatusTracingLatencyMetric *prometheus.HistogramVec
 )
 
-type responseWriter struct {
+type ResponseWriter struct {
 	status              int
 	statusHeaderWritten bool
 	capturePayload      bool
@@ -56,22 +54,22 @@ type responseWriter struct {
 	writer              http.ResponseWriter
 }
 
-func newResponseWriter(w http.ResponseWriter, capturePayload bool) *responseWriter {
-	return &responseWriter{status: -1, statusHeaderWritten: false, writer: w, capturePayload: capturePayload}
+func NewResponseWriter(w http.ResponseWriter, capturePayload bool) *ResponseWriter {
+	return &ResponseWriter{status: -1, statusHeaderWritten: false, writer: w, capturePayload: capturePayload}
 }
 
 // Status returns the http response status.
-func (w *responseWriter) Status() int {
+func (w *ResponseWriter) Status() int {
 	return w.status
 }
 
 // Header returns the Header.
-func (w *responseWriter) Header() http.Header {
+func (w *ResponseWriter) Header() http.Header {
 	return w.writer.Header()
 }
 
-// Write to the internal responseWriter and sets the status if not set already.
-func (w *responseWriter) Write(d []byte) (int, error) {
+// Write to the internal ResponseWriter and sets the status if not set already.
+func (w *ResponseWriter) Write(d []byte) (int, error) {
 	if !w.statusHeaderWritten {
 		w.status = http.StatusOK
 		w.statusHeaderWritten = true
@@ -90,17 +88,17 @@ func (w *responseWriter) Write(d []byte) (int, error) {
 }
 
 // WriteHeader writes the internal Header and saves the status for retrieval.
-func (w *responseWriter) WriteHeader(code int) {
+func (w *ResponseWriter) WriteHeader(code int) {
 	w.status = code
 	w.writer.WriteHeader(code)
 	w.statusHeaderWritten = true
 }
 
-// MiddlewareFunc type declaration of middleware func.
-type MiddlewareFunc func(next http.Handler) http.Handler
+// Func type declaration of middleware func.
+type Func func(next http.Handler) http.Handler
 
-// NewRecoveryMiddleware creates a MiddlewareFunc that ensures recovery and no panic.
-func NewRecoveryMiddleware() MiddlewareFunc {
+// NewRecovery creates a Func that ensures recovery and no panic.
+func NewRecovery() Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
@@ -124,8 +122,8 @@ func NewRecoveryMiddleware() MiddlewareFunc {
 	}
 }
 
-// NewAuthMiddleware creates a MiddlewareFunc that implements authentication using an Authenticator.
-func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
+// NewAuth creates a Func that implements authentication using an Authenticator.
+func NewAuth(auth auth.Authenticator) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authenticated, err := auth.Authenticate(r)
@@ -143,14 +141,14 @@ func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
 	}
 }
 
-// NewLoggingTracingMiddleware creates a MiddlewareFunc that continues a tracing span and finishes it.
+// NewLoggingTracing creates a Func that continues a tracing span and finishes it.
 // It uses Jaeger and OpenTracing and will also log the HTTP request on debug level if configured so.
-func NewLoggingTracingMiddleware(path string, statusCodeLogger statusCodeLoggerHandler) MiddlewareFunc {
+func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			corID := getOrSetCorrelationID(r.Header)
+			corID := correlation.GetOrSetHeaderID(r.Header)
 			sp, r := span(path, corID, r)
-			lw := newResponseWriter(w, true)
+			lw := NewResponseWriter(w, true)
 			next.ServeHTTP(lw, r)
 			finishSpan(sp, lw.Status(), &lw.responsePayload)
 			logRequestResponse(corID, lw, r)
@@ -183,17 +181,17 @@ func initHTTPServerMetrics() {
 	prometheus.MustRegister(httpStatusTracingLatencyMetric)
 }
 
-// NewRequestObserverMiddleware creates a MiddlewareFunc that captures status code and duration metrics about the responses returned;
+// NewRequestObserver creates a Func that captures status code and duration metrics about the responses returned;
 // metrics are exposed via Prometheus.
 // This middleware is enabled by default.
-func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
-	// register Prometheus metrics on first use
+func NewRequestObserver(method, path string) Func {
+	// register Promethus metrics on first use
 	httpStatusTracingInit.Do(initHTTPServerMetrics)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			now := time.Now()
-			lw := newResponseWriter(w, false)
+			lw := NewResponseWriter(w, false)
 			next.ServeHTTP(lw, r)
 
 			// collect metrics about HTTP server-side handling and latency
@@ -212,8 +210,8 @@ func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 	}
 }
 
-// NewRateLimitingMiddleware creates a MiddlewareFunc that adds a rate limit to a route.
-func NewRateLimitingMiddleware(limiter *rate.Limiter) MiddlewareFunc {
+// NewRateLimiting creates a Func that adds a rate limit to a route.
+func NewRateLimiting(limiter *rate.Limiter) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !limiter.Allow() {
@@ -310,10 +308,10 @@ func selectByWeight(weighted map[float64]string) (string, error) {
 	return weighted[keys[len(keys)-1]], nil
 }
 
-// NewCompressionMiddleware initializes a compression middleware.
+// NewCompression initializes a compression middleware.
 // As per Section 3.5 of the HTTP/1.1 RFC, GZIP and Deflate compression methods are supported.
 // https://tools.ietf.org/html/rfc2616#section-14.3
-func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) MiddlewareFunc {
+func NewCompression(deflateLevel int, ignoreRoutes ...string) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ignore(ignoreRoutes, r.URL.String()) {
@@ -448,10 +446,10 @@ func (w *dynamicCompressionResponseWriter) Close() error {
 	return nil
 }
 
-// NewCachingMiddleware creates a cache layer as a middleware
+// NewCaching creates a cache layer as a middleware
 // when used as part of a middleware chain any middleware later in the chain,
-// will not be executed, but the headers it appends will be part of the cache.
-func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
+// will not be executed, but the headers it appends will be part of the cache
+func NewCaching(rc *cache.RouteCache) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != http.MethodGet {
@@ -467,15 +465,15 @@ func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
 	}
 }
 
-// MiddlewareChain chains middlewares to a handler func.
-func MiddlewareChain(f http.Handler, mm ...MiddlewareFunc) http.Handler {
+// Chain chains middlewares to a handler func.
+func Chain(f http.Handler, mm ...Func) http.Handler {
 	for i := len(mm) - 1; i >= 0; i-- {
 		f = mm[i](f)
 	}
 	return f
 }
 
-func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
+func logRequestResponse(corID string, w *ResponseWriter, r *http.Request) {
 	if !log.Enabled(log.DebugLevel) {
 		return
 	}
@@ -498,26 +496,6 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 		},
 	}
 	log.Sub(info).Debug()
-}
-
-func getOrSetCorrelationID(h http.Header) string {
-	cor, ok := h[correlation.HeaderID]
-	if !ok {
-		corID := uuid.New().String()
-		h.Set(correlation.HeaderID, corID)
-		return corID
-	}
-	if len(cor) == 0 {
-		corID := uuid.New().String()
-		h.Set(correlation.HeaderID, corID)
-		return corID
-	}
-	if cor[0] == "" {
-		corID := uuid.New().String()
-		h.Set(correlation.HeaderID, corID)
-		return corID
-	}
-	return cor[0]
 }
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {

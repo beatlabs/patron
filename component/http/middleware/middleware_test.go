@@ -1,4 +1,4 @@
-package http
+package middleware
 
 import (
 	"errors"
@@ -7,16 +7,27 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"golang.org/x/time/rate"
-
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/time/rate"
 )
 
-// A middleware generator that tags resp for assertions.
-func tagMiddleware(tag string) MiddlewareFunc {
+type mockAuthenticator struct {
+	success bool
+	err     error
+}
+
+func (mo mockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
+	if mo.err != nil {
+		return false, mo.err
+	}
+	return mo.success, nil
+}
+
+// A middleware generator that tags resp for assertions
+func tagMiddleware(tag string) Func {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write([]byte(tag))
@@ -26,8 +37,8 @@ func tagMiddleware(tag string) MiddlewareFunc {
 	}
 }
 
-// Panic middleware to test recovery middleware.
-func panicMiddleware(v interface{}) MiddlewareFunc {
+// Panic middleware to test recovery middleware
+func panicMiddleware(v interface{}) Func {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			panic(v)
@@ -56,7 +67,7 @@ func TestMiddlewareChain(t *testing.T) {
 
 	type args struct {
 		next http.Handler
-		mws  []MiddlewareFunc
+		mws  []Func
 	}
 	tests := []struct {
 		name         string
@@ -64,15 +75,15 @@ func TestMiddlewareChain(t *testing.T) {
 		expectedCode int
 		expectedBody string
 	}{
-		{"middleware 1,2,3 and finish", args{next: handler, mws: []MiddlewareFunc{t1, t2, t3}}, 202, "t1\nt2\nt3\n"},
-		{"middleware 1,2 and finish", args{next: handler, mws: []MiddlewareFunc{t1, t2}}, 202, "t1\nt2\n"},
-		{"no middleware and finish", args{next: handler, mws: []MiddlewareFunc{}}, 202, ""},
+		{"middleware 1,2,3 and finish", args{next: handler, mws: []Func{t1, t2, t3}}, 202, "t1\nt2\nt3\n"},
+		{"middleware 1,2 and finish", args{next: handler, mws: []Func{t1, t2}}, 202, "t1\nt2\n"},
+		{"no middleware and finish", args{next: handler, mws: []Func{}}, 202, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rc := httptest.NewRecorder()
-			rw := newResponseWriter(rc, true)
-			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
+			rw := NewResponseWriter(rc, true)
+			tt.args.next = Chain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
 			assert.Equal(t, tt.expectedBody, rc.Body.String())
@@ -90,7 +101,7 @@ func TestMiddlewares(t *testing.T) {
 
 	type args struct {
 		next http.Handler
-		mws  []MiddlewareFunc
+		mws  []Func
 	}
 	tests := []struct {
 		name         string
@@ -98,21 +109,21 @@ func TestMiddlewares(t *testing.T) {
 		expectedCode int
 		expectedBody string
 	}{
-		{"auth middleware success", args{next: handler, mws: []MiddlewareFunc{NewAuthMiddleware(&MockAuthenticator{success: true})}}, 202, ""},
-		{"auth middleware false", args{next: handler, mws: []MiddlewareFunc{NewAuthMiddleware(&MockAuthenticator{success: false})}}, 401, "Unauthorized\n"},
-		{"auth middleware error", args{next: handler, mws: []MiddlewareFunc{NewAuthMiddleware(&MockAuthenticator{err: errors.New("auth error")})}}, 500, "Internal Server Error\n"},
-		{"tracing middleware", args{next: handler, mws: []MiddlewareFunc{NewLoggingTracingMiddleware("/index", statusCodeLoggerHandler{})}}, 202, ""},
-		{"rate limiting middleware", args{next: handler, mws: []MiddlewareFunc{NewRateLimitingMiddleware(getMockLimiter(true))}}, 202, ""},
-		{"rate limiting middleware error", args{next: handler, mws: []MiddlewareFunc{NewRateLimitingMiddleware(getMockLimiter(false))}}, 429, "Requests greater than limit\n"},
-		{"recovery middleware from panic 1", args{next: handler, mws: []MiddlewareFunc{NewRecoveryMiddleware(), panicMiddleware("error")}}, 500, "Internal Server Error\n"},
-		{"recovery middleware from panic 2", args{next: handler, mws: []MiddlewareFunc{NewRecoveryMiddleware(), panicMiddleware(errors.New("error"))}}, 500, "Internal Server Error\n"},
-		{"recovery middleware from panic 3", args{next: handler, mws: []MiddlewareFunc{NewRecoveryMiddleware(), panicMiddleware(-1)}}, 500, "Internal Server Error\n"},
+		{"auth middleware success", args{next: handler, mws: []Func{NewAuth(&mockAuthenticator{success: true})}}, 202, ""},
+		{"auth middleware false", args{next: handler, mws: []Func{NewAuth(&mockAuthenticator{success: false})}}, 401, "Unauthorized\n"},
+		{"auth middleware error", args{next: handler, mws: []Func{NewAuth(&mockAuthenticator{err: errors.New("auth error")})}}, 500, "Internal Server Error\n"},
+		{"tracing middleware", args{next: handler, mws: []Func{NewLoggingTracing("/index", StatusCodeLoggerHandler{})}}, 202, ""},
+		{"rate limiting middleware", args{next: handler, mws: []Func{NewRateLimiting(getMockLimiter(true))}}, 202, ""},
+		{"rate limiting middleware error", args{next: handler, mws: []Func{NewRateLimiting(getMockLimiter(false))}}, 429, "Requests greater than limit\n"},
+		{"recovery middleware from panic 1", args{next: handler, mws: []Func{NewRecovery(), panicMiddleware("error")}}, 500, "Internal Server Error\n"},
+		{"recovery middleware from panic 2", args{next: handler, mws: []Func{NewRecovery(), panicMiddleware(errors.New("error"))}}, 500, "Internal Server Error\n"},
+		{"recovery middleware from panic 3", args{next: handler, mws: []Func{NewRecovery(), panicMiddleware(-1)}}, 500, "Internal Server Error\n"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rc := httptest.NewRecorder()
-			rw := newResponseWriter(rc, true)
-			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
+			rw := NewResponseWriter(rc, true)
+			tt.args.next = Chain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
 			assert.Equal(t, tt.expectedBody, rc.Body.String())
@@ -139,7 +150,7 @@ func TestSpanLogError(t *testing.T) {
 
 	type args struct {
 		next http.Handler
-		mws  []MiddlewareFunc
+		mws  []Func
 	}
 	tests := []struct {
 		name                 string
@@ -148,15 +159,15 @@ func TestSpanLogError(t *testing.T) {
 		expectedBody         string
 		expectedSpanLogError string
 	}{
-		{"tracing middleware - error", args{next: errorHandler, mws: []MiddlewareFunc{NewLoggingTracingMiddleware("/index", statusCodeLoggerHandler{})}}, http.StatusInternalServerError, "foo", "foo"},
-		{"tracing middleware - success", args{next: successHandler, mws: []MiddlewareFunc{NewLoggingTracingMiddleware("/index", statusCodeLoggerHandler{})}}, http.StatusOK, "", ""},
+		{"tracing middleware - error", args{next: errorHandler, mws: []Func{NewLoggingTracing("/index", StatusCodeLoggerHandler{})}}, http.StatusInternalServerError, "foo", "foo"},
+		{"tracing middleware - success", args{next: successHandler, mws: []Func{NewLoggingTracing("/index", StatusCodeLoggerHandler{})}}, http.StatusOK, "", ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mtr.Reset()
 			rc := httptest.NewRecorder()
-			rw := newResponseWriter(rc, true)
-			tt.args.next = MiddlewareChain(tt.args.next, tt.args.mws...)
+			rw := NewResponseWriter(rc, true)
+			tt.args.next = Chain(tt.args.next, tt.args.mws...)
 			tt.args.next.ServeHTTP(rw, r)
 			assert.Equal(t, tt.expectedCode, rw.Status())
 			assert.Equal(t, tt.expectedBody, rc.Body.String())
@@ -172,7 +183,7 @@ func TestSpanLogError(t *testing.T) {
 
 func TestResponseWriter(t *testing.T) {
 	rc := httptest.NewRecorder()
-	rw := newResponseWriter(rc, true)
+	rw := NewResponseWriter(rc, true)
 
 	_, err := rw.Write([]byte("test"))
 	assert.NoError(t, err)
@@ -261,10 +272,10 @@ func getSpanLogError(t *testing.T, span *mocktracer.MockSpan) string {
 
 func TestNewCompressionMiddleware(t *testing.T) {
 	tests := map[string]struct {
-		cm MiddlewareFunc
+		cm Func
 	}{
-		"gzip":    {cm: NewCompressionMiddleware(8)},
-		"deflate": {cm: NewCompressionMiddleware(8)},
+		"gzip":    {cm: NewCompression(8)},
+		"deflate": {cm: NewCompression(8)},
 	}
 
 	for name, tc := range tests {
@@ -294,7 +305,7 @@ func TestNewCompressionMiddleware(t *testing.T) {
 
 func TestNewCompressionMiddlewareServer(t *testing.T) {
 	tests := []struct {
-		cm               MiddlewareFunc
+		cm               Func
 		status           int
 		acceptEncoding   string
 		expectedEncoding string
@@ -303,61 +314,61 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 			status:           200,
 			acceptEncoding:   "gzip",
 			expectedEncoding: "gzip",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 		{
 			status:           201,
 			acceptEncoding:   "gzip",
 			expectedEncoding: "gzip",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 		{
 			status:           204,
 			acceptEncoding:   "gzip",
 			expectedEncoding: "",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 		{
 			status:           304,
 			acceptEncoding:   "gzip",
 			expectedEncoding: "",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 		{
 			status:           404,
 			acceptEncoding:   "gzip",
 			expectedEncoding: "gzip",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 		{
 			status:           200,
 			acceptEncoding:   "deflate",
 			expectedEncoding: "deflate",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 		{
 			status:           201,
 			acceptEncoding:   "deflate",
 			expectedEncoding: "deflate",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 		{
 			status:           204,
 			acceptEncoding:   "deflate",
 			expectedEncoding: "",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 		{
 			status:           304,
 			acceptEncoding:   "deflate",
 			expectedEncoding: "",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 		{
 			status:           404,
 			acceptEncoding:   "deflate",
 			expectedEncoding: "deflate",
-			cm:               NewCompressionMiddleware(8),
+			cm:               NewCompression(8),
 		},
 	}
 
@@ -387,7 +398,7 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	var ceh string // accept-encoding, content type
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(202) })
-	middleware := NewCompressionMiddleware(8, "/metrics")
+	middleware := NewCompression(8, "/metrics")
 
 	assert.NotNil(t, middleware)
 
@@ -419,10 +430,10 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 
 func TestNewCompressionMiddleware_Headers(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
-	middleware := NewCompressionMiddleware(8, "/metrics")
+	middleware := NewCompression(8, "/metrics")
 
 	tests := map[string]struct {
-		cm               MiddlewareFunc
+		cm               Func
 		statusCode       int
 		encodingExpected string
 	}{
@@ -711,19 +722,19 @@ func (fw *failWriter) WriteHeader(_ int) {
 
 func TestSetResponseWriterStatusOnResponseFailWrite(t *testing.T) {
 	failWriter := &failWriter{}
-	failDynamicCompressionResponseWriter := &dynamicCompressionResponseWriter{failWriter, "", nil, 0, deflateLevel}
+	failDynamicCompressionResponseWriter := &dynamicCompressionResponseWriter{failWriter, "", nil, 0, 6}
 
 	tests := []struct {
 		Name           string
-		ResponseWriter *responseWriter
+		ResponseWriter *ResponseWriter
 	}{
 		{
-			Name:           "Failing responseWriter with http.ResponseWriter",
-			ResponseWriter: newResponseWriter(failWriter, false),
+			Name:           "Failing ResponseWriter with http.ResponseWriter",
+			ResponseWriter: NewResponseWriter(failWriter, false),
 		},
 		{
-			Name:           "Failing responseWriter with http.ResponseWriter",
-			ResponseWriter: newResponseWriter(failDynamicCompressionResponseWriter, false),
+			Name:           "Failing ResponseWriter with http.ResponseWriter",
+			ResponseWriter: NewResponseWriter(failDynamicCompressionResponseWriter, false),
 		},
 	}
 

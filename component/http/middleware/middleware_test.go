@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	httpcache "github.com/beatlabs/patron/component/http/cache"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -747,4 +748,34 @@ func TestSetResponseWriterStatusOnResponseFailWrite(t *testing.T) {
 			assert.Equal(t, http.StatusOK, test.ResponseWriter.status)
 		})
 	}
+}
+
+func TestNewInjectObservability(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
+	middleware := NewInjectObservability()
+	assert.NotNil(t, middleware)
+
+	// check if the route actually ignored
+	req, err := http.NewRequest("GET", "/metrics", nil)
+	assert.NoError(t, err)
+
+	rc := httptest.NewRecorder()
+	middleware(handler).ServeHTTP(rc, req)
+
+	assert.Equal(t, 200, rc.Code)
+}
+
+func TestNewCaching(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
+	middleware := NewCaching(&httpcache.RouteCache{})
+	assert.NotNil(t, middleware)
+
+	// check if the route actually ignored
+	req, err := http.NewRequest("GET", "/metrics", nil)
+	assert.NoError(t, err)
+
+	rc := httptest.NewRecorder()
+	middleware(handler).ServeHTTP(rc, req)
+
+	assert.Equal(t, 200, rc.Code)
 }

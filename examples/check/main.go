@@ -22,7 +22,7 @@ func main() {
 	}
 
 	// perform a client call that is supposed to trigger a call across all the services
-	var jsonStr = []byte(`{"firstname":"John","lastname":"Doe"}`)
+	jsonStr := []byte(`{"firstname":"John","lastname":"Doe"}`)
 	req, err := http.NewRequest("POST", "http://localhost:50000/api", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +37,8 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Fatalf("Response supposed to be status code %d instead it is %d (body: %q)", http.StatusCreated, resp.StatusCode, string(body))
+		log.Fatalf("Response supposed to be status code %d instead it is %d (body: %q)",
+			http.StatusCreated, resp.StatusCode, string(body))
 	}
 
 	// wait 1 second so that metrics can be flushed to http endpoint

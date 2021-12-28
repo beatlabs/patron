@@ -158,7 +158,7 @@ func (hc *kafkaProducer) forwardToKafkaHandler(rw http.ResponseWriter, r *http.R
 	}
 
 	log.FromContext(r.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	rw.WriteHeader(http.StatusNoContent)
+	rw.WriteHeader(http.StatusCreated)
 }
 
 type apiKeyValidator struct {

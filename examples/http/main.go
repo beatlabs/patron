@@ -15,6 +15,7 @@ import (
 	clienthttp "github.com/beatlabs/patron/client/http"
 	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
+	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
@@ -124,7 +125,7 @@ func httpHandler(rw http.ResponseWriter, r *http.Request) {
 
 	var u examples.User
 
-	err = protobuf.Decode(r.Body, &u)
+	err = json.Decode(r.Body, &u)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		_, _ = rw.Write([]byte(fmt.Sprintf("failed to decode request: %v", err)))

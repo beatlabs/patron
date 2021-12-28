@@ -779,3 +779,18 @@ func TestNewCaching(t *testing.T) {
 
 	assert.Equal(t, 200, rc.Code)
 }
+
+func TestNewRequestObserver(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
+	middleware := NewRequestObserver(http.MethodGet, "/api")
+	assert.NotNil(t, middleware)
+
+	// check if the route actually ignored
+	req, err := http.NewRequest("GET", "/api", nil)
+	assert.NoError(t, err)
+
+	rc := httptest.NewRecorder()
+	middleware(handler).ServeHTTP(rc, req)
+
+	assert.Equal(t, 200, rc.Code)
+}

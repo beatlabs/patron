@@ -161,7 +161,7 @@ func httpHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.FromContext(r.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	rw.WriteHeader(http.StatusInternalServerError)
+	rw.WriteHeader(http.StatusCreated)
 	_, _ = rw.Write([]byte(fmt.Sprintf("got %s from HTTP route", rsp.Status)))
 }
 

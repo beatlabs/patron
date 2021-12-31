@@ -22,7 +22,6 @@ type RouteCache struct {
 
 // NewRouteCache creates a new cache implementation for an http route
 func NewRouteCache(ttlCache cache.TTLCache, age Age) (*RouteCache, []error) {
-
 	errs := make([]error, 0)
 
 	if ttlCache == nil {

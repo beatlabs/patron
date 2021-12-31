@@ -1625,7 +1625,6 @@ func assertCache(t *testing.T, args [][]testArgs) {
 
 	for _, testArg := range args {
 		for _, arg := range testArg {
-
 			path := arg.routeConfig.path
 			if arg.requestParams.path != "" {
 				path = arg.requestParams.path

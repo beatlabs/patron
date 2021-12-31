@@ -8,7 +8,6 @@ import (
 )
 
 func TestResponse(t *testing.T) {
-
 	type arg struct {
 		payload interface{}
 	}
@@ -35,11 +34,9 @@ func TestResponse(t *testing.T) {
 	for _, argument := range args {
 		assertForHandlerResponse(t, argument.payload)
 	}
-
 }
 
 func assertForHandlerResponse(t *testing.T, payload interface{}) {
-
 	bp, err := json.Encode(payload)
 	assert.NoError(t, err)
 
@@ -63,5 +60,4 @@ func assertForHandlerResponse(t *testing.T, payload interface{}) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, r, rsp)
-
 }

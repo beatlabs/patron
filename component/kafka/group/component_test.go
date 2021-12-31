@@ -211,7 +211,6 @@ func (m *mockConsumerSession) MarkMessage(*sarama.ConsumerMessage, string) {}
 func (m *mockConsumerSession) Context() context.Context                    { return context.Background() }
 
 func TestHandler_ConsumeClaim(t *testing.T) {
-
 	tests := []struct {
 		name         string
 		msgs         []*sarama.ConsumerMessage

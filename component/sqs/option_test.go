@@ -9,6 +9,7 @@ import (
 )
 
 func TestMaxMessages(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		maxMessages *int64
 	}
@@ -29,7 +30,9 @@ func TestMaxMessages(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := MaxMessages(*tt.args.maxMessages)(c)
 			if tt.expectedErr != "" {
@@ -43,6 +46,7 @@ func TestMaxMessages(t *testing.T) {
 }
 
 func TestPollWaitSeconds(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		waitSeconds *int64
 	}
@@ -63,7 +67,9 @@ func TestPollWaitSeconds(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := PollWaitSeconds(*tt.args.waitSeconds)(c)
 			if tt.expectedErr != "" {
@@ -77,6 +83,7 @@ func TestPollWaitSeconds(t *testing.T) {
 }
 
 func TestVisibilityTimeout(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		timeout *int64
 	}
@@ -97,7 +104,9 @@ func TestVisibilityTimeout(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := VisibilityTimeout(*tt.args.timeout)(c)
 			if tt.expectedErr != "" {
@@ -111,6 +120,7 @@ func TestVisibilityTimeout(t *testing.T) {
 }
 
 func TestQueueStatsInterval(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		interval time.Duration
 	}
@@ -127,7 +137,9 @@ func TestQueueStatsInterval(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := QueueStatsInterval(tt.args.interval)(c)
 			if tt.expectedErr != "" {
@@ -148,6 +160,7 @@ func TestRetries(t *testing.T) {
 }
 
 func TestRetryWait(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		retryWait time.Duration
 	}
@@ -164,7 +177,9 @@ func TestRetryWait(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := RetryWait(tt.args.retryWait)(c)
 			if tt.expectedErr != "" {

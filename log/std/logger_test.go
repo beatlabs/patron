@@ -84,6 +84,7 @@ func TestLogger(t *testing.T) {
 		"panicf": {args: args{lvl: log.PanicLevel, msg: "Hi, %s", args: []interface{}{"John"}}},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			defer b.Reset()
 
@@ -134,6 +135,7 @@ func TestLogger(t *testing.T) {
 }
 
 func TestLogger_shouldLog(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		lvl log.Level
 	}
@@ -186,7 +188,9 @@ func TestLogger_shouldLog(t *testing.T) {
 		"setup no level,passing fatal": {setupLevel: log.NoLevel, args: args{lvl: log.FatalLevel}, want: false},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			l := &Logger{level: tt.setupLevel}
 			assert.Equal(t, tt.want, l.shouldLog(tt.args.lvl))
 		})

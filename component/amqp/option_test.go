@@ -16,6 +16,7 @@ func TestAMQPConfig(t *testing.T) {
 }
 
 func TestBatching(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		count   uint
 		timeout time.Duration
@@ -29,7 +30,9 @@ func TestBatching(t *testing.T) {
 		"invalid timeout": {args: args{count: 2, timeout: -3}, expectedErr: "timeout should be a positive number"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := Batching(tt.args.count, tt.args.timeout)(c)
 			if tt.expectedErr != "" {
@@ -59,6 +62,7 @@ func TestRequeue(t *testing.T) {
 }
 
 func TestStatsInterval(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		interval time.Duration
 	}
@@ -70,7 +74,9 @@ func TestStatsInterval(t *testing.T) {
 		"invalid interval": {args: args{interval: -3}, expectedErr: "stats interval should be a positive number"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := &Component{}
 			err := StatsInterval(tt.args.interval)(c)
 			if tt.expectedErr != "" {

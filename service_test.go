@@ -18,6 +18,7 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
+	t.Parallel()
 	routesBuilder := patronhttp.NewRoutesBuilder().
 		Append(patronhttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).MethodGet())
 
@@ -80,7 +81,9 @@ func TestNewServer(t *testing.T) {
 	}
 
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			svc, err := New("name", "1.0", LogFields(tt.fields), TextLogger())
 			require.NoError(t, err)
 			gotService, gotErr := svc.
@@ -130,6 +133,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		"failed to run": {cp: &testComponent{errorRunning: true}, wantErr: true},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 
@@ -210,6 +214,7 @@ func TestBuild_FailingConditions(t *testing.T) {
 	}
 
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 
@@ -346,6 +351,7 @@ func (ts testComponent) Run(_ context.Context) error {
 }
 
 func TestLogFields(t *testing.T) {
+	t.Parallel()
 	defaultFields := defaultLogFields("test", "1.0")
 	fields := map[string]interface{}{"key": "value"}
 	fields1 := defaultLogFields("name1", "version1")
@@ -360,7 +366,9 @@ func TestLogFields(t *testing.T) {
 		"no overwrite": {args: args{fields: fields1}, want: Config{fields: defaultFields}},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			cfg := Config{fields: defaultFields}
 			LogFields(tt.args.fields)(&cfg)
 			assert.Equal(t, tt.want, cfg)

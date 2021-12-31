@@ -69,6 +69,7 @@ func Test_determineEncoding(t *testing.T) {
 		{"multi-value accept", args{req: request(t, json.TypeCharset, "application/json, */*")}, json.Decode, json.Encode, json.TypeCharset, false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			ct, got, got1, err := determineEncoding(tt.args.req.Header)
 			if tt.wantErr {
@@ -101,6 +102,7 @@ func Test_getMultiValueHeaders(t *testing.T) {
 		{"comma separated multi(3) header", "application/json,*/*,application/xml", []string{"application/json", "*/*", "application/xml"}},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			newHeaders := getMultiValueHeaders(tt.headers)
 			assert.Equal(t, tt.expectedHeaders, newHeaders)
@@ -121,6 +123,7 @@ func request(t *testing.T, contentType, accept string) *http.Request {
 }
 
 func Test_getOrSetCorrelationID(t *testing.T) {
+	t.Parallel()
 	withID := http.Header{correlation.HeaderID: []string{"123"}}
 	withoutID := http.Header{correlation.HeaderID: []string{}}
 	withEmptyID := http.Header{correlation.HeaderID: []string{""}}
@@ -137,7 +140,9 @@ func Test_getOrSetCorrelationID(t *testing.T) {
 		"missing Header": {args: args{hdr: missingHeader}},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.NotEmpty(t, getOrSetCorrelationID(tt.args.hdr))
 			assert.NotEmpty(t, tt.args.hdr[correlation.HeaderID][0])
 		})
@@ -145,6 +150,7 @@ func Test_getOrSetCorrelationID(t *testing.T) {
 }
 
 func Test_handleSuccess(t *testing.T) {
+	t.Parallel()
 	get, err := http.NewRequest(http.MethodGet, "/", nil)
 	assert.NoError(t, err)
 	post, err := http.NewRequest(http.MethodPost, "/", nil)
@@ -175,7 +181,9 @@ func Test_handleSuccess(t *testing.T) {
 		{"Encode failure", args{req: post, rsp: jsonEncodeFailRsp, enc: json.Encode}, http.StatusCreated, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			rsp := httptest.NewRecorder()
 
 			err := handleSuccess(rsp, tt.args.req, tt.args.rsp, tt.args.enc)
@@ -211,6 +219,7 @@ func Test_handleError(t *testing.T) {
 		{name: "Payload encoding error", args: args{err: NewErrorWithCodeAndPayload(http.StatusBadRequest, make(chan int)), enc: json.Encode}, expectedCode: http.StatusInternalServerError},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			rsp := httptest.NewRecorder()
 			handleError(log.Sub(nil), rsp, tt.args.enc, tt.args.err)
@@ -279,6 +288,7 @@ func Test_handler(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			rsp := httptest.NewRecorder()
 			handler(tt.args.hnd).ServeHTTP(rsp, tt.args.req)
@@ -330,6 +340,7 @@ func Test_fileserverHandler(t *testing.T) {
 		"fallback": {path: "/frontend/missing-file", expectedResponse: "fallback"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			// the only way to test do we get the same handler that we provided initially, is to run it explicitly,
 			// since all we have in Route itself is a wrapper function

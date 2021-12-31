@@ -74,6 +74,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestStart(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		optionFunc      OptionFunc
 		expectedOffsets int64
@@ -93,7 +94,9 @@ func TestStart(t *testing.T) {
 	}
 
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			c := ConsumerConfig{}
 			c.SaramaConfig = sarama.NewConfig()
 			err := tt.optionFunc(&c)
@@ -104,7 +107,6 @@ func TestStart(t *testing.T) {
 }
 
 func TestDecoder1(t *testing.T) {
-
 	tests := []struct {
 		name string
 		dec  encoding.DecodeRawFunc

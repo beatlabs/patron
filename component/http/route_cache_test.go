@@ -137,11 +137,9 @@ func TestNewRouteBuilder_WithCache(t *testing.T) {
 	}
 
 	for _, arg := range args {
-
 		assertRouteBuilder(t, arg, NewRouteBuilder("/", processor), c)
 
 		assertRouteBuilder(t, arg, NewRawRouteBuilder("/", handler), c)
-
 	}
 }
 

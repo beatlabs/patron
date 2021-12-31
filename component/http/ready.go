@@ -18,7 +18,6 @@ const (
 type ReadyCheckFunc func() ReadyStatus
 
 func readyCheckRoute(rcf ReadyCheckFunc) *RouteBuilder {
-
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch rcf() {
 		case Ready:

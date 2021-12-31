@@ -8,6 +8,7 @@ import (
 )
 
 func TestIDFromContext(t *testing.T) {
+	t.Parallel()
 	ctxWith := ContextWithID(context.Background(), "123")
 	type args struct {
 		ctx context.Context
@@ -19,7 +20,9 @@ func TestIDFromContext(t *testing.T) {
 		"without existing id": {args: args{ctx: context.Background()}},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got := IDFromContext(tt.args.ctx)
 			assert.NotEmpty(t, got)
 		})

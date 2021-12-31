@@ -41,7 +41,6 @@ func (m *prometheusMetrics) evict(path string, context validationContext, age in
 
 // newPrometheusMetrics constructs a new prometheus metrics implementation instance
 func newPrometheusMetrics() *prometheusMetrics {
-
 	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "http_cache",
 		Subsystem: "handler",
@@ -65,5 +64,4 @@ func newPrometheusMetrics() *prometheusMetrics {
 	prometheus.MustRegister(m.ageHistogram, m.operations)
 
 	return m
-
 }

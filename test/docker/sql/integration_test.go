@@ -11,14 +11,12 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/client/sql"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	runtime *sqlRuntime
-)
+var runtime *sqlRuntime
 
 func TestMain(m *testing.M) {
 	var err error
@@ -28,7 +26,6 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	defer func() {
-
 	}()
 	exitCode := m.Run()
 
@@ -42,6 +39,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestOpen(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		driverName string
 	}
@@ -53,7 +51,9 @@ func TestOpen(t *testing.T) {
 		"failure with wrong": {args: args{driverName: "XXX"}, expectedErr: "sql: unknown driver \"XXX\" (forgotten import?)"},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got, err := sql.Open(tt.args.driverName, runtime.DSN())
 
 			if tt.expectedErr != "" {

@@ -17,6 +17,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/uber/jaeger-client-go"
+
 	"golang.org/x/time/rate"
 
 	"github.com/beatlabs/patron/component/http/auth"
@@ -188,7 +190,7 @@ func initHTTPServerMetrics() {
 // metrics are exposed via Prometheus.
 // This middleware is enabled by default.
 func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
-	// register Promethus metrics on first use
+	// register Prometheus metrics on first use
 	httpStatusTracingInit.Do(initHTTPServerMetrics)
 
 	return func(next http.Handler) http.Handler {
@@ -200,7 +202,19 @@ func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 			// collect metrics about HTTP server-side handling and latency
 			status := strconv.Itoa(lw.Status())
 			httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
-			httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
+
+			sp := opentracing.SpanFromContext(r.Context())
+			if sp != nil {
+				if sctx, ok := sp.Context().(jaeger.SpanContext); ok {
+					httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).(prometheus.ExemplarObserver).ObserveWithExemplar(
+						time.Since(now).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
+					)
+				} else {
+					httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
+				}
+			} else {
+				httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
+			}
 		})
 	}
 }

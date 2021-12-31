@@ -4,11 +4,12 @@ package http
 import (
 	"compress/flate"
 	"compress/gzip"
-	"github.com/uber/jaeger-client-go"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/uber/jaeger-client-go"
 
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
@@ -98,7 +99,7 @@ func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 
 	if sctx, ok := ht.Span().Context().(jaeger.SpanContext); ok {
 		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-			time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+			time.Since(start).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
 		)
 	} else {
 		durationHistogram.Observe(time.Since(start).Seconds())

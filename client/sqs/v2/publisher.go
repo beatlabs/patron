@@ -6,9 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/uber/jaeger-client-go"
 	"strconv"
 	"time"
+
+	"github.com/uber/jaeger-client-go"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -108,7 +109,7 @@ func observePublish(span opentracing.Span, start time.Time, queue string, err er
 
 	if sctx, ok := span.Context().(jaeger.SpanContext); ok {
 		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-			time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+			time.Since(start).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
 		)
 	} else {
 		durationHistogram.Observe(time.Since(start).Seconds())

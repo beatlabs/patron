@@ -4,7 +4,6 @@ package es
 import (
 	"bytes"
 	"fmt"
-	"github.com/uber/jaeger-client-go"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -13,12 +12,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/uber/jaeger-client-go"
+
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	elasticsearch "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/elastic/go-elasticsearch/v8/estransport"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -125,7 +126,7 @@ func observeResponse(req *http.Request, sp opentracing.Span, rsp *http.Response,
 
 	if sctx, ok := sp.Context().(jaeger.SpanContext); ok {
 		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-			time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+			time.Since(start).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
 		)
 	} else {
 		durationHistogram.Observe(time.Since(start).Seconds())

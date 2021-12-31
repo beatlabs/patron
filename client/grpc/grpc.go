@@ -4,8 +4,9 @@ package grpc
 
 import (
 	"context"
-	"github.com/uber/jaeger-client-go"
 	"time"
+
+	"github.com/uber/jaeger-client-go"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
@@ -91,7 +92,7 @@ func unaryInterceptor(target string) grpc.UnaryClientInterceptor {
 		durationHistogram := rpcDurationMetrics.WithLabelValues(unary, target, method, rpcStatus.Code().String())
 		if sctx, ok := span.Context().(jaeger.SpanContext); ok {
 			durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-				invokeDuration.Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+				invokeDuration.Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
 			)
 		} else {
 			durationHistogram.Observe(invokeDuration.Seconds())

@@ -22,6 +22,8 @@ const (
 	HostsTag = "hosts"
 	// VersionTag is used to tag the components's version.
 	VersionTag = "version"
+	// TraceID is a label name for a request trace ID
+	TraceID = "traceID"
 )
 
 var (

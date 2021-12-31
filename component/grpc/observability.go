@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/uber/jaeger-client-go"
+
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
@@ -116,7 +118,15 @@ func (o *observer) messageHandled(err error) {
 
 func (o *observer) messageLatency(dur time.Duration, err error) {
 	st, _ := status.FromError(err)
-	rpcLatencyMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String()).Observe(dur.Seconds())
+	rpcLatencyMetricObserver := rpcLatencyMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String())
+
+	if sctx, ok := o.sp.Context().(jaeger.SpanContext); ok {
+		rpcLatencyMetricObserver.(prometheus.ExemplarObserver).ObserveWithExemplar(
+			dur.Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
+		)
+	} else {
+		rpcLatencyMetricObserver.Observe(dur.Seconds())
+	}
 }
 
 func observableUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {

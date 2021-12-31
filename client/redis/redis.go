@@ -3,14 +3,15 @@ package redis
 
 import (
 	"context"
-	"github.com/uber/jaeger-client-go"
 	"strconv"
 	"time"
+
+	"github.com/uber/jaeger-client-go"
 
 	"github.com/beatlabs/patron/trace"
 	"github.com/go-redis/redis/extra/rediscmd"
 	"github.com/go-redis/redis/v8"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -96,7 +97,7 @@ func observeDuration(ctx context.Context, cmd string, err error) {
 	if spanFromCtx != nil {
 		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
 			durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-				dur.Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+				dur.Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
 			)
 		} else {
 			durationHistogram.Observe(dur.Seconds())

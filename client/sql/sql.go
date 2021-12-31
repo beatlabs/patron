@@ -5,13 +5,14 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"github.com/uber/jaeger-client-go"
 	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/uber/jaeger-client-go"
+
 	"github.com/beatlabs/patron/trace"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -498,7 +499,7 @@ func observeDuration(span opentracing.Span, start time.Time, op string, err erro
 
 	if sctx, ok := span.Context().(jaeger.SpanContext); ok {
 		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-			time.Since(start).Seconds(), prometheus.Labels{"traceID": sctx.TraceID().String()},
+			time.Since(start).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
 		)
 	} else {
 		durationHistogram.Observe(time.Since(start).Seconds())

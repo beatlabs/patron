@@ -8,6 +8,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/uber/jaeger-client-go"
+
 	"github.com/beatlabs/patron/correlation"
 	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
@@ -38,9 +40,9 @@ const (
 )
 
 var (
-	messageAge     *prometheus.GaugeVec
-	messageCounter *prometheus.CounterVec
-	queueSize      *prometheus.GaugeVec
+	messageAge        *prometheus.GaugeVec
+	messageCounterVec *prometheus.CounterVec
+	queueSize         *prometheus.GaugeVec
 )
 
 func init() {
@@ -54,7 +56,7 @@ func init() {
 		[]string{"queue"},
 	)
 	prometheus.MustRegister(messageAge)
-	messageCounter = prometheus.NewCounterVec(
+	messageCounterVec = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "component",
 			Subsystem: "amqp",
@@ -63,7 +65,7 @@ func init() {
 		},
 		[]string{"queue", "state", "hasError"},
 	)
-	prometheus.MustRegister(messageCounter)
+	prometheus.MustRegister(messageCounterVec)
 	queueSize = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "component",
@@ -219,7 +221,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 				return errors.New("subscription channel closed")
 			}
 			log.Debugf("processing message %d", delivery.DeliveryTag)
-			observeReceivedMessageStats(c.queueCfg.queue, delivery.Timestamp)
+			observeReceivedMessageStats(ctx, c.queueCfg.queue, delivery.Timestamp)
 			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
 			log.Debugf("batch timeout expired, sending batch")
@@ -233,9 +235,9 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 	}
 }
 
-func observeReceivedMessageStats(queue string, timestamp time.Time) {
+func observeReceivedMessageStats(ctx context.Context, queue string, timestamp time.Time) {
 	messageAge.WithLabelValues(queue).Set(time.Now().UTC().Sub(timestamp).Seconds())
-	messageCountInc(queue, fetchedMessageState, nil)
+	messageCountInc(ctx, queue, fetchedMessageState, nil)
 }
 
 type subscription struct {
@@ -329,12 +331,24 @@ func (c *Component) stats(sub subscription) error {
 	return nil
 }
 
-func messageCountInc(queue string, state messageState, err error) {
+func messageCountInc(ctx context.Context, queue string, state messageState, err error) {
 	hasError := "false"
 	if err != nil {
 		hasError = "true"
 	}
-	messageCounter.WithLabelValues(queue, string(state), hasError).Inc()
+	messageStatusCounter := messageCounterVec.WithLabelValues(queue, string(state), hasError)
+	spanFromCtx := opentracing.SpanFromContext(ctx)
+	if spanFromCtx != nil {
+		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
+			messageStatusCounter.(prometheus.ExemplarAdder).AddWithExemplar(
+				1, prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
+			)
+		} else {
+			messageStatusCounter.Inc()
+		}
+	} else {
+		messageStatusCounter.Inc()
+	}
 }
 
 func mapHeader(hh amqp.Table) map[string]string {

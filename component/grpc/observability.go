@@ -113,7 +113,14 @@ func (o *observer) log(err error) {
 
 func (o *observer) messageHandled(err error) {
 	st, _ := status.FromError(err)
-	rpcHandledMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String()).Inc()
+	rpcHandledCounter := rpcHandledMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String())
+	if sctx, ok := o.sp.Context().(jaeger.SpanContext); ok {
+		rpcHandledCounter.(prometheus.ExemplarAdder).AddWithExemplar(
+			1, prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
+		)
+	} else {
+		rpcHandledCounter.Inc()
+	}
 }
 
 func (o *observer) messageLatency(dur time.Duration, err error) {

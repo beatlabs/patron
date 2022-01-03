@@ -201,7 +201,6 @@ func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 
 			// collect metrics about HTTP server-side handling and latency
 			status := strconv.Itoa(lw.Status())
-			httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
 
 			sp := opentracing.SpanFromContext(r.Context())
 			if sp != nil {
@@ -209,11 +208,16 @@ func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 					httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).(prometheus.ExemplarObserver).ObserveWithExemplar(
 						time.Since(now).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
 					)
+					httpStatusTracingHandledMetric.WithLabelValues(method, path, status).(prometheus.ExemplarAdder).AddWithExemplar(
+						1, prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
+					)
 				} else {
 					httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
+					httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
 				}
 			} else {
 				httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
+				httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
 			}
 		})
 	}

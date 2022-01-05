@@ -5,7 +5,6 @@ import (
 
 	"github.com/beatlabs/patron/examples"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/proto"
 )
 
 func TestNewMessage(t *testing.T) {
@@ -25,16 +24,13 @@ func TestNewJSONMessage(t *testing.T) {
 
 func TestNewProtobufMessage(t *testing.T) {
 	u := examples.User{
-		Firstname: proto.String("John"),
-		Lastname:  proto.String("Doe"),
+		Firstname: "John",
+		Lastname:  "Doe",
 	}
 	m, err := NewProtobufMessage(&u)
 	assert.NoError(t, err)
 	assert.Equal(t, "application/x-protobuf", m.contentType)
 	assert.Len(t, m.body, 11)
-	u = examples.User{}
-	_, err = NewProtobufMessage(&u)
-	assert.Error(t, err)
 }
 
 func TestNewPublisher(t *testing.T) {

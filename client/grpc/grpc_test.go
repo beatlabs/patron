@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/beatlabs/patron/examples"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -18,8 +19,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
-
-	"github.com/beatlabs/patron/examples"
 )
 
 const (
@@ -29,7 +28,9 @@ const (
 
 var lis *bufconn.Listener
 
-type server struct{}
+type server struct {
+	examples.UnimplementedGreeterServer
+}
 
 func (s *server) SayHelloStream(_ *examples.HelloRequest, _ examples.Greeter_SayHelloStreamServer) error {
 	return status.Error(codes.Unavailable, "streaming not supported")

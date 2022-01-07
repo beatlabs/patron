@@ -5,8 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
@@ -113,27 +111,19 @@ func (o *observer) log(err error) {
 
 func (o *observer) messageHandled(err error) {
 	st, _ := status.FromError(err)
-	rpcHandledCounter := rpcHandledMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String())
-	if sctx, ok := o.sp.Context().(jaeger.SpanContext); ok {
-		rpcHandledCounter.(prometheus.ExemplarAdder).AddWithExemplar(
-			1, prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-		)
-	} else {
-		rpcHandledCounter.Inc()
+	rpcHandledCounter := trace.Counter{
+		Counter: rpcHandledMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String()),
 	}
+	rpcHandledCounter.Inc(o.ctx)
 }
 
 func (o *observer) messageLatency(dur time.Duration, err error) {
 	st, _ := status.FromError(err)
-	rpcLatencyMetricObserver := rpcLatencyMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String())
 
-	if sctx, ok := o.sp.Context().(jaeger.SpanContext); ok {
-		rpcLatencyMetricObserver.(prometheus.ExemplarObserver).ObserveWithExemplar(
-			dur.Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-		)
-	} else {
-		rpcLatencyMetricObserver.Observe(dur.Seconds())
+	rpcLatencyMetricObserver := trace.Histogram{
+		Observer: rpcLatencyMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String()),
 	}
+	rpcLatencyMetricObserver.Observe(o.ctx, dur.Seconds())
 }
 
 func observableUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {

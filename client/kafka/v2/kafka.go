@@ -6,13 +6,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/Shopify/sarama"
 	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
+	"github.com/beatlabs/patron/trace"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -47,19 +44,8 @@ func init() {
 }
 
 func statusCountAddWithExemplars(ctx context.Context, deliveryType string, status deliveryStatus, topic string, cnt int) {
-	messageStatusCounter := messageStatus.WithLabelValues(string(status), topic, deliveryType)
-	spanFromCtx := opentracing.SpanFromContext(ctx)
-	if spanFromCtx != nil {
-		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
-			messageStatusCounter.(prometheus.ExemplarAdder).AddWithExemplar(
-				float64(cnt), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-			)
-		} else {
-			messageStatusCounter.Add(float64(cnt))
-		}
-	} else {
-		messageStatusCounter.Add(float64(cnt))
-	}
+	messageStatusCounter := trace.Counter{Counter: messageStatus.WithLabelValues(string(status), topic, deliveryType)}
+	messageStatusCounter.Add(ctx, float64(cnt))
 }
 
 func statusCountAdd(deliveryType string, status deliveryStatus, topic string, cnt int) {

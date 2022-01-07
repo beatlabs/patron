@@ -8,8 +8,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/beatlabs/patron/correlation"
 	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
@@ -336,19 +334,8 @@ func messageCountInc(ctx context.Context, queue string, state messageState, err 
 	if err != nil {
 		hasError = "true"
 	}
-	messageStatusCounter := messageCounterVec.WithLabelValues(queue, string(state), hasError)
-	spanFromCtx := opentracing.SpanFromContext(ctx)
-	if spanFromCtx != nil {
-		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
-			messageStatusCounter.(prometheus.ExemplarAdder).AddWithExemplar(
-				1, prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-			)
-		} else {
-			messageStatusCounter.Inc()
-		}
-	} else {
-		messageStatusCounter.Inc()
-	}
+	messageStatusCounter := trace.Counter{Counter: messageCounterVec.WithLabelValues(queue, string(state), hasError)}
+	messageStatusCounter.Inc(ctx)
 }
 
 func mapHeader(hh amqp.Table) map[string]string {

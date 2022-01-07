@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/beatlabs/patron/trace"
 	"github.com/go-redis/redis/extra/rediscmd"
 	"github.com/go-redis/redis/v8"
@@ -91,20 +89,10 @@ func (th tracingHook) AfterProcessPipeline(ctx context.Context, cmds []redis.Cmd
 
 func observeDuration(ctx context.Context, cmd string, err error) {
 	dur := time.Since(ctx.Value(duration{}).(time.Time))
-	durationHistogram := cmdDurationMetrics.WithLabelValues(cmd, strconv.FormatBool(err == nil))
-
-	spanFromCtx := opentracing.SpanFromContext(ctx)
-	if spanFromCtx != nil {
-		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
-			durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-				dur.Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-			)
-		} else {
-			durationHistogram.Observe(dur.Seconds())
-		}
-	} else {
-		durationHistogram.Observe(dur.Seconds())
+	durationHistogram := trace.Histogram{
+		Observer: cmdDurationMetrics.WithLabelValues(cmd, strconv.FormatBool(err == nil)),
 	}
+	durationHistogram.Observe(ctx, dur.Seconds())
 }
 
 func startSpan(ctx context.Context, address, opName string) (opentracing.Span, context.Context) {

@@ -6,8 +6,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
@@ -89,14 +87,10 @@ func unaryInterceptor(target string) grpc.UnaryClientInterceptor {
 
 		rpcStatus, _ := status.FromError(err) // codes.OK if err == nil, codes.Unknown if !ok
 
-		durationHistogram := rpcDurationMetrics.WithLabelValues(unary, target, method, rpcStatus.Code().String())
-		if sctx, ok := span.Context().(jaeger.SpanContext); ok {
-			durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-				invokeDuration.Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-			)
-		} else {
-			durationHistogram.Observe(invokeDuration.Seconds())
+		durationHistogram := trace.Histogram{
+			Observer: rpcDurationMetrics.WithLabelValues(unary, target, method, rpcStatus.Code().String()),
 		}
+		durationHistogram.Observe(ctx, invokeDuration.Seconds())
 
 		if err != nil {
 			trace.SpanError(span)

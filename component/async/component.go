@@ -8,6 +8,7 @@ import (
 
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/trace"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -28,8 +29,9 @@ func init() {
 	prometheus.MustRegister(consumerErrors)
 }
 
-func consumerErrorsInc(name string) {
-	consumerErrors.WithLabelValues(name).Inc()
+func consumerErrorsInc(ctx context.Context, name string) {
+	consumerErrorsCounter := trace.Counter{Counter: consumerErrors.WithLabelValues(name)}
+	consumerErrorsCounter.Inc(ctx)
 }
 
 // Component implementation of a async component.
@@ -160,7 +162,7 @@ func (c *Component) Run(ctx context.Context) error {
 		if ctx.Err() == context.Canceled {
 			break
 		}
-		consumerErrorsInc(c.name)
+		consumerErrorsInc(ctx, c.name)
 		if c.retries > 0 {
 			log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, err)
 			time.Sleep(c.retryWait)

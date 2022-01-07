@@ -17,8 +17,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/uber/jaeger-client-go"
-
 	"golang.org/x/time/rate"
 
 	"github.com/beatlabs/patron/component/http/auth"
@@ -202,23 +200,15 @@ func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 			// collect metrics about HTTP server-side handling and latency
 			status := strconv.Itoa(lw.Status())
 
-			sp := opentracing.SpanFromContext(r.Context())
-			if sp != nil {
-				if sctx, ok := sp.Context().(jaeger.SpanContext); ok {
-					httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).(prometheus.ExemplarObserver).ObserveWithExemplar(
-						time.Since(now).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-					)
-					httpStatusTracingHandledMetric.WithLabelValues(method, path, status).(prometheus.ExemplarAdder).AddWithExemplar(
-						1, prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-					)
-				} else {
-					httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
-					httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
-				}
-			} else {
-				httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
-				httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
+			httpStatusCounter := trace.Counter{
+				Counter: httpStatusTracingHandledMetric.WithLabelValues(method, path, status),
 			}
+			httpStatusCounter.Inc(r.Context())
+
+			httpLatencyMetricObserver := trace.Histogram{
+				Observer: httpStatusTracingLatencyMetric.WithLabelValues(method, path, status),
+			}
+			httpLatencyMetricObserver.Observe(r.Context(), time.Since(now).Seconds())
 		})
 	}
 }

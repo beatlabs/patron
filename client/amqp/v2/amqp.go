@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/beatlabs/patron/correlation"
 	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
@@ -102,7 +100,7 @@ func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandator
 	start := time.Now()
 	err := tc.channel.Publish(exchange, key, mandatory, immediate, msg)
 
-	observePublish(sp, start, exchange, err)
+	observePublish(ctx, sp, start, exchange, err)
 	if err != nil {
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
@@ -122,16 +120,11 @@ func (c amqpHeadersCarrier) Set(key, val string) {
 	c[key] = val
 }
 
-func observePublish(span opentracing.Span, start time.Time, exchange string, err error) {
+func observePublish(ctx context.Context, span opentracing.Span, start time.Time, exchange string, err error) {
 	trace.SpanComplete(span, err)
 
-	durationHistogram := publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err == nil))
-
-	if sctx, ok := span.Context().(jaeger.SpanContext); ok {
-		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-			time.Since(start).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-		)
-	} else {
-		durationHistogram.Observe(time.Since(start).Seconds())
+	durationHistogram := trace.Histogram{
+		Observer: publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err == nil)),
 	}
+	durationHistogram.Observe(ctx, time.Since(start).Seconds())
 }

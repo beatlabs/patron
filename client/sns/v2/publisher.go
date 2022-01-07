@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sns/snsiface"
@@ -71,10 +69,10 @@ func (p Publisher) Publish(ctx context.Context, input *sns.PublishInput) (messag
 	start := time.Now()
 	out, err := p.api.PublishWithContext(ctx, input)
 	if input.TopicArn != nil {
-		observePublish(span, start, *input.TopicArn, err)
+		observePublish(ctx, span, start, *input.TopicArn, err)
 	}
 	if input.TargetArn != nil {
-		observePublish(span, start, *input.TargetArn, err)
+		observePublish(ctx, span, start, *input.TargetArn, err)
 	}
 	if err != nil {
 		return "", fmt.Errorf("failed to publish message: %w", err)
@@ -126,15 +124,11 @@ func injectHeaders(span opentracing.Span, input *sns.PublishInput) error {
 	return nil
 }
 
-func observePublish(span opentracing.Span, start time.Time, topic string, err error) {
+func observePublish(ctx context.Context, span opentracing.Span, start time.Time, topic string, err error) {
 	trace.SpanComplete(span, err)
-	durationHistogram := publishDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err == nil))
 
-	if sctx, ok := span.Context().(jaeger.SpanContext); ok {
-		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-			time.Since(start).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-		)
-	} else {
-		durationHistogram.Observe(time.Since(start).Seconds())
+	durationHistogram := trace.Histogram{
+		Observer: publishDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err == nil)),
 	}
+	durationHistogram.Observe(ctx, time.Since(start).Seconds())
 }

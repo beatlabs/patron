@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -95,15 +93,10 @@ func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
-	durationHistogram := reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode))
-
-	if sctx, ok := ht.Span().Context().(jaeger.SpanContext); ok {
-		durationHistogram.(prometheus.ExemplarObserver).ObserveWithExemplar(
-			time.Since(start).Seconds(), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-		)
-	} else {
-		durationHistogram.Observe(time.Since(start).Seconds())
+	durationHistogram := trace.Histogram{
+		Observer: reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)),
 	}
+	durationHistogram.Observe(req.Context(), time.Since(start).Seconds())
 
 	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
 		rsp.Body = decompress(hdr, rsp)

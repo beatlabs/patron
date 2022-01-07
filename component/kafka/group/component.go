@@ -9,8 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/correlation"
@@ -95,20 +93,10 @@ func topicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high
 
 // messageStatusCountInc increments the messageStatus counter for a certain status.
 func messageStatusCountInc(ctx context.Context, status, group, topic string) {
-	messageStatus.WithLabelValues(status, group, topic).Inc()
-	messageCounter := messageStatus.WithLabelValues(status, group, topic)
-	spanFromCtx := opentracing.SpanFromContext(ctx)
-	if spanFromCtx != nil {
-		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
-			messageCounter.(prometheus.ExemplarAdder).AddWithExemplar(
-				1, prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-			)
-		} else {
-			messageCounter.Inc()
-		}
-	} else {
-		messageCounter.Inc()
+	httpStatusCounter := trace.Counter{
+		Counter: messageStatus.WithLabelValues(status, group, topic),
 	}
+	httpStatusCounter.Inc(ctx)
 }
 
 // New initializes a new  kafka consumer component with support for functional configuration.

@@ -8,9 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
@@ -338,20 +335,11 @@ func messageCountInc(ctx context.Context, queue string, state messageState, hasE
 	if hasError {
 		hasErrorString = "true"
 	}
-	messageCounter := messageCounterVec.WithLabelValues(queue, string(state), hasErrorString)
 
-	spanFromCtx := opentracing.SpanFromContext(ctx)
-	if spanFromCtx != nil {
-		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
-			messageCounter.(prometheus.ExemplarAdder).AddWithExemplar(
-				float64(count), prometheus.Labels{trace.TraceID: sctx.TraceID().String()},
-			)
-		} else {
-			messageCounter.Add(float64(count))
-		}
-	} else {
-		messageCounter.Add(float64(count))
+	messageCounter := trace.Counter{
+		Counter: messageCounterVec.WithLabelValues(queue, string(state), hasErrorString),
 	}
+	messageCounter.Add(ctx, float64(count))
 }
 
 func getCorrelationID(ma map[string]*sqs.MessageAttributeValue) string {

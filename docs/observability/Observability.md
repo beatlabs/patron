@@ -18,13 +18,13 @@ it became possible to move seamlessly between metrics, logs, and traces.
 Below are prerequisites for enabling exemplars:
 
 - Use Prometheus Go client library version 1.4.0 or above.
-- Use the new `ExemplarObserver` interface because the original `Histogram` interface has not been changed,
-  to avoid breaking the backward compatibility.
-- Use `ObserveWithExemplar` method noting the `TraceID` key — it is needed later to configure Grafana,
-  so that it knows which label to use to retrieve the `TraceID`
+- Use the new `ExemplarObserver` for `Histogram` or `ExemplarAdder` for `Counter` 
+  because the original interfaces has not been changed for the backward compatibility.
+- Use `ObserveWithExemplar` or `AddWithExemplar` methods noting the `TraceID` key — it is needed later to configure 
+  Grafana, so that it knows which label to use to retrieve the `TraceID`
 
-An example of enabling exemplars in an already instrumented Go application can be found [here](../client/http/http.go)
-where exemplars are enabled for request duration metric.
+An example of enabling exemplars in an already instrumented Go application can be found [here](../trace/metric.go)
+where exemplars are enabled for `Histogram` and `Counter` metrics.
 
 The result of the above steps is attached trace IDs to metrics via exemplars.
 When querying `/metrics` endpoint `curl -H "Accept: application/openmetrics-text"  <endpoint>:<port>/metrics`

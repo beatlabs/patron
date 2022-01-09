@@ -8,23 +8,13 @@ import (
 	"github.com/uber/jaeger-client-go"
 )
 
+// Counter is a wrapper of a prometheus.Counter.
 type Counter struct {
 	prometheus.Counter
 }
 
-type Histogram struct {
-	prometheus.Observer
-}
-
-type CounterOperation interface {
-	Inc(ctx context.Context)
-	Add(ctx context.Context, val float64)
-}
-
-type HistogramOperation interface {
-	Observe(ctx context.Context, v float64)
-}
-
+// Add adds the given value to the counter. If there is a span associated with a context ctx the method
+// replaces the currently saved exemplar (if any) with a new one, created from the provided value.
 func (c *Counter) Add(ctx context.Context, count float64) {
 	spanFromCtx := opentracing.SpanFromContext(ctx)
 	if spanFromCtx != nil {
@@ -40,6 +30,8 @@ func (c *Counter) Add(ctx context.Context, count float64) {
 	}
 }
 
+// Inc increments the given value to the counter. If there is a span associated with a context ctx the method
+// replaces the currently saved exemplar (if any) with a new one, created from the provided value.
 func (c *Counter) Inc(ctx context.Context) {
 	spanFromCtx := opentracing.SpanFromContext(ctx)
 	if spanFromCtx != nil {
@@ -55,6 +47,13 @@ func (c *Counter) Inc(ctx context.Context) {
 	}
 }
 
+// Histogram is a wrapper of a prometheus.Observer.
+type Histogram struct {
+	prometheus.Observer
+}
+
+// Observe adds an observation. If there is a span associated with a context ctx the method replaces
+// the currently saved exemplar (if any) with a new one, created from the provided value.
 func (h *Histogram) Observe(ctx context.Context, v float64) {
 	spanFromCtx := opentracing.SpanFromContext(ctx)
 	if spanFromCtx != nil {

@@ -11,9 +11,8 @@ The `component` and `client` packages implement capturing and propagating of met
 
 ## Prometheus Exemplars
 
-After a release of [Grafana Tempo](https://grafana.com/oss/tempo/) and
-[Prometheus Exemplars](https://grafana.com/docs/grafana/latest/basics/exemplars/)
-it became possible to move seamlessly between metrics, logs, and traces.
+[OpenTracing](https://opentracing.io) compatible tracing systems such as [Grafana Tempo](https://grafana.com/oss/tempo/)
+can work with [Prometheus Exemplars](https://grafana.com/docs/grafana/latest/basics/exemplars/).
 
 Below are prerequisites for enabling exemplars:
 

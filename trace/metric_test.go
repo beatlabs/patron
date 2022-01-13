@@ -63,7 +63,7 @@ func TestCounter_Add(t *testing.T) {
 			if tt.expectedPanic {
 				defer func() {
 					if r := recover(); r == nil {
-						t.Errorf("Add method did not panic.")
+						t.Error("Add method did not panic.")
 					}
 				}()
 			}
@@ -74,7 +74,7 @@ func TestCounter_Add(t *testing.T) {
 			if tt.expectedPanic {
 				defer func() {
 					if r := recover(); r == nil {
-						t.Errorf("Add method did not panic.")
+						t.Error("Add method did not panic.")
 					}
 				}()
 			} else {
@@ -214,7 +214,7 @@ func sampleSum(c prometheus.Collector) (float64, error) {
 	}
 
 	pb := &dto.Metric{}
-	m.Write(pb)
+	_ = m.Write(pb)
 
 	if pb.Histogram != nil {
 		return *pb.Histogram.SampleSum, nil

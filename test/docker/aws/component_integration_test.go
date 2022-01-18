@@ -23,7 +23,8 @@ type message struct {
 }
 
 func Test_SQS_Consume(t *testing.T) {
-	defer mtr.Reset()
+	mtr.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"

@@ -269,7 +269,10 @@ func TestNewCompressionMiddleware(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(202) })
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Add("Content-Length", "123")
+				w.WriteHeader(202)
+			})
 			req, err := http.NewRequest("GET", "/test", nil)
 			assert.NoError(t, err)
 
@@ -281,8 +284,10 @@ func TestNewCompressionMiddleware(t *testing.T) {
 			rc := httptest.NewRecorder()
 			compressionMiddleware(handler).ServeHTTP(rc, req)
 			actual := rc.Header().Get("Content-Encoding")
-			assert.NotNil(t, actual)
 			assert.Equal(t, name, actual)
+
+			cl := rc.Header().Get("Content-Length")
+			assert.Equal(t, "", cl)
 		})
 	}
 }

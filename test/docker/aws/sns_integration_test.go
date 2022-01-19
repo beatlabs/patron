@@ -17,7 +17,8 @@ import (
 )
 
 func Test_SNS_Publish_Message(t *testing.T) {
-	defer mtr.Reset()
+	mtr.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 
 	const topic = "test_publish_message"
 
@@ -42,7 +43,8 @@ func Test_SNS_Publish_Message(t *testing.T) {
 }
 
 func Test_SNS_Publish_Message_v2(t *testing.T) {
-	defer mtr.Reset()
+	mtr.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 
 	const topic = "test_publish_message_v2"
 

@@ -19,15 +19,13 @@ func (c *Counter) Add(ctx context.Context, count float64) {
 	spanFromCtx := opentracing.SpanFromContext(ctx)
 	if spanFromCtx != nil {
 		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
-			c.Counter.(prometheus.ExemplarAdder).AddWithExemplar(
-				count, prometheus.Labels{TraceID: sctx.TraceID().String()},
-			)
-		} else {
-			c.Counter.Add(count)
+			if counter, ok := c.Counter.(prometheus.ExemplarAdder); ok {
+				counter.AddWithExemplar(count, prometheus.Labels{TraceID: sctx.TraceID().String()})
+				return
+			}
 		}
-	} else {
-		c.Counter.Add(count)
 	}
+	c.Counter.Add(count)
 }
 
 // Inc increments the given value to the counter. If there is a span associated with a context ctx the method
@@ -36,15 +34,13 @@ func (c *Counter) Inc(ctx context.Context) {
 	spanFromCtx := opentracing.SpanFromContext(ctx)
 	if spanFromCtx != nil {
 		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
-			c.Counter.(prometheus.ExemplarAdder).AddWithExemplar(
-				1, prometheus.Labels{TraceID: sctx.TraceID().String()},
-			)
-		} else {
-			c.Counter.Inc()
+			if counter, ok := c.Counter.(prometheus.ExemplarAdder); ok {
+				counter.AddWithExemplar(1, prometheus.Labels{TraceID: sctx.TraceID().String()})
+				return
+			}
 		}
-	} else {
-		c.Counter.Inc()
 	}
+	c.Counter.Add(1)
 }
 
 // Histogram is a wrapper of a prometheus.Observer.
@@ -58,13 +54,11 @@ func (h *Histogram) Observe(ctx context.Context, v float64) {
 	spanFromCtx := opentracing.SpanFromContext(ctx)
 	if spanFromCtx != nil {
 		if sctx, ok := spanFromCtx.Context().(jaeger.SpanContext); ok {
-			h.Observer.(prometheus.ExemplarObserver).ObserveWithExemplar(
-				v, prometheus.Labels{TraceID: sctx.TraceID().String()},
-			)
-		} else {
-			h.Observer.Observe(v)
+			if observer, ok := h.Observer.(prometheus.ExemplarObserver); ok {
+				observer.ObserveWithExemplar(v, prometheus.Labels{TraceID: sctx.TraceID().String()})
+				return
+			}
 		}
-	} else {
-		h.Observer.Observe(v)
 	}
+	h.Observer.Observe(v)
 }

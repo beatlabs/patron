@@ -100,7 +100,7 @@ func injectHeaders(ctx context.Context, span opentracing.Span, input *sqs.SendMe
 		}
 	}
 
-	if input.MessageAttributes[correlation.HeaderID] == nil {
+	if _, ok := input.MessageAttributes[correlation.HeaderID]; !ok {
 		input.MessageAttributes[correlation.HeaderID] = &sqs.MessageAttributeValue{
 			DataType:    aws.String(attributeDataTypeString),
 			StringValue: aws.String(correlation.IDFromContext(ctx)),

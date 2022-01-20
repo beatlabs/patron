@@ -128,12 +128,34 @@ func Test_Publisher_Publish_InjectsHeaders(t *testing.T) {
 			DataType:    aws.String("String"),
 		},
 	}
-	sqsStub.expectMessageInput(t, &expectedMsgInput)
 
-	_, err = p.Publish(ctx, &msg)
-	require.NoError(t, err)
+	t.Run("sets correlation ID and opentracing headers", func(t *testing.T) {
+		sqsStub.expectMessageInput(t, &expectedMsgInput)
 
-	mtr.Reset()
+		_, err = p.Publish(ctx, &msg)
+		require.NoError(t, err)
+
+		mtr.Reset()
+	})
+
+	t.Run("does not set correlation ID header when it's already present", func(t *testing.T) {
+		msg.MessageAttributes = map[string]*sqs.MessageAttributeValue{
+			correlation.HeaderID: {
+				StringValue: aws.String("something"),
+				DataType:    aws.String("String"),
+			},
+		}
+
+		// Expect the original value to be retained.
+		expectedMsgInput.MessageAttributes[correlation.HeaderID] = msg.MessageAttributes[correlation.HeaderID]
+
+		sqsStub.expectMessageInput(t, &expectedMsgInput)
+
+		_, err = p.Publish(ctx, &msg)
+		require.NoError(t, err)
+
+		mtr.Reset()
+	})
 }
 
 type stubSQSAPI struct {

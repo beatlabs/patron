@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
@@ -57,7 +58,7 @@ func New(api sqsiface.SQSAPI) (Publisher, error) {
 func (p Publisher) Publish(ctx context.Context, msg *sqs.SendMessageInput) (messageID string, err error) {
 	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, *msg.QueueUrl), publisherComponent, ext.SpanKindProducer)
 
-	if err := injectHeaders(span, msg); err != nil {
+	if err := injectHeaders(ctx, span, msg); err != nil {
 		log.FromContext(ctx).Errorf("failed to inject trace headers: %v", err)
 	}
 
@@ -83,7 +84,7 @@ func (c sqsHeadersCarrier) Set(key, val string) {
 }
 
 // injectHeaders injects the SQS headers carrier's headers into the message's attributes.
-func injectHeaders(span opentracing.Span, input *sqs.SendMessageInput) error {
+func injectHeaders(ctx context.Context, span opentracing.Span, input *sqs.SendMessageInput) error {
 	carrier := sqsHeadersCarrier{}
 	if err := span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier); err != nil {
 		return fmt.Errorf("failed to inject tracing headers: %w", err)
@@ -97,6 +98,11 @@ func injectHeaders(span opentracing.Span, input *sqs.SendMessageInput) error {
 			DataType:    aws.String(attributeDataTypeString),
 			StringValue: aws.String(v.(string)),
 		}
+	}
+
+	input.MessageAttributes[correlation.HeaderID] = &sqs.MessageAttributeValue{
+		DataType:    aws.String(attributeDataTypeString),
+		StringValue: aws.String(correlation.IDFromContext(ctx)),
 	}
 	return nil
 }

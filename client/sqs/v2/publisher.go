@@ -83,7 +83,8 @@ func (c sqsHeadersCarrier) Set(key, val string) {
 	c[key] = val
 }
 
-// injectHeaders injects the SQS headers carrier's headers into the message's attributes.
+// injectHeaders injects opentracing headers into SQS message attributes.
+// It also injects a message attribute for correlation.HeaderID if it's not set already.
 func injectHeaders(ctx context.Context, span opentracing.Span, input *sqs.SendMessageInput) error {
 	carrier := sqsHeadersCarrier{}
 	if err := span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier); err != nil {

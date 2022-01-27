@@ -108,3 +108,18 @@ func DefaultConsumerSaramaConfig(name string, readCommitted bool) (*sarama.Confi
 
 	return config, nil
 }
+
+// DeduplicateMessages takes a slice of Messages and de-duplicates the messages based on the Key of those messages.
+func DeduplicateMessages(messages []Message) []Message {
+	m := map[string]Message{}
+	for _, message := range messages {
+		m[string(message.Message().Key)] = message
+	}
+
+	deduplicated := make([]Message, 0, len(m))
+	for _, message := range m {
+		deduplicated = append(deduplicated, message)
+	}
+
+	return deduplicated
+}

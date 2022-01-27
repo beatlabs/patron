@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/require"
 
@@ -87,4 +88,36 @@ func Test_DefaultConsumerSaramaConfig(t *testing.T) {
 	sc, err = DefaultConsumerSaramaConfig("name", false)
 	require.NoError(t, err)
 	require.NotEqual(t, sarama.ReadCommitted, sc.Consumer.IsolationLevel)
+}
+
+func TestDeduplicateMessages(t *testing.T) {
+	message := func(key, val string) Message {
+		return NewMessage(
+			context.TODO(),
+			opentracing.SpanFromContext(context.TODO()),
+			&sarama.ConsumerMessage{Key: []byte(key), Value: []byte(val)})
+	}
+	find := func(collection []Message, key string) Message {
+		for _, m := range collection {
+			if string(m.Message().Key) == key {
+				return m
+			}
+		}
+		return nil
+	}
+
+	// Given
+	original := []Message{
+		message("k1", "v1.1"),
+		message("k1", "v1.2"),
+		message("k2", "v2.1"),
+		message("k2", "v2.2"),
+		message("k1", "v1.3"),
+	}
+
+	cleaned := DeduplicateMessages(original)
+
+	assert.Len(t, cleaned, 2)
+	assert.Equal(t, []byte("v1.3"), find(cleaned, "k1").Message().Value)
+	assert.Equal(t, []byte("v2.2"), find(cleaned, "k2").Message().Value)
 }

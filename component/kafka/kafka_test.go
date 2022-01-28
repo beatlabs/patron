@@ -93,8 +93,8 @@ func Test_DefaultConsumerSaramaConfig(t *testing.T) {
 func TestDeduplicateMessages(t *testing.T) {
 	message := func(key, val string) Message {
 		return NewMessage(
-			context.TODO(),
-			opentracing.SpanFromContext(context.TODO()),
+			context.Background(),
+			opentracing.SpanFromContext(context.Background()),
 			&sarama.ConsumerMessage{Key: []byte(key), Value: []byte(val)})
 	}
 	find := func(collection []Message, key string) Message {

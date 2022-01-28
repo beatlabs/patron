@@ -212,12 +212,14 @@ func (m *mockConsumerSession) Context() context.Context                    { ret
 
 func TestHandler_ConsumeClaim(t *testing.T) {
 	tests := []struct {
-		name         string
-		msgs         []*sarama.ConsumerMessage
-		proc         *mockProcessor
-		failStrategy kafka.FailStrategy
-		batchSize    uint
-		expectError  bool
+		name                      string
+		msgs                      []*sarama.ConsumerMessage
+		proc                      *mockProcessor
+		failStrategy              kafka.FailStrategy
+		batchSize                 uint
+		batchMessageDeduplication bool
+		expectError               bool
+		expectedProcessExecutions int
 	}{
 		{
 			name: "success",
@@ -272,14 +274,42 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			batchSize:    1,
 			expectError:  false,
 		},
+		{
+			name: "deduplicates messages",
+			msgs: []*sarama.ConsumerMessage{
+				saramaConsumerMessage("1", &sarama.RecordHeader{
+					Key:   []byte(encoding.ContentTypeHeader),
+					Value: []byte(json.Type),
+				}),
+				saramaConsumerMessage("2", &sarama.RecordHeader{
+					Key:   []byte(encoding.ContentTypeHeader),
+					Value: []byte(json.Type),
+				}),
+				saramaConsumerMessage("3", &sarama.RecordHeader{
+					Key:   []byte(encoding.ContentTypeHeader),
+					Value: []byte(json.Type),
+				}),
+			},
+			proc: &mockProcessor{
+				errReturn: false,
+			},
+			failStrategy:              kafka.SkipStrategy,
+			batchSize:                 10,
+			batchMessageDeduplication: true,
+			expectError:               false,
+			expectedProcessExecutions: 1,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.expectedProcessExecutions == 0 {
+				tt.expectedProcessExecutions = len(tt.msgs)
+			}
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			h := newConsumerHandler(ctx, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
-				10*time.Millisecond, true)
+				10*time.Millisecond, true, tt.batchMessageDeduplication)
 
 			ch := make(chan *sarama.ConsumerMessage, len(tt.msgs))
 			for _, m := range tt.msgs {
@@ -295,7 +325,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-			assert.Equal(t, len(tt.msgs), tt.proc.GetExecs())
+			assert.Equal(t, tt.expectedProcessExecutions, tt.proc.GetExecs())
 		})
 	}
 }

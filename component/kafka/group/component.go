@@ -159,18 +159,19 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 
 // Component is a kafka consumer implementation that processes messages in batch
 type Component struct {
-	name         string
-	group        string
-	topics       []string
-	brokers      []string
-	saramaConfig *sarama.Config
-	proc         kafka.BatchProcessorFunc
-	failStrategy kafka.FailStrategy
-	batchSize    uint
-	batchTimeout time.Duration
-	retries      uint
-	retryWait    time.Duration
-	commitSync   bool
+	name                      string
+	group                     string
+	topics                    []string
+	brokers                   []string
+	saramaConfig              *sarama.Config
+	proc                      kafka.BatchProcessorFunc
+	failStrategy              kafka.FailStrategy
+	batchSize                 uint
+	batchTimeout              time.Duration
+	batchMessageDeduplication bool
+	retries                   uint
+	retryWait                 time.Duration
+	commitSync                bool
 }
 
 // Run starts the consumer processing loop to process messages from Kafka.
@@ -186,7 +187,7 @@ func (c *Component) processing(ctx context.Context) error {
 	retries := int(c.retries)
 	for i := 0; i <= retries; i++ {
 		handler := newConsumerHandler(ctx, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
-			c.batchTimeout, c.commitSync)
+			c.batchTimeout, c.commitSync, c.batchMessageDeduplication)
 
 		client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 		componentError = err
@@ -264,8 +265,9 @@ type consumerHandler struct {
 	group string
 
 	// buffer
-	batchSize int
-	ticker    *time.Ticker
+	batchSize                 int
+	ticker                    *time.Ticker
+	batchMessageDeduplication bool
 
 	// callback
 	proc kafka.BatchProcessorFunc
@@ -288,18 +290,19 @@ type consumerHandler struct {
 }
 
 func newConsumerHandler(ctx context.Context, name, group string, processorFunc kafka.BatchProcessorFunc,
-	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync bool) *consumerHandler {
+	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync bool, batchMessageDeduplication bool) *consumerHandler {
 	return &consumerHandler{
-		ctx:          ctx,
-		name:         name,
-		group:        group,
-		batchSize:    int(batchSize),
-		ticker:       time.NewTicker(batchTimeout),
-		msgBuf:       make([]*sarama.ConsumerMessage, 0, batchSize),
-		mu:           sync.RWMutex{},
-		proc:         processorFunc,
-		failStrategy: fs,
-		commitSync:   commitSync,
+		ctx:                       ctx,
+		name:                      name,
+		group:                     group,
+		batchSize:                 int(batchSize),
+		batchMessageDeduplication: batchMessageDeduplication,
+		ticker:                    time.NewTicker(batchTimeout),
+		msgBuf:                    make([]*sarama.ConsumerMessage, 0, batchSize),
+		mu:                        sync.RWMutex{},
+		proc:                      processorFunc,
+		failStrategy:              fs,
+		commitSync:                commitSync,
 	}
 }
 
@@ -355,6 +358,9 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 			messages = append(messages, kafka.NewMessage(ctx, sp, msg))
 		}
 
+		if c.batchMessageDeduplication {
+			messages = kafka.DeduplicateMessages(messages)
+		}
 		btc := kafka.NewBatch(messages)
 		err := c.proc(btc)
 		if err != nil {

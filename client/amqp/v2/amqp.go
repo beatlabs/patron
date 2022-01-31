@@ -12,7 +12,7 @@ import (
 	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/streadway/amqp"
@@ -100,7 +100,7 @@ func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandator
 	start := time.Now()
 	err := tc.channel.Publish(exchange, key, mandatory, immediate, msg)
 
-	observePublish(sp, start, exchange, err)
+	observePublish(ctx, sp, start, exchange, err)
 	if err != nil {
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
@@ -120,7 +120,11 @@ func (c amqpHeadersCarrier) Set(key, val string) {
 	c[key] = val
 }
 
-func observePublish(span opentracing.Span, start time.Time, exchange string, err error) {
+func observePublish(ctx context.Context, span opentracing.Span, start time.Time, exchange string, err error) {
 	trace.SpanComplete(span, err)
-	publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
+
+	durationHistogram := trace.Histogram{
+		Observer: publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err == nil)),
+	}
+	durationHistogram.Observe(ctx, time.Since(start).Seconds())
 }

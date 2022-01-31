@@ -46,9 +46,9 @@ const (
 )
 
 var (
-	messageAge     *prometheus.GaugeVec
-	messageCounter *prometheus.CounterVec
-	queueSize      *prometheus.GaugeVec
+	messageAge        *prometheus.GaugeVec
+	messageCounterVec *prometheus.CounterVec
+	queueSize         *prometheus.GaugeVec
 )
 
 func init() {
@@ -62,7 +62,7 @@ func init() {
 		[]string{"queue"},
 	)
 	prometheus.MustRegister(messageAge)
-	messageCounter = prometheus.NewCounterVec(
+	messageCounterVec = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "component",
 			Subsystem: "sqs",
@@ -71,7 +71,7 @@ func init() {
 		},
 		[]string{"queue", "state", "hasError"},
 	)
-	prometheus.MustRegister(messageCounter)
+	prometheus.MustRegister(messageCounterVec)
 	queueSize = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "component",
@@ -228,7 +228,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 		}
 
 		logger.Debugf("Consume: received %d messages", len(output.Messages))
-		messageCountInc(c.queue.name, fetchedMessageState, len(output.Messages))
+		messageCountInc(ctx, c.queue.name, fetchedMessageState, false, len(output.Messages))
 
 		if len(output.Messages) == 0 {
 			continue
@@ -330,12 +330,16 @@ func observerMessageAge(queue string, attributes map[string]*string) {
 	messageAge.WithLabelValues(queue).Set(time.Now().UTC().Sub(time.Unix(timestamp, 0)).Seconds())
 }
 
-func messageCountInc(queue string, state messageState, count int) {
-	messageCounter.WithLabelValues(queue, string(state), "false").Add(float64(count))
-}
+func messageCountInc(ctx context.Context, queue string, state messageState, hasError bool, count int) {
+	hasErrorString := "false"
+	if hasError {
+		hasErrorString = "true"
+	}
 
-func messageCountErrorInc(queue string, state messageState, count int) {
-	messageCounter.WithLabelValues(queue, string(state), "true").Add(float64(count))
+	messageCounter := trace.Counter{
+		Counter: messageCounterVec.WithLabelValues(queue, string(state), hasErrorString),
+	}
+	messageCounter.Add(ctx, float64(count))
 }
 
 func getCorrelationID(ma map[string]*sqs.MessageAttributeValue) string {

@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"github.com/Shopify/sarama"
 	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
+	"github.com/beatlabs/patron/trace"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -39,6 +41,11 @@ func init() {
 	)
 
 	prometheus.MustRegister(messageStatus)
+}
+
+func statusCountAddWithExemplars(ctx context.Context, deliveryType string, status deliveryStatus, topic string, cnt int) {
+	messageStatusCounter := trace.Counter{Counter: messageStatus.WithLabelValues(string(status), topic, deliveryType)}
+	messageStatusCounter.Add(ctx, float64(cnt))
 }
 
 func statusCountAdd(deliveryType string, status deliveryStatus, topic string, cnt int) {

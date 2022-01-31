@@ -79,17 +79,17 @@ func (m message) ACK() error {
 		ReceiptHandle: m.msg.ReceiptHandle,
 	})
 	if err != nil {
-		messageCountErrorInc(m.queue.name, ackMessageState, 1)
+		messageCountInc(m.ctx, m.queue.name, ackMessageState, true, 1)
 		trace.SpanError(m.span)
 		return err
 	}
-	messageCountInc(m.queue.name, ackMessageState, 1)
+	messageCountInc(m.ctx, m.queue.name, ackMessageState, false, 1)
 	trace.SpanSuccess(m.span)
 	return nil
 }
 
 func (m message) NACK() {
-	messageCountInc(m.queue.name, nackMessageState, 1)
+	messageCountInc(m.ctx, m.queue.name, nackMessageState, false, 1)
 	trace.SpanSuccess(m.span)
 }
 
@@ -117,7 +117,7 @@ func (b batch) ACK() ([]Message, error) {
 		QueueUrl: aws.String(b.queue.url),
 	})
 	if err != nil {
-		messageCountErrorInc(b.queue.name, ackMessageState, len(b.messages))
+		messageCountInc(b.ctx, b.queue.name, ackMessageState, true, len(b.messages))
 		for _, msg := range b.messages {
 			trace.SpanError(msg.Span())
 		}
@@ -125,7 +125,7 @@ func (b batch) ACK() ([]Message, error) {
 	}
 
 	if len(output.Successful) > 0 {
-		messageCountInc(b.queue.name, ackMessageState, len(output.Successful))
+		messageCountInc(b.ctx, b.queue.name, ackMessageState, false, len(output.Successful))
 
 		for _, suc := range output.Successful {
 			trace.SpanSuccess(msgMap[aws.StringValue(suc.Id)].Span())
@@ -133,7 +133,7 @@ func (b batch) ACK() ([]Message, error) {
 	}
 
 	if len(output.Failed) > 0 {
-		messageCountErrorInc(b.queue.name, ackMessageState, len(output.Failed))
+		messageCountInc(b.ctx, b.queue.name, ackMessageState, true, len(output.Failed))
 		failed := make([]Message, 0, len(output.Failed))
 		for _, fail := range output.Failed {
 			msg := msgMap[aws.StringValue(fail.Id)]

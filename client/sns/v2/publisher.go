@@ -69,10 +69,10 @@ func (p Publisher) Publish(ctx context.Context, input *sns.PublishInput) (messag
 	start := time.Now()
 	out, err := p.api.PublishWithContext(ctx, input)
 	if input.TopicArn != nil {
-		observePublish(span, start, *input.TopicArn, err)
+		observePublish(ctx, span, start, *input.TopicArn, err)
 	}
 	if input.TargetArn != nil {
-		observePublish(span, start, *input.TargetArn, err)
+		observePublish(ctx, span, start, *input.TargetArn, err)
 	}
 	if err != nil {
 		return "", fmt.Errorf("failed to publish message: %w", err)
@@ -124,7 +124,11 @@ func injectHeaders(span opentracing.Span, input *sns.PublishInput) error {
 	return nil
 }
 
-func observePublish(span opentracing.Span, start time.Time, topic string, err error) {
+func observePublish(ctx context.Context, span opentracing.Span, start time.Time, topic string, err error) {
 	trace.SpanComplete(span, err)
-	publishDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
+
+	durationHistogram := trace.Histogram{
+		Observer: publishDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err == nil)),
+	}
+	durationHistogram.Observe(ctx, time.Since(start).Seconds())
 }

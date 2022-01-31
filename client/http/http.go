@@ -93,9 +93,10 @@ func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
-	reqDurationMetrics.
-		WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
-		Observe(time.Since(start).Seconds())
+	durationHistogram := trace.Histogram{
+		Observer: reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)),
+	}
+	durationHistogram.Observe(req.Context(), time.Since(start).Seconds())
 
 	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
 		rsp.Body = decompress(hdr, rsp)

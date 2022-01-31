@@ -86,9 +86,11 @@ func unaryInterceptor(target string) grpc.UnaryClientInterceptor {
 		invokeDuration := time.Since(invokeTime)
 
 		rpcStatus, _ := status.FromError(err) // codes.OK if err == nil, codes.Unknown if !ok
-		rpcDurationMetrics.
-			WithLabelValues(unary, target, method, rpcStatus.Code().String()).
-			Observe(invokeDuration.Seconds())
+
+		durationHistogram := trace.Histogram{
+			Observer: rpcDurationMetrics.WithLabelValues(unary, target, method, rpcStatus.Code().String()),
+		}
+		durationHistogram.Observe(ctx, invokeDuration.Seconds())
 
 		if err != nil {
 			trace.SpanError(span)

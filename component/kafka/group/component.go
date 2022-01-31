@@ -92,8 +92,11 @@ func topicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high
 }
 
 // messageStatusCountInc increments the messageStatus counter for a certain status.
-func messageStatusCountInc(status, group, topic string) {
-	messageStatus.WithLabelValues(status, group, topic).Inc()
+func messageStatusCountInc(ctx context.Context, status, group, topic string) {
+	httpStatusCounter := trace.Counter{
+		Counter: messageStatus.WithLabelValues(status, group, topic),
+	}
+	httpStatusCounter.Inc(ctx)
 }
 
 // New initializes a new  kafka consumer component with support for functional configuration.
@@ -318,7 +321,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			if ok {
 				log.Debugf("message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
 				topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-				messageStatusCountInc(messageReceived, c.group, msg.Topic)
+				messageStatusCountInc(c.ctx, messageReceived, c.group, msg.Topic)
 				err := c.insertMessage(session, msg)
 				if err != nil {
 					return err
@@ -347,7 +350,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 	if len(c.msgBuf) > 0 {
 		messages := make([]kafka.Message, 0, len(c.msgBuf))
 		for _, msg := range c.msgBuf {
-			messageStatusCountInc(messageProcessed, c.group, msg.Topic)
+			messageStatusCountInc(c.ctx, messageProcessed, c.group, msg.Topic)
 			ctx, sp := c.getContextWithCorrelation(msg)
 			messages = append(messages, kafka.NewMessage(ctx, sp, msg))
 		}
@@ -385,7 +388,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 	case kafka.ExitStrategy:
 		for _, m := range messages {
 			trace.SpanError(m.Span())
-			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
+			messageStatusCountInc(c.ctx, messageErrored, c.group, m.Message().Topic)
 		}
 		log.Errorf("could not process message(s)")
 		c.err = err
@@ -393,8 +396,8 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 	case kafka.SkipStrategy:
 		for _, m := range messages {
 			trace.SpanError(m.Span())
-			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
-			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
+			messageStatusCountInc(c.ctx, messageErrored, c.group, m.Message().Topic)
+			messageStatusCountInc(c.ctx, messageSkipped, c.group, m.Message().Topic)
 		}
 		log.Errorf("could not process message(s) so skipping with error: %v", err)
 	default:

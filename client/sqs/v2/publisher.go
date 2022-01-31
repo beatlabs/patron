@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
@@ -57,13 +58,13 @@ func New(api sqsiface.SQSAPI) (Publisher, error) {
 func (p Publisher) Publish(ctx context.Context, msg *sqs.SendMessageInput) (messageID string, err error) {
 	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, *msg.QueueUrl), publisherComponent, ext.SpanKindProducer)
 
-	if err := injectHeaders(span, msg); err != nil {
+	if err := injectHeaders(ctx, span, msg); err != nil {
 		log.FromContext(ctx).Errorf("failed to inject trace headers: %v", err)
 	}
 
 	start := time.Now()
 	out, err := p.api.SendMessageWithContext(ctx, msg)
-	observePublish(span, start, *msg.QueueUrl, err)
+	observePublish(ctx, span, start, *msg.QueueUrl, err)
 	if err != nil {
 		return "", fmt.Errorf("failed to publish message: %w", err)
 	}
@@ -82,8 +83,9 @@ func (c sqsHeadersCarrier) Set(key, val string) {
 	c[key] = val
 }
 
-// injectHeaders injects the SQS headers carrier's headers into the message's attributes.
-func injectHeaders(span opentracing.Span, input *sqs.SendMessageInput) error {
+// injectHeaders injects opentracing headers into SQS message attributes.
+// It also injects a message attribute for correlation.HeaderID if it's not set already.
+func injectHeaders(ctx context.Context, span opentracing.Span, input *sqs.SendMessageInput) error {
 	carrier := sqsHeadersCarrier{}
 	if err := span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier); err != nil {
 		return fmt.Errorf("failed to inject tracing headers: %w", err)
@@ -98,10 +100,22 @@ func injectHeaders(span opentracing.Span, input *sqs.SendMessageInput) error {
 			StringValue: aws.String(v.(string)),
 		}
 	}
+
+	if _, ok := input.MessageAttributes[correlation.HeaderID]; !ok {
+		input.MessageAttributes[correlation.HeaderID] = &sqs.MessageAttributeValue{
+			DataType:    aws.String(attributeDataTypeString),
+			StringValue: aws.String(correlation.IDFromContext(ctx)),
+		}
+	}
+
 	return nil
 }
 
-func observePublish(span opentracing.Span, start time.Time, queue string, err error) {
+func observePublish(ctx context.Context, span opentracing.Span, start time.Time, queue string, err error) {
 	trace.SpanComplete(span, err)
-	publishDurationMetrics.WithLabelValues(queue, strconv.FormatBool(err != nil)).Observe(time.Since(start).Seconds())
+
+	durationHistogram := trace.Histogram{
+		Observer: publishDurationMetrics.WithLabelValues(queue, strconv.FormatBool(err == nil)),
+	}
+	durationHistogram.Observe(ctx, time.Since(start).Seconds())
 }

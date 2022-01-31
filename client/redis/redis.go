@@ -9,7 +9,7 @@ import (
 	"github.com/beatlabs/patron/trace"
 	"github.com/go-redis/redis/extra/rediscmd"
 	"github.com/go-redis/redis/v8"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -89,7 +89,10 @@ func (th tracingHook) AfterProcessPipeline(ctx context.Context, cmds []redis.Cmd
 
 func observeDuration(ctx context.Context, cmd string, err error) {
 	dur := time.Since(ctx.Value(duration{}).(time.Time))
-	cmdDurationMetrics.WithLabelValues(cmd, strconv.FormatBool(err != nil)).Observe(dur.Seconds())
+	durationHistogram := trace.Histogram{
+		Observer: cmdDurationMetrics.WithLabelValues(cmd, strconv.FormatBool(err == nil)),
+	}
+	durationHistogram.Observe(ctx, dur.Seconds())
 }
 
 func startSpan(ctx context.Context, address, opName string) (opentracing.Span, context.Context) {

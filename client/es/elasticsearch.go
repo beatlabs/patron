@@ -17,7 +17,7 @@ import (
 	elasticsearch "github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/elastic/go-elasticsearch/v8/estransport"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -120,8 +120,10 @@ func (c *transportClient) Perform(req *http.Request) (*http.Response, error) {
 
 func observeResponse(req *http.Request, sp opentracing.Span, rsp *http.Response, start time.Time) {
 	endSpan(sp, rsp)
-	reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)).
-		Observe(time.Since(start).Seconds())
+	durationHistogram := trace.Histogram{
+		Observer: reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)),
+	}
+	durationHistogram.Observe(req.Context(), time.Since(start).Seconds())
 }
 
 // Config is a wrapper for elasticsearch.Config

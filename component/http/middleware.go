@@ -188,7 +188,7 @@ func initHTTPServerMetrics() {
 // metrics are exposed via Prometheus.
 // This middleware is enabled by default.
 func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
-	// register Promethus metrics on first use
+	// register Prometheus metrics on first use
 	httpStatusTracingInit.Do(initHTTPServerMetrics)
 
 	return func(next http.Handler) http.Handler {
@@ -199,8 +199,16 @@ func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 
 			// collect metrics about HTTP server-side handling and latency
 			status := strconv.Itoa(lw.Status())
-			httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
-			httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
+
+			httpStatusCounter := trace.Counter{
+				Counter: httpStatusTracingHandledMetric.WithLabelValues(method, path, status),
+			}
+			httpStatusCounter.Inc(r.Context())
+
+			httpLatencyMetricObserver := trace.Histogram{
+				Observer: httpStatusTracingLatencyMetric.WithLabelValues(method, path, status),
+			}
+			httpLatencyMetricObserver.Observe(r.Context(), time.Since(now).Seconds())
 		})
 	}
 }

@@ -219,7 +219,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 				return errors.New("subscription channel closed")
 			}
 			log.Debugf("processing message %d", delivery.DeliveryTag)
-			observeReceivedMessageStats(ctx, c.queueCfg.queue, delivery.Timestamp)
+			observeReceivedMessageStats(c.queueCfg.queue, delivery.Timestamp)
 			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
 			log.Debugf("batch timeout expired, sending batch")
@@ -233,9 +233,9 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 	}
 }
 
-func observeReceivedMessageStats(ctx context.Context, queue string, timestamp time.Time) {
+func observeReceivedMessageStats(queue string, timestamp time.Time) {
 	messageAge.WithLabelValues(queue).Set(time.Now().UTC().Sub(timestamp).Seconds())
-	messageCountInc(ctx, queue, fetchedMessageState, nil)
+	messageCountInc(queue, fetchedMessageState, nil)
 }
 
 type subscription struct {
@@ -329,13 +329,12 @@ func (c *Component) stats(sub subscription) error {
 	return nil
 }
 
-func messageCountInc(ctx context.Context, queue string, state messageState, err error) {
+func messageCountInc(queue string, state messageState, err error) {
 	hasError := "false"
 	if err != nil {
 		hasError = "true"
 	}
-	messageStatusCounter := trace.Counter{Counter: messageCounterVec.WithLabelValues(queue, string(state), hasError)}
-	messageStatusCounter.Inc(ctx)
+	messageCounterVec.WithLabelValues(queue, string(state), hasError).Inc()
 }
 
 func mapHeader(hh amqp.Table) map[string]string {

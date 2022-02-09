@@ -359,7 +359,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		}
 
 		if c.batchMessageDeduplication {
-			messages = kafka.DeduplicateMessages(messages)
+			messages = deduplicateMessages(messages)
 		}
 		btc := kafka.NewBatch(messages)
 		err := c.proc(btc)
@@ -452,4 +452,22 @@ func mapHeader(hh []*sarama.RecordHeader) map[string]string {
 		mp[string(h.Key)] = string(h.Value)
 	}
 	return mp
+}
+
+// deduplicateMessages takes a slice of Messages and de-duplicates the messages based on the Key of those messages.
+// This function assumes that messages are ordered from old to new, and relies on Kafka ordering guarantees within
+// partitions. This is the default behaviour from Kafka unless the Producer altered the partition hashing behaviour in
+// a nondeterministic way.
+func deduplicateMessages(messages []kafka.Message) []kafka.Message {
+	m := map[string]kafka.Message{}
+	for _, message := range messages {
+		m[string(message.Message().Key)] = message
+	}
+
+	deduplicated := make([]kafka.Message, 0, len(m))
+	for _, message := range m {
+		deduplicated = append(deduplicated, message)
+	}
+
+	return deduplicated
 }

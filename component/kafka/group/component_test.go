@@ -13,6 +13,7 @@ import (
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -380,4 +381,36 @@ func Test_getCorrelationID(t *testing.T) {
 		},
 	})
 	assert.NotEqual(t, emptyCorID, got)
+}
+
+func Test_deduplicateMessages(t *testing.T) {
+	message := func(key, val string) kafka.Message {
+		return kafka.NewMessage(
+			context.Background(),
+			opentracing.SpanFromContext(context.Background()),
+			&sarama.ConsumerMessage{Key: []byte(key), Value: []byte(val)})
+	}
+	find := func(collection []kafka.Message, key string) kafka.Message {
+		for _, m := range collection {
+			if string(m.Message().Key) == key {
+				return m
+			}
+		}
+		return nil
+	}
+
+	// Given
+	original := []kafka.Message{
+		message("k1", "v1.1"),
+		message("k1", "v1.2"),
+		message("k2", "v2.1"),
+		message("k2", "v2.2"),
+		message("k1", "v1.3"),
+	}
+
+	cleaned := deduplicateMessages(original)
+
+	assert.Len(t, cleaned, 2)
+	assert.Equal(t, []byte("v1.3"), find(cleaned, "k1").Message().Value)
+	assert.Equal(t, []byte("v2.2"), find(cleaned, "k2").Message().Value)
 }

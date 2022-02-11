@@ -23,6 +23,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func newMLDeleteTrainedModelFunc(t Transport) MLDeleteTrainedModel {
@@ -48,6 +49,8 @@ type MLDeleteTrainedModel func(model_id string, o ...func(*MLDeleteTrainedModelR
 type MLDeleteTrainedModelRequest struct {
 	ModelID string
 
+	Timeout time.Duration
+
 	Pretty     bool
 	Human      bool
 	ErrorTrace bool
@@ -69,7 +72,8 @@ func (r MLDeleteTrainedModelRequest) Do(ctx context.Context, transport Transport
 
 	method = "DELETE"
 
-	path.Grow(1 + len("_ml") + 1 + len("trained_models") + 1 + len(r.ModelID))
+	path.Grow(7 + 1 + len("_ml") + 1 + len("trained_models") + 1 + len(r.ModelID))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_ml")
 	path.WriteString("/")
@@ -78,6 +82,10 @@ func (r MLDeleteTrainedModelRequest) Do(ctx context.Context, transport Transport
 	path.WriteString(r.ModelID)
 
 	params = make(map[string]string)
+
+	if r.Timeout != 0 {
+		params["timeout"] = formatDuration(r.Timeout)
+	}
 
 	if r.Pretty {
 		params["pretty"] = "true"
@@ -143,6 +151,14 @@ func (r MLDeleteTrainedModelRequest) Do(ctx context.Context, transport Transport
 func (f MLDeleteTrainedModel) WithContext(v context.Context) func(*MLDeleteTrainedModelRequest) {
 	return func(r *MLDeleteTrainedModelRequest) {
 		r.ctx = v
+	}
+}
+
+// WithTimeout - controls the amount of time to wait for the model to be deleted..
+//
+func (f MLDeleteTrainedModel) WithTimeout(v time.Duration) func(*MLDeleteTrainedModelRequest) {
+	return func(r *MLDeleteTrainedModelRequest) {
+		r.Timeout = v
 	}
 }
 

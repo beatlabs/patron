@@ -38,9 +38,7 @@ func newShutdownPutNodeFunc(t Transport) ShutdownPutNode {
 
 // ----- API Definition -------------------------------------------------------
 
-// ShutdownPutNode adds a node to be shut down
-//
-// This API is experimental.
+// ShutdownPutNode adds a node to be shut down. Designed for indirect use by ECE/ESS and ECK. Direct use is not supported.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current.
 //
@@ -74,7 +72,8 @@ func (r ShutdownPutNodeRequest) Do(ctx context.Context, transport Transport) (*R
 
 	method = "PUT"
 
-	path.Grow(1 + len("_nodes") + 1 + len(r.NodeID) + 1 + len("shutdown"))
+	path.Grow(7 + 1 + len("_nodes") + 1 + len(r.NodeID) + 1 + len("shutdown"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_nodes")
 	path.WriteString("/")

@@ -21,13 +21,14 @@ package esapi
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strings"
 )
 
-func newNodesGetMeteringInfoFunc(t Transport) NodesGetMeteringInfo {
-	return func(node_id []string, o ...func(*NodesGetMeteringInfoRequest)) (*Response, error) {
-		var r = NodesGetMeteringInfoRequest{NodeID: node_id}
+func newIndicesModifyDataStreamFunc(t Transport) IndicesModifyDataStream {
+	return func(body io.Reader, o ...func(*IndicesModifyDataStreamRequest)) (*Response, error) {
+		var r = IndicesModifyDataStreamRequest{Body: body}
 		for _, f := range o {
 			f(&r)
 		}
@@ -37,18 +38,16 @@ func newNodesGetMeteringInfoFunc(t Transport) NodesGetMeteringInfo {
 
 // ----- API Definition -------------------------------------------------------
 
-// NodesGetMeteringInfo returns cluster repositories metering information.
+// IndicesModifyDataStream modifies a data stream
 //
-// This API is experimental.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/data-streams.html.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/get-repositories-metering-api.html.
-//
-type NodesGetMeteringInfo func(node_id []string, o ...func(*NodesGetMeteringInfoRequest)) (*Response, error)
+type IndicesModifyDataStream func(body io.Reader, o ...func(*IndicesModifyDataStreamRequest)) (*Response, error)
 
-// NodesGetMeteringInfoRequest configures the Nodes Get Metering Info API request.
+// IndicesModifyDataStreamRequest configures the Indices Modify Data Stream API request.
 //
-type NodesGetMeteringInfoRequest struct {
-	NodeID []string
+type IndicesModifyDataStreamRequest struct {
+	Body io.Reader
 
 	Pretty     bool
 	Human      bool
@@ -62,22 +61,18 @@ type NodesGetMeteringInfoRequest struct {
 
 // Do executes the request and returns response or error.
 //
-func (r NodesGetMeteringInfoRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r IndicesModifyDataStreamRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
 		params map[string]string
 	)
 
-	method = "GET"
+	method = "POST"
 
-	path.Grow(1 + len("_nodes") + 1 + len(strings.Join(r.NodeID, ",")) + 1 + len("_repositories_metering"))
-	path.WriteString("/")
-	path.WriteString("_nodes")
-	path.WriteString("/")
-	path.WriteString(strings.Join(r.NodeID, ","))
-	path.WriteString("/")
-	path.WriteString("_repositories_metering")
+	path.Grow(7 + len("/_data_stream/_modify"))
+	path.WriteString("http://")
+	path.WriteString("/_data_stream/_modify")
 
 	params = make(map[string]string)
 
@@ -97,7 +92,7 @@ func (r NodesGetMeteringInfoRequest) Do(ctx context.Context, transport Transport
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, err := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), r.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +103,10 @@ func (r NodesGetMeteringInfoRequest) Do(ctx context.Context, transport Transport
 			q.Set(k, v)
 		}
 		req.URL.RawQuery = q.Encode()
+	}
+
+	if r.Body != nil {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if len(r.Header) > 0 {
@@ -142,48 +141,48 @@ func (r NodesGetMeteringInfoRequest) Do(ctx context.Context, transport Transport
 
 // WithContext sets the request context.
 //
-func (f NodesGetMeteringInfo) WithContext(v context.Context) func(*NodesGetMeteringInfoRequest) {
-	return func(r *NodesGetMeteringInfoRequest) {
+func (f IndicesModifyDataStream) WithContext(v context.Context) func(*IndicesModifyDataStreamRequest) {
+	return func(r *IndicesModifyDataStreamRequest) {
 		r.ctx = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
 //
-func (f NodesGetMeteringInfo) WithPretty() func(*NodesGetMeteringInfoRequest) {
-	return func(r *NodesGetMeteringInfoRequest) {
+func (f IndicesModifyDataStream) WithPretty() func(*IndicesModifyDataStreamRequest) {
+	return func(r *IndicesModifyDataStreamRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
 //
-func (f NodesGetMeteringInfo) WithHuman() func(*NodesGetMeteringInfoRequest) {
-	return func(r *NodesGetMeteringInfoRequest) {
+func (f IndicesModifyDataStream) WithHuman() func(*IndicesModifyDataStreamRequest) {
+	return func(r *IndicesModifyDataStreamRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
 //
-func (f NodesGetMeteringInfo) WithErrorTrace() func(*NodesGetMeteringInfoRequest) {
-	return func(r *NodesGetMeteringInfoRequest) {
+func (f IndicesModifyDataStream) WithErrorTrace() func(*IndicesModifyDataStreamRequest) {
+	return func(r *IndicesModifyDataStreamRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
 //
-func (f NodesGetMeteringInfo) WithFilterPath(v ...string) func(*NodesGetMeteringInfoRequest) {
-	return func(r *NodesGetMeteringInfoRequest) {
+func (f IndicesModifyDataStream) WithFilterPath(v ...string) func(*IndicesModifyDataStreamRequest) {
+	return func(r *IndicesModifyDataStreamRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
 //
-func (f NodesGetMeteringInfo) WithHeader(h map[string]string) func(*NodesGetMeteringInfoRequest) {
-	return func(r *NodesGetMeteringInfoRequest) {
+func (f IndicesModifyDataStream) WithHeader(h map[string]string) func(*IndicesModifyDataStreamRequest) {
+	return func(r *IndicesModifyDataStreamRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -195,8 +194,8 @@ func (f NodesGetMeteringInfo) WithHeader(h map[string]string) func(*NodesGetMete
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
 //
-func (f NodesGetMeteringInfo) WithOpaqueID(s string) func(*NodesGetMeteringInfoRequest) {
-	return func(r *NodesGetMeteringInfoRequest) {
+func (f IndicesModifyDataStream) WithOpaqueID(s string) func(*IndicesModifyDataStreamRequest) {
+	return func(r *IndicesModifyDataStreamRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

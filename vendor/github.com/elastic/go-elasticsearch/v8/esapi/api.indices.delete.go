@@ -21,6 +21,7 @@ package esapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -77,7 +78,12 @@ func (r IndicesDeleteRequest) Do(ctx context.Context, transport Transport) (*Res
 
 	method = "DELETE"
 
-	path.Grow(1 + len(strings.Join(r.Index, ",")))
+	if len(r.Index) == 0 {
+		return nil, errors.New("index is required and cannot be nil or empty")
+	}
+
+	path.Grow(7 + 1 + len(strings.Join(r.Index, ",")))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString(strings.Join(r.Index, ","))
 
@@ -178,7 +184,7 @@ func (f IndicesDelete) WithAllowNoIndices(v bool) func(*IndicesDeleteRequest) {
 	}
 }
 
-// WithExpandWildcards - whether wildcard expressions should get expanded to open or closed indices (default: open).
+// WithExpandWildcards - whether wildcard expressions should get expanded to open, closed, or hidden indices.
 //
 func (f IndicesDelete) WithExpandWildcards(v string) func(*IndicesDeleteRequest) {
 	return func(r *IndicesDeleteRequest) {

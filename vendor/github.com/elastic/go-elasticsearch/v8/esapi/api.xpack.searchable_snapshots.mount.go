@@ -42,8 +42,6 @@ func newSearchableSnapshotsMountFunc(t Transport) SearchableSnapshotsMount {
 
 // SearchableSnapshotsMount - Mount a snapshot as a searchable index.
 //
-// This API is experimental.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/searchable-snapshots-api-mount-snapshot.html.
 //
 type SearchableSnapshotsMount func(repository string, snapshot string, body io.Reader, o ...func(*SearchableSnapshotsMountRequest)) (*Response, error)
@@ -81,7 +79,8 @@ func (r SearchableSnapshotsMountRequest) Do(ctx context.Context, transport Trans
 
 	method = "POST"
 
-	path.Grow(1 + len("_snapshot") + 1 + len(r.Repository) + 1 + len(r.Snapshot) + 1 + len("_mount"))
+	path.Grow(7 + 1 + len("_snapshot") + 1 + len(r.Repository) + 1 + len(r.Snapshot) + 1 + len("_mount"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_snapshot")
 	path.WriteString("/")

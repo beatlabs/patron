@@ -34,11 +34,11 @@ endif
   		export ELASTICSEARCH_URL='http://elastic:elastic@localhost:9200'; \
 		echo "gotestsum --format=short-verbose --junitfile=tmp/integration-report.xml --" $(testintegargs); \
 		gotestsum --format=short-verbose --junitfile=tmp/integration-report.xml -- $(testintegargs) "."; \
-		gotestsum --format=short-verbose --junitfile=tmp/integration-report.xml -- $(testintegargs) "./estransport" "./esapi" "./esutil"; \
+		gotestsum --format=short-verbose --junitfile=tmp/integration-report.xml -- $(testintegargs) "./esapi" "./esutil"; \
 	else \
 	  	export ELASTICSEARCH_URL='http://elastic:elastic@localhost:9200'; \
 		echo "go test -v" $(testintegargs) "."; \
-		go test -v $(testintegargs) "./estransport" "./esapi" "./esutil"; \
+		go test -v $(testintegargs) "./esapi" "./esutil"; \
 	fi;
 
 test-api:  ## Run generated API integration tests
@@ -103,7 +103,7 @@ test-examples: ## Execute the _examples
 			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\n"; \
 			printf "\033[1mUpdating dependencies for $$d\033[0m\n"; \
 			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
-			(cd $$d && go mod download && make setup) || \
+			(cd $$d && go mod download all && make setup test) || \
 			( \
 				printf "\033[31m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
 				printf "\033[31;1m⨯ ERROR\033[0m\n"; \
@@ -111,7 +111,9 @@ test-examples: ## Execute the _examples
 			); \
 	    done; \
 	    \
-		for f in _examples/*.go; do \
+	    ( \
+	    cd _examples; \
+		for f in *.go; do \
 			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\n"; \
 			printf "\033[1m$$f\033[0m\n"; \
 			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
@@ -122,18 +124,19 @@ test-examples: ## Execute the _examples
 				false; \
 			); \
 		done; \
-		\
-		for f in _examples/*/; do \
-			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
-			printf "\033[1m$$f\033[0m\n"; \
-			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
-			(cd $$f && make test && true) || \
-			( \
-				printf "\033[31m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
-				printf "\033[31;1m⨯ ERROR\033[0m\n"; \
-				false; \
-			); \
-		done; \
+		);\
+#		\
+#		for f in _examples/*/; do \
+#			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
+#			printf "\033[1m$$f\033[0m\n"; \
+#			printf "\033[2m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
+#			(cd $$f && make test && true) || \
+#			( \
+#				printf "\033[31m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
+#				printf "\033[31;1m⨯ ERROR\033[0m\n"; \
+#				false; \
+#			); \
+#		done; \
 		printf "\033[32m────────────────────────────────────────────────────────────────────────────────\033[0m\n"; \
 		\
 		printf "\033[32;1mSUCCESS\033[0m\n"; \
@@ -189,7 +192,7 @@ ifeq ($(origin commits), undefined)
 	@exit 2
 endif
 ifndef branches
-	$(eval branches_list = '7.x' '6.x' '5.x')
+	$(eval branches_list = '7.16' '6.x' '5.x')
 else
 	$(eval branches_list = $(shell echo $(branches) | tr ',' ' ') )
 endif
@@ -263,7 +266,6 @@ godoc: ## Display documentation for the package
 	@printf "\033[2m→ Generating documentation...\033[0m\n"
 	@echo "* http://localhost:6060/pkg/github.com/elastic/go-elasticsearch/v8"
 	@echo "* http://localhost:6060/pkg/github.com/elastic/go-elasticsearch/v8/esapi"
-	@echo "* http://localhost:6060/pkg/github.com/elastic/go-elasticsearch/v8/estransport"
 	@echo "* http://localhost:6060/pkg/github.com/elastic/go-elasticsearch/v8/esutil"
 	@printf "\n"
 	godoc --http=localhost:6060 --play
@@ -328,6 +330,7 @@ endif
 				--env "node.attr.testattr=test" \
 				--env "path.repo=/tmp" \
 				--env "repositories.url.allowed_urls=http://snapshot.test*" \
+				--env "xpack.security.enabled=false" \
 				--env ES_JAVA_OPTS="-Xms1g -Xmx1g" \
 				$(xpack_env) \
 				--volume `echo $(version) | tr -C "[:alnum:]" '-'`-node-$$n-data:/usr/share/elasticsearch/data \

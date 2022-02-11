@@ -37,9 +37,7 @@ func newShutdownGetNodeFunc(t Transport) ShutdownGetNode {
 
 // ----- API Definition -------------------------------------------------------
 
-// ShutdownGetNode retrieve status of a node or nodes that are currently marked as shutting down
-//
-// This API is experimental.
+// ShutdownGetNode retrieve status of a node or nodes that are currently marked as shutting down. Designed for indirect use by ECE/ESS and ECK. Direct use is not supported.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current.
 //
@@ -71,7 +69,8 @@ func (r ShutdownGetNodeRequest) Do(ctx context.Context, transport Transport) (*R
 
 	method = "GET"
 
-	path.Grow(1 + len("_nodes") + 1 + len(r.NodeID) + 1 + len("shutdown"))
+	path.Grow(7 + 1 + len("_nodes") + 1 + len(r.NodeID) + 1 + len("shutdown"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_nodes")
 	if r.NodeID != "" {

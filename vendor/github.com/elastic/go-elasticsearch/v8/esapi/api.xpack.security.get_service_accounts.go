@@ -39,8 +39,6 @@ func newSecurityGetServiceAccountsFunc(t Transport) SecurityGetServiceAccounts {
 
 // SecurityGetServiceAccounts - Retrieves information about service accounts.
 //
-// This API is beta.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-service-accounts.html.
 //
 type SecurityGetServiceAccounts func(o ...func(*SecurityGetServiceAccountsRequest)) (*Response, error)
@@ -72,7 +70,8 @@ func (r SecurityGetServiceAccountsRequest) Do(ctx context.Context, transport Tra
 
 	method = "GET"
 
-	path.Grow(1 + len("_security") + 1 + len("service") + 1 + len(r.Namespace) + 1 + len(r.Service))
+	path.Grow(7 + 1 + len("_security") + 1 + len("service") + 1 + len(r.Namespace) + 1 + len(r.Service))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_security")
 	path.WriteString("/")

@@ -53,7 +53,6 @@ type MLCloseJobRequest struct {
 
 	JobID string
 
-	AllowNoJobs  *bool
 	AllowNoMatch *bool
 	Force        *bool
 	Timeout      time.Duration
@@ -79,7 +78,8 @@ func (r MLCloseJobRequest) Do(ctx context.Context, transport Transport) (*Respon
 
 	method = "POST"
 
-	path.Grow(1 + len("_ml") + 1 + len("anomaly_detectors") + 1 + len(r.JobID) + 1 + len("_close"))
+	path.Grow(7 + 1 + len("_ml") + 1 + len("anomaly_detectors") + 1 + len(r.JobID) + 1 + len("_close"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_ml")
 	path.WriteString("/")
@@ -90,10 +90,6 @@ func (r MLCloseJobRequest) Do(ctx context.Context, transport Transport) (*Respon
 	path.WriteString("_close")
 
 	params = make(map[string]string)
-
-	if r.AllowNoJobs != nil {
-		params["allow_no_jobs"] = strconv.FormatBool(*r.AllowNoJobs)
-	}
 
 	if r.AllowNoMatch != nil {
 		params["allow_no_match"] = strconv.FormatBool(*r.AllowNoMatch)
@@ -183,14 +179,6 @@ func (f MLCloseJob) WithContext(v context.Context) func(*MLCloseJobRequest) {
 func (f MLCloseJob) WithBody(v io.Reader) func(*MLCloseJobRequest) {
 	return func(r *MLCloseJobRequest) {
 		r.Body = v
-	}
-}
-
-// WithAllowNoJobs - whether to ignore if a wildcard expression matches no jobs. (this includes `_all` string or when no jobs have been specified).
-//
-func (f MLCloseJob) WithAllowNoJobs(v bool) func(*MLCloseJobRequest) {
-	return func(r *MLCloseJobRequest) {
-		r.AllowNoJobs = &v
 	}
 }
 

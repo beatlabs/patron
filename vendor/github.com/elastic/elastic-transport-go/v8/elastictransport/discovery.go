@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package estransport
+package elastictransport
 
 import (
 	"encoding/json"
@@ -141,10 +141,6 @@ func (c *Client) getNodesInfo() ([]nodeInfo, error) {
 	c.setReqURL(conn.URL, req)
 	c.setReqAuth(conn.URL, req)
 	c.setReqUserAgent(req)
-
-	if c.disableMetaHeader == false {
-		c.setMetaHeader(req)
-	}
 
 	res, err := c.transport.RoundTrip(req)
 	if err != nil {

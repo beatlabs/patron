@@ -13,6 +13,7 @@ import (
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -212,12 +213,14 @@ func (m *mockConsumerSession) Context() context.Context                    { ret
 
 func TestHandler_ConsumeClaim(t *testing.T) {
 	tests := []struct {
-		name         string
-		msgs         []*sarama.ConsumerMessage
-		proc         *mockProcessor
-		failStrategy kafka.FailStrategy
-		batchSize    uint
-		expectError  bool
+		name                      string
+		msgs                      []*sarama.ConsumerMessage
+		proc                      *mockProcessor
+		failStrategy              kafka.FailStrategy
+		batchSize                 uint
+		batchMessageDeduplication bool
+		expectError               bool
+		expectedProcessExecutions int
 	}{
 		{
 			name: "success",
@@ -272,14 +275,42 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			batchSize:    1,
 			expectError:  false,
 		},
+		{
+			name: "deduplicates messages",
+			msgs: []*sarama.ConsumerMessage{
+				saramaConsumerMessage("1", &sarama.RecordHeader{
+					Key:   []byte(encoding.ContentTypeHeader),
+					Value: []byte(json.Type),
+				}),
+				saramaConsumerMessage("2", &sarama.RecordHeader{
+					Key:   []byte(encoding.ContentTypeHeader),
+					Value: []byte(json.Type),
+				}),
+				saramaConsumerMessage("3", &sarama.RecordHeader{
+					Key:   []byte(encoding.ContentTypeHeader),
+					Value: []byte(json.Type),
+				}),
+			},
+			proc: &mockProcessor{
+				errReturn: false,
+			},
+			failStrategy:              kafka.SkipStrategy,
+			batchSize:                 10,
+			batchMessageDeduplication: true,
+			expectError:               false,
+			expectedProcessExecutions: 1,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.expectedProcessExecutions == 0 {
+				tt.expectedProcessExecutions = len(tt.msgs)
+			}
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			h := newConsumerHandler(ctx, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
-				10*time.Millisecond, true)
+				10*time.Millisecond, true, tt.batchMessageDeduplication)
 
 			ch := make(chan *sarama.ConsumerMessage, len(tt.msgs))
 			for _, m := range tt.msgs {
@@ -295,7 +326,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-			assert.Equal(t, len(tt.msgs), tt.proc.GetExecs())
+			assert.Equal(t, tt.expectedProcessExecutions, tt.proc.GetExecs())
 		})
 	}
 }
@@ -350,4 +381,36 @@ func Test_getCorrelationID(t *testing.T) {
 		},
 	})
 	assert.NotEqual(t, emptyCorID, got)
+}
+
+func Test_deduplicateMessages(t *testing.T) {
+	message := func(key, val string) kafka.Message {
+		return kafka.NewMessage(
+			context.Background(),
+			opentracing.SpanFromContext(context.Background()),
+			&sarama.ConsumerMessage{Key: []byte(key), Value: []byte(val)})
+	}
+	find := func(collection []kafka.Message, key string) kafka.Message {
+		for _, m := range collection {
+			if string(m.Message().Key) == key {
+				return m
+			}
+		}
+		return nil
+	}
+
+	// Given
+	original := []kafka.Message{
+		message("k1", "v1.1"),
+		message("k1", "v1.2"),
+		message("k2", "v2.1"),
+		message("k2", "v2.2"),
+		message("k1", "v1.3"),
+	}
+
+	cleaned := deduplicateMessages(original)
+
+	assert.Len(t, cleaned, 2)
+	assert.Equal(t, []byte("v1.3"), find(cleaned, "k1").Message().Value)
+	assert.Equal(t, []byte("v2.2"), find(cleaned, "k2").Message().Value)
 }

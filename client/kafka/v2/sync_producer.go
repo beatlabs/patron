@@ -29,19 +29,19 @@ func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (p
 
 	err = injectTracingHeaders(msg, sp)
 	if err != nil {
-		statusCountAddWithExemplars(ctx, deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
+		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
 		return -1, -1, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
 	partition, offset, err = p.syncProd.SendMessage(msg)
 	if err != nil {
-		statusCountAddWithExemplars(ctx, deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
+		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
 		return -1, -1, err
 	}
 
-	statusCountAddWithExemplars(ctx, deliveryTypeSync, deliveryStatusSent, msg.Topic, 1)
+	statusCountAdd(deliveryTypeSync, deliveryStatusSent, msg.Topic, 1)
 	trace.SpanSuccess(sp)
 	return partition, offset, nil
 }
@@ -57,19 +57,19 @@ func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.Produce
 
 	for _, msg := range messages {
 		if err := injectTracingHeaders(msg, sp); err != nil {
-			statusCountAddWithExemplars(ctx, deliveryTypeSync, deliveryStatusSendError, msg.Topic, len(messages))
+			statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, len(messages))
 			trace.SpanError(sp)
 			return fmt.Errorf("failed to inject tracing headers: %w", err)
 		}
 	}
 
 	if err := p.syncProd.SendMessages(messages); err != nil {
-		statusCountBatchAdd(ctx, deliveryTypeSync, deliveryStatusSendError, messages)
+		statusCountBatchAdd(deliveryTypeSync, deliveryStatusSendError, messages)
 		trace.SpanError(sp)
 		return err
 	}
 
-	statusCountBatchAdd(ctx, deliveryTypeSync, deliveryStatusSent, messages)
+	statusCountBatchAdd(deliveryTypeSync, deliveryStatusSent, messages)
 	trace.SpanSuccess(sp)
 	return nil
 }
@@ -87,8 +87,8 @@ func (p *SyncProducer) Close() error {
 	return nil
 }
 
-func statusCountBatchAdd(ctx context.Context, deliveryType string, status deliveryStatus, messages []*sarama.ProducerMessage) {
+func statusCountBatchAdd(deliveryType string, status deliveryStatus, messages []*sarama.ProducerMessage) {
 	for _, msg := range messages {
-		statusCountAddWithExemplars(ctx, deliveryType, status, msg.Topic, 1)
+		statusCountAdd(deliveryType, status, msg.Topic, 1)
 	}
 }

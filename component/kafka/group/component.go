@@ -92,11 +92,8 @@ func topicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high
 }
 
 // messageStatusCountInc increments the messageStatus counter for a certain status.
-func messageStatusCountInc(ctx context.Context, status, group, topic string) {
-	httpStatusCounter := trace.Counter{
-		Counter: messageStatus.WithLabelValues(status, group, topic),
-	}
-	httpStatusCounter.Inc(ctx)
+func messageStatusCountInc(status, group, topic string) {
+	messageStatus.WithLabelValues(status, group, topic).Inc()
 }
 
 // New initializes a new  kafka consumer component with support for functional configuration.
@@ -159,18 +156,19 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 
 // Component is a kafka consumer implementation that processes messages in batch
 type Component struct {
-	name         string
-	group        string
-	topics       []string
-	brokers      []string
-	saramaConfig *sarama.Config
-	proc         kafka.BatchProcessorFunc
-	failStrategy kafka.FailStrategy
-	batchSize    uint
-	batchTimeout time.Duration
-	retries      uint
-	retryWait    time.Duration
-	commitSync   bool
+	name                      string
+	group                     string
+	topics                    []string
+	brokers                   []string
+	saramaConfig              *sarama.Config
+	proc                      kafka.BatchProcessorFunc
+	failStrategy              kafka.FailStrategy
+	batchSize                 uint
+	batchTimeout              time.Duration
+	batchMessageDeduplication bool
+	retries                   uint
+	retryWait                 time.Duration
+	commitSync                bool
 }
 
 // Run starts the consumer processing loop to process messages from Kafka.
@@ -186,7 +184,7 @@ func (c *Component) processing(ctx context.Context) error {
 	retries := int(c.retries)
 	for i := 0; i <= retries; i++ {
 		handler := newConsumerHandler(ctx, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
-			c.batchTimeout, c.commitSync)
+			c.batchTimeout, c.commitSync, c.batchMessageDeduplication)
 
 		client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 		componentError = err
@@ -264,8 +262,9 @@ type consumerHandler struct {
 	group string
 
 	// buffer
-	batchSize int
-	ticker    *time.Ticker
+	batchSize                 int
+	ticker                    *time.Ticker
+	batchMessageDeduplication bool
 
 	// callback
 	proc kafka.BatchProcessorFunc
@@ -288,18 +287,19 @@ type consumerHandler struct {
 }
 
 func newConsumerHandler(ctx context.Context, name, group string, processorFunc kafka.BatchProcessorFunc,
-	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync bool) *consumerHandler {
+	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync bool, batchMessageDeduplication bool) *consumerHandler {
 	return &consumerHandler{
-		ctx:          ctx,
-		name:         name,
-		group:        group,
-		batchSize:    int(batchSize),
-		ticker:       time.NewTicker(batchTimeout),
-		msgBuf:       make([]*sarama.ConsumerMessage, 0, batchSize),
-		mu:           sync.RWMutex{},
-		proc:         processorFunc,
-		failStrategy: fs,
-		commitSync:   commitSync,
+		ctx:                       ctx,
+		name:                      name,
+		group:                     group,
+		batchSize:                 int(batchSize),
+		batchMessageDeduplication: batchMessageDeduplication,
+		ticker:                    time.NewTicker(batchTimeout),
+		msgBuf:                    make([]*sarama.ConsumerMessage, 0, batchSize),
+		mu:                        sync.RWMutex{},
+		proc:                      processorFunc,
+		failStrategy:              fs,
+		commitSync:                commitSync,
 	}
 }
 
@@ -321,7 +321,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			if ok {
 				log.Debugf("message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
 				topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-				messageStatusCountInc(c.ctx, messageReceived, c.group, msg.Topic)
+				messageStatusCountInc(messageReceived, c.group, msg.Topic)
 				err := c.insertMessage(session, msg)
 				if err != nil {
 					return err
@@ -350,11 +350,14 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 	if len(c.msgBuf) > 0 {
 		messages := make([]kafka.Message, 0, len(c.msgBuf))
 		for _, msg := range c.msgBuf {
-			messageStatusCountInc(c.ctx, messageProcessed, c.group, msg.Topic)
+			messageStatusCountInc(messageProcessed, c.group, msg.Topic)
 			ctx, sp := c.getContextWithCorrelation(msg)
 			messages = append(messages, kafka.NewMessage(ctx, sp, msg))
 		}
 
+		if c.batchMessageDeduplication {
+			messages = deduplicateMessages(messages)
+		}
 		btc := kafka.NewBatch(messages)
 		err := c.proc(btc)
 		if err != nil {
@@ -388,7 +391,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 	case kafka.ExitStrategy:
 		for _, m := range messages {
 			trace.SpanError(m.Span())
-			messageStatusCountInc(c.ctx, messageErrored, c.group, m.Message().Topic)
+			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 		}
 		log.Errorf("could not process message(s)")
 		c.err = err
@@ -396,8 +399,8 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 	case kafka.SkipStrategy:
 		for _, m := range messages {
 			trace.SpanError(m.Span())
-			messageStatusCountInc(c.ctx, messageErrored, c.group, m.Message().Topic)
-			messageStatusCountInc(c.ctx, messageSkipped, c.group, m.Message().Topic)
+			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
+			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
 		}
 		log.Errorf("could not process message(s) so skipping with error: %v", err)
 	default:
@@ -446,4 +449,22 @@ func mapHeader(hh []*sarama.RecordHeader) map[string]string {
 		mp[string(h.Key)] = string(h.Value)
 	}
 	return mp
+}
+
+// deduplicateMessages takes a slice of Messages and de-duplicates the messages based on the Key of those messages.
+// This function assumes that messages are ordered from old to new, and relies on Kafka ordering guarantees within
+// partitions. This is the default behaviour from Kafka unless the Producer altered the partition hashing behaviour in
+// a nondeterministic way.
+func deduplicateMessages(messages []kafka.Message) []kafka.Message {
+	m := map[string]kafka.Message{}
+	for _, message := range messages {
+		m[string(message.Message().Key)] = message
+	}
+
+	deduplicated := make([]kafka.Message, 0, len(m))
+	for _, message := range m {
+		deduplicated = append(deduplicated, message)
+	}
+
+	return deduplicated
 }

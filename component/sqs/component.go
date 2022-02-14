@@ -228,7 +228,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 		}
 
 		logger.Debugf("Consume: received %d messages", len(output.Messages))
-		messageCountInc(ctx, c.queue.name, fetchedMessageState, false, len(output.Messages))
+		messageCountInc(c.queue.name, fetchedMessageState, false, len(output.Messages))
 
 		if len(output.Messages) == 0 {
 			continue
@@ -330,16 +330,13 @@ func observerMessageAge(queue string, attributes map[string]*string) {
 	messageAge.WithLabelValues(queue).Set(time.Now().UTC().Sub(time.Unix(timestamp, 0)).Seconds())
 }
 
-func messageCountInc(ctx context.Context, queue string, state messageState, hasError bool, count int) {
+func messageCountInc(queue string, state messageState, hasError bool, count int) {
 	hasErrorString := "false"
 	if hasError {
 		hasErrorString = "true"
 	}
 
-	messageCounter := trace.Counter{
-		Counter: messageCounterVec.WithLabelValues(queue, string(state), hasErrorString),
-	}
-	messageCounter.Add(ctx, float64(count))
+	messageCounterVec.WithLabelValues(queue, string(state), hasErrorString).Add(float64(count))
 }
 
 func getCorrelationID(ma map[string]*sqs.MessageAttributeValue) string {

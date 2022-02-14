@@ -102,6 +102,17 @@ func BatchTimeout(timeout time.Duration) OptionFunc {
 	}
 }
 
+// BatchMessageDeduplication enables the deduplication of messages based on the message's key.
+// This implementation does not do additional sorting, but instead relies on the ordering guarantees that Kafka gives
+// within partitions of a topic. Don't use this functionality if you've changed your producer's partition hashing
+// behaviour to a nondeterministic way.
+func BatchMessageDeduplication() OptionFunc {
+	return func(c *Component) error {
+		c.batchMessageDeduplication = true
+		return nil
+	}
+}
+
 // CommitSync instructs the consumer to commit offsets in a blocking operation after processing every batch of messages
 func CommitSync() OptionFunc {
 	return func(c *Component) error {

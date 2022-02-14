@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
-	github.com/Shopify/sarama v1.30.1
+	github.com/Shopify/sarama v1.31.1
 	github.com/aws/aws-sdk-go v1.42.9
 	github.com/elastic/go-elasticsearch/v8 v8.0.0-20211001143748-fd99a833e74f
 	github.com/go-redis/redis/extra/rediscmd v0.2.0
@@ -28,4 +28,6 @@ require (
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

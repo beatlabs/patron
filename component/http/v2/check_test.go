@@ -11,7 +11,7 @@ import (
 
 func Test_aliveCheckRoute(t *testing.T) {
 	tests := map[string]struct {
-		acf  AliveCheckFunc
+		acf  LivenessCheckFunc
 		want int
 	}{
 		"alive":        {func() AliveStatus { return Alive }, http.StatusOK},
@@ -20,7 +20,7 @@ func Test_aliveCheckRoute(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			route := AliveCheckRoute(tt.acf)
+			route := LivenessCheckRoute(tt.acf)
 			assert.Equal(t, http.MethodGet, route.method)
 			assert.Equal(t, "/alive", route.path)
 

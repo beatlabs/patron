@@ -70,7 +70,7 @@ func TestRoutes(t *testing.T) {
 func TestAliveCheck(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		acf v2.AliveCheckFunc
+		acf v2.LivenessCheckFunc
 	}
 	tests := map[string]struct {
 		args        args

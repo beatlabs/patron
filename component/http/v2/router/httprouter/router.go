@@ -18,7 +18,7 @@ type OptionFunc func(*Config) error
 
 // Config definition.
 type Config struct {
-	aliveCheckFunc v2.AliveCheckFunc
+	aliveCheckFunc v2.LivenessCheckFunc
 	readyCheckFunc v2.ReadyCheckFunc
 	deflateLevel   int
 	middlewares    []middleware.Func
@@ -44,7 +44,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	mux := httprouter.New()
 	stdRoutes = append(stdRoutes, v2.MetricRoute())
 	stdRoutes = append(stdRoutes, v2.ProfilingRoutes()...)
-	stdRoutes = append(stdRoutes, v2.AliveCheckRoute(cfg.aliveCheckFunc))
+	stdRoutes = append(stdRoutes, v2.LivenessCheckRoute(cfg.aliveCheckFunc))
 	stdRoutes = append(stdRoutes, v2.ReadyCheckRoute(cfg.readyCheckFunc))
 
 	for _, route := range stdRoutes {
@@ -94,7 +94,7 @@ func Routes(routes ...*v2.Route) OptionFunc {
 }
 
 // AliveCheck option for the router.
-func AliveCheck(acf v2.AliveCheckFunc) OptionFunc {
+func AliveCheck(acf v2.LivenessCheckFunc) OptionFunc {
 	return func(cfg *Config) error {
 		if acf == nil {
 			return errors.New("alive check function is nil")

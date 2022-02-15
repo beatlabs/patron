@@ -29,10 +29,11 @@ const (
 // ReadyCheckFunc defines a function type for implementing a readiness check.
 type ReadyCheckFunc func() ReadyStatus
 
-// AliveCheckFunc defines a function type for implementing a liveness check.
-type AliveCheckFunc func() AliveStatus
+// LivenessCheckFunc defines a function type for implementing a liveness check.
+type LivenessCheckFunc func() AliveStatus
 
-func AliveCheckRoute(acf AliveCheckFunc) *Route {
+// LivenessCheckRoute returns a route for liveness checks.
+func LivenessCheckRoute(acf LivenessCheckFunc) *Route {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch acf() {
 		case Alive:
@@ -47,6 +48,7 @@ func AliveCheckRoute(acf AliveCheckFunc) *Route {
 	return route
 }
 
+// ReadyCheckRoute returns a route for ready checks.
 func ReadyCheckRoute(rcf ReadyCheckFunc) *Route {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch rcf() {

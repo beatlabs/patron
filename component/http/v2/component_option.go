@@ -43,6 +43,17 @@ func WriteTimeout(wt time.Duration) OptionFunc {
 	}
 }
 
+// HandlerTimeout functional option.
+func HandlerTimeout(wt time.Duration) OptionFunc {
+	return func(cmp *Component) error {
+		if wt <= 0*time.Second {
+			return errors.New("negative or zero handler timeout provided")
+		}
+		cmp.handlerTimeout = wt
+		return nil
+	}
+}
+
 // ShutdownGracePeriod functional option.
 func ShutdownGracePeriod(gp time.Duration) OptionFunc {
 	return func(cmp *Component) error {

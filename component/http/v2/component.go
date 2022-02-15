@@ -17,6 +17,7 @@ const (
 	readTimeout         = 30 * time.Second
 	writeTimeout        = 60 * time.Second
 	idleTimeout         = 240 * time.Second
+	handlerTimeout      = 59 * time.Second // should be smaller than write timeout
 	shutdownGracePeriod = 5 * time.Second
 )
 
@@ -26,6 +27,7 @@ type Component struct {
 	readTimeout         time.Duration
 	writeTimeout        time.Duration
 	shutdownGracePeriod time.Duration
+	handlerTimeout      time.Duration
 	handler             http.Handler
 	mu                  sync.Mutex
 	certFile            string
@@ -42,6 +44,7 @@ func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 		readTimeout:         readTimeout,
 		writeTimeout:        writeTimeout,
 		shutdownGracePeriod: shutdownGracePeriod,
+		handlerTimeout:      handlerTimeout,
 		handler:             handler,
 	}
 
@@ -80,7 +83,7 @@ func (c *Component) createHTTPServer() *http.Server {
 		ReadTimeout:  c.readTimeout,
 		WriteTimeout: c.writeTimeout,
 		IdleTimeout:  idleTimeout,
-		Handler:      c.handler,
+		Handler:      http.TimeoutHandler(c.handler, c.handlerTimeout, ""),
 	}
 }
 

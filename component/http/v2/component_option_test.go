@@ -97,6 +97,35 @@ func TestWriteTimeout(t *testing.T) {
 	}
 }
 
+func TestHandlerTimeout(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		wt time.Duration
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success":      {args: args{wt: time.Second}},
+		"missing cert": {args: args{wt: -1 * time.Second}, expectedErr: "negative or zero handler timeout provided"},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			cmp := &Component{}
+			err := HandlerTimeout(tt.args.wt)(cmp)
+
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.args.wt, cmp.handlerTimeout)
+			}
+		})
+	}
+}
+
 func TestShutdownGracePeriod(t *testing.T) {
 	t.Parallel()
 	type args struct {

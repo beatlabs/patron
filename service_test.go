@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	patronhttp "github.com/beatlabs/patron/component/http"
-	middleware2 "github.com/beatlabs/patron/component/http/middleware"
+	"github.com/beatlabs/patron/component/http/middleware"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/std"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +23,7 @@ func TestNewServer(t *testing.T) {
 	routesBuilder := patronhttp.NewRoutesBuilder().
 		Append(patronhttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).MethodGet())
 
-	middleware := func(h http.Handler) http.Handler {
+	mw := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		})
@@ -42,7 +42,7 @@ func TestNewServer(t *testing.T) {
 		fields            map[string]interface{}
 		cps               []Component
 		routesBuilder     *patronhttp.RoutesBuilder
-		middlewares       []middleware2.Func
+		middlewares       []middleware.Func
 		acf               patronhttp.AliveCheckFunc
 		rcf               patronhttp.ReadyCheckFunc
 		sighupHandler     func()
@@ -54,12 +54,12 @@ func TestNewServer(t *testing.T) {
 			fields:            map[string]interface{}{"env": "dev"},
 			cps:               []Component{&testComponent{}, &testComponent{}},
 			routesBuilder:     routesBuilder,
-			middlewares:       []middleware2.Func{middleware},
+			middlewares:       []middleware.Func{mw},
 			acf:               patronhttp.DefaultAliveCheck,
 			rcf:               patronhttp.DefaultReadyCheck,
 			sighupHandler:     func() { log.Info("SIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
-			handler:           middleware(nil),
+			handler:           mw(nil),
 			wantErr:           "",
 		},
 		"nil inputs steps": {
@@ -76,7 +76,7 @@ func TestNewServer(t *testing.T) {
 		"error in all builder steps": {
 			cps:               []Component{},
 			routesBuilder:     nil,
-			middlewares:       []middleware2.Func{},
+			middlewares:       []middleware.Func{},
 			acf:               nil,
 			rcf:               nil,
 			sighupHandler:     nil,

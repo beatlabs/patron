@@ -13,6 +13,8 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		name    string
 		brokers []string
@@ -85,6 +87,8 @@ func TestNew(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
+	t.Parallel()
+
 	singleMessage := map[int32][]*sarama.ConsumerMessage{
 		0: {
 			msg(0, 0),

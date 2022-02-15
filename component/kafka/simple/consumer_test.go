@@ -14,6 +14,8 @@ import (
 )
 
 func TestConsumePartition(t *testing.T) {
+	t.Parallel()
+
 	messages := map[int32][]*sarama.ConsumerMessage{
 		0: {
 			msg(0, 0),

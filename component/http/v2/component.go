@@ -88,6 +88,7 @@ func (c *Component) listenAndServe(srv *http.Server, ch chan<- error) {
 	if c.certFile != "" && c.keyFile != "" {
 		log.Debugf("HTTPS component listening on port %d", c.port)
 		ch <- srv.ListenAndServeTLS(c.certFile, c.keyFile)
+		return
 	}
 
 	log.Debugf("HTTP component listening on port %d", c.port)

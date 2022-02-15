@@ -132,7 +132,7 @@ func TestRun(t *testing.T) {
 				partitionConsumerFactory: func(ctx context.Context) (sarama.Client, sarama.Consumer, map[int32]sarama.PartitionConsumer, error) {
 					return clientStub{}, consumerStub{}, createPartitionConsumersWithClosure(messages), nil
 				},
-				options: []OptionFunc{Retries(1)},
+				options: []OptionFunc{Retries(0)},
 			},
 			expectedMessages: expectedMessages,
 		},
@@ -143,7 +143,7 @@ func TestRun(t *testing.T) {
 				partitionConsumerFactory: func(ctx context.Context) (sarama.Client, sarama.Consumer, map[int32]sarama.PartitionConsumer, error) {
 					return clientStub{}, consumerStub{}, createPartitionConsumersWithClosure(messages), nil
 				},
-				options: []OptionFunc{Retries(1)},
+				options: []OptionFunc{Retries(0)},
 			},
 			expectedErr: errors.New("simple consumer error on topic topic: proc error"),
 		},
@@ -199,7 +199,7 @@ func (c clientStub) Brokers() []*sarama.Broker {
 	return nil
 }
 
-func (c clientStub) Broker(brokerID int32) (*sarama.Broker, error) {
+func (c clientStub) Broker(int32) (*sarama.Broker, error) {
 	return nil, nil
 }
 
@@ -207,47 +207,47 @@ func (c clientStub) Topics() ([]string, error) {
 	return nil, nil
 }
 
-func (c clientStub) Partitions(topic string) ([]int32, error) {
+func (c clientStub) Partitions(string) ([]int32, error) {
 	return nil, nil
 }
 
-func (c clientStub) WritablePartitions(topic string) ([]int32, error) {
+func (c clientStub) WritablePartitions(string) ([]int32, error) {
 	return nil, nil
 }
 
-func (c clientStub) Leader(topic string, partitionID int32) (*sarama.Broker, error) {
+func (c clientStub) Leader(string, int32) (*sarama.Broker, error) {
 	return nil, nil
 }
 
-func (c clientStub) Replicas(topic string, partitionID int32) ([]int32, error) {
+func (c clientStub) Replicas(string, int32) ([]int32, error) {
 	return nil, nil
 }
 
-func (c clientStub) InSyncReplicas(topic string, partitionID int32) ([]int32, error) {
+func (c clientStub) InSyncReplicas(string, int32) ([]int32, error) {
 	return nil, nil
 }
 
-func (c clientStub) OfflineReplicas(topic string, partitionID int32) ([]int32, error) {
+func (c clientStub) OfflineReplicas(string, int32) ([]int32, error) {
 	return nil, nil
 }
 
-func (c clientStub) RefreshBrokers(addrs []string) error {
+func (c clientStub) RefreshBrokers([]string) error {
 	return nil
 }
 
-func (c clientStub) RefreshMetadata(topics ...string) error {
+func (c clientStub) RefreshMetadata(...string) error {
 	return nil
 }
 
-func (c clientStub) GetOffset(topic string, partitionID int32, time int64) (int64, error) {
+func (c clientStub) GetOffset(string, int32, int64) (int64, error) {
 	return 0, nil
 }
 
-func (c clientStub) Coordinator(consumerGroup string) (*sarama.Broker, error) {
+func (c clientStub) Coordinator(string) (*sarama.Broker, error) {
 	return nil, nil
 }
 
-func (c clientStub) RefreshCoordinator(consumerGroup string) error {
+func (c clientStub) RefreshCoordinator(string) error {
 	return nil
 }
 
@@ -269,11 +269,11 @@ func (c consumerStub) Topics() ([]string, error) {
 	return nil, nil
 }
 
-func (c consumerStub) Partitions(topic string) ([]int32, error) {
+func (c consumerStub) Partitions(string) ([]int32, error) {
 	return nil, nil
 }
 
-func (c consumerStub) ConsumePartition(topic string, partition int32, offset int64) (sarama.PartitionConsumer, error) {
+func (c consumerStub) ConsumePartition(string, int32, int64) (sarama.PartitionConsumer, error) {
 	return nil, nil
 }
 
@@ -284,3 +284,11 @@ func (c consumerStub) HighWaterMarks() map[string]map[int32]int64 {
 func (c consumerStub) Close() error {
 	return nil
 }
+
+func (c consumerStub) Pause(map[string][]int32) {}
+
+func (c consumerStub) Resume(map[string][]int32) {}
+
+func (c consumerStub) PauseAll() {}
+
+func (c consumerStub) ResumeAll() {}

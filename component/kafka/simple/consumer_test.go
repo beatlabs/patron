@@ -285,6 +285,14 @@ func (p partitionConsumerStub) HighWaterMarkOffset() int64 {
 	return 0
 }
 
+func (p partitionConsumerStub) Pause() {}
+
+func (p partitionConsumerStub) Resume() {}
+
+func (p partitionConsumerStub) IsPaused() bool {
+	return false
+}
+
 func msg(partition int32, offset int64) *sarama.ConsumerMessage {
 	return &sarama.ConsumerMessage{
 		Partition: partition,

@@ -111,12 +111,19 @@ func (o *observer) log(err error) {
 
 func (o *observer) messageHandled(err error) {
 	st, _ := status.FromError(err)
-	rpcHandledMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String()).Inc()
+	rpcHandledCounter := trace.Counter{
+		Counter: rpcHandledMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String()),
+	}
+	rpcHandledCounter.Inc(o.ctx)
 }
 
 func (o *observer) messageLatency(dur time.Duration, err error) {
 	st, _ := status.FromError(err)
-	rpcLatencyMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String()).Observe(dur.Seconds())
+
+	rpcLatencyMetricObserver := trace.Histogram{
+		Observer: rpcLatencyMetric.WithLabelValues(o.typ, o.service, o.method, st.Code().String()),
+	}
+	rpcLatencyMetricObserver.Observe(o.ctx, dur.Seconds())
 }
 
 func observableUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {

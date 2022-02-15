@@ -12,8 +12,8 @@ import (
 
 	"github.com/beatlabs/patron/trace"
 
+	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/elastic/go-elasticsearch/v8/estransport"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -94,11 +94,11 @@ func TestNewDefaultClient(t *testing.T) {
 	defaultAddr := getAddrFromEnv()
 	expectedURL, err := url.Parse(strings.TrimRight(defaultAddr, "/"))
 	assert.NoError(t, err)
-	cfg := estransport.Config{
+	cfg := elastictransport.Config{
 		URLs:      []*url.URL{expectedURL},
 		Transport: nil,
 	}
-	expectedTransport.client, err = estransport.New(cfg)
+	expectedTransport.client, err = elastictransport.New(cfg)
 	assert.NoError(t, err)
 	expectedTransport.tracingInfo.hosts = []string{defaultAddr}
 	assert.EqualValues(t, expectedTransport, transport)
@@ -123,7 +123,7 @@ func TestNewClient(t *testing.T) {
 
 	expectedURLs, err := addrsToURLs(addresses)
 	assert.NoError(t, err)
-	transportCfg := estransport.Config{
+	transportCfg := elastictransport.Config{
 		URLs:      expectedURLs,
 		Username:  user,
 		Password:  password,
@@ -131,7 +131,7 @@ func TestNewClient(t *testing.T) {
 		Transport: nil,
 		Logger:    nil,
 	}
-	expectedTransport.client, err = estransport.New(transportCfg)
+	expectedTransport.client, err = elastictransport.New(transportCfg)
 	assert.NoError(t, err)
 	expectedTransport.tracingInfo.hosts = addresses
 	expectedTransport.user = user

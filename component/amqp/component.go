@@ -38,9 +38,9 @@ const (
 )
 
 var (
-	messageAge     *prometheus.GaugeVec
-	messageCounter *prometheus.CounterVec
-	queueSize      *prometheus.GaugeVec
+	messageAge        *prometheus.GaugeVec
+	messageCounterVec *prometheus.CounterVec
+	queueSize         *prometheus.GaugeVec
 )
 
 func init() {
@@ -54,7 +54,7 @@ func init() {
 		[]string{"queue"},
 	)
 	prometheus.MustRegister(messageAge)
-	messageCounter = prometheus.NewCounterVec(
+	messageCounterVec = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "component",
 			Subsystem: "amqp",
@@ -63,7 +63,7 @@ func init() {
 		},
 		[]string{"queue", "state", "hasError"},
 	)
-	prometheus.MustRegister(messageCounter)
+	prometheus.MustRegister(messageCounterVec)
 	queueSize = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "component",
@@ -334,7 +334,7 @@ func messageCountInc(queue string, state messageState, err error) {
 	if err != nil {
 		hasError = "true"
 	}
-	messageCounter.WithLabelValues(queue, string(state), hasError).Inc()
+	messageCounterVec.WithLabelValues(queue, string(state), hasError).Inc()
 }
 
 func mapHeader(hh amqp.Table) map[string]string {

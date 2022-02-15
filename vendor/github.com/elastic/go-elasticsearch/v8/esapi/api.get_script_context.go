@@ -39,8 +39,6 @@ func newGetScriptContextFunc(t Transport) GetScriptContext {
 
 // GetScriptContext returns all script contexts.
 //
-// This API is experimental.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/painless/master/painless-contexts.html.
 //
 type GetScriptContext func(o ...func(*GetScriptContextRequest)) (*Response, error)
@@ -69,7 +67,8 @@ func (r GetScriptContextRequest) Do(ctx context.Context, transport Transport) (*
 
 	method = "GET"
 
-	path.Grow(len("/_script_context"))
+	path.Grow(7 + len("/_script_context"))
+	path.WriteString("http://")
 	path.WriteString("/_script_context")
 
 	params = make(map[string]string)

@@ -188,7 +188,7 @@ func initHTTPServerMetrics() {
 // metrics are exposed via Prometheus.
 // This middleware is enabled by default.
 func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
-	// register Promethus metrics on first use
+	// register Prometheus metrics on first use
 	httpStatusTracingInit.Do(initHTTPServerMetrics)
 
 	return func(next http.Handler) http.Handler {
@@ -199,8 +199,16 @@ func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 
 			// collect metrics about HTTP server-side handling and latency
 			status := strconv.Itoa(lw.Status())
-			httpStatusTracingHandledMetric.WithLabelValues(method, path, status).Inc()
-			httpStatusTracingLatencyMetric.WithLabelValues(method, path, status).Observe(time.Since(now).Seconds())
+
+			httpStatusCounter := trace.Counter{
+				Counter: httpStatusTracingHandledMetric.WithLabelValues(method, path, status),
+			}
+			httpStatusCounter.Inc(r.Context())
+
+			httpLatencyMetricObserver := trace.Histogram{
+				Observer: httpStatusTracingLatencyMetric.WithLabelValues(method, path, status),
+			}
+			httpLatencyMetricObserver.Observe(r.Context(), time.Since(now).Seconds())
 		})
 	}
 }
@@ -404,6 +412,7 @@ func (w *dynamicCompressionResponseWriter) WriteHeader(statusCode int) {
 		case gzipHeader:
 			w.writer = gzip.NewWriter(w.ResponseWriter)
 			w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, gzipHeader)
+			w.ResponseWriter.Header().Del("Content-Length")
 		case deflateHeader:
 			var err error
 			w.writer, err = flate.NewWriter(w.ResponseWriter, w.deflateLevel)
@@ -411,6 +420,7 @@ func (w *dynamicCompressionResponseWriter) WriteHeader(statusCode int) {
 				w.writer = w.ResponseWriter
 			} else {
 				w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, deflateHeader)
+				w.ResponseWriter.Header().Del("Content-Length")
 			}
 		case identityHeader, "":
 			w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, identityHeader)

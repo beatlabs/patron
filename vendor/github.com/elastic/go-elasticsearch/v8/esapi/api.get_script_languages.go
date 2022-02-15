@@ -39,8 +39,6 @@ func newGetScriptLanguagesFunc(t Transport) GetScriptLanguages {
 
 // GetScriptLanguages returns available script types, languages and contexts
 //
-// This API is experimental.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting.html.
 //
 type GetScriptLanguages func(o ...func(*GetScriptLanguagesRequest)) (*Response, error)
@@ -69,7 +67,8 @@ func (r GetScriptLanguagesRequest) Do(ctx context.Context, transport Transport) 
 
 	method = "GET"
 
-	path.Grow(len("/_script_language"))
+	path.Grow(7 + len("/_script_language"))
+	path.WriteString("http://")
 	path.WriteString("/_script_language")
 
 	params = make(map[string]string)

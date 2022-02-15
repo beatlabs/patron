@@ -21,6 +21,8 @@ package esapi
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -59,11 +61,12 @@ type SearchMvtRequest struct {
 	Y     *int
 	Zoom  *int
 
-	ExactBounds   *bool
-	Extent        *int
-	GridPrecision *int
-	GridType      string
-	Size          *int
+	ExactBounds    *bool
+	Extent         *int
+	GridPrecision  *int
+	GridType       string
+	Size           *int
+	TrackTotalHits interface{}
 
 	Pretty     bool
 	Human      bool
@@ -86,7 +89,21 @@ func (r SearchMvtRequest) Do(ctx context.Context, transport Transport) (*Respons
 
 	method = "POST"
 
-	path.Grow(1 + len(strings.Join(r.Index, ",")) + 1 + len("_mvt") + 1 + len(r.Field) + 1 + len(strconv.Itoa(*r.Zoom)) + 1 + len(strconv.Itoa(*r.X)) + 1 + len(strconv.Itoa(*r.Y)))
+	if len(r.Index) == 0 {
+		return nil, errors.New("index is required and cannot be nil or empty")
+	}
+	if r.Zoom == nil {
+		return nil, errors.New("zoom is required and cannot be nil")
+	}
+	if r.X == nil {
+		return nil, errors.New("x is required and cannot be nil")
+	}
+	if r.Y == nil {
+		return nil, errors.New("y is required and cannot be nil")
+	}
+
+	path.Grow(7 + 1 + len(strings.Join(r.Index, ",")) + 1 + len("_mvt") + 1 + len(r.Field) + 1 + len(strconv.Itoa(*r.Zoom)) + 1 + len(strconv.Itoa(*r.X)) + 1 + len(strconv.Itoa(*r.Y)))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString(strings.Join(r.Index, ","))
 	path.WriteString("/")
@@ -120,6 +137,10 @@ func (r SearchMvtRequest) Do(ctx context.Context, transport Transport) (*Respons
 
 	if r.Size != nil {
 		params["size"] = strconv.FormatInt(int64(*r.Size), 10)
+	}
+
+	if r.TrackTotalHits != nil {
+		params["track_total_hits"] = fmt.Sprintf("%v", r.TrackTotalHits)
 	}
 
 	if r.Pretty {
@@ -238,6 +259,14 @@ func (f SearchMvt) WithGridType(v string) func(*SearchMvtRequest) {
 func (f SearchMvt) WithSize(v int) func(*SearchMvtRequest) {
 	return func(r *SearchMvtRequest) {
 		r.Size = &v
+	}
+}
+
+// WithTrackTotalHits - indicate if the number of documents that match the query should be tracked. a number can also be specified, to accurately track the total hit count up to the number..
+//
+func (f SearchMvt) WithTrackTotalHits(v interface{}) func(*SearchMvtRequest) {
+	return func(r *SearchMvtRequest) {
+		r.TrackTotalHits = v
 	}
 }
 

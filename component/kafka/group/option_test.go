@@ -149,3 +149,10 @@ func TestBatchTimeout(t *testing.T) {
 		})
 	}
 }
+
+func TestBatchMessageDeduplication(t *testing.T) {
+	c := &Component{}
+	err := BatchMessageDeduplication()(c)
+	assert.NoError(t, err)
+	assert.Equal(t, c.batchMessageDeduplication, true)
+}

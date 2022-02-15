@@ -39,8 +39,6 @@ func newSecurityGetServiceCredentialsFunc(t Transport) SecurityGetServiceCredent
 
 // SecurityGetServiceCredentials - Retrieves information of all service credentials for a service account.
 //
-// This API is beta.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-service-credentials.html.
 //
 type SecurityGetServiceCredentials func(namespace string, service string, o ...func(*SecurityGetServiceCredentialsRequest)) (*Response, error)
@@ -72,7 +70,8 @@ func (r SecurityGetServiceCredentialsRequest) Do(ctx context.Context, transport 
 
 	method = "GET"
 
-	path.Grow(1 + len("_security") + 1 + len("service") + 1 + len(r.Namespace) + 1 + len(r.Service) + 1 + len("credential"))
+	path.Grow(7 + 1 + len("_security") + 1 + len("service") + 1 + len(r.Namespace) + 1 + len(r.Service) + 1 + len("credential"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_security")
 	path.WriteString("/")

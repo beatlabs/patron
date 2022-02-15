@@ -21,6 +21,7 @@ package esapi
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -39,8 +40,6 @@ func newTermsEnumFunc(t Transport) TermsEnum {
 // ----- API Definition -------------------------------------------------------
 
 // TermsEnum the terms enum API  can be used to discover terms in the index that begin with the provided string. It is designed for low-latency look-ups used in auto-complete scenarios.
-//
-// This API is beta.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/search-terms-enum.html.
 //
@@ -74,7 +73,12 @@ func (r TermsEnumRequest) Do(ctx context.Context, transport Transport) (*Respons
 
 	method = "POST"
 
-	path.Grow(1 + len(strings.Join(r.Index, ",")) + 1 + len("_terms_enum"))
+	if len(r.Index) == 0 {
+		return nil, errors.New("index is required and cannot be nil or empty")
+	}
+
+	path.Grow(7 + 1 + len(strings.Join(r.Index, ",")) + 1 + len("_terms_enum"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString(strings.Join(r.Index, ","))
 	path.WriteString("/")

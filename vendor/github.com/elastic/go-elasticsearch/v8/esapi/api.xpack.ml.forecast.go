@@ -21,6 +21,7 @@ package esapi
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -47,6 +48,8 @@ type MLForecast func(job_id string, o ...func(*MLForecastRequest)) (*Response, e
 // MLForecastRequest configures the ML Forecast API request.
 //
 type MLForecastRequest struct {
+	Body io.Reader
+
 	JobID string
 
 	Duration       time.Duration
@@ -74,7 +77,8 @@ func (r MLForecastRequest) Do(ctx context.Context, transport Transport) (*Respon
 
 	method = "POST"
 
-	path.Grow(1 + len("_ml") + 1 + len("anomaly_detectors") + 1 + len(r.JobID) + 1 + len("_forecast"))
+	path.Grow(7 + 1 + len("_ml") + 1 + len("anomaly_detectors") + 1 + len(r.JobID) + 1 + len("_forecast"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_ml")
 	path.WriteString("/")
@@ -114,7 +118,7 @@ func (r MLForecastRequest) Do(ctx context.Context, transport Transport) (*Respon
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, err := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), r.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +129,10 @@ func (r MLForecastRequest) Do(ctx context.Context, transport Transport) (*Respon
 			q.Set(k, v)
 		}
 		req.URL.RawQuery = q.Encode()
+	}
+
+	if r.Body != nil {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if len(r.Header) > 0 {
@@ -162,6 +170,14 @@ func (r MLForecastRequest) Do(ctx context.Context, transport Transport) (*Respon
 func (f MLForecast) WithContext(v context.Context) func(*MLForecastRequest) {
 	return func(r *MLForecastRequest) {
 		r.ctx = v
+	}
+}
+
+// WithBody - Query parameters can be specified in the body.
+//
+func (f MLForecast) WithBody(v io.Reader) func(*MLForecastRequest) {
+	return func(r *MLForecastRequest) {
+		r.Body = v
 	}
 }
 

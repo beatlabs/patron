@@ -18,10 +18,12 @@ import (
 )
 
 const (
-	// HostsTag is used to tag the components's hosts.
+	// HostsTag is used to tag the component's hosts.
 	HostsTag = "hosts"
-	// VersionTag is used to tag the components's version.
+	// VersionTag is used to tag the component's version.
 	VersionTag = "version"
+	// TraceID is a label name for a request trace ID
+	TraceID = "traceID"
 )
 
 var (

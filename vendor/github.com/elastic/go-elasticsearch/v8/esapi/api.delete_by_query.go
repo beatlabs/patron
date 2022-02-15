@@ -21,6 +21,7 @@ package esapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -77,9 +78,6 @@ type DeleteByQueryRequest struct {
 	SearchType          string
 	Slices              interface{}
 	Sort                []string
-	Source              []string
-	SourceExcludes      []string
-	SourceIncludes      []string
 	Stats               []string
 	TerminateAfter      *int
 	Timeout             time.Duration
@@ -108,7 +106,12 @@ func (r DeleteByQueryRequest) Do(ctx context.Context, transport Transport) (*Res
 
 	method = "POST"
 
-	path.Grow(1 + len(strings.Join(r.Index, ",")) + 1 + len("_delete_by_query"))
+	if len(r.Index) == 0 {
+		return nil, errors.New("index is required and cannot be nil or empty")
+	}
+
+	path.Grow(7 + 1 + len(strings.Join(r.Index, ",")) + 1 + len("_delete_by_query"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString(strings.Join(r.Index, ","))
 	path.WriteString("/")
@@ -206,18 +209,6 @@ func (r DeleteByQueryRequest) Do(ctx context.Context, transport Transport) (*Res
 
 	if len(r.Sort) > 0 {
 		params["sort"] = strings.Join(r.Sort, ",")
-	}
-
-	if len(r.Source) > 0 {
-		params["_source"] = strings.Join(r.Source, ",")
-	}
-
-	if len(r.SourceExcludes) > 0 {
-		params["_source_excludes"] = strings.Join(r.SourceExcludes, ",")
-	}
-
-	if len(r.SourceIncludes) > 0 {
-		params["_source_includes"] = strings.Join(r.SourceIncludes, ",")
 	}
 
 	if len(r.Stats) > 0 {
@@ -496,30 +487,6 @@ func (f DeleteByQuery) WithSlices(v interface{}) func(*DeleteByQueryRequest) {
 func (f DeleteByQuery) WithSort(v ...string) func(*DeleteByQueryRequest) {
 	return func(r *DeleteByQueryRequest) {
 		r.Sort = v
-	}
-}
-
-// WithSource - true or false to return the _source field or not, or a list of fields to return.
-//
-func (f DeleteByQuery) WithSource(v ...string) func(*DeleteByQueryRequest) {
-	return func(r *DeleteByQueryRequest) {
-		r.Source = v
-	}
-}
-
-// WithSourceExcludes - a list of fields to exclude from the returned _source field.
-//
-func (f DeleteByQuery) WithSourceExcludes(v ...string) func(*DeleteByQueryRequest) {
-	return func(r *DeleteByQueryRequest) {
-		r.SourceExcludes = v
-	}
-}
-
-// WithSourceIncludes - a list of fields to extract and return from the _source field.
-//
-func (f DeleteByQuery) WithSourceIncludes(v ...string) func(*DeleteByQueryRequest) {
-	return func(r *DeleteByQueryRequest) {
-		r.SourceIncludes = v
 	}
 }
 

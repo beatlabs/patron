@@ -39,8 +39,6 @@ func newSecurityCreateServiceTokenFunc(t Transport) SecurityCreateServiceToken {
 
 // SecurityCreateServiceToken - Creates a service account token for access without requiring basic authentication.
 //
-// This API is beta.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-service-token.html.
 //
 type SecurityCreateServiceToken func(namespace string, service string, o ...func(*SecurityCreateServiceTokenRequest)) (*Response, error)
@@ -75,7 +73,8 @@ func (r SecurityCreateServiceTokenRequest) Do(ctx context.Context, transport Tra
 
 	method = "PUT"
 
-	path.Grow(1 + len("_security") + 1 + len("service") + 1 + len(r.Namespace) + 1 + len(r.Service) + 1 + len("credential") + 1 + len("token") + 1 + len(r.Name))
+	path.Grow(7 + 1 + len("_security") + 1 + len("service") + 1 + len(r.Namespace) + 1 + len(r.Service) + 1 + len("credential") + 1 + len("token") + 1 + len(r.Name))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_security")
 	path.WriteString("/")

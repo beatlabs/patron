@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/trace"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -75,7 +75,7 @@ func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	sp, _ := c.startSpan(ctx, op, "")
 	start := time.Now()
 	tx, err := c.conn.BeginTx(ctx, opts)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *Conn) Close(ctx context.Context) error {
 	sp, _ := c.startSpan(ctx, op, "")
 	start := time.Now()
 	err := c.conn.Close()
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	return err
 }
 
@@ -99,7 +99,7 @@ func (c *Conn) Exec(ctx context.Context, query string, args ...interface{}) (sql
 	sp, _ := c.startSpan(ctx, op, query)
 	start := time.Now()
 	res, err := c.conn.ExecContext(ctx, query, args...)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	return res, err
 }
 
@@ -109,7 +109,7 @@ func (c *Conn) Ping(ctx context.Context) error {
 	sp, _ := c.startSpan(ctx, op, "")
 	start := time.Now()
 	err := c.conn.PingContext(ctx)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	return err
 }
 
@@ -119,7 +119,7 @@ func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	sp, _ := c.startSpan(ctx, op, query)
 	start := time.Now()
 	stmt, err := c.conn.PrepareContext(ctx, query)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (c *Conn) Query(ctx context.Context, query string, args ...interface{}) (*s
 	sp, _ := c.startSpan(ctx, op, query)
 	start := time.Now()
 	rows, err := c.conn.QueryContext(ctx, query, args...)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (c *Conn) QueryRow(ctx context.Context, query string, args ...interface{}) 
 	sp, _ := c.startSpan(ctx, op, query)
 	start := time.Now()
 	row := c.conn.QueryRowContext(ctx, query, args...)
-	observeDuration(sp, start, op, nil)
+	observeDuration(ctx, sp, start, op, nil)
 	return row
 }
 
@@ -191,7 +191,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	sp, _ := db.startSpan(ctx, op, "")
 	start := time.Now()
 	tx, err := db.db.BeginTx(ctx, opts)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (db *DB) Close(ctx context.Context) error {
 	sp, _ := db.startSpan(ctx, op, "")
 	start := time.Now()
 	err := db.db.Close()
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	return err
 }
 
@@ -214,7 +214,7 @@ func (db *DB) Conn(ctx context.Context) (*Conn, error) {
 	sp, _ := db.startSpan(ctx, op, "")
 	start := time.Now()
 	conn, err := db.db.Conn(ctx)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (db *DB) Driver(ctx context.Context) driver.Driver {
 	sp, _ := db.startSpan(ctx, op, "")
 	start := time.Now()
 	drv := db.db.Driver()
-	observeDuration(sp, start, op, nil)
+	observeDuration(ctx, sp, start, op, nil)
 	return drv
 }
 
@@ -238,7 +238,7 @@ func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 	sp, _ := db.startSpan(ctx, op, query)
 	start := time.Now()
 	res, err := db.db.ExecContext(ctx, query, args...)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +252,7 @@ func (db *DB) Ping(ctx context.Context) error {
 	sp, _ := db.startSpan(ctx, op, "")
 	start := time.Now()
 	err := db.db.PingContext(ctx)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	return err
 }
 
@@ -262,7 +262,7 @@ func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	sp, _ := db.startSpan(ctx, op, query)
 	start := time.Now()
 	stmt, err := db.db.PrepareContext(ctx, query)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +276,7 @@ func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (*sq
 	sp, _ := db.startSpan(ctx, op, query)
 	start := time.Now()
 	rows, err := db.db.QueryContext(ctx, query, args...)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +290,7 @@ func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *
 	sp, _ := db.startSpan(ctx, op, query)
 	start := time.Now()
 	row := db.db.QueryRowContext(ctx, query, args...)
-	observeDuration(sp, start, op, nil)
+	observeDuration(ctx, sp, start, op, nil)
 	return row
 }
 
@@ -315,7 +315,7 @@ func (db *DB) Stats(ctx context.Context) sql.DBStats {
 	sp, _ := db.startSpan(ctx, op, "")
 	start := time.Now()
 	stats := db.db.Stats()
-	observeDuration(sp, start, op, nil)
+	observeDuration(ctx, sp, start, op, nil)
 	return stats
 }
 
@@ -332,7 +332,7 @@ func (s *Stmt) Close(ctx context.Context) error {
 	sp, _ := s.startSpan(ctx, op, "")
 	start := time.Now()
 	err := s.stmt.Close()
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	return err
 }
 
@@ -342,7 +342,7 @@ func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error
 	sp, _ := s.startSpan(ctx, op, s.query)
 	start := time.Now()
 	res, err := s.stmt.ExecContext(ctx, args...)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +356,7 @@ func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error
 	sp, _ := s.startSpan(ctx, op, s.query)
 	start := time.Now()
 	rows, err := s.stmt.QueryContext(ctx, args...)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +370,7 @@ func (s *Stmt) QueryRow(ctx context.Context, args ...interface{}) *sql.Row {
 	sp, _ := s.startSpan(ctx, op, s.query)
 	start := time.Now()
 	row := s.stmt.QueryRowContext(ctx, args...)
-	observeDuration(sp, start, op, nil)
+	observeDuration(ctx, sp, start, op, nil)
 	return row
 }
 
@@ -386,7 +386,7 @@ func (tx *Tx) Commit(ctx context.Context) error {
 	sp, _ := tx.startSpan(ctx, op, "")
 	start := time.Now()
 	err := tx.tx.Commit()
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	return err
 }
 
@@ -396,7 +396,7 @@ func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 	sp, _ := tx.startSpan(ctx, op, query)
 	start := time.Now()
 	res, err := tx.tx.ExecContext(ctx, query, args...)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +410,7 @@ func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	sp, _ := tx.startSpan(ctx, op, query)
 	start := time.Now()
 	stmt, err := tx.tx.PrepareContext(ctx, query)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -424,7 +424,7 @@ func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sq
 	sp, _ := tx.startSpan(ctx, op, query)
 	start := time.Now()
 	rows, err := tx.tx.QueryContext(ctx, query, args...)
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -437,7 +437,7 @@ func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *
 	sp, _ := tx.startSpan(ctx, op, query)
 	start := time.Now()
 	row := tx.tx.QueryRowContext(ctx, query, args...)
-	observeDuration(sp, start, op, nil)
+	observeDuration(ctx, sp, start, op, nil)
 	return row
 }
 
@@ -447,7 +447,7 @@ func (tx *Tx) Rollback(ctx context.Context) error {
 	sp, _ := tx.startSpan(ctx, op, "")
 	start := time.Now()
 	err := tx.tx.Rollback()
-	observeDuration(sp, start, op, err)
+	observeDuration(ctx, sp, start, op, err)
 	return err
 }
 
@@ -457,7 +457,7 @@ func (tx *Tx) Stmt(ctx context.Context, stmt *Stmt) *Stmt {
 	sp, _ := tx.startSpan(ctx, op, stmt.query)
 	start := time.Now()
 	st := &Stmt{stmt: tx.tx.StmtContext(ctx, stmt.stmt), connInfo: tx.connInfo, query: stmt.query}
-	observeDuration(sp, start, op, nil)
+	observeDuration(ctx, sp, start, op, nil)
 	return st
 }
 
@@ -491,7 +491,11 @@ func parseDSN(dsn string) DSNInfo {
 	return res
 }
 
-func observeDuration(span opentracing.Span, start time.Time, op string, err error) {
+func observeDuration(ctx context.Context, span opentracing.Span, start time.Time, op string, err error) {
 	trace.SpanComplete(span, err)
-	opDurationMetrics.WithLabelValues(op, strconv.FormatBool(err == nil)).Observe(time.Since(start).Seconds())
+
+	durationHistogram := trace.Histogram{
+		Observer: opDurationMetrics.WithLabelValues(op, strconv.FormatBool(err == nil)),
+	}
+	durationHistogram.Observe(ctx, time.Since(start).Seconds())
 }

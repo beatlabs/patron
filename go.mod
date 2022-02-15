@@ -4,9 +4,10 @@ go 1.16
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
-	github.com/Shopify/sarama v1.30.1
-	github.com/aws/aws-sdk-go v1.42.9
-	github.com/elastic/go-elasticsearch/v8 v8.0.0-20211001143748-fd99a833e74f
+	github.com/Shopify/sarama v1.31.1
+	github.com/aws/aws-sdk-go v1.42.51
+	github.com/elastic/elastic-transport-go/v8 v8.0.0-alpha
+	github.com/elastic/go-elasticsearch/v8 v8.0.0
 	github.com/go-redis/redis/extra/rediscmd v0.2.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.6.0
@@ -17,15 +18,17 @@ require (
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/ory/dockertest/v3 v3.8.1
-	github.com/prometheus/client_golang v1.11.0
-	github.com/rs/zerolog v1.26.0
+	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_model v0.2.0
+	github.com/rs/zerolog v1.26.1
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.2-0.20210604143007-135cf5605a6d+incompatible
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
-	google.golang.org/grpc v1.43.0
+	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
+	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

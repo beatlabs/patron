@@ -41,8 +41,6 @@ func newRankEvalFunc(t Transport) RankEval {
 
 // RankEval allows to evaluate the quality of ranked search results over a set of typical search queries
 //
-// This API is experimental.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/search-rank-eval.html.
 //
 type RankEval func(body io.Reader, o ...func(*RankEvalRequest)) (*Response, error)
@@ -80,7 +78,8 @@ func (r RankEvalRequest) Do(ctx context.Context, transport Transport) (*Response
 
 	method = "POST"
 
-	path.Grow(1 + len(strings.Join(r.Index, ",")) + 1 + len("_rank_eval"))
+	path.Grow(7 + 1 + len(strings.Join(r.Index, ",")) + 1 + len("_rank_eval"))
+	path.WriteString("http://")
 	if len(r.Index) > 0 {
 		path.WriteString("/")
 		path.WriteString(strings.Join(r.Index, ","))

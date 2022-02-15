@@ -97,9 +97,6 @@ type Component struct {
 }
 
 // New initializes a new simple kafka consumer component with support for functional configuration.
-// The default failure strategy is the ExitStrategy.
-// The default batch size is 1 and the batch timeout is 100ms.
-// The default number of retries is 0 and the retry wait is 0.
 func New(name string, brokers []string, topic string, proc kafka.BatchProcessorFunc, saramaCfg *sarama.Config, oo ...OptionFunc) (*Component, error) {
 	var errs []error
 	if name == "" {
@@ -151,7 +148,7 @@ func New(name string, brokers []string, topic string, proc kafka.BatchProcessorF
 func (c *Component) Run(ctx context.Context) error {
 	retries := int(c.retries)
 
-	if retries == 1 {
+	if retries == 0 {
 		return c.runWithoutRetry(ctx)
 	}
 	return c.runWithRetry(ctx, retries)

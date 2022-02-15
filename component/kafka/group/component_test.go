@@ -11,7 +11,6 @@ import (
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )

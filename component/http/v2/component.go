@@ -27,9 +27,9 @@ type Component struct {
 	writeTimeout        time.Duration
 	shutdownGracePeriod time.Duration
 	handler             http.Handler
-	sync.Mutex
-	certFile string
-	keyFile  string
+	mu                  sync.Mutex
+	certFile            string
+	keyFile             string
 }
 
 func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
@@ -57,11 +57,11 @@ func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 
 // Run starts the HTTP server.
 func (c *Component) Run(ctx context.Context) error {
-	c.Lock()
+	c.mu.Lock()
 	chFail := make(chan error)
 	srv := c.createHTTPServer()
 	go c.listenAndServe(srv, chFail)
-	c.Unlock()
+	c.mu.Unlock()
 
 	select {
 	case <-ctx.Done():

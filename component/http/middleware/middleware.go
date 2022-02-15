@@ -152,7 +152,7 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Fu
 			next.ServeHTTP(lw, r)
 			finishSpan(sp, lw.Status(), &lw.responsePayload)
 			logRequestResponse(corID, lw, r)
-			if log.Enabled(log.ErrorLevel) && statusCodeLogger.ShouldLog(lw.status) {
+			if log.Enabled(log.ErrorLevel) && statusCodeLogger.shouldLog(lw.status) {
 				log.FromContext(r.Context()).Errorf("%s %d error: %v", path, lw.status, lw.responsePayload.String())
 			}
 		})

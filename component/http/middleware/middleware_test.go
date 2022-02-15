@@ -15,12 +15,12 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type mockAuthenticator struct {
+type stubAuthenticator struct {
 	success bool
 	err     error
 }
 
-func (mo mockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
+func (mo stubAuthenticator) Authenticate(_ *http.Request) (bool, error) {
 	if mo.err != nil {
 		return false, mo.err
 	}
@@ -110,9 +110,9 @@ func TestMiddlewares(t *testing.T) {
 		expectedCode int
 		expectedBody string
 	}{
-		{"auth middleware success", args{next: handler, mws: []Func{NewAuth(&mockAuthenticator{success: true})}}, 202, ""},
-		{"auth middleware false", args{next: handler, mws: []Func{NewAuth(&mockAuthenticator{success: false})}}, 401, "Unauthorized\n"},
-		{"auth middleware error", args{next: handler, mws: []Func{NewAuth(&mockAuthenticator{err: errors.New("auth error")})}}, 500, "Internal Server Error\n"},
+		{"auth middleware success", args{next: handler, mws: []Func{NewAuth(&stubAuthenticator{success: true})}}, 202, ""},
+		{"auth middleware false", args{next: handler, mws: []Func{NewAuth(&stubAuthenticator{success: false})}}, 401, "Unauthorized\n"},
+		{"auth middleware error", args{next: handler, mws: []Func{NewAuth(&stubAuthenticator{err: errors.New("auth error")})}}, 500, "Internal Server Error\n"},
 		{"tracing middleware", args{next: handler, mws: []Func{NewLoggingTracing("/index", StatusCodeLoggerHandler{})}}, 202, ""},
 		{"rate limiting middleware", args{next: handler, mws: []Func{NewRateLimiting(getMockLimiter(true))}}, 202, ""},
 		{"rate limiting middleware error", args{next: handler, mws: []Func{NewRateLimiting(getMockLimiter(false))}}, 429, "Requests greater than limit\n"},

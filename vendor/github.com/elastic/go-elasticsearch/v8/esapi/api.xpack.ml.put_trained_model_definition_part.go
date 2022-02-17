@@ -21,14 +21,16 @@ package esapi
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
-func newDataFrameTransformDeprecatedPreviewTransformFunc(t Transport) DataFrameTransformDeprecatedPreviewTransform {
-	return func(body io.Reader, o ...func(*DataFrameTransformDeprecatedPreviewTransformRequest)) (*Response, error) {
-		var r = DataFrameTransformDeprecatedPreviewTransformRequest{Body: body}
+func newMLPutTrainedModelDefinitionPartFunc(t Transport) MLPutTrainedModelDefinitionPart {
+	return func(body io.Reader, model_id string, part *int, o ...func(*MLPutTrainedModelDefinitionPartRequest)) (*Response, error) {
+		var r = MLPutTrainedModelDefinitionPartRequest{Body: body, ModelID: model_id, Part: part}
 		for _, f := range o {
 			f(&r)
 		}
@@ -38,18 +40,21 @@ func newDataFrameTransformDeprecatedPreviewTransformFunc(t Transport) DataFrameT
 
 // ----- API Definition -------------------------------------------------------
 
-// DataFrameTransformDeprecatedPreviewTransform - Previews a transform.
+// MLPutTrainedModelDefinitionPart - Creates part of a trained model definition
 //
-// This API is beta.
+// This API is experimental.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/preview-transform.html.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/put-trained-model-definition-part.html.
 //
-type DataFrameTransformDeprecatedPreviewTransform func(body io.Reader, o ...func(*DataFrameTransformDeprecatedPreviewTransformRequest)) (*Response, error)
+type MLPutTrainedModelDefinitionPart func(body io.Reader, model_id string, part *int, o ...func(*MLPutTrainedModelDefinitionPartRequest)) (*Response, error)
 
-// DataFrameTransformDeprecatedPreviewTransformRequest configures the Data Frame Transform Deprecated Preview Transform API request.
+// MLPutTrainedModelDefinitionPartRequest configures the ML Put Trained Model Definition Part API request.
 //
-type DataFrameTransformDeprecatedPreviewTransformRequest struct {
+type MLPutTrainedModelDefinitionPartRequest struct {
 	Body io.Reader
+
+	ModelID string
+	Part    *int
 
 	Pretty     bool
 	Human      bool
@@ -63,17 +68,31 @@ type DataFrameTransformDeprecatedPreviewTransformRequest struct {
 
 // Do executes the request and returns response or error.
 //
-func (r DataFrameTransformDeprecatedPreviewTransformRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r MLPutTrainedModelDefinitionPartRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
 		params map[string]string
 	)
 
-	method = "POST"
+	method = "PUT"
 
-	path.Grow(len("/_data_frame/transforms/_preview"))
-	path.WriteString("/_data_frame/transforms/_preview")
+	if r.Part == nil {
+		return nil, errors.New("part is required and cannot be nil")
+	}
+
+	path.Grow(7 + 1 + len("_ml") + 1 + len("trained_models") + 1 + len(r.ModelID) + 1 + len("definition") + 1 + len(strconv.Itoa(*r.Part)))
+	path.WriteString("http://")
+	path.WriteString("/")
+	path.WriteString("_ml")
+	path.WriteString("/")
+	path.WriteString("trained_models")
+	path.WriteString("/")
+	path.WriteString(r.ModelID)
+	path.WriteString("/")
+	path.WriteString("definition")
+	path.WriteString("/")
+	path.WriteString(strconv.Itoa(*r.Part))
 
 	params = make(map[string]string)
 
@@ -142,48 +161,48 @@ func (r DataFrameTransformDeprecatedPreviewTransformRequest) Do(ctx context.Cont
 
 // WithContext sets the request context.
 //
-func (f DataFrameTransformDeprecatedPreviewTransform) WithContext(v context.Context) func(*DataFrameTransformDeprecatedPreviewTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPreviewTransformRequest) {
+func (f MLPutTrainedModelDefinitionPart) WithContext(v context.Context) func(*MLPutTrainedModelDefinitionPartRequest) {
+	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.ctx = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
 //
-func (f DataFrameTransformDeprecatedPreviewTransform) WithPretty() func(*DataFrameTransformDeprecatedPreviewTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPreviewTransformRequest) {
+func (f MLPutTrainedModelDefinitionPart) WithPretty() func(*MLPutTrainedModelDefinitionPartRequest) {
+	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
 //
-func (f DataFrameTransformDeprecatedPreviewTransform) WithHuman() func(*DataFrameTransformDeprecatedPreviewTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPreviewTransformRequest) {
+func (f MLPutTrainedModelDefinitionPart) WithHuman() func(*MLPutTrainedModelDefinitionPartRequest) {
+	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
 //
-func (f DataFrameTransformDeprecatedPreviewTransform) WithErrorTrace() func(*DataFrameTransformDeprecatedPreviewTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPreviewTransformRequest) {
+func (f MLPutTrainedModelDefinitionPart) WithErrorTrace() func(*MLPutTrainedModelDefinitionPartRequest) {
+	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
 //
-func (f DataFrameTransformDeprecatedPreviewTransform) WithFilterPath(v ...string) func(*DataFrameTransformDeprecatedPreviewTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPreviewTransformRequest) {
+func (f MLPutTrainedModelDefinitionPart) WithFilterPath(v ...string) func(*MLPutTrainedModelDefinitionPartRequest) {
+	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
 //
-func (f DataFrameTransformDeprecatedPreviewTransform) WithHeader(h map[string]string) func(*DataFrameTransformDeprecatedPreviewTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPreviewTransformRequest) {
+func (f MLPutTrainedModelDefinitionPart) WithHeader(h map[string]string) func(*MLPutTrainedModelDefinitionPartRequest) {
+	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -195,8 +214,8 @@ func (f DataFrameTransformDeprecatedPreviewTransform) WithHeader(h map[string]st
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
 //
-func (f DataFrameTransformDeprecatedPreviewTransform) WithOpaqueID(s string) func(*DataFrameTransformDeprecatedPreviewTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPreviewTransformRequest) {
+func (f MLPutTrainedModelDefinitionPart) WithOpaqueID(s string) func(*MLPutTrainedModelDefinitionPartRequest) {
+	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

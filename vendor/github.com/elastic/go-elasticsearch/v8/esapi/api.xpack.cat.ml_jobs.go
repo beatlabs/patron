@@ -49,7 +49,6 @@ type CatMLJobs func(o ...func(*CatMLJobsRequest)) (*Response, error)
 type CatMLJobsRequest struct {
 	JobID string
 
-	AllowNoJobs  *bool
 	AllowNoMatch *bool
 	Bytes        string
 	Format       string
@@ -80,7 +79,8 @@ func (r CatMLJobsRequest) Do(ctx context.Context, transport Transport) (*Respons
 
 	method = "GET"
 
-	path.Grow(1 + len("_cat") + 1 + len("ml") + 1 + len("anomaly_detectors") + 1 + len(r.JobID))
+	path.Grow(7 + 1 + len("_cat") + 1 + len("ml") + 1 + len("anomaly_detectors") + 1 + len(r.JobID))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_cat")
 	path.WriteString("/")
@@ -93,10 +93,6 @@ func (r CatMLJobsRequest) Do(ctx context.Context, transport Transport) (*Respons
 	}
 
 	params = make(map[string]string)
-
-	if r.AllowNoJobs != nil {
-		params["allow_no_jobs"] = strconv.FormatBool(*r.AllowNoJobs)
-	}
 
 	if r.AllowNoMatch != nil {
 		params["allow_no_match"] = strconv.FormatBool(*r.AllowNoMatch)
@@ -202,14 +198,6 @@ func (f CatMLJobs) WithContext(v context.Context) func(*CatMLJobsRequest) {
 func (f CatMLJobs) WithJobID(v string) func(*CatMLJobsRequest) {
 	return func(r *CatMLJobsRequest) {
 		r.JobID = v
-	}
-}
-
-// WithAllowNoJobs - whether to ignore if a wildcard expression matches no jobs. (this includes `_all` string or when no jobs have been specified).
-//
-func (f CatMLJobs) WithAllowNoJobs(v bool) func(*CatMLJobsRequest) {
-	return func(r *CatMLJobsRequest) {
-		r.AllowNoJobs = &v
 	}
 }
 

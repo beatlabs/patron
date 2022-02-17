@@ -21,14 +21,14 @@ package esapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
-func newNodesClearMeteringArchiveFunc(t Transport) NodesClearMeteringArchive {
-	return func(max_archive_version *int, node_id []string, o ...func(*NodesClearMeteringArchiveRequest)) (*Response, error) {
-		var r = NodesClearMeteringArchiveRequest{MaxArchiveVersion: max_archive_version, NodeID: node_id}
+func newNodesGetRepositoriesMeteringInfoFunc(t Transport) NodesGetRepositoriesMeteringInfo {
+	return func(node_id []string, o ...func(*NodesGetRepositoriesMeteringInfoRequest)) (*Response, error) {
+		var r = NodesGetRepositoriesMeteringInfoRequest{NodeID: node_id}
 		for _, f := range o {
 			f(&r)
 		}
@@ -38,19 +38,18 @@ func newNodesClearMeteringArchiveFunc(t Transport) NodesClearMeteringArchive {
 
 // ----- API Definition -------------------------------------------------------
 
-// NodesClearMeteringArchive removes the archived repositories metering information present in the cluster.
+// NodesGetRepositoriesMeteringInfo returns cluster repositories metering information.
 //
 // This API is experimental.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/clear-repositories-metering-archive-api.html.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/get-repositories-metering-api.html.
 //
-type NodesClearMeteringArchive func(max_archive_version *int, node_id []string, o ...func(*NodesClearMeteringArchiveRequest)) (*Response, error)
+type NodesGetRepositoriesMeteringInfo func(node_id []string, o ...func(*NodesGetRepositoriesMeteringInfoRequest)) (*Response, error)
 
-// NodesClearMeteringArchiveRequest configures the Nodes Clear Metering Archive API request.
+// NodesGetRepositoriesMeteringInfoRequest configures the Nodes Get Repositories Metering Info API request.
 //
-type NodesClearMeteringArchiveRequest struct {
-	MaxArchiveVersion *int
-	NodeID            []string
+type NodesGetRepositoriesMeteringInfoRequest struct {
+	NodeID []string
 
 	Pretty     bool
 	Human      bool
@@ -64,24 +63,27 @@ type NodesClearMeteringArchiveRequest struct {
 
 // Do executes the request and returns response or error.
 //
-func (r NodesClearMeteringArchiveRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r NodesGetRepositoriesMeteringInfoRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
 		params map[string]string
 	)
 
-	method = "DELETE"
+	method = "GET"
 
-	path.Grow(1 + len("_nodes") + 1 + len(strings.Join(r.NodeID, ",")) + 1 + len("_repositories_metering") + 1 + len(strconv.Itoa(*r.MaxArchiveVersion)))
+	if len(r.NodeID) == 0 {
+		return nil, errors.New("node_id is required and cannot be nil or empty")
+	}
+
+	path.Grow(7 + 1 + len("_nodes") + 1 + len(strings.Join(r.NodeID, ",")) + 1 + len("_repositories_metering"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_nodes")
 	path.WriteString("/")
 	path.WriteString(strings.Join(r.NodeID, ","))
 	path.WriteString("/")
 	path.WriteString("_repositories_metering")
-	path.WriteString("/")
-	path.WriteString(strconv.Itoa(*r.MaxArchiveVersion))
 
 	params = make(map[string]string)
 
@@ -146,48 +148,48 @@ func (r NodesClearMeteringArchiveRequest) Do(ctx context.Context, transport Tran
 
 // WithContext sets the request context.
 //
-func (f NodesClearMeteringArchive) WithContext(v context.Context) func(*NodesClearMeteringArchiveRequest) {
-	return func(r *NodesClearMeteringArchiveRequest) {
+func (f NodesGetRepositoriesMeteringInfo) WithContext(v context.Context) func(*NodesGetRepositoriesMeteringInfoRequest) {
+	return func(r *NodesGetRepositoriesMeteringInfoRequest) {
 		r.ctx = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
 //
-func (f NodesClearMeteringArchive) WithPretty() func(*NodesClearMeteringArchiveRequest) {
-	return func(r *NodesClearMeteringArchiveRequest) {
+func (f NodesGetRepositoriesMeteringInfo) WithPretty() func(*NodesGetRepositoriesMeteringInfoRequest) {
+	return func(r *NodesGetRepositoriesMeteringInfoRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
 //
-func (f NodesClearMeteringArchive) WithHuman() func(*NodesClearMeteringArchiveRequest) {
-	return func(r *NodesClearMeteringArchiveRequest) {
+func (f NodesGetRepositoriesMeteringInfo) WithHuman() func(*NodesGetRepositoriesMeteringInfoRequest) {
+	return func(r *NodesGetRepositoriesMeteringInfoRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
 //
-func (f NodesClearMeteringArchive) WithErrorTrace() func(*NodesClearMeteringArchiveRequest) {
-	return func(r *NodesClearMeteringArchiveRequest) {
+func (f NodesGetRepositoriesMeteringInfo) WithErrorTrace() func(*NodesGetRepositoriesMeteringInfoRequest) {
+	return func(r *NodesGetRepositoriesMeteringInfoRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
 //
-func (f NodesClearMeteringArchive) WithFilterPath(v ...string) func(*NodesClearMeteringArchiveRequest) {
-	return func(r *NodesClearMeteringArchiveRequest) {
+func (f NodesGetRepositoriesMeteringInfo) WithFilterPath(v ...string) func(*NodesGetRepositoriesMeteringInfoRequest) {
+	return func(r *NodesGetRepositoriesMeteringInfoRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
 //
-func (f NodesClearMeteringArchive) WithHeader(h map[string]string) func(*NodesClearMeteringArchiveRequest) {
-	return func(r *NodesClearMeteringArchiveRequest) {
+func (f NodesGetRepositoriesMeteringInfo) WithHeader(h map[string]string) func(*NodesGetRepositoriesMeteringInfoRequest) {
+	return func(r *NodesGetRepositoriesMeteringInfoRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -199,8 +201,8 @@ func (f NodesClearMeteringArchive) WithHeader(h map[string]string) func(*NodesCl
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
 //
-func (f NodesClearMeteringArchive) WithOpaqueID(s string) func(*NodesClearMeteringArchiveRequest) {
-	return func(r *NodesClearMeteringArchiveRequest) {
+func (f NodesGetRepositoriesMeteringInfo) WithOpaqueID(s string) func(*NodesGetRepositoriesMeteringInfoRequest) {
+	return func(r *NodesGetRepositoriesMeteringInfoRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

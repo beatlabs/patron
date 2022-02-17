@@ -4,11 +4,11 @@ The official Go client for [Elasticsearch](https://www.elastic.co/products/elast
 
 [![GoDoc](https://godoc.org/github.com/elastic/go-elasticsearch?status.svg)](https://pkg.go.dev/github.com/elastic/go-elasticsearch/v8)
 [![Go Report Card](https://goreportcard.com/badge/github.com/elastic/go-elasticsearch)](https://goreportcard.com/report/github.com/elastic/go-elasticsearch)
-[![codecov.io](https://codecov.io/github/elastic/go-elasticsearch/coverage.svg?branch=master)](https://codecov.io/gh/elastic/go-elasticsearch?branch=master)
-[![Build](https://github.com/elastic/go-elasticsearch/workflows/Build/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amaster)
-[![Unit](https://github.com/elastic/go-elasticsearch/workflows/Unit/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amaster)
-[![Integration](https://github.com/elastic/go-elasticsearch/workflows/Integration/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amaster)
-[![API](https://github.com/elastic/go-elasticsearch/workflows/API/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amaster)
+[![codecov.io](https://codecov.io/github/elastic/go-elasticsearch/coverage.svg?branch=main)](https://codecov.io/gh/elastic/go-elasticsearch?branch=main)
+[![Build](https://github.com/elastic/go-elasticsearch/workflows/Build/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amain)
+[![Unit](https://github.com/elastic/go-elasticsearch/workflows/Unit/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amain)
+[![Integration](https://github.com/elastic/go-elasticsearch/workflows/Integration/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amain)
+[![API](https://github.com/elastic/go-elasticsearch/workflows/API/badge.svg)](https://github.com/elastic/go-elasticsearch/actions?query=branch%3Amain)
 
 ## Compatibility
 
@@ -17,25 +17,25 @@ Elasticsearch language clients are only backwards compatible with default distri
 
 When using Go modules, include the version in the import path, and specify either an explicit version or a branch:
 
-    require github.com/elastic/go-elasticsearch/v7 7.x
-    require github.com/elastic/go-elasticsearch/v7 7.0.0
+    require github.com/elastic/go-elasticsearch/v8 v8.0.0
+    require github.com/elastic/go-elasticsearch/v7 7.17
 
 It's possible to use multiple versions of the client in a single project:
 
     // go.mod
-    github.com/elastic/go-elasticsearch/v6 6.x
-    github.com/elastic/go-elasticsearch/v7 7.x
+    github.com/elastic/go-elasticsearch/v7 v7.17.0
+    github.com/elastic/go-elasticsearch/v8 v8.0.0
 
     // main.go
     import (
-      elasticsearch6 "github.com/elastic/go-elasticsearch/v6"
       elasticsearch7 "github.com/elastic/go-elasticsearch/v7"
+      elasticsearch8 "github.com/elastic/go-elasticsearch/v8"
     )
     // ...
-    es6, _ := elasticsearch6.NewDefaultClient()
     es7, _ := elasticsearch7.NewDefaultClient()
+    es8, _ := elasticsearch8.NewDefaultClient()
 
-The `master` branch of the client is compatible with the current `master` branch of Elasticsearch.
+The `main` branch of the client is compatible with the current `master` branch of Elasticsearch.
 
 <!-- ----------------------------------------------------------------------------------------------- -->
 
@@ -43,11 +43,11 @@ The `master` branch of the client is compatible with the current `master` branch
 
 Add the package to your `go.mod` file:
 
-    require github.com/elastic/go-elasticsearch/v8 master
+    require github.com/elastic/go-elasticsearch/v8 main
 
 Or, clone the repository:
 
-    git clone --branch master https://github.com/elastic/go-elasticsearch.git $GOPATH/src/github.com/elastic/go-elasticsearch
+    git clone --branch main https://github.com/elastic/go-elasticsearch.git $GOPATH/src/github.com/elastic/go-elasticsearch
 
 A complete example:
 
@@ -57,7 +57,7 @@ mkdir my-elasticsearch-app && cd my-elasticsearch-app
 cat > go.mod <<-END
   module my-elasticsearch-app
 
-  require github.com/elastic/go-elasticsearch/v8 master
+  require github.com/elastic/go-elasticsearch/v8 main
 END
 
 cat > main.go <<-END
@@ -84,7 +84,7 @@ go run main.go
 
 ## Usage
 
-The `elasticsearch` package ties together two separate packages for calling the Elasticsearch APIs and transferring data over HTTP: `esapi` and `estransport`, respectively.
+The `elasticsearch` package ties together two separate packages for calling the Elasticsearch APIs and transferring data over HTTP: `esapi` and `elastictransport`, respectively.
 
 Use the `elasticsearch.NewDefaultClient()` function to create the client with the default settings.
 
@@ -159,7 +159,7 @@ cfg := elasticsearch.Config{
     MaxIdleConnsPerHost:   10,
     ResponseHeaderTimeout: time.Second,
     TLSClientConfig: &tls.Config{
-      MinVersion: tls.VersionTLS11,
+      MinVersion: tls.VersionTLS12,
       // ...
     },
     // ...
@@ -351,7 +351,7 @@ func main() {
 As you see in the example above, the `esapi` package allows to call the Elasticsearch APIs in two distinct ways: either by creating a struct, such as `IndexRequest`, and calling its `Do()` method by passing it a context and the client, or by calling the `Search()` function on the client directly, using the option functions such as `WithIndex()`. See more information and examples in the
 [package documentation](https://godoc.org/github.com/elastic/go-elasticsearch/esapi).
 
-The `estransport` package handles the transfer of data to and from Elasticsearch, including retrying failed requests, keeping a connection pool, discovering cluster nodes and logging.
+The `elastictransport` package handles the transfer of data to and from Elasticsearch, including retrying failed requests, keeping a connection pool, discovering cluster nodes and logging.
 
 Read more about the client internals and usage in the following blog posts:
 
@@ -375,4 +375,4 @@ The **[`_examples`](./_examples)** folder contains a number of recipes and compr
 
 ## License
 
-(c) 2019 Elasticsearch. Licensed under the Apache License, Version 2.0.
+This software is licensed under the [Apache 2 license](./LICENSE). See [NOTICE](./NOTICE).

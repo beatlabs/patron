@@ -41,7 +41,7 @@ func newFleetGlobalCheckpointsFunc(t Transport) FleetGlobalCheckpoints {
 
 // FleetGlobalCheckpoints returns the current global checkpoints for an index. This API is design for internal use by the fleet server project.
 //
-// This API is experimental.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/get-global-checkpoints.html.
 //
 type FleetGlobalCheckpoints func(index string, o ...func(*FleetGlobalCheckpointsRequest)) (*Response, error)
 
@@ -76,7 +76,8 @@ func (r FleetGlobalCheckpointsRequest) Do(ctx context.Context, transport Transpo
 
 	method = "GET"
 
-	path.Grow(1 + len(r.Index) + 1 + len("_fleet") + 1 + len("global_checkpoints"))
+	path.Grow(7 + 1 + len(r.Index) + 1 + len("_fleet") + 1 + len("global_checkpoints"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString(r.Index)
 	path.WriteString("/")

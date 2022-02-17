@@ -24,25 +24,44 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v8/esapi"
-	"github.com/elastic/go-elasticsearch/v8/estransport"
 	"github.com/elastic/go-elasticsearch/v8/internal/version"
+
+	"github.com/elastic/elastic-transport-go/v8/elastictransport"
+	tpversion "github.com/elastic/elastic-transport-go/v8/elastictransport/version"
 )
 
 const (
 	defaultURL = "http://localhost:9200"
-)
 
-// Version returns the package version as a string.
-//
-const (
+	// Version returns the package version as a string.
 	Version        = version.Client
 	unknownProduct = "the client noticed that the server is not Elasticsearch and we do not support this unknown product"
+
+	// HeaderClientMeta Key for the HTTP Header related to telemetry data sent with
+	// each request to Elasticsearch.
+	HeaderClientMeta = "x-elastic-client-meta"
+
+	compatibilityHeader = "application/vnd.elasticsearch+json;compatible-with=8"
 )
+
+var (
+	esCompatHeader = "ELASTIC_CLIENT_APIVERSIONING"
+	userAgent      string
+	reGoVersion    = regexp.MustCompile(`go(\d+\.\d+\..+)`)
+	reMetaVersion  = regexp.MustCompile("([0-9.]+)(.*)")
+)
+
+func init() {
+	userAgent = initUserAgent()
+}
 
 // Config represents the client configuration.
 //
@@ -51,9 +70,10 @@ type Config struct {
 	Username  string   // Username for HTTP Basic Authentication.
 	Password  string   // Password for HTTP Basic Authentication.
 
-	CloudID      string // Endpoint for the Elastic Service (https://elastic.co/cloud).
-	APIKey       string // Base64-encoded token for authorization; if set, overrides username/password and service token.
-	ServiceToken string // Service token for authorization; if set, overrides username/password.
+	CloudID                string // Endpoint for the Elastic Service (https://elastic.co/cloud).
+	APIKey                 string // Base64-encoded token for authorization; if set, overrides username/password and service token.
+	ServiceToken           string // Service token for authorization; if set, overrides username/password.
+	CertificateFingerprint string // SHA256 hex fingerprint given by Elasticsearch on first launch.
 
 	Header http.Header // Global HTTP request header.
 
@@ -62,37 +82,41 @@ type Config struct {
 	// The option is only valid when the transport is not specified, or when it's http.Transport.
 	CACert []byte
 
-	RetryOnStatus        []int // List of status codes for retry. Default: 502, 503, 504.
-	DisableRetry         bool  // Default: false.
-	EnableRetryOnTimeout bool  // Default: false.
-	MaxRetries           int   // Default: 3.
+	RetryOnStatus []int                           // List of status codes for retry. Default: 502, 503, 504.
+	DisableRetry  bool                            // Default: false.
+	MaxRetries    int                             // Default: 3.
+	RetryOnError  func(*http.Request, error) bool // Optional function allowing to indicate which error should be retried. Default: nil.
 
 	CompressRequestBody bool // Default: false.
 
 	DiscoverNodesOnStart  bool          // Discover nodes when initializing the client. Default: false.
 	DiscoverNodesInterval time.Duration // Discover nodes periodically. Default: disabled.
 
-	EnableMetrics     bool // Enable the metrics collection.
-	EnableDebugLogger bool // Enable the debug logging.
+	EnableMetrics           bool // Enable the metrics collection.
+	EnableDebugLogger       bool // Enable the debug logging.
+	EnableCompatibilityMode bool // Enable sends compatibility header
 
 	DisableMetaHeader bool // Disable the additional "X-Elastic-Client-Meta" HTTP header.
 
 	RetryBackoff func(attempt int) time.Duration // Optional backoff duration. Default: nil.
 
-	Transport http.RoundTripper    // The HTTP transport object.
-	Logger    estransport.Logger   // The logger object.
-	Selector  estransport.Selector // The selector object.
+	Transport http.RoundTripper         // The HTTP transport object.
+	Logger    elastictransport.Logger   // The logger object.
+	Selector  elastictransport.Selector // The selector object.
 
 	// Optional constructor function for a custom ConnectionPool. Default: nil.
-	ConnectionPoolFunc func([]*estransport.Connection, estransport.Selector) estransport.ConnectionPool
+	ConnectionPoolFunc func([]*elastictransport.Connection, elastictransport.Selector) elastictransport.ConnectionPool
 }
 
 // Client represents the Elasticsearch client.
 //
 type Client struct {
-	*esapi.API // Embeds the API methods
-	Transport  estransport.Interface
+	*esapi.API          // Embeds the API methods
+	Transport           elastictransport.Interface
+	metaHeader          string
+	compatibilityHeader bool
 
+	disableMetaHeader   bool
 	productCheckMu      sync.RWMutex
 	productCheckSuccess bool
 }
@@ -160,28 +184,29 @@ func NewClient(cfg Config) (*Client, error) {
 		cfg.Password = pw
 	}
 
-	tp, err := estransport.New(estransport.Config{
-		URLs:         urls,
-		Username:     cfg.Username,
-		Password:     cfg.Password,
-		APIKey:       cfg.APIKey,
-		ServiceToken: cfg.ServiceToken,
+	tp, err := elastictransport.New(elastictransport.Config{
+		UserAgent: userAgent,
+
+		URLs:                   urls,
+		Username:               cfg.Username,
+		Password:               cfg.Password,
+		APIKey:                 cfg.APIKey,
+		ServiceToken:           cfg.ServiceToken,
+		CertificateFingerprint: cfg.CertificateFingerprint,
 
 		Header: cfg.Header,
 		CACert: cfg.CACert,
 
-		RetryOnStatus:        cfg.RetryOnStatus,
-		DisableRetry:         cfg.DisableRetry,
-		EnableRetryOnTimeout: cfg.EnableRetryOnTimeout,
-		MaxRetries:           cfg.MaxRetries,
-		RetryBackoff:         cfg.RetryBackoff,
+		RetryOnStatus: cfg.RetryOnStatus,
+		DisableRetry:  cfg.DisableRetry,
+		RetryOnError:  cfg.RetryOnError,
+		MaxRetries:    cfg.MaxRetries,
+		RetryBackoff:  cfg.RetryBackoff,
 
 		CompressRequestBody: cfg.CompressRequestBody,
 
 		EnableMetrics:     cfg.EnableMetrics,
 		EnableDebugLogger: cfg.EnableDebugLogger,
-
-		DisableMetaHeader: cfg.DisableMetaHeader,
 
 		DiscoverNodesInterval: cfg.DiscoverNodesInterval,
 
@@ -194,7 +219,15 @@ func NewClient(cfg Config) (*Client, error) {
 		return nil, fmt.Errorf("error creating transport: %s", err)
 	}
 
-	client := &Client{Transport: tp}
+	compatHeaderEnv := os.Getenv(esCompatHeader)
+	compatibilityHeader, _ := strconv.ParseBool(compatHeaderEnv)
+
+	client := &Client{
+		Transport:           tp,
+		disableMetaHeader:   cfg.DisableMetaHeader,
+		metaHeader:          initMetaHeader(tp),
+		compatibilityHeader: cfg.EnableCompatibilityMode || compatibilityHeader,
+	}
 	client.API = esapi.New(client)
 
 	if cfg.DiscoverNodesOnStart {
@@ -207,17 +240,37 @@ func NewClient(cfg Config) (*Client, error) {
 // Perform delegates to Transport to execute a request and return a response.
 //
 func (c *Client) Perform(req *http.Request) (*http.Response, error) {
+	// Compatibility Header
+	if c.compatibilityHeader {
+		if req.Body != nil {
+			req.Header.Set("Content-Type", compatibilityHeader)
+		}
+		req.Header.Set("Accept", compatibilityHeader)
+	}
+
+	if !c.disableMetaHeader {
+		existingMetaHeader := req.Header.Get(HeaderClientMeta)
+		if existingMetaHeader != "" {
+			req.Header.Set(HeaderClientMeta, strings.Join([]string{c.metaHeader, existingMetaHeader}, ","))
+		} else {
+			req.Header.Add(HeaderClientMeta, c.metaHeader)
+		}
+	} else {
+		req.Header.Del(HeaderClientMeta)
+	}
+
 	// Retrieve the original request.
 	res, err := c.Transport.Perform(req)
 
-	// ResponseCheck path continues, we run the header check on the first answer from ES.
-	if err == nil {
+	// ResponseCheck, we run the header check on the first answer from ES.
+	if err == nil && (res.StatusCode >= 200 && res.StatusCode < 300) {
 		checkHeader := func() error { return genuineCheckHeader(res.Header) }
 		if err := c.doProductCheck(checkHeader); err != nil {
 			res.Body.Close()
 			return nil, err
 		}
 	}
+
 	return res, err
 }
 
@@ -259,17 +312,17 @@ func genuineCheckHeader(header http.Header) error {
 
 // Metrics returns the client metrics.
 //
-func (c *Client) Metrics() (estransport.Metrics, error) {
-	if mt, ok := c.Transport.(estransport.Measurable); ok {
+func (c *Client) Metrics() (elastictransport.Metrics, error) {
+	if mt, ok := c.Transport.(elastictransport.Measurable); ok {
 		return mt.Metrics()
 	}
-	return estransport.Metrics{}, errors.New("transport is missing method Metrics()")
+	return elastictransport.Metrics{}, errors.New("transport is missing method Metrics()")
 }
 
 // DiscoverNodes reloads the client connections by fetching information from the cluster.
 //
 func (c *Client) DiscoverNodes() error {
-	if dt, ok := c.Transport.(estransport.Discoverable); ok {
+	if dt, ok := c.Transport.(elastictransport.Discoverable); ok {
 		return dt.DiscoverNodes()
 	}
 	return errors.New("transport is missing method DiscoverNodes()")
@@ -327,4 +380,85 @@ func addrFromCloudID(input string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s%s.%s", scheme, parts[1], parts[0]), nil
+}
+
+func initUserAgent() string {
+	var b strings.Builder
+
+	b.WriteString("go-elasticsearch")
+	b.WriteRune('/')
+	b.WriteString(Version)
+	b.WriteRune(' ')
+	b.WriteRune('(')
+	b.WriteString(runtime.GOOS)
+	b.WriteRune(' ')
+	b.WriteString(runtime.GOARCH)
+	b.WriteString("; ")
+	b.WriteString("Go ")
+	if v := reGoVersion.ReplaceAllString(runtime.Version(), "$1"); v != "" {
+		b.WriteString(v)
+	} else {
+		b.WriteString(runtime.Version())
+	}
+	b.WriteRune(')')
+
+	return b.String()
+}
+
+func initMetaHeader(transport interface{}) string {
+	var b strings.Builder
+	var strippedGoVersion string
+	var strippedEsVersion string
+	var strippedTransportVersion string
+
+	strippedEsVersion = buildStrippedVersion(Version)
+	strippedGoVersion = buildStrippedVersion(runtime.Version())
+
+	if _, ok := transport.(*elastictransport.Client); ok {
+		strippedTransportVersion = buildStrippedVersion(tpversion.Transport)
+	} else {
+		strippedTransportVersion = strippedEsVersion
+	}
+
+	var duos = [][]string{
+		{
+			"es",
+			strippedEsVersion,
+		},
+		{
+			"go",
+			strippedGoVersion,
+		},
+		{
+			"t",
+			strippedTransportVersion,
+		},
+		{
+			"hc",
+			strippedGoVersion,
+		},
+	}
+
+	var arr []string
+	for _, duo := range duos {
+		arr = append(arr, strings.Join(duo, "="))
+	}
+	b.WriteString(strings.Join(arr, ","))
+
+	return b.String()
+}
+
+func buildStrippedVersion(version string) string {
+	v := reMetaVersion.FindStringSubmatch(version)
+
+	if len(v) == 3 && !strings.Contains(version, "devel") {
+		switch {
+		case v[2] != "":
+			return v[1] + "p"
+		default:
+			return v[1]
+		}
+	}
+
+	return "0.0p"
 }

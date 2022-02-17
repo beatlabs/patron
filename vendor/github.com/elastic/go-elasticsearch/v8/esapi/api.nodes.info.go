@@ -75,7 +75,8 @@ func (r NodesInfoRequest) Do(ctx context.Context, transport Transport) (*Respons
 
 	method = "GET"
 
-	path.Grow(1 + len("_nodes") + 1 + len(strings.Join(r.NodeID, ",")) + 1 + len(strings.Join(r.Metric, ",")))
+	path.Grow(7 + 1 + len("_nodes") + 1 + len(strings.Join(r.NodeID, ",")) + 1 + len(strings.Join(r.Metric, ",")))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_nodes")
 	if len(r.NodeID) > 0 {
@@ -164,7 +165,7 @@ func (f NodesInfo) WithContext(v context.Context) func(*NodesInfoRequest) {
 	}
 }
 
-// WithMetric - a list of metrics you wish returned. leave empty to return all..
+// WithMetric - a list of metrics you wish returned. leave empty to return all metrics..
 //
 func (f NodesInfo) WithMetric(v ...string) func(*NodesInfoRequest) {
 	return func(r *NodesInfoRequest) {

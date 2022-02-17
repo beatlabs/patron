@@ -21,14 +21,15 @@ package esapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strconv"
 	"strings"
-	"time"
 )
 
-func newDataFrameTransformDeprecatedStartTransformFunc(t Transport) DataFrameTransformDeprecatedStartTransform {
-	return func(transform_id string, o ...func(*DataFrameTransformDeprecatedStartTransformRequest)) (*Response, error) {
-		var r = DataFrameTransformDeprecatedStartTransformRequest{TransformID: transform_id}
+func newNodesClearRepositoriesMeteringArchiveFunc(t Transport) NodesClearRepositoriesMeteringArchive {
+	return func(max_archive_version *int, node_id []string, o ...func(*NodesClearRepositoriesMeteringArchiveRequest)) (*Response, error) {
+		var r = NodesClearRepositoriesMeteringArchiveRequest{MaxArchiveVersion: max_archive_version, NodeID: node_id}
 		for _, f := range o {
 			f(&r)
 		}
@@ -38,20 +39,19 @@ func newDataFrameTransformDeprecatedStartTransformFunc(t Transport) DataFrameTra
 
 // ----- API Definition -------------------------------------------------------
 
-// DataFrameTransformDeprecatedStartTransform - Starts one or more transforms.
+// NodesClearRepositoriesMeteringArchive removes the archived repositories metering information present in the cluster.
 //
-// This API is beta.
+// This API is experimental.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/start-transform.html.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/clear-repositories-metering-archive-api.html.
 //
-type DataFrameTransformDeprecatedStartTransform func(transform_id string, o ...func(*DataFrameTransformDeprecatedStartTransformRequest)) (*Response, error)
+type NodesClearRepositoriesMeteringArchive func(max_archive_version *int, node_id []string, o ...func(*NodesClearRepositoriesMeteringArchiveRequest)) (*Response, error)
 
-// DataFrameTransformDeprecatedStartTransformRequest configures the Data Frame Transform Deprecated Start Transform API request.
+// NodesClearRepositoriesMeteringArchiveRequest configures the Nodes Clear Repositories Metering Archive API request.
 //
-type DataFrameTransformDeprecatedStartTransformRequest struct {
-	TransformID string
-
-	Timeout time.Duration
+type NodesClearRepositoriesMeteringArchiveRequest struct {
+	MaxArchiveVersion *int
+	NodeID            []string
 
 	Pretty     bool
 	Human      bool
@@ -65,30 +65,34 @@ type DataFrameTransformDeprecatedStartTransformRequest struct {
 
 // Do executes the request and returns response or error.
 //
-func (r DataFrameTransformDeprecatedStartTransformRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r NodesClearRepositoriesMeteringArchiveRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
 		params map[string]string
 	)
 
-	method = "POST"
+	method = "DELETE"
 
-	path.Grow(1 + len("_data_frame") + 1 + len("transforms") + 1 + len(r.TransformID) + 1 + len("_start"))
+	if len(r.NodeID) == 0 {
+		return nil, errors.New("node_id is required and cannot be nil or empty")
+	}
+	if r.MaxArchiveVersion == nil {
+		return nil, errors.New("max_archive_version is required and cannot be nil")
+	}
+
+	path.Grow(7 + 1 + len("_nodes") + 1 + len(strings.Join(r.NodeID, ",")) + 1 + len("_repositories_metering") + 1 + len(strconv.Itoa(*r.MaxArchiveVersion)))
+	path.WriteString("http://")
 	path.WriteString("/")
-	path.WriteString("_data_frame")
+	path.WriteString("_nodes")
 	path.WriteString("/")
-	path.WriteString("transforms")
+	path.WriteString(strings.Join(r.NodeID, ","))
 	path.WriteString("/")
-	path.WriteString(r.TransformID)
+	path.WriteString("_repositories_metering")
 	path.WriteString("/")
-	path.WriteString("_start")
+	path.WriteString(strconv.Itoa(*r.MaxArchiveVersion))
 
 	params = make(map[string]string)
-
-	if r.Timeout != 0 {
-		params["timeout"] = formatDuration(r.Timeout)
-	}
 
 	if r.Pretty {
 		params["pretty"] = "true"
@@ -151,56 +155,48 @@ func (r DataFrameTransformDeprecatedStartTransformRequest) Do(ctx context.Contex
 
 // WithContext sets the request context.
 //
-func (f DataFrameTransformDeprecatedStartTransform) WithContext(v context.Context) func(*DataFrameTransformDeprecatedStartTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedStartTransformRequest) {
+func (f NodesClearRepositoriesMeteringArchive) WithContext(v context.Context) func(*NodesClearRepositoriesMeteringArchiveRequest) {
+	return func(r *NodesClearRepositoriesMeteringArchiveRequest) {
 		r.ctx = v
-	}
-}
-
-// WithTimeout - controls the time to wait for the transform to start.
-//
-func (f DataFrameTransformDeprecatedStartTransform) WithTimeout(v time.Duration) func(*DataFrameTransformDeprecatedStartTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedStartTransformRequest) {
-		r.Timeout = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
 //
-func (f DataFrameTransformDeprecatedStartTransform) WithPretty() func(*DataFrameTransformDeprecatedStartTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedStartTransformRequest) {
+func (f NodesClearRepositoriesMeteringArchive) WithPretty() func(*NodesClearRepositoriesMeteringArchiveRequest) {
+	return func(r *NodesClearRepositoriesMeteringArchiveRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
 //
-func (f DataFrameTransformDeprecatedStartTransform) WithHuman() func(*DataFrameTransformDeprecatedStartTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedStartTransformRequest) {
+func (f NodesClearRepositoriesMeteringArchive) WithHuman() func(*NodesClearRepositoriesMeteringArchiveRequest) {
+	return func(r *NodesClearRepositoriesMeteringArchiveRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
 //
-func (f DataFrameTransformDeprecatedStartTransform) WithErrorTrace() func(*DataFrameTransformDeprecatedStartTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedStartTransformRequest) {
+func (f NodesClearRepositoriesMeteringArchive) WithErrorTrace() func(*NodesClearRepositoriesMeteringArchiveRequest) {
+	return func(r *NodesClearRepositoriesMeteringArchiveRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
 //
-func (f DataFrameTransformDeprecatedStartTransform) WithFilterPath(v ...string) func(*DataFrameTransformDeprecatedStartTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedStartTransformRequest) {
+func (f NodesClearRepositoriesMeteringArchive) WithFilterPath(v ...string) func(*NodesClearRepositoriesMeteringArchiveRequest) {
+	return func(r *NodesClearRepositoriesMeteringArchiveRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
 //
-func (f DataFrameTransformDeprecatedStartTransform) WithHeader(h map[string]string) func(*DataFrameTransformDeprecatedStartTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedStartTransformRequest) {
+func (f NodesClearRepositoriesMeteringArchive) WithHeader(h map[string]string) func(*NodesClearRepositoriesMeteringArchiveRequest) {
+	return func(r *NodesClearRepositoriesMeteringArchiveRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -212,8 +208,8 @@ func (f DataFrameTransformDeprecatedStartTransform) WithHeader(h map[string]stri
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
 //
-func (f DataFrameTransformDeprecatedStartTransform) WithOpaqueID(s string) func(*DataFrameTransformDeprecatedStartTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedStartTransformRequest) {
+func (f NodesClearRepositoriesMeteringArchive) WithOpaqueID(s string) func(*NodesClearRepositoriesMeteringArchiveRequest) {
+	return func(r *NodesClearRepositoriesMeteringArchiveRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

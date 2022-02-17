@@ -23,13 +23,12 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
-func newDataFrameTransformDeprecatedPutTransformFunc(t Transport) DataFrameTransformDeprecatedPutTransform {
-	return func(body io.Reader, transform_id string, o ...func(*DataFrameTransformDeprecatedPutTransformRequest)) (*Response, error) {
-		var r = DataFrameTransformDeprecatedPutTransformRequest{Body: body, TransformID: transform_id}
+func newMLPutTrainedModelVocabularyFunc(t Transport) MLPutTrainedModelVocabulary {
+	return func(body io.Reader, model_id string, o ...func(*MLPutTrainedModelVocabularyRequest)) (*Response, error) {
+		var r = MLPutTrainedModelVocabularyRequest{Body: body, ModelID: model_id}
 		for _, f := range o {
 			f(&r)
 		}
@@ -39,22 +38,20 @@ func newDataFrameTransformDeprecatedPutTransformFunc(t Transport) DataFrameTrans
 
 // ----- API Definition -------------------------------------------------------
 
-// DataFrameTransformDeprecatedPutTransform - Instantiates a transform.
+// MLPutTrainedModelVocabulary - Creates a trained model vocabulary
 //
-// This API is beta.
+// This API is experimental.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/put-transform.html.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/put-trained-model-vocabulary.html.
 //
-type DataFrameTransformDeprecatedPutTransform func(body io.Reader, transform_id string, o ...func(*DataFrameTransformDeprecatedPutTransformRequest)) (*Response, error)
+type MLPutTrainedModelVocabulary func(body io.Reader, model_id string, o ...func(*MLPutTrainedModelVocabularyRequest)) (*Response, error)
 
-// DataFrameTransformDeprecatedPutTransformRequest configures the Data Frame Transform Deprecated Put Transform API request.
+// MLPutTrainedModelVocabularyRequest configures the ML Put Trained Model Vocabulary API request.
 //
-type DataFrameTransformDeprecatedPutTransformRequest struct {
+type MLPutTrainedModelVocabularyRequest struct {
 	Body io.Reader
 
-	TransformID string
-
-	DeferValidation *bool
+	ModelID string
 
 	Pretty     bool
 	Human      bool
@@ -68,7 +65,7 @@ type DataFrameTransformDeprecatedPutTransformRequest struct {
 
 // Do executes the request and returns response or error.
 //
-func (r DataFrameTransformDeprecatedPutTransformRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r MLPutTrainedModelVocabularyRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
@@ -77,19 +74,18 @@ func (r DataFrameTransformDeprecatedPutTransformRequest) Do(ctx context.Context,
 
 	method = "PUT"
 
-	path.Grow(1 + len("_data_frame") + 1 + len("transforms") + 1 + len(r.TransformID))
+	path.Grow(7 + 1 + len("_ml") + 1 + len("trained_models") + 1 + len(r.ModelID) + 1 + len("vocabulary"))
+	path.WriteString("http://")
 	path.WriteString("/")
-	path.WriteString("_data_frame")
+	path.WriteString("_ml")
 	path.WriteString("/")
-	path.WriteString("transforms")
+	path.WriteString("trained_models")
 	path.WriteString("/")
-	path.WriteString(r.TransformID)
+	path.WriteString(r.ModelID)
+	path.WriteString("/")
+	path.WriteString("vocabulary")
 
 	params = make(map[string]string)
-
-	if r.DeferValidation != nil {
-		params["defer_validation"] = strconv.FormatBool(*r.DeferValidation)
-	}
 
 	if r.Pretty {
 		params["pretty"] = "true"
@@ -156,56 +152,48 @@ func (r DataFrameTransformDeprecatedPutTransformRequest) Do(ctx context.Context,
 
 // WithContext sets the request context.
 //
-func (f DataFrameTransformDeprecatedPutTransform) WithContext(v context.Context) func(*DataFrameTransformDeprecatedPutTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPutTransformRequest) {
+func (f MLPutTrainedModelVocabulary) WithContext(v context.Context) func(*MLPutTrainedModelVocabularyRequest) {
+	return func(r *MLPutTrainedModelVocabularyRequest) {
 		r.ctx = v
-	}
-}
-
-// WithDeferValidation - if validations should be deferred until transform starts, defaults to false..
-//
-func (f DataFrameTransformDeprecatedPutTransform) WithDeferValidation(v bool) func(*DataFrameTransformDeprecatedPutTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPutTransformRequest) {
-		r.DeferValidation = &v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
 //
-func (f DataFrameTransformDeprecatedPutTransform) WithPretty() func(*DataFrameTransformDeprecatedPutTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPutTransformRequest) {
+func (f MLPutTrainedModelVocabulary) WithPretty() func(*MLPutTrainedModelVocabularyRequest) {
+	return func(r *MLPutTrainedModelVocabularyRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
 //
-func (f DataFrameTransformDeprecatedPutTransform) WithHuman() func(*DataFrameTransformDeprecatedPutTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPutTransformRequest) {
+func (f MLPutTrainedModelVocabulary) WithHuman() func(*MLPutTrainedModelVocabularyRequest) {
+	return func(r *MLPutTrainedModelVocabularyRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
 //
-func (f DataFrameTransformDeprecatedPutTransform) WithErrorTrace() func(*DataFrameTransformDeprecatedPutTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPutTransformRequest) {
+func (f MLPutTrainedModelVocabulary) WithErrorTrace() func(*MLPutTrainedModelVocabularyRequest) {
+	return func(r *MLPutTrainedModelVocabularyRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
 //
-func (f DataFrameTransformDeprecatedPutTransform) WithFilterPath(v ...string) func(*DataFrameTransformDeprecatedPutTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPutTransformRequest) {
+func (f MLPutTrainedModelVocabulary) WithFilterPath(v ...string) func(*MLPutTrainedModelVocabularyRequest) {
+	return func(r *MLPutTrainedModelVocabularyRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
 //
-func (f DataFrameTransformDeprecatedPutTransform) WithHeader(h map[string]string) func(*DataFrameTransformDeprecatedPutTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPutTransformRequest) {
+func (f MLPutTrainedModelVocabulary) WithHeader(h map[string]string) func(*MLPutTrainedModelVocabularyRequest) {
+	return func(r *MLPutTrainedModelVocabularyRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -217,8 +205,8 @@ func (f DataFrameTransformDeprecatedPutTransform) WithHeader(h map[string]string
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
 //
-func (f DataFrameTransformDeprecatedPutTransform) WithOpaqueID(s string) func(*DataFrameTransformDeprecatedPutTransformRequest) {
-	return func(r *DataFrameTransformDeprecatedPutTransformRequest) {
+func (f MLPutTrainedModelVocabulary) WithOpaqueID(s string) func(*MLPutTrainedModelVocabularyRequest) {
+	return func(r *MLPutTrainedModelVocabularyRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

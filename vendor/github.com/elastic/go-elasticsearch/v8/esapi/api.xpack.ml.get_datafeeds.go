@@ -49,7 +49,6 @@ type MLGetDatafeeds func(o ...func(*MLGetDatafeedsRequest)) (*Response, error)
 type MLGetDatafeedsRequest struct {
 	DatafeedID string
 
-	AllowNoDatafeeds *bool
 	AllowNoMatch     *bool
 	ExcludeGenerated *bool
 
@@ -74,7 +73,8 @@ func (r MLGetDatafeedsRequest) Do(ctx context.Context, transport Transport) (*Re
 
 	method = "GET"
 
-	path.Grow(1 + len("_ml") + 1 + len("datafeeds") + 1 + len(r.DatafeedID))
+	path.Grow(7 + 1 + len("_ml") + 1 + len("datafeeds") + 1 + len(r.DatafeedID))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_ml")
 	path.WriteString("/")
@@ -85,10 +85,6 @@ func (r MLGetDatafeedsRequest) Do(ctx context.Context, transport Transport) (*Re
 	}
 
 	params = make(map[string]string)
-
-	if r.AllowNoDatafeeds != nil {
-		params["allow_no_datafeeds"] = strconv.FormatBool(*r.AllowNoDatafeeds)
-	}
 
 	if r.AllowNoMatch != nil {
 		params["allow_no_match"] = strconv.FormatBool(*r.AllowNoMatch)
@@ -170,14 +166,6 @@ func (f MLGetDatafeeds) WithContext(v context.Context) func(*MLGetDatafeedsReque
 func (f MLGetDatafeeds) WithDatafeedID(v string) func(*MLGetDatafeedsRequest) {
 	return func(r *MLGetDatafeedsRequest) {
 		r.DatafeedID = v
-	}
-}
-
-// WithAllowNoDatafeeds - whether to ignore if a wildcard expression matches no datafeeds. (this includes `_all` string or when no datafeeds have been specified).
-//
-func (f MLGetDatafeeds) WithAllowNoDatafeeds(v bool) func(*MLGetDatafeedsRequest) {
-	return func(r *MLGetDatafeedsRequest) {
-		r.AllowNoDatafeeds = &v
 	}
 }
 

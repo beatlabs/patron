@@ -21,6 +21,7 @@ package esapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 )
@@ -38,8 +39,6 @@ func newIndicesResolveIndexFunc(t Transport) IndicesResolveIndex {
 // ----- API Definition -------------------------------------------------------
 
 // IndicesResolveIndex returns information about any matching indices, aliases, and data streams
-//
-// This API is experimental.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-resolve-index-api.html.
 //
@@ -73,7 +72,12 @@ func (r IndicesResolveIndexRequest) Do(ctx context.Context, transport Transport)
 
 	method = "GET"
 
-	path.Grow(1 + len("_resolve") + 1 + len("index") + 1 + len(strings.Join(r.Name, ",")))
+	if len(r.Name) == 0 {
+		return nil, errors.New("name is required and cannot be nil or empty")
+	}
+
+	path.Grow(7 + 1 + len("_resolve") + 1 + len("index") + 1 + len(strings.Join(r.Name, ",")))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_resolve")
 	path.WriteString("/")

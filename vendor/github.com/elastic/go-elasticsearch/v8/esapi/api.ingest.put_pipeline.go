@@ -23,6 +23,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -52,6 +53,7 @@ type IngestPutPipelineRequest struct {
 
 	Body io.Reader
 
+	IfVersion     *int
 	MasterTimeout time.Duration
 	Timeout       time.Duration
 
@@ -76,7 +78,8 @@ func (r IngestPutPipelineRequest) Do(ctx context.Context, transport Transport) (
 
 	method = "PUT"
 
-	path.Grow(1 + len("_ingest") + 1 + len("pipeline") + 1 + len(r.PipelineID))
+	path.Grow(7 + 1 + len("_ingest") + 1 + len("pipeline") + 1 + len(r.PipelineID))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_ingest")
 	path.WriteString("/")
@@ -85,6 +88,10 @@ func (r IngestPutPipelineRequest) Do(ctx context.Context, transport Transport) (
 	path.WriteString(r.PipelineID)
 
 	params = make(map[string]string)
+
+	if r.IfVersion != nil {
+		params["if_version"] = strconv.FormatInt(int64(*r.IfVersion), 10)
+	}
 
 	if r.MasterTimeout != 0 {
 		params["master_timeout"] = formatDuration(r.MasterTimeout)
@@ -162,6 +169,14 @@ func (r IngestPutPipelineRequest) Do(ctx context.Context, transport Transport) (
 func (f IngestPutPipeline) WithContext(v context.Context) func(*IngestPutPipelineRequest) {
 	return func(r *IngestPutPipelineRequest) {
 		r.ctx = v
+	}
+}
+
+// WithIfVersion - required version for optimistic concurrency control for pipeline updates.
+//
+func (f IngestPutPipeline) WithIfVersion(v int) func(*IngestPutPipelineRequest) {
+	return func(r *IngestPutPipelineRequest) {
+		r.IfVersion = &v
 	}
 }
 

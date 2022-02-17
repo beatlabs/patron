@@ -52,6 +52,7 @@ type MLStartTrainedModelDeploymentRequest struct {
 	ModelID string
 
 	Timeout time.Duration
+	WaitFor string
 
 	Pretty     bool
 	Human      bool
@@ -74,7 +75,8 @@ func (r MLStartTrainedModelDeploymentRequest) Do(ctx context.Context, transport 
 
 	method = "POST"
 
-	path.Grow(1 + len("_ml") + 1 + len("trained_models") + 1 + len(r.ModelID) + 1 + len("deployment") + 1 + len("_start"))
+	path.Grow(7 + 1 + len("_ml") + 1 + len("trained_models") + 1 + len(r.ModelID) + 1 + len("deployment") + 1 + len("_start"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_ml")
 	path.WriteString("/")
@@ -90,6 +92,10 @@ func (r MLStartTrainedModelDeploymentRequest) Do(ctx context.Context, transport 
 
 	if r.Timeout != 0 {
 		params["timeout"] = formatDuration(r.Timeout)
+	}
+
+	if r.WaitFor != "" {
+		params["wait_for"] = r.WaitFor
 	}
 
 	if r.Pretty {
@@ -164,6 +170,14 @@ func (f MLStartTrainedModelDeployment) WithContext(v context.Context) func(*MLSt
 func (f MLStartTrainedModelDeployment) WithTimeout(v time.Duration) func(*MLStartTrainedModelDeploymentRequest) {
 	return func(r *MLStartTrainedModelDeploymentRequest) {
 		r.Timeout = v
+	}
+}
+
+// WithWaitFor - the allocation status for which to wait.
+//
+func (f MLStartTrainedModelDeployment) WithWaitFor(v string) func(*MLStartTrainedModelDeploymentRequest) {
+	return func(r *MLStartTrainedModelDeploymentRequest) {
+		r.WaitFor = v
 	}
 }
 

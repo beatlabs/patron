@@ -15,12 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package estransport
+package elastictransport
 
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/sha256"
+	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -29,43 +32,19 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"regexp"
-	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/elastic/go-elasticsearch/v8/internal/version"
 )
 
 const (
-	// Version returns the package version as a string.
-	Version = version.Client
-
-	// esCompatHeader defines the env var for Compatibility header.
-	esCompatHeader = "ELASTIC_CLIENT_APIVERSIONING"
-
 	userAgentHeader = "User-Agent"
 )
 
 var (
-	userAgent           string
-	metaHeader          string
-	compatibilityHeader bool
-	reGoVersion         = regexp.MustCompile(`go(\d+\.\d+\..+)`)
-
 	defaultMaxRetries    = 3
 	defaultRetryOnStatus = [...]int{502, 503, 504}
 )
-
-func init() {
-	userAgent = initUserAgent()
-	metaHeader = initMetaHeader()
-
-	compatHeaderEnv := os.Getenv(esCompatHeader)
-	compatibilityHeader, _ = strconv.ParseBool(compatHeaderEnv)
-}
 
 // Interface defines the interface for HTTP client.
 //
@@ -76,6 +55,8 @@ type Interface interface {
 // Config represents the configuration of HTTP client.
 //
 type Config struct {
+	UserAgent string
+
 	URLs         []*url.URL
 	Username     string
 	Password     string
@@ -85,18 +66,27 @@ type Config struct {
 	Header http.Header
 	CACert []byte
 
-	RetryOnStatus        []int
-	DisableRetry         bool
-	EnableRetryOnTimeout bool
-	MaxRetries           int
-	RetryBackoff         func(attempt int) time.Duration
+	// DisableRetry disables retrying requests.
+	//
+	// If DisableRetry is true, then RetryOnStatus, RetryOnError, MaxRetries, and RetryBackoff will be ignored.
+	DisableRetry bool
+
+	// RetryOnStatus holds an optional list of HTTP response status codes that should trigger a retry.
+	//
+	// If RetryOnStatus is nil, then the defaults will be used:
+	// 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout).
+	RetryOnStatus []int
+
+	// RetryOnError holds an optional function that will be called when a request fails due to an
+	// HTTP transport error, to indicate whether the request should be retried, e.g. timeouts.
+	RetryOnError func(*http.Request, error) bool
+	MaxRetries   int
+	RetryBackoff func(attempt int) time.Duration
 
 	CompressRequestBody bool
 
 	EnableMetrics     bool
 	EnableDebugLogger bool
-
-	DisableMetaHeader bool
 
 	DiscoverNodesInterval time.Duration
 
@@ -105,6 +95,8 @@ type Config struct {
 	Selector  Selector
 
 	ConnectionPoolFunc func([]*Connection, Selector) ConnectionPool
+
+	CertificateFingerprint string
 }
 
 // Client represents the HTTP client.
@@ -112,18 +104,22 @@ type Config struct {
 type Client struct {
 	sync.Mutex
 
+	userAgent string
+
 	urls         []*url.URL
 	username     string
 	password     string
 	apikey       string
 	servicetoken string
+	fingerprint  string
 	header       http.Header
 
-	retryOnStatus         []int
-	disableRetry          bool
-	enableRetryOnTimeout  bool
-	disableMetaHeader     bool
+	retryOnStatus        []int
+	disableRetry         bool
+	enableRetryOnTimeout bool
+
 	maxRetries            int
+	retryOnError          func(*http.Request, error) bool
 	retryBackoff          func(attempt int) time.Duration
 	discoverNodesInterval time.Duration
 	discoverNodesTimer    *time.Timer
@@ -146,6 +142,32 @@ type Client struct {
 func New(cfg Config) (*Client, error) {
 	if cfg.Transport == nil {
 		cfg.Transport = http.DefaultTransport
+	}
+
+	if transport, ok := cfg.Transport.(*http.Transport); ok {
+		if cfg.CertificateFingerprint != "" {
+			transport.DialTLS = func(network, addr string) (net.Conn, error) {
+				fingerprint, _ := hex.DecodeString(cfg.CertificateFingerprint)
+
+				c, err := tls.Dial(network, addr, &tls.Config{InsecureSkipVerify: true})
+				if err != nil {
+					return nil, err
+				}
+
+				// Retrieve the connection state from the remote server.
+				cState := c.ConnectionState()
+				for _, cert := range cState.PeerCertificates {
+					// Compute digest for each certificate.
+					digest := sha256.Sum256(cert.Raw)
+
+					// Provided fingerprint should match at least one certificate from remote before we continue.
+					if bytes.Compare(digest[0:], fingerprint) == 0 {
+						return c, nil
+					}
+				}
+				return nil, fmt.Errorf("fingerprint mismatch, provided: %s", cfg.CertificateFingerprint)
+			}
+		}
 	}
 
 	if cfg.CACert != nil {
@@ -178,6 +200,8 @@ func New(cfg Config) (*Client, error) {
 	}
 
 	client := Client{
+		userAgent: cfg.UserAgent,
+
 		urls:         cfg.URLs,
 		username:     cfg.Username,
 		password:     cfg.Password,
@@ -187,9 +211,8 @@ func New(cfg Config) (*Client, error) {
 
 		retryOnStatus:         cfg.RetryOnStatus,
 		disableRetry:          cfg.DisableRetry,
-		enableRetryOnTimeout:  cfg.EnableRetryOnTimeout,
-		disableMetaHeader:     cfg.DisableMetaHeader,
 		maxRetries:            cfg.MaxRetries,
+		retryOnError:          cfg.RetryOnError,
 		retryBackoff:          cfg.RetryBackoff,
 		discoverNodesInterval: cfg.DiscoverNodesInterval,
 
@@ -239,14 +262,6 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 		err error
 	)
 
-	// Compatibility Header
-	if compatibilityHeader {
-		if req.Body != nil {
-			req.Header.Set("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7")
-		}
-		req.Header.Set("Accept", "application/vnd.elasticsearch+json;compatible-with=7")
-	}
-
 	// Record metrics, when enabled
 	if c.metrics != nil {
 		c.metrics.Lock()
@@ -257,7 +272,6 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 	// Update request
 	c.setReqUserAgent(req)
 	c.setReqGlobalHeader(req)
-	c.setMetaHeader(req)
 
 	if req.Body != nil && req.Body != http.NoBody {
 		if c.compressRequestBody {
@@ -349,16 +363,9 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 			c.pool.OnFailure(conn)
 			c.Unlock()
 
-			// Retry on EOF errors
-			if err == io.EOF {
+			// Retry upon decision by the user
+			if !c.disableRetry && (c.retryOnError == nil || c.retryOnError(req, err)) {
 				shouldRetry = true
-			}
-
-			// Retry on network errors, but not on timeout errors, unless configured
-			if err, ok := err.(net.Error); ok {
-				if (!err.Timeout() || c.enableRetryOnTimeout) && !c.disableRetry {
-					shouldRetry = true
-				}
 			}
 		} else {
 			// Report the connection as succesfull
@@ -483,7 +490,7 @@ func (c *Client) setReqUserAgent(req *http.Request) *http.Request {
 			return req
 		}
 	}
-	req.Header.Set(userAgentHeader, userAgent)
+	req.Header.Set(userAgentHeader, c.userAgent)
 	return req
 }
 
@@ -496,21 +503,6 @@ func (c *Client) setReqGlobalHeader(req *http.Request) *http.Request {
 				}
 			}
 		}
-	}
-	return req
-}
-
-func (c *Client) setMetaHeader(req *http.Request) *http.Request {
-	if c.disableMetaHeader {
-		req.Header.Del(HeaderClientMeta)
-		return req
-	}
-
-	existingMetaHeader := req.Header.Get(HeaderClientMeta)
-	if existingMetaHeader != "" {
-		req.Header.Set(HeaderClientMeta, strings.Join([]string{metaHeader, existingMetaHeader}, ","))
-	} else {
-		req.Header.Add(HeaderClientMeta, metaHeader)
 	}
 	return req
 }
@@ -534,27 +526,4 @@ func (c *Client) logRoundTrip(
 		}
 	}
 	c.logger.LogRoundTrip(req, &dupRes, err, start, dur) // errcheck exclude
-}
-
-func initUserAgent() string {
-	var b strings.Builder
-
-	b.WriteString("go-elasticsearch")
-	b.WriteRune('/')
-	b.WriteString(Version)
-	b.WriteRune(' ')
-	b.WriteRune('(')
-	b.WriteString(runtime.GOOS)
-	b.WriteRune(' ')
-	b.WriteString(runtime.GOARCH)
-	b.WriteString("; ")
-	b.WriteString("Go ")
-	if v := reGoVersion.ReplaceAllString(runtime.Version(), "$1"); v != "" {
-		b.WriteString(v)
-	} else {
-		b.WriteString(runtime.Version())
-	}
-	b.WriteRune(')')
-
-	return b.String()
 }

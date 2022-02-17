@@ -21,7 +21,9 @@ package esapi
 
 import (
 	"context"
+	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -48,7 +50,12 @@ type MLStopTrainedModelDeployment func(model_id string, o ...func(*MLStopTrained
 // MLStopTrainedModelDeploymentRequest configures the ML Stop Trained Model Deployment API request.
 //
 type MLStopTrainedModelDeploymentRequest struct {
+	Body io.Reader
+
 	ModelID string
+
+	AllowNoMatch *bool
+	Force        *bool
 
 	Pretty     bool
 	Human      bool
@@ -71,7 +78,8 @@ func (r MLStopTrainedModelDeploymentRequest) Do(ctx context.Context, transport T
 
 	method = "POST"
 
-	path.Grow(1 + len("_ml") + 1 + len("trained_models") + 1 + len(r.ModelID) + 1 + len("deployment") + 1 + len("_stop"))
+	path.Grow(7 + 1 + len("_ml") + 1 + len("trained_models") + 1 + len(r.ModelID) + 1 + len("deployment") + 1 + len("_stop"))
+	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_ml")
 	path.WriteString("/")
@@ -84,6 +92,14 @@ func (r MLStopTrainedModelDeploymentRequest) Do(ctx context.Context, transport T
 	path.WriteString("_stop")
 
 	params = make(map[string]string)
+
+	if r.AllowNoMatch != nil {
+		params["allow_no_match"] = strconv.FormatBool(*r.AllowNoMatch)
+	}
+
+	if r.Force != nil {
+		params["force"] = strconv.FormatBool(*r.Force)
+	}
 
 	if r.Pretty {
 		params["pretty"] = "true"
@@ -101,7 +117,7 @@ func (r MLStopTrainedModelDeploymentRequest) Do(ctx context.Context, transport T
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, err := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), r.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +128,10 @@ func (r MLStopTrainedModelDeploymentRequest) Do(ctx context.Context, transport T
 			q.Set(k, v)
 		}
 		req.URL.RawQuery = q.Encode()
+	}
+
+	if r.Body != nil {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if len(r.Header) > 0 {
@@ -149,6 +169,30 @@ func (r MLStopTrainedModelDeploymentRequest) Do(ctx context.Context, transport T
 func (f MLStopTrainedModelDeployment) WithContext(v context.Context) func(*MLStopTrainedModelDeploymentRequest) {
 	return func(r *MLStopTrainedModelDeploymentRequest) {
 		r.ctx = v
+	}
+}
+
+// WithBody - The stop deployment parameters.
+//
+func (f MLStopTrainedModelDeployment) WithBody(v io.Reader) func(*MLStopTrainedModelDeploymentRequest) {
+	return func(r *MLStopTrainedModelDeploymentRequest) {
+		r.Body = v
+	}
+}
+
+// WithAllowNoMatch - whether to ignore if a wildcard expression matches no deployments. (this includes `_all` string or when no deployments have been specified).
+//
+func (f MLStopTrainedModelDeployment) WithAllowNoMatch(v bool) func(*MLStopTrainedModelDeploymentRequest) {
+	return func(r *MLStopTrainedModelDeploymentRequest) {
+		r.AllowNoMatch = &v
+	}
+}
+
+// WithForce - true if the deployment should be forcefully stopped.
+//
+func (f MLStopTrainedModelDeployment) WithForce(v bool) func(*MLStopTrainedModelDeploymentRequest) {
+	return func(r *MLStopTrainedModelDeploymentRequest) {
+		r.Force = &v
 	}
 }
 

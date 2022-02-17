@@ -191,10 +191,8 @@ func (c *Component) runWithRetry(ctx context.Context, retries int) error {
 
 func isContextDone(ctx context.Context) bool {
 	select {
-	case _, ok := <-ctx.Done():
-		if !ok {
-			return true
-		}
+	case <-ctx.Done():
+		return true
 	default:
 	}
 	return false

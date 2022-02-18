@@ -178,8 +178,10 @@ func TestNewSessionCallback(t *testing.T) {
 			err := NewSessionCallback(tt.args.sessionCallback)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
+				assert.Nil(t, c.sessionCallback)
 			} else {
 				assert.NoError(t, err)
+				assert.NotNil(t, c.sessionCallback)
 			}
 		})
 	}

@@ -169,6 +169,7 @@ type Component struct {
 	retries                   uint
 	retryWait                 time.Duration
 	commitSync                bool
+	sessionCallback           func(sarama.ConsumerGroupSession) error
 }
 
 // Run starts the consumer processing loop to process messages from Kafka.
@@ -184,7 +185,7 @@ func (c *Component) processing(ctx context.Context) error {
 	retries := int(c.retries)
 	for i := 0; i <= retries; i++ {
 		handler := newConsumerHandler(ctx, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
-			c.batchTimeout, c.commitSync, c.batchMessageDeduplication)
+			c.batchTimeout, c.commitSync, c.batchMessageDeduplication, c.sessionCallback)
 
 		client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 		componentError = err
@@ -284,10 +285,12 @@ type consumerHandler struct {
 
 	// whether the handler has processed any messages
 	processedMessages bool
+	sessionCallback   func(sarama.ConsumerGroupSession) error
 }
 
 func newConsumerHandler(ctx context.Context, name, group string, processorFunc kafka.BatchProcessorFunc,
-	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync bool, batchMessageDeduplication bool) *consumerHandler {
+	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync, batchMessageDeduplication bool,
+	sessionCallback func(sarama.ConsumerGroupSession) error) *consumerHandler {
 	return &consumerHandler{
 		ctx:                       ctx,
 		name:                      name,
@@ -300,12 +303,16 @@ func newConsumerHandler(ctx context.Context, name, group string, processorFunc k
 		proc:                      processorFunc,
 		failStrategy:              fs,
 		commitSync:                commitSync,
+		sessionCallback:           sessionCallback,
 	}
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
-func (c *consumerHandler) Setup(sarama.ConsumerGroupSession) error {
-	return nil
+func (c *consumerHandler) Setup(cgs sarama.ConsumerGroupSession) error {
+	if c.sessionCallback == nil {
+		return nil
+	}
+	return c.sessionCallback(cgs)
 }
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited

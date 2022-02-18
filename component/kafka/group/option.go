@@ -124,3 +124,15 @@ func CommitSync() OptionFunc {
 		return nil
 	}
 }
+
+// NewSessionCallback adds a callback when a new consumer group session is created (e.g., rebalancing).
+func NewSessionCallback(sessionCallback func(sarama.ConsumerGroupSession) error) OptionFunc {
+	return func(c *Component) error {
+		if sessionCallback == nil {
+			return errors.New("nil session callback")
+		}
+
+		c.sessionCallback = sessionCallback
+		return nil
+	}
+}

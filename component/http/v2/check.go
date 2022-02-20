@@ -16,14 +16,15 @@ const (
 	// Unresponsive represents a state defining a Unresponsive state.
 	Unresponsive AliveStatus = 2
 
-	alivePath = "/alive"
-
 	// Ready represents a state defining a Ready state.
 	Ready ReadyStatus = 1
 	// NotReady represents a state defining a NotReady state.
 	NotReady ReadyStatus = 2
 
-	readyPath = "/ready"
+	// AlivePath of the component.
+	AlivePath = "/alive"
+	// ReadyPath of the component.
+	ReadyPath = "/ready"
 )
 
 // ReadyCheckFunc defines a function type for implementing a readiness check.
@@ -44,7 +45,7 @@ func LivenessCheckRoute(acf LivenessCheckFunc) *Route {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	route, _ := NewRoute(http.MethodGet, alivePath, f)
+	route, _ := NewRoute(http.MethodGet, AlivePath, f)
 	return route
 }
 
@@ -60,6 +61,6 @@ func ReadyCheckRoute(rcf ReadyCheckFunc) *Route {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	route, _ := NewRoute(http.MethodGet, readyPath, f)
+	route, _ := NewRoute(http.MethodGet, ReadyPath, f)
 	return route
 }

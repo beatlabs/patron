@@ -17,4 +17,3 @@ The framework makes primarily use of the following OSS projects:
 * [github.com/google/uuid](https://github.com/google/uuid) 
 * [github.com/hashicorp/golang-lru](https://github.com/hashicorp/golang-lru)
 * [github.com/ory/dockertest](https://github.com/ory/dockertest)
-* [github.com/gorilla/mux](https://github.com/gorilla/mux)

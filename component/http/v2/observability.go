@@ -10,11 +10,12 @@ import (
 )
 
 const (
-	metricsPath = "/metrics"
+	// MetricsPath of the component.
+	MetricsPath = "/metrics"
 )
 
 func MetricRoute() *Route {
-	route, _ := NewRoute(http.MethodGet, metricsPath, promhttp.Handler().ServeHTTP)
+	route, _ := NewRoute(http.MethodGet, MetricsPath, promhttp.Handler().ServeHTTP)
 	return route
 }
 

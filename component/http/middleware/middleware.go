@@ -159,6 +159,7 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Fu
 	}
 }
 
+// NewInjectObservability injects a correlation ID unless one is already present.
 func NewInjectObservability() Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

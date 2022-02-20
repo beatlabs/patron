@@ -48,6 +48,10 @@ linters:
     - errname
     - maligned
     - predeclared
+    - nestif
+    - exhaustive
+    - tenv
+    - gofumpt
     # - promlinter
   fast: false
 

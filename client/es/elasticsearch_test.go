@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
@@ -14,7 +13,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
@@ -178,14 +177,8 @@ func TestGetAddrFromEnv(t *testing.T) {
 	addr := getAddrFromEnv()
 	assert.Equal(t, defaultHost+":"+defaultPort, addr)
 
-	err := os.Setenv(defaultHostEnv, "http://10.1.1.1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.Setenv(defaultPortEnv, "9300")
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Setenv(defaultHostEnv, "http://10.1.1.1")
+	t.Setenv(defaultPortEnv, "9300")
 	addr = getAddrFromEnv()
 	assert.Equal(t, "http://10.1.1.1:9300", addr)
 }

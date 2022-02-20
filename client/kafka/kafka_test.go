@@ -71,12 +71,16 @@ func TestNewMessageWithHeader(t *testing.T) {
 		expectedHeaderKeys   []string
 		expectedHeaderValues []string
 	}{
-		{name: "2-headers", data: []byte("TEST"),
+		{
+			name: "2-headers", data: []byte("TEST"),
 			setHeaderKeys: []string{"header1", "header2"}, setHeaderValues: []string{"value1", "value2"},
-			expectedHeaderKeys: []string{"header1", "header2"}, expectedHeaderValues: []string{"value1", "value2"}},
-		{name: "2-headers", data: []byte("TEST"),
+			expectedHeaderKeys: []string{"header1", "header2"}, expectedHeaderValues: []string{"value1", "value2"},
+		},
+		{
+			name: "2-headers", data: []byte("TEST"),
 			setHeaderKeys: []string{"header1", "header1"}, setHeaderValues: []string{"value1", "value2"},
-			expectedHeaderKeys: []string{"header1", "header1"}, expectedHeaderValues: []string{"value1", "value2"}},
+			expectedHeaderKeys: []string{"header1", "header1"}, expectedHeaderValues: []string{"value1", "value2"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -27,6 +27,7 @@ func TestValidationErrorWithPayload(t *testing.T) {
 	assert.EqualError(t, err, "HTTP error with code: 400 payload: test")
 	assert.Equal(t, 400, err.code)
 }
+
 func TestUnauthorizedError(t *testing.T) {
 	err := NewUnauthorizedError()
 	assert.EqualError(t, err, "HTTP error with code: 401 payload: Unauthorized")

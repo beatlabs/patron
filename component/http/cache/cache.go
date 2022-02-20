@@ -157,32 +157,35 @@ func isValid(age, maxAge int64, validators ...validator) (bool, validationContex
 }
 
 func get(key string, rc *RouteCache) *response {
-	if resp, ok, err := rc.cache.Get(key); ok && err == nil {
-		if b, ok := resp.([]byte); ok {
-			r := &response{}
-			err := r.decode(b)
-			if err != nil {
-				return &response{Err: fmt.Errorf("could not decode cached bytes as response %v for key %s", resp, key)}
-			}
-			r.FromCache = true
-			return r
-		}
-		// NOTE : we need to do this hack to bypass the redis go client implementation of returning result as string instead of bytes
-		if b, ok := resp.(string); ok {
-			r := &response{}
-			err := r.decode([]byte(b))
-			if err != nil {
-				return &response{Err: fmt.Errorf("could not decode cached string as response %v for key %s", resp, key)}
-			}
-			r.FromCache = true
-			return r
-		}
-
-		return &response{Err: fmt.Errorf("could not parse cached response %v for key %s", resp, key)}
-	} else if err != nil {
+	resp, ok, err := rc.cache.Get(key)
+	if err != nil {
 		return &response{Err: fmt.Errorf("could not read cache value for [ key = %v , Err = %w ]", key, err)}
 	}
-	return nil
+	if !ok {
+		return nil
+	}
+
+	if b, ok := resp.([]byte); ok {
+		r := &response{}
+		err := r.decode(b)
+		if err != nil {
+			return &response{Err: fmt.Errorf("could not decode cached bytes as response %v for key %s", resp, key)}
+		}
+		r.FromCache = true
+		return r
+	}
+	// NOTE : we need to do this hack to bypass the redis go client implementation of returning result as string instead of bytes
+	if b, ok := resp.(string); ok {
+		r := &response{}
+		err := r.decode([]byte(b))
+		if err != nil {
+			return &response{Err: fmt.Errorf("could not decode cached string as response %v for key %s", resp, key)}
+		}
+		r.FromCache = true
+		return r
+	}
+
+	return &response{Err: fmt.Errorf("could not parse cached response %v for key %s", resp, key)}
 }
 
 // save caches the given Response if required with a ttl

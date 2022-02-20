@@ -166,10 +166,14 @@ type Component struct {
 	batchSize                 uint
 	batchTimeout              time.Duration
 	batchMessageDeduplication bool
+	commitSync                bool
 	retries                   uint
 	retryWait                 time.Duration
+<<<<<<< HEAD
 	commitSync                bool
 	sessionCallback           func(sarama.ConsumerGroupSession) error
+=======
+>>>>>>> 4d7757e7 (Revamp linter setup)
 }
 
 // Run starts the consumer processing loop to process messages from Kafka.
@@ -257,14 +261,15 @@ func (c *Component) processing(ctx context.Context) error {
 
 // Consumer represents a Sarama consumer group consumer.
 type consumerHandler struct {
-	ctx context.Context
-
-	name  string
-	group string
-
-	// buffer
+	ctx                       context.Context
+	name                      string
+	group                     string
+	commitSync                bool // committing after every batch
+	batchMessageDeduplication bool
+	processedMessages         bool // whether the handler has processed any messages
 	batchSize                 int
 	ticker                    *time.Ticker
+<<<<<<< HEAD
 	batchMessageDeduplication bool
 
 	// callback
@@ -286,6 +291,13 @@ type consumerHandler struct {
 	// whether the handler has processed any messages
 	processedMessages bool
 	sessionCallback   func(sarama.ConsumerGroupSession) error
+=======
+	proc                      kafka.BatchProcessorFunc // callback
+	failStrategy              kafka.FailStrategy       // failures strategy
+	mu                        sync.RWMutex             // lock to protect buffer operation
+	msgBuf                    []*sarama.ConsumerMessage
+	err                       error
+>>>>>>> 4d7757e7 (Revamp linter setup)
 }
 
 func newConsumerHandler(ctx context.Context, name, group string, processorFunc kafka.BatchProcessorFunc,

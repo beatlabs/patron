@@ -44,6 +44,10 @@ linters:
     - revive
     - godot
     - errorlint
+    - gocritic
+    - errname
+    - maligned
+    # - promlinter
   fast: false
 
 issues:

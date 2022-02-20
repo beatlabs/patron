@@ -28,15 +28,15 @@ func TestMain(m *testing.M) {
 }
 
 func TestExtractCacheHeaders(t *testing.T) {
-	type caheRequestCondition struct {
+	type cacheRequestCondition struct {
 		noCache         bool
 		forceCache      bool
-		validators      int
 		expiryValidator bool
+		validators      int
 	}
 
 	type args struct {
-		cfg     caheRequestCondition
+		cfg     cacheRequestCondition
 		headers map[string]string
 		wrn     string
 	}
@@ -47,7 +47,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 	params := []args{
 		{
 			headers: map[string]string{HeaderCacheControl: "max-age=10"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,
@@ -57,7 +57,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// Header cannot be parsed
 		{
 			headers: map[string]string{HeaderCacheControl: "maxage=10"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 			},
@@ -66,7 +66,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// Header resets to minAge
 		{
 			headers: map[string]string{HeaderCacheControl: "max-age=twenty"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,
@@ -76,7 +76,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// Header resets to maxFresh e.g. maxAge - minAge
 		{
 			headers: map[string]string{HeaderCacheControl: "min-fresh=10"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,
@@ -86,7 +86,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// no Warning e.g. headers are within allowed values
 		{
 			headers: map[string]string{HeaderCacheControl: "min-fresh=5,max-age=5"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 2,
@@ -96,7 +96,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// cache headers reset to min-age, note we still cache but send a Warning Header back
 		{
 			headers: map[string]string{HeaderCacheControl: "no-cache"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,
@@ -105,7 +105,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		},
 		{
 			headers: map[string]string{HeaderCacheControl: "no-store"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,
@@ -144,14 +144,14 @@ type responseStruct struct {
 	Header  map[string]string
 }
 
-func newRequestAt(timeInstant int64, ControlHeaders ...string) requestParams {
+func newRequestAt(timeInstant int64, controlHeaders ...string) requestParams {
 	params := requestParams{
 		query:        "VALUE=1",
 		timeInstance: timeInstant,
 		header:       make(map[string]string),
 	}
-	if len(ControlHeaders) > 0 {
-		params.header[HeaderCacheControl] = strings.Join(ControlHeaders, ",")
+	if len(controlHeaders) > 0 {
+		params.header[HeaderCacheControl] = strings.Join(controlHeaders, ",")
 	}
 	return params
 }

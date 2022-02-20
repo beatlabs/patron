@@ -521,9 +521,9 @@ func (mcf *mockConsumerFactory) Create() (Consumer, error) {
 type mockConsumer struct {
 	consumeError bool
 	clsError     bool
+	outOfOrder   bool
 	chMsg        chan Message
 	chErr        chan error
-	outOfOrder   bool
 }
 
 func (mc *mockConsumer) OutOfOrder() bool {

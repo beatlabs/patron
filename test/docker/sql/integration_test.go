@@ -25,8 +25,6 @@ func TestMain(m *testing.M) {
 		fmt.Printf("could not create mysql runtime: %v\n", err)
 		os.Exit(1)
 	}
-	defer func() {
-	}()
 	exitCode := m.Run()
 
 	ee := runtime.Teardown()
@@ -114,6 +112,7 @@ func TestIntegration(t *testing.T) {
 		defer func() {
 			assert.NoError(t, rows.Close())
 		}()
+		assert.NoError(t, rows.Err())
 		assert.NoError(t, err)
 		assert.NotNil(t, rows)
 		assertSpan(t, mtr.FinishedSpans()[0], "db.Query", query)
@@ -151,6 +150,7 @@ func TestIntegration(t *testing.T) {
 			mtr.Reset()
 			rows, err := stmt.Query(ctx)
 			assert.NoError(t, err)
+			assert.NoError(t, rows.Err())
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
@@ -193,6 +193,7 @@ func TestIntegration(t *testing.T) {
 			mtr.Reset()
 			rows, err := conn.Query(ctx, query)
 			assert.NoError(t, err)
+			assert.NoError(t, rows.Err())
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
@@ -248,6 +249,7 @@ func TestIntegration(t *testing.T) {
 			mtr.Reset()
 			rows, err := tx.Query(ctx, query)
 			assert.NoError(t, err)
+			assert.NoError(t, rows.Err())
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()

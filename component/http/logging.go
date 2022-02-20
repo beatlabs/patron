@@ -119,8 +119,8 @@ func (s statusCode) isRange() bool {
 
 type statusCodeRange struct {
 	start         int
-	startInterval intervalType
 	end           int
+	startInterval intervalType
 	endInterval   intervalType
 }
 

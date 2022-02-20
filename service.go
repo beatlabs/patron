@@ -392,7 +392,7 @@ func setupJaegerTracing(name, version string) error {
 
 // WithRoutesBuilder adds routes builder to the default HTTP component.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 func (b *Builder) WithRoutesBuilder(rb *patronhttp.RoutesBuilder) *Builder {
 	if rb == nil {
@@ -407,7 +407,7 @@ func (b *Builder) WithRoutesBuilder(rb *patronhttp.RoutesBuilder) *Builder {
 
 // WithMiddlewares adds generic middlewares to the default HTTP component.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 func (b *Builder) WithMiddlewares(mm ...middleware.Func) *Builder {
 	if len(mm) == 0 {
@@ -422,7 +422,7 @@ func (b *Builder) WithMiddlewares(mm ...middleware.Func) *Builder {
 
 // WithAliveCheck overrides the default liveness check of the default HTTP component.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 func (b *Builder) WithAliveCheck(acf patronhttp.AliveCheckFunc) *Builder {
 	if acf == nil {
@@ -437,7 +437,7 @@ func (b *Builder) WithAliveCheck(acf patronhttp.AliveCheckFunc) *Builder {
 
 // WithReadyCheck overrides the default readiness check of the default HTTP component.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 func (b *Builder) WithReadyCheck(rcf patronhttp.ReadyCheckFunc) *Builder {
 	if rcf == nil {
@@ -476,7 +476,7 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 
 // WithUncompressedPaths defines a list of paths which the compre ssion middleware will skip.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
 	if len(p) == 0 {

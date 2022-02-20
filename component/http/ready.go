@@ -6,7 +6,7 @@ import (
 
 // ReadyStatus type.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 type ReadyStatus int
 
@@ -22,7 +22,7 @@ const (
 
 // ReadyCheckFunc defines a function type for implementing a readiness check.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 type ReadyCheckFunc func() ReadyStatus
 

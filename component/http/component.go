@@ -26,19 +26,19 @@ const (
 var (
 	// DefaultAliveCheck return always live.
 	//
-	// Deprecated: Pls use the new v2 package.
+	// Deprecated: Please use the new v2 package.
 	// This package is frozen and no new functionality will be added.
 	DefaultAliveCheck = func() AliveStatus { return Alive }
 	// DefaultReadyCheck return always ready.
 	//
-	// Deprecated: Pls use the new v2 package.
+	// Deprecated: Please use the new v2 package.
 	// This package is frozen and no new functionality will be added.
 	DefaultReadyCheck = func() ReadyStatus { return Ready }
 )
 
 // Component implementation of HTTP.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 type Component struct {
 	ac                  AliveCheckFunc
@@ -116,7 +116,7 @@ func (c *Component) createHTTPServer() *http.Server {
 // Builder gathers all required and optional properties, in order
 // to construct an HTTP component.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 type Builder struct {
 	ac                  AliveCheckFunc
@@ -138,7 +138,7 @@ type Builder struct {
 // The builder instantiates the component using default values for
 // HTTP Port, Alive/Ready check functions and Read/Write timeouts.
 //
-// Deprecated: Pls use the new v2 package.
+// Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 func NewBuilder() *Builder {
 	var errs []error

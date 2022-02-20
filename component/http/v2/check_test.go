@@ -15,7 +15,7 @@ func Test_aliveCheckRoute(t *testing.T) {
 		want int
 	}{
 		"alive":        {func() AliveStatus { return Alive }, http.StatusOK},
-		"unresponsive": {func() AliveStatus { return Unresponsive }, http.StatusServiceUnavailable},
+		"unresponsive": {func() AliveStatus { return Unhealthy }, http.StatusServiceUnavailable},
 		"default":      {func() AliveStatus { return 10 }, http.StatusOK},
 	}
 	for name, tt := range tests {

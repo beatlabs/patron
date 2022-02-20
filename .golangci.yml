@@ -46,7 +46,7 @@ linters:
     - errorlint
     - gocritic
     - errname
-    - maligned
+    - govet
     - predeclared
     - nestif
     - exhaustive

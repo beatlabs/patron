@@ -87,7 +87,7 @@ func TestNewDefaultClient(t *testing.T) {
 
 	upstreamClient, err := elasticsearch.NewDefaultClient()
 	assert.NoError(t, err)
-	assert.IsType(t, *upstreamClient, newClient.Client)
+	assert.IsType(t, *upstreamClient, newClient.Client) //nolint:govet
 
 	expectedTransport, transport := new(transportClient), newClient.Transport
 	assert.IsType(t, expectedTransport, transport)

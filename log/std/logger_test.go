@@ -46,7 +46,8 @@ func TestNewSub(t *testing.T) {
 	var b bytes.Buffer
 	logger := New(&b, log.InfoLevel, map[string]interface{}{"name": "john doe"})
 	assert.NotNil(t, logger)
-	subLogger := logger.Sub(map[string]interface{}{"age": 18}).(*Logger)
+	subLogger, ok := logger.Sub(map[string]interface{}{"age": 18}).(*Logger)
+	assert.True(t, ok)
 	assert.NotNil(t, subLogger.debug)
 	assert.NotNil(t, subLogger.info)
 	assert.NotNil(t, subLogger.warn)

@@ -98,7 +98,7 @@ func (b *MessageBuilder) WithDelaySeconds(seconds int64) *MessageBuilder {
 // injectHeaders injects the SQS headers carrier's headers into the message's attributes.
 func (m *Message) injectHeaders(carrier sqsHeadersCarrier) {
 	for k, v := range carrier {
-		m.setMessageAttribute(k, v.(string))
+		m.setMessageAttribute(k, v.(string)) //nolint:forcetypeassert
 	}
 }
 

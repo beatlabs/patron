@@ -39,7 +39,8 @@ func TestStartEndSpan(t *testing.T) {
 	assert.Empty(t, mtr.FinishedSpans())
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
 
-	jsp := sp.(*mocktracer.MockSpan)
+	jsp, ok := sp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.NotNil(t, jsp)
 	actualTags := jsp.Tags()
 
@@ -67,7 +68,8 @@ func TestStartEndSpan(t *testing.T) {
 	}
 	endSpan(sp, rsp)
 
-	jsp = sp.(*mocktracer.MockSpan)
+	jsp, ok = sp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.Equal(t, respondent, jsp.Tag(respondentTag))
 	assert.Equal(t, uint16(statusCode), jsp.Tag("http.status_code"))
 	assert.Equal(t, false, jsp.Tag("error"))
@@ -199,7 +201,8 @@ func TestStartSpan(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, sp)
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
-	jsp := sp.(*mocktracer.MockSpan)
+	jsp, ok := sp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.NotNil(t, jsp)
 	trace.SpanSuccess(sp)
 	rawspan := mtr.FinishedSpans()[0]

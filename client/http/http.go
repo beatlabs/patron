@@ -118,7 +118,12 @@ func (tc *TracedClient) do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	return r.(*http.Response), nil
+	rsp, ok := r.(*http.Response)
+	if !ok {
+		return nil, errors.New("failed to assert response type")
+	}
+
+	return rsp, nil
 }
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {

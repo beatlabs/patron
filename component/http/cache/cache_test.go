@@ -1677,7 +1677,9 @@ func assertCache(t *testing.T, args [][]testArgs) {
 					assert.NotEmpty(t, response.Header[HeaderETagHeader])
 				}
 			}
-			assertMetrics(t, arg.metrics, *monitor.(*testMetrics))
+			tm, ok := monitor.(*testMetrics)
+			assert.True(t, ok)
+			assertMetrics(t, arg.metrics, *tm)
 		}
 	}
 }

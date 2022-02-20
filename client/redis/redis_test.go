@@ -17,7 +17,8 @@ func TestSpan(t *testing.T) {
 	assert.NotNil(t, sp)
 	assert.NotNil(t, req)
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
-	jsp := sp.(*mocktracer.MockSpan)
+	jsp, ok := sp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.NotNil(t, jsp)
 	trace.SpanSuccess(sp)
 	rawSpan := mtr.FinishedSpans()[0]

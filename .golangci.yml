@@ -52,6 +52,7 @@ linters:
     - exhaustive
     - tenv
     - gofumpt
+    - forcetypeassert
     # - promlinter
   fast: false
 

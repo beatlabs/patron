@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/go-redis/redis/extra/rediscmd"
 	"github.com/go-redis/redis/v8"
@@ -88,7 +89,13 @@ func (th tracingHook) AfterProcessPipeline(ctx context.Context, cmds []redis.Cmd
 }
 
 func observeDuration(ctx context.Context, cmd string, err error) {
-	dur := time.Since(ctx.Value(duration{}).(time.Time))
+	start, ok := ctx.Value(duration{}).(time.Time)
+	if !ok {
+		log.Warnf("failed to get start time from context")
+		return
+	}
+
+	dur := time.Since(start)
 	durationHistogram := trace.Histogram{
 		Observer: cmdDurationMetrics.WithLabelValues(cmd, strconv.FormatBool(err == nil)),
 	}

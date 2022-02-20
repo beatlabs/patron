@@ -47,6 +47,7 @@ linters:
     - gocritic
     - errname
     - maligned
+    - predeclared
     # - promlinter
   fast: false
 

@@ -20,7 +20,7 @@ func (oe OpenError) Error() string {
 type status int
 
 const (
-	close status = iota
+	close status = iota //nolint:predeclared
 	open
 )
 

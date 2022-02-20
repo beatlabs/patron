@@ -425,7 +425,7 @@ func (w *dynamicCompressionResponseWriter) WriteHeader(statusCode int) {
 		case identityHeader, "":
 			w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, identityHeader)
 			fallthrough
-		// `*`, `identity` and others must fall through here to be served without compression
+			// `*`, `identity` and others must fall through here to be served without compression
 		default:
 			w.writer = w.ResponseWriter
 		}

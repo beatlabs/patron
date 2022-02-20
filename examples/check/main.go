@@ -22,7 +22,7 @@ func main() {
 	}
 
 	// perform a client call that is supposed to trigger a call across all the services
-	var jsonStr = []byte(`{"firstname":"John","lastname":"Doe"}`)
+	jsonStr := []byte(`{"firstname":"John","lastname":"Doe"}`)
 	req, err := http.NewRequest("POST", "http://localhost:50000/api", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		log.Fatal(err)

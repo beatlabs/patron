@@ -13,8 +13,8 @@ type ReadyStatus int
 const (
 	// Alive represents a state defining a Alive state.
 	Alive AliveStatus = 1
-	// Unresponsive represents a state defining a Unresponsive state.
-	Unresponsive AliveStatus = 2
+	// Unhealthy represents an unhealthy alive state.
+	Unhealthy AliveStatus = 2
 
 	// Ready represents a state defining a Ready state.
 	Ready ReadyStatus = 1
@@ -39,7 +39,7 @@ func LivenessCheckRoute(acf LivenessCheckFunc) *Route {
 		switch acf() {
 		case Alive:
 			w.WriteHeader(http.StatusOK)
-		case Unresponsive:
+		case Unhealthy:
 			w.WriteHeader(http.StatusServiceUnavailable)
 		default:
 			w.WriteHeader(http.StatusOK)

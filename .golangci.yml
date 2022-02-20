@@ -40,6 +40,9 @@ linters:
     - unconvert
     - staticcheck
     - gosec
+    - tparallel
+    - whitespace
+    - revive
   fast: false
 
 issues:

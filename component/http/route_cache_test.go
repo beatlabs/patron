@@ -528,7 +528,7 @@ func (t *testingCache) Remove(key string) error {
 }
 
 // Note : this method will effectively not cache anything
-// e.g. testingCacheEntity.t is `0`
+// e.g. testingCacheEntity.t is `0`.
 func (t *testingCache) Set(key string, value interface{}) error {
 	t.setCount++
 	if t.setErr != nil {

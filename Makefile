@@ -28,7 +28,7 @@ lint: fmtcheck
 	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.44.2 golangci-lint -v run
 
 deeplint: fmtcheck
-	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.44.2 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
+	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.44.2 golangci-lint run --no-config --sort-results --exclude-use-default=false --enable-all --build-tags integration
 
 ci: fmtcheck lint coverci
 

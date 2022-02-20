@@ -12,7 +12,7 @@ type metrics interface {
 	evict(path string, context validationContext, age int64)
 }
 
-// prometheusMetrics is the prometheus implementation for exposing cache metrics
+// prometheusMetrics is the prometheus implementation for exposing cache metrics.
 type prometheusMetrics struct {
 	ageHistogram *prometheus.HistogramVec
 	operations   *prometheus.CounterVec
@@ -39,7 +39,7 @@ func (m *prometheusMetrics) evict(path string, context validationContext, age in
 	m.operations.WithLabelValues(path, "evict", validationReason[context]).Inc()
 }
 
-// newPrometheusMetrics constructs a new prometheus metrics implementation instance
+// newPrometheusMetrics constructs a new prometheus metrics implementation instance.
 func newPrometheusMetrics() *prometheusMetrics {
 	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "http_cache",

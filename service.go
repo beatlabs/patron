@@ -18,7 +18,7 @@ import (
 	"github.com/beatlabs/patron/log/std"
 	patronzerolog "github.com/beatlabs/patron/log/zerolog"
 	"github.com/beatlabs/patron/trace"
-	jaeger "github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go"
 )
 
 const (
@@ -320,7 +320,7 @@ func setupJaegerTracing(name, version string) error {
 		for _, bs := range strings.Split(b, ",") {
 			val, err := strconv.ParseFloat(strings.TrimSpace(bs), 64)
 			if err != nil {
-				return fmt.Errorf("env var for jaeger default buckets contains invalid value: %v", err)
+				return fmt.Errorf("env var for jaeger default buckets contains invalid value: %w", err)
 			}
 			buckets = append(buckets, val)
 		}

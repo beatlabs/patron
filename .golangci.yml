@@ -42,6 +42,8 @@ linters:
     - tparallel
     - whitespace
     - revive
+    - godot
+    - errorlint
   fast: false
 
 issues:

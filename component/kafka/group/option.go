@@ -113,7 +113,7 @@ func BatchMessageDeduplication() OptionFunc {
 	}
 }
 
-// CommitSync instructs the consumer to commit offsets in a blocking operation after processing every batch of messages
+// CommitSync instructs the consumer to commit offsets in a blocking operation after processing every batch of messages.
 func CommitSync() OptionFunc {
 	return func(c *Component) error {
 		if c.saramaConfig != nil && c.saramaConfig.Consumer.Offsets.AutoCommit.Enable {

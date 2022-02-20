@@ -138,8 +138,7 @@ type requestParams struct {
 	timeInstance int64
 }
 
-// responseStruct emulates the patron http response,
-// but this can be any struct in general
+// responseStruct emulates the patron http response but this can be any struct in general.
 type responseStruct struct {
 	Payload interface{}
 	Header  map[string]string
@@ -263,8 +262,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 	assertCache(t, args)
 }
 
-// No cache age configuration
-// this effectively disables the cache
+// No cache age configuration this effectively disables the cache.
 func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 	rc := routeConfig{
 		path: "/",
@@ -1752,7 +1750,7 @@ func (t *testingCache) Remove(key string) error {
 }
 
 // Note : this method will effectively not cache anything
-// e.g. testingCacheEntity.t is `0`
+// e.g. testingCacheEntity.t is `0`.
 func (t *testingCache) Set(key string, value interface{}) error {
 	t.setCount++
 	if t.setErr != nil {

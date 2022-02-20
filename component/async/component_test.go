@@ -100,7 +100,7 @@ func run(ctx context.Context, t *testing.T, builder *proxyBuilder) error {
 	return cmp.Run(ctx)
 }
 
-// TestCreate_ReturnsError expects an error when concurrency > 1 and component does not allow out of order processing
+// TestCreate_ReturnsError expects an error when concurrency > 1 and component does not allow out of order processing.
 func TestCreate_ReturnsError(t *testing.T) {
 	cnr := mockConsumer{}
 	builder := proxyBuilder{
@@ -121,7 +121,7 @@ func TestCreate_ReturnsError(t *testing.T) {
 	assert.EqualError(t, got, want)
 }
 
-// TestRun_ReturnsError expects a consumer consume Error
+// TestRun_ReturnsError expects a consumer consume Error.
 func TestRun_ReturnsError(t *testing.T) {
 	builder := proxyBuilder{
 		cnr: mockConsumer{consumeError: true},
@@ -132,7 +132,7 @@ func TestRun_ReturnsError(t *testing.T) {
 	assert.Equal(t, 0, builder.proc.execs)
 }
 
-// TestRun_WithCancel_CloseError expects a consumer closing error
+// TestRun_WithCancel_CloseError expects a consumer closing error.
 func TestRun_WithCancel_CloseError(t *testing.T) {
 	builder := proxyBuilder{
 		cnr: mockConsumer{clsError: true},
@@ -151,7 +151,7 @@ func TestRun_WithCancel_CloseError(t *testing.T) {
 // TestRun_Process_Error_NackExitStrategy expects a PROC ERROR
 // from an error producing processor
 // which will cause the component to return with an error
-// due to the Nack FailureStrategy
+// due to the Nack FailureStrategy.
 func TestRun_Process_Error_NackExitStrategy(t *testing.T) {
 	builder := proxyBuilder{
 		proc: mockProcessor{errReturn: true},
@@ -173,7 +173,7 @@ func TestRun_Process_Error_NackExitStrategy(t *testing.T) {
 
 // TestRun_Process_Error_NackStrategy expects a PROC ERROR
 // from an error producing processor
-// but due to the Nack FailureStrategy, it will continue processing other messages
+// but due to the Nack FailureStrategy, it will continue processing other messages.
 func TestRun_Process_Error_NackStrategy(t *testing.T) {
 	builder := proxyBuilder{
 		proc: mockProcessor{errReturn: true},
@@ -208,7 +208,7 @@ func TestRun_Process_Error_NackStrategy(t *testing.T) {
 // TestRun_ProcessError_WithNackError expects a PROC ERROR
 // from an error producing processor
 // but also a Nack Error from the message
-// This will cause the component to stop execution, as it cannot execute the Nack failure strategy
+// This will cause the component to stop execution, as it cannot execute the Nack failure strategy.
 func TestRun_ProcessError_WithNackError(t *testing.T) {
 	builder := proxyBuilder{
 		proc: mockProcessor{errReturn: true},
@@ -230,7 +230,7 @@ func TestRun_ProcessError_WithNackError(t *testing.T) {
 }
 
 // TestRun_ParallelProcessError_WithNackError expects a PROC ERROR
-// same as TestRun_ProcessError_WithNackError, just with concurrency
+// same as TestRun_ProcessError_WithNackError, just with concurrency.
 func TestRun_ParallelProcessError_WithNackError(t *testing.T) {
 	builder := proxyBuilder{
 		proc: mockProcessor{errReturn: true},
@@ -255,7 +255,7 @@ func TestRun_ParallelProcessError_WithNackError(t *testing.T) {
 
 // TestRun_Process_Error_AckStrategy expects a PROC ERROR
 // from an error producing processor
-// but due to the Ack FailureStrategy, it will continue processing other messages
+// but due to the Ack FailureStrategy, it will continue processing other messages.
 func TestRun_Process_Error_AckStrategy(t *testing.T) {
 	builder := proxyBuilder{
 		proc: mockProcessor{errReturn: true},
@@ -290,7 +290,7 @@ func TestRun_Process_Error_AckStrategy(t *testing.T) {
 // TestRun_ProcessError_WithAckError expects a PROC ERROR
 // from an error producing processor
 // but also an Ack Error from the message
-// This will cause the component to stop execution, as it cannot execute the Nack failure strategy
+// This will cause the component to stop execution, as it cannot execute the Nack failure strategy.
 func TestRun_ProcessError_WithAckError(t *testing.T) {
 	builder := proxyBuilder{
 		proc: mockProcessor{errReturn: true},
@@ -312,7 +312,7 @@ func TestRun_ProcessError_WithAckError(t *testing.T) {
 }
 
 // TestRun_MessageAckError expects an ack error from the message acknowledgement
-// it will break the execution of the component due to the default NackExit failure strategy
+// it will break the execution of the component due to the default NackExit failure strategy.
 func TestRun_MessageAckError(t *testing.T) {
 	builder := proxyBuilder{
 		cnr: mockConsumer{
@@ -332,7 +332,7 @@ func TestRun_MessageAckError(t *testing.T) {
 
 // TestRun_ConsumeError will break the component execution,
 // when an error is injected into the consumers error channel
-// while using the default NackExit Failure Strategy
+// while using the default NackExit Failure Strategy.
 func TestRun_ConsumeError(t *testing.T) {
 	builder := proxyBuilder{
 		cnr: mockConsumer{
@@ -350,7 +350,7 @@ func TestRun_ConsumeError(t *testing.T) {
 }
 
 // TestRun_ConsumeError_WithRetry will retry the specified amount of times
-// before exiting the execution
+// before exiting the execution.
 func TestRun_ConsumeError_WithRetry(t *testing.T) {
 	retries := 3
 	cf := &mockConsumerFactory{errRet: true}
@@ -368,7 +368,7 @@ func TestRun_ConsumeError_WithRetry(t *testing.T) {
 }
 
 // TestRun_ConsumeError_WithRetry_AndContextCancel will retry after a consumer error
-// only a small amount fo times, due to the context being canceled as well
+// only a small amount fo times, due to the context being canceled as well.
 func TestRun_ConsumeError_WithRetry_AndContextCancel(t *testing.T) {
 	retries := 33
 	cf := &mockConsumerFactory{errRet: true}
@@ -388,7 +388,7 @@ func TestRun_ConsumeError_WithRetry_AndContextCancel(t *testing.T) {
 	assert.Equal(t, 0, builder.proc.execs)
 }
 
-// TestRun_Process_Shutdown verifies the process shuts down on a context cancellation action
+// TestRun_Process_Shutdown verifies the process shuts down on a context cancellation action.
 func TestRun_Process_Shutdown(t *testing.T) {
 	builder := proxyBuilder{
 		cnr: mockConsumer{
@@ -414,7 +414,7 @@ func TestRun_Process_Shutdown(t *testing.T) {
 
 // TestRun_Process_Error_InvalidStrategy expects a invalid failure strategy error
 // NOTE : we injected the failure strategy after the construction,
-// in order to avoid the failure strategy check
+// in order to avoid the failure strategy check.
 func TestRun_Process_Error_InvalidStrategy(t *testing.T) {
 	cnr := mockConsumer{
 		chMsg: make(chan Message, 10),
@@ -443,7 +443,7 @@ func (mm *mockMessage) Context() context.Context {
 	return mm.ctx
 }
 
-// Decode is not called in our tests, because the mockProcessor will ignore the message decoding
+// Decode is not called in our tests, because the mockProcessor will ignore the message decoding.
 func (mm *mockMessage) Decode(interface{}) error {
 	return nil
 }

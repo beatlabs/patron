@@ -11,7 +11,7 @@ github.com/Nvveen/Gotty
 # github.com/Shopify/sarama v1.31.1
 ## explicit
 github.com/Shopify/sarama
-# github.com/aws/aws-sdk-go v1.42.51
+# github.com/aws/aws-sdk-go v1.43.2
 ## explicit
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr

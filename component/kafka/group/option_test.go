@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/stretchr/testify/assert"
 )
@@ -145,6 +146,42 @@ func TestBatchTimeout(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, c.batchTimeout, tt.args.batchTimeout)
+			}
+		})
+	}
+}
+
+func TestNewSessionCallback(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		sessionCallback func(sarama.ConsumerGroupSession) error
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success": {
+			args: args{sessionCallback: func(session sarama.ConsumerGroupSession) error {
+				return nil
+			}},
+		},
+		"nil session callback": {
+			args:        args{},
+			expectedErr: "nil session callback",
+		},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			c := &Component{}
+			err := NewSessionCallback(tt.args.sessionCallback)(c)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+				assert.Nil(t, c.sessionCallback)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, c.sessionCallback)
 			}
 		})
 	}

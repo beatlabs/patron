@@ -310,7 +310,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			h := newConsumerHandler(ctx, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
-				10*time.Millisecond, true, tt.batchMessageDeduplication)
+				10*time.Millisecond, true, tt.batchMessageDeduplication, nil)
 
 			ch := make(chan *sarama.ConsumerMessage, len(tt.msgs))
 			for _, m := range tt.msgs {

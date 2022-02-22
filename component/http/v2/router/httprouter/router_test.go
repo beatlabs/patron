@@ -23,7 +23,7 @@ func TestNew(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":            {args: args{oo: []OptionFunc{Routes(route)}}},
+		"success":            {args: args{oo: []OptionFunc{Routes([]*v2.Route{route})}}},
 		"option func failed": {args: args{oo: []OptionFunc{AliveCheck(nil)}}, expectedErr: "alive check function is nil"},
 	}
 	for name, tt := range tests {
@@ -49,15 +49,16 @@ func TestRoutes(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{routes: []*v2.Route{{}, {}}}},
-		"fail":    {args: args{routes: nil}, expectedErr: "routes are empty"},
+		"success":      {args: args{routes: []*v2.Route{{}, {}}}},
+		"nil slice":    {args: args{routes: nil}, expectedErr: "routes slice is empty or nil"},
+		"empty routes": {args: args{routes: []*v2.Route{}}, expectedErr: "routes slices did not contain routes"},
 	}
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
-			err := Routes(tt.args.routes...)(cfg)
+			err := Routes(tt.args.routes)(cfg)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {

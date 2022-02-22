@@ -72,7 +72,7 @@ func main() {
 		log.Fatalf("failed to create routes: %v", err)
 	}
 
-	router, err := httprouter.New(httprouter.Routes(rr...))
+	router, err := httprouter.New(httprouter.Routes(rr))
 	if err != nil {
 		log.Fatalf("failed to create http router: %v", err)
 	}

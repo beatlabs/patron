@@ -92,7 +92,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	return mux, nil
 }
 
-// Routes option for providing routes to the router.
+// Routes option for providing routes to the router using a variadic slice of routes to support adding slices more effectively.
 func Routes(routeSlices ...[]*v2.Route) OptionFunc {
 	return func(cfg *Config) error {
 		if len(routeSlices) == 0 || routeSlices[0] == nil {

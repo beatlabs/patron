@@ -149,7 +149,7 @@ func NewBuilder() *Builder {
 		httpReadTimeout:     httpReadTimeout,
 		httpWriteTimeout:    httpWriteTimeout,
 		deflateLevel:        deflateLevel,
-		uncompressedPaths:   []string{"/metrics", "/alive", "/ready"},
+		uncompressedPaths:   []string{MetricsPath, AlivePath, ReadyPath},
 		shutdownGracePeriod: shutdownGracePeriod,
 		routesBuilder:       NewRoutesBuilder(),
 		errors:              errs,

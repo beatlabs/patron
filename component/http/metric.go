@@ -9,5 +9,5 @@ import (
 const MetricsPath = "/metrics"
 
 func metricRoute() *RouteBuilder {
-	return NewRawRouteBuilder("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{EnableOpenMetrics: true}).ServeHTTP).MethodGet()
+	return NewRawRouteBuilder(MetricsPath, promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{EnableOpenMetrics: true}).ServeHTTP).MethodGet()
 }

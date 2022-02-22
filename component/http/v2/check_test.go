@@ -10,6 +10,7 @@ import (
 )
 
 func Test_aliveCheckRoute(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		acf  LivenessCheckFunc
 		want int
@@ -19,7 +20,9 @@ func Test_aliveCheckRoute(t *testing.T) {
 		"default":      {func() AliveStatus { return 10 }, http.StatusOK},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			route, err := LivenessCheckRoute(tt.acf)
 			assert.NoError(t, err)
 			assert.Equal(t, http.MethodGet, route.method)
@@ -37,6 +40,7 @@ func Test_aliveCheckRoute(t *testing.T) {
 }
 
 func Test_readyCheckRoute(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		rcf  ReadyCheckFunc
 		want int
@@ -46,7 +50,9 @@ func Test_readyCheckRoute(t *testing.T) {
 		"default":  {func() ReadyStatus { return 10 }, http.StatusOK},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			route, err := ReadyCheckRoute(tt.rcf)
 			assert.NoError(t, err)
 			assert.Equal(t, http.MethodGet, route.method)

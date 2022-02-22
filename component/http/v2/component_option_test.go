@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSSL(t *testing.T) {
+func TestTLS(t *testing.T) {
 	t.Parallel()
 	type args struct {
 		cert string
@@ -26,7 +26,7 @@ func TestSSL(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
-			err := SSL(tt.args.cert, tt.args.key)(cmp)
+			err := TLS(tt.args.cert, tt.args.key)(cmp)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

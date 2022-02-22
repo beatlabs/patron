@@ -8,8 +8,8 @@ import (
 // OptionFunc definition for configuring the component in a functional way.
 type OptionFunc func(*Component) error
 
-// SSL functional option.
-func SSL(cert, key string) OptionFunc {
+// TLS functional option.
+func TLS(cert, key string) OptionFunc {
 	return func(cmp *Component) error {
 		if cert == "" || key == "" {
 			return errors.New("cert file or key file was empty")

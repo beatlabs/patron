@@ -34,6 +34,7 @@ type Component struct {
 	keyFile             string
 }
 
+// New creates an HTTP component configurable by functional options.
 func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 	if handler == nil {
 		return nil, errors.New("handler is nil")
@@ -58,7 +59,7 @@ func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 	return cmp, nil
 }
 
-// Run starts the HTTP server.
+// Run starts the HTTP server and returns only if listening and/or serving failed, or if the context was canceled.
 func (c *Component) Run(ctx context.Context) error {
 	c.mu.Lock()
 	chFail := make(chan error)

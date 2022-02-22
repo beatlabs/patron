@@ -44,8 +44,18 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	mux := httprouter.New()
 	stdRoutes = append(stdRoutes, v2.MetricRoute())
 	stdRoutes = append(stdRoutes, v2.ProfilingRoutes()...)
-	stdRoutes = append(stdRoutes, v2.LivenessCheckRoute(cfg.aliveCheckFunc))
-	stdRoutes = append(stdRoutes, v2.ReadyCheckRoute(cfg.readyCheckFunc))
+
+	route, err := v2.LivenessCheckRoute(cfg.aliveCheckFunc)
+	if err != nil {
+		return nil, err
+	}
+	stdRoutes = append(stdRoutes, route)
+
+	route, err = v2.ReadyCheckRoute(cfg.readyCheckFunc)
+	if err != nil {
+		return nil, err
+	}
+	stdRoutes = append(stdRoutes, route)
 
 	for _, route := range stdRoutes {
 		handler := middleware.Chain(route.Handler(), middleware.NewRecovery())

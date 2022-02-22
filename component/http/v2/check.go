@@ -34,7 +34,7 @@ type ReadyCheckFunc func() ReadyStatus
 type LivenessCheckFunc func() AliveStatus
 
 // LivenessCheckRoute returns a route for liveness checks.
-func LivenessCheckRoute(acf LivenessCheckFunc) *Route {
+func LivenessCheckRoute(acf LivenessCheckFunc) (*Route, error) {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch acf() {
 		case Alive:
@@ -45,12 +45,12 @@ func LivenessCheckRoute(acf LivenessCheckFunc) *Route {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	route, _ := NewRoute(http.MethodGet, AlivePath, f)
-	return route
+
+	return NewRoute(http.MethodGet, AlivePath, f)
 }
 
 // ReadyCheckRoute returns a route for ready checks.
-func ReadyCheckRoute(rcf ReadyCheckFunc) *Route {
+func ReadyCheckRoute(rcf ReadyCheckFunc) (*Route, error) {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		switch rcf() {
 		case Ready:
@@ -61,6 +61,6 @@ func ReadyCheckRoute(rcf ReadyCheckFunc) *Route {
 			w.WriteHeader(http.StatusOK)
 		}
 	}
-	route, _ := NewRoute(http.MethodGet, ReadyPath, f)
-	return route
+
+	return NewRoute(http.MethodGet, ReadyPath, f)
 }

@@ -20,7 +20,8 @@ func Test_aliveCheckRoute(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			route := LivenessCheckRoute(tt.acf)
+			route, err := LivenessCheckRoute(tt.acf)
+			assert.NoError(t, err)
 			assert.Equal(t, http.MethodGet, route.method)
 			assert.Equal(t, "/alive", route.path)
 
@@ -46,7 +47,8 @@ func Test_readyCheckRoute(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			route := ReadyCheckRoute(tt.rcf)
+			route, err := ReadyCheckRoute(tt.rcf)
+			assert.NoError(t, err)
 			assert.Equal(t, http.MethodGet, route.method)
 			assert.Equal(t, "/ready", route.path)
 

@@ -2,6 +2,8 @@ package v2
 
 import (
 	"net/http"
+
+	"github.com/beatlabs/patron/log"
 )
 
 // AliveStatus type representing the liveness of the service via HTTP component.
@@ -36,13 +38,15 @@ type LivenessCheckFunc func() AliveStatus
 // LivenessCheckRoute returns a route for liveness checks.
 func LivenessCheckRoute(acf LivenessCheckFunc) (*Route, error) {
 	f := func(w http.ResponseWriter, r *http.Request) {
-		switch acf() {
+		val := acf()
+		switch val {
 		case Alive:
 			w.WriteHeader(http.StatusOK)
 		case Unhealthy:
 			w.WriteHeader(http.StatusServiceUnavailable)
 		default:
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			log.FromContext(r.Context()).Errorf("wrong live check status returned: %d", val)
 		}
 	}
 
@@ -52,13 +56,15 @@ func LivenessCheckRoute(acf LivenessCheckFunc) (*Route, error) {
 // ReadyCheckRoute returns a route for ready checks.
 func ReadyCheckRoute(rcf ReadyCheckFunc) (*Route, error) {
 	f := func(w http.ResponseWriter, r *http.Request) {
-		switch rcf() {
+		val := rcf()
+		switch val {
 		case Ready:
 			w.WriteHeader(http.StatusOK)
 		case NotReady:
 			w.WriteHeader(http.StatusServiceUnavailable)
 		default:
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			log.FromContext(r.Context()).Errorf("wrong ready check status returned: %d", val)
 		}
 	}
 

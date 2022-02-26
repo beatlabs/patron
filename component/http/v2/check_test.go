@@ -17,7 +17,7 @@ func Test_aliveCheckRoute(t *testing.T) {
 	}{
 		"alive":        {func() AliveStatus { return Alive }, http.StatusOK},
 		"unresponsive": {func() AliveStatus { return Unhealthy }, http.StatusServiceUnavailable},
-		"default":      {func() AliveStatus { return 10 }, http.StatusOK},
+		"default":      {func() AliveStatus { return 10 }, http.StatusServiceUnavailable},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -47,7 +47,7 @@ func Test_readyCheckRoute(t *testing.T) {
 	}{
 		"ready":    {func() ReadyStatus { return Ready }, http.StatusOK},
 		"notReady": {func() ReadyStatus { return NotReady }, http.StatusServiceUnavailable},
-		"default":  {func() ReadyStatus { return 10 }, http.StatusOK},
+		"default":  {func() ReadyStatus { return 10 }, http.StatusServiceUnavailable},
 	}
 	for name, tt := range tests {
 		tt := tt

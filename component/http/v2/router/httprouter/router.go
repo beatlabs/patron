@@ -18,18 +18,20 @@ type OptionFunc func(*Config) error
 
 // Config definition.
 type Config struct {
-	aliveCheckFunc v2.LivenessCheckFunc
-	readyCheckFunc v2.ReadyCheckFunc
-	deflateLevel   int
-	middlewares    []middleware.Func
-	routes         []*v2.Route
+	aliveCheckFunc  v2.LivenessCheckFunc
+	readyCheckFunc  v2.ReadyCheckFunc
+	deflateLevel    int
+	middlewares     []middleware.Func
+	routes          []*v2.Route
+	enableProfiling bool
 }
 
 func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	cfg := &Config{
-		aliveCheckFunc: func() v2.AliveStatus { return v2.Alive },
-		readyCheckFunc: func() v2.ReadyStatus { return v2.Ready },
-		deflateLevel:   defaultDeflateLevel,
+		aliveCheckFunc:  func() v2.AliveStatus { return v2.Alive },
+		readyCheckFunc:  func() v2.ReadyStatus { return v2.Ready },
+		deflateLevel:    defaultDeflateLevel,
+		enableProfiling: true,
 	}
 
 	for _, option := range oo {
@@ -154,6 +156,14 @@ func Middlewares(mm ...middleware.Func) OptionFunc {
 			return errors.New("middlewares are empty")
 		}
 		cfg.middlewares = mm
+		return nil
+	}
+}
+
+// DisableProfiling option for middlewares.
+func DisableProfiling() OptionFunc {
+	return func(cfg *Config) error {
+		cfg.enableProfiling = false
 		return nil
 	}
 }

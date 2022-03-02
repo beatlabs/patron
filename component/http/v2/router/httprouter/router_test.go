@@ -156,3 +156,11 @@ func TestMiddlewares(t *testing.T) {
 		})
 	}
 }
+
+func TestDisableProfiling(t *testing.T) {
+	t.Parallel()
+	cfg := &Config{}
+	err := DisableProfiling()(cfg)
+	assert.NoError(t, err)
+	assert.False(t, cfg.enableProfiling)
+}

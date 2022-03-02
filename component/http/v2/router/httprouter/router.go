@@ -45,7 +45,10 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 
 	mux := httprouter.New()
 	stdRoutes = append(stdRoutes, v2.MetricRoute())
-	stdRoutes = append(stdRoutes, v2.ProfilingRoutes()...)
+
+	if cfg.enableProfiling {
+		stdRoutes = append(stdRoutes, v2.ProfilingRoutes()...)
+	}
 
 	route, err := v2.LivenessCheckRoute(cfg.aliveCheckFunc)
 	if err != nil {

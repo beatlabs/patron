@@ -504,7 +504,7 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 		"remote-address": remoteAddr,
 		"proto":          r.Proto,
 	}
-	log.FromContext(r.Context()).Sub(info).Debug()
+	log.FromContext(r.Context()).Sub(info).Debug("request log")
 }
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {

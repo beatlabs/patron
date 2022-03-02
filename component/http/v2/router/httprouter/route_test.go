@@ -21,8 +21,8 @@ func TestNewFileServerRoute(t *testing.T) {
 	}{
 		"success": {args: args{
 			path:         "/frontend/*path",
-			assetsDir:    "public/",
-			fallbackPath: "public/index.html",
+			assetsDir:    "testdata/",
+			fallbackPath: "testdata/index.html",
 		}},
 		"missing path": {args: args{
 			path:         "",
@@ -60,7 +60,7 @@ func TestNewFileServerRoute(t *testing.T) {
 }
 
 func TestFileServerRouteHandler(t *testing.T) {
-	handler, err := NewFileServerRoute("/frontend/*path", "public/", "public/index.html")
+	handler, err := NewFileServerRoute("/frontend/*path", "testdata/", "testdata/index.html")
 	require.NoError(t, err)
 
 	type args struct {

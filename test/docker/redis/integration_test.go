@@ -126,6 +126,6 @@ func TestClient(t *testing.T) {
 	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["component"], "redis")
 	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["error"], false)
 	assert.Regexp(t, `:\d+`, mtr.FinishedSpans()[0].Tags()["db.instance"])
-	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["db.statement"], "set key value")
+	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["db.statement"], "set")
 	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["db.type"], "kv")
 }

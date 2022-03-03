@@ -62,14 +62,14 @@ type tracingHook struct {
 }
 
 func (th tracingHook) BeforeProcess(ctx context.Context, cmd redis.Cmder) (context.Context, error) {
-	_, ctx = startSpan(ctx, th.address, rediscmd.CmdString(cmd))
+	_, ctx = startSpan(ctx, th.address, cmd.FullName())
 	return context.WithValue(ctx, duration{}, time.Now()), nil
 }
 
 func (th tracingHook) AfterProcess(ctx context.Context, cmd redis.Cmder) error {
 	span := opentracing.SpanFromContext(ctx)
 	trace.SpanComplete(span, cmd.Err())
-	observeDuration(ctx, rediscmd.CmdString(cmd), cmd.Err())
+	observeDuration(ctx, cmd.FullName(), cmd.Err())
 	return nil
 }
 

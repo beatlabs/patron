@@ -93,26 +93,12 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	return mux, nil
 }
 
-// Routes option for providing routes to the router using a variadic slice of routes to support adding slices more effectively.
-func Routes(routeSlices ...[]*v2.Route) OptionFunc {
+// Routes option for providing routes to the router.
+func Routes(routes ...*v2.Route) OptionFunc {
 	return func(cfg *Config) error {
-		if len(routeSlices) == 0 || routeSlices[0] == nil {
-			return errors.New("routes slice is empty or nil")
-		}
-
-		var routes []*v2.Route
-
-		for _, rt := range routeSlices {
-			if len(rt) == 0 {
-				continue
-			}
-			routes = append(routes, rt...)
-		}
-
 		if len(routes) == 0 {
-			return errors.New("routes slices did not contain routes")
+			return errors.New("routes are empty")
 		}
-
 		cfg.routes = routes
 		return nil
 	}

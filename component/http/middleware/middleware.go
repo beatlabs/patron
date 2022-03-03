@@ -366,7 +366,7 @@ func isErrConnectionReset(err error) bool {
 	errMsg := err.Error()
 
 	// See the explanation here: https://github.com/aws/aws-sdk-go/issues/2525#issuecomment-519263830
-	// It is a little bit vague, but it seems they mean that this specific error happens when we stopped reading for some reason
+	// It is a little vague, but it seems they mean that this specific error happens when we stopped reading for some reason
 	// even though there was something to read. This might have happened due to a wrong length header for example.
 	// So it might've been our error, not an error of remote server when it closes connection unexpectedly.
 	if strings.Contains(errMsg, "read: connection reset") {

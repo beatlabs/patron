@@ -16,7 +16,7 @@ type Cache struct {
 	ctx context.Context
 }
 
-// Options exposes the options struct from go-redis package.
+// Options exposes the struct from go-redis package.
 type Options redis.Options
 
 // New returns a new Redis client that will be used as the cache store.

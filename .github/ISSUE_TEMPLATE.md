@@ -3,7 +3,7 @@ Welcome to the patron framework project.
 
 - Please search for existing issues to avoid creating duplicate bugs/feature requests.
 - Please be respectful and considerate of others when commenting on issues.
-- Please provide as much information as possible so we all understand the issue.
+- Please provide as much information as possible, so we all understand the issue.
 
 -->
 

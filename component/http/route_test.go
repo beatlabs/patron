@@ -191,7 +191,7 @@ func TestRouteBuilder_Build(t *testing.T) {
 	t.Parallel()
 	mockAuth := &MockAuthenticator{}
 	mockProcessor := func(context.Context, *Request) (*Response, error) { return nil, nil }
-	middleware := func(next http.Handler) http.Handler { return next }
+	mw := func(next http.Handler) http.Handler { return next }
 	type fields struct {
 		path          string
 		missingMethod bool
@@ -208,7 +208,7 @@ func TestRouteBuilder_Build(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			rb := NewRouteBuilder(tt.fields.path, mockProcessor).WithTrace().WithAuth(mockAuth).WithMiddlewares(middleware).WithRateLimiting(5, 50)
+			rb := NewRouteBuilder(tt.fields.path, mockProcessor).WithTrace().WithAuth(mockAuth).WithMiddlewares(mw).WithRateLimiting(5, 50)
 			if !tt.fields.missingMethod {
 				rb.MethodGet()
 			}

@@ -53,9 +53,9 @@ func main() {
 
 	var routes v2.Routes
 	routes.Append(v2.NewGetRoute("/", handler, v2.Cache(cache, httpcache.Age{
-		// we wont allow to override the cache more than once per 15 seconds
+		// we won't allow to override the cache more than once per 15 seconds
 		Min: 15 * time.Second,
-		// by default we might send stale response for up to 1 minute
+		// by default, we might send stale response for up to 1 minute
 		Max: 60 * time.Second,
 	})))
 	rr, err := routes.Result()
@@ -79,7 +79,7 @@ func main() {
 	}
 }
 
-// handler gives the 7 minute interval of the current unix timestamp
+// handler gives the 7-minute interval of the current unix timestamp
 // since the response will be the same for the next 7 minutes, it s a good use-case to apply caching
 func handler(rw http.ResponseWriter, _ *http.Request) {
 	now := time.Now()

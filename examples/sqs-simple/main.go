@@ -72,7 +72,7 @@ func sampleSqs() (*async.Component, error) {
 		sqsClient,
 		sampleConfig.name,
 		// Optionally override the queue's default polling setting.
-		// Long polling is highly recommended to avoid large costs on AWS.
+		// Long polling is highly recommended avoiding large costs on AWS.
 		// See https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html
 		// It's probably best to not specify any value: the default value on the queue will be used.
 		patronsqs.PollWaitSeconds(20),
@@ -93,7 +93,7 @@ func sampleSqs() (*async.Component, error) {
 	// The max number of retires of a message is determined by the SQS queue, not the consumer.
 	return async.New("sqs", factory, messageHandler).
 		// Note that NackExitStrategy does not work with concurrency, so we need to pick either Nack or Ack Strategy
-		// Ack strategy is not recommended for SQS: we want failed messages to end up in the dead letter queue
+		// is not recommended for SQS: we want failed messages to end up in the dead letter queue
 		WithFailureStrategy(async.NackStrategy).
 		WithRetries(3).
 		WithRetryWait(30 * time.Second).

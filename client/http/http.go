@@ -41,12 +41,12 @@ func init() {
 	prometheus.MustRegister(reqDurationMetrics)
 }
 
-// Client interface of a HTTP client.
+// Client interface of an HTTP client.
 type Client interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// TracedClient defines a HTTP client with tracing integrated.
+// TracedClient defines an HTTP client with tracing integrated.
 type TracedClient struct {
 	cl *http.Client
 	cb *circuitbreaker.CircuitBreaker

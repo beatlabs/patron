@@ -109,7 +109,7 @@ func newAsyncKafkaProducer(kafkaBroker, topic string, readCommitted bool) (*kafk
 	return &kafkaProducer{prd: prd, topic: topic}, nil
 }
 
-// forwardToKafkaHandler is an http handler that decodes the input request and
+// forwardToKafkaHandler is a http handler that decodes the input request and
 // publishes the decoded content as a message into a kafka topic (also does an HTTP GET request to google.com)
 func (hc *kafkaProducer) forwardToKafkaHandler(rw http.ResponseWriter, r *http.Request) {
 	var u examples.User

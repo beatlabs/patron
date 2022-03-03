@@ -36,7 +36,7 @@ type Component interface {
 }
 
 // service is responsible for managing and setting up everything.
-// The service will start by default a HTTP component in order to host management endpoint.
+// The service will start by default an HTTP component in order to host management endpoint.
 type service struct {
 	name              string
 	cps               []Component
@@ -462,7 +462,7 @@ func (b *Builder) WithComponents(cc ...Component) *Builder {
 	return b
 }
 
-// WithSIGHUP adds a custom handler for when the service receives a SIGHUP.
+// WithSIGHUP adds a custom handler for handling SIGHUP.
 func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	if handler == nil {
 		b.errors = append(b.errors, errors.New("provided SIGHUP handler was nil"))

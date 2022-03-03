@@ -2,7 +2,7 @@
 Thanks for taking precious time for making a PR.
 
 Before creating a pull request, please make sure:
-- Your PR solves one problem for which a issue exist and a solution has been discussed
+- Your PR solves one problem for which an issue exist and a solution has been discussed
 - You have read the guide for contributing
   - See https://github.com/beatlabs/patron/blob/master/README.md#how-to-contribute
 - You signed all your commits (otherwise we won't be able to merge the PR)

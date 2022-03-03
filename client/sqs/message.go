@@ -10,13 +10,13 @@ import (
 
 const attributeDataTypeString string = "String"
 
-// MessageBuilder helps building messages to be sent to SQS.
+// MessageBuilder helps to build messages to be sent to SQS.
 type MessageBuilder struct {
 	err   error
 	input *sqs.SendMessageInput
 }
 
-// NewMessageBuilder creates a new MessageBuilder that helps creating messages.
+// NewMessageBuilder creates a new MessageBuilder that helps to create messages.
 //
 // Deprecated: The SQS client package is superseded by the `github.com/beatlabs/client/sqs/v2` package.
 // Please refer to the documents and the examples for the usage.

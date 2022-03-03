@@ -11,7 +11,7 @@ import (
 // RouteOptionFunc definition for configuring the route in a functional way.
 type RouteOptionFunc func(route *Route) error
 
-// Route definition of a HTTP route.
+// Route definition of an HTTP route.
 type Route struct {
 	method      string
 	path        string

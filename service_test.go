@@ -123,8 +123,8 @@ func TestNewServer(t *testing.T) {
 					assert.Contains(t, gotService.cps, comp)
 				}
 
-				for _, middleware := range tt.middlewares {
-					assert.NotNil(t, middleware)
+				for _, mw := range tt.middlewares {
+					assert.NotNil(t, mw)
 				}
 			}
 		})

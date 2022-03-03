@@ -36,7 +36,7 @@ func init() {
 		fmt.Printf("failed to set sampler env vars: %v", err)
 		os.Exit(1)
 	}
-	// allows to run from any folder the 'go run examples/http/main.go'
+	// allows running from any folder the 'go run examples/http/main.go'
 	var ok bool
 	assetsFolder, ok = os.LookupEnv("PATRON_EXAMPLE_ASSETS_FOLDER")
 	if !ok {

@@ -15,7 +15,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-// Route definition of a HTTP route.
+// Route definition of an HTTP route.
 type Route struct {
 	path        string
 	method      string

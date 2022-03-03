@@ -1,4 +1,4 @@
-// Package http provides a HTTP component with included observability.
+// Package http provides an HTTP component with included observability.
 package http
 
 import (

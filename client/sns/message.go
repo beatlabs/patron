@@ -22,13 +22,13 @@ const (
 	tracingTargetUnknown     = "unknown"
 )
 
-// MessageBuilder helps building messages to be sent to SNS.
+// MessageBuilder helps to build messages to be sent to SNS.
 type MessageBuilder struct {
 	err   error
 	input *sns.PublishInput
 }
 
-// NewMessageBuilder creates a new MessageBuilder that helps creating messages.
+// NewMessageBuilder creates a new MessageBuilder that helps to create messages.
 //
 // Deprecated: The SNS client package is superseded by the `github.com/beatlabs/client/sns/v2` package.
 // Please refer to the documents and the examples for the usage.
@@ -110,7 +110,7 @@ func (b *MessageBuilder) WithStringAttribute(name string, value string) *Message
 	return b
 }
 
-// WithStringArrayAttribute attaches an array of strings attribute to the message.
+// WithStringArrayAttribute attaches an array of strings attributes to the message.
 //
 // The accepted values types are string, number, boolean and nil. Any other type will throw an error.
 func (b *MessageBuilder) WithStringArrayAttribute(name string, values []interface{}) *MessageBuilder {
@@ -163,7 +163,7 @@ func (b *MessageBuilder) WithBinaryAttribute(name string, value []byte) *Message
 	return b
 }
 
-// addAttributeValue creates a base attribute value and adds it to the the list of attribute values.
+// addAttributeValue creates a base attribute value and adds it to the list of attribute values.
 func (b *MessageBuilder) addAttributeValue(name string, dataType attributeDataType) *sns.MessageAttributeValue {
 	attributeValue := &sns.MessageAttributeValue{}
 	attributeValue.SetDataType(string(dataType))

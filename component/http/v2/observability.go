@@ -50,7 +50,7 @@ func ProfilingRoutes(enableExpVar bool) []*Route {
 }
 
 // Replicated from expvar.go as not public.
-func expVars(w http.ResponseWriter, r *http.Request) {
+func expVars(w http.ResponseWriter, _ *http.Request) {
 	first := true
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = fmt.Fprintf(w, "{\n")

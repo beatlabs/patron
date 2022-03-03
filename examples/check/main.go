@@ -13,7 +13,7 @@ import (
 // this program is meant to be used to check the whole 'examples' cluster. It's meant to be put in the CI
 // so that new developments do not break the examples. We can see this as a single E2E test check
 // the program is supposed to start a transaction that flows through all the services under the 'examples'
-// folder and than check that the transaction actually triggered all the services in the chain until the
+// folder and then check that the transaction actually triggered all the services in the chain until the
 // 'leaves'
 func main() {
 	// create simple client with timeout set to 1 second
@@ -74,9 +74,9 @@ func main() {
 		responses[svc] = rsp
 	}
 
-	// To check that the message flowed across all of the services we check the leaves of the message flow.
+	// To check that the message flowed across all the services we check the leaves of the message flow.
 	// The leaves are 'grpc-svc' and 'http-cache-svc'
-	// To check that the message made through them we check that the metrics endpoint contain certain strings
+	// To check that the message made through them, we check that the metrics endpoint contain certain strings
 	// by using a regex
 
 	// services to url map

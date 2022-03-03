@@ -47,7 +47,7 @@ func (cb *Builder) WithReadTimeout(rt time.Duration) *Builder {
 	// ...
 }
 
-// WithWriteTimeout sets the Write Timeout for the HTTP component.
+// WithWriteTimeout sets the write timeout for the HTTP component.
 func (cb *Builder) WithWriteTimeout(wt time.Duration) *Builder {
 	// ...
 }
@@ -118,7 +118,7 @@ You can create new middleware functions and pass them to Service to be chained o
 ```go
 type MiddlewareFunc func(next http.Handler) http.Handler
 
-// Setup a simple middleware for CORS
+// Set up a simple middleware for CORS
 newMiddleware := func(h http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         w.Header().Add("Access-Control-Allow-Origin", "*")
@@ -499,13 +499,13 @@ The http cache exposes several metrics, used to
 - help trim the optimal time-to-live policy
 - identify client control interference
 
-By default we are using prometheus as the the pre-defined metrics framework.
+By default, we are using prometheus as the pre-defined metrics framework.
 
 - `additions = misses + evictions`
 
 Always , the cache addition operations (objects added to the cache), 
 must be equal to the misses (requests that were not cached) plus the evictions (expired objects).
-Otherwise we would expect to notice also an increased amount of errors or having the cache misbehaving in a different manner.
+Otherwise, we would expect to notice also an increased amount of errors or having the cache misbehaving in a different manner.
 
 - `additions ~ misses`
 
@@ -522,7 +522,7 @@ this would signify that probably a cache is not a good option for the access pat
 - `eviction age`
 
 The age at which the objects are evicted from the cache is a very useful indicator. 
-If the vast amount of evictions are close to the time to live setting, it would indicate a nicely working cache.
+If the vast amount of evictions is close to the time to live setting, it would indicate a nicely working cache.
 If we find that many evictions happen before the time to live threshold, clients would be making use cache-control headers.
  
 

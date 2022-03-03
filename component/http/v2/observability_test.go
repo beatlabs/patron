@@ -24,20 +24,57 @@ func Test_metricRoute(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.Code)
 }
 
-func TestProfilingRoutes(t *testing.T) {
-	mux := http.NewServeMux()
+type profilingTestCase struct {
+	path string
+	want int
+}
 
-	for _, route := range ProfilingRoutes() {
+func TestProfilingRoutes(t *testing.T) {
+	t.Run("without vars", func(t *testing.T) {
+		server := createProfilingServer(false)
+		defer server.Close()
+
+		for name, tt := range createProfilingTestCases(false) {
+			tt := tt
+			t.Run(name, func(t *testing.T) {
+				resp, err := http.Get(fmt.Sprintf("%s/%s", server.URL, tt.path))
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, resp.StatusCode)
+			})
+		}
+	})
+
+	t.Run("with vars", func(t *testing.T) {
+		server := createProfilingServer(true)
+		defer server.Close()
+
+		for name, tt := range createProfilingTestCases(true) {
+			tt := tt
+			t.Run(name, func(t *testing.T) {
+				resp, err := http.Get(fmt.Sprintf("%s/%s", server.URL, tt.path))
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, resp.StatusCode)
+			})
+		}
+	})
+}
+
+func createProfilingServer(enableExpVar bool) *httptest.Server {
+	mux := http.NewServeMux()
+	for _, route := range ProfilingRoutes(enableExpVar) {
 		mux.HandleFunc(route.path, route.handler)
 	}
 
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	return httptest.NewServer(mux)
+}
 
-	tests := map[string]struct {
-		path string
-		want int
-	}{
+func createProfilingTestCases(enableExpVar bool) map[string]profilingTestCase {
+	expVarWant := 404
+	if enableExpVar {
+		expVarWant = 200
+	}
+
+	return map[string]profilingTestCase{
 		"index":        {"/debug/pprof/", 200},
 		"allocs":       {"/debug/pprof/allocs/", 200},
 		"cmdline":      {"/debug/pprof/cmdline/", 200},
@@ -49,14 +86,6 @@ func TestProfilingRoutes(t *testing.T) {
 		"block":        {"/debug/pprof/block/", 200},
 		"threadcreate": {"/debug/pprof/threadcreate/", 200},
 		"mutex":        {"/debug/pprof/mutex/", 200},
-		"vars":         {"/debug/vars/", 200},
-	}
-	for name, tt := range tests {
-		tt := tt
-		t.Run(name, func(t *testing.T) {
-			resp, err := http.Get(fmt.Sprintf("%s/%s", server.URL, tt.path))
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, resp.StatusCode)
-		})
+		"vars":         {"/debug/vars/", expVarWant},
 	}
 }

@@ -14,12 +14,16 @@ const (
 	MetricsPath = "/metrics"
 )
 
+// MetricRoute returns a
 func MetricRoute() *Route {
-	route, _ := NewRoute(http.MethodGet, MetricsPath, promhttp.Handler().ServeHTTP)
-	return route
+	return &Route{
+		method:  http.MethodGet,
+		path:    MetricsPath,
+		handler: promhttp.Handler().ServeHTTP,
+	}
 }
 
-func ProfilingRoutes() []*Route {
+func ProfilingRoutes(enableExpVar bool) []*Route {
 	var routes []*Route
 
 	routeFunc := func(path string, handler http.HandlerFunc) *Route {
@@ -38,7 +42,9 @@ func ProfilingRoutes() []*Route {
 	routes = append(routes, routeFunc("/debug/pprof/block/", pprof.Handler("block").ServeHTTP))
 	routes = append(routes, routeFunc("/debug/pprof/threadcreate/", pprof.Handler("threadcreate").ServeHTTP))
 	routes = append(routes, routeFunc("/debug/pprof/mutex/", pprof.Handler("mutex").ServeHTTP))
-	routes = append(routes, routeFunc("/debug/vars/", expVars))
+	if enableExpVar {
+		routes = append(routes, routeFunc("/debug/vars/", expVars))
+	}
 
 	return routes
 }

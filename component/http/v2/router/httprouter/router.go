@@ -18,20 +18,19 @@ type OptionFunc func(*Config) error
 
 // Config definition.
 type Config struct {
-	aliveCheckFunc  v2.LivenessCheckFunc
-	readyCheckFunc  v2.ReadyCheckFunc
-	deflateLevel    int
-	middlewares     []middleware.Func
-	routes          []*v2.Route
-	enableProfiling bool
+	aliveCheckFunc        v2.LivenessCheckFunc
+	readyCheckFunc        v2.ReadyCheckFunc
+	deflateLevel          int
+	middlewares           []middleware.Func
+	routes                []*v2.Route
+	enableProfilingExpVar bool
 }
 
 func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	cfg := &Config{
-		aliveCheckFunc:  func() v2.AliveStatus { return v2.Alive },
-		readyCheckFunc:  func() v2.ReadyStatus { return v2.Ready },
-		deflateLevel:    defaultDeflateLevel,
-		enableProfiling: true,
+		aliveCheckFunc: func() v2.AliveStatus { return v2.Alive },
+		readyCheckFunc: func() v2.ReadyStatus { return v2.Ready },
+		deflateLevel:   defaultDeflateLevel,
 	}
 
 	for _, option := range oo {
@@ -45,10 +44,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 
 	mux := httprouter.New()
 	stdRoutes = append(stdRoutes, v2.MetricRoute())
-
-	if cfg.enableProfiling {
-		stdRoutes = append(stdRoutes, v2.ProfilingRoutes()...)
-	}
+	stdRoutes = append(stdRoutes, v2.ProfilingRoutes(cfg.enableProfilingExpVar)...)
 
 	route, err := v2.LivenessCheckRoute(cfg.aliveCheckFunc)
 	if err != nil {
@@ -163,10 +159,10 @@ func Middlewares(mm ...middleware.Func) OptionFunc {
 	}
 }
 
-// DisableProfiling option for middlewares.
-func DisableProfiling() OptionFunc {
+// EnableExpVarProfiling option for enabling expVar in profiling endpoints.
+func EnableExpVarProfiling() OptionFunc {
 	return func(cfg *Config) error {
-		cfg.enableProfiling = false
+		cfg.enableProfilingExpVar = true
 		return nil
 	}
 }

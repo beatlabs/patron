@@ -58,7 +58,6 @@ func TestSetup(t *testing.T) {
 }
 
 func TestFromContext(t *testing.T) {
-	t.Parallel()
 	logger = &nilLogger{}
 	lg := &nilLogger{}
 	ctxWith := WithContext(context.Background(), logger)
@@ -77,7 +76,6 @@ func TestFromContext(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 			got := FromContext(tt.args.ctx)
 			assert.Equal(t, tt.want, got)
 		})

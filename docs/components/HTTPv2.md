@@ -12,19 +12,23 @@ The component provides out of the box:
 - metrics and distributed traces
 - profiling using the standard `net/http/pprof` package
 
-The [examples](../../examples) folder contains various use cases.
+The [example](../../examples) folder contains various use cases.
+
+The component create is then passed to the functional option of the Patron services, which replaces the default legacy HTTP handler
+with the new HTTP handler.
 
 ## httprouter
 
 The implementation provides the following:
 
-- file server route for helping us serving files
+- file server route for helping us serving files e.g. SPA
 - functional options to set up the handler e.g. live and readiness checks, middlewares, routes, compression, etc.
 
-The implementation automatically adds to every route provided our standard middlewares that handle:
+In the handler creation process are adding automatically to every route our standard middlewares that handle:
 
 - recovery from panics
 - configurable logging
 - tracing
 - metrics
 - compression
+

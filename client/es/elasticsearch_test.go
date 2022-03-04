@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
@@ -179,8 +180,8 @@ func TestGetAddrFromEnv(t *testing.T) {
 	addr := getAddrFromEnv()
 	assert.Equal(t, defaultHost+":"+defaultPort, addr)
 
-	t.Setenv(defaultHostEnv, "http://10.1.1.1")
-	t.Setenv(defaultPortEnv, "9300")
+	assert.NoError(t, os.Setenv(defaultHostEnv, "http://10.1.1.1"))
+	assert.NoError(t, os.Setenv(defaultPortEnv, "9300"))
 
 	addr = getAddrFromEnv()
 	assert.Equal(t, "http://10.1.1.1:9300", addr)

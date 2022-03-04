@@ -206,7 +206,10 @@ func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 func newKafkaAsyncPackageComponent(t *testing.T, name string, retries uint, processorFunc func(message async.Message) error) *async.Component {
 	decode := func(data []byte, v interface{}) error {
 		tmp := string(data)
-		p := v.(*string)
+		p, ok := v.(*string)
+		if !ok {
+			return fmt.Errorf("failed to type assert to *string %v", v)
+		}
 		*p = tmp
 		return nil
 	}

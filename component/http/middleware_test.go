@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A middleware generator that tags resp for assertions
+// A middleware generator that tags resp for assertions.
 func tagMiddleware(tag string) MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +26,7 @@ func tagMiddleware(tag string) MiddlewareFunc {
 	}
 }
 
-// Panic middleware to test recovery middleware
+// Panic middleware to test recovery middleware.
 func panicMiddleware(v interface{}) MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

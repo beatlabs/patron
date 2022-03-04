@@ -9,7 +9,7 @@ import (
 	"github.com/beatlabs/patron/encoding"
 )
 
-// Header is the http header representation as a map of strings
+// Header is the http header representation as a map of strings.
 type Header map[string]string
 
 // Request definition of the sync request model.

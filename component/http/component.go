@@ -215,7 +215,7 @@ func (cb *Builder) WithDeflateLevel(level int) *Builder {
 }
 
 // WithUncompressedPaths specifies which routes should be excluded from compression
-// Any trailing slashes are trimmed, so we match both /metrics/ and /metrics?seconds=30
+// Any trailing slashes are trimmed, so we match both /metrics/ and /metrics?seconds=30.
 func (cb *Builder) WithUncompressedPaths(r ...string) *Builder {
 	res := make([]string, 0, len(r))
 	for _, e := range r {

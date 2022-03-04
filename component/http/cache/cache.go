@@ -16,17 +16,17 @@ import (
 type validationContext int
 
 const (
-	// validation due to normal expiry in terms of ttl setting
+	// validation due to normal expiry in terms of ttl setting.
 	ttlValidation validationContext = iota + 1
-	// maxAgeValidation represents a validation , happening due to max-age  Header requirements
+	// maxAgeValidation represents a validation , happening due to max-age  Header requirements.
 	maxAgeValidation
-	// minFreshValidation represents a validation , happening due to min-fresh  Header requirements
+	// minFreshValidation represents a validation , happening due to min-fresh  Header requirements.
 	minFreshValidation
 
-	// HeaderCacheControl is the Header key for cache related values
-	// note : it is case-sensitive
+	// HeaderCacheControl is the Header key for cache related values.
+	// note : it is case-sensitive.
 	HeaderCacheControl = "Cache-Control"
-	// HeaderETagHeader is the constant representing the Etag http header
+	// HeaderETagHeader is the constant representing the Etag http header.
 	HeaderETagHeader = "Etag"
 
 	controlMinFresh     = "min-fresh"
@@ -46,20 +46,20 @@ func init() {
 	monitor = newPrometheusMetrics()
 }
 
-// NowSeconds returns the current unix timestamp in seconds
+// NowSeconds returns the current unix timestamp in seconds.
 var NowSeconds = func() int64 {
 	return time.Now().Unix()
 }
 
-// validator is a conditional function on an objects age and the configured ttl
+// validator is a conditional function on an objects age and the configured ttl.
 type validator func(age, ttl int64) (bool, validationContext)
 
-// expiryCheck is the main validator that checks that the entry has not expired e.g. is stale
+// expiryCheck is the main validator that checks that the entry has not expired e.g. is stale.
 var expiryCheck validator = func(age, ttl int64) (bool, validationContext) {
 	return age <= ttl, ttlValidation
 }
 
-// control is the model of the request parameters regarding the cache control
+// control is the model of the request parameters regarding the cache control.
 type control struct {
 	noCache         bool
 	forceCache      bool
@@ -68,12 +68,12 @@ type control struct {
 	expiryValidator validator
 }
 
-// executor is the function returning a cache Response object from the underlying implementation
+// executor is the function returning a cache Response object from the underlying implementation.
 type executor func(now int64, key string) *response
 
 // handler wraps the an execution logic with a cache layer
 // exec is the processor func that the cache will wrap
-// rc is the route cache implementation to be used
+// rc is the route cache implementation to be used.
 func handler(exec executor, rc *RouteCache) func(request *handlerRequest) (response *handlerResponse, e error) {
 	return func(request *handlerRequest) (handlerResponse *handlerResponse, e error) {
 		now := NowSeconds()
@@ -107,8 +107,7 @@ func handler(exec executor, rc *RouteCache) func(request *handlerRequest) (respo
 	}
 }
 
-// getResponse will get the appropriate Response either using the cache or the executor,
-// depending on the
+// getResponse will get the appropriate Response either using the cache or the executor.
 func getResponse(cfg *control, path, key string, now int64, rc *RouteCache, exec executor) *response {
 	if cfg.noCache {
 		return exec(now, key)
@@ -159,7 +158,7 @@ func isValid(age, maxAge int64, validators ...validator) (bool, validationContex
 }
 
 // get is the implementation that will provide a response instance from the cache,
-// if it exists
+// if it exists.
 func get(key string, rc *RouteCache) *response {
 	if resp, ok, err := rc.cache.Get(key); ok && err == nil {
 		if b, ok := resp.([]byte); ok {
@@ -184,13 +183,13 @@ func get(key string, rc *RouteCache) *response {
 
 		return &response{Err: fmt.Errorf("could not parse cached response %v for key %s", resp, key)}
 	} else if err != nil {
-		return &response{Err: fmt.Errorf("could not read cache value for [ key = %v , Err = %v ]", key, err)}
+		return &response{Err: fmt.Errorf("could not read cache value for [ key = %v , Err = %w ]", key, err)}
 	}
 	return nil
 }
 
 // save caches the given Response if required with a ttl
-// as we are putting the objects in the cache, if its a TTL one, we need to manage the expiration on our own
+// as we are putting the objects in the cache, if its a TTL one, we need to manage the expiration on our own.
 func save(path, key string, rsp *response, cache cache.TTLCache, maxAge time.Duration) {
 	if !rsp.FromCache && rsp.Err == nil {
 		// encode to a byte array on our side to avoid cache specific encoding / marshaling requirements
@@ -209,7 +208,7 @@ func save(path, key string, rsp *response, cache cache.TTLCache, maxAge time.Dur
 	}
 }
 
-// addResponseHeaders adds the appropriate headers according to the response conditions
+// addResponseHeaders adds the appropriate headers according to the response conditions.
 func addResponseHeaders(now int64, header http.Header, rsp *response, maxAge int64) {
 	header.Set(HeaderETagHeader, rsp.Etag)
 	header.Set(HeaderCacheControl, createCacheControlHeader(maxAge, now-rsp.LastValid))
@@ -220,7 +219,7 @@ func addResponseHeaders(now int64, header http.Header, rsp *response, maxAge int
 	}
 }
 
-// extractRequestHeaders extracts the client request headers allowing the client some control over the cache
+// extractRequestHeaders extracts the client request headers allowing the client some control over the cache.
 func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
 	cfg := control{
 		validators: make([]validator, 0),

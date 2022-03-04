@@ -22,9 +22,7 @@ const (
 	unary         = "unary"
 )
 
-var (
-	rpcDurationMetrics *prometheus.HistogramVec
-)
+var rpcDurationMetrics *prometheus.HistogramVec
 
 func init() {
 	rpcDurationMetrics = prometheus.NewHistogramVec(

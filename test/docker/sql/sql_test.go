@@ -39,20 +39,24 @@ func create(expiration time.Duration) (*sqlRuntime, error) {
 
 	runtime := &sqlRuntime{Runtime: *br}
 
-	runOptions := &dockertest.RunOptions{Repository: "mysql",
-		Tag: "5.7.25",
+	runOptions := &dockertest.RunOptions{
+		Repository: "mysql",
+		Tag:        "5.7.25",
 		PortBindings: map[docker.Port][]docker.PortBinding{
 			"3306/tcp":  {{HostIP: "", HostPort: ""}},
 			"33060/tcp": {{HostIP: "", HostPort: ""}},
 		},
-		//ExposedPorts: []string{"3306/tcp", "33060/tcp"},
+
+		// ExposedPorts: []string{"3306/tcp", "33060/tcp"},
 		Env: []string{
 			fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", dbRootPassword),
 			fmt.Sprintf("MYSQL_USER=%s", dbUsername),
 			fmt.Sprintf("MYSQL_PASSWORD=%s", dbPassword),
 			fmt.Sprintf("MYSQL_DATABASE=%s", dbSchema),
 			"TIMEZONE=UTC",
-		}}
+		},
+	}
+
 	_, err = runtime.RunWithOptions(runOptions)
 	if err != nil {
 		return nil, fmt.Errorf("could not start mysql: %w", err)

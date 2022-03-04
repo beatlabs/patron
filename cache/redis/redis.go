@@ -3,6 +3,7 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/beatlabs/patron/client/redis"
@@ -28,7 +29,7 @@ func New(ctx context.Context, opt Options) (*Cache, error) {
 func (c *Cache) Get(key string) (interface{}, bool, error) {
 	res, err := c.rdb.Do(c.ctx, "get", key).Result()
 	if err != nil {
-		if err == redis.Nil { // cache miss
+		if errors.Is(err, redis.Nil) { // cache miss
 			return nil, false, nil
 		}
 		return nil, false, err

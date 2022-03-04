@@ -27,8 +27,6 @@ func TestMain(m *testing.M) {
 		fmt.Printf("could not create mysql runtime: %v\n", err)
 		os.Exit(1)
 	}
-	defer func() {
-	}()
 	exitCode := m.Run()
 
 	ee := runtime.Teardown()

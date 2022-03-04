@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
@@ -14,7 +13,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,7 +39,8 @@ func TestStartEndSpan(t *testing.T) {
 	assert.Empty(t, mtr.FinishedSpans())
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
 
-	jsp := sp.(*mocktracer.MockSpan)
+	jsp, ok := sp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.NotNil(t, jsp)
 	actualTags := jsp.Tags()
 
@@ -68,7 +68,8 @@ func TestStartEndSpan(t *testing.T) {
 	}
 	endSpan(sp, rsp)
 
-	jsp = sp.(*mocktracer.MockSpan)
+	jsp, ok = sp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.Equal(t, respondent, jsp.Tag(respondentTag))
 	assert.Equal(t, uint16(statusCode), jsp.Tag("http.status_code"))
 	assert.Equal(t, false, jsp.Tag("error"))
@@ -86,7 +87,7 @@ func TestNewDefaultClient(t *testing.T) {
 
 	upstreamClient, err := elasticsearch.NewDefaultClient()
 	assert.NoError(t, err)
-	assert.IsType(t, *upstreamClient, newClient.Client)
+	assert.IsType(t, *upstreamClient, newClient.Client) // nolint:govet
 
 	expectedTransport, transport := new(transportClient), newClient.Transport
 	assert.IsType(t, expectedTransport, transport)
@@ -178,14 +179,9 @@ func TestGetAddrFromEnv(t *testing.T) {
 	addr := getAddrFromEnv()
 	assert.Equal(t, defaultHost+":"+defaultPort, addr)
 
-	err := os.Setenv(defaultHostEnv, "http://10.1.1.1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.Setenv(defaultPortEnv, "9300")
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Setenv(defaultHostEnv, "http://10.1.1.1")
+	t.Setenv(defaultPortEnv, "9300")
+
 	addr = getAddrFromEnv()
 	assert.Equal(t, "http://10.1.1.1:9300", addr)
 }
@@ -206,7 +202,8 @@ func TestStartSpan(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, sp)
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
-	jsp := sp.(*mocktracer.MockSpan)
+	jsp, ok := sp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.NotNil(t, jsp)
 	trace.SpanSuccess(sp)
 	rawspan := mtr.FinishedSpans()[0]

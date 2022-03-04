@@ -36,7 +36,6 @@ const (
 	serverComponent = "http-server"
 	fieldNameError  = "error"
 
-	// compression algorithms
 	gzipHeader     = "gzip"
 	deflateHeader  = "deflate"
 	identityHeader = "identity"
@@ -283,7 +282,7 @@ func notSupportedCompression(algorithm string) bool {
 // When not present, the default value is 1 according to https://developer.mozilla.org/en-US/docs/Glossary/Quality_values
 // q not present or can’t be parsed -> 1.0
 // q is < 0 -> 0.0
-// q is > 1 -> 1.0
+// q is > 1 -> 1.0.
 func parseWeight(qStr string) float64 {
 	qAndWeight := strings.Split(qStr, "=")
 	if len(qAndWeight) != 2 {
@@ -451,7 +450,7 @@ func (w *dynamicCompressionResponseWriter) Close() error {
 
 // NewCachingMiddleware creates a cache layer as a middleware
 // when used as part of a middleware chain any middleware later in the chain,
-// will not be executed, but the headers it appends will be part of the cache
+// will not be executed, but the headers it appends will be part of the cache.
 func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -523,7 +522,7 @@ func getOrSetCorrelationID(h http.Header) string {
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
 	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	if err != nil && err != opentracing.ErrSpanContextNotFound {
+	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
 		log.Errorf("failed to extract HTTP span: %v", err)
 	}
 
@@ -542,7 +541,7 @@ func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request)
 	return sp, r.WithContext(opentracing.ContextWithSpan(r.Context(), sp))
 }
 
-// stripQueryString returns a path without the query string
+// stripQueryString returns a path without the query string.
 func stripQueryString(path string) (string, error) {
 	u, err := url.Parse(path)
 	if err != nil {

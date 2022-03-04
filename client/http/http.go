@@ -4,6 +4,7 @@ package http
 import (
 	"compress/flate"
 	"compress/gzip"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -122,7 +123,7 @@ func (tc *TracedClient) do(req *http.Request) (*http.Response, error) {
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
 	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	if err != nil && err != opentracing.ErrSpanContextNotFound {
+	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
 		log.Errorf("failed to extract HTTP span: %v", err)
 	}
 	sp := opentracing.StartSpan(opName(r.Method, path), ext.RPCServerOption(ctx))

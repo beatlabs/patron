@@ -78,7 +78,7 @@ func (c durationKafkaClient) getNewestOffset(topic string, partitionID int32) (i
 func (c durationKafkaClient) getMessageAtOffset(ctx context.Context, topic string, partitionID int32, offset int64) (*sarama.ConsumerMessage, error) {
 	pc, err := c.kafkaConsumer.ConsumePartition(topic, partitionID, offset)
 	if err != nil {
-		if err == sarama.ErrOffsetOutOfRange {
+		if errors.Is(err, sarama.ErrOffsetOutOfRange) {
 			closePartitionConsumer(pc)
 			return nil, &outOfRangeOffsetError{
 				message: err.Error(),

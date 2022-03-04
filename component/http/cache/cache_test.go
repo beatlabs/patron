@@ -139,20 +139,20 @@ type requestParams struct {
 }
 
 // responseStruct emulates the patron http response,
-// but this can be any struct in general
+// but this can be any struct in general.
 type responseStruct struct {
 	Payload interface{}
 	Header  map[string]string
 }
 
-func newRequestAt(timeInstant int64, ControlHeaders ...string) requestParams {
+func newRequestAt(timeInstant int64, controlHeaders ...string) requestParams {
 	params := requestParams{
 		query:        "VALUE=1",
 		timeInstance: timeInstant,
 		header:       make(map[string]string),
 	}
-	if len(ControlHeaders) > 0 {
-		params.header[HeaderCacheControl] = strings.Join(ControlHeaders, ",")
+	if len(controlHeaders) > 0 {
+		params.header[HeaderCacheControl] = strings.Join(controlHeaders, ",")
 	}
 	return params
 }
@@ -263,8 +263,7 @@ func TestMinAgeCache_WithoutClientHeader(t *testing.T) {
 	assertCache(t, args)
 }
 
-// No cache age configuration
-// this effectively disables the cache
+// No cache age configuration this effectively disables the cache.
 func TestNoAgeCache_WithoutClientHeader(t *testing.T) {
 	rc := routeConfig{
 		path: "/",
@@ -1751,8 +1750,7 @@ func (t *testingCache) Remove(key string) error {
 	return nil
 }
 
-// Note : this method will effectively not cache anything
-// e.g. testingCacheEntity.t is `0`
+// Note : this method will effectively not cache anything e.g. testingCacheEntity.t is `0`.
 func (t *testingCache) Set(key string, value interface{}) error {
 	t.setCount++
 	if t.setErr != nil {

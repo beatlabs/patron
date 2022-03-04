@@ -86,7 +86,7 @@ func (rb *RouteBuilder) WithAuth(auth auth.Authenticator) *RouteBuilder {
 	return rb
 }
 
-// WithRouteCache adds a cache to the corresponding route
+// WithRouteCache adds a cache to the corresponding route.
 func (rb *RouteBuilder) WithRouteCache(cache cache.TTLCache, ageBounds httpcache.Age) *RouteBuilder {
 	rc, ee := httpcache.NewRouteCache(cache, ageBounds)
 
@@ -286,7 +286,7 @@ func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return &RouteBuilder{path: path, errors: ee, handler: handler(processor)}
 }
 
-// NewGetRouteBuilder constructor
+// NewGetRouteBuilder constructor.
 func NewGetRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodGet()
 }

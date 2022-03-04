@@ -45,7 +45,7 @@ type Component struct {
 	jobErr       chan error
 }
 
-// Builder gathers all required properties in order to construct a component
+// Builder gathers all required properties in order to construct a component.
 type Builder struct {
 	errors       []error
 	name         string
@@ -101,7 +101,7 @@ func (cb *Builder) WithRetries(retries uint) *Builder {
 
 // WithConcurrency specifies the number of worker goroutines for processing messages in parallel
 // default value is '1'
-// do NOT enable concurrency value for in-order consumers, such as Kafka or FIFO SQS
+// do NOT enable concurrency value for in-order consumers, such as Kafka or FIFO SQS.
 func (cb *Builder) WithConcurrency(concurrency uint) *Builder {
 	log.Debugf(propSetMSG, "concurrency", cb.name)
 	cb.concurrency = concurrency
@@ -121,7 +121,7 @@ func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 	return cb
 }
 
-// Create constructs the Component applying
+// Create constructs the Component applying.
 func (cb *Builder) Create() (*Component, error) {
 	if len(cb.errors) > 0 {
 		return nil, patronErrors.Aggregate(cb.errors...)
@@ -157,7 +157,7 @@ func (c *Component) Run(ctx context.Context) error {
 		if err == nil {
 			return nil
 		}
-		if ctx.Err() == context.Canceled {
+		if errors.Is(ctx.Err(), context.Canceled) {
 			break
 		}
 		consumerErrorsInc(c.name)
@@ -200,7 +200,7 @@ func (c *Component) processing(ctx context.Context) error {
 				return err
 			}
 		case <-ctx.Done():
-			if ctx.Err() != context.Canceled {
+			if !errors.Is(ctx.Err(), context.Canceled) {
 				log.Warnf("closing consumer: %v", ctx.Err())
 			}
 			return cns.Close()

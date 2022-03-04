@@ -15,7 +15,6 @@ func TestResponse(t *testing.T) {
 	args := []arg{
 		{"string"},
 		{10.0},
-		//{10},
 		{struct {
 			a  string
 			f  float64

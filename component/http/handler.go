@@ -205,7 +205,7 @@ func prepareResponse(w http.ResponseWriter, ct string) {
 	w.Header().Set(encoding.ContentTypeHeader, ct)
 }
 
-// ExtractParams extracts dynamic URL parameters using httprouter's functionality
+// ExtractParams extracts dynamic URL parameters using httprouter's functionality.
 func ExtractParams(r *http.Request) map[string]string {
 	par := httprouter.ParamsFromContext(r.Context())
 	if len(par) == 0 {

@@ -45,7 +45,6 @@ func TestMain(m *testing.M) {
 
 	mtr = mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
-	defer mtr.Reset()
 
 	exitCode := m.Run()
 
@@ -55,6 +54,7 @@ func TestMain(m *testing.M) {
 			fmt.Printf("could not tear down containers: %v\n", err)
 		}
 	}
+	mtr.Reset()
 
 	os.Exit(exitCode)
 }

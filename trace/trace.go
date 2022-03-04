@@ -3,13 +3,14 @@ package trace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-client-go/rpcmetrics"
@@ -22,7 +23,7 @@ const (
 	HostsTag = "hosts"
 	// VersionTag is used to tag the component's version.
 	VersionTag = "version"
-	// TraceID is a label name for a request trace ID
+	// TraceID is a label name for a request trace ID.
 	TraceID = "traceID"
 )
 
@@ -76,7 +77,7 @@ func Close() error {
 func ConsumerSpan(ctx context.Context, opName, cmp, corID string, hdr map[string]string,
 	tags ...opentracing.Tag) (opentracing.Span, context.Context) {
 	spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.TextMapCarrier(hdr))
-	if err != nil && err != opentracing.ErrSpanContextNotFound {
+	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
 		log.Errorf("failed to extract consumer span: %v", err)
 	}
 	sp := opentracing.StartSpan(opName, consumerOption{ctx: spCtx})

@@ -81,7 +81,7 @@ func init() {
 	)
 }
 
-// consumerErrorsInc increments the number of errors encountered by a specific consumer
+// consumerErrorsInc increments the number of errors encountered by a specific consumer.
 func consumerErrorsInc(name string) {
 	consumerErrors.WithLabelValues(name).Inc()
 }
@@ -154,7 +154,7 @@ func New(name, group string, brokers, topics []string, proc kafka.BatchProcessor
 	return cmp, nil
 }
 
-// Component is a kafka consumer implementation that processes messages in batch
+// Component is a kafka consumer implementation that processes messages in batch.
 type Component struct {
 	name                      string
 	group                     string
@@ -255,7 +255,7 @@ func (c *Component) processing(ctx context.Context) error {
 	return componentError
 }
 
-// Consumer represents a Sarama consumer group consumer
+// Consumer represents a Sarama consumer group consumer.
 type consumerHandler struct {
 	ctx context.Context
 
@@ -307,7 +307,7 @@ func newConsumerHandler(ctx context.Context, name, group string, processorFunc k
 	}
 }
 
-// Setup is run at the beginning of a new session, before ConsumeClaim
+// Setup is run at the beginning of a new session, before ConsumeClaim.
 func (c *consumerHandler) Setup(cgs sarama.ConsumerGroupSession) error {
 	if c.sessionCallback == nil {
 		return nil
@@ -315,7 +315,7 @@ func (c *consumerHandler) Setup(cgs sarama.ConsumerGroupSession) error {
 	return c.sessionCallback(cgs)
 }
 
-// Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
+// Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited.
 func (c *consumerHandler) Cleanup(sarama.ConsumerGroupSession) error {
 	return nil
 }
@@ -345,7 +345,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				return err
 			}
 		case <-c.ctx.Done():
-			if c.ctx.Err() != context.Canceled {
+			if !errors.Is(c.ctx.Err(), context.Canceled) {
 				log.Infof("closing consumer: %v", c.ctx.Err())
 			}
 			return nil
@@ -368,7 +368,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		btc := kafka.NewBatch(messages)
 		err := c.proc(btc)
 		if err != nil {
-			if c.ctx.Err() == context.Canceled {
+			if errors.Is(c.ctx.Err(), context.Canceled) {
 				return fmt.Errorf("context was cancelled after processing error: %w", err)
 			}
 			err := c.executeFailureStrategy(messages, err)

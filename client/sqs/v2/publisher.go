@@ -95,9 +95,13 @@ func injectHeaders(ctx context.Context, span opentracing.Span, input *sqs.SendMe
 	}
 
 	for k, v := range carrier {
+		val, ok := v.(string)
+		if !ok {
+			return errors.New("failed to type assert string")
+		}
 		input.MessageAttributes[k] = &sqs.MessageAttributeValue{
 			DataType:    aws.String(attributeDataTypeString),
-			StringValue: aws.String(v.(string)),
+			StringValue: aws.String(val),
 		}
 	}
 

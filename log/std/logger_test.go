@@ -124,6 +124,8 @@ func TestLogger(t *testing.T) {
 						logger.Panicf(tt.args.msg, tt.args.args...)
 					})
 				}
+			case log.FatalLevel, log.NoLevel:
+				assert.FailNow(t, "unexpected case")
 			}
 
 			if tt.args.msg == "" {

@@ -116,9 +116,13 @@ func injectHeaders(span opentracing.Span, input *sns.PublishInput) error {
 	}
 
 	for k, v := range carrier {
+		val, ok := v.(string)
+		if !ok {
+			return errors.New("failed to type assert string")
+		}
 		input.MessageAttributes[k] = &sns.MessageAttributeValue{
 			DataType:    aws.String(attributeDataTypeString),
-			StringValue: aws.String(v.(string)),
+			StringValue: aws.String(val),
 		}
 	}
 	return nil

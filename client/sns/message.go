@@ -189,7 +189,7 @@ func (b *MessageBuilder) Build() (*Message, error) {
 // injectHeaders injects the SNS headers carrier's headers into the message's attributes.
 func (m *Message) injectHeaders(carrier snsHeadersCarrier) {
 	for k, v := range carrier {
-		m.setMessageAttribute(k, v.(string))
+		m.setMessageAttribute(k, v.(string)) //nolint:forcetypeassert
 	}
 }
 

@@ -44,8 +44,10 @@ func TestNewLogger(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sl := New(&zerolog.Logger{}, tt.lvl, tt.f)
 			assert.NotNil(t, sl)
-			assert.NotNil(t, sl.(*Logger).loggerf)
-			assert.NotNil(t, sl.(*Logger).logger)
+			logger, ok := sl.(*Logger)
+			assert.True(t, ok)
+			assert.NotNil(t, logger.loggerf)
+			assert.NotNil(t, logger.logger)
 		})
 	}
 }
@@ -55,8 +57,10 @@ func TestLogger_Sub(t *testing.T) {
 	l := New(&b, log.DebugLevel, f)
 	sl := l.Sub(map[string]interface{}{"subkey1": "subval1"})
 	assert.NotNil(t, sl)
-	assert.NotNil(t, sl.(*Logger).loggerf)
-	assert.NotNil(t, sl.(*Logger).logger)
+	logger, ok := sl.(*Logger)
+	assert.True(t, ok)
+	assert.NotNil(t, logger.loggerf)
+	assert.NotNil(t, logger.logger)
 
 	sl.Debug(logMsg)
 	assert.Contains(t, b.String(), `"subkey1":"subval1"`, b.String())

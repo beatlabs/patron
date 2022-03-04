@@ -23,7 +23,7 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -111,7 +111,7 @@ func (m *message) Ack() error {
 	})
 	if err != nil {
 		messageCountErrorInc(m.queueName, ackMessageState, 1)
-		return nil
+		return nil // nolint:nilerr
 	}
 	messageCountInc(m.queueName, ackMessageState, 1)
 	trace.SpanSuccess(m.span)

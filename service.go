@@ -160,6 +160,7 @@ func (s *service) waitTermination(chErr <-chan error) error {
 		select {
 		case sig := <-s.termSig:
 			log.Infof("signal %s received", sig.String())
+
 			switch sig {
 			case syscall.SIGHUP:
 				s.sighupHandler()

@@ -53,7 +53,9 @@ linters:
     - tenv
     - gofumpt
     - forcetypeassert
-    # - promlinter
+    - nilerr
+    - errcheck
+    # - promlinter this is a very nice linter, but it will most probably break things...
   fast: false
 
 issues:

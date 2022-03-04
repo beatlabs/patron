@@ -354,41 +354,43 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 }
 
 func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
-	if len(c.msgBuf) > 0 {
-		messages := make([]kafka.Message, 0, len(c.msgBuf))
-		for _, msg := range c.msgBuf {
-			messageStatusCountInc(messageProcessed, c.group, msg.Topic)
-			ctx, sp := c.getContextWithCorrelation(msg)
-			messages = append(messages, kafka.NewMessage(ctx, sp, msg))
-		}
-
-		if c.batchMessageDeduplication {
-			messages = deduplicateMessages(messages)
-		}
-		btc := kafka.NewBatch(messages)
-		err := c.proc(btc)
-		if err != nil {
-			if errors.Is(c.ctx.Err(), context.Canceled) {
-				return fmt.Errorf("context was cancelled after processing error: %w", err)
-			}
-			err := c.executeFailureStrategy(messages, err)
-			if err != nil {
-				return err
-			}
-		}
-
-		c.processedMessages = true
-		for _, m := range messages {
-			trace.SpanSuccess(m.Span())
-			session.MarkMessage(m.Message(), "")
-		}
-
-		if c.commitSync {
-			session.Commit()
-		}
-
-		c.msgBuf = c.msgBuf[:0]
+	if len(c.msgBuf) == 0 {
+		return nil
 	}
+
+	messages := make([]kafka.Message, 0, len(c.msgBuf))
+	for _, msg := range c.msgBuf {
+		messageStatusCountInc(messageProcessed, c.group, msg.Topic)
+		ctx, sp := c.getContextWithCorrelation(msg)
+		messages = append(messages, kafka.NewMessage(ctx, sp, msg))
+	}
+
+	if c.batchMessageDeduplication {
+		messages = deduplicateMessages(messages)
+	}
+	btc := kafka.NewBatch(messages)
+	err := c.proc(btc)
+	if err != nil {
+		if errors.Is(c.ctx.Err(), context.Canceled) {
+			return fmt.Errorf("context was cancelled after processing error: %w", err)
+		}
+		err := c.executeFailureStrategy(messages, err)
+		if err != nil {
+			return err
+		}
+	}
+
+	c.processedMessages = true
+	for _, m := range messages {
+		trace.SpanSuccess(m.Span())
+		session.MarkMessage(m.Message(), "")
+	}
+
+	if c.commitSync {
+		session.Commit()
+	}
+
+	c.msgBuf = c.msgBuf[:0]
 
 	return nil
 }

@@ -181,22 +181,23 @@ func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *Response, enc en
 }
 
 func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
-	// Assert error to type Error in order to leverage the code and Payload values that such errors contain.
-	if err, ok := err.(*Error); ok {
-		p, encErr := enc(err.payload)
+	var errAs *Error
+	if errors.As(err, &errAs) {
+		p, encErr := enc(errAs.payload)
 		if encErr != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-		for k, v := range err.headers {
+		for k, v := range errAs.headers {
 			w.Header().Set(k, v)
 		}
-		w.WriteHeader(err.code)
+		w.WriteHeader(errAs.code)
 		if _, err := w.Write(p); err != nil {
 			logger.Errorf("failed to write Response: %v", err)
 		}
 		return
 	}
+
 	// Using http.Error helper hijacks the content type Header of the Response returning plain text Payload.
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }

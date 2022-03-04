@@ -18,7 +18,7 @@ func (e *outOfRangeOffsetError) Error() string {
 }
 
 func (e *outOfRangeOffsetError) Is(target error) bool {
-	_, ok := target.(*outOfRangeOffsetError)
+	_, ok := target.(*outOfRangeOffsetError) //nolint:errorlint
 	return ok
 }
 

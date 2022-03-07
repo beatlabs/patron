@@ -72,7 +72,7 @@ func sampleSqs() (*async.Component, error) {
 		sqsClient,
 		sampleConfig.name,
 		// Optionally override the queue's default polling setting.
-		// Long polling is highly recommended avoiding large costs on AWS.
+		// Long polling is highly recommended to avoid large costs on AWS.
 		// See https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html
 		// It's probably best to not specify any value: the default value on the queue will be used.
 		patronsqs.PollWaitSeconds(20),

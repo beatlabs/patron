@@ -14,7 +14,7 @@ const (
 	MetricsPath = "/metrics"
 )
 
-// MetricRoute returns a
+// MetricRoute creation.
 func MetricRoute() *Route {
 	return &Route{
 		method:  http.MethodGet,

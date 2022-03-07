@@ -461,7 +461,7 @@ func (w *dynamicCompressionResponseWriter) Close() error {
 
 // NewCaching creates a cache layer as a middleware
 // when used as part of a middleware chain any middleware later in the chain,
-// will not be executed, but the headers it appends will be part of the cache
+// will not be executed, but the headers it appends will be part of the cache.
 func NewCaching(rc *cache.RouteCache) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

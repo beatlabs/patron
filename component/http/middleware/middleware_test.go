@@ -27,7 +27,7 @@ func (mo stubAuthenticator) Authenticate(_ *http.Request) (bool, error) {
 	return mo.success, nil
 }
 
-// A middleware generator that tags resp for assertions
+// A middleware generator that tags resp for assertions.
 func tagMiddleware(tag string) Func {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +38,7 @@ func tagMiddleware(tag string) Func {
 	}
 }
 
-// Panic middleware to test recovery middleware
+// Panic middleware to test recovery middleware.
 func panicMiddleware(v interface{}) Func {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

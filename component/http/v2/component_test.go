@@ -60,10 +60,11 @@ func TestNew(t *testing.T) {
 func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 	listener, err := net.Listen("tcp", ":0") //nolint:gosec
 	require.NoError(t, err)
-	port := listener.Addr().(*net.TCPAddr).Port
+	port, ok := listener.Addr().(*net.TCPAddr)
+	assert.True(t, ok)
 	require.NoError(t, listener.Close())
 
-	cmp, err := New(&stubHandler{}, Port(port))
+	cmp, err := New(&stubHandler{}, Port(port.Port))
 	assert.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())
@@ -72,7 +73,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 		done <- true
 	}()
 	time.Sleep(10 * time.Millisecond)
-	rsp, err := http.Get(fmt.Sprintf("http://localhost:%d/", port))
+	rsp, err := http.Get(fmt.Sprintf("http://localhost:%d/", port.Port))
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rsp.StatusCode)
 	cnl()

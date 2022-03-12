@@ -8,18 +8,27 @@ import (
 	"testing"
 
 	v2 "github.com/beatlabs/patron/client/amqp/v2"
-	patronamqp "github.com/beatlabs/patron/component/amqp"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	endpoint      = "amqp://user:bitnami@localhost:5672/"
+	rabbitMQQueue = "rmq-test-queue"
+)
+
 func TestRun(t *testing.T) {
+	require.NoError(t, createQueue())
+	mtr := mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
 	defer mtr.Reset()
 
 	ctx, cnl := context.WithCancel(context.Background())
 
-	pub, err := v2.New(runtime.getEndpoint())
+	pub, err := v2.New(endpoint)
 	require.NoError(t, err)
 
 	sent := []string{"one", "two"}
@@ -37,7 +46,7 @@ func TestRun(t *testing.T) {
 	received := make([]string, 0)
 	count := 0
 
-	procFunc := func(_ context.Context, b patronamqp.Batch) {
+	procFunc := func(_ context.Context, b Batch) {
 		for _, msg := range b.Messages() {
 			received = append(received, string(msg.Body()))
 			assert.NoError(t, msg.ACK())
@@ -49,7 +58,7 @@ func TestRun(t *testing.T) {
 		}
 	}
 
-	cmp, err := patronamqp.New(runtime.getEndpoint(), rabbitMQQueue, procFunc)
+	cmp, err := New(endpoint, rabbitMQQueue, procFunc)
 	require.NoError(t, err)
 
 	chDone := make(chan struct{})
@@ -64,4 +73,23 @@ func TestRun(t *testing.T) {
 	assert.ElementsMatch(t, sent, got)
 	assert.Len(t, mtr.FinishedSpans(), 2)
 	<-chDone
+}
+
+func createQueue() error {
+	conn, err := amqp.Dial(endpoint)
+	if err != nil {
+		return err
+	}
+
+	channel, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+
+	_, err = channel.QueueDeclare(rabbitMQQueue, true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -17,12 +17,8 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v3
 
-      - name: cache docker images
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
-
-      - name: docker-compose up
-        run: docker-compose up -d
+      - name: Start dependencies
+        run: make deps-start
 
       - name: Running CI
         run: make ci

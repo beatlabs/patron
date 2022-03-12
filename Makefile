@@ -5,7 +5,7 @@ default: test
 test: fmtcheck
 	go test ./... -cover -race -timeout 60s
 
-testint: fmtcheck  deps-up
+testint: fmtcheck  deps-start
 	go test ./... -race -cover -tags=integration -timeout 120s -count=1
 
 cover: fmtcheck
@@ -13,7 +13,7 @@ cover: fmtcheck
 	go tool cover -func=coverage.txt && \
 	rm coverage.txt
 
-coverci: deps-up
+coverci: deps-start
 	go test ./... -race -cover -mod=vendor -coverprofile=coverage.txt -covermode=atomic -tags=integration && \
 	mv coverage.txt coverage.txt.tmp && \
 	cat coverage.txt.tmp | grep -v "/cmd/patron/" > coverage.txt
@@ -38,10 +38,10 @@ modsync: fmtcheck
 examples:
 	$(MAKE) -C examples
 
-deps-up:
+deps-start:
 	docker-compose up -d
 
-deps-down:
+deps-stop:
 	docker-compose down
 
 # disallow any parallelism (-j) for Make. This is necessary since some
@@ -49,4 +49,4 @@ deps-down:
 # under parallel conditions.
 .NOTPARALLEL:
 
-.PHONY: default test testint cover coverci fmt fmtcheck lint deeplint ci modsync deps-up deps-down
+.PHONY: default test testint cover coverci fmt fmtcheck lint deeplint ci modsync deps-start deps-stop

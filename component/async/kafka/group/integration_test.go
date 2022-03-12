@@ -35,7 +35,6 @@ const (
 
 func TestGroupConsume(t *testing.T) {
 	require.NoError(t, test.CreateTopics(broker, groupTopic1))
-	t.Parallel()
 
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)
@@ -92,7 +91,6 @@ func TestGroupConsume(t *testing.T) {
 
 func TestGroupConsume_ClaimMessageError(t *testing.T) {
 	require.NoError(t, test.CreateTopics(broker, groupTopic2))
-	t.Parallel()
 
 	chMessages := make(chan []string)
 	chErr := make(chan error)

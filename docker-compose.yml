@@ -33,6 +33,22 @@ services:
       - RABBITMQ_SECURE_PASSWORD=yes
     volumes:
       - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'patrondb'
+      MYSQL_USER: 'patron'
+      MYSQL_PASSWORD: 'test123'
+      MYSQL_ROOT_PASSWORD: 'test123'
+      TIMEZONE: UTC
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
 volumes:
   rabbitmq_data:
     driver: local
+  my-db:

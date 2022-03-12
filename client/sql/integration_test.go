@@ -5,36 +5,19 @@ package sql
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/beatlabs/patron/client/sql"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	// Integration test.
+	_ "github.com/go-sql-driver/mysql"
 )
 
-var runtime *sqlRuntime
-
-func TestMain(m *testing.M) {
-	var err error
-	runtime, err = create(60 * time.Second)
-	if err != nil {
-		fmt.Printf("could not create mysql runtime: %v\n", err)
-		os.Exit(1)
-	}
-	exitCode := m.Run()
-
-	ee := runtime.Teardown()
-	if len(ee) > 0 {
-		for _, err = range ee {
-			fmt.Printf("could not tear down containers: %v\n", err)
-		}
-	}
-	os.Exit(exitCode)
-}
+const (
+	dsn = "patron:test123@(localhost:3306)/patrondb?parseTime=true"
+)
 
 func TestOpen(t *testing.T) {
 	t.Parallel()
@@ -52,7 +35,7 @@ func TestOpen(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := sql.Open(tt.args.driverName, runtime.DSN())
+			got, err := Open(tt.args.driverName, dsn)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -73,7 +56,7 @@ func TestIntegration(t *testing.T) {
 	const query = "SELECT * FROM employee LIMIT 1"
 	const insertQuery = "INSERT INTO employee(name) value (?)"
 
-	db, err := sql.Open("mysql", runtime.DSN())
+	db, err := Open("mysql", dsn)
 	assert.NoError(t, err)
 	assert.NotNil(t, db)
 	db.SetConnMaxLifetime(time.Minute)

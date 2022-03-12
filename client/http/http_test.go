@@ -8,17 +8,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/reliability/circuitbreaker"
 )
 
 func TestTracedClient_Do(t *testing.T) {
@@ -137,6 +138,7 @@ func TestHTTPStartFinishSpan(t *testing.T) {
 		"version":          "dev",
 		"correlationID":    "corID",
 	}, rawSpan.Tags())
+	assert.NoError(t, testutil.GatherAndCompare(prometheus.DefaultGatherer, strings.NewReader("123"), "client_http_request_duration_seconds"))
 }
 
 func TestDecompress(t *testing.T) {

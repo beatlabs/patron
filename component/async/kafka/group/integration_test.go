@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package kafka
+package group
 
 import (
 	"context"
@@ -17,13 +17,132 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
-	"github.com/beatlabs/patron/component/async/kafka/group"
 	kafkacmp "github.com/beatlabs/patron/component/kafka"
+	"github.com/beatlabs/patron/test"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	groupTopic1          = "groupTopic1"
+	groupTopic2          = "groupTopic2"
+	successTopic1        = "successTopic1"
+	failAllRetriesTopic1 = "failAllRetriesTopic1"
+	failAndRetryTopic1   = "failAndRetryTopic1"
+	broker               = "127.0.0.1:9093"
+)
+
+func TestGroupConsume(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, groupTopic1))
+	t.Parallel()
+
+	sent := []string{"one", "two", "three"}
+	chMessages := make(chan []string)
+	chErr := make(chan error)
+	go func() {
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-group-consumer", true)
+		require.NoError(t, err)
+
+		factory, err := New("test1", uuid.New().String(), []string{groupTopic1}, []string{broker}, saramaCfg, kafka.DecoderJSON(),
+			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		consumer, err := factory.Create()
+		if err != nil {
+			chErr <- err
+			return
+		}
+		defer func() {
+			_ = consumer.Close()
+		}()
+
+		received, err := test.AsyncConsumeMessages(consumer, len(sent))
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		chMessages <- received
+	}()
+
+	time.Sleep(5 * time.Second)
+
+	messages := make([]*sarama.ProducerMessage, 0, len(sent))
+	for _, val := range sent {
+		messages = append(messages, test.CreateProducerMessage(groupTopic1, val))
+	}
+
+	err := test.SendMessages(broker, messages...)
+	require.NoError(t, err)
+
+	var received []string
+
+	select {
+	case received = <-chMessages:
+	case err = <-chErr:
+		require.NoError(t, err)
+	}
+
+	assert.Equal(t, sent, received)
+}
+
+func TestGroupConsume_ClaimMessageError(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, groupTopic2))
+	t.Parallel()
+
+	chMessages := make(chan []string)
+	chErr := make(chan error)
+	go func() {
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-consumer", true)
+		require.NoError(t, err)
+
+		// Consumer will error out in ClaimMessage as no DecoderFunc has been set
+		factory, err := New("test1", uuid.New().String(), []string{groupTopic2}, []string{broker}, saramaCfg,
+			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		consumer, err := factory.Create()
+		if err != nil {
+			chErr <- err
+			return
+		}
+		defer func() {
+			_ = consumer.Close()
+		}()
+
+		received, err := test.AsyncConsumeMessages(consumer, 1)
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		chMessages <- received
+	}()
+
+	time.Sleep(5 * time.Second)
+
+	err := test.SendMessages(broker, test.CreateProducerMessage(groupTopic2, "321"))
+	require.NoError(t, err)
+
+	select {
+	case <-chMessages:
+		require.Fail(t, "no messages were expected")
+	case err = <-chErr:
+		require.EqualError(t, err, "kafka: error while consuming groupTopic2/0: "+
+			"could not determine decoder  failed to determine content type from message headers [] : "+
+			"content type header is missing")
+	}
+}
+
 func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, successTopic1))
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -57,7 +176,7 @@ func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := NewProducer()
+		producer, err := test.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
@@ -83,6 +202,7 @@ func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 }
 
 func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, failAllRetriesTopic1))
 	// Test parameters
 	numOfMessagesToSend := 100
 	errAtIndex := 50
@@ -112,7 +232,7 @@ func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := NewProducer()
+		producer, err := test.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAllRetriesTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
@@ -140,6 +260,7 @@ func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
 }
 
 func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, failAndRetryTopic1))
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -166,7 +287,7 @@ func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := NewProducer()
+		producer, err := test.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
@@ -217,21 +338,12 @@ func newKafkaAsyncPackageComponent(t *testing.T, name string, retries uint, proc
 	saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig(name, true)
 	require.NoError(t, err)
 
-	factory, err := group.New(
-		name,
-		name+"-group",
-		[]string{name},
-		[]string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)},
-		saramaCfg,
-		kafka.Decoder(decode),
-		kafka.Start(sarama.OffsetOldest))
+	factory, err := New(name, name+"-group", []string{name},
+		[]string{broker}, saramaCfg, kafka.Decoder(decode), kafka.Start(sarama.OffsetOldest))
 	require.NoError(t, err)
 
-	cmp, err := async.New(name, factory, processorFunc).
-		WithRetries(retries).
-		WithRetryWait(200 * time.Millisecond).
-		WithFailureStrategy(async.NackExitStrategy).
-		Create()
+	cmp, err := async.New(name, factory, processorFunc).WithRetries(retries).
+		WithRetryWait(200 * time.Millisecond).WithFailureStrategy(async.NackExitStrategy).Create()
 	require.NoError(t, err)
 
 	return cmp

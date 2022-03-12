@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package kafka
+package simple
 
 import (
 	"context"
@@ -10,13 +10,23 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/async/kafka"
-	"github.com/beatlabs/patron/component/async/kafka/simple"
 	kafkacmp "github.com/beatlabs/patron/component/kafka"
+	"github.com/beatlabs/patron/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	simpleTopic1 = "simpleTopic1"
+	simpleTopic2 = "simpleTopic2"
+	simpleTopic3 = "simpleTopic3"
+	simpleTopic4 = "simpleTopic4"
+	simpleTopic5 = "simpleTopic5"
+	broker       = "127.0.0.1:9093"
+)
+
 func TestSimpleConsume(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, simpleTopic1))
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)
 	chErr := make(chan error)
@@ -24,7 +34,7 @@ func TestSimpleConsume(t *testing.T) {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer", true)
 		require.NoError(t, err)
 
-		factory, err := simple.New("test1", simpleTopic1, Brokers(), saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := New("test1", simpleTopic1, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
@@ -40,7 +50,7 @@ func TestSimpleConsume(t *testing.T) {
 			_ = consumer.Close()
 		}()
 
-		received, err := consumeMessages(consumer, len(sent))
+		received, err := test.AsyncConsumeMessages(consumer, len(sent))
 		if err != nil {
 			chErr <- err
 			return
@@ -53,10 +63,10 @@ func TestSimpleConsume(t *testing.T) {
 
 	messages := make([]*sarama.ProducerMessage, 0, len(sent))
 	for _, val := range sent {
-		messages = append(messages, getProducerMessage(simpleTopic1, val))
+		messages = append(messages, test.CreateProducerMessage(simpleTopic1, val))
 	}
 
-	err := sendMessages(messages...)
+	err := test.SendMessages(broker, messages...)
 	require.NoError(t, err)
 
 	var received []string
@@ -71,13 +81,14 @@ func TestSimpleConsume(t *testing.T) {
 }
 
 func TestSimpleConsume_ClaimMessageError(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, simpleTopic2))
 	chMessages := make(chan []string)
 	chErr := make(chan error)
 	go func() {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-claim", true)
 		require.NoError(t, err)
 
-		factory, err := simple.New("test1", simpleTopic2, Brokers(), saramaCfg, kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := New("test1", simpleTopic2, []string{broker}, saramaCfg, kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromNewest())
 		if err != nil {
 			chErr <- err
@@ -93,7 +104,7 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 			_ = consumer.Close()
 		}()
 
-		received, err := consumeMessages(consumer, 1)
+		received, err := test.AsyncConsumeMessages(consumer, 1)
 		if err != nil {
 			chErr <- err
 			return
@@ -104,7 +115,7 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	err := sendMessages(getProducerMessage(simpleTopic2, "123"))
+	err := test.SendMessages(broker, test.CreateProducerMessage(simpleTopic2, "123"))
 	require.NoError(t, err)
 
 	select {
@@ -116,6 +127,7 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 }
 
 func TestSimpleConsume_WithDurationOffset(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, simpleTopic3))
 	now := time.Now()
 	sent := createTimestampPayload(
 		now.Add(-10*time.Hour),
@@ -127,10 +139,10 @@ func TestSimpleConsume_WithDurationOffset(t *testing.T) {
 
 	messages := make([]*sarama.ProducerMessage, 0)
 	for _, val := range sent {
-		messages = append(messages, getProducerMessage(simpleTopic3, val))
+		messages = append(messages, test.CreateProducerMessage(simpleTopic3, val))
 	}
 
-	err := sendMessages(messages...)
+	err := test.SendMessages(broker, messages...)
 	require.NoError(t, err)
 
 	chMessages := make(chan []string)
@@ -139,8 +151,8 @@ func TestSimpleConsume_WithDurationOffset(t *testing.T) {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-w-duration", true)
 		require.NoError(t, err)
 
-		factory, err := simple.New("test1", simpleTopic3, Brokers(), saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromNewest(), simple.WithDurationOffset(4*time.Hour, timestampExtractor))
+		factory, err := New("test1", simpleTopic3, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+			kafka.StartFromNewest(), WithDurationOffset(4*time.Hour, timestampExtractor))
 		if err != nil {
 			chErr <- err
 			return
@@ -155,7 +167,7 @@ func TestSimpleConsume_WithDurationOffset(t *testing.T) {
 			_ = consumer.Close()
 		}()
 
-		received, err := consumeMessages(consumer, 3)
+		received, err := test.AsyncConsumeMessages(consumer, 3)
 		if err != nil {
 			chErr <- err
 			return
@@ -178,13 +190,14 @@ func TestSimpleConsume_WithDurationOffset(t *testing.T) {
 }
 
 func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, simpleTopic4))
 	messages := make([]*sarama.ProducerMessage, 0)
 	numberOfMessages := 10
 	for i := 0; i < numberOfMessages; i++ {
-		messages = append(messages, getProducerMessage(simpleTopic4, "foo"))
+		messages = append(messages, test.CreateProducerMessage(simpleTopic4, "foo"))
 	}
 
-	err := sendMessages(messages...)
+	err := test.SendMessages(broker, messages...)
 	require.NoError(t, err)
 
 	chMessages := make(chan []string)
@@ -194,8 +207,8 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-w-notif", true)
 		require.NoError(t, err)
 
-		factory, err := simple.New("test4", simpleTopic4, Brokers(), saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromOldest(), simple.WithNotificationOnceReachingLatestOffset(chNotif))
+		factory, err := New("test4", simpleTopic4, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+			kafka.StartFromOldest(), WithNotificationOnceReachingLatestOffset(chNotif))
 		if err != nil {
 			chErr <- err
 			return
@@ -210,7 +223,7 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 			_ = consumer.Close()
 		}()
 
-		received, err := consumeMessages(consumer, numberOfMessages)
+		received, err := test.AsyncConsumeMessages(consumer, numberOfMessages)
 		if err != nil {
 			chErr <- err
 			return
@@ -239,14 +252,15 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 }
 
 func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_NoMessages(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, simpleTopic5))
 	chErr := make(chan error)
 	chNotif := make(chan struct{})
 	go func() {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer", true)
 		require.NoError(t, err)
 
-		factory, err := simple.New("test5", simpleTopic5, Brokers(), saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromOldest(), simple.WithNotificationOnceReachingLatestOffset(chNotif))
+		factory, err := New("test5", simpleTopic5, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+			kafka.StartFromOldest(), WithNotificationOnceReachingLatestOffset(chNotif))
 		if err != nil {
 			chErr <- err
 			return

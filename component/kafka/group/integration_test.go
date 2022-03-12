@@ -1,12 +1,11 @@
 //go:build integration
 // +build integration
 
-package kafka
+package group
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -16,12 +15,21 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/kafka"
-	"github.com/beatlabs/patron/component/kafka/group"
+	"github.com/beatlabs/patron/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	successTopic2        = "successTopic2"
+	failAllRetriesTopic2 = "failAllRetriesTopic2"
+	failAndRetryTopic2   = "failAndRetryTopic2"
+	successTopic3        = "successTopic3"
+	broker               = "127.0.0.1:9093"
+)
+
 func TestKafkaComponent_Success(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, successTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -57,7 +65,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := NewProducer()
+		producer, err := test.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
@@ -83,6 +91,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, failAllRetriesTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100
 	errAtIndex := 70
@@ -112,27 +121,23 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	batchSize := uint(1)
 	component := newComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
 
-	// Send messages to the kafka topic
-	var producerWG sync.WaitGroup
-	producerWG.Add(1)
-	go func() {
-		producer, err := NewProducer()
-		require.NoError(t, err)
-		for i := 1; i <= numOfMessagesToSend; i++ {
-			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAllRetriesTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
-			require.NoError(t, err)
-		}
-		producerWG.Done()
-	}()
+	producer, err := test.NewProducer(broker)
+	require.NoError(t, err)
+
+	msgs := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
+
+	for i := 1; i <= numOfMessagesToSend; i++ {
+		msgs = append(msgs, &sarama.ProducerMessage{Topic: failAllRetriesTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
+	}
+
+	err = producer.SendMessages(msgs)
+	require.NoError(t, err)
 
 	// Run Patron with the component - no need for goroutine since we expect it to stop after the retries fail
 	svc, err := patron.New(failAllRetriesTopic2, "0", patron.LogFields(map[string]interface{}{"test": failAllRetriesTopic2}))
 	require.NoError(t, err)
 	err = svc.WithComponents(component).Run(context.Background())
 	assert.Error(t, err)
-
-	// Wait for the producer & consumer to finish
-	producerWG.Wait()
 
 	// Verify all messages were processed in the right order
 	expectedMessages := make([]int, errAtIndex-1)
@@ -144,6 +149,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 }
 
 func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, failAndRetryTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -172,7 +178,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := NewProducer()
+		producer, err := test.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
@@ -215,14 +221,8 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 		return nil
 	}
 	invalidTopicName := "invalid-topic-name"
-	_, err := group.New(
-		invalidTopicName,
-		invalidTopicName+"-group",
-		[]string{fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)},
-		[]string{invalidTopicName},
-		processorFunc,
-		sarama.NewConfig(),
-		group.CheckTopic())
+	_, err := New(invalidTopicName, invalidTopicName+"-group", []string{broker},
+		[]string{invalidTopicName}, processorFunc, sarama.NewConfig(), CheckTopic())
 	require.EqualError(t, err, "topic invalid-topic-name does not exist in broker")
 }
 
@@ -231,39 +231,21 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	processorFunc := func(batch kafka.Batch) error {
 		return nil
 	}
-	_, err := group.New(
-		successTopic3,
-		successTopic3+"-group",
-		[]string{fmt.Sprintf("%s:%s", kafkaHost, wrongKafkaPort)},
-		[]string{successTopic3},
-		processorFunc,
-		sarama.NewConfig(),
-		group.CheckTopic())
+	_, err := New(successTopic3, successTopic3+"-group", []string{"127.0.0.1:9999"},
+		[]string{successTopic3}, processorFunc, sarama.NewConfig(), CheckTopic())
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "failed to create client:")
 }
 
-func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc kafka.BatchProcessorFunc) *group.Component {
+func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc kafka.BatchProcessorFunc) *Component {
 	saramaCfg, err := kafka.DefaultConsumerSaramaConfig(name, true)
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	saramaCfg.Version = sarama.V2_6_0_0
 	require.NoError(t, err)
 
-	broker := fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)
-	cmp, err := group.New(
-		name,
-		name+"-group",
-		[]string{broker},
-		[]string{name},
-		processorFunc,
-		saramaCfg,
-		group.FailureStrategy(kafka.ExitStrategy),
-		group.BatchSize(batchSize),
-		group.BatchTimeout(100*time.Millisecond),
-		group.Retries(retries),
-		group.RetryWait(200*time.Millisecond),
-		group.CommitSync(),
-		group.CheckTopic())
+	cmp, err := New(name, name+"-group", []string{broker}, []string{name}, processorFunc,
+		saramaCfg, FailureStrategy(kafka.ExitStrategy), BatchSize(batchSize), BatchTimeout(100*time.Millisecond),
+		Retries(retries), RetryWait(200*time.Millisecond), CommitSync(), CheckTopic())
 	require.NoError(t, err)
 
 	return cmp

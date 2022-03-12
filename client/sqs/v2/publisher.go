@@ -50,7 +50,6 @@ func New(api sqsiface.SQSAPI) (Publisher, error) {
 	if api == nil {
 		return Publisher{}, errors.New("missing api")
 	}
-
 	return Publisher{api: api}, nil
 }
 

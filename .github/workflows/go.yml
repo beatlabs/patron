@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: docker-compose pull
-        run: docker-compose up -d
+        run: docker-compose pull
 
       - name: cache docker images
         uses: satackey/action-docker-layer-caching@v0.0.11

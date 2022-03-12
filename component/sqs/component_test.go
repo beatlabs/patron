@@ -117,7 +117,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestComponent_Run_Success(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 	sp := stubProcessor{t: t}
 
 	sqsAPI := stubSQSAPI{
@@ -138,11 +138,11 @@ func TestComponent_Run_Success(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	cnl()
 	wg.Wait()
-	assert.True(t, len(mockTracer.FinishedSpans()) > 0)
+	assert.True(t, len(mtr.FinishedSpans()) > 0)
 }
 
 func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 	sp := stubProcessor{t: t}
 
 	sqsAPI := stubSQSAPI{
@@ -164,11 +164,11 @@ func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	cnl()
 	wg.Wait()
-	assert.True(t, len(mockTracer.FinishedSpans()) > 0)
+	assert.True(t, len(mtr.FinishedSpans()) > 0)
 }
 
 func TestComponent_Run_Error(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 	sp := stubProcessor{t: t}
 
 	sqsAPI := stubSQSAPI{

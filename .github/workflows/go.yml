@@ -17,6 +17,14 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v3
 
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: $-buildx-ubuntu-$
+          restore-keys: |
+            $-buildx-ubuntu-
+
       - name: Start dependencies
         run: make deps-up
 

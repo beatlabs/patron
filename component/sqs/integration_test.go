@@ -14,8 +14,6 @@ import (
 	patronsqsclient "github.com/beatlabs/patron/client/sqs/v2"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/test"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,8 +28,6 @@ type testMessage struct {
 }
 
 func Test_SQS_Consume(t *testing.T) {
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
 	t.Cleanup(func() { mtr.Reset() })
 
 	const queueName = "test-sqs-consume"

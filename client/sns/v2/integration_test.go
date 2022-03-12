@@ -28,7 +28,6 @@ func Test_SNS_Publish_Message_v2(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
 
 	const topic = "test_publish_message_v2"
-
 	api, err := test.CreateSNSAPI(region, endpoint)
 	require.NoError(t, err)
 	arn, err := test.CreateSNSTopic(api, topic)

@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	v2 "github.com/beatlabs/patron/client/amqp/v2"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,9 +20,7 @@ const (
 
 func TestRun(t *testing.T) {
 	require.NoError(t, createQueue())
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	defer mtr.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 
 	ctx, cnl := context.WithCancel(context.Background())
 

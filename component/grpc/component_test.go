@@ -108,9 +108,9 @@ func TestComponent_Run_Unary(t *testing.T) {
 					assert.Equal(t, expectedTags, span.Tags())
 				}
 
-				assert.Equal(t, 1, testutil.CollectAndCount(rpcHandledMetric, "component_grpc_handled_total"))
+				assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcHandledMetric, "component_grpc_handled_total"), 1)
 				rpcHandledMetric.Reset()
-				assert.Equal(t, 1, testutil.CollectAndCount(rpcLatencyMetric, "component_grpc_handled_seconds"))
+				assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcLatencyMetric, "component_grpc_handled_seconds"), 1)
 				rpcLatencyMetric.Reset()
 			}
 		})
@@ -175,9 +175,9 @@ func TestComponent_Run_Stream(t *testing.T) {
 				assert.Equal(t, expectedTags, span.Tags())
 			}
 
-			assert.Equal(t, 1, testutil.CollectAndCount(rpcHandledMetric, "component_grpc_handled_total"))
+			assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcHandledMetric, "component_grpc_handled_total"), 1)
 			rpcHandledMetric.Reset()
-			assert.Equal(t, 1, testutil.CollectAndCount(rpcLatencyMetric, "component_grpc_handled_seconds"))
+			assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcLatencyMetric, "component_grpc_handled_seconds"), 1)
 			rpcLatencyMetric.Reset()
 
 			assert.NoError(t, client.CloseSend())

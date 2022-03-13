@@ -13,7 +13,7 @@ cover: fmtcheck
 	go tool cover -func=coverage.txt && \
 	rm coverage.txt
 
-coverci: deps-start
+ci: deps-start
 	go test ./... -race -cover -mod=vendor -coverprofile=coverage.txt -covermode=atomic -tags=integration && \
 	mv coverage.txt coverage.txt.tmp && \
 	cat coverage.txt.tmp | grep -v "/cmd/patron/" > coverage.txt
@@ -29,8 +29,6 @@ lint: fmtcheck
 
 deeplint: fmtcheck
 	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.44.2 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
-
-ci: fmtcheck lint coverci
 
 modsync: fmtcheck
 	go mod tidy && 	go mod vendor

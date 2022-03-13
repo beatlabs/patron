@@ -89,7 +89,7 @@ func Test_SQS_Consume(t *testing.T) {
 		assert.Equal(t, expectedTags, span.Tags())
 	}
 
-	assert.Equal(t, 1, testutil.CollectAndCount(messageAge, "component_sqs_message_age"))
+	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageAge, "component_sqs_message_age"), 1)
 	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageCounterVec, "component_sqs_message_counter"), 1)
 	assert.GreaterOrEqual(t, testutil.CollectAndCount(queueSize, "component_sqs_queue_size"), 1)
 }

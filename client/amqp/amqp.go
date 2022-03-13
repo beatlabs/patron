@@ -18,7 +18,7 @@ import (
 	"github.com/beatlabs/patron/encoding/protobuf"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/streadway/amqp"
 )
@@ -127,7 +127,7 @@ func NewPublisher(url, exc string, oo ...OptionFunc) (*TracedPublisher, error) {
 	return &p, nil
 }
 
-// Publish a message to a exchange.
+// Publish a message to an exchange.
 func (tc *TracedPublisher) Publish(ctx context.Context, msg *Message) error {
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, tc.exc),
 		publisherComponent, ext.SpanKindProducer, tc.tag)

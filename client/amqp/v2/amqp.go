@@ -81,7 +81,7 @@ func New(url string, oo ...OptionFunc) (*Publisher, error) {
 	return pub, nil
 }
 
-// Publish a message to a exchange.
+// Publish a message to an exchange.
 func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error {
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, exchange),
 		publisherComponent, ext.SpanKindProducer, opentracing.Tag{Key: "exchange", Value: exchange})

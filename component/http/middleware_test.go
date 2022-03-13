@@ -706,7 +706,7 @@ func (fw *failWriter) Write([]byte) (int, error) {
 	return 0, fmt.Errorf("foo")
 }
 
-func (fw *failWriter) WriteHeader(statusCode int) {
+func (fw *failWriter) WriteHeader(_ int) {
 }
 
 func TestSetResponseWriterStatusOnResponseFailWrite(t *testing.T) {

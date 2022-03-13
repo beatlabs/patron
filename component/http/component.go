@@ -188,7 +188,7 @@ func (cb *Builder) WithReadTimeout(rt time.Duration) *Builder {
 	return cb
 }
 
-// WithWriteTimeout sets the Write Timeout for the HTTP component.
+// WithWriteTimeout sets write timeout for the HTTP component.
 func (cb *Builder) WithWriteTimeout(wt time.Duration) *Builder {
 	if wt <= 0*time.Second {
 		cb.errors = append(cb.errors, errors.New("negative or zero write timeout provided"))

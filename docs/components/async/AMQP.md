@@ -6,6 +6,6 @@ The supported [exchange types](https://www.rabbitmq.com/tutorials/amqp-concepts.
 
 Users can configure the incoming messages buffer size, the connection timeout, whether rejected message should be requeued, as well as provide custom exchange-queue [bindings](https://www.rabbitmq.com/tutorials/amqp-concepts.html#bindings).
 
-The AMQP consumer component is powered by the battle-tested [`streadway/amqp`](https://www.rabbitmq.com/tutorials/amqp-concepts.html#bindings) package. In the [examples](/examples/amqp/main.go) folder you can see the component in action.
+The AMQP consumer component is powered by the battle-tested [`streadway/amqp`](https://www.rabbitmq.com/tutorials/amqp-concepts.html#bindings) package. In the [example's](/examples/amqp/main.go) folder you can see the component in action.
 
 As with all Patron components, tracing capabilities are included out of the box.

@@ -32,7 +32,7 @@ func consumerErrorsInc(name string) {
 	consumerErrors.WithLabelValues(name).Inc()
 }
 
-// Component implementation of a async component.
+// Component implementation of an async component.
 type Component struct {
 	name         string
 	proc         ProcessorFunc

@@ -155,7 +155,6 @@ func main() {
 }
 
 func getAWSSession(endpoint string) *session.Session {
-
 	// 15 attempts 1 seconds separated to retrieve valid session
 	var s *session.Session = nil
 	var err error = nil
@@ -260,7 +259,7 @@ func (ac *amqpComponent) Process(ctx context.Context, batch patronamqp.Batch) {
 			}
 		}
 
-		payload, err := json.Encode(u)
+		payload, err := json.Encode(&u)
 		if err != nil {
 			logger.Errorf("failed to encode message: %v", err)
 			err = msg.NACK()

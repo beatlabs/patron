@@ -94,27 +94,19 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 
 	chMessages := make(chan []string)
 	chErr := make(chan error)
+
+	saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-consumer", true)
+	require.NoError(t, err)
+
+	// Consumer will error out in ClaimMessage as no DecoderFunc has been set
+	factory, err := New("test1", uuid.New().String(), []string{groupTopic2}, []string{broker}, saramaCfg,
+		kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+	require.NoError(t, err)
+	consumer, err := factory.Create()
+	require.NoError(t, err)
+	defer func() { _ = consumer.Close() }()
+
 	go func() {
-		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-consumer", true)
-		require.NoError(t, err)
-
-		// Consumer will error out in ClaimMessage as no DecoderFunc has been set
-		factory, err := New("test1", uuid.New().String(), []string{groupTopic2}, []string{broker}, saramaCfg,
-			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
-		if err != nil {
-			chErr <- err
-			return
-		}
-
-		consumer, err := factory.Create()
-		if err != nil {
-			chErr <- err
-			return
-		}
-		defer func() {
-			_ = consumer.Close()
-		}()
-
 		received, err := test.AsyncConsumeMessages(consumer, 1)
 		if err != nil {
 			chErr <- err
@@ -126,7 +118,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	err := test.SendMessages(broker, test.CreateProducerMessage(groupTopic2, "321"))
+	err = test.SendMessages(broker, test.CreateProducerMessage(groupTopic2, "321"))
 	require.NoError(t, err)
 
 	select {
@@ -162,9 +154,10 @@ func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 	patronContext, patronCancel := context.WithCancel(context.Background())
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
+	svc, err := patron.New(successTopic1, "0", patron.TextLogger())
+	require.NoError(t, err)
+
 	go func() {
-		svc, err := patron.New(successTopic1, "0", patron.TextLogger())
-		require.NoError(t, err)
 		err = svc.WithComponents(component).Run(patronContext)
 		require.NoError(t, err)
 		patronWG.Done()

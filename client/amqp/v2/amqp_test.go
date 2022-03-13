@@ -1,8 +1,12 @@
 package v2
 
 import (
+	"context"
 	"testing"
 
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,4 +36,14 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_injectTraceHeaders(t *testing.T) {
+	mtr := mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
+	t.Cleanup(func() { mtr.Reset() })
+	msg := amqp.Publishing{}
+	sp := injectTraceHeaders(context.Background(), "123", &msg)
+	assert.NotNil(t, sp)
+	assert.NotEmpty(t, msg.Headers)
 }

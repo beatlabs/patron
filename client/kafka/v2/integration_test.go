@@ -53,8 +53,9 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
 	msg := &sarama.ProducerMessage{
-		Topic: clientTopic,
-		Value: sarama.StringEncoder("TEST"),
+		Topic:   clientTopic,
+		Value:   sarama.StringEncoder("TEST"),
+		Headers: []sarama.RecordHeader{{Key: []byte("123"), Value: []byte("123")}},
 	}
 	err = ap.Send(context.Background(), msg)
 	assert.NoError(t, err)

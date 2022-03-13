@@ -6,9 +6,10 @@ import (
 	"fmt"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/correlation"
 	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 
@@ -26,7 +27,7 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) 
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeAsync, msg.Topic), componentTypeAsync,
 		ext.SpanKindProducer, asyncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
 
-	err := injectTracingHeaders(msg, sp)
+	err := injectTracingAndCorrelationHeaders(ctx, msg, sp)
 	if err != nil {
 		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
@@ -39,10 +40,15 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) 
 	return nil
 }
 
-func injectTracingHeaders(msg *sarama.ProducerMessage, sp opentracing.Span) error {
+func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.ProducerMessage, sp opentracing.Span) error {
+	msg.Headers = append(msg.Headers, sarama.RecordHeader{
+		Key:   []byte(correlation.HeaderID),
+		Value: []byte(correlation.IDFromContext(ctx)),
+	})
 	c := kafkaHeadersCarrier(msg.Headers)
-
-	return sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
+	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
+	msg.Headers = c
+	return err
 }
 
 func (ap *AsyncProducer) propagateError(chErr chan<- error) {

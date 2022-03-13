@@ -13,8 +13,9 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron"
+	kafkaclient "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/kafka"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/test"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -36,10 +37,28 @@ func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, test.CreateTopics(broker, successTopic1))
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
+	mtr.Reset()
 	t.Cleanup(func() { mtr.Reset() })
 
 	// Test parameters
 	numOfMessagesToSend := 100
+	ctx := correlation.ContextWithID(context.Background(), "123")
+
+	messages := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
+	for i := 1; i <= numOfMessagesToSend; i++ {
+		messages = append(messages, &sarama.ProducerMessage{
+			Topic:   successTopic1,
+			Value:   sarama.StringEncoder(strconv.Itoa(i)),
+			Headers: make([]sarama.RecordHeader, 0),
+		})
+	}
+	cfg, err := kafkaclient.DefaultProducerSaramaConfig("test-client", true)
+	require.NoError(t, err)
+	client, err := kafkaclient.New([]string{broker}, cfg).Create()
+	require.NoError(t, err)
+	require.NoError(t, client.SendBatch(ctx, messages))
+
+	mtr.Reset()
 
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]string, 0)
@@ -62,28 +81,12 @@ func TestKafkaComponent_Success(t *testing.T) {
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(successTopic1, "0", patron.LogFields(map[string]interface{}{"test": successTopic1}))
-		require.NoError(t, err)
-		err = svc.WithComponents(component).Run(patronContext)
+		err := component.Run(patronContext)
 		require.NoError(t, err)
 		patronWG.Done()
 	}()
 
-	// Send messages to the kafka topic
-	var producerWG sync.WaitGroup
-	producerWG.Add(1)
-	go func() {
-		producer, err := test.NewProducer(broker)
-		require.NoError(t, err)
-		for i := 1; i <= numOfMessagesToSend; i++ {
-			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
-			require.NoError(t, err)
-		}
-		producerWG.Done()
-	}()
-
 	// Wait for both consumer and producer to finish processing all the messages.
-	producerWG.Wait()
 	consumerWG.Wait()
 
 	// Verify all messages were processed in the right order
@@ -97,10 +100,10 @@ func TestKafkaComponent_Success(t *testing.T) {
 	patronCancel()
 	patronWG.Wait()
 
-	assert.Len(t, mtr.FinishedSpans(), 3)
+	assert.Len(t, mtr.FinishedSpans(), 100)
 
 	expectedTags := map[string]interface{}{
-		"component":     "sqs-consumer",
+		"component":     "kafka-consumer",
 		"correlationID": "123",
 		"error":         false,
 		"span.kind":     ext.SpanKindEnum("consumer"),
@@ -159,10 +162,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	err = producer.SendMessages(msgs)
 	require.NoError(t, err)
 
-	// Run Patron with the component - no need for goroutine since we expect it to stop after the retries fail
-	svc, err := patron.New(failAllRetriesTopic2, "0", patron.LogFields(map[string]interface{}{"test": failAllRetriesTopic2}))
-	require.NoError(t, err)
-	err = svc.WithComponents(component).Run(context.Background())
+	err = component.Run(context.Background())
 	assert.Error(t, err)
 
 	// Verify all messages were processed in the right order
@@ -218,10 +218,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(failAndRetryTopic2, "0", patron.LogFields(map[string]interface{}{"test": failAndRetryTopic2}))
-		require.NoError(t, err)
-		err = svc.WithComponents(component).Run(patronContext)
-		require.NoError(t, err)
+		require.NoError(t, component.Run(patronContext))
 		patronWG.Done()
 	}()
 

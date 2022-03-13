@@ -25,6 +25,7 @@ const (
 func TestRun(t *testing.T) {
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
+	t.Cleanup(func() { mtr.Reset() })
 
 	require.NoError(t, testamqp.CreateQueue(endpoint, queue))
 

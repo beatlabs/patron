@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -12,10 +13,8 @@ import (
 // CreateTopics helper function.
 func CreateTopics(broker string, topics ...string) error {
 	brk := sarama.NewBroker(broker)
-	config := sarama.NewConfig()
-	config.Version = sarama.V2_8_0_0
 
-	err := brk.Open(config)
+	err := brk.Open(sarama.NewConfig())
 	if err != nil {
 		return err
 	}
@@ -33,10 +32,20 @@ func CreateTopics(broker string, topics ...string) error {
 		Timeout: time.Second * 15,
 	}
 
-	_, err = brk.DeleteTopics(deleteReq)
+	deleteResp, err := brk.DeleteTopics(deleteReq)
 	if err != nil {
 		return err
 	}
+
+	for k, v := range deleteResp.TopicErrorCodes {
+		if v == sarama.ErrNoError || v == sarama.ErrUnknownTopicOrPartition {
+			continue
+		}
+		fmt.Println(k)
+		fmt.Println(v)
+	}
+
+	time.Sleep(100 * time.Millisecond)
 
 	topicDetail := &sarama.TopicDetail{}
 	topicDetail.NumPartitions = int32(1)
@@ -59,15 +68,11 @@ func CreateTopics(broker string, topics ...string) error {
 		return err
 	}
 
-	t := response.TopicErrors
-	for _, val := range t {
+	for _, val := range response.TopicErrors {
 		if val.Err == sarama.ErrTopicAlreadyExists || val.Err == sarama.ErrNoError {
 			continue
 		}
-		msg := val.Error()
-		if msg != "" {
-			return errors.New(msg)
-		}
+		return errors.New(val.Error())
 	}
 
 	return brk.Close()
@@ -88,11 +93,9 @@ func SendMessages(broker string, messages ...*sarama.ProducerMessage) error {
 	if err != nil {
 		return err
 	}
-	for _, message := range messages {
-		_, _, err = prod.SendMessage(message)
-		if err != nil {
-			return err
-		}
+	err = prod.SendMessages(messages)
+	if err != nil {
+		return err
 	}
 
 	return nil

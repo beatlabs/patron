@@ -129,7 +129,7 @@ func TestSyncProducer_SendMessages_Close(t *testing.T) {
 	err = p.SendBatch(context.Background(), []*sarama.ProducerMessage{msg1, msg2})
 	assert.NoError(t, err)
 	assert.NoError(t, p.Close())
-	assert.Len(t, mtr.FinishedSpans(), 1)
+	assert.Len(t, mtr.FinishedSpans(), 2)
 
 	expected := map[string]interface{}{
 		"component": "kafka-sync-producer",

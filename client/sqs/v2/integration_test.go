@@ -14,6 +14,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -74,4 +75,5 @@ func Test_SQS_Publish_Message(t *testing.T) {
 		"version":   "dev",
 	}
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+	assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_sqs_publish_duration_seconds"))
 }

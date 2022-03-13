@@ -11,6 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,6 +47,9 @@ func TestRun(t *testing.T) {
 
 	assert.Len(t, mtr.FinishedSpans(), 1)
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+	// Metrics
+	assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_amqp_publish_duration_seconds"))
 
 	conn, err := amqp.Dial(endpoint)
 	require.NoError(t, err)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	// Integration test.
 	_ "github.com/go-sql-driver/mysql"
@@ -66,14 +67,14 @@ func TestIntegration(t *testing.T) {
 	t.Run("db.Ping", func(t *testing.T) {
 		mtr.Reset()
 		assert.NoError(t, db.Ping(ctx))
-		assertSpan(t, mtr.FinishedSpans()[0], "db.Ping", "")
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Ping", "", 1)
 	})
 
 	t.Run("db.Stats", func(t *testing.T) {
 		mtr.Reset()
 		stats := db.Stats(ctx)
 		assert.NotNil(t, stats)
-		assertSpan(t, mtr.FinishedSpans()[0], "db.Stats", "")
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Stats", "", 1)
 	})
 
 	t.Run("db.Exec", func(t *testing.T) {
@@ -86,7 +87,7 @@ func TestIntegration(t *testing.T) {
 		result, err = db.Exec(ctx, insertQuery, "patron")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assertSpan(t, mtr.FinishedSpans()[0], "db.Exec", insertQuery)
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Exec", insertQuery, 1)
 	})
 
 	t.Run("db.Query", func(t *testing.T) {
@@ -97,35 +98,35 @@ func TestIntegration(t *testing.T) {
 		}()
 		assert.NoError(t, err)
 		assert.NotNil(t, rows)
-		assertSpan(t, mtr.FinishedSpans()[0], "db.Query", query)
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Query", query, 1)
 	})
 
 	t.Run("db.QueryRow", func(t *testing.T) {
 		mtr.Reset()
 		row := db.QueryRow(ctx, query)
 		assert.NotNil(t, row)
-		assertSpan(t, mtr.FinishedSpans()[0], "db.QueryRow", query)
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.QueryRow", query, 1)
 	})
 
 	t.Run("db.Driver", func(t *testing.T) {
 		mtr.Reset()
 		drv := db.Driver(ctx)
 		assert.NotNil(t, drv)
-		assertSpan(t, mtr.FinishedSpans()[0], "db.Driver", "")
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Driver", "", 1)
 	})
 
 	t.Run("stmt", func(t *testing.T) {
 		mtr.Reset()
 		stmt, err := db.Prepare(ctx, query)
 		assert.NoError(t, err)
-		assertSpan(t, mtr.FinishedSpans()[0], "db.Prepare", query)
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Prepare", query, 1)
 
 		t.Run("stmt.Exec", func(t *testing.T) {
 			mtr.Reset()
 			result, err := stmt.Exec(ctx)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assertSpan(t, mtr.FinishedSpans()[0], "stmt.Exec", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "stmt.Exec", query, 1)
 		})
 
 		t.Run("stmt.Query", func(t *testing.T) {
@@ -135,31 +136,31 @@ func TestIntegration(t *testing.T) {
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
-			assertSpan(t, mtr.FinishedSpans()[0], "stmt.Query", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "stmt.Query", query, 1)
 		})
 
 		t.Run("stmt.QueryRow", func(t *testing.T) {
 			mtr.Reset()
 			row := stmt.QueryRow(ctx)
 			assert.NotNil(t, row)
-			assertSpan(t, mtr.FinishedSpans()[0], "stmt.QueryRow", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "stmt.QueryRow", query, 1)
 		})
 
 		mtr.Reset()
 		assert.NoError(t, stmt.Close(ctx))
-		assertSpan(t, mtr.FinishedSpans()[0], "stmt.Close", "")
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "stmt.Close", "", 1)
 	})
 
 	t.Run("conn", func(t *testing.T) {
 		mtr.Reset()
 		conn, err := db.Conn(ctx)
 		assert.NoError(t, err)
-		assertSpan(t, mtr.FinishedSpans()[0], "db.Conn", "")
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Conn", "", 1)
 
 		t.Run("conn.Ping", func(t *testing.T) {
 			mtr.Reset()
 			assert.NoError(t, conn.Ping(ctx))
-			assertSpan(t, mtr.FinishedSpans()[0], "conn.Ping", "")
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Ping", "", 1)
 		})
 
 		t.Run("conn.Exec", func(t *testing.T) {
@@ -167,7 +168,7 @@ func TestIntegration(t *testing.T) {
 			result, err := conn.Exec(ctx, insertQuery, "patron")
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assertSpan(t, mtr.FinishedSpans()[0], "conn.Exec", insertQuery)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Exec", insertQuery, 1)
 		})
 
 		t.Run("conn.Query", func(t *testing.T) {
@@ -177,7 +178,7 @@ func TestIntegration(t *testing.T) {
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
-			assertSpan(t, mtr.FinishedSpans()[0], "conn.Query", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Query", query, 1)
 		})
 
 		t.Run("conn.QueryRow", func(t *testing.T) {
@@ -186,7 +187,7 @@ func TestIntegration(t *testing.T) {
 			var id int
 			var name string
 			assert.NoError(t, row.Scan(&id, &name))
-			assertSpan(t, mtr.FinishedSpans()[0], "conn.QueryRow", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.QueryRow", query, 1)
 		})
 
 		t.Run("conn.Prepare", func(t *testing.T) {
@@ -194,7 +195,7 @@ func TestIntegration(t *testing.T) {
 			stmt, err := conn.Prepare(ctx, query)
 			assert.NoError(t, err)
 			assert.NoError(t, stmt.Close(ctx))
-			assertSpan(t, mtr.FinishedSpans()[0], "conn.Prepare", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Prepare", query, 2)
 		})
 
 		t.Run("conn.BeginTx", func(t *testing.T) {
@@ -202,12 +203,12 @@ func TestIntegration(t *testing.T) {
 			tx, err := conn.BeginTx(ctx, nil)
 			assert.NoError(t, err)
 			assert.NoError(t, tx.Commit(ctx))
-			assertSpan(t, mtr.FinishedSpans()[0], "conn.BeginTx", "")
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.BeginTx", "", 2)
 		})
 
 		mtr.Reset()
 		assert.NoError(t, conn.Close(ctx))
-		assertSpan(t, mtr.FinishedSpans()[0], "conn.Close", "")
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Close", "", 1)
 	})
 
 	t.Run("tx", func(t *testing.T) {
@@ -215,14 +216,14 @@ func TestIntegration(t *testing.T) {
 		tx, err := db.BeginTx(ctx, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, tx)
-		assertSpan(t, mtr.FinishedSpans()[0], "db.BeginTx", "")
+		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.BeginTx", "", 1)
 
 		t.Run("tx.Exec", func(t *testing.T) {
 			mtr.Reset()
 			result, err := tx.Exec(ctx, insertQuery, "patron")
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assertSpan(t, mtr.FinishedSpans()[0], "tx.Exec", insertQuery)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Exec", insertQuery, 1)
 		})
 
 		t.Run("tx.Query", func(t *testing.T) {
@@ -232,7 +233,7 @@ func TestIntegration(t *testing.T) {
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
-			assertSpan(t, mtr.FinishedSpans()[0], "tx.Query", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Query", query, 1)
 		})
 
 		t.Run("tx.QueryRow", func(t *testing.T) {
@@ -241,7 +242,7 @@ func TestIntegration(t *testing.T) {
 			var id int
 			var name string
 			assert.NoError(t, row.Scan(&id, &name))
-			assertSpan(t, mtr.FinishedSpans()[0], "tx.QueryRow", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.QueryRow", query, 1)
 		})
 
 		t.Run("tx.Prepare", func(t *testing.T) {
@@ -249,7 +250,7 @@ func TestIntegration(t *testing.T) {
 			stmt, err := tx.Prepare(ctx, query)
 			assert.NoError(t, err)
 			assert.NoError(t, stmt.Close(ctx))
-			assertSpan(t, mtr.FinishedSpans()[0], "tx.Prepare", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Prepare", query, 2)
 		})
 
 		t.Run("tx.Stmt", func(t *testing.T) {
@@ -259,7 +260,7 @@ func TestIntegration(t *testing.T) {
 			txStmt := tx.Stmt(ctx, stmt)
 			assert.NoError(t, txStmt.Close(ctx))
 			assert.NoError(t, stmt.Close(ctx))
-			assertSpan(t, mtr.FinishedSpans()[0], "tx.Stmt", query)
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Stmt", query, 3)
 		})
 
 		assert.NoError(t, tx.Commit(ctx))
@@ -276,16 +277,16 @@ func TestIntegration(t *testing.T) {
 
 			mtr.Reset()
 			assert.NoError(t, tx.Rollback(ctx))
-			assertSpan(t, mtr.FinishedSpans()[0], "tx.Rollback", "")
+			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Rollback", "", 4)
 		})
 	})
 
 	mtr.Reset()
 	assert.NoError(t, db.Close(ctx))
-	assertSpan(t, mtr.FinishedSpans()[0], "db.Close", "")
+	assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Close", "", 1)
 }
 
-func assertSpan(t *testing.T, sp *mocktracer.MockSpan, opName, statement string) {
+func assertSpanAndMetric(t *testing.T, sp *mocktracer.MockSpan, opName, statement string, metricCount int) {
 	assert.Equal(t, opName, sp.OperationName)
 	assert.Equal(t, map[string]interface{}{
 		"component":    "sql",
@@ -296,4 +297,7 @@ func assertSpan(t *testing.T, sp *mocktracer.MockSpan, opName, statement string)
 		"version":      "dev",
 		"error":        false,
 	}, sp.Tags())
+
+	assert.Equal(t, metricCount, testutil.CollectAndCount(opDurationMetrics, "client_sql_cmd_duration_seconds"))
+	opDurationMetrics.Reset()
 }

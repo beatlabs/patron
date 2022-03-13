@@ -9,6 +9,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,4 +37,6 @@ func TestClient(t *testing.T) {
 	assert.Regexp(t, `:\d+`, mtr.FinishedSpans()[0].Tags()["db.instance"])
 	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["db.statement"], "set")
 	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["db.type"], "kv")
+	// Metrics
+	assert.Equal(t, 1, testutil.CollectAndCount(cmdDurationMetrics, "client_redis_cmd_duration_seconds"))
 }

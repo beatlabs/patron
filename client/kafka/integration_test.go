@@ -10,6 +10,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -56,6 +57,8 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 		"version":   "dev",
 	}
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+	// Metrics
+	assert.Equal(t, 1, testutil.CollectAndCount(messageStatus, "component_kafka_producer_message_status"))
 }
 
 func TestSyncProducer_SendMessage_Close(t *testing.T) {

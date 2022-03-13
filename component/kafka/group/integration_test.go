@@ -25,18 +25,19 @@ import (
 )
 
 const (
+	successTopic1        = "successTopic1"
 	successTopic2        = "successTopic2"
 	failAllRetriesTopic2 = "failAllRetriesTopic2"
 	failAndRetryTopic2   = "failAndRetryTopic2"
-	successTopic3        = "successTopic3"
 	broker               = "127.0.0.1:9093"
 )
 
 func TestKafkaComponent_Success(t *testing.T) {
+	require.NoError(t, test.CreateTopics(broker, successTopic1))
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
 	t.Cleanup(func() { mtr.Reset() })
-	require.NoError(t, test.CreateTopics(broker, successTopic2))
+
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -54,14 +55,14 @@ func TestKafkaComponent_Success(t *testing.T) {
 		}
 		return nil
 	}
-	component := newComponent(t, successTopic2, 3, 10, processorFunc)
+	component := newComponent(t, successTopic1, 3, 10, processorFunc)
 
 	// Run Patron with the kafka component
 	patronContext, patronCancel := context.WithCancel(context.Background())
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(successTopic2, "0", patron.LogFields(map[string]interface{}{"test": successTopic2}))
+		svc, err := patron.New(successTopic1, "0", patron.LogFields(map[string]interface{}{"test": successTopic1}))
 		require.NoError(t, err)
 		err = svc.WithComponents(component).Run(patronContext)
 		require.NoError(t, err)
@@ -75,7 +76,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 		producer, err := test.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
-			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
+			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
 			require.NoError(t, err)
 		}
 		producerWG.Done()
@@ -110,9 +111,9 @@ func TestKafkaComponent_Success(t *testing.T) {
 		assert.Equal(t, expectedTags, span.Tags())
 	}
 
-	assert.Equal(t, 1, testutil.CollectAndCount(consumerErrors, "component_sqs_message_age"))
-	assert.Equal(t, 1, testutil.CollectAndCount(topicPartitionOffsetDiff, "component_sqs_message_counter"))
-	assert.Equal(t, 1, testutil.CollectAndCount(messageStatus, "component_sqs_queue_size"))
+	assert.GreaterOrEqual(t, testutil.CollectAndCount(consumerErrors, "component_kafka_consumer_errors"), 0)
+	assert.GreaterOrEqual(t, testutil.CollectAndCount(topicPartitionOffsetDiff, "component_kafka_offset_diff"), 1)
+	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageStatus, "component_kafka_message_status"), 1)
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {
@@ -256,8 +257,8 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	processorFunc := func(batch kafka.Batch) error {
 		return nil
 	}
-	_, err := New(successTopic3, successTopic3+"-group", []string{"127.0.0.1:9999"},
-		[]string{successTopic3}, processorFunc, sarama.NewConfig(), CheckTopic())
+	_, err := New(successTopic2, successTopic2+"-group", []string{"127.0.0.1:9999"},
+		[]string{successTopic2}, processorFunc, sarama.NewConfig(), CheckTopic())
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "failed to create client:")
 }

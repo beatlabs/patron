@@ -18,7 +18,7 @@ import (
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	kafkacmp "github.com/beatlabs/patron/component/kafka"
-	"github.com/beatlabs/patron/test"
+	kafka2 "github.com/beatlabs/patron/test/kafka"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,7 +34,7 @@ const (
 )
 
 func TestGroupConsume(t *testing.T) {
-	require.NoError(t, test.CreateTopics(broker, groupTopic1))
+	require.NoError(t, kafka2.CreateTopics(broker, groupTopic1))
 
 	sent := []string{"one", "two", "three"}
 	chMessages := make(chan []string)
@@ -59,7 +59,7 @@ func TestGroupConsume(t *testing.T) {
 			_ = consumer.Close()
 		}()
 
-		received, err := test.AsyncConsumeMessages(consumer, len(sent))
+		received, err := kafka2.AsyncConsumeMessages(consumer, len(sent))
 		if err != nil {
 			chErr <- err
 			return
@@ -72,10 +72,10 @@ func TestGroupConsume(t *testing.T) {
 
 	messages := make([]*sarama.ProducerMessage, 0, len(sent))
 	for _, val := range sent {
-		messages = append(messages, test.CreateProducerMessage(groupTopic1, val))
+		messages = append(messages, kafka2.CreateProducerMessage(groupTopic1, val))
 	}
 
-	err := test.SendMessages(broker, messages...)
+	err := kafka2.SendMessages(broker, messages...)
 	require.NoError(t, err)
 
 	var received []string
@@ -90,7 +90,7 @@ func TestGroupConsume(t *testing.T) {
 }
 
 func TestGroupConsume_ClaimMessageError(t *testing.T) {
-	require.NoError(t, test.CreateTopics(broker, groupTopic2))
+	require.NoError(t, kafka2.CreateTopics(broker, groupTopic2))
 
 	chMessages := make(chan []string)
 	chErr := make(chan error)
@@ -107,7 +107,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 	defer func() { _ = consumer.Close() }()
 
 	go func() {
-		received, err := test.AsyncConsumeMessages(consumer, 1)
+		received, err := kafka2.AsyncConsumeMessages(consumer, 1)
 		if err != nil {
 			chErr <- err
 			return
@@ -118,7 +118,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	err = test.SendMessages(broker, test.CreateProducerMessage(groupTopic2, "321"))
+	err = kafka2.SendMessages(broker, kafka2.CreateProducerMessage(groupTopic2, "321"))
 	require.NoError(t, err)
 
 	select {
@@ -132,7 +132,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 }
 
 func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
-	require.NoError(t, test.CreateTopics(broker, successTopic1))
+	require.NoError(t, kafka2.CreateTopics(broker, successTopic1))
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -167,7 +167,7 @@ func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := test.NewProducer(broker)
+		producer, err := kafka2.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: successTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
@@ -193,7 +193,7 @@ func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 }
 
 func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
-	require.NoError(t, test.CreateTopics(broker, failAllRetriesTopic1))
+	require.NoError(t, kafka2.CreateTopics(broker, failAllRetriesTopic1))
 	// Test parameters
 	numOfMessagesToSend := 100
 	errAtIndex := 50
@@ -223,7 +223,7 @@ func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := test.NewProducer(broker)
+		producer, err := kafka2.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAllRetriesTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})
@@ -251,7 +251,7 @@ func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
 }
 
 func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
-	require.NoError(t, test.CreateTopics(broker, failAndRetryTopic1))
+	require.NoError(t, kafka2.CreateTopics(broker, failAndRetryTopic1))
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -278,7 +278,7 @@ func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := test.NewProducer(broker)
+		producer, err := kafka2.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic1, Value: sarama.StringEncoder(strconv.Itoa(i))})

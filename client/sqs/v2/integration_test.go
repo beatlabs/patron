@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/beatlabs/patron/test"
+	aws2 "github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -36,9 +36,9 @@ func Test_SQS_Publish_Message(t *testing.T) {
 
 	const queueName = "test-sqs-publish-v2"
 
-	api, err := test.CreateSQSAPI(region, endpoint)
+	api, err := aws2.CreateSQSAPI(region, endpoint)
 	require.NoError(t, err)
-	queue, err := test.CreateSQSQueue(api, queueName)
+	queue, err := aws2.CreateSQSQueue(api, queueName)
 	require.NoError(t, err)
 
 	pub, err := New(api)

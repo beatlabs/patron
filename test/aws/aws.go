@@ -1,4 +1,4 @@
-package test
+package aws
 
 import (
 	"fmt"
@@ -26,6 +26,18 @@ func CreateSNSAPI(region, endpoint string) (snsiface.SNSAPI, error) {
 	return sns.New(ses, cfg), nil
 }
 
+// CreateSNSTopic helper function.
+func CreateSNSTopic(api snsiface.SNSAPI, topic string) (string, error) {
+	out, err := api.CreateTopic(&sns.CreateTopicInput{
+		Name: aws.String(topic),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to create topic %s: %w", topic, err)
+	}
+
+	return *out.TopicArn, nil
+}
+
 // CreateSQSAPI helper function.
 func CreateSQSAPI(region, endpoint string) (sqsiface.SQSAPI, error) {
 	ses, err := createSession(region, endpoint)
@@ -49,18 +61,6 @@ func CreateSQSQueue(api sqsiface.SQSAPI, queueName string) (string, error) {
 		return "", fmt.Errorf("failed to create SQS queue %s: %w", queueName, err)
 	}
 	return *out.QueueUrl, nil
-}
-
-// CreateSNSTopic helper function.
-func CreateSNSTopic(api snsiface.SNSAPI, topic string) (string, error) {
-	out, err := api.CreateTopic(&sns.CreateTopicInput{
-		Name: aws.String(topic),
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to create topic %s: %w", topic, err)
-	}
-
-	return *out.TopicArn, nil
 }
 
 func createSession(region, endpoint string) (*session.Session, error) {

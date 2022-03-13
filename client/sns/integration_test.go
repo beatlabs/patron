@@ -7,7 +7,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/beatlabs/patron/test"
+	"github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -26,9 +26,9 @@ func Test_SNS_Publish_Message(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
 
 	const topic = "test_publish_message"
-	api, err := test.CreateSNSAPI(region, endpoint)
+	api, err := aws.CreateSNSAPI(region, endpoint)
 	require.NoError(t, err)
-	arn, err := test.CreateSNSTopic(api, topic)
+	arn, err := aws.CreateSNSTopic(api, topic)
 	require.NoError(t, err)
 	pub, err := NewPublisher(api)
 	require.NoError(t, err)

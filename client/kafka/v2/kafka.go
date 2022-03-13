@@ -1,13 +1,16 @@
 package v2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/correlation"
 	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -162,4 +165,15 @@ type kafkaHeadersCarrier []sarama.RecordHeader
 // Set implements Set() of opentracing.TextMapWriter.
 func (c *kafkaHeadersCarrier) Set(key, val string) {
 	*c = append(*c, sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
+}
+
+func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.ProducerMessage, sp opentracing.Span) error {
+	msg.Headers = append(msg.Headers, sarama.RecordHeader{
+		Key:   []byte(correlation.HeaderID),
+		Value: []byte(correlation.IDFromContext(ctx)),
+	})
+	c := kafkaHeadersCarrier(msg.Headers)
+	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
+	msg.Headers = c
+	return err
 }

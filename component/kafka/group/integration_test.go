@@ -16,6 +16,10 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/test"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,6 +33,9 @@ const (
 )
 
 func TestKafkaComponent_Success(t *testing.T) {
+	mtr := mocktracer.New()
+	opentracing.SetGlobalTracer(mtr)
+	t.Cleanup(func() { mtr.Reset() })
 	require.NoError(t, test.CreateTopics(broker, successTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100
@@ -88,6 +95,24 @@ func TestKafkaComponent_Success(t *testing.T) {
 	// Shutdown Patron and wait for it to finish
 	patronCancel()
 	patronWG.Wait()
+
+	assert.Len(t, mtr.FinishedSpans(), 3)
+
+	expectedTags := map[string]interface{}{
+		"component":     "sqs-consumer",
+		"correlationID": "123",
+		"error":         false,
+		"span.kind":     ext.SpanKindEnum("consumer"),
+		"version":       "dev",
+	}
+
+	for _, span := range mtr.FinishedSpans() {
+		assert.Equal(t, expectedTags, span.Tags())
+	}
+
+	assert.Equal(t, 1, testutil.CollectAndCount(consumerErrors, "component_sqs_message_age"))
+	assert.Equal(t, 1, testutil.CollectAndCount(topicPartitionOffsetDiff, "component_sqs_message_counter"))
+	assert.Equal(t, 1, testutil.CollectAndCount(messageStatus, "component_sqs_queue_size"))
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {

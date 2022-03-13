@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -14,6 +15,8 @@ import (
 	patronsqsclient "github.com/beatlabs/patron/client/sqs/v2"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/test"
+	"github.com/opentracing/opentracing-go/ext"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -64,7 +67,7 @@ func Test_SQS_Consume(t *testing.T) {
 	}
 
 	cmp, err := New("123", queueName, api, procFunc, MaxMessages(10),
-		PollWaitSeconds(20), VisibilityTimeout(30))
+		PollWaitSeconds(20), VisibilityTimeout(30), QueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 
 	go func() { require.NoError(t, cmp.Run(context.Background())) }()
@@ -73,6 +76,22 @@ func Test_SQS_Consume(t *testing.T) {
 
 	assert.ElementsMatch(t, sent, got)
 	assert.Len(t, mtr.FinishedSpans(), 3)
+
+	expectedTags := map[string]interface{}{
+		"component":     "sqs-consumer",
+		"correlationID": "123",
+		"error":         false,
+		"span.kind":     ext.SpanKindEnum("consumer"),
+		"version":       "dev",
+	}
+
+	for _, span := range mtr.FinishedSpans() {
+		assert.Equal(t, expectedTags, span.Tags())
+	}
+
+	assert.Equal(t, 1, testutil.CollectAndCount(messageAge, "component_sqs_message_age"))
+	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageCounterVec, "component_sqs_message_counter"), 1)
+	assert.GreaterOrEqual(t, testutil.CollectAndCount(queueSize, "component_sqs_queue_size"), 1)
 }
 
 func sendMessage(t *testing.T, api sqsiface.SQSAPI, correlationID, queue string, ids ...string) []*testMessage {

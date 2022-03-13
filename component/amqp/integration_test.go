@@ -6,8 +6,12 @@ package amqp
 import (
 	"context"
 	"testing"
+	"time"
 
 	v2 "github.com/beatlabs/patron/client/amqp/v2"
+	"github.com/beatlabs/patron/correlation"
+	"github.com/opentracing/opentracing-go/ext"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,11 +33,13 @@ func TestRun(t *testing.T) {
 
 	sent := []string{"one", "two"}
 
-	err = pub.Publish(ctx, "", rabbitMQQueue, false, false,
+	reqCtx := correlation.ContextWithID(ctx, "123")
+
+	err = pub.Publish(reqCtx, "", rabbitMQQueue, false, false,
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent[0])})
 	require.NoError(t, err)
 
-	err = pub.Publish(ctx, "", rabbitMQQueue, false, false,
+	err = pub.Publish(reqCtx, "", rabbitMQQueue, false, false,
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent[1])})
 	require.NoError(t, err)
 	mtr.Reset()
@@ -54,7 +60,7 @@ func TestRun(t *testing.T) {
 		}
 	}
 
-	cmp, err := New(endpoint, rabbitMQQueue, procFunc)
+	cmp, err := New(endpoint, rabbitMQQueue, procFunc, StatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 
 	chDone := make(chan struct{})
@@ -66,9 +72,28 @@ func TestRun(t *testing.T) {
 
 	got := <-chReceived
 	cnl()
+
+	<-chDone
+
 	assert.ElementsMatch(t, sent, got)
 	assert.Len(t, mtr.FinishedSpans(), 2)
-	<-chDone
+
+	expectedTags := map[string]interface{}{
+		"component":     "amqp-consumer",
+		"correlationID": "123",
+		"error":         false,
+		"queue":         "rmq-test-queue",
+		"span.kind":     ext.SpanKindEnum("consumer"),
+		"version":       "dev",
+	}
+
+	for _, span := range mtr.FinishedSpans() {
+		assert.Equal(t, expectedTags, span.Tags())
+	}
+
+	assert.Equal(t, 1, testutil.CollectAndCount(messageAge, "component_amqp_message_age"))
+	assert.Equal(t, 2, testutil.CollectAndCount(messageCounterVec, "component_amqp_message_counter"))
+	assert.GreaterOrEqual(t, testutil.CollectAndCount(queueSize, "component_amqp_queue_size"), 0)
 }
 
 func createQueue() error {

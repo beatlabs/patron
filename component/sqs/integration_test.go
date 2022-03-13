@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	patronsqsclient "github.com/beatlabs/patron/client/sqs/v2"
 	"github.com/beatlabs/patron/correlation"
-	aws2 "github.com/beatlabs/patron/test/aws"
+	testaws "github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
@@ -36,9 +36,9 @@ func Test_SQS_Consume(t *testing.T) {
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"
 
-	api, err := aws2.CreateSQSAPI(region, endpoint)
+	api, err := testaws.CreateSQSAPI(region, endpoint)
 	require.NoError(t, err)
-	queue, err := aws2.CreateSQSQueue(api, queueName)
+	queue, err := testaws.CreateSQSQueue(api, queueName)
 	require.NoError(t, err)
 
 	sent := sendMessage(t, api, correlationID, queue, "1", "2", "3")

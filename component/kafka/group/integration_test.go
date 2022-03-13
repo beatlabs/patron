@@ -16,7 +16,7 @@ import (
 	kafkaclient "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/correlation"
-	kafka2 "github.com/beatlabs/patron/test/kafka"
+	testkafka "github.com/beatlabs/patron/test/kafka"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -34,7 +34,7 @@ const (
 )
 
 func TestKafkaComponent_Success(t *testing.T) {
-	require.NoError(t, kafka2.CreateTopics(broker, successTopic1))
+	require.NoError(t, testkafka.CreateTopics(broker, successTopic1))
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
 	mtr.Reset()
@@ -120,7 +120,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {
-	require.NoError(t, kafka2.CreateTopics(broker, failAllRetriesTopic2))
+	require.NoError(t, testkafka.CreateTopics(broker, failAllRetriesTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100
 	errAtIndex := 70
@@ -150,7 +150,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	batchSize := uint(1)
 	component := newComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
 
-	producer, err := kafka2.NewProducer(broker)
+	producer, err := testkafka.NewProducer(broker)
 	require.NoError(t, err)
 
 	msgs := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
@@ -175,7 +175,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 }
 
 func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
-	require.NoError(t, kafka2.CreateTopics(broker, failAndRetryTopic2))
+	require.NoError(t, testkafka.CreateTopics(broker, failAndRetryTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -204,7 +204,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := kafka2.NewProducer(broker)
+		producer, err := testkafka.NewProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})

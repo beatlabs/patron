@@ -98,11 +98,11 @@ github.com/eapache/go-resiliency/breaker
 github.com/eapache/go-xerial-snappy
 # github.com/eapache/queue v1.1.0
 github.com/eapache/queue
-# github.com/elastic/elastic-transport-go/v8 v8.0.0-alpha
+# github.com/elastic/elastic-transport-go/v8 v8.1.0
 ## explicit
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version
-# github.com/elastic/go-elasticsearch/v8 v8.0.0
+# github.com/elastic/go-elasticsearch/v8 v8.1.0
 ## explicit
 github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi

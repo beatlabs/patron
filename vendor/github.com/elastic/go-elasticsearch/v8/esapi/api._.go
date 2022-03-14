@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.0.0 (58bd3a7): DO NOT EDIT
+// Code generated from specification version 8.1.0 (66b60a2): DO NOT EDIT
 
 package esapi
 
@@ -60,6 +60,9 @@ type API struct {
 	DeleteByQueryRethrottle            DeleteByQueryRethrottle
 	Delete                             Delete
 	DeleteScript                       DeleteScript
+	DesiredNodesDeleteDesiredNodes     DesiredNodesDeleteDesiredNodes
+	DesiredNodesGetDesiredNodes        DesiredNodesGetDesiredNodes
+	DesiredNodesUpdateDesiredNodes     DesiredNodesUpdateDesiredNodes
 	EnrichDeletePolicy                 EnrichDeletePolicy
 	EnrichExecutePolicy                EnrichExecutePolicy
 	EnrichGetPolicy                    EnrichGetPolicy
@@ -86,6 +89,9 @@ type API struct {
 	GraphExplore                       GraphExplore
 	Index                              Index
 	Info                               Info
+	InternalDeleteDesiredNodes         InternalDeleteDesiredNodes
+	InternalGetDesiredNodes            InternalGetDesiredNodes
+	InternalUpdateDesiredNodes         InternalUpdateDesiredNodes
 	KnnSearch                          KnnSearch
 	LogstashDeletePipeline             LogstashDeletePipeline
 	LogstashGetPipeline                LogstashGetPipeline
@@ -131,6 +137,7 @@ type API struct {
 	TransformGetTransformStats         TransformGetTransformStats
 	TransformPreviewTransform          TransformPreviewTransform
 	TransformPutTransform              TransformPutTransform
+	TransformResetTransform            TransformResetTransform
 	TransformStartTransform            TransformStartTransform
 	TransformStopTransform             TransformStopTransform
 	TransformUpdateTransform           TransformUpdateTransform
@@ -477,6 +484,9 @@ type Security struct {
 	HasPrivileges               SecurityHasPrivileges
 	InvalidateAPIKey            SecurityInvalidateAPIKey
 	InvalidateToken             SecurityInvalidateToken
+	OidcAuthenticate            SecurityOidcAuthenticate
+	OidcLogout                  SecurityOidcLogout
+	OidcPrepareAuthentication   SecurityOidcPrepareAuthentication
 	PutPrivileges               SecurityPutPrivileges
 	PutRoleMapping              SecurityPutRoleMapping
 	PutRole                     SecurityPutRole
@@ -546,6 +556,9 @@ func New(t Transport) *API {
 		DeleteByQueryRethrottle:            newDeleteByQueryRethrottleFunc(t),
 		Delete:                             newDeleteFunc(t),
 		DeleteScript:                       newDeleteScriptFunc(t),
+		DesiredNodesDeleteDesiredNodes:     newDesiredNodesDeleteDesiredNodesFunc(t),
+		DesiredNodesGetDesiredNodes:        newDesiredNodesGetDesiredNodesFunc(t),
+		DesiredNodesUpdateDesiredNodes:     newDesiredNodesUpdateDesiredNodesFunc(t),
 		EnrichDeletePolicy:                 newEnrichDeletePolicyFunc(t),
 		EnrichExecutePolicy:                newEnrichExecutePolicyFunc(t),
 		EnrichGetPolicy:                    newEnrichGetPolicyFunc(t),
@@ -572,6 +585,9 @@ func New(t Transport) *API {
 		GraphExplore:                       newGraphExploreFunc(t),
 		Index:                              newIndexFunc(t),
 		Info:                               newInfoFunc(t),
+		InternalDeleteDesiredNodes:         newInternalDeleteDesiredNodesFunc(t),
+		InternalGetDesiredNodes:            newInternalGetDesiredNodesFunc(t),
+		InternalUpdateDesiredNodes:         newInternalUpdateDesiredNodesFunc(t),
 		KnnSearch:                          newKnnSearchFunc(t),
 		LogstashDeletePipeline:             newLogstashDeletePipelineFunc(t),
 		LogstashGetPipeline:                newLogstashGetPipelineFunc(t),
@@ -617,6 +633,7 @@ func New(t Transport) *API {
 		TransformGetTransformStats:         newTransformGetTransformStatsFunc(t),
 		TransformPreviewTransform:          newTransformPreviewTransformFunc(t),
 		TransformPutTransform:              newTransformPutTransformFunc(t),
+		TransformResetTransform:            newTransformResetTransformFunc(t),
 		TransformStartTransform:            newTransformStartTransformFunc(t),
 		TransformStopTransform:             newTransformStopTransformFunc(t),
 		TransformUpdateTransform:           newTransformUpdateTransformFunc(t),
@@ -927,6 +944,9 @@ func New(t Transport) *API {
 			HasPrivileges:               newSecurityHasPrivilegesFunc(t),
 			InvalidateAPIKey:            newSecurityInvalidateAPIKeyFunc(t),
 			InvalidateToken:             newSecurityInvalidateTokenFunc(t),
+			OidcAuthenticate:            newSecurityOidcAuthenticateFunc(t),
+			OidcLogout:                  newSecurityOidcLogoutFunc(t),
+			OidcPrepareAuthentication:   newSecurityOidcPrepareAuthenticationFunc(t),
 			PutPrivileges:               newSecurityPutPrivilegesFunc(t),
 			PutRoleMapping:              newSecurityPutRoleMappingFunc(t),
 			PutRole:                     newSecurityPutRoleFunc(t),

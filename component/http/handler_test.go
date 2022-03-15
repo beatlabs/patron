@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/beatlabs/patron/correlation"
@@ -376,4 +377,103 @@ func Test_extractParamsRawRoute(t *testing.T) {
 
 	assert.Equal(t, "42", fields["id"])
 	assert.Equal(t, "online", fields["status"])
+}
+
+func Test_getSingleHeaderEncoding(t *testing.T) {
+	testcases := []struct {
+		header string
+		ct     string
+		dec    encoding.DecodeFunc
+		enc    encoding.EncodeFunc
+		err    error
+	}{
+		{
+			json.Type,
+			json.TypeCharset,
+			json.Decode,
+			json.Encode,
+			nil,
+		},
+		{
+			json.TypeCharset,
+			json.TypeCharset,
+			json.Decode,
+			json.Encode,
+			nil,
+		},
+		{
+			"*/*", // json as default (?)
+			json.TypeCharset,
+			json.Decode,
+			json.Encode,
+			nil,
+		},
+		{
+			"*",
+			json.TypeCharset,
+			json.Decode,
+			json.Encode,
+			nil,
+		},
+		{
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding#:~:text=This%20value%20is%20always%20considered%20as%20acceptable%2C%20even%20if%20omitted
+			"identity",
+			json.TypeCharset,
+			json.Decode,
+			json.Encode,
+			nil,
+		},
+		{
+			"*/*;q=0.8",
+			json.TypeCharset,
+			json.Decode,
+			json.Encode,
+			nil,
+		},
+		{
+			protobuf.Type,
+			protobuf.Type,
+			protobuf.Decode,
+			protobuf.Encode,
+			nil,
+		},
+		{
+			protobuf.TypeGoogle,
+			protobuf.Type,
+			protobuf.Decode,
+			protobuf.Encode,
+			nil,
+		},
+		{
+			"text/html",
+			"",
+			nil,
+			nil,
+			ErrAcceptHeaderNotSupported,
+		},
+		{
+			"garbage",
+			"",
+			nil,
+			nil,
+			ErrAcceptHeaderNotSupported,
+		},
+	}
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.header, func(t *testing.T) {
+			ct, dec, enc, err := getSingleHeaderEncoding(tc.header)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.ct, ct)
+
+			if reflect.ValueOf(tc.dec).Pointer() != reflect.ValueOf(dec).Pointer() {
+				t.Fatalf("Invalid decoder\n\texpected: %v\n\treceived: %v", tc.dec, dec)
+			}
+
+			if reflect.ValueOf(tc.enc).Pointer() != reflect.ValueOf(enc).Pointer() {
+				t.Fatalf("Invalid encoder\n\texpected: %v\n\treceived: %v", tc.dec, dec)
+			}
+		})
+	}
 }

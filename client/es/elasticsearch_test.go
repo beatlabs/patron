@@ -11,11 +11,11 @@ import (
 	"testing"
 
 	"github.com/beatlabs/patron/trace"
-
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -170,10 +170,27 @@ func TestEsQuery(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, rsp)
 
+	// assert span
 	finishedSpans := mtr.FinishedSpans()
 	assert.Equal(t, 1, len(finishedSpans))
-
+	expected := map[string]interface{}{
+		"component":        "go-elasticsearch",
+		"db.statement":     "{\"mappings\": {\"_doc\": {\"properties\": {\"field1\": {\"type\": \"integer\"}}}}}",
+		"db.type":          "elasticsearch",
+		"db.user":          "",
+		"error":            false,
+		"hosts":            "[http://localhost:9200]",
+		"http.method":      "PUT",
+		"http.status_code": uint16(200),
+		"http.url":         "/test_index",
+		"respondent":       "localhost:9200",
+		"version":          "dev",
+	}
+	assert.Equal(t, expected, finishedSpans[0].Tags())
 	assert.Equal(t, opName, finishedSpans[0].OperationName)
+
+	// assert metrics
+	assert.Equal(t, 1, testutil.CollectAndCount(reqDurationMetrics, "client_elasticsearch_request_duration_seconds"))
 }
 
 func TestGetAddrFromEnv(t *testing.T) {

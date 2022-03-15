@@ -120,7 +120,7 @@ func (hc *kafkaProducer) forwardToKafkaHandler(ctx context.Context, req *patronh
 		return nil, fmt.Errorf("failed to get www.google.com: %w", err)
 	}
 
-	b, err := json.Encode(u)
+	b, err := json.Encode(&u)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode message: %w", err)
 	}

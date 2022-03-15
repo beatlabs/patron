@@ -1,6 +1,6 @@
-// Package sqs provides a set of common interfaces and structs for publishing messages to AWS SQS. Implementations
+// Package v2 provides a set of common interfaces and structs for publishing messages to AWS SQS. Implementations
 // in this package also include distributed tracing capabilities by default.
-package sqs
+package v2
 
 import (
 	"context"
@@ -50,7 +50,6 @@ func New(api sqsiface.SQSAPI) (Publisher, error) {
 	if api == nil {
 		return Publisher{}, errors.New("missing api")
 	}
-
 	return Publisher{api: api}, nil
 }
 

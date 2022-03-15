@@ -22,7 +22,7 @@ Below are prerequisites for enabling exemplars:
 - Use `ObserveWithExemplar` or `AddWithExemplar` methods noting the `TraceID` key — it is needed later to configure 
   Grafana, so that it knows which label to use to retrieve the `TraceID`
 
-An example of enabling exemplars in an already instrumented Go application can be found [here](../trace/metric.go)
+An example of enabling exemplars in an already instrumented Go application can be found [here](../../trace/metric.go)
 where exemplars are enabled for `Histogram` and `Counter` metrics.
 
 The result of the above steps is attached trace IDs to metrics via exemplars.

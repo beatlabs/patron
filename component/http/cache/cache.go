@@ -71,7 +71,7 @@ type control struct {
 // executor is the function returning a cache Response object from the underlying implementation.
 type executor func(now int64, key string) *response
 
-// handler wraps the an execution logic with a cache layer
+// handler wraps an execution logic with a cache layer
 // exec is the processor func that the cache will wrap
 // rc is the route cache implementation to be used.
 func handler(exec executor, rc *RouteCache) func(request *handlerRequest) (response *handlerResponse, e error) {
@@ -191,7 +191,7 @@ func get(key string, rc *RouteCache) *response {
 }
 
 // save caches the given Response if required with a ttl
-// as we are putting the objects in the cache, if its a TTL one, we need to manage the expiration on our own.
+// as we are putting the objects in the cache, if it's a TTL one, we need to manage the expiration on our own.
 func save(path, key string, rsp *response, cache cache.TTLCache, maxAge time.Duration) {
 	if !rsp.FromCache && rsp.Err == nil {
 		// encode to a byte array on our side to avoid cache specific encoding / marshaling requirements

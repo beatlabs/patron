@@ -76,7 +76,7 @@ func init() {
 	prometheus.MustRegister(queueSize)
 }
 
-// ProcessorFunc definition of a async processor.
+// ProcessorFunc definition of an async processor.
 type ProcessorFunc func(context.Context, Batch)
 
 type queueConfig struct {
@@ -99,7 +99,7 @@ type statsConfig struct {
 	interval time.Duration
 }
 
-// Component implementation of a async component.
+// Component implementation of an async component.
 type Component struct {
 	queueCfg queueConfig
 	proc     ProcessorFunc

@@ -177,7 +177,7 @@ func TestSayHello(t *testing.T) {
 			mtr.Reset()
 
 			// Metrics
-			assert.Equal(t, tc.wantCounter, testutil.CollectAndCount(rpcDurationMetrics))
+			assert.Equal(t, tc.wantCounter, testutil.CollectAndCount(rpcDurationMetrics, "client_grpc_rpc_duration_seconds"))
 			rpcDurationMetrics.Reset()
 		})
 	}

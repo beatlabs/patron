@@ -27,7 +27,7 @@ func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (p
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeSync, msg.Topic), componentTypeSync,
 		ext.SpanKindProducer, syncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
 
-	err = injectTracingHeaders(msg, sp)
+	err = injectTracingAndCorrelationHeaders(ctx, msg, sp)
 	if err != nil {
 		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
@@ -52,25 +52,33 @@ func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.Produce
 		return errors.New("messages are empty or nil")
 	}
 
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeSync, batchTarget), componentTypeSync,
-		ext.SpanKindProducer, syncTag, opentracing.Tag{Key: "topic", Value: batchTarget})
+	spans := make([]opentracing.Span, 0, len(messages))
 
 	for _, msg := range messages {
-		if err := injectTracingHeaders(msg, sp); err != nil {
+		sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeSync, batchTarget), componentTypeSync,
+			ext.SpanKindProducer, syncTag, opentracing.Tag{Key: "topic", Value: batchTarget})
+
+		if err := injectTracingAndCorrelationHeaders(ctx, msg, sp); err != nil {
 			statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, len(messages))
 			trace.SpanError(sp)
 			return fmt.Errorf("failed to inject tracing headers: %w", err)
 		}
+		spans = append(spans, sp)
 	}
 
 	if err := p.syncProd.SendMessages(messages); err != nil {
 		statusCountBatchAdd(deliveryTypeSync, deliveryStatusSendError, messages)
-		trace.SpanError(sp)
+		for _, sp := range spans {
+			trace.SpanError(sp)
+		}
+
 		return err
 	}
 
 	statusCountBatchAdd(deliveryTypeSync, deliveryStatusSent, messages)
-	trace.SpanSuccess(sp)
+	for _, sp := range spans {
+		trace.SpanSuccess(sp)
+	}
 	return nil
 }
 

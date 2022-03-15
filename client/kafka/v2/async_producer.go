@@ -8,7 +8,7 @@ import (
 	"github.com/Shopify/sarama"
 	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 
@@ -26,7 +26,7 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) 
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeAsync, msg.Topic), componentTypeAsync,
 		ext.SpanKindProducer, asyncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
 
-	err := injectTracingHeaders(msg, sp)
+	err := injectTracingAndCorrelationHeaders(ctx, msg, sp)
 	if err != nil {
 		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
@@ -37,12 +37,6 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) 
 	statusCountAdd(deliveryTypeAsync, deliveryStatusSent, msg.Topic, 1)
 	trace.SpanSuccess(sp)
 	return nil
-}
-
-func injectTracingHeaders(msg *sarama.ProducerMessage, sp opentracing.Span) error {
-	c := kafkaHeadersCarrier(msg.Headers)
-
-	return sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
 }
 
 func (ap *AsyncProducer) propagateError(chErr chan<- error) {

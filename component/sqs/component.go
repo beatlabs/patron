@@ -25,7 +25,7 @@ const (
 	defaultMaxMessages   = 3
 )
 
-// ProcessorFunc definition of a async processor.
+// ProcessorFunc definition of an async processor.
 type ProcessorFunc func(context.Context, Batch)
 
 type messageState string
@@ -99,7 +99,7 @@ type stats struct {
 	interval time.Duration
 }
 
-// Component implementation of a async component.
+// Component implementation of an async component.
 type Component struct {
 	name  string
 	queue queue

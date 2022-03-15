@@ -11,14 +11,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/reliability/circuitbreaker"
 )
 
 func TestTracedClient_Do(t *testing.T) {
@@ -77,7 +76,7 @@ func TestTracedClient_Do(t *testing.T) {
 			assert.Equal(t, tt.wantOpName, sp.OperationName)
 			mtr.Reset()
 			// Test counters.
-			assert.Equal(t, tt.wantCounter, testutil.CollectAndCount(reqDurationMetrics))
+			assert.Equal(t, tt.wantCounter, testutil.CollectAndCount(reqDurationMetrics, "client_http_request_duration_seconds"))
 			reqDurationMetrics.Reset()
 		})
 	}

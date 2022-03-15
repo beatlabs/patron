@@ -8,7 +8,7 @@ import (
 type AliveStatus int
 
 const (
-	// Alive represents a state defining a Alive state.
+	// Alive represents a state defining an Alive state.
 	Alive AliveStatus = 1
 	// Unresponsive represents a state defining a Unresponsive state.
 	Unresponsive AliveStatus = 2

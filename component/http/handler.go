@@ -13,7 +13,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var ErrAcceptHeaderNotSupported = errors.New("accept header not supported")
+var errAcceptHeaderNotSupported = errors.New("accept header not supported")
 
 func handler(hnd ProcessorFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func determineEncoding(h http.Header) (string, encoding.DecodeFunc, encoding.Enc
 		}
 		// No valid headers found after going through all headers
 		if !encFound {
-			return "", nil, nil, ErrAcceptHeaderNotSupported
+			return "", nil, nil, errAcceptHeaderNotSupported
 		}
 	}
 
@@ -119,7 +119,7 @@ func getSingleHeaderEncoding(header string) (string, encoding.DecodeFunc, encodi
 		dec = protobuf.Decode
 		ct = protobuf.Type
 	default:
-		return "", nil, nil, ErrAcceptHeaderNotSupported
+		return "", nil, nil, errAcceptHeaderNotSupported
 	}
 
 	return ct, dec, enc, nil

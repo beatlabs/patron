@@ -449,14 +449,14 @@ func Test_getSingleHeaderEncoding(t *testing.T) {
 			ct:     "",
 			dec:    nil,
 			enc:    nil,
-			err:    errAcceptHeaderNotSupported,
+			err:    errors.New("accept header not supported"),
 		},
 		{
 			header: "garbage",
 			ct:     "",
 			dec:    nil,
 			enc:    nil,
-			err:    errAcceptHeaderNotSupported,
+			err:    errors.New("accept header not supported"),
 		},
 	}
 

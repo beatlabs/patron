@@ -412,7 +412,7 @@ func TestRun_Process_Shutdown(t *testing.T) {
 	assert.Equal(t, 1, builder.proc.execs)
 }
 
-// TestRun_Process_Error_InvalidStrategy expects a invalid failure strategy error
+// TestRun_Process_Error_InvalidStrategy expects an invalid failure strategy error
 // NOTE : we injected the failure strategy after the construction,
 // in order to avoid the failure strategy check.
 func TestRun_Process_Error_InvalidStrategy(t *testing.T) {

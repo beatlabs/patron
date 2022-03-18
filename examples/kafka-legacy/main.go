@@ -97,10 +97,8 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 		return nil, err
 	}
 
-	cmp, err := async.New("kafka-cmp", cf, kafkaCmp.Process).
-		WithRetries(10).
-		WithRetryWait(5 * time.Second).
-		Create()
+	cmp, err := async.New("kafka-cmp", cf, kafkaCmp.Process).WithRetries(10).
+		WithRetryWait(5 * time.Second).Create()
 	if err != nil {
 		return nil, err
 	}

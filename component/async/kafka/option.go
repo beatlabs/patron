@@ -13,7 +13,7 @@ import (
 // OptionFunc definition for configuring the consumer in a functional way.
 type OptionFunc func(*ConsumerConfig) error
 
-// Version option for setting the Kafka version.
+// Version for setting the Kafka version.
 func Version(version string) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		if version == "" {
@@ -29,7 +29,7 @@ func Version(version string) OptionFunc {
 	}
 }
 
-// Buffer option for adjusting the incoming messages buffer.
+// Buffer for adjusting the incoming messages buffer.
 func Buffer(buf int) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		if buf < 0 {
@@ -40,7 +40,7 @@ func Buffer(buf int) OptionFunc {
 	}
 }
 
-// Timeout option for adjusting the timeout of the connection.
+// Timeout for adjusting the timeout of the connection.
 func Timeout(timeout time.Duration) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Net.DialTimeout = timeout
@@ -48,7 +48,7 @@ func Timeout(timeout time.Duration) OptionFunc {
 	}
 }
 
-// Start option for adjusting the the starting offset.
+// Start for adjusting the starting offset.
 func Start(offset int64) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Consumer.Offsets.Initial = offset
@@ -56,7 +56,7 @@ func Start(offset int64) OptionFunc {
 	}
 }
 
-// StartFromOldest option for adjusting the starting offset to oldest.
+// StartFromOldest for adjusting the starting offset to oldest.
 func StartFromOldest() OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -64,7 +64,7 @@ func StartFromOldest() OptionFunc {
 	}
 }
 
-// StartFromNewest option for adjusting the starting offset to newest.
+// StartFromNewest for adjusting the starting offset to newest.
 func StartFromNewest() OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetNewest
@@ -72,7 +72,7 @@ func StartFromNewest() OptionFunc {
 	}
 }
 
-// Decoder option for injecting a specific decoder implementation.
+// Decoder for injecting a specific decoder implementation.
 func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		if dec == nil {
@@ -83,7 +83,7 @@ func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
 	}
 }
 
-// DecoderJSON option for injecting json decoder.
+// DecoderJSON for injecting json decoder.
 func DecoderJSON() OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.DecoderFunc = json.DecodeRaw

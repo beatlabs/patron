@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -12,7 +13,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/beatlabs/patron/component/http"
+	patronhttp "github.com/beatlabs/patron/component/http"
+	"github.com/beatlabs/patron/component/http/middleware"
+	v2 "github.com/beatlabs/patron/component/http/v2"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/std"
@@ -33,17 +36,18 @@ type Component interface {
 }
 
 // service is responsible for managing and setting up everything.
-// The service will start by default a HTTP component in order to host management endpoint.
+// The service will start by default an HTTP component in order to host management endpoint.
 type service struct {
 	name              string
 	cps               []Component
-	routesBuilder     *http.RoutesBuilder
-	middlewares       []http.MiddlewareFunc
-	acf               http.AliveCheckFunc
-	rcf               http.ReadyCheckFunc
+	routesBuilder     *patronhttp.RoutesBuilder
+	middlewares       []middleware.Func
+	acf               patronhttp.AliveCheckFunc
+	rcf               patronhttp.ReadyCheckFunc
 	termSig           chan os.Signal
 	sighupHandler     func()
 	uncompressedPaths []string
+	httpRouter        http.Handler
 }
 
 func (s *service) setupOSSignal() {
@@ -87,44 +91,84 @@ func (s *service) createHTTPComponent() (Component, error) {
 	portVal := int64(50000)
 	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
 	if ok {
-		portVal, err = strconv.ParseInt(port, 10, 64)
+		portVal, err = strconv.ParseInt(port, 10, 32)
 		if err != nil {
 			return nil, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
 		}
 	}
-	port = strconv.FormatInt(portVal, 10)
-	log.Debugf("creating default HTTP component at port %s", port)
+	log.Debugf("creating default HTTP component at port %d", portVal)
 
-	b := http.NewBuilder().WithPort(int(portVal))
-
-	httpReadTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
-	if ok {
-		readTimeout, err := time.ParseDuration(httpReadTimeout)
-		if err != nil {
-			return nil, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
-		}
-		b.WithReadTimeout(readTimeout)
-		log.Debugf("setting up default HTTP read timeout %s", httpReadTimeout)
+	readTimeout, err := getHTTPReadTimeout()
+	if err != nil {
+		return nil, err
 	}
 
-	httpWriteTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
-	if ok {
-		writeTimeout, err := time.ParseDuration(httpWriteTimeout)
-		if err != nil {
-			return nil, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
-		}
-		b.WithWriteTimeout(writeTimeout)
-		log.Debugf("setting up default HTTP write timeout %s", httpWriteTimeout)
+	writeTimeout, err := getHTTPWriteTimeout()
+	if err != nil {
+		return nil, err
 	}
 
+	deflateLevel, err := getHTTPDeflateLevel()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.httpRouter == nil {
+		return s.createHTTPv1(int(portVal), readTimeout, writeTimeout, deflateLevel)
+	}
+
+	return s.createHTTPv2(int(portVal), readTimeout, writeTimeout)
+}
+
+func getHTTPReadTimeout() (*time.Duration, error) {
+	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
+	if !ok {
+		return nil, nil
+	}
+	timeout, err := time.ParseDuration(httpTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
+	}
+	return &timeout, nil
+}
+
+func getHTTPWriteTimeout() (*time.Duration, error) {
+	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
+	if !ok {
+		return nil, nil
+	}
+	timeout, err := time.ParseDuration(httpTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
+	}
+	return &timeout, nil
+}
+
+func getHTTPDeflateLevel() (*int, error) {
 	deflateLevel, ok := os.LookupEnv("PATRON_COMPRESSION_DEFLATE_LEVEL")
-	if ok {
-		deflateLevelInt, err := strconv.Atoi(deflateLevel)
-		if err != nil {
-			return nil, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
-		}
-		b.WithDeflateLevel(deflateLevelInt)
-		log.Debugf("setting up default HTTP deflate level  %s", deflateLevel)
+	if !ok {
+		return nil, nil
+	}
+	deflateLevelInt, err := strconv.Atoi(deflateLevel)
+	if err != nil {
+		return nil, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
+	}
+	return &deflateLevelInt, nil
+}
+
+func (s *service) createHTTPv1(port int, readTimeout, writeTimeout *time.Duration, deflateLevel *int) (Component, error) {
+	b := patronhttp.NewBuilder().WithPort(port)
+
+	if readTimeout != nil {
+		b.WithReadTimeout(*readTimeout)
+	}
+
+	if writeTimeout != nil {
+		b.WithWriteTimeout(*writeTimeout)
+	}
+
+	if deflateLevel != nil {
+		b.WithDeflateLevel(*deflateLevel)
 	}
 
 	if s.acf != nil {
@@ -153,6 +197,20 @@ func (s *service) createHTTPComponent() (Component, error) {
 	}
 
 	return cp, nil
+}
+
+func (s *service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duration) (Component, error) {
+	oo := []v2.OptionFunc{v2.Port(port)}
+
+	if readTimeout != nil {
+		oo = append(oo, v2.ReadTimeout(*readTimeout))
+	}
+
+	if writeTimeout != nil {
+		oo = append(oo, v2.WriteTimeout(*writeTimeout))
+	}
+
+	return v2.New(s.httpRouter, oo...)
 }
 
 func (s *service) waitTermination(chErr <-chan error) error {
@@ -184,13 +242,14 @@ type Builder struct {
 	name              string
 	version           string
 	cps               []Component
-	routesBuilder     *http.RoutesBuilder
-	middlewares       []http.MiddlewareFunc
-	acf               http.AliveCheckFunc
-	rcf               http.ReadyCheckFunc
+	routesBuilder     *patronhttp.RoutesBuilder
+	middlewares       []middleware.Func
+	acf               patronhttp.AliveCheckFunc
+	rcf               patronhttp.ReadyCheckFunc
 	termSig           chan os.Signal
 	sighupHandler     func()
 	uncompressedPaths []string
+	httpRouter        http.Handler
 }
 
 // Config for setting up the builder.
@@ -257,8 +316,8 @@ func New(name, version string, options ...Option) (*Builder, error) {
 		errors:        make([]error, 0),
 		name:          name,
 		version:       version,
-		acf:           http.DefaultAliveCheck,
-		rcf:           http.DefaultReadyCheck,
+		acf:           patronhttp.DefaultAliveCheck,
+		rcf:           patronhttp.DefaultReadyCheck,
 		termSig:       make(chan os.Signal, 1),
 		sighupHandler: func() { log.Debug("SIGHUP received: nothing setup") },
 	}, nil
@@ -332,7 +391,10 @@ func setupJaegerTracing(name, version string) error {
 }
 
 // WithRoutesBuilder adds routes builder to the default HTTP component.
-func (b *Builder) WithRoutesBuilder(rb *http.RoutesBuilder) *Builder {
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
+func (b *Builder) WithRoutesBuilder(rb *patronhttp.RoutesBuilder) *Builder {
 	if rb == nil {
 		b.errors = append(b.errors, errors.New("routes builder is nil"))
 	} else {
@@ -344,7 +406,10 @@ func (b *Builder) WithRoutesBuilder(rb *http.RoutesBuilder) *Builder {
 }
 
 // WithMiddlewares adds generic middlewares to the default HTTP component.
-func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
+func (b *Builder) WithMiddlewares(mm ...middleware.Func) *Builder {
 	if len(mm) == 0 {
 		b.errors = append(b.errors, errors.New("provided middlewares slice was empty"))
 	} else {
@@ -356,7 +421,10 @@ func (b *Builder) WithMiddlewares(mm ...http.MiddlewareFunc) *Builder {
 }
 
 // WithAliveCheck overrides the default liveness check of the default HTTP component.
-func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder {
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
+func (b *Builder) WithAliveCheck(acf patronhttp.AliveCheckFunc) *Builder {
 	if acf == nil {
 		b.errors = append(b.errors, errors.New("alive check func provided was nil"))
 	} else {
@@ -368,7 +436,10 @@ func (b *Builder) WithAliveCheck(acf http.AliveCheckFunc) *Builder {
 }
 
 // WithReadyCheck overrides the default readiness check of the default HTTP component.
-func (b *Builder) WithReadyCheck(rcf http.ReadyCheckFunc) *Builder {
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
+func (b *Builder) WithReadyCheck(rcf patronhttp.ReadyCheckFunc) *Builder {
 	if rcf == nil {
 		b.errors = append(b.errors, errors.New("ready check func provided was nil"))
 	} else {
@@ -391,7 +462,7 @@ func (b *Builder) WithComponents(cc ...Component) *Builder {
 	return b
 }
 
-// WithSIGHUP adds a custom handler for when the service receives a SIGHUP.
+// WithSIGHUP adds a custom handler for handling SIGHUP.
 func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	if handler == nil {
 		b.errors = append(b.errors, errors.New("provided SIGHUP handler was nil"))
@@ -403,13 +474,28 @@ func (b *Builder) WithSIGHUP(handler func()) *Builder {
 	return b
 }
 
-// WithUncompressedPaths defines a list of paths which the compression middleware will skip.
+// WithUncompressedPaths defines a list of paths which the compre ssion middleware will skip.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func (b *Builder) WithUncompressedPaths(p ...string) *Builder {
 	if len(p) == 0 {
 		b.errors = append(b.errors, errors.New("provided uncompressed paths slice was empty"))
 	} else {
 		log.Debug("setting paths which for which compression will be skipped")
 		b.uncompressedPaths = p
+	}
+
+	return b
+}
+
+// WithRouter replaces the default v1 HTTP component with a new component v2 based on http.Handler.
+func (b *Builder) WithRouter(handler http.Handler) *Builder {
+	if handler == nil {
+		b.errors = append(b.errors, errors.New("provided router is nil"))
+	} else {
+		log.Debug("router will be used with the v2 HTTP component")
+		b.httpRouter = handler
 	}
 
 	return b
@@ -436,6 +522,7 @@ func (b *Builder) build() (*service, error) {
 		termSig:           b.termSig,
 		sighupHandler:     b.sighupHandler,
 		uncompressedPaths: b.uncompressedPaths,
+		httpRouter:        b.httpRouter,
 	}
 
 	httpCp, err := s.createHTTPComponent()
@@ -449,7 +536,7 @@ func (b *Builder) build() (*service, error) {
 }
 
 // Run starts up all service components and monitors for errors.
-// If a component returns a error the service is responsible for shutting down
+// If a component returns an error the service is responsible for shutting down
 // all components and terminate itself.
 func (b *Builder) Run(ctx context.Context) error {
 	s, err := b.build()

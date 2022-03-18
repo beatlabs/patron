@@ -1,4 +1,4 @@
-package http
+package middleware
 
 import (
 	"errors"
@@ -14,10 +14,29 @@ const (
 	excluded                     // '(' or ')'
 )
 
-func newStatusCodeLoggerHandler(cfg string) (statusCodeLoggerHandler, error) {
+type StatusCodeLoggerHandler struct {
+	codes []statusCode
+}
+
+func (s StatusCodeLoggerHandler) shouldLog(statusCode int) bool {
+	for _, code := range s.codes {
+		if code.isRange() {
+			if code.rangeCodes.isIncluded(statusCode) {
+				return true
+			}
+		} else {
+			if statusCode == code.exactCode {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func NewStatusCodeLoggerHandler(cfg string) (StatusCodeLoggerHandler, error) {
 	cfg = strings.TrimSpace(cfg)
 	if len(cfg) == 0 {
-		return statusCodeLoggerHandler{}, nil
+		return StatusCodeLoggerHandler{}, nil
 	}
 
 	splits := strings.Split(cfg, ";")
@@ -34,7 +53,7 @@ func newStatusCodeLoggerHandler(cfg string) (statusCodeLoggerHandler, error) {
 		} else {
 			codeRange, err := parseRange(split)
 			if err != nil {
-				return statusCodeLoggerHandler{}, fmt.Errorf("failed to parse status code range %q: %w", split, err)
+				return StatusCodeLoggerHandler{}, fmt.Errorf("failed to parse status code range %q: %w", split, err)
 			}
 
 			codes[idx] = statusCode{
@@ -42,7 +61,7 @@ func newStatusCodeLoggerHandler(cfg string) (statusCodeLoggerHandler, error) {
 			}
 		}
 	}
-	return statusCodeLoggerHandler{
+	return StatusCodeLoggerHandler{
 		codes: codes,
 	}, nil
 }
@@ -135,23 +154,4 @@ func (s *statusCodeRange) isIncluded(statusCode int) bool {
 		return statusCode > s.start && statusCode <= s.end
 	}
 	return statusCode > s.start && statusCode < s.end
-}
-
-type statusCodeLoggerHandler struct {
-	codes []statusCode
-}
-
-func (s statusCodeLoggerHandler) shouldLog(statusCode int) bool {
-	for _, code := range s.codes {
-		if code.isRange() {
-			if code.rangeCodes.isIncluded(statusCode) {
-				return true
-			}
-		} else {
-			if statusCode == code.exactCode {
-				return true
-			}
-		}
-	}
-	return false
 }

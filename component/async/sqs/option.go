@@ -40,9 +40,9 @@ func PollWaitSeconds(pollWaitSeconds int64) OptionFunc {
 }
 
 // VisibilityTimeout sets the time a message is invisible after it has been requested.
-// This is a built in resiliency mechanism so that, should the consumer fail to acknowledge the message within such timeout,
+// This is a built-in resiliency mechanism so that, should the consumer fail to acknowledge the message within such timeout,
 // it will become visible again and thus available for retries.
-// Allowed values are between 0 and and 12 hours in seconds.
+// Allowed values are between 0 and 12 hours in seconds.
 // If this option is unused, it defaults to the queue's default visibility settings.
 func VisibilityTimeout(visibilityTimeout int64) OptionFunc {
 	return func(f *Factory) error {

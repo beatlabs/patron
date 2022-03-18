@@ -1,4 +1,4 @@
-package http
+package middleware
 
 import (
 	"bytes"
@@ -17,19 +17,17 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/time/rate"
-
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
-	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	tracinglog "github.com/opentracing/opentracing-go/log"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -42,6 +40,12 @@ const (
 	anythingHeader = "*"
 )
 
+var (
+	httpStatusTracingInit          sync.Once
+	httpStatusTracingHandledMetric *prometheus.CounterVec
+	httpStatusTracingLatencyMetric *prometheus.HistogramVec
+)
+
 type responseWriter struct {
 	status              int
 	statusHeaderWritten bool
@@ -49,12 +53,6 @@ type responseWriter struct {
 	responsePayload     bytes.Buffer
 	writer              http.ResponseWriter
 }
-
-var (
-	httpStatusTracingInit          sync.Once
-	httpStatusTracingHandledMetric *prometheus.CounterVec
-	httpStatusTracingLatencyMetric *prometheus.HistogramVec
-)
 
 func newResponseWriter(w http.ResponseWriter, capturePayload bool) *responseWriter {
 	return &responseWriter{status: -1, statusHeaderWritten: false, writer: w, capturePayload: capturePayload}
@@ -96,11 +94,11 @@ func (w *responseWriter) WriteHeader(code int) {
 	w.statusHeaderWritten = true
 }
 
-// MiddlewareFunc type declaration of middleware func.
-type MiddlewareFunc func(next http.Handler) http.Handler
+// Func type declaration of middleware func.
+type Func func(next http.Handler) http.Handler
 
-// NewRecoveryMiddleware creates a MiddlewareFunc that ensures recovery and no panic.
-func NewRecoveryMiddleware() MiddlewareFunc {
+// NewRecovery creates a Func that ensures recovery and no panic.
+func NewRecovery() Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
@@ -124,8 +122,8 @@ func NewRecoveryMiddleware() MiddlewareFunc {
 	}
 }
 
-// NewAuthMiddleware creates a MiddlewareFunc that implements authentication using an Authenticator.
-func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
+// NewAuth creates a Func that implements authentication using an Authenticator.
+func NewAuth(auth auth.Authenticator) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authenticated, err := auth.Authenticate(r)
@@ -143,12 +141,12 @@ func NewAuthMiddleware(auth auth.Authenticator) MiddlewareFunc {
 	}
 }
 
-// NewLoggingTracingMiddleware creates a MiddlewareFunc that continues a tracing span and finishes it.
+// NewLoggingTracing creates a Func that continues a tracing span and finishes it.
 // It uses Jaeger and OpenTracing and will also log the HTTP request on debug level if configured so.
-func NewLoggingTracingMiddleware(path string, statusCodeLogger statusCodeLoggerHandler) MiddlewareFunc {
+func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			corID := getOrSetCorrelationID(r.Header)
+			corID := correlation.GetOrSetHeaderID(r.Header)
 			sp, r := span(path, corID, r)
 			lw := newResponseWriter(w, true)
 			next.ServeHTTP(lw, r)
@@ -157,6 +155,19 @@ func NewLoggingTracingMiddleware(path string, statusCodeLogger statusCodeLoggerH
 			if log.Enabled(log.ErrorLevel) && statusCodeLogger.shouldLog(lw.status) {
 				log.FromContext(r.Context()).Errorf("%s %d error: %v", path, lw.status, lw.responsePayload.String())
 			}
+		})
+	}
+}
+
+// NewInjectObservability injects a correlation ID unless one is already present.
+func NewInjectObservability() Func {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			corID := correlation.GetOrSetHeaderID(r.Header)
+			ctx := correlation.ContextWithID(r.Context(), corID)
+			logger := log.Sub(map[string]interface{}{correlation.ID: corID})
+			ctx = log.WithContext(ctx, logger)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
@@ -183,10 +194,10 @@ func initHTTPServerMetrics() {
 	prometheus.MustRegister(httpStatusTracingLatencyMetric)
 }
 
-// NewRequestObserverMiddleware creates a MiddlewareFunc that captures status code and duration metrics about the responses returned;
+// NewRequestObserver creates a Func that captures status code and duration metrics about the responses returned;
 // metrics are exposed via Prometheus.
 // This middleware is enabled by default.
-func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
+func NewRequestObserver(method, path string) Func {
 	// register Prometheus metrics on first use
 	httpStatusTracingInit.Do(initHTTPServerMetrics)
 
@@ -212,8 +223,8 @@ func NewRequestObserverMiddleware(method, path string) MiddlewareFunc {
 	}
 }
 
-// NewRateLimitingMiddleware creates a MiddlewareFunc that adds a rate limit to a route.
-func NewRateLimitingMiddleware(limiter *rate.Limiter) MiddlewareFunc {
+// NewRateLimiting creates a Func that adds a rate limit to a route.
+func NewRateLimiting(limiter *rate.Limiter) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !limiter.Allow() {
@@ -310,10 +321,10 @@ func selectByWeight(weighted map[float64]string) (string, error) {
 	return weighted[keys[len(keys)-1]], nil
 }
 
-// NewCompressionMiddleware initializes a compression middleware.
+// NewCompression initializes a compression middleware.
 // As per Section 3.5 of the HTTP/1.1 RFC, GZIP and Deflate compression methods are supported.
 // https://tools.ietf.org/html/rfc2616#section-14.3
-func NewCompressionMiddleware(deflateLevel int, ignoreRoutes ...string) MiddlewareFunc {
+func NewCompression(deflateLevel int, ignoreRoutes ...string) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ignore(ignoreRoutes, r.URL.String()) {
@@ -355,7 +366,7 @@ func isErrConnectionReset(err error) bool {
 	errMsg := err.Error()
 
 	// See the explanation here: https://github.com/aws/aws-sdk-go/issues/2525#issuecomment-519263830
-	// It is a little bit vague, but it seems they mean that this specific error happens when we stopped reading for some reason
+	// It is a little vague, but it seems they mean that this specific error happens when we stopped reading for some reason
 	// even though there was something to read. This might have happened due to a wrong length header for example.
 	// So it might've been our error, not an error of remote server when it closes connection unexpectedly.
 	if strings.Contains(errMsg, "read: connection reset") {
@@ -448,10 +459,10 @@ func (w *dynamicCompressionResponseWriter) Close() error {
 	return nil
 }
 
-// NewCachingMiddleware creates a cache layer as a middleware
+// NewCaching creates a cache layer as a middleware
 // when used as part of a middleware chain any middleware later in the chain,
 // will not be executed, but the headers it appends will be part of the cache.
-func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
+func NewCaching(rc *cache.RouteCache) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != http.MethodGet {
@@ -467,8 +478,8 @@ func NewCachingMiddleware(rc *cache.RouteCache) MiddlewareFunc {
 	}
 }
 
-// MiddlewareChain chains middlewares to a handler func.
-func MiddlewareChain(f http.Handler, mm ...MiddlewareFunc) http.Handler {
+// Chain chains middlewares to a handler func.
+func Chain(f http.Handler, mm ...Func) http.Handler {
 	for i := len(mm) - 1; i >= 0; i-- {
 		f = mm[i](f)
 	}
@@ -486,38 +497,14 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 	}
 
 	info := map[string]interface{}{
-		"request": map[string]interface{}{
-			"remote-address": remoteAddr,
-			"method":         r.Method,
-			"url":            r.URL,
-			"proto":          r.Proto,
-			"status":         w.Status(),
-			"referer":        r.Referer(),
-			"user-agent":     r.UserAgent(),
-			correlation.ID:   corID,
-		},
+		correlation.ID:   corID,
+		"method":         r.Method,
+		"url":            r.URL,
+		"status":         w.Status(),
+		"remote-address": remoteAddr,
+		"proto":          r.Proto,
 	}
-	log.Sub(info).Debug()
-}
-
-func getOrSetCorrelationID(h http.Header) string {
-	cor, ok := h[correlation.HeaderID]
-	if !ok {
-		corID := uuid.New().String()
-		h.Set(correlation.HeaderID, corID)
-		return corID
-	}
-	if len(cor) == 0 {
-		corID := uuid.New().String()
-		h.Set(correlation.HeaderID, corID)
-		return corID
-	}
-	if cor[0] == "" {
-		corID := uuid.New().String()
-		h.Set(correlation.HeaderID, corID)
-		return corID
-	}
-	return cor[0]
+	log.FromContext(r.Context()).Sub(info).Debug("request log")
 }
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {

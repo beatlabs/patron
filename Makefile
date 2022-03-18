@@ -1,4 +1,4 @@
- DOCKER = docker
+DOCKER = docker
 
 default: test
 

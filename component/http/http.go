@@ -1,4 +1,4 @@
-// Package http provides a HTTP component with included observability.
+// Package http provides an HTTP component with included observability.
 package http
 
 import (
@@ -9,10 +9,16 @@ import (
 	"github.com/beatlabs/patron/encoding"
 )
 
-// Header is the http header representation as a map of strings.
+// Header is the http header representation as a map of strings
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type Header map[string]string
 
 // Request definition of the sync request model.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type Request struct {
 	Fields  map[string]string
 	Raw     io.Reader
@@ -21,6 +27,9 @@ type Request struct {
 }
 
 // NewRequest creates a new request.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewRequest(f map[string]string, r io.Reader, h map[string]string, d encoding.DecodeFunc) *Request {
 	return &Request{Fields: f, Raw: r, Headers: h, decode: d}
 }
@@ -31,6 +40,9 @@ func (r *Request) Decode(v interface{}) error {
 }
 
 // Response definition of the sync Response model.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type Response struct {
 	Payload interface{}
 	Header  Header
@@ -42,6 +54,9 @@ func NewResponse(p interface{}) *Response {
 }
 
 // ProcessorFunc definition of a function type for processing sync requests.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type ProcessorFunc func(context.Context, *Request) (*Response, error)
 
 func propagateHeaders(header Header, wHeader http.Header) {

@@ -93,7 +93,7 @@ func sampleSqs() (*async.Component, error) {
 	// The max number of retires of a message is determined by the SQS queue, not the consumer.
 	return async.New("sqs", factory, messageHandler).
 		// Note that NackExitStrategy does not work with concurrency, so we need to pick either Nack or Ack Strategy
-		// Ack strategy is not recommended for SQS: we want failed messages to end up in the dead letter queue
+		// is not recommended for SQS: we want failed messages to end up in the dead letter queue
 		WithFailureStrategy(async.NackStrategy).
 		WithRetries(3).
 		WithRetryWait(30 * time.Second).

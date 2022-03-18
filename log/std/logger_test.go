@@ -58,6 +58,8 @@ func TestNewSub(t *testing.T) {
 	assert.Equal(t, subLogger.fields, map[string]interface{}{"name": "john doe", "age": 18})
 	assert.Contains(t, subLogger.fieldsLine, "age=18")
 	assert.Contains(t, subLogger.fieldsLine, "name=john doe")
+	subLogger.Info()
+	assert.Contains(t, b.String(), "age=18")
 }
 
 func TestLogger(t *testing.T) {

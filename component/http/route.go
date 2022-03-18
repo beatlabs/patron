@@ -10,16 +10,17 @@ import (
 	"github.com/beatlabs/patron/cache"
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
+	"github.com/beatlabs/patron/component/http/middleware"
 	errs "github.com/beatlabs/patron/errors"
 	"golang.org/x/time/rate"
 )
 
-// Route definition of a HTTP route.
+// Route definition of an HTTP route.
 type Route struct {
 	path        string
 	method      string
 	handler     http.HandlerFunc
-	middlewares []MiddlewareFunc
+	middlewares []middleware.Func
 }
 
 // Path returns route path value.
@@ -33,7 +34,7 @@ func (r Route) Method() string {
 }
 
 // Middlewares returns route middlewares.
-func (r Route) Middlewares() []MiddlewareFunc {
+func (r Route) Middlewares() []middleware.Func {
 	return r.middlewares
 }
 
@@ -43,12 +44,15 @@ func (r Route) Handler() http.HandlerFunc {
 }
 
 // RouteBuilder for building a route.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type RouteBuilder struct {
 	method        string
 	path          string
 	jaegerTrace   bool
 	rateLimiter   *rate.Limiter
-	middlewares   []MiddlewareFunc
+	middlewares   []middleware.Func
 	authenticator auth.Authenticator
 	handler       http.HandlerFunc
 	routeCache    *httpcache.RouteCache
@@ -69,7 +73,7 @@ func (rb *RouteBuilder) WithRateLimiting(limit float64, burst int) *RouteBuilder
 }
 
 // WithMiddlewares adds middlewares.
-func (rb *RouteBuilder) WithMiddlewares(mm ...MiddlewareFunc) *RouteBuilder {
+func (rb *RouteBuilder) WithMiddlewares(mm ...middleware.Func) *RouteBuilder {
 	if len(mm) == 0 {
 		rb.errors = append(rb.errors, errors.New("middlewares are empty"))
 	}
@@ -152,7 +156,7 @@ func (rb *RouteBuilder) MethodTrace() *RouteBuilder {
 func (rb *RouteBuilder) Build() (Route, error) {
 	// parse a list of HTTP numeric status codes that must be logged
 	cfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
-	statusCodeLogger, err := newStatusCodeLoggerHandler(cfg)
+	statusCodeLogger, err := middleware.NewStatusCodeLoggerHandler(cfg)
 	if err != nil {
 		return Route{}, fmt.Errorf("failed to parse status codes %q: %w", cfg, err)
 	}
@@ -165,21 +169,21 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		return Route{}, errors.New("method is missing")
 	}
 
-	var middlewares []MiddlewareFunc
+	var middlewares []middleware.Func
 	if rb.jaegerTrace {
 		// uses Jaeger/OpenTracing and Patron's response logging
-		middlewares = append(middlewares, NewLoggingTracingMiddleware(rb.path, statusCodeLogger))
+		middlewares = append(middlewares, middleware.NewLoggingTracing(rb.path, statusCodeLogger))
 	}
 
 	// uses a custom Patron metric for HTTP responses (with complete status code)
 	// it does not use Jaeger/OpenTracing
-	middlewares = append(middlewares, NewRequestObserverMiddleware(rb.method, rb.path))
+	middlewares = append(middlewares, middleware.NewRequestObserver(rb.method, rb.path))
 
 	if rb.rateLimiter != nil {
-		middlewares = append(middlewares, NewRateLimitingMiddleware(rb.rateLimiter))
+		middlewares = append(middlewares, middleware.NewRateLimiting(rb.rateLimiter))
 	}
 	if rb.authenticator != nil {
-		middlewares = append(middlewares, NewAuthMiddleware(rb.authenticator))
+		middlewares = append(middlewares, middleware.NewAuth(rb.authenticator))
 	}
 	if len(rb.middlewares) > 0 {
 		middlewares = append(middlewares, rb.middlewares...)
@@ -189,7 +193,7 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		if rb.method != http.MethodGet {
 			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
 		}
-		middlewares = append(middlewares, NewCachingMiddleware(rb.routeCache))
+		middlewares = append(middlewares, middleware.NewCaching(rb.routeCache))
 	}
 
 	return Route{
@@ -201,6 +205,9 @@ func (rb *RouteBuilder) Build() (Route, error) {
 }
 
 // NewFileServer constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewFileServer(path string, assetsDir string, fallbackPath string) *RouteBuilder {
 	var ee []error
 
@@ -257,6 +264,9 @@ func NewFileServer(path string, assetsDir string, fallbackPath string) *RouteBui
 }
 
 // NewRawRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 	var ee []error
 
@@ -272,6 +282,9 @@ func NewRawRouteBuilder(path string, handler http.HandlerFunc) *RouteBuilder {
 }
 
 // NewRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	var ee []error
 
@@ -286,52 +299,82 @@ func NewRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return &RouteBuilder{path: path, errors: ee, handler: handler(processor)}
 }
 
-// NewGetRouteBuilder constructor.
+// NewGetRouteBuilder constructor
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewGetRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodGet()
 }
 
 // NewHeadRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewHeadRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodHead()
 }
 
 // NewPostRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewPostRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodPost()
 }
 
 // NewPutRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewPutRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodPut()
 }
 
 // NewPatchRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewPatchRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodPatch()
 }
 
 // NewDeleteRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewDeleteRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodDelete()
 }
 
 // NewConnectRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewConnectRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodConnect()
 }
 
 // NewOptionsRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewOptionsRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodOptions()
 }
 
 // NewTraceRouteBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewTraceRouteBuilder(path string, processor ProcessorFunc) *RouteBuilder {
 	return NewRouteBuilder(path, processor).MethodTrace()
 }
 
 // RoutesBuilder creates a list of routes.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 type RoutesBuilder struct {
 	routes []Route
 	errors []error
@@ -370,6 +413,9 @@ func (rb *RoutesBuilder) Build() ([]Route, error) {
 }
 
 // NewRoutesBuilder constructor.
+//
+// Deprecated: Please use the new v2 package.
+// This package is frozen and no new functionality will be added.
 func NewRoutesBuilder() *RoutesBuilder {
 	return &RoutesBuilder{}
 }

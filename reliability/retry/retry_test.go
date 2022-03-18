@@ -99,7 +99,7 @@ func Test_Retry_Execute(t *testing.T) {
 
 			assert.Equal(t, tC.expectedExecutions, tC.action.executions)
 
-			// Assert that the total time taken takes into account the delay between retries
+			// Assert that the total time takes into account the delay between retries
 			assert.True(t, elapsed > tC.delay*time.Duration(tC.expectedExecutions-1))
 		})
 	}

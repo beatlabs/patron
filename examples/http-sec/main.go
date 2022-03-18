@@ -10,11 +10,13 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
 	clienthttp "github.com/beatlabs/patron/client/http"
-	v2 "github.com/beatlabs/patron/client/kafka/v2"
-	patronhttp "github.com/beatlabs/patron/component/http"
+	patronkafka "github.com/beatlabs/patron/client/kafka/v2"
 	"github.com/beatlabs/patron/component/http/auth/apikey"
+	v2 "github.com/beatlabs/patron/component/http/v2"
+	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/json"
+	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 )
@@ -63,18 +65,27 @@ func main() {
 		log.Fatalf("failed to create authenticator %v", err)
 	}
 
-	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewGetRouteBuilder("/", asyncComp.forwardToKafkaHandler).WithTrace().WithAuth(auth))
+	var routes v2.Routes
+	routes.Append(v2.NewGetRoute("/", asyncComp.forwardToKafkaHandler, v2.Auth(auth)))
+	rr, err := routes.Result()
+	if err != nil {
+		log.Fatalf("failed to create routes: %v", err)
+	}
+
+	router, err := httprouter.New(httprouter.Routes(rr...))
+	if err != nil {
+		log.Fatalf("failed to create http router: %v", err)
+	}
 
 	ctx := context.Background()
-	err = service.WithRoutesBuilder(routesBuilder).Run(ctx)
+	err = service.WithRouter(router).Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}
 }
 
 type kafkaProducer struct {
-	prd   *v2.AsyncProducer
+	prd   *patronkafka.AsyncProducer
 	topic string
 }
 
@@ -85,7 +96,7 @@ func newAsyncKafkaProducer(kafkaBroker, topic string, readCommitted bool) (*kafk
 		return nil, err
 	}
 
-	prd, chErr, err := v2.New([]string{kafkaBroker}, saramaCfg).CreateAsync()
+	prd, chErr, err := patronkafka.New([]string{kafkaBroker}, saramaCfg).CreateAsync()
 	if err != nil {
 		return nil, err
 	}
@@ -98,31 +109,41 @@ func newAsyncKafkaProducer(kafkaBroker, topic string, readCommitted bool) (*kafk
 	return &kafkaProducer{prd: prd, topic: topic}, nil
 }
 
-// forwardToKafkaHandler is an http handler that decodes the input request and
+// forwardToKafkaHandler is a http handler that decodes the input request and
 // publishes the decoded content as a message into a kafka topic (also does an HTTP GET request to google.com)
-func (hc *kafkaProducer) forwardToKafkaHandler(ctx context.Context, req *patronhttp.Request) (*patronhttp.Response, error) {
+func (hc *kafkaProducer) forwardToKafkaHandler(rw http.ResponseWriter, r *http.Request) {
 	var u examples.User
-	err := req.Decode(&u)
+
+	err := protobuf.Decode(r.Body, &u)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode message: %w", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		_, _ = rw.Write([]byte(fmt.Sprintf("failed to decode request: %v", err)))
+		return
 	}
 
 	googleReq, err := http.NewRequest("GET", "https://www.google.com", nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request for www.google.com: %w", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		_, _ = rw.Write([]byte(fmt.Sprintf("failed to create request for www.google.com: %v", err)))
+		return
 	}
 	cl, err := clienthttp.New(clienthttp.Timeout(5 * time.Second))
 	if err != nil {
-		return nil, err
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	_, err = cl.Do(googleReq)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get www.google.com: %w", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		_, _ = rw.Write([]byte(fmt.Sprintf("failed to get www.google.com: %v", err)))
+		return
 	}
 
 	b, err := json.Encode(&u)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encode message: %w", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		_, _ = rw.Write([]byte(fmt.Sprintf("failed to encode message: %v", err)))
+		return
 	}
 
 	kafkaMsg := &sarama.ProducerMessage{
@@ -130,13 +151,14 @@ func (hc *kafkaProducer) forwardToKafkaHandler(ctx context.Context, req *patronh
 		Value: sarama.ByteEncoder(b),
 	}
 
-	err = hc.prd.Send(ctx, kafkaMsg)
+	err = hc.prd.Send(r.Context(), kafkaMsg)
 	if err != nil {
-		return nil, err
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	log.FromContext(ctx).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
-	return nil, nil
+	log.FromContext(r.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
+	rw.WriteHeader(http.StatusCreated)
 }
 
 type apiKeyValidator struct {

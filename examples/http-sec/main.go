@@ -29,19 +29,16 @@ const (
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
-		fmt.Printf("failed to set log level env var: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set log level env var: %v", err)
 	}
 	err = os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
-		fmt.Printf("failed to set sampler env vars: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set sampler env vars: %v", err)
 	}
 
 	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50001")
 	if err != nil {
-		fmt.Printf("failed to set default patron port env vars: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set default patron port env vars: %v", err)
 	}
 }
 
@@ -51,8 +48,7 @@ func main() {
 
 	service, err := patron.New(name, version, patron.LogFields(map[string]interface{}{"env": "staging"}))
 	if err != nil {
-		fmt.Printf("failed to set up service: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set up service: %v", err)
 	}
 
 	asyncComp, err := newAsyncKafkaProducer(kafkaBroker, kafkaTopic, true)

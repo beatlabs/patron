@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -12,18 +10,17 @@ import (
 	"github.com/beatlabs/patron"
 	clienthttp "github.com/beatlabs/patron/client/http"
 	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/log"
 )
 
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
-		fmt.Printf("failed to set log level env var: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set log level env var: %v", err)
 	}
 	err = os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
-		fmt.Printf("failed to set sampler env vars: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set sampler env vars: %v", err)
 	}
 }
 
@@ -34,8 +31,7 @@ func main() {
 
 	service, err := patron.New(name, version)
 	if err != nil {
-		fmt.Printf("failed to set up service: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set up service: %v", err)
 	}
 	err = service.Run(ctx)
 	if err != nil {
@@ -70,9 +66,9 @@ func main() {
 	bdy3, err := ioutil.ReadAll(rsp3.Body)
 	handle(err)
 
-	fmt.Printf("Response without compression : %v\n", string(bdy1))
-	fmt.Printf("Response with GZIP compression : %v\n", string(bdy2))
-	fmt.Printf("Response with Deflate compression : %v\n", string(bdy3))
+	log.Infof("Response without compression : %v\n", string(bdy1))
+	log.Infof("Response with GZIP compression : %v\n", string(bdy2))
+	log.Infof("Response with Deflate compression : %v\n", string(bdy3))
 }
 
 func handle(err error) {

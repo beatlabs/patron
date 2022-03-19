@@ -33,8 +33,7 @@ var (
 func init() {
 	err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
-		fmt.Printf("failed to set sampler env vars: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set sampler env vars: %v", err)
 	}
 	// allows running from any folder the 'go run examples/http/main.go'
 	var ok bool
@@ -56,8 +55,7 @@ func main() {
 
 	service, err := patron.New(name, version, patron.Logger(logger))
 	if err != nil {
-		fmt.Printf("failed to set up service: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set up service: %v", err)
 	}
 
 	// Set up a simple CORS middleware

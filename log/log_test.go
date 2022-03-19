@@ -40,7 +40,7 @@ func TestSetup(t *testing.T) {
 		wantErr bool
 	}{
 		"failure with nil loggers": {logger: nil, wantErr: true},
-		"success":                  {logger: &nilLogger{}, wantErr: false},
+		"success":                  {logger: &fmtLogger{}, wantErr: false},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -56,8 +56,8 @@ func TestSetup(t *testing.T) {
 }
 
 func TestFromContext(t *testing.T) {
-	logger = &nilLogger{}
-	lg := &nilLogger{}
+	logger = &fmtLogger{}
+	lg := &fmtLogger{}
 	ctxWith := WithContext(context.Background(), logger)
 	ctxWithNil := WithContext(context.Background(), nil)
 	type args struct {
@@ -192,21 +192,18 @@ func TestLog_Level(t *testing.T) {
 	}
 }
 
-func Test_nilLogger(t *testing.T) {
-	l := &nilLogger{}
-	l.Panic("test")
-	l.Panicf("test", "123")
-	l.Fatal("test", "123")
-	l.Fatalf("test", "123")
+func Test_fmtLogger(t *testing.T) {
+	l := &fmtLogger{}
 	l.Error("test")
-	l.Errorf("test", "123")
+	l.Errorf("test %s", "123")
 	l.Warn("test")
-	l.Warnf("test", "123")
+	l.Warnf("test %s", "123")
 	l.Info("test")
-	l.Infof("test", "123")
+	l.Infof("test %s", "123")
 	l.Debug("test")
-	l.Debugf("test", "123")
-
+	l.Debugf("test %s", "123")
+	assert.Panics(t, func() { l.Panic("test") })
+	assert.Panics(t, func() { l.Panicf("test %s", "123") })
 	assert.Equal(t, l, l.Sub(map[string]interface{}{}))
 	assert.Equal(t, DebugLevel, l.Level())
 }

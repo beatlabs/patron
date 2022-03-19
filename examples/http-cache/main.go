@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -13,23 +12,21 @@ import (
 	httpcache "github.com/beatlabs/patron/component/http/cache"
 	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
+	"github.com/beatlabs/patron/log"
 )
 
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
-		fmt.Printf("failed to set log level env var: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set log level env var: %v", err)
 	}
 	err = os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
-		fmt.Printf("failed to set sampler env vars: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set sampler env vars: %v", err)
 	}
 	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50007")
 	if err != nil {
-		fmt.Printf("failed to set default patron port env vars: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set default patron port env vars: %v", err)
 	}
 }
 
@@ -39,16 +36,14 @@ func main() {
 
 	service, err := patron.New(name, version, patron.TextLogger())
 	if err != nil {
-		fmt.Printf("failed to set up service: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set up service: %v", err)
 	}
 
 	ctx := context.Background()
 
 	cache, err := redis.New(ctx, redis.Options{})
 	if err != nil {
-		fmt.Printf("failed to set up redis cache: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set up redis cache: %v", err)
 	}
 
 	var routes v2.Routes

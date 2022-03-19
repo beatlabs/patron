@@ -33,7 +33,7 @@ services:
       - RABBITMQ_SECURE_PASSWORD=yes
     volumes:
       - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
-  db:
+  mysql:
     image: mysql:5.7
     restart: always
     environment:
@@ -74,6 +74,14 @@ services:
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+  mongo:
+    image: mongo:5
+    restart: always
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
 volumes:
   rabbitmq_data:
     driver: local

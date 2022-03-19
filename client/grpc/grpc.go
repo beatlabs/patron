@@ -1,5 +1,4 @@
-// Package grpc provides a client implementation for gRPC with tracing and
-// metrics included.
+// Package grpc provides a client implementation for gRPC with tracing and metrics included.
 package grpc
 
 import (

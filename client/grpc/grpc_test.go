@@ -87,7 +87,7 @@ func TestDialContext(t *testing.T) {
 		},
 		"failure missing grpc.WithInsecure()": {
 			args:        args{},
-			expectedErr: "grpc: no transport security set (use grpc.WithInsecure() explicitly or set credentials)",
+			expectedErr: "grpc: no transport security set (use grpc.WithTransportCredentials(insecure.NewCredentials()) explicitly or set credentials)",
 		},
 	}
 	for name, tt := range tests {

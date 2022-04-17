@@ -15,7 +15,7 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -93,6 +93,8 @@ type ConsumerConfig struct {
 	DurationBasedConsumer   bool
 	DurationOffset          time.Duration
 	TimeExtractor           func(*sarama.ConsumerMessage) (time.Time, error)
+	TimestampBasedConsumer  bool
+	TimestampOffset         int64
 	SaramaConfig            *sarama.Config
 	LatestOffsetReachedChan chan<- struct{}
 }

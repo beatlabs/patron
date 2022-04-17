@@ -22,6 +22,7 @@ const (
 	simpleTopic3 = "simpleTopic3"
 	simpleTopic4 = "simpleTopic4"
 	simpleTopic5 = "simpleTopic5"
+	simpleTopic6 = "simpleTopic6"
 	broker       = "127.0.0.1:9093"
 )
 
@@ -153,6 +154,73 @@ func TestSimpleConsume_WithDurationOffset(t *testing.T) {
 
 		factory, err := New("test1", simpleTopic3, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
 			kafka.StartFromNewest(), WithDurationOffset(4*time.Hour, timestampExtractor))
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		consumer, err := factory.Create()
+		if err != nil {
+			chErr <- err
+			return
+		}
+		defer func() {
+			_ = consumer.Close()
+		}()
+
+		received, err := testkafka.AsyncConsumeMessages(consumer, 3)
+		if err != nil {
+			chErr <- err
+			return
+		}
+
+		chMessages <- received
+	}()
+
+	time.Sleep(5 * time.Second)
+
+	var received []string
+
+	select {
+	case received = <-chMessages:
+	case err = <-chErr:
+		require.NoError(t, err)
+	}
+
+	assert.Equal(t, sent[2:], received)
+}
+
+func TestSimpleConsume_WithTimestampOffset(t *testing.T) {
+	require.NoError(t, testkafka.CreateTopics(broker, simpleTopic6))
+	now := time.Now()
+	times := []time.Time{
+		now.Add(-10 * time.Hour),
+		now.Add(-5 * time.Hour),
+		now.Add(-3 * time.Hour),
+		now.Add(-2 * time.Hour),
+		now.Add(-1 * time.Hour),
+	}
+	sent := createTimestampPayload(times...)
+
+	messages := make([]*sarama.ProducerMessage, 0)
+	for i, tm := range times {
+		val := sent[i]
+		msg := testkafka.CreateProducerMessage(simpleTopic6, val)
+		msg.Timestamp = tm
+		messages = append(messages, msg)
+	}
+
+	err := testkafka.SendMessages(broker, messages...)
+	require.NoError(t, err)
+
+	chMessages := make(chan []string)
+	chErr := make(chan error)
+	go func() {
+		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-w-timestamp", true)
+		require.NoError(t, err)
+
+		factory, err := New("test1", simpleTopic6, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+			kafka.StartFromNewest(), WithTimestampOffset(4*time.Hour))
 		if err != nil {
 			chErr <- err
 			return

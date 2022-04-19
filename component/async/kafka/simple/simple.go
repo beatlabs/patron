@@ -362,7 +362,7 @@ func (c *consumer) partitionsSinceTimestamp(_ context.Context) ([]sarama.Partiti
 	pcs := make([]sarama.PartitionConsumer, len(partitions))
 
 	ts := c.config.TimestampOffset
-	c.startingOffsets = make(map[int32]int64)
+	c.startingOffsets = make(map[int32]int64, len(partitions))
 
 	for i, partition := range partitions {
 		offset, err := client.GetOffset(c.topic, partition, ts)

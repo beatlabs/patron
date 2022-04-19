@@ -15,6 +15,9 @@ import (
 	"github.com/beatlabs/patron/log"
 )
 
+// unixNanoToTimestampDivider divides unix nano seconds to valid timestamp for kafka messages
+const unixNanoToTimestampDivider = 1000_000
+
 // TimeExtractor defines a function extracting a time from a Kafka message.
 type TimeExtractor func(*sarama.ConsumerMessage) (time.Time, error)
 
@@ -42,7 +45,7 @@ func WithTimestampOffset(since time.Duration) kafka.OptionFunc {
 			return errors.New("duration must be positive")
 		}
 		c.TimestampBasedConsumer = true
-		c.TimestampOffset = time.Now().Add(-since).UnixNano() / 1000_000
+		c.TimestampOffset = time.Now().Add(-since).UnixNano() / unixNanoToTimestampDivider
 		return nil
 	}
 }

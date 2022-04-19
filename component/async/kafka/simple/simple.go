@@ -367,7 +367,7 @@ func (c *consumer) partitionsSinceTimestamp(_ context.Context) ([]sarama.Partiti
 	for i, partition := range partitions {
 		offset, err := client.GetOffset(c.topic, partition, ts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get offset by timestamp %d for partition %d", ts, partition)
+			return nil, fmt.Errorf("failed to get offset by timestamp %d for partition %d: %w", ts, partition, err)
 		}
 		c.startingOffsets[partition] = offset
 

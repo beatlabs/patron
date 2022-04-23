@@ -236,8 +236,8 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
 		case headerCacheMaxAge:
 			/**
 			Indicates that the client is willing to accept a Response whose
-			age is no greater than the specified time in seconds. Unless max-
-			stale directive is also included, the client is not willing to
+			age is no greater than the specified time in seconds. Unless max-stale
+			directive is also included, the client is not willing to
 			accept a stale Response.
 			*/
 			value, ok := parseValue(keyValue)

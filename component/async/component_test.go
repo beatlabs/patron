@@ -331,7 +331,7 @@ func TestRun_MessageAckError(t *testing.T) {
 }
 
 // TestRun_ConsumeError will break the component execution,
-// when an error is injected into the consumers error channel
+// when an error is injected into the consumer's error channel
 // while using the default NackExit Failure Strategy.
 func TestRun_ConsumeError(t *testing.T) {
 	builder := proxyBuilder{

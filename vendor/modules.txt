@@ -3,7 +3,7 @@
 # github.com/Shopify/sarama v1.32.0
 ## explicit
 github.com/Shopify/sarama
-# github.com/aws/aws-sdk-go v1.43.2
+# github.com/aws/aws-sdk-go v1.44.4
 ## explicit
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr

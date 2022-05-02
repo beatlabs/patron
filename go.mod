@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/Shopify/sarama v1.32.0
-	github.com/aws/aws-sdk-go v1.43.2
+	github.com/aws/aws-sdk-go v1.44.4
 	github.com/elastic/elastic-transport-go/v8 v8.1.0
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/go-redis/redis/extra/rediscmd v0.2.0

@@ -67,7 +67,7 @@ github.com/eapache/queue
 ## explicit
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version
-# github.com/elastic/go-elasticsearch/v8 v8.1.0
+# github.com/elastic/go-elasticsearch/v8 v8.2.0
 ## explicit
 github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi

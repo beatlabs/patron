@@ -47,7 +47,8 @@ services:
     expose:
       - '3306'
     volumes:
-      - my-db:/var/lib/mysql
+      - mysql:/var/lib/mysql
+      - mysql:/var/lib/mysql
   redis:
     image: docker.io/bitnami/redis:6.2
     environment:
@@ -85,6 +86,6 @@ services:
 volumes:
   rabbitmq_data:
     driver: local
-  my-db:
+  mysql:
   redis_data:
     driver: local

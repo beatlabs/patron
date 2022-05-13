@@ -48,7 +48,6 @@ services:
       - '3306'
     volumes:
       - mysql:/var/lib/mysql
-      - mysql:/var/lib/mysql
   redis:
     image: docker.io/bitnami/redis:6.2
     environment:

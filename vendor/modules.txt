@@ -1,6 +1,6 @@
 # github.com/HdrHistogram/hdrhistogram-go v1.1.2
 ## explicit
-# github.com/Shopify/sarama v1.32.0
+# github.com/Shopify/sarama v1.33.0
 ## explicit
 github.com/Shopify/sarama
 # github.com/aws/aws-sdk-go v1.44.4
@@ -102,6 +102,10 @@ github.com/golang/snappy
 # github.com/google/uuid v1.3.0
 ## explicit
 github.com/google/uuid
+# github.com/hashicorp/errwrap v1.0.0
+github.com/hashicorp/errwrap
+# github.com/hashicorp/go-multierror v1.1.1
+github.com/hashicorp/go-multierror
 # github.com/hashicorp/go-uuid v1.0.2
 github.com/hashicorp/go-uuid
 # github.com/hashicorp/golang-lru v0.5.4
@@ -154,7 +158,7 @@ github.com/jmespath/go-jmespath
 # github.com/julienschmidt/httprouter v1.3.0
 ## explicit
 github.com/julienschmidt/httprouter
-# github.com/klauspost/compress v1.14.4
+# github.com/klauspost/compress v1.15.0
 github.com/klauspost/compress
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
@@ -237,9 +241,9 @@ github.com/uber/jaeger-lib/metrics
 github.com/uber/jaeger-lib/metrics/prometheus
 # github.com/xdg-go/pbkdf2 v1.0.0
 github.com/xdg-go/pbkdf2
-# github.com/xdg-go/scram v1.1.0
+# github.com/xdg-go/scram v1.1.1
 github.com/xdg-go/scram
-# github.com/xdg-go/stringprep v1.0.2
+# github.com/xdg-go/stringprep v1.0.3
 github.com/xdg-go/stringprep
 # github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d
 github.com/youmark/pkcs8
@@ -286,7 +290,7 @@ go.uber.org/atomic
 golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
-# golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
+# golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack

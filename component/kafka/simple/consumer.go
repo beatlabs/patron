@@ -2,6 +2,7 @@ package simple
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -104,7 +105,7 @@ func (c *consumerHandler) consumePartitionUnit(ctx context.Context, ch <-chan *s
 				return err
 			}
 		case <-ctx.Done():
-			if ctx.Err() != context.Canceled {
+			if errors.Is(ctx.Err(), context.Canceled) {
 				log.Infof("closing consumer: %v", ctx)
 			}
 			return nil
@@ -141,7 +142,7 @@ func (c *consumerHandler) consumePartitionBatch(ctx context.Context, ch <-chan *
 				return err
 			}
 		case <-ctx.Done():
-			if ctx.Err() != context.Canceled {
+			if errors.Is(ctx.Err(), context.Canceled) {
 				log.Infof("closing consumer: %v", ctx)
 			}
 			return nil
@@ -157,7 +158,7 @@ func (c *consumerHandler) unit(ctx context.Context, msg *sarama.ConsumerMessage)
 	btc := kafka.NewBatch(messages)
 	err := c.component.proc(btc)
 	if err != nil {
-		if ctx.Err() == context.Canceled {
+		if errors.Is(ctx.Err(), context.Canceled) {
 			return fmt.Errorf("context was cancelled after processing error: %w", err)
 		}
 		err = c.executeFailureStrategy(messages, err)
@@ -205,7 +206,7 @@ func (c *consumerHandler) flush(ctx context.Context) error {
 	btc := kafka.NewBatch(messages)
 	err := c.component.proc(btc)
 	if err != nil {
-		if ctx.Err() == context.Canceled {
+		if errors.Is(ctx.Err(), context.Canceled) {
 			return fmt.Errorf("context was cancelled after processing error: %w", err)
 		}
 		if err = c.executeFailureStrategy(messages, err); err != nil {

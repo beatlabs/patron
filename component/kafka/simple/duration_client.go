@@ -10,18 +10,25 @@ import (
 )
 
 type durationClient struct {
-	client     durationKafkaClientAPI
-	partitions []int32
+	client durationKafkaClientAPI
 }
 
-func newDurationClient(client durationKafkaClientAPI, partitions []int32) durationClient {
-	return durationClient{client: client, partitions: partitions}
+func newDurationClient(client durationKafkaClientAPI) (durationClient, error) {
+	if client == nil {
+		return durationClient{}, errors.New("empty client api")
+	}
+	return durationClient{client: client}, nil
 }
 
 func (d durationClient) getTimeBasedOffsetsPerPartition(ctx context.Context, topic string, since time.Time, timeExtractor TimeExtractor) (map[int32]int64, error) {
-	responseCh := make(chan partitionOffsetResponse, len(d.partitions))
-	d.triggerWorkers(ctx, topic, since, timeExtractor, responseCh)
-	return d.aggregateResponses(ctx, responseCh)
+	partitionIDs, err := d.client.getPartitionIDs(topic)
+	if err != nil {
+		return nil, err
+	}
+
+	responseCh := make(chan partitionOffsetResponse, len(partitionIDs))
+	d.triggerWorkers(ctx, topic, since, timeExtractor, partitionIDs, responseCh)
+	return d.aggregateResponses(ctx, partitionIDs, responseCh)
 }
 
 type partitionOffsetResponse struct {
@@ -30,8 +37,8 @@ type partitionOffsetResponse struct {
 	err         error
 }
 
-func (d durationClient) triggerWorkers(ctx context.Context, topic string, since time.Time, timeExtractor TimeExtractor, responseCh chan<- partitionOffsetResponse) {
-	for _, partitionID := range d.partitions {
+func (d durationClient) triggerWorkers(ctx context.Context, topic string, since time.Time, timeExtractor TimeExtractor, partitionIDs []int32, responseCh chan<- partitionOffsetResponse) {
+	for _, partitionID := range partitionIDs {
 		partitionID := partitionID
 		go func() {
 			offset, err := d.getTimeBasedOffset(ctx, topic, since, partitionID, timeExtractor)
@@ -48,8 +55,8 @@ func (d durationClient) triggerWorkers(ctx context.Context, topic string, since 
 	}
 }
 
-func (d durationClient) aggregateResponses(ctx context.Context, responseCh <-chan partitionOffsetResponse) (map[int32]int64, error) {
-	numberOfPartitions := len(d.partitions)
+func (d durationClient) aggregateResponses(ctx context.Context, partitionIDs []int32, responseCh <-chan partitionOffsetResponse) (map[int32]int64, error) {
+	numberOfPartitions := len(partitionIDs)
 	offsets := make(map[int32]int64, numberOfPartitions)
 	numberOfResponses := 0
 	for {

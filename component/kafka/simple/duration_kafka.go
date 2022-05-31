@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/log"
 )
 
 type outOfRangeOffsetError struct {
@@ -19,11 +18,12 @@ func (e *outOfRangeOffsetError) Error() string {
 }
 
 func (e *outOfRangeOffsetError) Is(target error) bool {
-	_, ok := target.(*outOfRangeOffsetError)
+	_, ok := target.(*outOfRangeOffsetError) //nolint:errorlint
 	return ok
 }
 
 type durationKafkaClientAPI interface {
+	getPartitionIDs(topic string) ([]int32, error)
 	getOldestOffset(topic string, partitionID int32) (int64, error)
 	getNewestOffset(topic string, partitionID int32) (int64, error)
 	getMessageAtOffset(ctx context.Context, topic string, partitionID int32, offset int64) (*sarama.ConsumerMessage, error)
@@ -78,7 +78,7 @@ func (c durationKafkaClient) getNewestOffset(topic string, partitionID int32) (i
 func (c durationKafkaClient) getMessageAtOffset(ctx context.Context, topic string, partitionID int32, offset int64) (*sarama.ConsumerMessage, error) {
 	pc, err := c.kafkaConsumer.ConsumePartition(topic, partitionID, offset)
 	if err != nil {
-		if err == sarama.ErrOffsetOutOfRange {
+		if errors.Is(err, sarama.ErrOffsetOutOfRange) {
 			closePartitionConsumer(pc)
 			return nil, &outOfRangeOffsetError{
 				message: err.Error(),
@@ -101,15 +101,5 @@ func (c durationKafkaClient) consumeSingleMessage(ctx context.Context, pc sarama
 		return nil, fmt.Errorf("error while consuming message: %w", ctx.Err())
 	case msg := <-pc.Messages():
 		return msg, nil
-	}
-}
-
-func closePartitionConsumer(cns sarama.PartitionConsumer) {
-	if cns == nil {
-		return
-	}
-	err := cns.Close()
-	if err != nil {
-		log.Errorf("failed to close partition consumer: %v", err)
 	}
 }

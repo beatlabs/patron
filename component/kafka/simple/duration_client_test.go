@@ -21,13 +21,11 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 	testCases := map[string]struct {
 		globalTimeout   time.Duration
 		client          *clientMock
-		partitions      []int32
 		expectedOffsets map[int32]int64
 		expectedErr     error
 	}{
 		"success - multiple partitions": {
 			globalTimeout: time.Second,
-			partitions:    []int32{0, 1, 2},
 			client: client(topic).
 				partitionIDs([]int32{0, 1, 2}, nil).
 				partition(0, partitionConfig{
@@ -92,7 +90,6 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 		},
 		"success - all inside": {
 			globalTimeout: time.Second,
-			partitions:    []int32{0},
 			client: client(topic).
 				partitionIDs([]int32{0}, nil).
 				partition(0, partitionConfig{
@@ -122,7 +119,6 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 		},
 		"success - with invalid message": {
 			globalTimeout: time.Second,
-			partitions:    []int32{0},
 			client: client(topic).
 				partitionIDs([]int32{0}, nil).
 				partition(0, partitionConfig{
@@ -152,7 +148,6 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 		},
 		"success - all outside": {
 			globalTimeout: time.Second,
-			partitions:    []int32{0},
 			client: client(topic).
 				partitionIDs([]int32{0}, nil).
 				partition(0, partitionConfig{
@@ -185,7 +180,6 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 		},
 		"success - out of range offset": {
 			globalTimeout: time.Second,
-			partitions:    []int32{0},
 			client: client(topic).
 				partitionIDs([]int32{0}, nil).
 				partition(0, partitionConfig{
@@ -219,6 +213,12 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 				0: 8,
 			},
 		},
+		"error - get partitions": {
+			globalTimeout: time.Second,
+			client: client(topic).
+				partitionIDs(nil, errors.New("foo")).build(),
+			expectedErr: errors.New("foo"),
+		},
 		"error - timeout": {
 			globalTimeout: time.Nanosecond,
 			client:        dummyClient,
@@ -226,7 +226,6 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 		},
 		"error - get oldest offset": {
 			globalTimeout: time.Second,
-			partitions:    []int32{0},
 			client: client(topic).
 				partitionIDs([]int32{0}, nil).
 				partition(0, partitionConfig{
@@ -236,7 +235,6 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 		},
 		"error - get newest offset": {
 			globalTimeout: time.Second,
-			partitions:    []int32{0},
 			client: client(topic).
 				partitionIDs([]int32{0}, nil).
 				partition(0, partitionConfig{
@@ -247,7 +245,6 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 		},
 		"error - get message offset": {
 			globalTimeout: time.Second,
-			partitions:    []int32{0},
 			client: client(topic).
 				partitionIDs([]int32{0}, nil).
 				partition(0, partitionConfig{
@@ -265,7 +262,8 @@ func Test_Consumer_GetTimeBasedOffsetsPerPartition(t *testing.T) {
 	}
 	for name, tt := range testCases {
 		t.Run(name, func(t *testing.T) {
-			consumer := newDurationClient(tt.client, tt.partitions)
+			consumer, err := newDurationClient(tt.client)
+			require.NoError(t, err)
 			ctx, cancel := context.WithTimeout(context.Background(), tt.globalTimeout)
 			defer cancel()
 
@@ -294,7 +292,6 @@ func client(topic string) *clientBuilder {
 	}
 }
 
-//nolint:unparam
 func (c *clientBuilder) partitionIDs(partitions []int32, err error) *clientBuilder {
 	c.partitions = partitions
 	c.partitionsError = err
@@ -330,6 +327,10 @@ func (c *clientBuilder) build() *clientMock {
 
 type clientMock struct {
 	builder *clientBuilder
+}
+
+func (c *clientMock) getPartitionIDs(_ string) ([]int32, error) {
+	return c.builder.partitions, c.builder.partitionsError
 }
 
 func (c *clientMock) getOldestOffset(_ string, partitionID int32) (int64, error) {

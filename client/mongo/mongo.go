@@ -71,15 +71,15 @@ func (m *monitor) started(ctx context.Context, startedEvent *event.CommandStarte
 
 func (m *monitor) succeeded(_ context.Context, succeededEvent *event.CommandSucceededEvent) {
 	key := createKey(succeededEvent.ConnectionID, succeededEvent.RequestID)
-	m.finish(key, succeededEvent.CommandName, false, time.Duration(succeededEvent.DurationNanos))
+	m.finish(key, succeededEvent.CommandName, true, time.Duration(succeededEvent.DurationNanos))
 }
 
 func (m *monitor) failed(_ context.Context, failedEvent *event.CommandFailedEvent) {
 	key := createKey(failedEvent.ConnectionID, failedEvent.RequestID)
-	m.finish(key, failedEvent.CommandName, true, time.Duration(failedEvent.DurationNanos))
+	m.finish(key, failedEvent.CommandName, false, time.Duration(failedEvent.DurationNanos))
 }
 
-func (m *monitor) finish(key key, cmdName string, errored bool, duration time.Duration) {
+func (m *monitor) finish(key key, cmdName string, success bool, duration time.Duration) {
 	m.Lock()
 	sp, ok := m.spans[key]
 	if ok {
@@ -89,13 +89,13 @@ func (m *monitor) finish(key key, cmdName string, errored bool, duration time.Du
 	if !ok {
 		return
 	}
-	if errored {
-		trace.SpanError(sp)
-	} else {
+	if success {
 		trace.SpanSuccess(sp)
+	} else {
+		trace.SpanError(sp)
 	}
 
-	cmdDurationMetrics.WithLabelValues(cmdName, strconv.FormatBool(errored)).Observe(duration.Seconds())
+	cmdDurationMetrics.WithLabelValues(cmdName, strconv.FormatBool(success)).Observe(duration.Seconds())
 }
 
 func createKey(connID string, reqID int64) key {

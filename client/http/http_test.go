@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,14 +12,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/encoding"
+	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/reliability/circuitbreaker"
 )
 
 func TestTracedClient_Do(t *testing.T) {
@@ -77,10 +77,29 @@ func TestTracedClient_Do(t *testing.T) {
 			assert.Equal(t, tt.wantOpName, sp.OperationName)
 			mtr.Reset()
 			// Test counters.
-			assert.Equal(t, tt.wantCounter, testutil.CollectAndCount(reqDurationMetrics))
+			assert.Equal(t, tt.wantCounter, testutil.CollectAndCount(reqDurationMetrics, "client_http_request_duration_seconds"))
 			reqDurationMetrics.Reset()
 		})
 	}
+}
+
+func TestTracedClient_Do_Redirect(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://google.com", http.StatusSeeOther)
+	}))
+	defer ts.Close()
+	c, err := New(CheckRedirect(func(req *http.Request, via []*http.Request) error {
+		return errors.New("stop redirects")
+	}))
+	assert.NoError(t, err)
+	req, err := http.NewRequest("GET", ts.URL, nil)
+	assert.NoError(t, err)
+
+	res, err := c.Do(req)
+
+	assert.Errorf(t, err, "stop redirects")
+	assert.NotNil(t, res)
+	assert.Equal(t, http.StatusSeeOther, res.StatusCode)
 }
 
 func TestNew(t *testing.T) {
@@ -92,10 +111,16 @@ func TestNew(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "success", args: args{oo: []OptionFunc{Timeout(time.Second), CircuitBreaker("test", circuitbreaker.Setting{}), Transport(&http.Transport{})}}, wantErr: false},
+		{name: "success", args: args{oo: []OptionFunc{
+			Timeout(time.Second),
+			CircuitBreaker("test", circuitbreaker.Setting{}),
+			Transport(&http.Transport{}),
+			CheckRedirect(func(req *http.Request, via []*http.Request) error { return nil }),
+		}}, wantErr: false},
 		{name: "failure, invalid timeout", args: args{oo: []OptionFunc{Timeout(0 * time.Second)}}, wantErr: true},
 		{name: "failure, invalid circuit breaker", args: args{[]OptionFunc{CircuitBreaker("", circuitbreaker.Setting{})}}, wantErr: true},
 		{name: "failure, invalid transport", args: args{[]OptionFunc{Transport(nil)}}, wantErr: true},
+		{name: "failure, invalid check redirect", args: args{[]OptionFunc{CheckRedirect(nil)}}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -120,7 +145,8 @@ func TestHTTPStartFinishSpan(t *testing.T) {
 	assert.NotNil(t, sp)
 	assert.NotNil(t, req)
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
-	jsp := sp.(*mocktracer.MockSpan)
+	jsp, ok := sp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.NotNil(t, jsp)
 	assert.Equal(t, "GET /", jsp.OperationName)
 	finishSpan(jsp, 200)

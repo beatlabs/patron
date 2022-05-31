@@ -9,34 +9,29 @@ import (
 // Action function to execute in retry.
 type Action func() (interface{}, error)
 
-// Retry pattern with retries and optional delay.
+// Retry pattern with attempts and optional delay.
 type Retry struct {
-	retries int
-	delay   time.Duration
+	attempts int
+	delay    time.Duration
 }
 
 // New constructor.
-func New(retries int, delay time.Duration) (*Retry, error) {
-	if retries < 0 {
-		return nil, errors.New("retries should be zero or positive")
+func New(attempts int, delay time.Duration) (*Retry, error) {
+	if attempts <= 1 {
+		return nil, errors.New("attempts should be greater than 1")
 	}
-	return &Retry{retries: retries, delay: delay}, nil
+	return &Retry{attempts: attempts, delay: delay}, nil
 }
 
 // Execute a specific action.
 func (r Retry) Execute(act Action) (interface{}, error) {
-	current := r.retries
 	var err error
 	var res interface{}
 
-	for {
+	for i := 0; i < r.attempts; i++ {
 		res, err = act()
 		if err == nil {
 			return res, nil
-		}
-		current--
-		if current == 0 {
-			break
 		}
 
 		if r.delay > 0 {

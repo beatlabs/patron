@@ -10,13 +10,13 @@ import (
 
 const attributeDataTypeString string = "String"
 
-// MessageBuilder helps building messages to be sent to SQS.
+// MessageBuilder helps to build messages to be sent to SQS.
 type MessageBuilder struct {
 	err   error
 	input *sqs.SendMessageInput
 }
 
-// NewMessageBuilder creates a new MessageBuilder that helps creating messages.
+// NewMessageBuilder creates a new MessageBuilder that helps to create messages.
 //
 // Deprecated: The SQS client package is superseded by the `github.com/beatlabs/client/sqs/v2` package.
 // Please refer to the documents and the examples for the usage.
@@ -96,10 +96,15 @@ func (b *MessageBuilder) WithDelaySeconds(seconds int64) *MessageBuilder {
 }
 
 // injectHeaders injects the SQS headers carrier's headers into the message's attributes.
-func (m *Message) injectHeaders(carrier sqsHeadersCarrier) {
+func (m *Message) injectHeaders(carrier sqsHeadersCarrier) error {
 	for k, v := range carrier {
-		m.setMessageAttribute(k, v.(string))
+		val, ok := v.(string)
+		if !ok {
+			return errors.New("failed to type assert string")
+		}
+		m.setMessageAttribute(k, val)
 	}
+	return nil
 }
 
 func (m *Message) setMessageAttribute(key, value string) {

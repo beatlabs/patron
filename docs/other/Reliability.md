@@ -7,7 +7,7 @@ The reliability package contains the following implementations:
 
 ## Circuit Breaker Pattern
 
-The circuit breaker supports a half-open state which allows to probe for successful responses in order to close the circuit again.  
+The circuit breaker supports a half-open state which allows probing for successful responses in order to close the circuit again.  
 Every aspect of the circuit breaker is configurable via its settings.
 
 The action to be executed has the signature type of:

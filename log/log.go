@@ -4,6 +4,8 @@ package log
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"sync"
 )
 
@@ -63,7 +65,7 @@ type Logger interface {
 type ctxKey struct{}
 
 var (
-	logger Logger = &nilLogger{}
+	logger Logger = &fmtLogger{}
 	once   sync.Once
 )
 
@@ -165,62 +167,78 @@ func Enabled(l Level) bool {
 	return levelOrder[logger.Level()] <= levelOrder[l]
 }
 
-type nilLogger struct{}
+type fmtLogger struct{}
 
 // Sub returns a sub logger with new fields attached.
-func (nl *nilLogger) Sub(map[string]interface{}) Logger {
-	return nl
+func (fl *fmtLogger) Sub(map[string]interface{}) Logger {
+	return fl
 }
 
 // Panic logging.
-func (nl *nilLogger) Panic(_ ...interface{}) {
+func (fl *fmtLogger) Panic(args ...interface{}) {
+	fmt.Print(args...)
+	panic(args)
 }
 
 // Panicf logging.
-func (nl *nilLogger) Panicf(_ string, _ ...interface{}) {
+func (fl *fmtLogger) Panicf(msg string, args ...interface{}) {
+	fmt.Printf(msg, args...)
+	panic(args)
 }
 
 // Fatal logging.
-func (nl *nilLogger) Fatal(_ ...interface{}) {
+func (fl *fmtLogger) Fatal(args ...interface{}) {
+	fmt.Print(args...)
+	os.Exit(1)
 }
 
 // Fatalf logging.
-func (nl *nilLogger) Fatalf(_ string, _ ...interface{}) {
+func (fl *fmtLogger) Fatalf(msg string, args ...interface{}) {
+	fmt.Printf(msg, args...)
+	os.Exit(1)
 }
 
 // Error logging.
-func (nl *nilLogger) Error(_ ...interface{}) {
+func (fl *fmtLogger) Error(args ...interface{}) {
+	fmt.Print(args...)
 }
 
 // Errorf logging.
-func (nl *nilLogger) Errorf(_ string, _ ...interface{}) {
+func (fl *fmtLogger) Errorf(msg string, args ...interface{}) {
+	fmt.Printf(msg, args...)
 }
 
 // Warn logging.
-func (nl *nilLogger) Warn(_ ...interface{}) {
+func (fl *fmtLogger) Warn(args ...interface{}) {
+	fmt.Print(args...)
 }
 
 // Warnf logging.
-func (nl *nilLogger) Warnf(_ string, _ ...interface{}) {
+func (fl *fmtLogger) Warnf(msg string, args ...interface{}) {
+	fmt.Printf(msg, args...)
 }
 
 // Info logging.
-func (nl *nilLogger) Info(_ ...interface{}) {
+func (fl *fmtLogger) Info(args ...interface{}) {
+	fmt.Print(args...)
 }
 
 // Infof logging.
-func (nl *nilLogger) Infof(_ string, _ ...interface{}) {
+func (fl *fmtLogger) Infof(msg string, args ...interface{}) {
+	fmt.Printf(msg, args...)
 }
 
 // Debug logging.
-func (nl *nilLogger) Debug(_ ...interface{}) {
+func (fl *fmtLogger) Debug(args ...interface{}) {
+	fmt.Print(args...)
 }
 
 // Debugf logging.
-func (nl *nilLogger) Debugf(_ string, _ ...interface{}) {
+func (fl *fmtLogger) Debugf(msg string, args ...interface{}) {
+	fmt.Printf(msg, args...)
 }
 
 // Level returns the debug level of the nil logger.
-func (nl *nilLogger) Level() Level {
+func (fl *fmtLogger) Level() Level {
 	return DebugLevel
 }

@@ -16,20 +16,20 @@ var (
 
 func TestNew(t *testing.T) {
 	type args struct {
-		retries int
-		delay   time.Duration
+		attempts int
+		delay    time.Duration
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{name: "success", args: args{retries: 3, delay: 3 * time.Second}, wantErr: false},
-		{name: "invalid retries", args: args{retries: -1, delay: 3 * time.Second}, wantErr: true},
+		{name: "success", args: args{attempts: 3, delay: 3 * time.Second}, wantErr: false},
+		{name: "invalid attempts", args: args{attempts: -1, delay: 3 * time.Second}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.retries, tt.args.delay)
+			got, err := New(tt.args.attempts, tt.args.delay)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)
@@ -43,36 +43,42 @@ func TestNew(t *testing.T) {
 
 func Test_Retry_Execute(t *testing.T) {
 	testCases := map[string]struct {
-		retries            int
+		attempts           int
 		delay              time.Duration
 		action             mockAction
 		expectedExecutions int
 		expectErr          bool
 	}{
 		"instant success": {
-			retries:            3,
+			attempts:           3,
 			action:             mockAction{errors: 0},
 			expectedExecutions: 1,
 		},
 		"instant success with delay": {
-			retries:            3,
+			attempts:           3,
 			delay:              500 * time.Millisecond,
 			action:             mockAction{errors: 0},
 			expectedExecutions: 1,
 		},
 		"success without delay after an error": {
-			retries:            3,
+			attempts:           3,
 			action:             mockAction{errors: 1},
 			expectedExecutions: 2,
 		},
 		"success with delay after an error": {
-			retries:            3,
+			attempts:           3,
 			delay:              500 * time.Millisecond,
 			action:             mockAction{errors: 1},
 			expectedExecutions: 2,
 		},
-		"error": {
-			retries:            3,
+		"error after exceeding one failed attempt": {
+			attempts:           2,
+			action:             mockAction{errors: 2},
+			expectedExecutions: 2,
+			expectErr:          true,
+		},
+		"error after exceeding number of failed attempts": {
+			attempts:           3,
 			action:             mockAction{errors: 3},
 			expectedExecutions: 3,
 			expectErr:          true,
@@ -80,7 +86,7 @@ func Test_Retry_Execute(t *testing.T) {
 	}
 	for name, tC := range testCases {
 		t.Run(name, func(t *testing.T) {
-			r, err := New(tC.retries, tC.delay)
+			r, err := New(tC.attempts, tC.delay)
 			require.NoError(t, err)
 
 			start := time.Now()
@@ -99,7 +105,7 @@ func Test_Retry_Execute(t *testing.T) {
 
 			assert.Equal(t, tC.expectedExecutions, tC.action.executions)
 
-			// Assert that the total time taken takes into account the delay between retries
+			// Assert that the total time takes into account the delay between attempts
 			assert.True(t, elapsed > tC.delay*time.Duration(tC.expectedExecutions-1))
 		})
 	}

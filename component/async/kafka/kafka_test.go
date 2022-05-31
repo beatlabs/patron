@@ -371,7 +371,7 @@ var process = func(counter *eventCounter, data *decodingTestData) func(message a
 		// we assume based on our transform function, that we will be able to decode as a rule
 		if err := message.Decode(&values); err != nil {
 			counter.decodingErr++
-			return fmt.Errorf("error encountered while decoding message from source [%v] : %v", message, err)
+			return fmt.Errorf("error encountered while decoding message from source [%v] : %w", message, err)
 		}
 		if !reflect.DeepEqual(data.dmsgs[counter.messageCount], values) {
 			counter.resultErr++

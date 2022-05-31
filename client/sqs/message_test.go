@@ -61,7 +61,8 @@ func Test_Message_injectHeaders(t *testing.T) {
 		"foo": "bar",
 		"baz": "42",
 	}
-	msg.injectHeaders(headers)
+
+	assert.NoError(t, msg.injectHeaders(headers))
 	assert.Equal(
 		t,
 		map[string]*sqs.MessageAttributeValue{
@@ -130,7 +131,7 @@ func TestMessage_injectHeaders(t *testing.T) {
 		"foo": "bar",
 		"bar": "baz",
 	}
-	msg.injectHeaders(carrier)
+	assert.NoError(t, msg.injectHeaders(carrier))
 
 	assert.Equal(t, "bar", *msg.input.MessageAttributes["foo"].StringValue)
 	assert.Equal(t, "baz", *msg.input.MessageAttributes["bar"].StringValue)

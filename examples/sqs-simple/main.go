@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -31,8 +30,7 @@ var sampleConfig = sqsConfig{
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
-		fmt.Printf("failed to set log level env var: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set log level env var: %v", err)
 	}
 }
 
@@ -42,8 +40,7 @@ func main() {
 
 	service, err := patron.New(name, version)
 	if err != nil {
-		fmt.Printf("failed to set up service: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set up service: %v", err)
 	}
 	ctx := context.Background()
 
@@ -93,7 +90,7 @@ func sampleSqs() (*async.Component, error) {
 	// The max number of retires of a message is determined by the SQS queue, not the consumer.
 	return async.New("sqs", factory, messageHandler).
 		// Note that NackExitStrategy does not work with concurrency, so we need to pick either Nack or Ack Strategy
-		// Ack strategy is not recommended for SQS: we want failed messages to end up in the dead letter queue
+		// is not recommended for SQS: we want failed messages to end up in the dead letter queue
 		WithFailureStrategy(async.NackStrategy).
 		WithRetries(3).
 		WithRetryWait(30 * time.Second).

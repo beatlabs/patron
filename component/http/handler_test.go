@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
-	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
@@ -120,33 +120,6 @@ func request(t *testing.T, contentType, accept string) *http.Request {
 		req.Header.Set(encoding.AcceptHeader, accept)
 	}
 	return req
-}
-
-func Test_getOrSetCorrelationID(t *testing.T) {
-	t.Parallel()
-	withID := http.Header{correlation.HeaderID: []string{"123"}}
-	withoutID := http.Header{correlation.HeaderID: []string{}}
-	withEmptyID := http.Header{correlation.HeaderID: []string{""}}
-	missingHeader := http.Header{}
-	type args struct {
-		hdr http.Header
-	}
-	tests := map[string]struct {
-		args args
-	}{
-		"with id":        {args: args{hdr: withID}},
-		"without id":     {args: args{hdr: withoutID}},
-		"with empty id":  {args: args{hdr: withEmptyID}},
-		"missing Header": {args: args{hdr: missingHeader}},
-	}
-	for name, tt := range tests {
-		tt := tt
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			assert.NotEmpty(t, getOrSetCorrelationID(tt.args.hdr))
-			assert.NotEmpty(t, tt.args.hdr[correlation.HeaderID][0])
-		})
-	}
 }
 
 func Test_handleSuccess(t *testing.T) {
@@ -376,4 +349,103 @@ func Test_extractParamsRawRoute(t *testing.T) {
 
 	assert.Equal(t, "42", fields["id"])
 	assert.Equal(t, "online", fields["status"])
+}
+
+func Test_getSingleHeaderEncoding(t *testing.T) {
+	testcases := []struct {
+		header string
+		ct     string
+		dec    encoding.DecodeFunc
+		enc    encoding.EncodeFunc
+		err    error
+	}{
+		{
+			header: json.Type,
+			ct:     json.TypeCharset,
+			dec:    json.Decode,
+			enc:    json.Encode,
+			err:    nil,
+		},
+		{
+			header: json.TypeCharset,
+			ct:     json.TypeCharset,
+			dec:    json.Decode,
+			enc:    json.Encode,
+			err:    nil,
+		},
+		{
+			header: "*/*", // json as default (?)
+			ct:     json.TypeCharset,
+			dec:    json.Decode,
+			enc:    json.Encode,
+			err:    nil,
+		},
+		{
+			header: "*",
+			ct:     json.TypeCharset,
+			dec:    json.Decode,
+			enc:    json.Encode,
+			err:    nil,
+		},
+		{
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding#:~:text=This%20value%20is%20always%20considered%20as%20acceptable%2C%20even%20if%20omitted
+			header: "identity",
+			ct:     json.TypeCharset,
+			dec:    json.Decode,
+			enc:    json.Encode,
+			err:    nil,
+		},
+		{
+			header: "*/*;q=0.8",
+			ct:     json.TypeCharset,
+			dec:    json.Decode,
+			enc:    json.Encode,
+			err:    nil,
+		},
+		{
+			header: protobuf.Type,
+			ct:     protobuf.Type,
+			dec:    protobuf.Decode,
+			enc:    protobuf.Encode,
+			err:    nil,
+		},
+		{
+			header: protobuf.TypeGoogle,
+			ct:     protobuf.Type,
+			dec:    protobuf.Decode,
+			enc:    protobuf.Encode,
+			err:    nil,
+		},
+		{
+			header: "text/html",
+			ct:     "",
+			dec:    nil,
+			enc:    nil,
+			err:    errors.New("accept header not supported"),
+		},
+		{
+			header: "garbage",
+			ct:     "",
+			dec:    nil,
+			enc:    nil,
+			err:    errors.New("accept header not supported"),
+		},
+	}
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.header, func(t *testing.T) {
+			ct, dec, enc, err := getSingleHeaderEncoding(tc.header)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.ct, ct)
+
+			if reflect.ValueOf(tc.dec).Pointer() != reflect.ValueOf(dec).Pointer() {
+				t.Fatalf("Invalid decoder\n\texpected: %v\n\treceived: %v", tc.dec, dec)
+			}
+
+			if reflect.ValueOf(tc.enc).Pointer() != reflect.ValueOf(enc).Pointer() {
+				t.Fatalf("Invalid encoder\n\texpected: %v\n\treceived: %v", tc.dec, dec)
+			}
+		})
+	}
 }

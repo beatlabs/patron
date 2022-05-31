@@ -4,6 +4,7 @@ package http
 import (
 	"compress/flate"
 	"compress/gzip"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -40,12 +41,12 @@ func init() {
 	prometheus.MustRegister(reqDurationMetrics)
 }
 
-// Client interface of a HTTP client.
+// Client interface of an HTTP client.
 type Client interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// TracedClient defines a HTTP client with tracing integrated.
+// TracedClient defines an HTTP client with tracing integrated.
 type TracedClient struct {
 	cl *http.Client
 	cb *circuitbreaker.CircuitBreaker
@@ -117,12 +118,17 @@ func (tc *TracedClient) do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	return r.(*http.Response), nil
+	rsp, ok := r.(*http.Response)
+	if !ok {
+		return nil, errors.New("failed to type assert to response")
+	}
+
+	return rsp, nil
 }
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
 	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	if err != nil && err != opentracing.ErrSpanContextNotFound {
+	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
 		log.Errorf("failed to extract HTTP span: %v", err)
 	}
 	sp := opentracing.StartSpan(opName(r.Method, path), ext.RPCServerOption(ctx))

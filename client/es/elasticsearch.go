@@ -15,7 +15,7 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
-	elasticsearch "github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -101,7 +101,7 @@ type transportClient struct {
 	tracingInfo
 }
 
-// Perform wraps elasticsearch Perform with tracing functionality
+// Perform wraps elasticsearch Perform with tracing functionality.
 func (c *transportClient) Perform(req *http.Request) (*http.Response, error) {
 	sp, err := c.startSpan(req)
 	if err != nil {
@@ -126,15 +126,15 @@ func observeResponse(req *http.Request, sp opentracing.Span, rsp *http.Response,
 	durationHistogram.Observe(req.Context(), time.Since(start).Seconds())
 }
 
-// Config is a wrapper for elasticsearch.Config
+// Config is a wrapper for elasticsearch.Config.
 type Config elasticsearch.Config
 
-// Client is a wrapper for elasticsearch.Client
+// Client is a wrapper for elasticsearch.Client.
 type Client struct {
 	elasticsearch.Client
 }
 
-// NewDefaultClient returns an empty ES client with sane defaults
+// NewDefaultClient returns an empty ES client with sane defaults.
 func NewDefaultClient() (*Client, error) {
 	return NewClient(Config{})
 }
@@ -144,7 +144,7 @@ func NewDefaultClient() (*Client, error) {
 func NewClient(cfg Config) (*Client, error) {
 	urls, err := addrsToURLs(cfg.Addresses)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create client: %s", err)
+		return nil, fmt.Errorf("cannot create client: %w", err)
 	}
 
 	if len(urls) == 0 {
@@ -193,7 +193,7 @@ func addrsToURLs(addrs []string) ([]*url.URL, error) {
 	for _, addr := range addrs {
 		u, err := url.Parse(strings.TrimRight(addr, "/"))
 		if err != nil {
-			return nil, fmt.Errorf("cannot parse url: %v", err)
+			return nil, fmt.Errorf("cannot parse url: %w", err)
 		}
 
 		urls = append(urls, u)

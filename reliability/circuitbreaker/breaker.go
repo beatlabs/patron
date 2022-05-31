@@ -11,8 +11,7 @@ import (
 )
 
 // OpenError defines a open error.
-type OpenError struct {
-}
+type OpenError struct{}
 
 func (oe OpenError) Error() string {
 	return "circuit is open"
@@ -21,13 +20,13 @@ func (oe OpenError) Error() string {
 type status int
 
 const (
-	close status = iota
+	close status = iota // nolint:predeclared
 	open
 )
 
 var (
 	tsFuture       = int64(math.MaxInt64)
-	openError      = new(OpenError)
+	errOpen        = new(OpenError)
 	breakerCounter *prometheus.CounterVec
 	statusMap      = map[status]string{close: "close", open: "open"}
 )
@@ -125,7 +124,7 @@ func (cb *CircuitBreaker) isClose() bool {
 // Execute the function enclosed.
 func (cb *CircuitBreaker) Execute(act Action) (interface{}, error) {
 	if cb.isOpen() {
-		return nil, openError
+		return nil, errOpen
 	}
 
 	resp, err := act()

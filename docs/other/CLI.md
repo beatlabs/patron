@@ -3,7 +3,7 @@
 The framework supplies a CLI in order to simplify repository generation with the following features:
 
 - git repository creation
-- cmd folder and main.go creation with build version support (`go build -ldflags '-X main.version=1.0.0' main.go`)
+- cmd folder and `main.go` creation with build version support (`go build -ldflags '-X main.version=1.0.0' main.go`)
 - go module support and vendoring
 - Dockerfile with version support (`docker build --build-arg version=1.0.0`)
 

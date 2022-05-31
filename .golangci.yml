@@ -6,7 +6,6 @@ run:
 
   skip-dirs:
     - vendor
-  skip-files:
 
   modules-download-mode: vendor
 
@@ -40,6 +39,23 @@ linters:
     - unconvert
     - staticcheck
     - gosec
+    - tparallel
+    - whitespace
+    - revive
+    - godot
+    - errorlint
+    - gocritic
+    - errname
+    - govet
+    - predeclared
+    - nestif
+    - exhaustive
+    - tenv
+    - gofumpt
+    - forcetypeassert
+    - nilerr
+    - errcheck
+    # - promlinter this is a very nice linter, but it will most probably break things...
   fast: false
 
 issues:

@@ -113,7 +113,7 @@ func BatchMessageDeduplication() OptionFunc {
 	}
 }
 
-// CommitSync instructs the consumer to commit offsets in a blocking operation after processing every batch of messages
+// CommitSync instructs the consumer to commit offsets in a blocking operation after processing every batch of messages.
 func CommitSync() OptionFunc {
 	return func(c *Component) error {
 		if c.saramaConfig != nil && c.saramaConfig.Consumer.Offsets.AutoCommit.Enable {
@@ -121,6 +121,18 @@ func CommitSync() OptionFunc {
 			log.Warn("consumer is set to commit offsets after processing each batch and auto-commit is enabled")
 		}
 		c.commitSync = true
+		return nil
+	}
+}
+
+// NewSessionCallback adds a callback when a new consumer group session is created (e.g., rebalancing).
+func NewSessionCallback(sessionCallback func(sarama.ConsumerGroupSession) error) OptionFunc {
+	return func(c *Component) error {
+		if sessionCallback == nil {
+			return errors.New("nil session callback")
+		}
+
+		c.sessionCallback = sessionCallback
 		return nil
 	}
 }

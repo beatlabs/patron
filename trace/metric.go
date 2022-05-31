@@ -57,7 +57,7 @@ type Histogram struct {
 // Observe adds an observation. If there is a span associated with a context ctx the method replaces
 // the currently saved exemplar (if any) with a new one, created from the provided value.
 // NB: to have a histogram metric augmented with exemplars a histogram metric name MUST have a suffix "_bucket".
-// otherwise the metric will not be collected by Prometheus, refer to an OpenMetrics specification:
+// otherwise, the metric will not be collected by Prometheus, refer to an OpenMetrics specification:
 // https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md
 func (h *Histogram) Observe(ctx context.Context, v float64) {
 	spanFromCtx := opentracing.SpanFromContext(ctx)

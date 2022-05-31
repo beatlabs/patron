@@ -54,3 +54,15 @@ The service has some default settings which can be changed via environment varia
   - sampler type `probabilistic`with `PATRON_JAEGER_SAMPLER_TYPE`
   - sampler param `0.0` with `PATRON_JAEGER_SAMPLER_PARAM`, which means that no traces are sent.
   
+
+The service provides also the option to bypass the legacy created HTTP component and use the new v2 component.
+This will effectively disable the default legacy HTTP component.
+
+```go
+err = service.WithRouter(router).WithSIGHUP(sig).Run(ctx)
+    if err != nil {
+    log.Fatalf("failed to create and run service %v", err)
+}
+```
+
+This above builder extension is temporary until we fully replace the legacy HTTP component with our v2 component.

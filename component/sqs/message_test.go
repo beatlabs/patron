@@ -24,16 +24,16 @@ const (
 	queueURL  = "queueURL"
 )
 
-var mockTracer = mocktracer.New()
+var mtr = mocktracer.New()
 
 func TestMain(m *testing.M) {
-	opentracing.SetGlobalTracer(mockTracer)
+	opentracing.SetGlobalTracer(mtr)
 	code := m.Run()
 	os.Exit(code)
 }
 
 func Test_message(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 
 	ctx := context.Background()
 	sp, ctx := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, queueName),
@@ -65,7 +65,7 @@ func Test_message(t *testing.T) {
 }
 
 func Test_message_ACK(t *testing.T) {
-	t.Cleanup(func() { mockTracer.Reset() })
+	t.Cleanup(func() { mtr.Reset() })
 	type fields struct {
 		sqsAPI sqsiface.SQSAPI
 	}
@@ -79,7 +79,7 @@ func Test_message_ACK(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() { mockTracer.Reset() })
+			t.Cleanup(func() { mtr.Reset() })
 			m := createMessage(tt.fields.sqsAPI, "1")
 			err := m.ACK()
 
@@ -92,7 +92,7 @@ func Test_message_ACK(t *testing.T) {
 					"version":       "dev",
 					"correlationID": "123",
 				}
-				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
+				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 			} else {
 				assert.NoError(t, err)
 				expected := map[string]interface{}{
@@ -102,14 +102,14 @@ func Test_message_ACK(t *testing.T) {
 					"version":       "dev",
 					"correlationID": "123",
 				}
-				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
+				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 			}
 		})
 	}
 }
 
 func Test_message_NACK(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 
 	m := createMessage(&stubSQSAPI{}, "1")
 
@@ -121,11 +121,11 @@ func Test_message_NACK(t *testing.T) {
 		"version":       "dev",
 		"correlationID": "123",
 	}
-	assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
+	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 }
 
 func Test_batch(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 
 	sqsAPI := &stubSQSAPI{}
 
@@ -148,7 +148,7 @@ func Test_batch(t *testing.T) {
 }
 
 func Test_batch_NACK(t *testing.T) {
-	defer mockTracer.Reset()
+	t.Cleanup(func() { mtr.Reset() })
 
 	sqsAPI := &stubSQSAPI{}
 
@@ -169,7 +169,7 @@ func Test_batch_NACK(t *testing.T) {
 
 	btc.NACK()
 
-	assert.Len(t, mockTracer.FinishedSpans(), 2)
+	assert.Len(t, mtr.FinishedSpans(), 2)
 	expected := map[string]interface{}{
 		"component":     "sqs-consumer",
 		"error":         false,
@@ -177,12 +177,12 @@ func Test_batch_NACK(t *testing.T) {
 		"version":       "dev",
 		"correlationID": "123",
 	}
-	assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
-	assert.Equal(t, expected, mockTracer.FinishedSpans()[1].Tags())
+	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+	assert.Equal(t, expected, mtr.FinishedSpans()[1].Tags())
 }
 
 func Test_batch_ACK(t *testing.T) {
-	t.Cleanup(func() { mockTracer.Reset() })
+	t.Cleanup(func() { mtr.Reset() })
 
 	msg1 := createMessage(nil, "1")
 	msg2 := createMessage(nil, "2")
@@ -215,7 +215,7 @@ func Test_batch_ACK(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() { mockTracer.Reset() })
+			t.Cleanup(func() { mtr.Reset() })
 			btc := batch{
 				ctx: context.Background(),
 				queue: queue{
@@ -229,7 +229,7 @@ func Test_batch_ACK(t *testing.T) {
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
-				assert.Len(t, mockTracer.FinishedSpans(), 2)
+				assert.Len(t, mtr.FinishedSpans(), 2)
 				expected := map[string]interface{}{
 					"component":     "sqs-consumer",
 					"error":         true,
@@ -237,13 +237,13 @@ func Test_batch_ACK(t *testing.T) {
 					"version":       "dev",
 					"correlationID": "123",
 				}
-				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
-				assert.Equal(t, expected, mockTracer.FinishedSpans()[1].Tags())
+				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+				assert.Equal(t, expected, mtr.FinishedSpans()[1].Tags())
 			} else {
 				assert.NoError(t, err, tt)
 				assert.Len(t, failed, 1)
 				assert.Equal(t, msg1, failed[0])
-				assert.Len(t, mockTracer.FinishedSpans(), 2)
+				assert.Len(t, mtr.FinishedSpans(), 2)
 				expectedSuccess := map[string]interface{}{
 					"component":     "sqs-consumer",
 					"error":         false,
@@ -251,7 +251,7 @@ func Test_batch_ACK(t *testing.T) {
 					"version":       "dev",
 					"correlationID": "123",
 				}
-				assert.Equal(t, expectedSuccess, mockTracer.FinishedSpans()[0].Tags())
+				assert.Equal(t, expectedSuccess, mtr.FinishedSpans()[0].Tags())
 				expectedFailure := map[string]interface{}{
 					"component":     "sqs-consumer",
 					"error":         true,
@@ -259,7 +259,7 @@ func Test_batch_ACK(t *testing.T) {
 					"version":       "dev",
 					"correlationID": "123",
 				}
-				assert.Equal(t, expectedFailure, mockTracer.FinishedSpans()[1].Tags())
+				assert.Equal(t, expectedFailure, mtr.FinishedSpans()[1].Tags())
 			}
 		})
 	}

@@ -1,4 +1,4 @@
-package sqs
+package v2
 
 import (
 	"context"

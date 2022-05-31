@@ -38,7 +38,7 @@ type Message interface {
 	Span() opentracing.Span
 }
 
-// NewMessage initializes a new message which is an implementation of the kafka Message interface
+// NewMessage initializes a new message which is an implementation of the kafka Message interface.
 func NewMessage(ctx context.Context, sp opentracing.Span, msg *sarama.ConsumerMessage) Message {
 	return &message{
 		ctx: ctx,
@@ -75,7 +75,7 @@ type Batch interface {
 	Messages() []Message
 }
 
-// NewBatch initializes a new batch of messages returning an instance of the implementation of the kafka Batch interface
+// NewBatch initializes a new batch of messages returning an instance of the implementation of the kafka Batch interface.
 func NewBatch(messages []Message) Batch {
 	return &batch{
 		messages: messages,
@@ -104,7 +104,7 @@ func DefaultConsumerSaramaConfig(name string, readCommitted bool) (*sarama.Confi
 	config.Version = sarama.V0_11_0_0
 	if readCommitted {
 		// from Kafka documentation:
-		// Transactions were introduced in Kafka 0.11.0 wherein applications can write to multiple topics and partitions atomically. In order for this to work, consumers reading from these partitions should be configured to only read committed data. This can be achieved by by setting the isolation.level=read_committed in the consumer's configuration.
+		// Transactions were introduced in Kafka 0.11.0 wherein applications can write to multiple topics and partitions atomically. In order for this to work, consumers reading from these partitions should be configured to only read committed data. This can be achieved by setting the isolation.level=read_committed in the consumer's configuration.
 		// In read_committed mode, the consumer will read only those transactional messages which have been successfully committed. It will continue to read non-transactional messages as before. There is no client-side buffering in read_committed mode. Instead, the end offset of a partition for a read_committed consumer would be the offset of the first message in the partition belonging to an open transaction. This offset is known as the 'Last Stable Offset'(LSO).
 		config.Consumer.IsolationLevel = sarama.ReadCommitted
 	}

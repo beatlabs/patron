@@ -59,7 +59,11 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 		return "", fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
-	msg.injectHeaders(carrier)
+	err = msg.injectHeaders(carrier)
+	if err != nil {
+		return "", fmt.Errorf("failed to inject tracing headers in message: %w", err)
+	}
+
 	msg.setMessageAttribute(correlation.HeaderID, correlation.IDFromContext(ctx))
 
 	out, err := p.api.SendMessageWithContext(ctx, msg.input)

@@ -31,7 +31,7 @@ type ConsumerFactory interface {
 The actual processing of the function that needs to be provided is following the type:
 
 ```go
-// ProcessorFunc definition of a async processor.
+// ProcessorFunc definition of an async processor.
 type ProcessorFunc func(Message) error
 ```
 

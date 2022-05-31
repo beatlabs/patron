@@ -73,7 +73,7 @@ func NewMessage(t string, b interface{}) *Message {
 
 // SetHeader allows to set a message header.
 // Multiple headers with the same key are supported.
-// Headers are only set if Kafka is version 0.11+
+// Headers are only set if Kafka is version 0.11+.
 func (m *Message) SetHeader(key, value string) {
 	m.headers.Set(key, value)
 }

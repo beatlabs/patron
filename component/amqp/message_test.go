@@ -18,16 +18,16 @@ const (
 	queueName = "queueName"
 )
 
-var mockTracer = mocktracer.New()
+var mtr = mocktracer.New()
 
 func TestMain(m *testing.M) {
-	opentracing.SetGlobalTracer(mockTracer)
+	opentracing.SetGlobalTracer(mtr)
 	code := m.Run()
 	os.Exit(code)
 }
 
 func Test_message(t *testing.T) {
-	defer mockTracer.Reset()
+	defer mtr.Reset()
 
 	ctx := context.Background()
 	sp, ctx := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, queueName),
@@ -52,7 +52,7 @@ func Test_message(t *testing.T) {
 }
 
 func Test_message_ACK(t *testing.T) {
-	t.Cleanup(func() { mockTracer.Reset() })
+	t.Cleanup(func() { mtr.Reset() })
 	type fields struct {
 		acknowledger amqp.Acknowledger
 	}
@@ -71,7 +71,7 @@ func Test_message_ACK(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() { mockTracer.Reset() })
+			t.Cleanup(func() { mtr.Reset() })
 			m := createMessage("1", tt.fields.acknowledger)
 			err := m.ACK()
 
@@ -84,7 +84,7 @@ func Test_message_ACK(t *testing.T) {
 					"version":       "dev",
 					"correlationID": "123",
 				}
-				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
+				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 			} else {
 				assert.NoError(t, err)
 				expected := map[string]interface{}{
@@ -94,14 +94,14 @@ func Test_message_ACK(t *testing.T) {
 					"version":       "dev",
 					"correlationID": "123",
 				}
-				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
+				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 			}
 		})
 	}
 }
 
 func Test_message_NACK(t *testing.T) {
-	t.Cleanup(func() { mockTracer.Reset() })
+	t.Cleanup(func() { mtr.Reset() })
 	type fields struct {
 		acknowledger amqp.Acknowledger
 	}
@@ -120,7 +120,7 @@ func Test_message_NACK(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() { mockTracer.Reset() })
+			t.Cleanup(func() { mtr.Reset() })
 			m := createMessage("1", tt.fields.acknowledger)
 			err := m.NACK()
 
@@ -133,7 +133,7 @@ func Test_message_NACK(t *testing.T) {
 					"version":       "dev",
 					"correlationID": "123",
 				}
-				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
+				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 			} else {
 				assert.NoError(t, err)
 				expected := map[string]interface{}{
@@ -143,7 +143,7 @@ func Test_message_NACK(t *testing.T) {
 					"version":       "dev",
 					"correlationID": "123",
 				}
-				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
+				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 			}
 		})
 	}

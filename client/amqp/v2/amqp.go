@@ -81,8 +81,22 @@ func New(url string, oo ...OptionFunc) (*Publisher, error) {
 	return pub, nil
 }
 
-// Publish a message to a exchange.
+// Publish a message to an exchange.
 func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error {
+	sp := injectTraceHeaders(ctx, exchange, &msg)
+
+	start := time.Now()
+	err := tc.channel.Publish(exchange, key, mandatory, immediate, msg)
+
+	observePublish(ctx, sp, start, exchange, err)
+	if err != nil {
+		return fmt.Errorf("failed to publish message: %w", err)
+	}
+
+	return nil
+}
+
+func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishing) opentracing.Span {
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, exchange),
 		publisherComponent, ext.SpanKindProducer, opentracing.Tag{Key: "exchange", Value: exchange})
 
@@ -96,16 +110,7 @@ func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandator
 		log.FromContext(ctx).Errorf("failed to inject tracing headers: %v", err)
 	}
 	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
-
-	start := time.Now()
-	err := tc.channel.Publish(exchange, key, mandatory, immediate, msg)
-
-	observePublish(ctx, sp, start, exchange, err)
-	if err != nil {
-		return fmt.Errorf("failed to publish message: %w", err)
-	}
-
-	return nil
+	return sp
 }
 
 // Close the channel and connection.

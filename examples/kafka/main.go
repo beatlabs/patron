@@ -29,18 +29,15 @@ const (
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
-		fmt.Printf("failed to set log level env var: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set log level env var: %v", err)
 	}
 	err = os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
-		fmt.Printf("failed to set sampler env vars: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set sampler env vars: %v", err)
 	}
 	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", "50002")
 	if err != nil {
-		fmt.Printf("failed to set default patron port env vars: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set default patron port env vars: %v", err)
 	}
 }
 
@@ -50,8 +47,7 @@ func main() {
 
 	service, err := patron.New(name, version, patron.TextLogger())
 	if err != nil {
-		fmt.Printf("failed to set up service: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to set up service: %v", err)
 	}
 
 	pub, err := patronamqp.New(amqpURL)
@@ -99,19 +95,9 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 	saramaCfg.Net.DialTimeout = 15 * time.Second
 	saramaCfg.Version = sarama.V2_6_0_0
 
-	cmp, err := group.New(
-		name,
-		groupID,
-		[]string{broker},
-		[]string{topic},
-		kafkaCmp.Process,
-		saramaCfg,
-		group.FailureStrategy(kafka.SkipStrategy),
-		group.BatchSize(1),
-		group.BatchTimeout(1*time.Second),
-		group.Retries(10),
-		group.RetryWait(3*time.Second),
-		group.CommitSync())
+	cmp, err := group.New(name, groupID, []string{broker}, []string{topic}, kafkaCmp.Process, saramaCfg,
+		group.FailureStrategy(kafka.SkipStrategy), group.BatchSize(1), group.BatchTimeout(1*time.Second),
+		group.Retries(10), group.RetryWait(3*time.Second), group.CommitSync())
 	if err != nil {
 		return nil, err
 	}

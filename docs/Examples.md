@@ -170,7 +170,7 @@ The service can be started as follows:
 go run examples/grpc/main.go
 ```
 
-## All of the above working together
+## All the above working together
 
 After all services have been started successfully we can send a request and see how it travels through all of them by running. 
 

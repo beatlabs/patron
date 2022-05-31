@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/beatlabs/patron/examples"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -18,8 +19,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
-
-	"github.com/beatlabs/patron/examples"
 )
 
 const (
@@ -29,7 +28,9 @@ const (
 
 var lis *bufconn.Listener
 
-type server struct{}
+type server struct {
+	examples.UnimplementedGreeterServer
+}
 
 func (s *server) SayHelloStream(_ *examples.HelloRequest, _ examples.Greeter_SayHelloStreamServer) error {
 	return status.Error(codes.Unavailable, "streaming not supported")
@@ -86,7 +87,7 @@ func TestDialContext(t *testing.T) {
 		},
 		"failure missing grpc.WithInsecure()": {
 			args:        args{},
-			expectedErr: "grpc: no transport security set (use grpc.WithInsecure() explicitly or set credentials)",
+			expectedErr: "grpc: no transport security set (use grpc.WithTransportCredentials(insecure.NewCredentials()) explicitly or set credentials)",
 		},
 	}
 	for name, tt := range tests {
@@ -176,7 +177,7 @@ func TestSayHello(t *testing.T) {
 			mtr.Reset()
 
 			// Metrics
-			assert.Equal(t, tc.wantCounter, testutil.CollectAndCount(rpcDurationMetrics))
+			assert.Equal(t, tc.wantCounter, testutil.CollectAndCount(rpcDurationMetrics, "client_grpc_rpc_duration_seconds"))
 			rpcDurationMetrics.Reset()
 		})
 	}

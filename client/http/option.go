@@ -46,3 +46,14 @@ func Transport(rt http.RoundTripper) OptionFunc {
 		return nil
 	}
 }
+
+// CheckRedirect option for setting the CheckRedirect for the client.
+func CheckRedirect(cr func(req *http.Request, via []*http.Request) error) OptionFunc {
+	return func(tc *TracedClient) error {
+		if cr == nil {
+			return errors.New("check redirect must be supplied")
+		}
+		tc.cl.CheckRedirect = cr
+		return nil
+	}
+}

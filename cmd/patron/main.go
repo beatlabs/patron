@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	filePermission      = 0664
-	directoryPermission = 0775
+	filePermission      = 0o664
+	directoryPermission = 0o775
 )
 
 type genData struct {

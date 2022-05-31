@@ -1,11 +1,11 @@
- DOCKER = docker
+DOCKER = docker
 
 default: test
 
 test: fmtcheck
 	go test ./... -cover -race -timeout 60s
 
-testint: fmtcheck
+testint: fmtcheck  deps-start
 	go test ./... -race -cover -tags=integration -timeout 120s -count=1
 
 cover: fmtcheck
@@ -13,7 +13,7 @@ cover: fmtcheck
 	go tool cover -func=coverage.txt && \
 	rm coverage.txt
 
-coverci: fmtcheck
+ci: deps-start
 	go test ./... -race -cover -mod=vendor -coverprofile=coverage.txt -covermode=atomic -tags=integration && \
 	mv coverage.txt coverage.txt.tmp && \
 	cat coverage.txt.tmp | grep -v "/cmd/patron/" > coverage.txt
@@ -25,23 +25,26 @@ fmtcheck:
 	@sh -c "'$(CURDIR)/script/gofmtcheck.sh'"
 
 lint: fmtcheck
-	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.43.0 golangci-lint -v run -E tparallel,whitespace
+	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.44.2 golangci-lint -v run
 
 deeplint: fmtcheck
-	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.43.0 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
-
-ci: fmtcheck lint coverci
+	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.44.2 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
 
 modsync: fmtcheck
-	go mod tidy && \
-	go mod vendor
+	go mod tidy && 	go mod vendor
 
 examples:
 	$(MAKE) -C examples
+
+deps-start:
+	docker-compose up -d
+
+deps-stop:
+	docker-compose down
 
 # disallow any parallelism (-j) for Make. This is necessary since some
 # commands during the build process create temporary files that collide
 # under parallel conditions.
 .NOTPARALLEL:
 
-.PHONY: default test testint cover coverci fmt fmtcheck lint deeplint ci modsync
+.PHONY: default test testint cover coverci fmt fmtcheck lint deeplint ci modsync deps-start deps-stop

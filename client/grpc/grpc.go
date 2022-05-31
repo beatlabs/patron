@@ -1,5 +1,4 @@
-// Package grpc provides a client implementation for gRPC with tracing and
-// metrics included.
+// Package grpc provides a client implementation for gRPC with tracing and metrics included.
 package grpc
 
 import (
@@ -22,9 +21,7 @@ const (
 	unary         = "unary"
 )
 
-var (
-	rpcDurationMetrics *prometheus.HistogramVec
-)
+var rpcDurationMetrics *prometheus.HistogramVec
 
 func init() {
 	rpcDurationMetrics = prometheus.NewHistogramVec(

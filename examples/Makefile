@@ -27,7 +27,7 @@ stop-infra:
 	$(DOCKER_COMPOSE) down
 
 # stops the infrastructure and the example services
-stop: stop-infra stop-svcs
+stop: stop-svcs stop-infra
 
 # starts the infrastructure and the example services
 start: start-infra start-svcs

@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	patronhttp "github.com/beatlabs/patron/component/http"
+	"github.com/beatlabs/patron/component/http/middleware"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/std"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +23,7 @@ func TestNewServer(t *testing.T) {
 	routesBuilder := patronhttp.NewRoutesBuilder().
 		Append(patronhttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).MethodGet())
 
-	middleware := func(h http.Handler) http.Handler {
+	mw := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		})
@@ -34,28 +35,31 @@ func TestNewServer(t *testing.T) {
 		"ready check func provided was nil\n" +
 		"provided components slice was empty\n" +
 		"provided SIGHUP handler was nil\n" +
-		"provided uncompressed paths slice was empty\n"
+		"provided uncompressed paths slice was empty\n" +
+		"provided router is nil\n"
 
 	tests := map[string]struct {
 		fields            map[string]interface{}
 		cps               []Component
 		routesBuilder     *patronhttp.RoutesBuilder
-		middlewares       []patronhttp.MiddlewareFunc
+		middlewares       []middleware.Func
 		acf               patronhttp.AliveCheckFunc
 		rcf               patronhttp.ReadyCheckFunc
 		sighupHandler     func()
 		uncompressedPaths []string
+		handler           http.Handler
 		wantErr           string
 	}{
 		"success": {
 			fields:            map[string]interface{}{"env": "dev"},
 			cps:               []Component{&testComponent{}, &testComponent{}},
 			routesBuilder:     routesBuilder,
-			middlewares:       []patronhttp.MiddlewareFunc{middleware},
+			middlewares:       []middleware.Func{mw},
 			acf:               patronhttp.DefaultAliveCheck,
 			rcf:               patronhttp.DefaultReadyCheck,
 			sighupHandler:     func() { log.Info("SIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
+			handler:           mw(nil),
 			wantErr:           "",
 		},
 		"nil inputs steps": {
@@ -66,16 +70,18 @@ func TestNewServer(t *testing.T) {
 			rcf:               nil,
 			sighupHandler:     nil,
 			uncompressedPaths: nil,
+			handler:           nil,
 			wantErr:           httpBuilderAllErrors,
 		},
 		"error in all builder steps": {
 			cps:               []Component{},
 			routesBuilder:     nil,
-			middlewares:       []patronhttp.MiddlewareFunc{},
+			middlewares:       []middleware.Func{},
 			acf:               nil,
 			rcf:               nil,
 			sighupHandler:     nil,
 			uncompressedPaths: []string{},
+			handler:           nil,
 			wantErr:           httpBuilderAllErrors,
 		},
 	}
@@ -94,6 +100,7 @@ func TestNewServer(t *testing.T) {
 				WithComponents(tt.cps...).
 				WithSIGHUP(tt.sighupHandler).
 				WithUncompressedPaths(tt.uncompressedPaths...).
+				WithRouter(tt.handler).
 				build()
 
 			if tt.wantErr != "" {
@@ -116,8 +123,8 @@ func TestNewServer(t *testing.T) {
 					assert.Contains(t, gotService.cps, comp)
 				}
 
-				for _, middleware := range tt.middlewares {
-					assert.NotNil(t, middleware)
+				for _, mw := range tt.middlewares {
+					assert.NotNil(t, mw)
 				}
 			}
 		})

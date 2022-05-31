@@ -46,7 +46,8 @@ func TestNewSub(t *testing.T) {
 	var b bytes.Buffer
 	logger := New(&b, log.InfoLevel, map[string]interface{}{"name": "john doe"})
 	assert.NotNil(t, logger)
-	subLogger := logger.Sub(map[string]interface{}{"age": 18}).(*Logger)
+	subLogger, ok := logger.Sub(map[string]interface{}{"age": 18}).(*Logger)
+	assert.True(t, ok)
 	assert.NotNil(t, subLogger.debug)
 	assert.NotNil(t, subLogger.info)
 	assert.NotNil(t, subLogger.warn)
@@ -57,6 +58,8 @@ func TestNewSub(t *testing.T) {
 	assert.Equal(t, subLogger.fields, map[string]interface{}{"name": "john doe", "age": 18})
 	assert.Contains(t, subLogger.fieldsLine, "age=18")
 	assert.Contains(t, subLogger.fieldsLine, "name=john doe")
+	subLogger.Info()
+	assert.Contains(t, b.String(), "age=18")
 }
 
 func TestLogger(t *testing.T) {
@@ -123,6 +126,8 @@ func TestLogger(t *testing.T) {
 						logger.Panicf(tt.args.msg, tt.args.args...)
 					})
 				}
+			case log.FatalLevel, log.NoLevel:
+				assert.FailNow(t, "unexpected case")
 			}
 
 			if tt.args.msg == "" {

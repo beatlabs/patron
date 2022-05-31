@@ -85,8 +85,6 @@ func TestNew(t *testing.T) {
 }
 
 func TestFactory_Create(t *testing.T) {
-	t.Parallel()
-
 	type fields struct {
 		clientName string
 		topics     []string
@@ -116,9 +114,8 @@ func TestFactory_Create(t *testing.T) {
 		},
 	}
 	for testName, tt := range tests {
+		tt := tt
 		t.Run(testName, func(t *testing.T) {
-			t.Parallel()
-
 			saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig(tt.fields.clientName, false)
 			require.Nil(t, err)
 
@@ -174,8 +171,6 @@ func (m *mockConsumerSession) MarkMessage(*sarama.ConsumerMessage, string) {}
 func (m *mockConsumerSession) Context() context.Context                    { return context.Background() }
 
 func TestHandler_ConsumeClaim(t *testing.T) {
-	t.Parallel()
-
 	tests := []struct {
 		name    string
 		msgs    []*sarama.ConsumerMessage
@@ -189,8 +184,6 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			chMsg := make(chan async.Message, 1)
 			h := handler{messages: chMsg, consumer: &consumer{}}
 

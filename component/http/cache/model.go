@@ -6,14 +6,14 @@ import (
 	"net/http"
 )
 
-// handlerRequest is the dedicated request object for the cache handler
+// handlerRequest is the dedicated request object for the cache handler.
 type handlerRequest struct {
 	header string
 	path   string
 	query  string
 }
 
-// toCacheHandlerRequest transforms the http Request object to the cache handler request
+// toCacheHandlerRequest transforms the http Request object to the cache handler request.
 func toCacheHandlerRequest(req *http.Request) *handlerRequest {
 	var header string
 	if req.Header != nil {
@@ -32,18 +32,18 @@ func toCacheHandlerRequest(req *http.Request) *handlerRequest {
 	}
 }
 
-// getKey generates a unique cache key based on the route path and the query parameters
+// getKey generates a unique cache key based on the route path and the query parameters.
 func (c *handlerRequest) getKey() string {
 	return fmt.Sprintf("%s:%s", c.path, c.query)
 }
 
-// handlerResponse is the dedicated Response object for the cache handler
+// handlerResponse is the dedicated Response object for the cache handler.
 type handlerResponse struct {
 	Bytes  []byte
 	Header http.Header
 }
 
-// response is the struct representing an object retrieved or ready to be put into the route cache
+// response is the struct representing an object retrieved or ready to be put into the route cache.
 type response struct {
 	Response  handlerResponse
 	LastValid int64
@@ -53,7 +53,6 @@ type response struct {
 	Err       error
 }
 
-// encode encodes the generic response to bytes for external memory storage
 func (c *response) encode() ([]byte, error) {
 	b, err := json.Marshal(c)
 	if err != nil {
@@ -62,7 +61,6 @@ func (c *response) encode() ([]byte, error) {
 	return b, nil
 }
 
-// decode decodes the cached object bytes
 func (c *response) decode(data []byte) error {
 	return json.Unmarshal(data, c)
 }

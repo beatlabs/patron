@@ -15,6 +15,9 @@ import (
 	"github.com/beatlabs/patron/log"
 )
 
+// unixNanoToTimestampDivider divides unix nano seconds to valid timestamp for kafka messages.
+const unixNanoToTimestampDivider = 1000_000
+
 // TimeExtractor defines a function extracting a time from a Kafka message.
 type TimeExtractor func(*sarama.ConsumerMessage) (time.Time, error)
 
@@ -31,6 +34,18 @@ func WithDurationOffset(since time.Duration, timeExtractor TimeExtractor) kafka.
 		c.DurationBasedConsumer = true
 		c.DurationOffset = since
 		c.TimeExtractor = timeExtractor
+		return nil
+	}
+}
+
+// WithTimestampOffset allows creating a consumer from a given duration.
+func WithTimestampOffset(since time.Duration) kafka.OptionFunc {
+	return func(c *kafka.ConsumerConfig) error {
+		if since < 0 {
+			return errors.New("duration must be positive")
+		}
+		c.TimestampBasedConsumer = true
+		c.TimestampOffset = time.Now().Add(-since).UnixNano() / unixNanoToTimestampDivider
 		return nil
 	}
 }
@@ -105,6 +120,10 @@ func (f *Factory) Create() (async.Consumer, error) {
 
 	if c.config.DurationBasedConsumer {
 		c.partitions = c.partitionsSinceDuration
+	}
+
+	if c.config.TimestampBasedConsumer {
+		c.partitions = c.partitionsSinceTimestamp
 	}
 
 	if c.config.LatestOffsetReachedChan != nil {
@@ -223,7 +242,8 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 }
 
 func (c *consumer) ifStartingOffsetAfterLatestOffset(latestOffset int64, partition int) bool {
-	return c.startingOffsets[int32(partition)] >= latestOffset
+	startingOffset := c.startingOffsets[int32(partition)]
+	return startingOffset <= sarama.OffsetNewest || startingOffset >= latestOffset
 }
 
 func (c *consumer) partitionsFromOffset(_ context.Context) ([]sarama.PartitionConsumer, error) {
@@ -308,6 +328,52 @@ func (c *consumer) partitionsSinceDuration(ctx context.Context) ([]sarama.Partit
 		if !exists {
 			return nil, fmt.Errorf("partition %d unknown, this is most likely due to a repartitioning", partition)
 		}
+
+		pc, err := c.ms.ConsumePartition(c.topic, partition, offset)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get partition consumer: %w", err)
+		}
+		pcs[i] = pc
+	}
+
+	if c.latestOffsetReachedChan != nil {
+		err := c.setLatestOffsets(client, partitions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set latest offsets: %w", err)
+		}
+	}
+
+	return pcs, nil
+}
+
+func (c *consumer) partitionsSinceTimestamp(_ context.Context) ([]sarama.PartitionConsumer, error) {
+	client, err := sarama.NewClient(c.config.Brokers, c.config.SaramaConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client: %w", err)
+	}
+
+	consumer, err := sarama.NewConsumerFromClient(client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create simple consumer: %w", err)
+	}
+	c.ms = consumer
+
+	partitions, err := c.ms.Partitions(c.topic)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get partitions: %w", err)
+	}
+
+	pcs := make([]sarama.PartitionConsumer, len(partitions))
+
+	ts := c.config.TimestampOffset
+	c.startingOffsets = make(map[int32]int64, len(partitions))
+
+	for i, partition := range partitions {
+		offset, err := client.GetOffset(c.topic, partition, ts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get offset by timestamp %d for partition %d: %w", ts, partition, err)
+		}
+		c.startingOffsets[partition] = offset
 
 		pc, err := c.ms.ConsumePartition(c.topic, partition, offset)
 		if err != nil {

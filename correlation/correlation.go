@@ -3,6 +3,7 @@ package correlation
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/google/uuid"
 )
@@ -30,4 +31,24 @@ func IDFromContext(ctx context.Context) string {
 // ContextWithID sets a correlation ID to a context.
 func ContextWithID(ctx context.Context, correlationID string) context.Context {
 	return context.WithValue(ctx, idKey, correlationID)
+}
+
+func GetOrSetHeaderID(h http.Header) string {
+	cor, ok := h[HeaderID]
+	if !ok {
+		corID := uuid.New().String()
+		h.Set(HeaderID, corID)
+		return corID
+	}
+	if len(cor) == 0 {
+		corID := uuid.New().String()
+		h.Set(HeaderID, corID)
+		return corID
+	}
+	if cor[0] == "" {
+		corID := uuid.New().String()
+		h.Set(HeaderID, corID)
+		return corID
+	}
+	return cor[0]
 }

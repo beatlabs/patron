@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,8 @@ func TestStartFinishConsumerSpan(t *testing.T) {
 	assert.NotNil(t, sp)
 	assert.NotNil(t, ctx)
 	assert.IsType(t, &mocktracer.MockSpan{}, sp)
-	jsp := sp.(*mocktracer.MockSpan)
+	jsp, ok := sp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.NotNil(t, jsp)
 	assert.Equal(t, "123", jsp.OperationName)
 	SpanError(sp)
@@ -53,7 +54,8 @@ func TestStartFinishChildSpan(t *testing.T) {
 	assert.NotNil(t, childCtx)
 	childSp.LogKV("log event")
 	assert.IsType(t, &mocktracer.MockSpan{}, childSp)
-	jsp := childSp.(*mocktracer.MockSpan)
+	jsp, ok := childSp.(*mocktracer.MockSpan)
+	assert.True(t, ok)
 	assert.NotNil(t, jsp)
 	assert.Equal(t, "123", jsp.OperationName)
 	SpanError(childSp)

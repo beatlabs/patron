@@ -22,7 +22,7 @@ const (
 	AckStrategy
 )
 
-// ProcessorFunc definition of a async processor.
+// ProcessorFunc definition of an async processor.
 type ProcessorFunc func(Message) error
 
 // Message interface for defining messages that are handled by the async component.

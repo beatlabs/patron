@@ -324,7 +324,7 @@ func toChannelNotClosing(msgs ...*sarama.ConsumerMessage) <-chan *sarama.Consume
 }
 
 func ctxTimeout(d time.Duration) context.Context {
-	ctx, _ := context.WithTimeout(context.Background(), d)
+	ctx, _ := context.WithTimeout(context.Background(), d) //nolint:govet
 	return ctx
 }
 

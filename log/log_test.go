@@ -39,37 +39,26 @@ func TestLogMetrics(t *testing.T) {
 	logCounter.Reset()
 	l := testLogger{}
 	logger = &l
-
 	tests := map[string]struct {
-		lvl Level
+		lvl      Level
+		logfunc  func(args ...interface{})
+		logfuncf func(msg string, args ...interface{})
 	}{
-		"debug": {lvl: DebugLevel},
-		"info":  {lvl: InfoLevel},
-		"warn":  {lvl: WarnLevel},
-		"error": {lvl: ErrorLevel},
-		"fatal": {lvl: FatalLevel},
-		"panic": {lvl: PanicLevel},
+		"debug": {lvl: DebugLevel, logfunc: Debug, logfuncf: Debugf},
+		"info":  {lvl: InfoLevel, logfunc: Info, logfuncf: Infof},
+		"warn":  {lvl: WarnLevel, logfunc: Warn, logfuncf: Warnf},
+		"error": {lvl: ErrorLevel, logfunc: Error, logfuncf: Errorf},
+		"fatal": {lvl: FatalLevel, logfunc: Fatal, logfuncf: Fatalf},
+		"panic": {lvl: PanicLevel, logfunc: Panic, logfuncf: Panicf},
 	}
 	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, 0.0, testutil.ToFloat64(logCounter.WithLabelValues(string(tt.lvl))))
-		})
-	}
-	// run funcs
-	Debug("debug")
-	Debugf("debugf")
-	Info("info")
-	Infof("infof")
-	Warn("warn")
-	Warnf("warnf")
-	Error("error")
-	Errorf("errorf")
-	Fatal("fatal")
-	Fatalf("fatalf")
-	Panic("panic")
-	Panicf("panicf")
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
+			tt.logfunc(name)
+			assert.Equal(t, 1.0, testutil.ToFloat64(logCounter.WithLabelValues(string(tt.lvl))))
+			tt.logfuncf(name)
 			assert.Equal(t, 2.0, testutil.ToFloat64(logCounter.WithLabelValues(string(tt.lvl))))
 		})
 	}

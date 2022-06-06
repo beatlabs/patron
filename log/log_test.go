@@ -36,6 +36,7 @@ func TestLevelOrder(t *testing.T) {
 }
 
 func TestLogMetrics(t *testing.T) {
+	t.Parallel()
 	logCounter.Reset()
 	l := testLogger{}
 	logger = &l

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // The Level type definition.
@@ -65,9 +67,22 @@ type Logger interface {
 type ctxKey struct{}
 
 var (
-	logger Logger = &fmtLogger{}
-	once   sync.Once
+	logger     Logger = &fmtLogger{}
+	once       sync.Once
+	logCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: "observability",
+			Subsystem: "log",
+			Name:      "counter",
+			Help:      "Counts the log level",
+		},
+		[]string{"level"},
+	)
 )
+
+func init() {
+	prometheus.MustRegister(logCounter)
+}
 
 // Setup logging by providing a logger factory.
 func Setup(l Logger) error {
@@ -104,61 +119,73 @@ func Sub(ff map[string]interface{}) Logger {
 
 // Panic logging.
 func Panic(args ...interface{}) {
+	logCounter.WithLabelValues(string(PanicLevel)).Inc()
 	logger.Panic(args...)
 }
 
 // Panicf logging.
 func Panicf(msg string, args ...interface{}) {
+	logCounter.WithLabelValues(string(PanicLevel)).Inc()
 	logger.Panicf(msg, args...)
 }
 
 // Fatal logging.
 func Fatal(args ...interface{}) {
+	logCounter.WithLabelValues(string(FatalLevel)).Inc()
 	logger.Fatal(args...)
 }
 
 // Fatalf logging.
 func Fatalf(msg string, args ...interface{}) {
+	logCounter.WithLabelValues(string(FatalLevel)).Inc()
 	logger.Fatalf(msg, args...)
 }
 
 // Error logging.
 func Error(args ...interface{}) {
+	logCounter.WithLabelValues(string(ErrorLevel)).Inc()
 	logger.Error(args...)
 }
 
 // Errorf logging.
 func Errorf(msg string, args ...interface{}) {
+	logCounter.WithLabelValues(string(ErrorLevel)).Inc()
 	logger.Errorf(msg, args...)
 }
 
 // Warn logging.
 func Warn(args ...interface{}) {
+	logCounter.WithLabelValues(string(WarnLevel)).Inc()
 	logger.Warn(args...)
 }
 
 // Warnf logging.
 func Warnf(msg string, args ...interface{}) {
+	logCounter.WithLabelValues(string(WarnLevel)).Inc()
 	logger.Warnf(msg, args...)
 }
 
 // Info logging.
 func Info(args ...interface{}) {
+	logCounter.WithLabelValues(string(InfoLevel)).Inc()
 	logger.Info(args...)
 }
 
 // Infof logging.
 func Infof(msg string, args ...interface{}) {
+	logCounter.WithLabelValues(string(InfoLevel)).Inc()
 	logger.Infof(msg, args...)
 }
 
 // Debug logging.
 func Debug(args ...interface{}) {
+	logCounter.WithLabelValues(string(DebugLevel)).Inc()
 	logger.Debug(args...)
 }
 
 // Debugf logging.
 func Debugf(msg string, args ...interface{}) {
+	logCounter.WithLabelValues(string(DebugLevel)).Inc()
 	logger.Debugf(msg, args...)
 }
 

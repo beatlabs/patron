@@ -15,7 +15,6 @@ import (
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
@@ -42,7 +41,9 @@ func TestTracedClient_Do(t *testing.T) {
 	reqErr, err := http.NewRequest("GET", "", nil)
 	assert.NoError(t, err)
 	reqErr.Header.Set(encoding.AcceptEncodingHeader, "gzip")
-	opName := opName("GET", ts.URL)
+	u, err := req.URL.Parse(ts.URL)
+	assert.NoError(t, err)
+	opName := opName("GET", u.Scheme, u.Host)
 	opNameError := "HTTP GET"
 
 	type args struct {
@@ -136,34 +137,6 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestHTTPStartFinishSpan(t *testing.T) {
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	req, err := http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
-	sp, req := span("/", "corID", req)
-	assert.NotNil(t, sp)
-	assert.NotNil(t, req)
-	assert.IsType(t, &mocktracer.MockSpan{}, sp)
-	jsp, ok := sp.(*mocktracer.MockSpan)
-	assert.True(t, ok)
-	assert.NotNil(t, jsp)
-	assert.Equal(t, "GET /", jsp.OperationName)
-	finishSpan(jsp, 200)
-	assert.NotNil(t, jsp)
-	rawSpan := mtr.FinishedSpans()[0]
-	assert.Equal(t, map[string]interface{}{
-		"span.kind":        ext.SpanKindRPCServerEnum,
-		"component":        "http-client",
-		"error":            false,
-		"http.method":      "GET",
-		"http.status_code": uint16(200),
-		"http.url":         "/",
-		"version":          "dev",
-		"correlationID":    "corID",
-	}, rawSpan.Tags())
-}
-
 func TestDecompress(t *testing.T) {
 	const msg = "hello, client!"
 	ts1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -232,6 +205,32 @@ func TestDecompress(t *testing.T) {
 			assert.Nil(t, err)
 			body := string(b)
 			assert.Equal(t, msg, body)
+		})
+	}
+}
+
+func TestOpName(t *testing.T) {
+	type args struct {
+		method string
+		scheme string
+		host   string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"get http host", args{"GET", "http", "host"}, "GET http://host"},
+		{"post https host:port", args{"POST", "https", "host:443"}, "POST https://host:443"},
+		{"empty method", args{"", "http", "host"}, " http://host"},
+		{"empty scheme", args{"GET", "", "host"}, "GET ://host"},
+		{"empty host", args{"GET", "http", ""}, "GET http://"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := opName(tt.args.method, tt.args.scheme, tt.args.host); got != tt.want {
+				t.Errorf("opName() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

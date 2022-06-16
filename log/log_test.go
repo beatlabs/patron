@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,6 +31,36 @@ func TestLevelOrder(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			assert.Equal(t, tt.want, LevelOrder(tt.args.lvl))
+		})
+	}
+}
+
+func TestLogMetrics(t *testing.T) {
+	t.Parallel()
+	logCounter.Reset()
+	l := testLogger{}
+	logger = &l
+	tests := map[string]struct {
+		lvl      Level
+		logfunc  func(args ...interface{})
+		logfuncf func(msg string, args ...interface{})
+	}{
+		"debug": {lvl: DebugLevel, logfunc: Debug, logfuncf: Debugf},
+		"info":  {lvl: InfoLevel, logfunc: Info, logfuncf: Infof},
+		"warn":  {lvl: WarnLevel, logfunc: Warn, logfuncf: Warnf},
+		"error": {lvl: ErrorLevel, logfunc: Error, logfuncf: Errorf},
+		"fatal": {lvl: FatalLevel, logfunc: Fatal, logfuncf: Fatalf},
+		"panic": {lvl: PanicLevel, logfunc: Panic, logfuncf: Panicf},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, 0.0, testutil.ToFloat64(logCounter.WithLabelValues(string(tt.lvl))))
+			tt.logfunc(name)
+			assert.Equal(t, 1.0, testutil.ToFloat64(logCounter.WithLabelValues(string(tt.lvl))))
+			tt.logfuncf(name)
+			assert.Equal(t, 2.0, testutil.ToFloat64(logCounter.WithLabelValues(string(tt.lvl))))
 		})
 	}
 }

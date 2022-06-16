@@ -17,7 +17,6 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
 	"github.com/beatlabs/patron/trace"
 )
@@ -75,7 +74,7 @@ func New(oo ...OptionFunc) (*TracedClient, error) {
 // Do execute an HTTP request with integrated tracing and tracing propagation downstream.
 func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 	req, ht := nethttp.TraceRequest(opentracing.GlobalTracer(), req,
-		nethttp.OperationName(opName(req.Method, req.URL.String())),
+		nethttp.OperationName(opName(req.Method, req.URL.Scheme, req.URL.Host)),
 		nethttp.ComponentName(clientComponent))
 	defer ht.Finish()
 
@@ -126,28 +125,8 @@ func (tc *TracedClient) do(req *http.Request) (*http.Response, error) {
 	return rsp, nil
 }
 
-func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
-	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		log.Errorf("failed to extract HTTP span: %v", err)
-	}
-	sp := opentracing.StartSpan(opName(r.Method, path), ext.RPCServerOption(ctx))
-	ext.HTTPMethod.Set(sp, r.Method)
-	ext.HTTPUrl.Set(sp, r.URL.String())
-	ext.Component.Set(sp, clientComponent)
-	sp.SetTag(trace.VersionTag, trace.Version)
-	sp.SetTag(correlation.ID, corID)
-	return sp, r.WithContext(opentracing.ContextWithSpan(r.Context(), sp))
-}
-
-func finishSpan(sp opentracing.Span, code int) {
-	ext.HTTPStatusCode.Set(sp, uint16(code))
-	ext.Error.Set(sp, code >= http.StatusInternalServerError)
-	sp.Finish()
-}
-
-func opName(method, path string) string {
-	return method + " " + path
+func opName(method, scheme, host string) string {
+	return method + " " + scheme + "://" + host
 }
 
 func decompress(hdr string, rsp *http.Response) io.ReadCloser {

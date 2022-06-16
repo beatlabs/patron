@@ -1,88 +1,24 @@
-// Package sqs provides a native consumer for AWS SQS.
-package sqs
+// Package mqtt provides an instrumented subscriber for MQTT v5.
+package mqtt
 
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strconv"
+	"net/url"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/paho"
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	defaultStatsInterval = 10 * time.Second
-	defaultRetries       = 10
-	defaultRetryWait     = time.Second
-	defaultMaxMessages   = 3
+	defaultRetries   = 10
+	defaultRetryWait = time.Second
 )
-
-// ProcessorFunc definition of an async processor.
-type ProcessorFunc func(context.Context, Batch)
-
-type messageState string
-
-const (
-	sqsAttributeApproximateNumberOfMessages           = "ApproximateNumberOfMessages"
-	sqsAttributeApproximateNumberOfMessagesDelayed    = "ApproximateNumberOfMessagesDelayed"
-	sqsAttributeApproximateNumberOfMessagesNotVisible = "ApproximateNumberOfMessagesNotVisible"
-	sqsAttributeSentTimestamp                         = "SentTimestamp"
-
-	sqsMessageAttributeAll = "All"
-
-	consumerComponent = "sqs-consumer"
-
-	ackMessageState     messageState = "ACK"
-	nackMessageState    messageState = "NACK"
-	fetchedMessageState messageState = "FETCHED"
-)
-
-var (
-	messageAge        *prometheus.GaugeVec
-	messageCounterVec *prometheus.CounterVec
-	queueSize         *prometheus.GaugeVec
-)
-
-func init() {
-	messageAge = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "component",
-			Subsystem: "sqs",
-			Name:      "message_age",
-			Help:      "Message age based on the SentTimestamp SQS attribute",
-		},
-		[]string{"queue"},
-	)
-	prometheus.MustRegister(messageAge)
-	messageCounterVec = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: "sqs",
-			Name:      "message_counter",
-			Help:      "Message counter",
-		},
-		[]string{"queue", "state", "hasError"},
-	)
-	prometheus.MustRegister(messageCounterVec)
-	queueSize = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "component",
-			Subsystem: "sqs",
-			Name:      "queue_size",
-			Help:      "Queue size reported by AWS",
-		},
-		[]string{"state"},
-	)
-	prometheus.MustRegister(queueSize)
-}
 
 type retry struct {
 	count uint
@@ -90,65 +26,92 @@ type retry struct {
 }
 
 type config struct {
-	maxMessages       *int64
-	pollWaitSeconds   *int64
-	visibilityTimeout *int64
+	maxMessages *int64
 }
 
-type stats struct {
-	interval time.Duration
+// DefaultConfig provides a config with sane default and logging enabled on the callbacks.
+func DefaultConfig(brokerURLs []*url.URL, clientID string, router paho.Router) (autopaho.ClientConfig, error) {
+	if len(brokerURLs) == 0 {
+		return autopaho.ClientConfig{}, errors.New("no broker URLs provided")
+	}
+
+	if clientID == "" {
+		return autopaho.ClientConfig{}, errors.New("no client id provided")
+	}
+
+	if router == nil {
+		return autopaho.ClientConfig{}, errors.New("no router provided")
+	}
+
+	return autopaho.ClientConfig{
+		BrokerUrls:        brokerURLs,
+		KeepAlive:         30,
+		ConnectRetryDelay: 5 * time.Second,
+		ConnectTimeout:    1 * time.Second,
+		OnConnectionUp: func(_ *autopaho.ConnectionManager, conAck *paho.Connack) {
+			log.Infof("connection is up with reason code: %d\n", conAck.ReasonCode)
+		},
+		OnConnectError: func(err error) {
+			log.Errorf("failed to connect: %v\n", err)
+		},
+		ClientConfig: paho.ClientConfig{
+			ClientID: clientID,
+			Router:   router,
+			OnServerDisconnect: func(disconnect *paho.Disconnect) {
+				log.Warnf("server disconnect received with reason code: %d\n", disconnect.ReasonCode)
+			},
+			OnClientError: func(err error) {
+				log.Errorf("client error occurred: %v\n", err)
+			},
+			PublishHook: func(publish *paho.Publish) {
+				log.Debugf("message published to topic: %s\n", publish.Topic)
+			},
+		},
+	}, nil
 }
 
 // Component implementation of an async component.
 type Component struct {
 	name  string
-	queue queue
-	api   sqsiface.SQSAPI
-	cfg   config
-	proc  ProcessorFunc
-	stats stats
+	cm    *autopaho.ConnectionManager
+	cfg   autopaho.ClientConfig
+	sub   *paho.Subscribe
 	retry retry
 }
 
+type Subscription struct {
+	name    string
+	handler paho.MessageHandler
+	options paho.SubscribeOptions
+}
+
 // New creates a new component with support for functional configuration.
-func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo ...OptionFunc) (*Component, error) {
+func New(name string, cfg autopaho.ClientConfig, subs []Subscription, oo ...OptionFunc) (*Component, error) {
 	if name == "" {
 		return nil, errors.New("component name is empty")
 	}
 
-	if queueName == "" {
-		return nil, errors.New("queue name is empty")
+	if len(subs) == 0 {
+		return nil, errors.New("subscriptions is empty")
 	}
 
-	if sqsAPI == nil {
-		return nil, errors.New("SQS API is nil")
+	rt := &paho.StandardRouter{}
+	subscribe := &paho.Subscribe{
+		Subscriptions: make(map[string]paho.SubscribeOptions, len(subs)),
 	}
 
-	if proc == nil {
-		return nil, errors.New("process function is nil")
+	for _, sub := range subs {
+		// TODO: middleware for observability
+		rt.RegisterHandler(sub.name, sub.handler)
+		subscribe.Subscriptions[sub.name] = sub.options
 	}
 
-	out, err := sqsAPI.GetQueueUrlWithContext(context.Background(), &sqs.GetQueueUrlInput{
-		QueueName: aws.String(queueName),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get queue URL: %w", err)
-	}
+	cfg.Router = rt
 
 	cmp := &Component{
 		name: name,
-		queue: queue{
-			name: queueName,
-			url:  aws.StringValue(out.QueueUrl),
-		},
-		api: sqsAPI,
-		cfg: config{
-			maxMessages:       aws.Int64(defaultMaxMessages),
-			pollWaitSeconds:   nil,
-			visibilityTimeout: nil,
-		},
-		stats: stats{interval: defaultStatsInterval},
-		proc:  proc,
+		cfg:  cfg,
+		sub:  subscribe,
 		retry: retry{
 			count: defaultRetries,
 			wait:  defaultRetryWait,
@@ -156,7 +119,7 @@ func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo 
 	}
 
 	for _, optionFunc := range oo {
-		err = optionFunc(cmp)
+		err := optionFunc(cmp)
 		if err != nil {
 			return nil, err
 		}
@@ -171,8 +134,6 @@ func (c *Component) Run(ctx context.Context) error {
 
 	go c.consume(ctx, chErr)
 
-	tickerStats := time.NewTicker(c.stats.interval)
-	defer tickerStats.Stop()
 	for {
 		select {
 		case err := <-chErr:
@@ -180,11 +141,6 @@ func (c *Component) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			log.FromContext(ctx).Info("context cancellation received. exiting...")
 			return nil
-		case <-tickerStats.C:
-			err := c.report(ctx, c.api, c.queue.url)
-			if err != nil {
-				log.FromContext(ctx).Errorf("failed to report sqsAPI stats: %v", err)
-			}
 		}
 	}
 }
@@ -198,21 +154,12 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 		if ctx.Err() != nil {
 			return
 		}
-		logger.Debugf("consume: polling SQS sqsAPI %s for %d messages", c.queue.name, *c.cfg.maxMessages)
-		output, err := c.api.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
-			QueueUrl:            &c.queue.url,
-			MaxNumberOfMessages: c.cfg.maxMessages,
-			WaitTimeSeconds:     c.cfg.pollWaitSeconds,
-			VisibilityTimeout:   c.cfg.visibilityTimeout,
-			AttributeNames: aws.StringSlice([]string{
-				sqsAttributeSentTimestamp,
-			}),
-			MessageAttributeNames: aws.StringSlice([]string{
-				sqsMessageAttributeAll,
-			}),
-		})
+
+		logger.Debug("consume: connecting to broker")
+
+		cm, err := autopaho.NewConnection(ctx, c.cfg)
 		if err != nil {
-			logger.Errorf("failed to receive messages: %v, sleeping for %v", err, c.retry.wait)
+			logger.Errorf("failed to create new connection: %v, sleeping for %v", err, c.retry.wait)
 			time.Sleep(c.retry.wait)
 			retries--
 			if retries > 0 {
@@ -221,113 +168,26 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			chErr <- err
 			return
 		}
+
+		sa, err := cm.Subscribe(ctx, c.sub)
+		if err != nil {
+			logger.Errorf("failed to subscribe: %v, sleeping for %v", err, c.retry.wait)
+			time.Sleep(c.retry.wait)
+			retries--
+			if retries > 0 {
+				continue
+			}
+			chErr <- err
+			return
+		}
+		logger.Debugf("subscription acknowledgment: %v", sa)
+
 		retries = c.retry.count
 
 		if ctx.Err() != nil {
 			return
 		}
-
-		logger.Debugf("Consume: received %d messages", len(output.Messages))
-		messageCountInc(c.queue.name, fetchedMessageState, false, len(output.Messages))
-
-		if len(output.Messages) == 0 {
-			continue
-		}
-
-		btc := c.createBatch(ctx, output)
-
-		c.proc(ctx, btc)
 	}
-}
-
-func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageOutput) batch {
-	btc := batch{
-		ctx:      ctx,
-		queue:    c.queue,
-		sqsAPI:   c.api,
-		messages: make([]Message, 0, len(output.Messages)),
-	}
-
-	for _, msg := range output.Messages {
-		observerMessageAge(c.queue.name, msg.Attributes)
-
-		corID := getCorrelationID(msg.MessageAttributes)
-
-		sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queue.name),
-			consumerComponent, corID, mapHeader(msg.MessageAttributes))
-
-		ctxCh = correlation.ContextWithID(ctxCh, corID)
-		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
-		ctxCh = log.WithContext(ctxCh, logger)
-
-		btc.messages = append(btc.messages, message{
-			ctx:   ctxCh,
-			queue: c.queue,
-			api:   c.api,
-			msg:   msg,
-			span:  sp,
-		})
-	}
-
-	return btc
-}
-
-func (c *Component) report(ctx context.Context, sqsAPI sqsiface.SQSAPI, queueURL string) error {
-	log.Debugf("retrieve stats for SQS %s", c.queue.name)
-	rsp, err := sqsAPI.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
-		AttributeNames: []*string{
-			aws.String(sqsAttributeApproximateNumberOfMessages),
-			aws.String(sqsAttributeApproximateNumberOfMessagesDelayed),
-			aws.String(sqsAttributeApproximateNumberOfMessagesNotVisible),
-		},
-		QueueUrl: aws.String(queueURL),
-	})
-	if err != nil {
-		return err
-	}
-
-	size, err := getAttributeFloat64(rsp.Attributes, sqsAttributeApproximateNumberOfMessages)
-	if err != nil {
-		return err
-	}
-	queueSize.WithLabelValues("available").Set(size)
-
-	size, err = getAttributeFloat64(rsp.Attributes, sqsAttributeApproximateNumberOfMessagesDelayed)
-	if err != nil {
-		return err
-	}
-	queueSize.WithLabelValues("delayed").Set(size)
-
-	size, err = getAttributeFloat64(rsp.Attributes, sqsAttributeApproximateNumberOfMessagesNotVisible)
-	if err != nil {
-		return err
-	}
-	queueSize.WithLabelValues("invisible").Set(size)
-	return nil
-}
-
-func getAttributeFloat64(attr map[string]*string, key string) (float64, error) {
-	valueString := attr[key]
-	if valueString == nil {
-		return 0.0, fmt.Errorf("value of %s does not exist", key)
-	}
-	value, err := strconv.ParseFloat(*valueString, 64)
-	if err != nil {
-		return 0.0, fmt.Errorf("could not convert %s to float64", *valueString)
-	}
-	return value, nil
-}
-
-func observerMessageAge(queue string, attributes map[string]*string) {
-	attribute, ok := attributes[sqsAttributeSentTimestamp]
-	if !ok || attribute == nil {
-		return
-	}
-	timestamp, err := strconv.ParseInt(*attribute, 10, 64)
-	if err != nil {
-		return
-	}
-	messageAge.WithLabelValues(queue).Set(time.Now().UTC().Sub(time.Unix(timestamp, 0)).Seconds())
 }
 
 func messageCountInc(queue string, state messageState, hasError bool, count int) {

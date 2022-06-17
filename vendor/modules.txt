@@ -63,6 +63,11 @@ github.com/eapache/go-resiliency/breaker
 github.com/eapache/go-xerial-snappy
 # github.com/eapache/queue v1.1.0
 github.com/eapache/queue
+# github.com/eclipse/paho.golang v0.10.0
+## explicit
+github.com/eclipse/paho.golang/autopaho
+github.com/eclipse/paho.golang/packets
+github.com/eclipse/paho.golang/paho
 # github.com/elastic/elastic-transport-go/v8 v8.1.0
 ## explicit
 github.com/elastic/elastic-transport-go/v8/elastictransport
@@ -102,6 +107,8 @@ github.com/golang/snappy
 # github.com/google/uuid v1.3.0
 ## explicit
 github.com/google/uuid
+# github.com/gorilla/websocket v1.4.2
+github.com/gorilla/websocket
 # github.com/hashicorp/errwrap v1.0.0
 github.com/hashicorp/errwrap
 # github.com/hashicorp/go-multierror v1.1.1
@@ -301,6 +308,7 @@ golang.org/x/net/proxy
 golang.org/x/net/trace
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 golang.org/x/sync/errgroup
+golang.org/x/sync/semaphore
 # golang.org/x/sys v0.0.0-20220114195835-da31bd327af9
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix

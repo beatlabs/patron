@@ -16,4 +16,7 @@ The framework makes primarily use of the following OSS projects:
 * [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
 * [github.com/google/uuid](https://github.com/google/uuid) 
 * [github.com/hashicorp/golang-lru](https://github.com/hashicorp/golang-lru)
-* [github.com/ory/dockertest](https://github.com/ory/dockertest)
+* [github.com/eclipse/paho.golang](https://github.com/eclipse/paho.golang)
+* [google.golang.org/grpc](https://google.golang.org/grpc)
+* [google.golang.org/protobuf](https://google.golang.org/protobuf)
+* [github.com/eclipse/paho.golang](https://github.com/eclipse/paho.golang)

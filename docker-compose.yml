@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 services:
   zookeeper:
     image: 'bitnami/zookeeper:latest'
@@ -74,6 +74,22 @@ services:
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+  hivemq:
+    image: hivemq/hivemq4:latest
+    restart: always
+    ports:
+      - target: 1883
+        published: 1883
+        protocol: tcp
+        mode: host
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+    environment:
+      HIVEMQ_CONTROL_CENTER_USER: 'admin'
+      HIVEMQ_CONTROL_CENTER_PASSWORD: '123456'
+      HIVEMQ_CLUSTER_TRANSPORT_TYPE: 'TCP'
   mongo:
     image: mongo:5
     restart: always

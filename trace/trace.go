@@ -75,7 +75,8 @@ func Close() error {
 
 // ConsumerSpan starts a new consumer span.
 func ConsumerSpan(ctx context.Context, opName, cmp, corID string, hdr map[string]string,
-	tags ...opentracing.Tag) (opentracing.Span, context.Context) {
+	tags ...opentracing.Tag,
+) (opentracing.Span, context.Context) {
 	spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.TextMapCarrier(hdr))
 	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
 		log.Errorf("failed to extract consumer span: %v", err)

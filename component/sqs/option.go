@@ -80,3 +80,14 @@ func RetryWait(interval time.Duration) OptionFunc {
 		return nil
 	}
 }
+
+// QueueOwner sets the AWS queue owner ID for an SQS queue.
+func QueueOwner(queueOwner string) OptionFunc {
+	return func(c *Component) error {
+		if queueOwner == "" {
+			return errors.New("queue owner should not be empty")
+		}
+		c.queueOwner = queueOwner
+		return nil
+	}
+}

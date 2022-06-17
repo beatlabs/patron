@@ -98,6 +98,25 @@ func TestNew(t *testing.T) {
 			},
 			expectedErr: "retry wait time should be a positive number",
 		},
+		"success queue owner": {
+			args: args{
+				name:      "name",
+				queueName: "queueName",
+				sqsAPI:    &stubSQSAPI{},
+				proc:      sp.process,
+				oo:        []OptionFunc{QueueOwner("10201020")},
+			},
+		},
+		"queue owner fails": {
+			args: args{
+				name:      "name",
+				queueName: "queueName",
+				sqsAPI:    &stubSQSAPI{},
+				proc:      sp.process,
+				oo:        []OptionFunc{QueueOwner("")},
+			},
+			expectedErr: "queue owner should not be empty",
+		},
 	}
 	for name, tt := range tests {
 		tt := tt

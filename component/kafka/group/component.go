@@ -290,7 +290,8 @@ type consumerHandler struct {
 
 func newConsumerHandler(ctx context.Context, name, group string, processorFunc kafka.BatchProcessorFunc,
 	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync, batchMessageDeduplication bool,
-	sessionCallback func(sarama.ConsumerGroupSession) error) *consumerHandler {
+	sessionCallback func(sarama.ConsumerGroupSession) error,
+) *consumerHandler {
 	return &consumerHandler{
 		ctx:                       ctx,
 		name:                      name,

@@ -191,3 +191,36 @@ func TestRetryWait(t *testing.T) {
 		})
 	}
 }
+
+func TestQueueOwner(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		queueOwner string
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success": {
+			args: args{queueOwner: "10201020"},
+		},
+		"empty queue owner": {
+			args:        args{queueOwner: ""},
+			expectedErr: "queue owner should not be empty",
+		},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			c := &Component{}
+			err := QueueOwner(tt.args.queueOwner)(c)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, c.queueOwner, tt.args.queueOwner)
+			}
+		})
+	}
+}

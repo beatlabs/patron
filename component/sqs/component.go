@@ -101,13 +101,14 @@ type stats struct {
 
 // Component implementation of an async component.
 type Component struct {
-	name  string
-	queue queue
-	api   sqsiface.SQSAPI
-	cfg   config
-	proc  ProcessorFunc
-	stats stats
-	retry retry
+	name       string
+	queue      queue
+	queueOwner string
+	api        sqsiface.SQSAPI
+	cfg        config
+	proc       ProcessorFunc
+	stats      stats
+	retry      retry
 }
 
 // New creates a new component with support for functional configuration.
@@ -128,18 +129,10 @@ func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo 
 		return nil, errors.New("process function is nil")
 	}
 
-	out, err := sqsAPI.GetQueueUrlWithContext(context.Background(), &sqs.GetQueueUrlInput{
-		QueueName: aws.String(queueName),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get queue URL: %w", err)
-	}
-
 	cmp := &Component{
 		name: name,
 		queue: queue{
 			name: queueName,
-			url:  aws.StringValue(out.QueueUrl),
 		},
 		api: sqsAPI,
 		cfg: config{
@@ -156,11 +149,26 @@ func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo 
 	}
 
 	for _, optionFunc := range oo {
-		err = optionFunc(cmp)
+		err := optionFunc(cmp)
 		if err != nil {
 			return nil, err
 		}
 	}
+
+	req := &sqs.GetQueueUrlInput{
+		QueueName: aws.String(queueName),
+	}
+
+	if cmp.queueOwner != "" {
+		req.SetQueueOwnerAWSAccountId(cmp.queueOwner)
+	}
+
+	out, err := sqsAPI.GetQueueUrlWithContext(context.Background(), req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get queue URL: %w", err)
+	}
+
+	cmp.queue.url = aws.StringValue(out.QueueUrl)
 
 	return cmp, nil
 }

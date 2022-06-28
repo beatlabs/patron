@@ -87,8 +87,6 @@ services:
         protocol: tcp
         mode: host
     environment:
-      HIVEMQ_CONTROL_CENTER_USER: 'admin'
-      HIVEMQ_CONTROL_CENTER_PASSWORD: '123456'
       HIVEMQ_CLUSTER_TRANSPORT_TYPE: 'TCP'
   mongo:
     image: mongo:5

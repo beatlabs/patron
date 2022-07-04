@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.2.0 (2440f0a): DO NOT EDIT
+// Code generated from specification version 8.3.0 (6a8b801): DO NOT EDIT
 
 package esapi
 
@@ -392,7 +392,7 @@ type ML struct {
 	GetRecords                    MLGetRecords
 	GetTrainedModels              MLGetTrainedModels
 	GetTrainedModelsStats         MLGetTrainedModelsStats
-	InferTrainedModelDeployment   MLInferTrainedModelDeployment
+	InferTrainedModel             MLInferTrainedModel
 	Info                          MLInfo
 	OpenJob                       MLOpenJob
 	PostCalendarEvents            MLPostCalendarEvents
@@ -482,6 +482,7 @@ type Security struct {
 	GetUser                     SecurityGetUser
 	GrantAPIKey                 SecurityGrantAPIKey
 	HasPrivileges               SecurityHasPrivileges
+	HasPrivilegesUserProfile    SecurityHasPrivilegesUserProfile
 	InvalidateAPIKey            SecurityInvalidateAPIKey
 	InvalidateToken             SecurityInvalidateToken
 	OidcAuthenticate            SecurityOidcAuthenticate
@@ -860,7 +861,7 @@ func New(t Transport) *API {
 			GetRecords:                    newMLGetRecordsFunc(t),
 			GetTrainedModels:              newMLGetTrainedModelsFunc(t),
 			GetTrainedModelsStats:         newMLGetTrainedModelsStatsFunc(t),
-			InferTrainedModelDeployment:   newMLInferTrainedModelDeploymentFunc(t),
+			InferTrainedModel:             newMLInferTrainedModelFunc(t),
 			Info:                          newMLInfoFunc(t),
 			OpenJob:                       newMLOpenJobFunc(t),
 			PostCalendarEvents:            newMLPostCalendarEventsFunc(t),
@@ -944,6 +945,7 @@ func New(t Transport) *API {
 			GetUser:                     newSecurityGetUserFunc(t),
 			GrantAPIKey:                 newSecurityGrantAPIKeyFunc(t),
 			HasPrivileges:               newSecurityHasPrivilegesFunc(t),
+			HasPrivilegesUserProfile:    newSecurityHasPrivilegesUserProfileFunc(t),
 			InvalidateAPIKey:            newSecurityInvalidateAPIKeyFunc(t),
 			InvalidateToken:             newSecurityInvalidateTokenFunc(t),
 			OidcAuthenticate:            newSecurityOidcAuthenticateFunc(t),

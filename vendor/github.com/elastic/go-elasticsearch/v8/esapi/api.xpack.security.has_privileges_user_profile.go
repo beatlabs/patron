@@ -21,13 +21,14 @@ package esapi
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strings"
 )
 
-func newIndicesMigrateToDataStreamFunc(t Transport) IndicesMigrateToDataStream {
-	return func(name string, o ...func(*IndicesMigrateToDataStreamRequest)) (*Response, error) {
-		var r = IndicesMigrateToDataStreamRequest{Name: name}
+func newSecurityHasPrivilegesUserProfileFunc(t Transport) SecurityHasPrivilegesUserProfile {
+	return func(body io.Reader, o ...func(*SecurityHasPrivilegesUserProfileRequest)) (*Response, error) {
+		var r = SecurityHasPrivilegesUserProfileRequest{Body: body}
 		for _, f := range o {
 			f(&r)
 		}
@@ -37,16 +38,18 @@ func newIndicesMigrateToDataStreamFunc(t Transport) IndicesMigrateToDataStream {
 
 // ----- API Definition -------------------------------------------------------
 
-// IndicesMigrateToDataStream - Migrates an alias to a data stream
+// SecurityHasPrivilegesUserProfile - Determines whether the users associated with the specified profile IDs have all the requested privileges.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/data-streams.html.
+// This API is experimental.
 //
-type IndicesMigrateToDataStream func(name string, o ...func(*IndicesMigrateToDataStreamRequest)) (*Response, error)
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-has-privileges-user-profile.html.
+//
+type SecurityHasPrivilegesUserProfile func(body io.Reader, o ...func(*SecurityHasPrivilegesUserProfileRequest)) (*Response, error)
 
-// IndicesMigrateToDataStreamRequest configures the Indices Migrate To Data Stream API request.
+// SecurityHasPrivilegesUserProfileRequest configures the Security Has Privileges User Profile API request.
 //
-type IndicesMigrateToDataStreamRequest struct {
-	Name string
+type SecurityHasPrivilegesUserProfileRequest struct {
+	Body io.Reader
 
 	Pretty     bool
 	Human      bool
@@ -60,7 +63,7 @@ type IndicesMigrateToDataStreamRequest struct {
 
 // Do executes the request and returns response or error.
 //
-func (r IndicesMigrateToDataStreamRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r SecurityHasPrivilegesUserProfileRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
@@ -69,14 +72,9 @@ func (r IndicesMigrateToDataStreamRequest) Do(ctx context.Context, transport Tra
 
 	method = "POST"
 
-	path.Grow(7 + 1 + len("_data_stream") + 1 + len("_migrate") + 1 + len(r.Name))
+	path.Grow(7 + len("/_security/profile/_has_privileges"))
 	path.WriteString("http://")
-	path.WriteString("/")
-	path.WriteString("_data_stream")
-	path.WriteString("/")
-	path.WriteString("_migrate")
-	path.WriteString("/")
-	path.WriteString(r.Name)
+	path.WriteString("/_security/profile/_has_privileges")
 
 	params = make(map[string]string)
 
@@ -96,7 +94,7 @@ func (r IndicesMigrateToDataStreamRequest) Do(ctx context.Context, transport Tra
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, err := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), r.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +105,10 @@ func (r IndicesMigrateToDataStreamRequest) Do(ctx context.Context, transport Tra
 			q.Set(k, v)
 		}
 		req.URL.RawQuery = q.Encode()
+	}
+
+	if r.Body != nil {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if len(r.Header) > 0 {
@@ -141,48 +143,48 @@ func (r IndicesMigrateToDataStreamRequest) Do(ctx context.Context, transport Tra
 
 // WithContext sets the request context.
 //
-func (f IndicesMigrateToDataStream) WithContext(v context.Context) func(*IndicesMigrateToDataStreamRequest) {
-	return func(r *IndicesMigrateToDataStreamRequest) {
+func (f SecurityHasPrivilegesUserProfile) WithContext(v context.Context) func(*SecurityHasPrivilegesUserProfileRequest) {
+	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.ctx = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
 //
-func (f IndicesMigrateToDataStream) WithPretty() func(*IndicesMigrateToDataStreamRequest) {
-	return func(r *IndicesMigrateToDataStreamRequest) {
+func (f SecurityHasPrivilegesUserProfile) WithPretty() func(*SecurityHasPrivilegesUserProfileRequest) {
+	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
 //
-func (f IndicesMigrateToDataStream) WithHuman() func(*IndicesMigrateToDataStreamRequest) {
-	return func(r *IndicesMigrateToDataStreamRequest) {
+func (f SecurityHasPrivilegesUserProfile) WithHuman() func(*SecurityHasPrivilegesUserProfileRequest) {
+	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
 //
-func (f IndicesMigrateToDataStream) WithErrorTrace() func(*IndicesMigrateToDataStreamRequest) {
-	return func(r *IndicesMigrateToDataStreamRequest) {
+func (f SecurityHasPrivilegesUserProfile) WithErrorTrace() func(*SecurityHasPrivilegesUserProfileRequest) {
+	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
 //
-func (f IndicesMigrateToDataStream) WithFilterPath(v ...string) func(*IndicesMigrateToDataStreamRequest) {
-	return func(r *IndicesMigrateToDataStreamRequest) {
+func (f SecurityHasPrivilegesUserProfile) WithFilterPath(v ...string) func(*SecurityHasPrivilegesUserProfileRequest) {
+	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
 //
-func (f IndicesMigrateToDataStream) WithHeader(h map[string]string) func(*IndicesMigrateToDataStreamRequest) {
-	return func(r *IndicesMigrateToDataStreamRequest) {
+func (f SecurityHasPrivilegesUserProfile) WithHeader(h map[string]string) func(*SecurityHasPrivilegesUserProfileRequest) {
+	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -194,8 +196,8 @@ func (f IndicesMigrateToDataStream) WithHeader(h map[string]string) func(*Indice
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
 //
-func (f IndicesMigrateToDataStream) WithOpaqueID(s string) func(*IndicesMigrateToDataStreamRequest) {
-	return func(r *IndicesMigrateToDataStreamRequest) {
+func (f SecurityHasPrivilegesUserProfile) WithOpaqueID(s string) func(*SecurityHasPrivilegesUserProfileRequest) {
+	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

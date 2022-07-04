@@ -119,8 +119,8 @@ to the `elasticsearch.NewClient()` function.
 ```golang
 cfg := elasticsearch.Config{
   Addresses: []string{
-    "http://localhost:9200",
-    "http://localhost:9201",
+    "https://localhost:9200",
+    "https://localhost:9201",
   },
   // ...
 }
@@ -147,6 +147,15 @@ cert, _ := ioutil.ReadFile(*cacert)
 cfg := elasticsearch.Config{
   // ...
   CACert: cert,
+}
+```
+
+To set a fingerprint to validate the HTTPS connectionm use the `CertificateFingerprint` configuration option.
+
+```golang
+cfg := elasticsearch.Config{
+	// ...
+    CertificateFingerprint: fingerPrint,
 }
 ```
 
@@ -187,6 +196,7 @@ import (
   "strconv"
   "strings"
   "sync"
+  "bytes"
 
   "github.com/elastic/go-elasticsearch/v8"
   "github.com/elastic/go-elasticsearch/v8/esapi"
@@ -237,17 +247,17 @@ func main() {
     go func(i int, title string) {
       defer wg.Done()
 
-      // Build the request body.
-      var b strings.Builder
-      b.WriteString(`{"title" : "`)
-      b.WriteString(title)
-      b.WriteString(`"}`)
+      // Build the request body.      
+      data, err := json.Marshal(struct{ Title string }{Title: title})
+      if err != nil {
+        log.Fatalf("Error marshaling document: %s", err)
+      }
 
       // Set up the request object.
       req := esapi.IndexRequest{
         Index:      "test",
         DocumentID: strconv.Itoa(i + 1),
-        Body:       strings.NewReader(b.String()),
+        Body:       bytes.NewReader(data),
         Refresh:    "true",
       }
 

@@ -34,10 +34,11 @@ const (
 	serverComponent = "http-server"
 	fieldNameError  = "error"
 
-	gzipHeader     = "gzip"
-	deflateHeader  = "deflate"
-	identityHeader = "identity"
-	anythingHeader = "*"
+	gzipHeader       = "gzip"
+	deflateHeader    = "deflate"
+	identityHeader   = "identity"
+	anythingHeader   = "*"
+	appVersionHeader = "X-App-Version"
 )
 
 var (
@@ -118,6 +119,18 @@ func NewRecovery() Func {
 				}
 			}()
 			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// NewAppVersion returns to all responses a header which contain the app version.
+func NewAppVersion(version string) Func {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r)
+			if version != "" {
+				w.Header().Add(appVersionHeader, version)
+			}
 		})
 	}
 }

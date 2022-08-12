@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/beatlabs/patron/component/http/middleware"
-	"github.com/beatlabs/patron/component/http/v2"
+	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -162,4 +162,34 @@ func TestDisableProfiling(t *testing.T) {
 	err := EnableExpVarProfiling()(cfg)
 	assert.NoError(t, err)
 	assert.True(t, cfg.enableProfilingExpVar)
+}
+
+func TestEnableAppNameHeaders(t *testing.T) {
+	type args struct {
+		name    string
+		version string
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"success":         {args: args{name: "name", version: "version"}},
+		"missing name":    {args: args{name: "", version: "version"}, expectedErr: "app name was not provided"},
+		"missing version": {args: args{name: "name", version: ""}, expectedErr: "app version was not provided"},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			cfg := &Config{}
+			err := EnableAppNameHeaders(tt.args.name, tt.args.version)(cfg)
+
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+				assert.Nil(t, cfg.appNameVersionMiddleware)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, cfg.appNameVersionMiddleware)
+			}
+		})
+	}
 }

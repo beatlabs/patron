@@ -3,10 +3,11 @@ package httprouter
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/beatlabs/patron/component/http/middleware"
-	"github.com/beatlabs/patron/component/http/v2"
+	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
 )
@@ -18,14 +19,16 @@ type OptionFunc func(*Config) error
 
 // Config definition.
 type Config struct {
-	aliveCheckFunc        v2.LivenessCheckFunc
-	readyCheckFunc        v2.ReadyCheckFunc
-	deflateLevel          int
-	middlewares           []middleware.Func
-	routes                []*v2.Route
-	enableProfilingExpVar bool
+	aliveCheckFunc           v2.LivenessCheckFunc
+	readyCheckFunc           v2.ReadyCheckFunc
+	deflateLevel             int
+	middlewares              []middleware.Func
+	routes                   []*v2.Route
+	enableProfilingExpVar    bool
+	appNameVersionMiddleware middleware.Func
 }
 
+// New creates an http router with functional options.
 func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	cfg := &Config{
 		aliveCheckFunc: func() v2.AliveStatus { return v2.Alive },
@@ -59,7 +62,13 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	stdRoutes = append(stdRoutes, route)
 
 	for _, route := range stdRoutes {
-		handler := middleware.Chain(route.Handler(), middleware.NewRecovery())
+		var handler http.Handler
+
+		if cfg.appNameVersionMiddleware != nil {
+			handler = middleware.Chain(route.Handler(), cfg.appNameVersionMiddleware)
+		}
+
+		handler = middleware.Chain(handler, middleware.NewRecovery())
 		mux.Handler(route.Method(), route.Path(), handler)
 		log.Debugf("added route %s", route)
 	}
@@ -72,14 +81,18 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	}
 
 	for _, route := range cfg.routes {
-		// add standard middlewares
-		middlewares := []middleware.Func{
-			middleware.NewRecovery(),
-			middleware.NewInjectObservability(),
-			middleware.NewLoggingTracing(route.Path(), statusCodeLogger),
-			middleware.NewRequestObserver(route.Method(), route.Path()),
-			middleware.NewCompression(cfg.deflateLevel),
+		var middlewares []middleware.Func
+
+		if cfg.appNameVersionMiddleware != nil {
+			middlewares = append(middlewares, cfg.appNameVersionMiddleware)
 		}
+
+		middlewares = append(middlewares, middleware.NewRecovery())
+		middlewares = append(middlewares, middleware.NewInjectObservability())
+		middlewares = append(middlewares, middleware.NewLoggingTracing(route.Path(), statusCodeLogger))
+		middlewares = append(middlewares, middleware.NewRequestObserver(route.Method(), route.Path()))
+		middlewares = append(middlewares, middleware.NewCompression(cfg.deflateLevel))
+
 		// add router middlewares
 		middlewares = append(middlewares, cfg.middlewares...)
 		// add route middlewares
@@ -149,6 +162,22 @@ func Middlewares(mm ...middleware.Func) OptionFunc {
 func EnableExpVarProfiling() OptionFunc {
 	return func(cfg *Config) error {
 		cfg.enableProfilingExpVar = true
+		return nil
+	}
+}
+
+// EnableExpVarProfiling option for enabling expVar in profiling endpoints.
+func EnableAppNameHeaders(name, version string) OptionFunc {
+	return func(cfg *Config) error {
+		if name == "" {
+			return errors.New("app name was not provided")
+		}
+
+		if version == "" {
+			return errors.New("app version was not provided")
+		}
+
+		cfg.appNameVersionMiddleware = middleware.NewAppNameVersion(name, version)
 		return nil
 	}
 }

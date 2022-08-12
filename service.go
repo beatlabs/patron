@@ -495,7 +495,8 @@ func (b *Builder) WithRouter(handler http.Handler) *Builder {
 		b.errors = append(b.errors, errors.New("provided router is nil"))
 	} else {
 		log.Debug("router will be used with the v2 HTTP component")
-		b.httpRouter = handler
+
+		b.httpRouter = middleware.NewAppNameVersion(b.version, b.name)(handler)
 	}
 
 	return b

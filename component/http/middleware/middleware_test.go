@@ -796,9 +796,10 @@ func TestNewRequestObserver(t *testing.T) {
 }
 
 func TestNewAppVersion(t *testing.T) {
-	version := "1.0"
-	middlewareWith := NewAppVersion(version)
-	middlewareWithout := NewAppVersion("")
+	appName := "name"
+	appVersion := "1.0"
+	middlewareWith := NewAppNameVersion(appName, appVersion)
+	middlewareWithout := NewAppNameVersion("", "")
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
 
 	// check if the route actually ignored
@@ -819,9 +820,11 @@ func TestNewAppVersion(t *testing.T) {
 
 			tt.middleware(handler).ServeHTTP(rc, req)
 			if tt.hasVersion {
-				assert.Equal(t, version, rc.Header().Get(appVersionHeader))
+				assert.Equal(t, appVersion, rc.Header().Get(appVersionHeader))
+				assert.Equal(t, appName, rc.Header().Get(appNameHeader))
 			} else {
 				assert.Equal(t, "", rc.Header().Get(appVersionHeader))
+				assert.Equal(t, "", rc.Header().Get(appNameHeader))
 			}
 		})
 	}

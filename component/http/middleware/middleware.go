@@ -39,6 +39,7 @@ const (
 	identityHeader   = "identity"
 	anythingHeader   = "*"
 	appVersionHeader = "X-App-Version"
+	appNameHeader    = "X-App-Name"
 )
 
 var (
@@ -123,13 +124,16 @@ func NewRecovery() Func {
 	}
 }
 
-// NewAppVersion returns to all responses a header which contain the app version.
-func NewAppVersion(version string) Func {
+// NewAppNameVersion returns to all responses a header which contain the app name and version.
+func NewAppNameVersion(name, version string) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			next.ServeHTTP(w, r)
 			if version != "" {
 				w.Header().Add(appVersionHeader, version)
+			}
+			if name != "" {
+				w.Header().Add(appNameHeader, name)
 			}
 		})
 	}

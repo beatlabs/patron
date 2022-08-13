@@ -2,7 +2,6 @@ package httprouter
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/beatlabs/patron/component/http/middleware"
@@ -59,15 +58,14 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 		return nil, err
 	}
 	stdRoutes = append(stdRoutes, route)
+	var stdMiddlewares []middleware.Func
+	if cfg.appNameVersionMiddleware != nil {
+		stdMiddlewares = append(stdMiddlewares, cfg.appNameVersionMiddleware)
+	}
+	stdMiddlewares = append(stdMiddlewares, middleware.NewRecovery())
 
 	for _, route := range stdRoutes {
-		var handler http.Handler
-
-		if cfg.appNameVersionMiddleware != nil {
-			handler = middleware.Chain(route.Handler(), cfg.appNameVersionMiddleware)
-		}
-
-		handler = middleware.Chain(handler, middleware.NewRecovery())
+		handler := middleware.Chain(route.Handler(), stdMiddlewares...)
 		mux.Handler(route.Method(), route.Path(), handler)
 		log.Debugf("added route %s", route)
 	}
@@ -79,16 +77,11 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 		return nil, fmt.Errorf("failed to parse status codes %s: %w", statusCodeLoggerCfg, err)
 	}
 
+	// add to the default middlewares the observability we need per route.
+	stdMiddlewares = append(stdMiddlewares, middleware.NewInjectObservability())
+
 	for _, route := range cfg.routes {
-		var middlewares []middleware.Func
-
-		if cfg.appNameVersionMiddleware != nil {
-			middlewares = append(middlewares, cfg.appNameVersionMiddleware)
-		}
-
-		middlewares = append(middlewares, middleware.NewRecovery())
-		middlewares = append(middlewares, middleware.NewInjectObservability())
-		middlewares = append(middlewares, middleware.NewLoggingTracing(route.Path(), statusCodeLogger))
+		middlewares := append(stdMiddlewares, middleware.NewLoggingTracing(route.Path(), statusCodeLogger))
 		middlewares = append(middlewares, middleware.NewRequestObserver(route.Method(), route.Path()))
 		middlewares = append(middlewares, middleware.NewCompression(cfg.deflateLevel))
 

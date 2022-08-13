@@ -98,6 +98,4 @@ func TestVerifyRouter(t *testing.T) {
 		require.NoError(t, err)
 		assertResponse(t, rsp)
 	})
-
-	
 }

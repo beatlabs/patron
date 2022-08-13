@@ -81,7 +81,9 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	stdMiddlewares = append(stdMiddlewares, middleware.NewInjectObservability())
 
 	for _, route := range cfg.routes {
-		middlewares := append(stdMiddlewares, middleware.NewLoggingTracing(route.Path(), statusCodeLogger))
+		var middlewares []middleware.Func
+		middlewares = append(middlewares, stdMiddlewares...)
+		middlewares = append(middlewares, middleware.NewLoggingTracing(route.Path(), statusCodeLogger))
 		middlewares = append(middlewares, middleware.NewRequestObserver(route.Method(), route.Path()))
 		middlewares = append(middlewares, middleware.NewCompression(cfg.deflateLevel))
 

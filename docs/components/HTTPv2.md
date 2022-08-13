@@ -32,3 +32,9 @@ In the handler creation process are adding automatically to every route our stan
 - metrics
 - compression
 
+The router also provides functional options to configure certain aspects of its behavior like:
+
+- readiness and liveness checks
+- deflate level
+- app name and version in response headers
+- etc.

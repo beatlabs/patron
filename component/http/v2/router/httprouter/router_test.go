@@ -43,8 +43,6 @@ func TestNew(t *testing.T) {
 // TODO: proper router tests. using httptest to start the httprouter and try out all routes plus a custom one.
 
 func TestVerifyRouter(t *testing.T) {
-	t.Parallel()
-
 	route, err := v2.NewRoute(http.MethodGet, "/api/", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(200)
 	})

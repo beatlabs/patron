@@ -40,7 +40,6 @@ func init() {
 // $ curl -s localhost:50000/bar -H "Accept-Encoding: gzip" | wc -c
 // 1398106
 // $ curl -s localhost:50000/metrics -H "Accept-Encoding: deflate"
-//
 func main() {
 	name := "compression-middleware"
 	version := "1.0.0"

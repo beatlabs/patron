@@ -16,8 +16,8 @@ Patron provides abstractions for the following functionality of the framework:
 
   - service, which orchestrates everything
   - components and processors, which provide an abstraction of adding processing functionality to the service
-  	- asynchronous message processing (RabbitMQ, Kafka)
-  	- synchronous processing (HTTP)
+  - asynchronous message processing (RabbitMQ, Kafka)
+  - synchronous processing (HTTP)
   - metrics and tracing
   - logging
   - configuration management

@@ -128,13 +128,13 @@ func NewRecovery() Func {
 func NewAppNameVersion(name, version string) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next.ServeHTTP(w, r)
 			if version != "" {
-				w.Header().Add(appVersionHeader, version)
+				w.Header().Set(appVersionHeader, version)
 			}
 			if name != "" {
-				w.Header().Add(appNameHeader, name)
+				w.Header().Set(appNameHeader, name)
 			}
+			next.ServeHTTP(w, r)
 		})
 	}
 }

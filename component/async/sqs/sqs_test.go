@@ -212,7 +212,7 @@ func (s stubQueue) GetQueueAttributesWithContext(aws.Context, *sqs.GetQueueAttri
 	}, nil
 }
 
-//nolint
+// nolint
 func (s stubQueue) GetQueueUrl(*sqs.GetQueueUrlInput) (*sqs.GetQueueUrlOutput, error) {
 	if s.getQueueURLErr != nil {
 		return nil, s.getQueueURLErr

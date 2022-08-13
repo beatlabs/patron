@@ -6,12 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/stretchr/testify/require"
-
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/correlation"
+	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_messageWrapper(t *testing.T) {
@@ -87,4 +87,24 @@ func Test_DefaultConsumerSaramaConfig(t *testing.T) {
 	sc, err = DefaultConsumerSaramaConfig("name", false)
 	require.NoError(t, err)
 	require.NotEqual(t, sarama.ReadCommitted, sc.Consumer.IsolationLevel)
+}
+
+func Test_getCorrelationID(t *testing.T) {
+	corID := uuid.New().String()
+	got := GetCorrelationID([]*sarama.RecordHeader{
+		{
+			Key:   []byte(correlation.HeaderID),
+			Value: []byte(corID),
+		},
+	})
+	assert.Equal(t, corID, got)
+
+	emptyCorID := ""
+	got = GetCorrelationID([]*sarama.RecordHeader{
+		{
+			Key:   []byte(correlation.HeaderID),
+			Value: []byte(emptyCorID),
+		},
+	})
+	assert.NotEqual(t, emptyCorID, got)
 }

@@ -124,7 +124,7 @@ func NewRecovery() Func {
 	}
 }
 
-// NewAppNameVersion returns to all responses a header which contain the app name and version.
+// NewAppNameVersion adds an app name header and an app version header to all responses. Existing values of these headers are overwritten
 func NewAppNameVersion(name, version string) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

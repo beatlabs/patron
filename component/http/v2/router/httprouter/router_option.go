@@ -67,7 +67,7 @@ func EnableExpVarProfiling() OptionFunc {
 	}
 }
 
-// EnableExpVarProfiling option for enabling expVar in profiling endpoints.
+// EnableAppNameHeaders option for adding name and version header to the response.
 func EnableAppNameHeaders(name, version string) OptionFunc {
 	return func(cfg *Config) error {
 		if name == "" {

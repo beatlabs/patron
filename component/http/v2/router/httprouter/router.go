@@ -58,11 +58,11 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 		return nil, err
 	}
 	stdRoutes = append(stdRoutes, route)
-	var stdMiddlewares []middleware.Func
+	
+	stdMiddlewares := []middleware.Func{middleware.NewRecovery()}
 	if cfg.appNameVersionMiddleware != nil {
 		stdMiddlewares = append(stdMiddlewares, cfg.appNameVersionMiddleware)
 	}
-	stdMiddlewares = append(stdMiddlewares, middleware.NewRecovery())
 
 	for _, route := range stdRoutes {
 		handler := middleware.Chain(route.Handler(), stdMiddlewares...)

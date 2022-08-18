@@ -58,7 +58,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 		return nil, err
 	}
 	stdRoutes = append(stdRoutes, route)
-	
+
 	stdMiddlewares := []middleware.Func{middleware.NewRecovery()}
 	if cfg.appNameVersionMiddleware != nil {
 		stdMiddlewares = append(stdMiddlewares, cfg.appNameVersionMiddleware)

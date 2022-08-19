@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron"
-	clienthttp "github.com/beatlabs/patron/client/http"
-	v2 "github.com/beatlabs/patron/component/http/v2"
+	patronhttp "github.com/beatlabs/patron/client/http"
+	httpv2 "github.com/beatlabs/patron/component/http/v2"
+	httpv2json "github.com/beatlabs/patron/component/http/v2/encoding/json"
 	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
-	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
@@ -23,6 +23,14 @@ import (
 )
 
 const maxRequests = 1000
+
+type httpError struct {
+	Error string `json:"error"`
+}
+
+func newHttpError(error string) httpError {
+	return httpError{Error: error}
+}
 
 var (
 	assetsFolder  string
@@ -69,9 +77,9 @@ func main() {
 		})
 	}
 
-	var routes v2.Routes
-	routes.Append(v2.NewGetRoute("/api", getHandler, v2.RateLimiting(50, 50)))
-	routes.Append(v2.NewPostRoute("/api", httpHandler))
+	var routes httpv2.Routes
+	routes.Append(httpv2.NewGetRoute("/api", getHandler, httpv2.RateLimiting(50, 50)))
+	routes.Append(httpv2.NewPostRoute("/api", httpHandler))
 	routes.Append(httprouter.NewFileServerRoute("/frontend/*path", assetsFolder, assetsFolder+"/index.html"))
 	rr, err := routes.Result()
 	if err != nil {
@@ -123,39 +131,34 @@ func httpHandler(rw http.ResponseWriter, r *http.Request) {
 
 	var u examples.User
 
-	err = json.Decode(r.Body, &u)
+	err = httpv2json.ReadRequest(r, &u)
 	if err != nil {
-		rw.WriteHeader(http.StatusBadRequest)
-		_, _ = rw.Write([]byte(fmt.Sprintf("failed to decode request: %v", err)))
+		httpv2json.WriteResponse(r, rw, http.StatusBadRequest, newHttpError(fmt.Sprintf("failed to decode request: %v", err)))
 		return
 	}
 
 	b, err := protobuf.Encode(&u)
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		_, _ = rw.Write([]byte(fmt.Sprintf("failed create request: %v", err)))
+		httpv2json.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
 		return
 	}
 
 	httpRequest, err := http.NewRequest("GET", "http://localhost:50001", bytes.NewReader(b))
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		_, _ = rw.Write([]byte(fmt.Sprintf("failed create request: %v", err)))
+		httpv2json.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
 		return
 	}
 	httpRequest.Header.Add("Content-Type", protobuf.Type)
 	httpRequest.Header.Add("Accept", protobuf.Type)
 	httpRequest.Header.Add("Authorization", "Apikey 123456")
-	cl, err := clienthttp.New(clienthttp.Timeout(5 * time.Second))
+	cl, err := patronhttp.New(patronhttp.Timeout(5 * time.Second))
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		_, _ = rw.Write([]byte(fmt.Sprintf("failed execute request: %v", err)))
+		httpv2json.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed execute request: %v", err)))
 		return
 	}
 	rsp, err := cl.Do(httpRequest)
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		_, _ = rw.Write([]byte(fmt.Sprintf("failed to perform http request with protobuf payload: %v", err)))
+		httpv2json.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed to perform http request with protobuf payload: %v", err)))
 		return
 	}
 	log.FromContext(r.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
@@ -169,7 +172,7 @@ func DoIntervalRequest() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed create route request: %w", err)
 	}
-	cl, err := clienthttp.New(clienthttp.Timeout(5 * time.Second))
+	cl, err := patronhttp.New(patronhttp.Timeout(5 * time.Second))
 	if err != nil {
 		return "", fmt.Errorf("could not create http client: %w", err)
 	}
@@ -179,7 +182,7 @@ func DoIntervalRequest() (string, error) {
 		return "", fmt.Errorf("failed create get to http-cache service: %w", err)
 	}
 
-	tb, err := ioutil.ReadAll(response.Body)
+	tb, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode http-cache response body: %w", err)
 	}
@@ -187,7 +190,7 @@ func DoIntervalRequest() (string, error) {
 	rgx := regexp.MustCompile(`\((.*?)\)`)
 	timeInstance := rgx.FindStringSubmatch(string(tb))
 	if len(timeInstance) == 1 {
-		return "", fmt.Errorf("could not match timeinstance from response %s", string(tb))
+		return "", fmt.Errorf("could not match time instance from response %s", string(tb))
 	}
 	return timeInstance[1], nil
 }

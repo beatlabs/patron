@@ -4,6 +4,7 @@ package json
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/beatlabs/patron/encoding"
@@ -18,7 +19,7 @@ const (
 
 // ReadRequest validates the request headers and decodes into the provided payload.
 func ReadRequest(req *http.Request, payload interface{}) error {
-	err := validatingJsonContentType(req)
+	err := validatingContentType(req)
 	if err != nil {
 		return err
 	}
@@ -37,7 +38,7 @@ func ReadRequest(req *http.Request, payload interface{}) error {
 	return nil
 }
 
-func validatingJsonContentType(req *http.Request) error {
+func validatingContentType(req *http.Request) error {
 	header, ok := req.Header[encoding.ContentTypeHeader]
 	if !ok {
 		return nil
@@ -57,18 +58,19 @@ func validatingJsonContentType(req *http.Request) error {
 
 // WriteResponse validates the request headers and encodes the provided payload into the response.
 func WriteResponse(req *http.Request, w http.ResponseWriter, status int, payload interface{}) error {
-	err := validatingJsonAccept(req)
+	err := validatingAccept(req)
+	if err != nil {
+		return err
+	}
+
+	buf, err := json.Encode(payload)
 	if err != nil {
 		return err
 	}
 
 	w.WriteHeader(status)
 	w.Header().Add(encoding.ContentTypeHeader, json.Type)
-
-	buf, err := json.Encode(payload)
-	if err != nil {
-		return err
-	}
+	w.Header().Add(encoding.ContentLengthHeader, strconv.FormatInt(int64(len(buf)), 10))
 
 	_, err = w.Write(buf)
 	if err != nil {
@@ -78,7 +80,7 @@ func WriteResponse(req *http.Request, w http.ResponseWriter, status int, payload
 	return nil
 }
 
-func validatingJsonAccept(req *http.Request) error {
+func validatingAccept(req *http.Request) error {
 	header, ok := req.Header[encoding.AcceptHeader]
 	if !ok {
 		return nil

@@ -8,11 +8,13 @@ import (
 const (
 	// AcceptHeader for defining accept encoding.
 	AcceptHeader string = "Accept"
-	// ContentTypeHeader for defining content type headers.
+	// ContentTypeHeader for defining content type header.
 	ContentTypeHeader string = "Content-Type"
-	// ContentEncodingHeader for defining content encoding headers.
+	// ContentEncodingHeader for defining content encoding header.
 	ContentEncodingHeader string = "Content-Encoding"
-	// AcceptEncodingHeader for defining accept encoding headers, usually a compression algorithm.
+	// ContentLengthHeader for defining content length header.
+	ContentLengthHeader string = "Content-Length"
+	// AcceptEncodingHeader for defining accept encoding header, usually a compression algorithm.
 	AcceptEncodingHeader string = "Accept-Encoding"
 )
 

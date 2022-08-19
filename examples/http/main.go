@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron"
-	patronhttp "github.com/beatlabs/patron/client/http"
-	httpv2 "github.com/beatlabs/patron/component/http/v2"
-	httpv2json "github.com/beatlabs/patron/component/http/v2/encoding/json"
+	patronhttpclient "github.com/beatlabs/patron/client/http"
+	patronhttp "github.com/beatlabs/patron/component/http/v2"
+	patronhttpjson "github.com/beatlabs/patron/component/http/v2/encoding/json"
 	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
@@ -77,9 +77,9 @@ func main() {
 		})
 	}
 
-	var routes httpv2.Routes
-	routes.Append(httpv2.NewGetRoute("/api", getHandler, httpv2.RateLimiting(50, 50)))
-	routes.Append(httpv2.NewPostRoute("/api", httpHandler))
+	var routes patronhttp.Routes
+	routes.Append(patronhttp.NewGetRoute("/api", getHandler, patronhttp.RateLimiting(50, 50)))
+	routes.Append(patronhttp.NewPostRoute("/api", httpHandler))
 	routes.Append(httprouter.NewFileServerRoute("/frontend/*path", assetsFolder, assetsFolder+"/index.html"))
 	rr, err := routes.Result()
 	if err != nil {
@@ -131,34 +131,34 @@ func httpHandler(rw http.ResponseWriter, r *http.Request) {
 
 	var u examples.User
 
-	err = httpv2json.ReadRequest(r, &u)
+	err = patronhttpjson.ReadRequest(r, &u)
 	if err != nil {
-		httpv2json.WriteResponse(r, rw, http.StatusBadRequest, newHttpError(fmt.Sprintf("failed to decode request: %v", err)))
+		patronhttpjson.WriteResponse(r, rw, http.StatusBadRequest, newHttpError(fmt.Sprintf("failed to decode request: %v", err)))
 		return
 	}
 
 	b, err := protobuf.Encode(&u)
 	if err != nil {
-		httpv2json.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
+		patronhttpjson.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
 		return
 	}
 
 	httpRequest, err := http.NewRequest("GET", "http://localhost:50001", bytes.NewReader(b))
 	if err != nil {
-		httpv2json.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
+		patronhttpjson.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
 		return
 	}
 	httpRequest.Header.Add("Content-Type", protobuf.Type)
 	httpRequest.Header.Add("Accept", protobuf.Type)
 	httpRequest.Header.Add("Authorization", "Apikey 123456")
-	cl, err := patronhttp.New(patronhttp.Timeout(5 * time.Second))
+	cl, err := patronhttpclient.New(patronhttpclient.Timeout(5 * time.Second))
 	if err != nil {
-		httpv2json.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed execute request: %v", err)))
+		patronhttpjson.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed execute request: %v", err)))
 		return
 	}
 	rsp, err := cl.Do(httpRequest)
 	if err != nil {
-		httpv2json.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed to perform http request with protobuf payload: %v", err)))
+		patronhttpjson.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed to perform http request with protobuf payload: %v", err)))
 		return
 	}
 	log.FromContext(r.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())
@@ -172,7 +172,7 @@ func DoIntervalRequest() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed create route request: %w", err)
 	}
-	cl, err := patronhttp.New(patronhttp.Timeout(5 * time.Second))
+	cl, err := patronhttpclient.New(patronhttpclient.Timeout(5 * time.Second))
 	if err != nil {
 		return "", fmt.Errorf("could not create http client: %w", err)
 	}

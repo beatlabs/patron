@@ -9,7 +9,6 @@ import (
 
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/log"
 )
 
 const (
@@ -24,18 +23,7 @@ func ReadRequest(req *http.Request, payload interface{}) error {
 		return err
 	}
 
-	err = json.Decode(req.Body, payload)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err := req.Body.Close()
-		if err != nil {
-			log.FromContext(req.Context()).Errorf("failed to close request body: %v", err)
-		}
-	}()
-
-	return nil
+	return json.Decode(req.Body, payload)
 }
 
 func validatingContentType(req *http.Request) error {

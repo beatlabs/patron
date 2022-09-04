@@ -439,7 +439,7 @@ func (w *dynamicCompressionResponseWriter) WriteHeader(statusCode int) {
 		case gzipHeader:
 			w.writer = gzip.NewWriter(w.ResponseWriter)
 			w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, gzipHeader)
-			w.ResponseWriter.Header().Del("Content-Length")
+			w.ResponseWriter.Header().Del(encoding.ContentLengthHeader)
 		case deflateHeader:
 			var err error
 			w.writer, err = flate.NewWriter(w.ResponseWriter, w.deflateLevel)
@@ -447,7 +447,7 @@ func (w *dynamicCompressionResponseWriter) WriteHeader(statusCode int) {
 				w.writer = w.ResponseWriter
 			} else {
 				w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, deflateHeader)
-				w.ResponseWriter.Header().Del("Content-Length")
+				w.ResponseWriter.Header().Del(encoding.ContentLengthHeader)
 			}
 		case identityHeader, "":
 			w.ResponseWriter.Header().Set(encoding.ContentEncodingHeader, identityHeader)

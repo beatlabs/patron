@@ -18,7 +18,7 @@ const (
 
 // ReadRequest validates the request headers and decodes into the provided payload.
 func ReadRequest(req *http.Request, payload interface{}) error {
-	err := validatingContentType(req)
+	err := validateContentTypeHeader(req)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func WriteResponse(req *http.Request, w http.ResponseWriter, status int, payload
 	return nil
 }
 
-func validatingAccept(req *http.Request) error {
+func validateAcceptHeader(req *http.Request) error {
 	header, ok := req.Header[encoding.AcceptHeader]
 	if !ok {
 		return nil

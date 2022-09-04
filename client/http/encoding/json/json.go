@@ -60,7 +60,7 @@ func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) 
 	return json.DecodeRaw(buf, payload)
 }
 
-func validatingContentTypeHeader(rsp *http.Response) error {
+func validateContentTypeHeader(rsp *http.Response) error {
 	header, ok := rsp.Header[encoding.ContentTypeHeader]
 	if !ok {
 		return errors.New("response content type is missing")

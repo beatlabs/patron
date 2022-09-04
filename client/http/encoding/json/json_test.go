@@ -46,7 +46,7 @@ func TestFromResponse(t *testing.T) {
 		"success ":                                {args: args{contentType: stringPointer(json.Type), contentLength: "20", payload: buf}},
 		"success with charset":                    {args: args{contentType: stringPointer(json.TypeCharset), contentLength: "20", payload: buf}},
 		"success with invalid content length":     {args: args{contentType: stringPointer(json.Type), contentLength: "20", payload: buf}},
-		"success, invalid content length content": {args: args{contentType: stringPointer(json.Type), contentLength: "a", payload: buf}},
+		"success, invalid content length value": {args: args{contentType: stringPointer(json.Type), contentLength: "a", payload: buf}},
 		"failure, wrong content type":             {args: args{contentType: stringPointer("text/plain"), contentLength: "20", payload: buf}, expectedErr: "invalid content type provided: text/plain"},
 		"failure, empty content type":             {args: args{contentType: stringPointer(""), contentLength: "20", payload: buf}, expectedErr: "invalid content type provided: "},
 	}

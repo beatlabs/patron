@@ -26,7 +26,7 @@ func ReadRequest(req *http.Request, payload interface{}) error {
 	return json.Decode(req.Body, payload)
 }
 
-func validatingContentType(req *http.Request) error {
+func validateContentTypeHeader(req *http.Request) error {
 	header, ok := req.Header[encoding.ContentTypeHeader]
 	if !ok {
 		return nil

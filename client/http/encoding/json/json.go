@@ -36,7 +36,7 @@ func NewRequest(ctx context.Context, method string, url string, payload interfac
 
 // FromResponse checks for valid headers and decodes th payload.
 func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) error {
-	err := validatingContentTypeHeader(rsp)
+	err := validateContentTypeHeader(rsp)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) 
 		return err
 	}
 
-	err = validateContentLength(rsp, len(buf))
+	err = validateContentLengthHeader(rsp, len(buf))
 	if err != nil {
 		log.FromContext(ctx).Warn(err)
 	}

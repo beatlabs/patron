@@ -42,15 +42,15 @@ func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) 
 	}
 
 	buf, err := io.ReadAll(rsp.Body)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		err := rsp.Body.Close()
 		if err != nil {
 			log.FromContext(ctx).Errorf("failed to close response body: %v", err)
 		}
 	}()
-	if err != nil {
-		return err
-	}
 
 	err = validateContentLengthHeader(rsp, len(buf))
 	if err != nil {

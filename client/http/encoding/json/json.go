@@ -63,11 +63,11 @@ func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) 
 func validateContentTypeHeader(rsp *http.Response) error {
 	header, ok := rsp.Header[encoding.ContentTypeHeader]
 	if !ok {
-		return errors.New("response content type is missing")
+		return errors.New("response content type header key is missing")
 	}
 
 	if len(header) == 0 {
-		return errors.New("response content type is missing")
+		return errors.New("response content type header value is missing")
 	}
 
 	switch header[0] {

@@ -46,7 +46,7 @@ func validateContentTypeHeader(req *http.Request) error {
 
 // WriteResponse validates the request headers and encodes the provided payload into the response.
 func WriteResponse(req *http.Request, w http.ResponseWriter, status int, payload interface{}) error {
-	err := validatingAccept(req)
+	err := validateAcceptHeader(req)
 	if err != nil {
 		return err
 	}

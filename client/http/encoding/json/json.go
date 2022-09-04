@@ -78,7 +78,7 @@ func validateContentTypeHeader(rsp *http.Response) error {
 	}
 }
 
-func validateContentLength(rsp *http.Response, length int) error {
+func validateContentLengthHeader(rsp *http.Response, length int) error {
 	header, ok := rsp.Header[encoding.ContentLengthHeader]
 	if !ok {
 		return nil

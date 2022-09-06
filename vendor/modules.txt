@@ -264,7 +264,7 @@ github.com/xdg-go/scram
 github.com/xdg-go/stringprep
 # github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d
 github.com/youmark/pkcs8
-# go.mongodb.org/mongo-driver v1.10.0
+# go.mongodb.org/mongo-driver v1.10.1
 ## explicit
 go.mongodb.org/mongo-driver/bson
 go.mongodb.org/mongo-driver/bson/bsoncodec
@@ -334,7 +334,7 @@ golang.org/x/text/unicode/norm
 golang.org/x/time/rate
 # google.golang.org/genproto v0.0.0-20200825200019-8632dd797987
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.48.0
+# google.golang.org/grpc v1.49.0
 ## explicit
 google.golang.org/grpc
 google.golang.org/grpc/attributes

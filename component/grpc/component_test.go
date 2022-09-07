@@ -59,7 +59,7 @@ func TestCreate(t *testing.T) {
 
 func TestComponent_Run_Unary(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
-	cmp, err := New(60000).Create()
+	cmp, err := New(60000).WithReflection().Create()
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())
@@ -124,7 +124,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 
 func TestComponent_Run_Stream(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
-	cmp, err := New(60000).Create()
+	cmp, err := New(60000).WithReflection().Create()
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())

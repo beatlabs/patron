@@ -15,7 +15,7 @@ import (
 	"github.com/beatlabs/patron/log"
 )
 
-// NewRequest creates a request and encodes the body and set's the appropriate headers.
+// NewRequest creates a request, encodes the body, and sets the appropriate headers.
 func NewRequest(ctx context.Context, method string, url string, payload interface{}) (*http.Request, error) {
 	buf, err := json.Encode(payload)
 	if err != nil {

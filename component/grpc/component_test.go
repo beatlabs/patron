@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -43,7 +44,7 @@ func TestCreate(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := New(tt.args.port).WithOptions(grpc.ConnectionTimeout(1 * time.Second)).Create()
+			got, err := New(tt.args.port).WithOptions(grpc.ConnectionTimeout(1 * time.Second)).WithReflection().Create()
 			if tt.expErr != "" {
 				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, got)
@@ -58,7 +59,7 @@ func TestCreate(t *testing.T) {
 
 func TestComponent_Run_Unary(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
-	cmp, err := New(60000).Create()
+	cmp, err := New(60000).WithReflection().Create()
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())
@@ -67,7 +68,8 @@ func TestComponent_Run_Unary(t *testing.T) {
 		assert.NoError(t, cmp.Run(ctx))
 		chDone <- struct{}{}
 	}()
-	conn, err := grpc.DialContext(ctx, "localhost:60000", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, "localhost:60000", grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock())
 	require.NoError(t, err)
 	c := examples.NewGreeterClient(conn)
 
@@ -122,7 +124,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 
 func TestComponent_Run_Stream(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
-	cmp, err := New(60000).Create()
+	cmp, err := New(60000).WithReflection().Create()
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())
@@ -131,7 +133,8 @@ func TestComponent_Run_Stream(t *testing.T) {
 		assert.NoError(t, cmp.Run(ctx))
 		chDone <- struct{}{}
 	}()
-	conn, err := grpc.DialContext(ctx, "localhost:60000", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, "localhost:60000", grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock())
 	require.NoError(t, err)
 	c := examples.NewGreeterClient(conn)
 

@@ -83,6 +83,20 @@ func TestWriteResponse(t *testing.T) {
 	expectedBuf, err := json.Encode(expected)
 	require.NoError(t, err)
 
+	rsp := httptest.NewRecorder()
+	err = WriteResponse(rsp, http.StatusOK, expected)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rsp.Code)
+	assert.Equal(t, expectedBuf, rsp.Body.Bytes())
+	assert.Equal(t, json.Type, rsp.Header().Get(encoding.ContentTypeHeader))
+	assert.Equal(t, strconv.FormatInt(int64(len(expectedBuf)), 10), rsp.Header().Get(encoding.ContentLengthHeader))
+}
+
+func TestValidateAcceptHeader(t *testing.T) {
+	t.Parallel()
+
+	expected := customer{Name: "John Wick"}
+
 	type args struct {
 		acceptHeader *string
 		status       int
@@ -113,17 +127,12 @@ func TestWriteResponse(t *testing.T) {
 				req.Header.Set(encoding.AcceptHeader, *tt.args.acceptHeader)
 			}
 
-			rsp := httptest.NewRecorder()
-			err = WriteResponse(req, rsp, tt.args.status, tt.args.payload)
+			err = ValidateAcceptHeader(req)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.args.status, rsp.Code)
-				assert.Equal(t, expectedBuf, rsp.Body.Bytes())
-				assert.Equal(t, json.Type, rsp.Header().Get(encoding.ContentTypeHeader))
-				assert.Equal(t, strconv.FormatInt(int64(len(expectedBuf)), 10), rsp.Header().Get(encoding.ContentLengthHeader))
 			}
 		})
 	}

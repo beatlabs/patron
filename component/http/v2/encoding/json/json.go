@@ -45,12 +45,7 @@ func validateContentTypeHeader(req *http.Request) error {
 }
 
 // WriteResponse validates the request headers and encodes the provided payload into the response.
-func WriteResponse(req *http.Request, w http.ResponseWriter, status int, payload interface{}) error {
-	err := validateAcceptHeader(req)
-	if err != nil {
-		return err
-	}
-
+func WriteResponse(w http.ResponseWriter, status int, payload interface{}) error {
 	buf, err := json.Encode(payload)
 	if err != nil {
 		return err
@@ -68,7 +63,8 @@ func WriteResponse(req *http.Request, w http.ResponseWriter, status int, payload
 	return nil
 }
 
-func validateAcceptHeader(req *http.Request) error {
+// ValidateAcceptHeader checks that the accept header instruction allows for JSON handling.
+func ValidateAcceptHeader(req *http.Request) error {
 	header, ok := req.Header[encoding.AcceptHeader]
 	if !ok {
 		return nil

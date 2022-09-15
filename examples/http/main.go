@@ -133,19 +133,19 @@ func httpHandler(rw http.ResponseWriter, r *http.Request) {
 
 	err = patronhttpjson.ReadRequest(r, &u)
 	if err != nil {
-		patronhttpjson.WriteResponse(r, rw, http.StatusBadRequest, newHttpError(fmt.Sprintf("failed to decode request: %v", err)))
+		patronhttpjson.WriteResponse(rw, http.StatusBadRequest, newHttpError(fmt.Sprintf("failed to decode request: %v", err)))
 		return
 	}
 
 	b, err := protobuf.Encode(&u)
 	if err != nil {
-		patronhttpjson.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
+		patronhttpjson.WriteResponse(rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
 		return
 	}
 
 	httpRequest, err := http.NewRequest("GET", "http://localhost:50001", bytes.NewReader(b))
 	if err != nil {
-		patronhttpjson.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
+		patronhttpjson.WriteResponse(rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed create request: %v", err)))
 		return
 	}
 	httpRequest.Header.Add("Content-Type", protobuf.Type)
@@ -153,12 +153,12 @@ func httpHandler(rw http.ResponseWriter, r *http.Request) {
 	httpRequest.Header.Add("Authorization", "Apikey 123456")
 	cl, err := patronhttpclient.New(patronhttpclient.Timeout(5 * time.Second))
 	if err != nil {
-		patronhttpjson.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed execute request: %v", err)))
+		patronhttpjson.WriteResponse(rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed execute request: %v", err)))
 		return
 	}
 	rsp, err := cl.Do(httpRequest)
 	if err != nil {
-		patronhttpjson.WriteResponse(r, rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed to perform http request with protobuf payload: %v", err)))
+		patronhttpjson.WriteResponse(rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed to perform http request with protobuf payload: %v", err)))
 		return
 	}
 	log.FromContext(r.Context()).Infof("request processed: %s %s", u.GetFirstname(), u.GetLastname())

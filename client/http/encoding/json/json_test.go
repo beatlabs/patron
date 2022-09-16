@@ -23,7 +23,6 @@ func TestNewRequest(t *testing.T) {
 	got, err := NewRequest(context.Background(), http.MethodPost, "/api/customer", customer{Name: "John Wick"})
 	assert.NoError(t, err)
 	assert.Equal(t, json.Type, got.Header.Get(encoding.ContentTypeHeader))
-	assert.Equal(t, json.Type, got.Header.Get(encoding.AcceptHeader))
 	assert.Equal(t, "20", got.Header.Get(encoding.ContentLengthHeader))
 }
 

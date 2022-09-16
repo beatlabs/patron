@@ -29,7 +29,6 @@ func NewRequest(ctx context.Context, method string, url string, payload interfac
 
 	req.Header.Set(encoding.ContentTypeHeader, json.Type)
 	req.Header.Set(encoding.ContentLengthHeader, strconv.FormatInt(int64(len(buf)), 10))
-	req.Header.Set(encoding.AcceptHeader, json.Type)
 
 	return req, nil
 }

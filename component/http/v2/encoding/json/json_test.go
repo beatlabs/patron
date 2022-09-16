@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/beatlabs/patron/encoding"
@@ -89,7 +88,6 @@ func TestWriteResponse(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rsp.Code)
 	assert.Equal(t, expectedBuf, rsp.Body.Bytes())
 	assert.Equal(t, json.Type, rsp.Header().Get(encoding.ContentTypeHeader))
-	assert.Equal(t, strconv.FormatInt(int64(len(expectedBuf)), 10), rsp.Header().Get(encoding.ContentLengthHeader))
 }
 
 func TestValidateAcceptHeader(t *testing.T) {

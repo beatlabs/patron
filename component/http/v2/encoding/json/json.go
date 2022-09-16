@@ -4,7 +4,6 @@ package json
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/beatlabs/patron/encoding"
@@ -53,7 +52,6 @@ func WriteResponse(w http.ResponseWriter, status int, payload interface{}) error
 
 	w.WriteHeader(status)
 	w.Header().Add(encoding.ContentTypeHeader, json.Type)
-	w.Header().Add(encoding.ContentLengthHeader, strconv.FormatInt(int64(len(buf)), 10))
 
 	_, err = w.Write(buf)
 	if err != nil {

@@ -35,20 +35,18 @@ func TestFromResponse(t *testing.T) {
 	require.NoError(t, err)
 
 	type args struct {
-		contentType   *string
-		contentLength string
-		payload       []byte
+		contentType *string
+		payload     []byte
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success ":                              {args: args{contentType: stringPointer(json.Type), contentLength: "20", payload: buf}},
-		"success with charset":                  {args: args{contentType: stringPointer(json.TypeCharset), contentLength: "20", payload: buf}},
-		"success with invalid content length":   {args: args{contentType: stringPointer(json.Type), contentLength: "20", payload: buf}},
-		"success, invalid content length value": {args: args{contentType: stringPointer(json.Type), contentLength: "a", payload: buf}},
-		"failure, wrong content type":           {args: args{contentType: stringPointer("text/plain"), contentLength: "20", payload: buf}, expectedErr: "invalid content type provided: text/plain"},
-		"failure, empty content type":           {args: args{contentType: stringPointer(""), contentLength: "20", payload: buf}, expectedErr: "invalid content type provided: "},
+		"success ":                            {args: args{contentType: stringPointer(json.Type), payload: buf}},
+		"success with charset":                {args: args{contentType: stringPointer(json.TypeCharset), payload: buf}},
+		"success with invalid content length": {args: args{contentType: stringPointer(json.Type), payload: buf}},
+		"failure, wrong content type":         {args: args{contentType: stringPointer("text/plain"), payload: buf}, expectedErr: "invalid content type provided: text/plain"},
+		"failure, empty content type":         {args: args{contentType: stringPointer(""), payload: buf}, expectedErr: "invalid content type provided: "},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -60,7 +58,6 @@ func TestFromResponse(t *testing.T) {
 				rsp.Header().Set(encoding.ContentTypeHeader, *tt.args.contentType)
 			}
 
-			rsp.Header().Set(encoding.ContentLengthHeader, tt.args.contentLength)
 			_, err := rsp.Write(tt.args.payload)
 			require.NoError(t, err)
 

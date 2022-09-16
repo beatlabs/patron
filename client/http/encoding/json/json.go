@@ -52,11 +52,6 @@ func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) 
 		}
 	}()
 
-	err = validateContentLengthHeader(rsp, len(buf))
-	if err != nil {
-		log.FromContext(ctx).Warn(err)
-	}
-
 	return json.DecodeRaw(buf, payload)
 }
 
@@ -76,26 +71,4 @@ func validateContentTypeHeader(rsp *http.Response) error {
 	default:
 		return fmt.Errorf("invalid content type provided: %s", header[0])
 	}
-}
-
-func validateContentLengthHeader(rsp *http.Response, length int) error {
-	header, ok := rsp.Header[encoding.ContentLengthHeader]
-	if !ok {
-		return nil
-	}
-
-	if len(header) == 0 {
-		return nil
-	}
-
-	expected, err := strconv.Atoi(header[0])
-	if err != nil {
-		return fmt.Errorf("failed to convert content length to int: %w", err)
-	}
-
-	if expected != length {
-		return fmt.Errorf("expected content length is %d but got %d", expected, length)
-	}
-
-	return nil
 }

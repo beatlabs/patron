@@ -23,7 +23,16 @@ func TestNewLogger(t *testing.T) {
 	assert.Equal(t, log.InfoLevel, logger.Level())
 	assert.Equal(t, logger.fields, map[string]interface{}{"name": "john doe", "age": 18})
 	assert.Contains(t, logger.fieldsLine, "age=18")
-	assert.Contains(t, logger.fieldsLine, "name=john doe")
+	assert.Contains(t, logger.fieldsLine, `name="john doe"`)
+}
+
+func TestLoggerEscapes(t *testing.T) {
+	var b bytes.Buffer
+	logger := New(&b, log.InfoLevel, map[string]interface{}{"name": "john\n doe", "age": 18})
+	assert.Contains(t, logger.fieldsLine, `name="john\n doe"`)
+	logger.Infof(`unescaped "quotes" and \slashes\,
+new lines and	tabs`)
+	assert.Contains(t, b.String(), `name="john\n doe" message="unescaped \"quotes\" and \\slashes\\,\nnew lines and\ttabs"`)
 }
 
 func TestLogMetrics(t *testing.T) {
@@ -75,7 +84,7 @@ func TestNewWithFlagsLogger(t *testing.T) {
 	assert.Equal(t, log.InfoLevel, logger.Level())
 	assert.Equal(t, logger.fields, map[string]interface{}{"name": "john doe", "age": 18})
 	assert.Contains(t, logger.fieldsLine, "age=18")
-	assert.Contains(t, logger.fieldsLine, "name=john doe")
+	assert.Contains(t, logger.fieldsLine, `name="john doe"`)
 	year := time.Now().Format("2006")
 	assert.NotContains(t, logger.fieldsLine, year)
 }
@@ -95,7 +104,7 @@ func TestNewSub(t *testing.T) {
 	assert.Equal(t, log.InfoLevel, subLogger.Level())
 	assert.Equal(t, subLogger.fields, map[string]interface{}{"name": "john doe", "age": 18})
 	assert.Contains(t, subLogger.fieldsLine, "age=18")
-	assert.Contains(t, subLogger.fieldsLine, "name=john doe")
+	assert.Contains(t, subLogger.fieldsLine, `name="john doe"`)
 	subLogger.Info()
 	assert.Contains(t, b.String(), "age=18")
 }
@@ -169,9 +178,9 @@ func TestLogger(t *testing.T) {
 			}
 
 			if tt.args.msg == "" {
-				assert.Contains(t, b.String(), fmt.Sprintf("lvl=%s age=18 name=john doe hello world", levelMap[tt.args.lvl]))
+				assert.Contains(t, b.String(), fmt.Sprintf(`lvl=%s age=18 name="john doe" message="hello world"`, levelMap[tt.args.lvl]))
 			} else {
-				assert.Contains(t, b.String(), fmt.Sprintf("lvl=%s age=18 name=john doe Hi, John", levelMap[tt.args.lvl]))
+				assert.Contains(t, b.String(), fmt.Sprintf(`lvl=%s age=18 name="john doe" message="Hi, John"`, levelMap[tt.args.lvl]))
 			}
 		})
 	}

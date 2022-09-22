@@ -76,7 +76,7 @@ func createFieldsLine(fields map[string]interface{}) string {
 	for _, key := range keys {
 		sb.WriteString(key)
 		sb.WriteRune('=')
-		sb.WriteString(fmt.Sprintf("%v", fields[key]))
+		writeValue(&sb, fmt.Sprintf("%v", fields[key]))
 		sb.WriteRune(' ')
 	}
 
@@ -229,13 +229,59 @@ func (l *Logger) shouldLog(lvl patronLog.Level) bool {
 }
 
 func output(logger *log.Logger, args ...interface{}) string {
-	msg := fmt.Sprint(args...)
-	_ = logger.Output(4, msg)
-	return msg
+	sb := strings.Builder{}
+	writeValue(&sb, fmt.Sprint(args...))
+	_ = logger.Output(4, fmt.Sprintf("message=%s", sb.String()))
+	return sb.String()
 }
 
 func outputf(logger *log.Logger, msg string, args ...interface{}) string {
-	fmtMsg := fmt.Sprintf(msg, args...)
-	_ = logger.Output(4, fmtMsg)
-	return fmtMsg
+	sb := strings.Builder{}
+	writeValue(&sb, fmt.Sprintf(msg, args...))
+	_ = logger.Output(4, fmt.Sprintf("message=%s", sb.String()))
+	return sb.String()
+}
+
+func writeValue(buf *strings.Builder, s string) {
+	needsQuotes := strings.IndexFunc(s, func(r rune) bool {
+		return r <= ' ' || r == '=' || r == '"'
+	}) != -1
+
+	if needsQuotes {
+		buf.WriteByte('"')
+	}
+
+	start := 0
+	for i, r := range s {
+		if r >= 0x20 && r != '\\' && r != '"' {
+			continue
+		}
+
+		if start < i {
+			buf.WriteString(s[start:i])
+		}
+
+		switch r {
+		case '"':
+			buf.WriteString(`\"`)
+		case '\\':
+			buf.WriteString(`\\`)
+		case '\n':
+			buf.WriteString("\\n")
+		case '\r':
+			buf.WriteString("\\r")
+		case '\t':
+			buf.WriteString("\\t")
+		}
+
+		start = i + 1
+	}
+
+	if start < len(s) {
+		buf.WriteString(s[start:])
+	}
+
+	if needsQuotes {
+		buf.WriteByte('"')
+	}
 }

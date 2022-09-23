@@ -6,11 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
@@ -90,13 +91,22 @@ type retry struct {
 }
 
 type config struct {
-	maxMessages       *int64
-	pollWaitSeconds   *int64
-	visibilityTimeout *int64
+	maxMessages       int32
+	pollWaitSeconds   int32
+	visibilityTimeout int32
 }
 
 type stats struct {
 	interval time.Duration
+}
+
+type API interface {
+	CreateQueue(ctx context.Context, params *sqs.CreateQueueInput, optFns ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error)
+	GetQueueUrl(ctx context.Context, params *sqs.GetQueueUrlInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueUrlOutput, error)
+	GetQueueAttributes(ctx context.Context, params *sqs.GetQueueAttributesInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error)
+	DeleteMessageBatch(ctx context.Context, params *sqs.DeleteMessageBatchInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageBatchOutput, error)
+	DeleteMessage(ctx context.Context, params *sqs.DeleteMessageInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error)
+	ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error)
 }
 
 // Component implementation of an async component.
@@ -104,7 +114,7 @@ type Component struct {
 	name       string
 	queue      queue
 	queueOwner string
-	api        sqsiface.SQSAPI
+	api        API
 	cfg        config
 	proc       ProcessorFunc
 	stats      stats
@@ -112,7 +122,7 @@ type Component struct {
 }
 
 // New creates a new component with support for functional configuration.
-func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo ...OptionFunc) (*Component, error) {
+func New(name, queueName string, sqsAPI API, proc ProcessorFunc, oo ...OptionFunc) (*Component, error) {
 	if name == "" {
 		return nil, errors.New("component name is empty")
 	}
@@ -136,9 +146,7 @@ func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo 
 		},
 		api: sqsAPI,
 		cfg: config{
-			maxMessages:       aws.Int64(defaultMaxMessages),
-			pollWaitSeconds:   nil,
-			visibilityTimeout: nil,
+			maxMessages: defaultMaxMessages,
 		},
 		stats: stats{interval: defaultStatsInterval},
 		proc:  proc,
@@ -160,15 +168,15 @@ func New(name, queueName string, sqsAPI sqsiface.SQSAPI, proc ProcessorFunc, oo 
 	}
 
 	if cmp.queueOwner != "" {
-		req.SetQueueOwnerAWSAccountId(cmp.queueOwner)
+		req.QueueOwnerAWSAccountId = aws.String(cmp.queueOwner)
 	}
 
-	out, err := sqsAPI.GetQueueUrlWithContext(context.Background(), req)
+	out, err := sqsAPI.GetQueueUrl(context.Background(), req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get queue URL: %w", err)
 	}
 
-	cmp.queue.url = aws.StringValue(out.QueueUrl)
+	cmp.queue.url = aws.ToString(out.QueueUrl)
 
 	return cmp, nil
 }
@@ -206,18 +214,18 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 		if ctx.Err() != nil {
 			return
 		}
-		logger.Debugf("consume: polling SQS sqsAPI %s for %d messages", c.queue.name, *c.cfg.maxMessages)
-		output, err := c.api.ReceiveMessageWithContext(ctx, &sqs.ReceiveMessageInput{
+		logger.Debugf("consume: polling SQS sqsAPI %s for %d messages", c.queue.name, c.cfg.maxMessages)
+		output, err := c.api.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 			QueueUrl:            &c.queue.url,
 			MaxNumberOfMessages: c.cfg.maxMessages,
 			WaitTimeSeconds:     c.cfg.pollWaitSeconds,
 			VisibilityTimeout:   c.cfg.visibilityTimeout,
-			AttributeNames: aws.StringSlice([]string{
+			AttributeNames: []types.QueueAttributeName{
 				sqsAttributeSentTimestamp,
-			}),
-			MessageAttributeNames: aws.StringSlice([]string{
+			},
+			MessageAttributeNames: []string{
 				sqsMessageAttributeAll,
-			}),
+			},
 		})
 		if err != nil {
 			logger.Errorf("failed to receive messages: %v, sleeping for %v", err, c.retry.wait)
@@ -280,13 +288,13 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 	return btc
 }
 
-func (c *Component) report(ctx context.Context, sqsAPI sqsiface.SQSAPI, queueURL string) error {
+func (c *Component) report(ctx context.Context, sqsAPI API, queueURL string) error {
 	log.Debugf("retrieve stats for SQS %s", c.queue.name)
-	rsp, err := sqsAPI.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
-		AttributeNames: []*string{
-			aws.String(sqsAttributeApproximateNumberOfMessages),
-			aws.String(sqsAttributeApproximateNumberOfMessagesDelayed),
-			aws.String(sqsAttributeApproximateNumberOfMessagesNotVisible),
+	rsp, err := sqsAPI.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+		AttributeNames: []types.QueueAttributeName{
+			sqsAttributeApproximateNumberOfMessages,
+			sqsAttributeApproximateNumberOfMessagesDelayed,
+			sqsAttributeApproximateNumberOfMessagesNotVisible,
 		},
 		QueueUrl: aws.String(queueURL),
 	})
@@ -314,24 +322,24 @@ func (c *Component) report(ctx context.Context, sqsAPI sqsiface.SQSAPI, queueURL
 	return nil
 }
 
-func getAttributeFloat64(attr map[string]*string, key string) (float64, error) {
+func getAttributeFloat64(attr map[string]string, key string) (float64, error) {
 	valueString := attr[key]
-	if valueString == nil {
-		return 0.0, fmt.Errorf("value of %s does not exist", key)
+	if len(strings.TrimSpace(valueString)) == 0 {
+		return 0.0, fmt.Errorf("value of %s is empty", key)
 	}
-	value, err := strconv.ParseFloat(*valueString, 64)
+	value, err := strconv.ParseFloat(valueString, 64)
 	if err != nil {
-		return 0.0, fmt.Errorf("could not convert %s to float64", *valueString)
+		return 0.0, fmt.Errorf("could not convert %s to float64", valueString)
 	}
 	return value, nil
 }
 
-func observerMessageAge(queue string, attributes map[string]*string) {
+func observerMessageAge(queue string, attributes map[string]string) {
 	attribute, ok := attributes[sqsAttributeSentTimestamp]
-	if !ok || attribute == nil {
+	if !ok || len(strings.TrimSpace(attribute)) == 0 {
 		return
 	}
-	timestamp, err := strconv.ParseInt(*attribute, 10, 64)
+	timestamp, err := strconv.ParseInt(attribute, 10, 64)
 	if err != nil {
 		return
 	}
@@ -347,7 +355,7 @@ func messageCountInc(queue string, state messageState, hasError bool, count int)
 	messageCounterVec.WithLabelValues(queue, string(state), hasErrorString).Add(float64(count))
 }
 
-func getCorrelationID(ma map[string]*sqs.MessageAttributeValue) string {
+func getCorrelationID(ma map[string]types.MessageAttributeValue) string {
 	for key, value := range ma {
 		if key == correlation.HeaderID {
 			if value.StringValue != nil {
@@ -359,7 +367,7 @@ func getCorrelationID(ma map[string]*sqs.MessageAttributeValue) string {
 	return uuid.New().String()
 }
 
-func mapHeader(ma map[string]*sqs.MessageAttributeValue) map[string]string {
+func mapHeader(ma map[string]types.MessageAttributeValue) map[string]string {
 	mp := make(map[string]string)
 	for key, value := range ma {
 		if value.StringValue != nil {

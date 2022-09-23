@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +18,7 @@ func TestNew(t *testing.T) {
 	type args struct {
 		name      string
 		queueName string
-		sqsAPI    sqsiface.SQSAPI
+		sqsAPI    API
 		proc      ProcessorFunc
 		oo        []OptionFunc
 	}

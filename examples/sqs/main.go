@@ -3,13 +3,11 @@ package main
 import (
 	"context"
 	"os"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/beatlabs/patron"
 	patrongrpc "github.com/beatlabs/patron/client/grpc"
 	patronsqs "github.com/beatlabs/patron/component/sqs"
@@ -17,6 +15,7 @@ import (
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -53,7 +52,7 @@ func main() {
 		log.Fatalf("failed to set up service: %v", err)
 	}
 
-	cc, err := patrongrpc.Dial("localhost:50006", grpc.WithInsecure())
+	cc, err := patrongrpc.Dial("localhost:50006", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to dial grpc connection: %v", err)
 	}
@@ -64,7 +63,10 @@ func main() {
 	greeterClient := examples.NewGreeterClient(cc)
 
 	// Initialise SQS
-	sqsAPI := sqs.New(getAWSSession(awsSQSEndpoint))
+	sqsAPI, err := createSQSAPI(awsSQSEndpoint)
+	if err != nil {
+		log.Fatalf("failed to create sqs api: %v", err)
+	}
 	sqsCmp, err := createSQSComponent(sqsAPI, greeterClient)
 	if err != nil {
 		log.Fatalf("failed to create sqs component: %v", err)
@@ -81,7 +83,7 @@ type sqsComponent struct {
 	greeter examples.GreeterClient
 }
 
-func createSQSComponent(api sqsiface.SQSAPI, greeter examples.GreeterClient) (*sqsComponent, error) {
+func createSQSComponent(api *sqs.Client, greeter examples.GreeterClient) (*sqsComponent, error) {
 	sqsCmp := sqsComponent{
 		greeter: greeter,
 	}
@@ -136,23 +138,28 @@ func (ac *sqsComponent) Process(_ context.Context, btc patronsqs.Batch) {
 	// }
 }
 
-func getAWSSession(endpoint string) *session.Session {
-	// 15 attempts 1 seconds separated to retrieve valid session
-	var s *session.Session = nil
-	var err error = nil
-	for i := 0; i < 15; i++ {
-		s, err = session.NewSession(
-			&aws.Config{
-				Region:      aws.String(awsRegion),
-				Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
-			},
-			&aws.Config{Endpoint: aws.String(endpoint)},
-		)
-		if err == nil {
-			return s
+func createSQSAPI(endpoint string) (*sqs.Client, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == sqs.ServiceID && region == awsRegion {
+			return aws.Endpoint{
+				URL:           endpoint,
+				SigningRegion: awsRegion,
+			}, nil
 		}
-		time.Sleep(1 * time.Second)
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(awsRegion),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(awsID, awsSecret, awsToken))),
+	)
+	if err != nil {
+		return nil, err
 	}
-	// this will panic if error is not null
-	return session.Must(s, err)
+
+	api := sqs.NewFromConfig(cfg)
+
+	return api, nil
 }

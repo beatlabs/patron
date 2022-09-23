@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	testaws "github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -36,9 +36,9 @@ func Test_SQS_Publish_Message(t *testing.T) {
 
 	const queueName = "test-sqs-publish-v2"
 
-	api, err := testaws.CreateSQSAPI(region, endpoint)
+	api, err := testaws.CreateSQSAPIV2(region, endpoint)
 	require.NoError(t, err)
-	queue, err := testaws.CreateSQSQueue(api, queueName)
+	queue, err := testaws.CreateSQSQueueV2(api, queueName)
 	require.NoError(t, err)
 
 	pub, err := New(api)
@@ -60,9 +60,9 @@ func Test_SQS_Publish_Message(t *testing.T) {
 	assert.NoError(t, err)
 	assert.IsType(t, "string", msgID)
 
-	out, err := api.ReceiveMessage(&sqs.ReceiveMessageInput{
+	out, err := api.ReceiveMessage(context.Background(), &sqs.ReceiveMessageInput{
 		QueueUrl:        &queue,
-		WaitTimeSeconds: aws.Int64(2),
+		WaitTimeSeconds: int32(2),
 	})
 	require.NoError(t, err)
 	assert.Len(t, out.Messages, 1)

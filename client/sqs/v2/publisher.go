@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
@@ -40,13 +40,19 @@ func init() {
 	prometheus.MustRegister(publishDurationMetrics)
 }
 
+type SQSAPI interface {
+	CreateQueue(ctx context.Context, params *sqs.CreateQueueInput, optFns ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error)
+	SendMessage(ctx context.Context, params *sqs.SendMessageInput, optFns ...func(*sqs.Options)) (*sqs.SendMessageOutput, error)
+	ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error)
+}
+
 // Publisher is a wrapper with added distributed tracing capabilities.
 type Publisher struct {
-	api sqsiface.SQSAPI
+	api SQSAPI
 }
 
 // New creates a new SQS publisher.
-func New(api sqsiface.SQSAPI) (Publisher, error) {
+func New(api SQSAPI) (Publisher, error) {
 	if api == nil {
 		return Publisher{}, errors.New("missing api")
 	}
@@ -62,7 +68,7 @@ func (p Publisher) Publish(ctx context.Context, msg *sqs.SendMessageInput) (mess
 	}
 
 	start := time.Now()
-	out, err := p.api.SendMessageWithContext(ctx, msg)
+	out, err := p.api.SendMessage(ctx, msg)
 	observePublish(ctx, span, start, *msg.QueueUrl, err)
 	if err != nil {
 		return "", fmt.Errorf("failed to publish message: %w", err)
@@ -90,7 +96,7 @@ func injectHeaders(ctx context.Context, span opentracing.Span, input *sqs.SendMe
 		return fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 	if input.MessageAttributes == nil {
-		input.MessageAttributes = make(map[string]*sqs.MessageAttributeValue)
+		input.MessageAttributes = make(map[string]types.MessageAttributeValue)
 	}
 
 	for k, v := range carrier {
@@ -98,14 +104,14 @@ func injectHeaders(ctx context.Context, span opentracing.Span, input *sqs.SendMe
 		if !ok {
 			return errors.New("failed to type assert string")
 		}
-		input.MessageAttributes[k] = &sqs.MessageAttributeValue{
+		input.MessageAttributes[k] = types.MessageAttributeValue{
 			DataType:    aws.String(attributeDataTypeString),
 			StringValue: aws.String(val),
 		}
 	}
 
 	if _, ok := input.MessageAttributes[correlation.HeaderID]; !ok {
-		input.MessageAttributes[correlation.HeaderID] = &sqs.MessageAttributeValue{
+		input.MessageAttributes[correlation.HeaderID] = types.MessageAttributeValue{
 			DataType:    aws.String(attributeDataTypeString),
 			StringValue: aws.String(correlation.IDFromContext(ctx)),
 		}

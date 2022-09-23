@@ -7,8 +7,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	testaws "github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -29,9 +29,9 @@ func Test_SNS_Publish_Message_v2(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
 
 	const topic = "test_publish_message_v2"
-	api, err := testaws.CreateSNSAPI(region, endpoint)
+	api, err := testaws.CreateSNSAPIV2(region, endpoint)
 	require.NoError(t, err)
-	arn, err := testaws.CreateSNSTopic(api, topic)
+	arn, err := testaws.CreateSNSTopicV2(api, topic)
 	require.NoError(t, err)
 	pub, err := New(api)
 	require.NoError(t, err)

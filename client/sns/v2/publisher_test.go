@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sns/snsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -21,7 +19,7 @@ import (
 
 func Test_New(t *testing.T) {
 	testCases := map[string]struct {
-		api         snsiface.SNSAPI
+		api         SNSAPI
 		expectedErr error
 	}{
 		"missing API": {api: nil, expectedErr: errors.New("missing api")},
@@ -48,7 +46,7 @@ func Test_Publisher_Publish(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := map[string]struct {
-		sns           snsiface.SNSAPI
+		sns           SNSAPI
 		expectedMsgID string
 		expectedErr   string
 	}{
@@ -63,7 +61,7 @@ func Test_Publisher_Publish(t *testing.T) {
 			expectedErr:   "tried to publish a message but no message ID returned",
 		},
 		"success": {
-			sns:           newStubSNSAPI((&sns.PublishOutput{}).SetMessageId("msgID"), nil),
+			sns:           newStubSNSAPI((&sns.PublishOutput{MessageId: aws.String("msgID")}), nil),
 			expectedMsgID: "msgID",
 		},
 	}
@@ -89,7 +87,7 @@ func Test_Publisher_Publish(t *testing.T) {
 }
 
 type stubSNSAPI struct {
-	snsiface.SNSAPI // Implement the interface's methods without defining all of them (just override what we need)
+	SNSAPI // Implement the interface's methods without defining all of them (just override what we need)
 
 	output *sns.PublishOutput
 	err    error
@@ -99,25 +97,33 @@ func newStubSNSAPI(expectedOutput *sns.PublishOutput, expectedErr error) *stubSN
 	return &stubSNSAPI{output: expectedOutput, err: expectedErr}
 }
 
-func (s *stubSNSAPI) PublishWithContext(_ context.Context, _ *sns.PublishInput, _ ...request.Option) (*sns.PublishOutput, error) {
+func (s *stubSNSAPI) Publish(ctx context.Context, params *sns.PublishInput, optFns ...func(*sns.Options)) (*sns.PublishOutput, error) {
 	return s.output, s.err
 }
 
 func ExamplePublisher() {
 	// Create the SNS API with the required config, credentials, etc.
-	sess, err := session.NewSession(
-		aws.NewConfig().
-			WithEndpoint("http://localhost:4575").
-			WithRegion("eu-west-1").
-			WithCredentials(
-				credentials.NewStaticCredentials("aws-id", "aws-secret", "aws-token"),
-			),
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == sns.ServiceID && region == "eu-west-1" {
+			return aws.Endpoint{
+				URL:           "http://localhost:4575",
+				SigningRegion: "eu-west-1",
+			}, nil
+		}
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion("eu-west-1"),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider("aws-id", "aws-secret", "aws-token"))),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	api := sns.New(sess)
+	api := sns.NewFromConfig(cfg)
 
 	// Create the publisher
 	pub, err := New(api)

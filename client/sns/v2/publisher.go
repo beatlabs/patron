@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sns/snsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
@@ -44,13 +44,17 @@ func init() {
 	prometheus.MustRegister(publishDurationMetrics)
 }
 
+type SNSAPI interface {
+	Publish(ctx context.Context, params *sns.PublishInput, optFns ...func(*sns.Options)) (*sns.PublishOutput, error)
+}
+
 // Publisher is an implementation of the Publisher interface with added distributed tracing capabilities.
 type Publisher struct {
-	api snsiface.SNSAPI
+	api SNSAPI
 }
 
 // New creates a new SNS publisher.
-func New(api snsiface.SNSAPI) (Publisher, error) {
+func New(api SNSAPI) (Publisher, error) {
 	if api == nil {
 		return Publisher{}, errors.New("missing api")
 	}
@@ -67,7 +71,7 @@ func (p Publisher) Publish(ctx context.Context, input *sns.PublishInput) (messag
 	}
 
 	start := time.Now()
-	out, err := p.api.PublishWithContext(ctx, input)
+	out, err := p.api.Publish(ctx, input)
 	if input.TopicArn != nil {
 		observePublish(ctx, span, start, *input.TopicArn, err)
 	}
@@ -94,11 +98,11 @@ func (c snsHeadersCarrier) Set(key, val string) {
 
 func tracingTarget(input *sns.PublishInput) string {
 	if input.TopicArn != nil {
-		return fmt.Sprintf("%s:%s", tracingTargetTopicArn, aws.StringValue(input.TopicArn))
+		return fmt.Sprintf("%s:%s", tracingTargetTopicArn, aws.ToString(input.TopicArn))
 	}
 
 	if input.TargetArn != nil {
-		return fmt.Sprintf("%s:%s", tracingTargetTargetArn, aws.StringValue(input.TargetArn))
+		return fmt.Sprintf("%s:%s", tracingTargetTargetArn, aws.ToString(input.TargetArn))
 	}
 
 	return tracingTargetUnknown
@@ -107,7 +111,7 @@ func tracingTarget(input *sns.PublishInput) string {
 // injectHeaders injects the SNS headers carrier's headers into the message's attributes.
 func injectHeaders(span opentracing.Span, input *sns.PublishInput) error {
 	if input.MessageAttributes == nil {
-		input.MessageAttributes = make(map[string]*sns.MessageAttributeValue)
+		input.MessageAttributes = make(map[string]types.MessageAttributeValue)
 	}
 
 	carrier := snsHeadersCarrier{}
@@ -120,7 +124,7 @@ func injectHeaders(span opentracing.Span, input *sns.PublishInput) error {
 		if !ok {
 			return errors.New("failed to type assert string")
 		}
-		input.MessageAttributes[k] = &sns.MessageAttributeValue{
+		input.MessageAttributes[k] = types.MessageAttributeValue{
 			DataType:    aws.String(attributeDataTypeString),
 			StringValue: aws.String(val),
 		}

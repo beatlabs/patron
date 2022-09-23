@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"
@@ -22,7 +20,7 @@ import (
 
 func Test_New(t *testing.T) {
 	testCases := map[string]struct {
-		api         sqsiface.SQSAPI
+		api         SQSAPI
 		expectedErr string
 	}{
 		"missing API": {api: nil, expectedErr: "missing api"},
@@ -69,7 +67,7 @@ func Test_Publisher_Publish(t *testing.T) {
 			expectedErr:   "tried to publish a message but no message ID returned",
 		},
 		"success": {
-			sqs:           newStubSQSAPI((&sqs.SendMessageOutput{}).SetMessageId("msgID"), nil),
+			sqs:           newStubSQSAPI((&sqs.SendMessageOutput{MessageId: aws.String("msgID")}), nil),
 			expectedMsgID: "msgID",
 			expectedErr:   "",
 		},
@@ -106,7 +104,7 @@ func Test_Publisher_Publish_InjectsHeaders(t *testing.T) {
 		QueueUrl:    aws.String("url"),
 	}
 
-	sqsStub := newStubSQSAPI((&sqs.SendMessageOutput{}).SetMessageId("msgID"), nil)
+	sqsStub := newStubSQSAPI((&sqs.SendMessageOutput{MessageId: aws.String("msgID")}), nil)
 	p, err := New(sqsStub)
 	require.NoError(t, err)
 
@@ -115,7 +113,7 @@ func Test_Publisher_Publish_InjectsHeaders(t *testing.T) {
 	mtr.RegisterInjector(opentracing.TextMap, mockTracerInjector)
 
 	expectedMsgInput := msg
-	expectedMsgInput.MessageAttributes = map[string]*sqs.MessageAttributeValue{
+	expectedMsgInput.MessageAttributes = map[string]types.MessageAttributeValue{
 		// Expect the opentracing headers to be injected.
 		mockTracerInjector.headerKey: {
 			StringValue: aws.String(mockTracerInjector.headerValue),
@@ -139,7 +137,7 @@ func Test_Publisher_Publish_InjectsHeaders(t *testing.T) {
 	})
 
 	t.Run("does not set correlation ID header when it's already present", func(t *testing.T) {
-		msg.MessageAttributes = map[string]*sqs.MessageAttributeValue{
+		msg.MessageAttributes = map[string]types.MessageAttributeValue{
 			correlation.HeaderID: {
 				StringValue: aws.String("something"),
 				DataType:    aws.String("String"),
@@ -159,7 +157,7 @@ func Test_Publisher_Publish_InjectsHeaders(t *testing.T) {
 }
 
 type stubSQSAPI struct {
-	sqsiface.SQSAPI // Implement the interface's methods without defining all of them (just override what we need)
+	SQSAPI // Implement the interface's methods without defining all of them (just override what we need)
 
 	output *sqs.SendMessageOutput
 	err    error
@@ -172,8 +170,8 @@ func newStubSQSAPI(expectedOutput *sqs.SendMessageOutput, expectedErr error) *st
 	return &stubSQSAPI{output: expectedOutput, err: expectedErr}
 }
 
-func (s *stubSQSAPI) SendMessageWithContext(
-	_ context.Context, actualMessage *sqs.SendMessageInput, _ ...request.Option,
+func (s *stubSQSAPI) SendMessage(
+	_ context.Context, actualMessage *sqs.SendMessageInput, _ ...func(*sqs.Options),
 ) (*sqs.SendMessageOutput, error) {
 	if s.expectedMsgInput != nil {
 		assert.Equal(s.t, s.expectedMsgInput, actualMessage)
@@ -211,20 +209,26 @@ func NewMockTracerInjector() MockTracerInjector {
 }
 
 func ExamplePublisher() {
-	// Create the SQS API with the required config, credentials, etc.
-	sess, err := session.NewSession(
-		aws.NewConfig().
-			WithEndpoint("http://localhost:4576").
-			WithRegion("eu-west-1").
-			WithCredentials(
-				credentials.NewStaticCredentials("aws-id", "aws-secret", "aws-token"),
-			),
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == sqs.ServiceID && region == "eu-west-1" {
+			return aws.Endpoint{
+				URL:           "http://localhost:4576",
+				SigningRegion: "eu-west-1",
+			}, nil
+		}
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion("eu-west-1"),
+		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	api := sqs.New(sess)
+	api := sqs.NewFromConfig(cfg)
 
 	pub, err := New(api)
 	if err != nil {

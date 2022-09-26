@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	pSqsClient "github.com/beatlabs/patron/client/sqs/v2"
+	patronsqscli "github.com/beatlabs/patron/client/sqs"
 	"github.com/beatlabs/patron/correlation"
 	testaws "github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go/ext"
@@ -35,9 +35,9 @@ func Test_SQS_Consume(t *testing.T) {
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"
 
-	api, err := testaws.CreateSQSAPIV2(region, endpoint)
+	api, err := testaws.CreateSQSAPI(region, endpoint)
 	require.NoError(t, err)
-	queue, err := testaws.CreateSQSQueueV2(api, queueName)
+	queue, err := testaws.CreateSQSQueue(api, queueName)
 	require.NoError(t, err)
 
 	sent := sendMessage(t, api, correlationID, queue, "1", "2", "3")
@@ -94,7 +94,7 @@ func Test_SQS_Consume(t *testing.T) {
 }
 
 func sendMessage(t *testing.T, api *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {
-	pub, err := pSqsClient.New(api)
+	pub, err := patronsqscli.New(api)
 	require.NoError(t, err)
 
 	ctx := correlation.ContextWithID(context.Background(), correlationID)

@@ -1,77 +1,83 @@
-// Package sns provides a set of common interfaces and structs for publishing messages to AWS SNS. Implementations
+// Package sns provides a wrapper for publishing messages to AWS SNS. Implementations
 // in this package also include distributed tracing capabilities by default.
-//
-// Deprecated: The SNS client package is superseded by the `github.com/beatlabs/client/sns/v2` package.
-// Please refer to the documents and the examples for the usage.
-//
-// This package is frozen and no new functionality will be added.
 package sns
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 
-	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/beatlabs/patron/correlation"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
+	attributeDataTypeString = "String"
+
 	publisherComponent = "sns-publisher"
+
+	tracingTargetUnknown   = "unknown"
+	tracingTargetTopicArn  = "topic-arn"
+	tracingTargetTargetArn = "target-arn"
 )
 
-// Publisher is the interface defining an SNS publisher, used to publish messages to SNS.
-type Publisher interface {
-	Publish(ctx context.Context, msg Message) (messageID string, err error)
+var publishDurationMetrics *prometheus.HistogramVec
+
+func init() {
+	publishDurationMetrics = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "client",
+			Subsystem: "sns",
+			Name:      "publish_duration_seconds",
+			Help:      "AWS SNS publish completed by the client.",
+		},
+		[]string{"topic", "success"},
+	)
+	prometheus.MustRegister(publishDurationMetrics)
 }
 
-// TracedPublisher is an implementation of the Publisher interface with added distributed tracing capabilities.
-type TracedPublisher struct {
-	api snsiface.SNSAPI
-
-	// component is the name of the component used in tracing operations
-	component string
-	// tag is the base tag used during tracing operations
-	tag opentracing.Tag
+type API interface {
+	Publish(ctx context.Context, params *sns.PublishInput, optFns ...func(*sns.Options)) (*sns.PublishOutput, error)
 }
 
-// NewPublisher creates a new SNS publisher.
-//
-// Deprecated: The SNS client package is superseded by the `github.com/beatlabs/client/sns/v2` package.
-// Please refer to the documents and the examples for the usage.
-//
-// This package is frozen and no new functionality will be added.
-func NewPublisher(api snsiface.SNSAPI) (*TracedPublisher, error) {
+// Publisher is an implementation of the Publisher interface with added distributed tracing capabilities.
+type Publisher struct {
+	api API
+}
+
+// New creates a new SNS publisher.
+func New(api API) (Publisher, error) {
 	if api == nil {
-		return nil, errors.New("missing api")
+		return Publisher{}, errors.New("missing api")
 	}
 
-	return &TracedPublisher{
-		api:       api,
-		component: publisherComponent,
-		tag:       ext.SpanKindProducer,
-	}, nil
+	return Publisher{api: api}, nil
 }
 
 // Publish tries to publish a new message to SNS. It also stores tracing information.
-func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID string, err error) {
-	span, _ := trace.ChildSpan(ctx, p.publishOpName(msg), p.component, ext.SpanKindProducer, p.tag)
+func (p Publisher) Publish(ctx context.Context, input *sns.PublishInput) (messageID string, err error) {
+	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, tracingTarget(input)), publisherComponent, ext.SpanKindProducer)
 
-	carrier := snsHeadersCarrier{}
-	err = span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier)
-	if err != nil {
-		return "", fmt.Errorf("failed to inject tracing headers: %w", err)
+	if err := injectHeaders(span, input); err != nil {
+		log.FromContext(ctx).Warnf("failed to inject tracing header: %v", err)
 	}
 
-	msg.injectHeaders(carrier)
-	msg.setMessageAttribute(correlation.HeaderID, correlation.IDFromContext(ctx))
-
-	out, err := p.api.PublishWithContext(ctx, msg.input)
-
-	trace.SpanComplete(span, err)
+	start := time.Now()
+	out, err := p.api.Publish(ctx, input)
+	if input.TopicArn != nil {
+		observePublish(ctx, span, start, *input.TopicArn, err)
+	}
+	if input.TargetArn != nil {
+		observePublish(ctx, span, start, *input.TargetArn, err)
+	}
 	if err != nil {
 		return "", fmt.Errorf("failed to publish message: %w", err)
 	}
@@ -83,17 +89,54 @@ func (p TracedPublisher) Publish(ctx context.Context, msg Message) (messageID st
 	return *out.MessageId, nil
 }
 
-// publishOpName returns the publish operation name based on the message.
-func (p TracedPublisher) publishOpName(msg Message) string {
-	return trace.ComponentOpName(
-		p.component,
-		msg.tracingTarget(),
-	)
-}
-
 type snsHeadersCarrier map[string]interface{}
 
 // Set implements Set() of opentracing.TextMapWriter.
 func (c snsHeadersCarrier) Set(key, val string) {
 	c[key] = val
+}
+
+func tracingTarget(input *sns.PublishInput) string {
+	if input.TopicArn != nil {
+		return fmt.Sprintf("%s:%s", tracingTargetTopicArn, aws.ToString(input.TopicArn))
+	}
+
+	if input.TargetArn != nil {
+		return fmt.Sprintf("%s:%s", tracingTargetTargetArn, aws.ToString(input.TargetArn))
+	}
+
+	return tracingTargetUnknown
+}
+
+// injectHeaders injects the SNS headers carrier's headers into the message's attributes.
+func injectHeaders(span opentracing.Span, input *sns.PublishInput) error {
+	if input.MessageAttributes == nil {
+		input.MessageAttributes = make(map[string]types.MessageAttributeValue)
+	}
+
+	carrier := snsHeadersCarrier{}
+	if err := span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier); err != nil {
+		return fmt.Errorf("failed to inject tracing headers: %w", err)
+	}
+
+	for k, v := range carrier {
+		val, ok := v.(string)
+		if !ok {
+			return errors.New("failed to type assert string")
+		}
+		input.MessageAttributes[k] = types.MessageAttributeValue{
+			DataType:    aws.String(attributeDataTypeString),
+			StringValue: aws.String(val),
+		}
+	}
+	return nil
+}
+
+func observePublish(ctx context.Context, span opentracing.Span, start time.Time, topic string, err error) {
+	trace.SpanComplete(span, err)
+
+	durationHistogram := trace.Histogram{
+		Observer: publishDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err == nil)),
+	}
+	durationHistogram.Observe(ctx, time.Since(start).Seconds())
 }

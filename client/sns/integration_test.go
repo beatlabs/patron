@@ -7,10 +7,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	testaws "github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,21 +23,24 @@ const (
 	endpoint = "http://localhost:4566"
 )
 
-func Test_SNS_Publish_Message(t *testing.T) {
+func Test_SNS_Publish_Message_v2(t *testing.T) {
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
 	t.Cleanup(func() { mtr.Reset() })
 
-	const topic = "test_publish_message"
+	const topic = "test_publish_message_v2"
 	api, err := testaws.CreateSNSAPI(region, endpoint)
 	require.NoError(t, err)
 	arn, err := testaws.CreateSNSTopic(api, topic)
 	require.NoError(t, err)
-	pub, err := NewPublisher(api)
+	pub, err := New(api)
 	require.NoError(t, err)
-	msg := createMsg(t, arn)
+	input := &sns.PublishInput{
+		Message:  aws.String(topic),
+		TopicArn: aws.String(arn),
+	}
 
-	msgID, err := pub.Publish(context.Background(), msg)
+	msgID, err := pub.Publish(context.Background(), input)
 	assert.NoError(t, err)
 	assert.IsType(t, "string", msgID)
 	expected := map[string]interface{}{
@@ -44,10 +50,6 @@ func Test_SNS_Publish_Message(t *testing.T) {
 		"version":   "dev",
 	}
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
-}
-
-func createMsg(t *testing.T, topicArn string) Message {
-	msg, err := NewMessageBuilder().Message("test msg").TopicArn(topicArn).Build()
-	require.NoError(t, err)
-	return *msg
+	// Metrics
+	assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_sns_publish_duration_seconds"))
 }

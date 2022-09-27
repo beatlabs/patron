@@ -35,4 +35,6 @@ Handling messages sequentially or concurrently is left to the process function s
 
 The package collects Prometheus metrics regarding the queue usage. These metrics are about the message age, the queue size, the total number of messages, as well as how many of them were delayed or not visible (in flight).
 The package has also included distributed trace support OOTB.
- 
+
+## Migrating from `aws-sdk-go` v1 to v2
+

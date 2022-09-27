@@ -11,6 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 )
 
+type SQSAPI interface {
+	CreateQueue(ctx context.Context, params *sqs.CreateQueueInput, optFns ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error)
+	ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error)
+}
+
+type SNSAPI interface {
+	CreateTopic(ctx context.Context, params *sns.CreateTopicInput, optFns ...func(*sns.Options)) (*sns.CreateTopicOutput, error)
+}
+
 // CreateSNSAPI helper function.
 func CreateSNSAPI(region, endpoint string) (*sns.Client, error) {
 	cfg, err := createConfig(sns.ServiceID, region, endpoint)
@@ -24,7 +33,7 @@ func CreateSNSAPI(region, endpoint string) (*sns.Client, error) {
 }
 
 // CreateSNSTopic helper function.
-func CreateSNSTopic(api *sns.Client, topic string) (string, error) {
+func CreateSNSTopic(api SNSAPI, topic string) (string, error) {
 	out, err := api.CreateTopic(context.Background(), &sns.CreateTopicInput{
 		Name: aws.String(topic),
 	})
@@ -48,7 +57,7 @@ func CreateSQSAPI(region, endpoint string) (*sqs.Client, error) {
 }
 
 // CreateSQSQueue helper function.
-func CreateSQSQueue(api *sqs.Client, queueName string) (string, error) {
+func CreateSQSQueue(api SQSAPI, queueName string) (string, error) {
 	out, err := api.CreateQueue(context.Background(), &sqs.CreateQueueInput{
 		QueueName: aws.String(queueName),
 	})

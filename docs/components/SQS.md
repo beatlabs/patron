@@ -35,17 +35,3 @@ Handling messages sequentially or concurrently is left to the process function s
 
 The package collects Prometheus metrics regarding the queue usage. These metrics are about the message age, the queue size, the total number of messages, as well as how many of them were delayed or not visible (in flight).
 The package has also included distributed trace support OOTB.
-
-## Migrating from `aws-sdk-go` v1 to v2
-
-For leveraging the AWS patron components updated to `aws-sdk-go` v2, the client initialization should be modified. In v2 the [session](https://docs.aws.amazon.com/sdk-for-go/api/aws/session) package was replaced with a simple configuration system provided by the [config](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/config) package.
-
-Options such as the AWS region and endpoint to be used can be mentioned during configuration loading.
-
-Endpoint resolvers are used to specify custom endpoints for a particular service and region.
-
-The AWS client configured can be plugged in to the respective patron component on initialization, in the same way its predecessor did in earlier patron versions.
-
-An example of configuring a client and plugging it on a patron component can be found [here](../../examples/sqs/main.go).
-
-> A more detailed documentation on migrating can be found [here](https://aws.github.io/aws-sdk-go-v2/docs/migrating).

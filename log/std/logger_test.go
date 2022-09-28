@@ -36,7 +36,6 @@ new lines and	tabs`)
 }
 
 func TestLogMetrics(t *testing.T) {
-	t.Parallel()
 	log.ResetLogCounter()
 	var b bytes.Buffer
 	l := New(&b, log.InfoLevel, nil)
@@ -54,7 +53,6 @@ func TestLogMetrics(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 			assert.Equal(t, 0.0, testutil.ToFloat64(log.LevelCount(string(tt.lvl))))
 			if tt.lvl == log.PanicLevel {
 				assert.Panics(t, func() { tt.logfunc(name) })

@@ -143,9 +143,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
-
-			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort(t))
-			assert.NoError(t, err)
+			t.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort(t))
 			svc, err := New("test", "", TextLogger())
 			require.NoError(t, err)
 			err = svc.WithComponents(tt.cp, tt.cp, tt.cp).Run(context.Background())

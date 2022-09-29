@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-// Aggregate of errors into one.
 type aggregate []error
 
 // Error returns the string representation of the aggregated errors.
+// Internally it uses a string builder in order to efficiently merge errors into one.
 func (a aggregate) Error() string {
 	b := strings.Builder{}
 	for _, err := range a {
@@ -19,6 +19,7 @@ func (a aggregate) Error() string {
 }
 
 // Aggregate errors into one error.
+// If the provided errors contain a nil it will be skipped.
 func Aggregate(ee ...error) error {
 	agr := make(aggregate, 0, len(ee))
 	for _, e := range ee {

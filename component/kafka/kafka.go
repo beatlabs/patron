@@ -98,7 +98,6 @@ func DefaultConsumerSaramaConfig(name string, readCommitted bool) (*sarama.Confi
 	config := sarama.NewConfig()
 	config.ClientID = fmt.Sprintf("%s-%s", host, name)
 	config.Consumer.Return.Errors = true
-	config.Version = sarama.V0_11_0_0
 	if readCommitted {
 		// from Kafka documentation:
 		// Transactions were introduced in Kafka 0.11.0 wherein applications can write to multiple topics and partitions atomically. In order for this to work, consumers reading from these partitions should be configured to only read committed data. This can be achieved by setting the isolation.level=read_committed in the consumer's configuration.

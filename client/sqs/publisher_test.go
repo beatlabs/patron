@@ -6,169 +6,243 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
-	"github.com/opentracing/opentracing-go/ext"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/log"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func Test_NewPublisher(t *testing.T) {
-	testCases := []struct {
-		desc        string
-		api         sqsiface.SQSAPI
-		expectedErr error
+func Test_New(t *testing.T) {
+	testCases := map[string]struct {
+		api         API
+		expectedErr string
 	}{
-		{
-			desc:        "Missing API",
-			api:         nil,
-			expectedErr: errors.New("missing api"),
-		},
-		{
-			desc:        "Success",
-			api:         newStubSQSAPI(nil, nil),
-			expectedErr: nil,
-		},
+		"missing API": {api: nil, expectedErr: "missing api"},
+		"success":     {api: newStubSQSAPI(nil, nil), expectedErr: ""},
 	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			p, err := NewPublisher(tC.api)
+	for name, tt := range testCases {
+		t.Run(name, func(t *testing.T) {
+			p, err := New(tt.api)
 
-			if tC.expectedErr != nil {
-				assert.Nil(t, p)
-				assert.EqualError(t, err, tC.expectedErr.Error())
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NotNil(t, p)
-				assert.Equal(t, tC.api, p.api)
-				assert.Equal(t, p.component, publisherComponent)
-				assert.Equal(t, p.tag, ext.SpanKindProducer)
+				assert.Equal(t, tt.api, p.api)
 			}
 		})
 	}
 }
 
 func Test_Publisher_Publish(t *testing.T) {
+	mtr := mocktracer.New()
+	defer mtr.Reset()
+	opentracing.SetGlobalTracer(mtr)
+
 	ctx := context.Background()
 
-	msg, err := NewMessageBuilder().Body("body").QueueURL("url").Build()
-	require.NoError(t, err)
+	msg := &sqs.SendMessageInput{
+		MessageBody: aws.String("body"),
+		QueueUrl:    aws.String("url"),
+	}
 
-	testCases := []struct {
-		desc          string
-		sqs           sqsiface.SQSAPI
+	testCases := map[string]struct {
+		sqs           *stubSQSAPI
 		expectedMsgID string
-		expectedErr   error
+		expectedErr   string
 	}{
-		{
-			desc:          "Publish error",
+		"publish error": {
 			sqs:           newStubSQSAPI(nil, errors.New("publish error")),
 			expectedMsgID: "",
-			expectedErr:   errors.New("failed to publish message: publish error"),
+			expectedErr:   "failed to publish message: publish error",
 		},
-		{
-			desc:          "No message ID returned",
+		"no message id returned": {
 			sqs:           newStubSQSAPI(&sqs.SendMessageOutput{}, nil),
 			expectedMsgID: "",
-			expectedErr:   errors.New("tried to publish a message but no message ID returned"),
+			expectedErr:   "tried to publish a message but no message ID returned",
 		},
-		{
-			desc:          "Success",
-			sqs:           newStubSQSAPI((&sqs.SendMessageOutput{}).SetMessageId("msgID"), nil),
+		"success": {
+			sqs:           newStubSQSAPI((&sqs.SendMessageOutput{MessageId: aws.String("msgID")}), nil),
 			expectedMsgID: "msgID",
-			expectedErr:   nil,
+			expectedErr:   "",
 		},
 	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			p, err := NewPublisher(tC.sqs)
+	for name, tt := range testCases {
+		t.Run(name, func(t *testing.T) {
+			p, err := New(tt.sqs)
 			require.NoError(t, err)
 
-			msgID, err := p.Publish(ctx, *msg)
+			msgID, err := p.Publish(ctx, msg)
 
-			assert.Equal(t, msgID, tC.expectedMsgID)
+			assert.Equal(t, msgID, tt.expectedMsgID)
 
-			if tC.expectedErr != nil {
-				assert.EqualError(t, err, tC.expectedErr.Error())
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				assert.NoError(t, err)
 			}
+			mtr.Reset()
 		})
 	}
 }
 
-func Test_Publisher_publishOpName(t *testing.T) {
-	component := "component"
-	p := &TracedPublisher{
-		component: component,
+func Test_Publisher_Publish_InjectsHeaders(t *testing.T) {
+	mtr := mocktracer.New()
+	defer mtr.Reset()
+	opentracing.SetGlobalTracer(mtr)
+
+	correlationID := "correlationID"
+	ctx := correlation.ContextWithID(context.Background(), correlationID)
+
+	msg := sqs.SendMessageInput{
+		MessageBody: aws.String("body"),
+		QueueUrl:    aws.String("url"),
 	}
 
-	msg, err := NewMessageBuilder().Body("body").QueueURL("url").Build()
+	sqsStub := newStubSQSAPI((&sqs.SendMessageOutput{MessageId: aws.String("msgID")}), nil)
+	p, err := New(sqsStub)
 	require.NoError(t, err)
 
-	assert.Equal(t, "component url", p.publishOpName(*msg))
-}
+	// Mimic the opentracing injector using a mocked one.
+	mockTracerInjector := NewMockTracerInjector()
+	mtr.RegisterInjector(opentracing.TextMap, mockTracerInjector)
 
-func Test_sqsHeadersCarrier_Set(t *testing.T) {
-	carrier := sqsHeadersCarrier{}
-	carrier.Set("foo", "bar")
+	expectedMsgInput := msg
+	expectedMsgInput.MessageAttributes = map[string]types.MessageAttributeValue{
+		// Expect the opentracing headers to be injected.
+		mockTracerInjector.headerKey: {
+			StringValue: aws.String(mockTracerInjector.headerValue),
+			DataType:    aws.String("String"),
+		},
 
-	assert.Equal(t, "bar", carrier["foo"])
+		// Expect the correlation header to be injected.
+		correlation.HeaderID: {
+			StringValue: aws.String(correlationID),
+			DataType:    aws.String("String"),
+		},
+	}
+
+	t.Run("sets correlation ID and opentracing headers", func(t *testing.T) {
+		sqsStub.expectMessageInput(t, &expectedMsgInput)
+
+		_, err = p.Publish(ctx, &msg)
+		require.NoError(t, err)
+
+		mtr.Reset()
+	})
+
+	t.Run("does not set correlation ID header when it's already present", func(t *testing.T) {
+		msg.MessageAttributes = map[string]types.MessageAttributeValue{
+			correlation.HeaderID: {
+				StringValue: aws.String("something"),
+				DataType:    aws.String("String"),
+			},
+		}
+
+		// Expect the original value to be retained.
+		expectedMsgInput.MessageAttributes[correlation.HeaderID] = msg.MessageAttributes[correlation.HeaderID]
+
+		sqsStub.expectMessageInput(t, &expectedMsgInput)
+
+		_, err = p.Publish(ctx, &msg)
+		require.NoError(t, err)
+
+		mtr.Reset()
+	})
 }
 
 type stubSQSAPI struct {
-	sqsiface.SQSAPI // Implement the interface's methods without defining all of them (just override what we need)
+	API // Implement the interface's methods without defining all of them (just override what we need)
 
 	output *sqs.SendMessageOutput
 	err    error
+
+	expectedMsgInput *sqs.SendMessageInput
+	t                *testing.T
 }
 
 func newStubSQSAPI(expectedOutput *sqs.SendMessageOutput, expectedErr error) *stubSQSAPI {
 	return &stubSQSAPI{output: expectedOutput, err: expectedErr}
 }
 
-func (s *stubSQSAPI) SendMessageWithContext(_ context.Context, _ *sqs.SendMessageInput, _ ...request.Option) (*sqs.SendMessageOutput, error) {
+func (s *stubSQSAPI) SendMessage(
+	_ context.Context, actualMessage *sqs.SendMessageInput, _ ...func(*sqs.Options),
+) (*sqs.SendMessageOutput, error) {
+	if s.expectedMsgInput != nil {
+		assert.Equal(s.t, s.expectedMsgInput, actualMessage)
+	}
+
 	return s.output, s.err
 }
 
+func (s *stubSQSAPI) expectMessageInput(t *testing.T, expectedMsgInput *sqs.SendMessageInput) {
+	s.t = t
+	s.expectedMsgInput = expectedMsgInput
+}
+
+type MockTracerInjector struct {
+	mocktracer.Injector
+
+	headerKey   string
+	headerValue string
+}
+
+func (i MockTracerInjector) Inject(_ mocktracer.MockSpanContext, carrier interface{}) error {
+	writer, ok := carrier.(opentracing.TextMapWriter)
+	if !ok {
+		return fmt.Errorf("unexpected carrier")
+	}
+	writer.Set(i.headerKey, i.headerValue)
+	return nil
+}
+
+func NewMockTracerInjector() MockTracerInjector {
+	return MockTracerInjector{
+		headerKey:   "header-injected-by",
+		headerValue: "mock-injector",
+	}
+}
+
 func ExamplePublisher() {
-	// Create the SQS API with the required config, credentials, etc.
-	sess, err := session.NewSession(
-		aws.NewConfig().
-			WithEndpoint("http://localhost:4576").
-			WithRegion("eu-west-1").
-			WithCredentials(
-				credentials.NewStaticCredentials("aws-id", "aws-secret", "aws-token"),
-			),
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == sqs.ServiceID && region == "eu-west-1" {
+			return aws.Endpoint{
+				URL:           "http://localhost:4576",
+				SigningRegion: "eu-west-1",
+			}, nil
+		}
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion("eu-west-1"),
+		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	api := sqs.New(sess)
+	api := sqs.NewFromConfig(cfg)
 
-	// Create the publisher
-	pub, err := NewPublisher(api)
+	pub, err := New(api)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	// Create a message
-	msg, err := NewMessageBuilder().
-		Body("message body").
-		QueueURL("http://localhost:4576/queue/foo-queue").
-		Build()
-	if err != nil {
-		panic(err)
+	msg := &sqs.SendMessageInput{
+		MessageBody: aws.String("message body"),
+		QueueUrl:    aws.String("http://localhost:4576/queue/foo-queue"),
 	}
 
-	// Publish it
-	msgID, err := pub.Publish(context.Background(), *msg)
+	msgID, err := pub.Publish(context.Background(), msg)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	fmt.Println(msgID)

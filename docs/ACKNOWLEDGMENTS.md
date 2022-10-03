@@ -10,7 +10,7 @@ The framework makes primarily use of the following OSS projects:
 * [github.com/streadway/amqp](https://github.com/streadway/amqp)
 * [github.com/stretchr/testify](https://github.com/stretchr/testify)
 * [github.com/uber/jaeger-client-go](https://github.com/uber/jaeger-client-go)
-* [github.com/aws/aws-sdk-go](https://github.com/aws/aws-sdk-go)
+* [github.com/aws/aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2)
 * [github.com/elastic/go-elasticsearch](https://github.com/elastic/go-elasticsearch)
 * [github.com/go-redis/redis](https://github.com/go-redis/redis)
 * [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)

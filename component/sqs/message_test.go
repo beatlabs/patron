@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -42,7 +41,7 @@ func Test_message(t *testing.T) {
 	id := "123"
 	body := "body"
 	sqsAPI := &stubSQSAPI{}
-	sqsMsg := &sqs.Message{
+	sqsMsg := types.Message{
 		Body:      aws.String(body),
 		MessageId: aws.String(id),
 	}
@@ -67,7 +66,7 @@ func Test_message(t *testing.T) {
 func Test_message_ACK(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
 	type fields struct {
-		sqsAPI sqsiface.SQSAPI
+		sqsAPI API
 	}
 	tests := map[string]struct {
 		fields      fields
@@ -198,7 +197,7 @@ func Test_batch_ACK(t *testing.T) {
 	}
 
 	type fields struct {
-		sqsAPI sqsiface.SQSAPI
+		sqsAPI API
 	}
 	tests := map[string]struct {
 		fields      fields
@@ -265,7 +264,7 @@ func Test_batch_ACK(t *testing.T) {
 	}
 }
 
-func createMessage(sqsAPI sqsiface.SQSAPI, id string) message {
+func createMessage(sqsAPI API, id string) message {
 	sp, ctx := trace.ConsumerSpan(context.Background(), trace.ComponentOpName(consumerComponent, queueName),
 		consumerComponent, "123", nil)
 
@@ -276,7 +275,7 @@ func createMessage(sqsAPI sqsiface.SQSAPI, id string) message {
 			url:  queueURL,
 		},
 		api: sqsAPI,
-		msg: &sqs.Message{
+		msg: types.Message{
 			MessageId: aws.String(id),
 		},
 		span: sp,
@@ -285,7 +284,7 @@ func createMessage(sqsAPI sqsiface.SQSAPI, id string) message {
 }
 
 type stubSQSAPI struct {
-	sqsiface.SQSAPI
+	API
 	receiveMessageWithContextErr     error
 	deleteMessageWithContextErr      error
 	deleteMessageBatchWithContextErr error
@@ -297,25 +296,25 @@ type stubSQSAPI struct {
 	queueURL                  string
 }
 
-func (s stubSQSAPI) DeleteMessageWithContext(aws.Context, *sqs.DeleteMessageInput, ...request.Option) (*sqs.DeleteMessageOutput, error) {
+func (s stubSQSAPI) DeleteMessage(ctx context.Context, params *sqs.DeleteMessageInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error) {
 	if s.deleteMessageWithContextErr != nil {
 		return nil, s.deleteMessageWithContextErr
 	}
 	return &sqs.DeleteMessageOutput{}, nil
 }
 
-func (s stubSQSAPI) DeleteMessageBatchWithContext(aws.Context, *sqs.DeleteMessageBatchInput, ...request.Option) (*sqs.DeleteMessageBatchOutput, error) {
+func (s stubSQSAPI) DeleteMessageBatch(ctx context.Context, params *sqs.DeleteMessageBatchInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageBatchOutput, error) {
 	if s.deleteMessageBatchWithContextErr != nil {
 		return nil, s.deleteMessageBatchWithContextErr
 	}
 
-	failed := []*sqs.BatchResultErrorEntry{{
+	failed := []types.BatchResultErrorEntry{{
 		Code:        aws.String("1"),
 		Id:          s.failedMessage.Message().MessageId,
 		Message:     aws.String("ERROR"),
-		SenderFault: aws.Bool(true),
+		SenderFault: true,
 	}}
-	succeeded := []*sqs.DeleteMessageBatchResultEntry{{Id: s.succeededMessage.Message().MessageId}}
+	succeeded := []types.DeleteMessageBatchResultEntry{{Id: s.succeededMessage.Message().MessageId}}
 
 	return &sqs.DeleteMessageBatchOutput{
 		Failed:     failed,
@@ -323,45 +322,45 @@ func (s stubSQSAPI) DeleteMessageBatchWithContext(aws.Context, *sqs.DeleteMessag
 	}, nil
 }
 
-func (s stubSQSAPI) GetQueueAttributesWithContext(aws.Context, *sqs.GetQueueAttributesInput, ...request.Option) (*sqs.GetQueueAttributesOutput, error) {
+func (s stubSQSAPI) GetQueueAttributes(ctx context.Context, params *sqs.GetQueueAttributesInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error) {
 	if s.getQueueAttributesWithContextErr != nil {
 		return nil, s.getQueueAttributesWithContextErr
 	}
 	return &sqs.GetQueueAttributesOutput{
-		Attributes: map[string]*string{
-			sqsAttributeApproximateNumberOfMessages:           aws.String("1"),
-			sqsAttributeApproximateNumberOfMessagesDelayed:    aws.String("2"),
-			sqsAttributeApproximateNumberOfMessagesNotVisible: aws.String("3"),
+		Attributes: map[string]string{
+			sqsAttributeApproximateNumberOfMessages:           "1",
+			sqsAttributeApproximateNumberOfMessagesDelayed:    "2",
+			sqsAttributeApproximateNumberOfMessagesNotVisible: "3",
 		},
 	}, nil
 }
 
 // nolint
-func (s stubSQSAPI) GetQueueUrlWithContext(aws.Context, *sqs.GetQueueUrlInput, ...request.Option) (*sqs.GetQueueUrlOutput, error) {
+func (s stubSQSAPI) GetQueueUrl(ctx context.Context, params *sqs.GetQueueUrlInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueUrlOutput, error) {
 	if s.getQueueUrlWithContextErr != nil {
 		return nil, s.getQueueUrlWithContextErr
 	}
 	return &sqs.GetQueueUrlOutput{QueueUrl: aws.String(s.queueURL)}, nil
 }
 
-func (s stubSQSAPI) ReceiveMessageWithContext(aws.Context, *sqs.ReceiveMessageInput, ...request.Option) (*sqs.ReceiveMessageOutput, error) {
+func (s stubSQSAPI) ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error) {
 	if s.receiveMessageWithContextErr != nil {
 		return nil, s.receiveMessageWithContextErr
 	}
 
 	return &sqs.ReceiveMessageOutput{
-		Messages: []*sqs.Message{
+		Messages: []types.Message{
 			{
-				Attributes: map[string]*string{
-					sqsAttributeSentTimestamp: aws.String(strconv.FormatInt(time.Now().Unix(), 10)),
+				Attributes: map[string]string{
+					sqsAttributeSentTimestamp: strconv.FormatInt(time.Now().Unix(), 10),
 				},
 				Body:          aws.String(`{"key":"value"}`),
 				MessageId:     s.succeededMessage.Message().MessageId,
 				ReceiptHandle: aws.String("123-123"),
 			},
 			{
-				Attributes: map[string]*string{
-					sqsAttributeSentTimestamp: aws.String(strconv.FormatInt(time.Now().Unix(), 10)),
+				Attributes: map[string]string{
+					sqsAttributeSentTimestamp: strconv.FormatInt(time.Now().Unix(), 10),
 				},
 				Body:          aws.String(`{"key":"value"}`),
 				MessageId:     s.failedMessage.Message().MessageId,

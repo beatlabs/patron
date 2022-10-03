@@ -1,34 +1,40 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 )
 
+type SQSAPI interface {
+	CreateQueue(ctx context.Context, params *sqs.CreateQueueInput, optFns ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error)
+	ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error)
+}
+
+type SNSAPI interface {
+	CreateTopic(ctx context.Context, params *sns.CreateTopicInput, optFns ...func(*sns.Options)) (*sns.CreateTopicOutput, error)
+}
+
 // CreateSNSAPI helper function.
-func CreateSNSAPI(region, endpoint string) (snsiface.SNSAPI, error) {
-	ses, err := createSession(region, endpoint)
+func CreateSNSAPI(region, endpoint string) (*sns.Client, error) {
+	cfg, err := createConfig(sns.ServiceID, region, endpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg := &aws.Config{
-		Region: aws.String(region),
-	}
+	api := sns.NewFromConfig(cfg)
 
-	return sns.New(ses, cfg), nil
+	return api, nil
 }
 
 // CreateSNSTopic helper function.
-func CreateSNSTopic(api snsiface.SNSAPI, topic string) (string, error) {
-	out, err := api.CreateTopic(&sns.CreateTopicInput{
+func CreateSNSTopic(api SNSAPI, topic string) (string, error) {
+	out, err := api.CreateTopic(context.Background(), &sns.CreateTopicInput{
 		Name: aws.String(topic),
 	})
 	if err != nil {
@@ -39,40 +45,49 @@ func CreateSNSTopic(api snsiface.SNSAPI, topic string) (string, error) {
 }
 
 // CreateSQSAPI helper function.
-func CreateSQSAPI(region, endpoint string) (sqsiface.SQSAPI, error) {
-	ses, err := createSession(region, endpoint)
+func CreateSQSAPI(region, endpoint string) (*sqs.Client, error) {
+	cfg, err := createConfig(sqs.ServiceID, region, endpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg := &aws.Config{
-		Region: aws.String(region),
-	}
+	api := sqs.NewFromConfig(cfg)
 
-	return sqs.New(ses, cfg), nil
+	return api, nil
 }
 
 // CreateSQSQueue helper function.
-func CreateSQSQueue(api sqsiface.SQSAPI, queueName string) (string, error) {
-	out, err := api.CreateQueue(&sqs.CreateQueueInput{
+func CreateSQSQueue(api SQSAPI, queueName string) (string, error) {
+	out, err := api.CreateQueue(context.Background(), &sqs.CreateQueueInput{
 		QueueName: aws.String(queueName),
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to create SQS queue %s: %w", queueName, err)
+		return "", err
 	}
+
 	return *out.QueueUrl, nil
 }
 
-func createSession(region, endpoint string) (*session.Session, error) {
-	ses, err := session.NewSession(
-		aws.NewConfig().
-			WithEndpoint(endpoint).
-			WithRegion(region).
-			WithCredentials(credentials.NewStaticCredentials("test", "test", "")),
+func createConfig(awsServiceID, awsRegion, awsEndpoint string) (aws.Config, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == awsServiceID && region == awsRegion {
+			return aws.Endpoint{
+				URL:           awsEndpoint,
+				SigningRegion: awsRegion,
+			}, nil
+		}
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(awsRegion),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider("test", "test", ""))),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create AWS endpoint: %w", err)
+		return aws.Config{}, fmt.Errorf("failed to create AWS config: %w", err)
 	}
 
-	return ses, nil
+	return cfg, nil
 }

@@ -6,16 +6,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sns/snsiface"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/beatlabs/patron"
-	patronsns "github.com/beatlabs/patron/client/sns/v2"
-	patronsqs "github.com/beatlabs/patron/client/sqs/v2"
+	patronsns "github.com/beatlabs/patron/client/sns"
+	patronsqscli "github.com/beatlabs/patron/client/sqs"
 	patronamqp "github.com/beatlabs/patron/component/amqp"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
@@ -103,14 +101,20 @@ func main() {
 	}
 
 	// Programmatically create an empty SQS queue for the sake of the example
-	sqsAPI := sqs.New(getAWSSession(awsSQSEndpoint))
+	sqsAPI, err := createSQSAPI(awsSQSEndpoint)
+	if err != nil {
+		log.Fatalf("failed to create sqs api: %v", err)
+	}
 	sqsQueueURL, err := createSQSQueue(sqsAPI)
 	if err != nil {
 		log.Fatalf("failed to create sqs queue: %v", err)
 	}
 
 	// Programmatically create an SNS topic for the sake of the example
-	snsAPI := sns.New(getAWSSession(awsSNSEndpoint))
+	snsAPI, err := createSNSAPI(awsSNSEndpoint)
+	if err != nil {
+		log.Fatalf("failed to create sns api: %v", err)
+	}
 	snsTopicArn, err := createSNSTopic(snsAPI)
 	if err != nil {
 		log.Fatalf("failed to create sns topic: %v", err)
@@ -130,7 +134,7 @@ func main() {
 	}
 
 	// Create an SQS publisher
-	sqsPub, err := patronsqs.New(sqsAPI)
+	sqsPub, err := patronsqscli.New(sqsAPI)
 	if err != nil {
 		log.Fatalf("failed to create sqs publisher: %v", err)
 	}
@@ -148,29 +152,60 @@ func main() {
 	}
 }
 
-func getAWSSession(endpoint string) *session.Session {
-	// 15 attempts 1 seconds separated to retrieve valid session
-	var s *session.Session = nil
-	var err error = nil
-	for i := 0; i < 15; i++ {
-		s, err = session.NewSession(
-			&aws.Config{
-				Region:      aws.String(awsRegion),
-				Credentials: credentials.NewStaticCredentials(awsID, awsSecret, awsToken),
-			},
-			&aws.Config{Endpoint: aws.String(endpoint)},
-		)
-		if err == nil {
-			return s
+func createSQSAPI(endpoint string) (*sqs.Client, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == sqs.ServiceID && region == awsRegion {
+			return aws.Endpoint{
+				URL:           endpoint,
+				SigningRegion: awsRegion,
+			}, nil
 		}
-		time.Sleep(1 * time.Second)
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(awsRegion),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(awsID, awsSecret, awsToken))),
+	)
+	if err != nil {
+		return nil, err
 	}
-	// this will panic if error is not null
-	return session.Must(s, err)
+
+	api := sqs.NewFromConfig(cfg)
+
+	return api, nil
 }
 
-func createSQSQueue(api sqsiface.SQSAPI) (string, error) {
-	out, err := api.CreateQueue(&sqs.CreateQueueInput{
+func createSNSAPI(endpoint string) (*sns.Client, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == sns.ServiceID && region == awsRegion {
+			return aws.Endpoint{
+				URL:           endpoint,
+				SigningRegion: awsRegion,
+			}, nil
+		}
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(awsRegion),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(awsID, awsSecret, awsToken))),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	api := sns.NewFromConfig(cfg)
+
+	return api, nil
+}
+
+func createSQSQueue(api *sqs.Client) (string, error) {
+	out, err := api.CreateQueue(context.Background(), &sqs.CreateQueueInput{
 		QueueName: aws.String(awsSQSQueue),
 	})
 	if err != nil {
@@ -182,8 +217,8 @@ func createSQSQueue(api sqsiface.SQSAPI) (string, error) {
 	return *out.QueueUrl, err
 }
 
-func createSNSTopic(snsAPI snsiface.SNSAPI) (string, error) {
-	out, err := snsAPI.CreateTopic(&sns.CreateTopicInput{
+func createSNSTopic(snsAPI *sns.Client) (string, error) {
+	out, err := snsAPI.CreateTopic(context.Background(), &sns.CreateTopicInput{
 		Name: aws.String(awsSNSTopic),
 	})
 	if err != nil {
@@ -192,16 +227,16 @@ func createSNSTopic(snsAPI snsiface.SNSAPI) (string, error) {
 	return *out.TopicArn, nil
 }
 
-func routeSNSTopicToSQSQueue(snsAPI snsiface.SNSAPI, sqsQueueArn, topicArn string) error {
-	_, err := snsAPI.Subscribe(&sns.SubscribeInput{
+func routeSNSTopicToSQSQueue(snsAPI *sns.Client, sqsQueueArn, topicArn string) error {
+	_, err := snsAPI.Subscribe(context.Background(), &sns.SubscribeInput{
 		Protocol: aws.String("sqs"),
 		TopicArn: aws.String(topicArn),
 		Endpoint: aws.String(sqsQueueArn),
-		Attributes: map[string]*string{
+		Attributes: map[string]string{
 			// Set the RawMessageDelivery to "true" in order to be able to pass the MessageAttributes from SNS
 			// to SQS, and therefore to propagate the trace.
 			// See https://docs.aws.amazon.com/sns/latest/dg/sns-message-attributes.html for more information.
-			"RawMessageDelivery": aws.String("true"),
+			"RawMessageDelivery": "true",
 		},
 	})
 
@@ -212,11 +247,11 @@ type amqpComponent struct {
 	cmp         patron.Component
 	snsTopicArn string
 	snsPub      patronsns.Publisher
-	sqsPub      patronsqs.Publisher
+	sqsPub      patronsqscli.Publisher
 	sqsQueueURL string
 }
 
-func newAmqpComponent(url, queue, snsTopicArn string, snsPub patronsns.Publisher, sqsPub patronsqs.Publisher,
+func newAmqpComponent(url, queue, snsTopicArn string, snsPub patronsns.Publisher, sqsPub patronsqscli.Publisher,
 	sqsQueueURL string) (*amqpComponent, error) {
 	amqpCmp := amqpComponent{
 		snsTopicArn: snsTopicArn,

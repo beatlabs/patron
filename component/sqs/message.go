@@ -3,9 +3,9 @@ package sqs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 )
@@ -20,7 +20,7 @@ type Message interface {
 	// Body of the message.
 	Body() []byte
 	// Message will contain the raw SQS message.
-	Message() *sqs.Message
+	Message() types.Message
 	// Span contains the tracing span of this message.
 	Span() opentracing.Span
 	// ACK deletes the message from the queue and completes the tracing span.
@@ -48,8 +48,8 @@ type queue struct {
 type message struct {
 	ctx   context.Context
 	queue queue
-	api   sqsiface.SQSAPI
-	msg   *sqs.Message
+	api   API
+	msg   types.Message
 	span  opentracing.Span
 }
 
@@ -58,7 +58,7 @@ func (m message) Context() context.Context {
 }
 
 func (m message) ID() string {
-	return aws.StringValue(m.msg.MessageId)
+	return aws.ToString(m.msg.MessageId)
 }
 
 func (m message) Body() []byte {
@@ -69,12 +69,12 @@ func (m message) Span() opentracing.Span {
 	return m.span
 }
 
-func (m message) Message() *sqs.Message {
+func (m message) Message() types.Message {
 	return m.msg
 }
 
 func (m message) ACK() error {
-	_, err := m.api.DeleteMessageWithContext(m.ctx, &sqs.DeleteMessageInput{
+	_, err := m.api.DeleteMessage(m.ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(m.queue.url),
 		ReceiptHandle: m.msg.ReceiptHandle,
 	})
@@ -96,23 +96,23 @@ func (m message) NACK() {
 type batch struct {
 	ctx      context.Context
 	queue    queue
-	sqsAPI   sqsiface.SQSAPI
+	sqsAPI   API
 	messages []Message
 }
 
 func (b batch) ACK() ([]Message, error) {
-	entries := make([]*sqs.DeleteMessageBatchRequestEntry, 0, len(b.messages))
+	entries := make([]types.DeleteMessageBatchRequestEntry, 0, len(b.messages))
 	msgMap := make(map[string]Message, len(b.messages))
 
 	for _, msg := range b.messages {
-		entries = append(entries, &sqs.DeleteMessageBatchRequestEntry{
+		entries = append(entries, types.DeleteMessageBatchRequestEntry{
 			Id:            aws.String(msg.ID()),
 			ReceiptHandle: msg.Message().ReceiptHandle,
 		})
 		msgMap[msg.ID()] = msg
 	}
 
-	output, err := b.sqsAPI.DeleteMessageBatchWithContext(b.ctx, &sqs.DeleteMessageBatchInput{
+	output, err := b.sqsAPI.DeleteMessageBatch(b.ctx, &sqs.DeleteMessageBatchInput{
 		Entries:  entries,
 		QueueUrl: aws.String(b.queue.url),
 	})
@@ -128,7 +128,7 @@ func (b batch) ACK() ([]Message, error) {
 		messageCountInc(b.queue.name, ackMessageState, false, len(output.Successful))
 
 		for _, suc := range output.Successful {
-			trace.SpanSuccess(msgMap[aws.StringValue(suc.Id)].Span())
+			trace.SpanSuccess(msgMap[aws.ToString(suc.Id)].Span())
 		}
 	}
 
@@ -136,7 +136,7 @@ func (b batch) ACK() ([]Message, error) {
 		messageCountInc(b.queue.name, ackMessageState, true, len(output.Failed))
 		failed := make([]Message, 0, len(output.Failed))
 		for _, fail := range output.Failed {
-			msg := msgMap[aws.StringValue(fail.Id)]
+			msg := msgMap[aws.ToString(fail.Id)]
 			trace.SpanError(msg.Span())
 			failed = append(failed, msg)
 		}

@@ -9,10 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
-	patronsqsclient "github.com/beatlabs/patron/client/sqs/v2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	patronsqscli "github.com/beatlabs/patron/client/sqs"
 	"github.com/beatlabs/patron/correlation"
 	testaws "github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go/ext"
@@ -94,8 +93,8 @@ func Test_SQS_Consume(t *testing.T) {
 	assert.GreaterOrEqual(t, testutil.CollectAndCount(queueSize, "component_sqs_queue_size"), 1)
 }
 
-func sendMessage(t *testing.T, api sqsiface.SQSAPI, correlationID, queue string, ids ...string) []*testMessage {
-	pub, err := patronsqsclient.New(api)
+func sendMessage(t *testing.T, api *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {
+	pub, err := patronsqscli.New(api)
 	require.NoError(t, err)
 
 	ctx := correlation.ContextWithID(context.Background(), correlationID)
@@ -110,7 +109,7 @@ func sendMessage(t *testing.T, api sqsiface.SQSAPI, correlationID, queue string,
 		require.NoError(t, err)
 
 		msg := &sqs.SendMessageInput{
-			DelaySeconds: aws.Int64(1),
+			DelaySeconds: int32(1),
 			MessageBody:  aws.String(string(sentMsgBody)),
 			QueueUrl:     aws.String(queue),
 		}

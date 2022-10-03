@@ -5,14 +5,17 @@ go 1.16
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/Shopify/sarama v1.36.0
-	github.com/aws/aws-sdk-go v1.44.4
+	github.com/aws/aws-sdk-go-v2 v1.16.16
+	github.com/aws/aws-sdk-go-v2/config v1.17.7
+	github.com/aws/aws-sdk-go-v2/credentials v1.12.20
+	github.com/aws/aws-sdk-go-v2/service/sns v1.18.1
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.19.9
 	github.com/eclipse/paho.golang v0.10.0
 	github.com/elastic/elastic-transport-go/v8 v8.1.0
 	github.com/elastic/go-elasticsearch/v8 v8.3.0
 	github.com/go-redis/redis/extra/rediscmd v0.2.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/julienschmidt/httprouter v1.3.0

@@ -91,7 +91,6 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 	// batches will be responsible for committing
 	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
-	saramaCfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
 	saramaCfg.Net.DialTimeout = 15 * time.Second
 	saramaCfg.Version = sarama.V2_6_0_0
 

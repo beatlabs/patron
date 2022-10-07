@@ -38,13 +38,15 @@ func TestCreate(t *testing.T) {
 		expErr string
 	}{
 		"success":      {args: args{port: 60000}},
-		"invalid port": {args: args{port: -1}, expErr: "port is invalid: -1\n"},
+		"invalid port": {args: args{port: -1}, expErr: "port is invalid: -1"},
 	}
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := New(tt.args.port).WithOptions(grpc.ConnectionTimeout(1 * time.Second)).WithReflection().Create()
+			got, err := New(tt.args.port,
+				ServerOptions(grpc.ConnectionTimeout(1*time.Second)),
+				Reflection())
 			if tt.expErr != "" {
 				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, got)
@@ -59,7 +61,7 @@ func TestCreate(t *testing.T) {
 
 func TestComponent_Run_Unary(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
-	cmp, err := New(60000).WithReflection().Create()
+	cmp, err := New(60000, Reflection())
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())
@@ -124,7 +126,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 
 func TestComponent_Run_Stream(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
-	cmp, err := New(60000).WithReflection().Create()
+	cmp, err := New(60000, Reflection())
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())

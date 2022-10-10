@@ -365,15 +365,15 @@ func TestLogFields(t *testing.T) {
 	}
 	tests := map[string]struct {
 		args args
-		want Config
+		want config
 	}{
-		"success":      {args: args{fields: fields}, want: Config{fields: mergeFields(defaultFields, fields)}},
-		"no overwrite": {args: args{fields: fields1}, want: Config{fields: defaultFields}},
+		"success":      {args: args{fields: fields}, want: config{fields: mergeFields(defaultFields, fields)}},
+		"no overwrite": {args: args{fields: fields1}, want: config{fields: defaultFields}},
 	}
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			cfg := Config{fields: defaultFields}
+			cfg := config{fields: defaultFields}
 			LogFields(tt.args.fields)(&cfg)
 			assert.Equal(t, tt.want, cfg)
 		})
@@ -393,7 +393,7 @@ func mergeFields(ff1, ff2 map[string]interface{}) map[string]interface{} {
 
 func TestLogger(t *testing.T) {
 	logger := std.New(os.Stderr, getLogLevel(), nil)
-	cfg := Config{}
+	cfg := config{}
 	Logger(logger)(&cfg)
 	assert.Equal(t, logger, cfg.logger)
 }

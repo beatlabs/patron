@@ -1,6 +1,6 @@
 # patron ![CI](https://github.com/beatlabs/patron/workflows/CI/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/beatlabs/patron/badge.svg?branch=master)](https://coveralls.io/github/beatlabs/patron?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/beatlabs/patron)](https://goreportcard.com/report/github.com/beatlabs/patron) [![GoDoc](https://godoc.org/github.com/beatlabs/patron?status.svg)](https://godoc.org/github.com/beatlabs/patron) ![GitHub release](https://img.shields.io/github/release/beatlabs/patron.svg)
 
-Patron is a framework for creating microservices, originally created by Sotiris Mantzaris (https://github.com/mantzas). This fork is maintained by Beat Engineering (https://thebeat.co)
+Patron is a framework for creating microservices, originally created by Sotiris Mantzaris (<https://github.com/mantzas>). This fork is maintained by Beat Engineering (<https://thebeat.co>)
 
 `Patron` is french for `template` or `pattern`, but it means also `boss` which we found out later (no pun intended).
 
@@ -17,7 +17,7 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 - logging
 
 `Patron` provides the same defaults for making the usage as simple as possible.
-`Patron` needs Go 1.16 as a minimum.
+`Patron` needs Go 1.17 as a minimum.
 
 ## Table of Contents
 

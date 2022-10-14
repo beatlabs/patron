@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/beatlabs/patron/component/http/middleware"
 	v2 "github.com/beatlabs/patron/component/http/v2"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
@@ -28,18 +27,17 @@ const (
 	host = "host"
 )
 
-// Component interface for implementing service components.
+// Component interface for implementing Service components.
 type Component interface {
 	Run(ctx context.Context) error
 }
 
-// service is responsible for managing and setting up everything.
-// The service will start by default an HTTP component in order to host management endpoint.
-type service struct {
+// Service is responsible for managing and setting up everything.
+// The Service will start by default an HTTP component in order to host management endpoint.
+type Service struct {
 	name              string
 	version           string
 	cps               []Component
-	middlewares       []middleware.Func
 	termSig           chan os.Signal
 	sighupHandler     func()
 	uncompressedPaths []string
@@ -48,11 +46,11 @@ type service struct {
 	config            config
 }
 
-func (s *service) setupOSSignal() {
+func (s *Service) setupOSSignal() {
 	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 }
 
-func (s *service) Run(ctx context.Context) error {
+func (s *Service) Run(ctx context.Context) error {
 	defer func() {
 		err := trace.Close()
 		if err != nil {
@@ -70,7 +68,7 @@ func (s *service) Run(ctx context.Context) error {
 		}(cp)
 	}
 
-	log.FromContext(ctx).Infof("service %s started", s.name)
+	log.FromContext(ctx).Infof("Service %s started", s.name)
 	ee := make([]error, 0, len(s.cps))
 	ee = append(ee, s.waitTermination(chErr))
 	cnl()
@@ -84,7 +82,7 @@ func (s *service) Run(ctx context.Context) error {
 	return patronErrors.Aggregate(ee...)
 }
 
-func (s *service) createHTTPComponent() (Component, error) {
+func (s *Service) createHTTPComponent() (Component, error) {
 	var err error
 	portVal := int64(50000)
 	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
@@ -145,7 +143,7 @@ func getHTTPDeflateLevel() (*int, error) {
 	return &deflateLevelInt, nil
 }
 
-func (s *service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duration) (Component, error) {
+func (s *Service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duration) (Component, error) {
 	oo := []v2.OptionFunc{v2.Port(port)}
 
 	if readTimeout != nil {
@@ -159,7 +157,7 @@ func (s *service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duratio
 	return v2.New(s.httpRouter, oo...)
 }
 
-func (s *service) waitTermination(chErr <-chan error) error {
+func (s *Service) waitTermination(chErr <-chan error) error {
 	for {
 		select {
 		case sig := <-s.termSig:
@@ -254,7 +252,7 @@ func setupJaegerTracing(name, version string) error {
 	return trace.Setup(name, version, agent, tp, prmVal, buckets)
 }
 
-func New(name, version string, options ...OptionFunc) (*service, error) {
+func New(name, version string, options ...OptionFunc) (*Service, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
@@ -268,7 +266,7 @@ func New(name, version string, options ...OptionFunc) (*service, error) {
 		fields: defaultLogFields(name, version),
 	}
 
-	s := &service{
+	s := &Service{
 		name:    name,
 		version: version,
 		termSig: make(chan os.Signal, 1),
@@ -284,8 +282,12 @@ func New(name, version string, options ...OptionFunc) (*service, error) {
 	for _, option := range options {
 		err = option(s)
 		if err != nil {
-			return nil, err
+			s.errors = append(s.errors, err)
 		}
+	}
+
+	if len(s.errors) > 0 {
+		return nil, patronErrors.Aggregate(s.errors...)
 	}
 
 	err = setupLogging(cfg.fields, cfg.logger)

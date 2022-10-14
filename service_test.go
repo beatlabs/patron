@@ -10,18 +10,13 @@ import (
 	"strconv"
 	"testing"
 
-	patronhttp "github.com/beatlabs/patron/component/http"
-	"github.com/beatlabs/patron/component/http/middleware"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/log/std"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewServer(t *testing.T) {
 	t.Parallel()
-	routesBuilder := patronhttp.NewRoutesBuilder().
-		Append(patronhttp.NewRawRouteBuilder("/", func(w http.ResponseWriter, r *http.Request) {}).MethodGet())
 
 	mw := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -29,22 +24,13 @@ func TestNewServer(t *testing.T) {
 		})
 	}
 
-	httpBuilderAllErrors := "routes builder is nil\n" +
-		"provided middlewares slice was empty\n" +
-		"alive check func provided was nil\n" +
-		"ready check func provided was nil\n" +
-		"provided components slice was empty\n" +
+	httpBuilderAllErrors := "provided components slice was empty\n" +
 		"provided SIGHUP handler was nil\n" +
-		"provided uncompressed paths slice was empty\n" +
 		"provided router is nil\n"
 
 	tests := map[string]struct {
 		fields            map[string]interface{}
 		cps               []Component
-		routesBuilder     *patronhttp.RoutesBuilder
-		middlewares       []middleware.Func
-		acf               patronhttp.AliveCheckFunc
-		rcf               patronhttp.ReadyCheckFunc
 		sighupHandler     func()
 		uncompressedPaths []string
 		handler           http.Handler
@@ -53,10 +39,6 @@ func TestNewServer(t *testing.T) {
 		"success": {
 			fields:            map[string]interface{}{"env": "dev"},
 			cps:               []Component{&testComponent{}, &testComponent{}},
-			routesBuilder:     routesBuilder,
-			middlewares:       []middleware.Func{mw},
-			acf:               patronhttp.DefaultAliveCheck,
-			rcf:               patronhttp.DefaultReadyCheck,
 			sighupHandler:     func() { log.Info("SIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
 			handler:           mw(nil),
@@ -64,10 +46,6 @@ func TestNewServer(t *testing.T) {
 		},
 		"nil inputs steps": {
 			cps:               nil,
-			routesBuilder:     nil,
-			middlewares:       nil,
-			acf:               nil,
-			rcf:               nil,
 			sighupHandler:     nil,
 			uncompressedPaths: nil,
 			handler:           nil,
@@ -75,10 +53,6 @@ func TestNewServer(t *testing.T) {
 		},
 		"error in all builder steps": {
 			cps:               []Component{},
-			routesBuilder:     nil,
-			middlewares:       []middleware.Func{},
-			acf:               nil,
-			rcf:               nil,
 			sighupHandler:     nil,
 			uncompressedPaths: []string{},
 			handler:           nil,
@@ -87,44 +61,32 @@ func TestNewServer(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		tt := tt
+		temp := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			svc, err := New("name", "1.0", LogFields(tt.fields), TextLogger())
-			require.NoError(t, err)
-			gotService, gotErr := svc.
-				WithRoutesBuilder(tt.routesBuilder).
-				WithMiddlewares(tt.middlewares...).
-				WithAliveCheck(tt.acf).
-				WithReadyCheck(tt.rcf).
-				WithComponents(tt.cps...).
-				WithSIGHUP(tt.sighupHandler).
-				WithUncompressedPaths(tt.uncompressedPaths...).
-				WithRouter(tt.handler).
-				build()
+			gotService, gotErr := New(
+				"name",
+				"1.0",
+				LogFields(temp.fields),
+				TextLogger(),
+				Components(temp.cps...),
+				SIGHUP(temp.sighupHandler),
+				Router(temp.handler))
 
-			if tt.wantErr != "" {
-				assert.EqualError(t, gotErr, tt.wantErr)
+			if temp.wantErr != "" {
+				assert.EqualError(t, gotErr, temp.wantErr)
 				assert.Nil(t, gotService)
 			} else {
 				assert.Nil(t, gotErr)
 				assert.NotNil(t, gotService)
-				assert.IsType(t, &service{}, gotService)
+				assert.IsType(t, &Service{}, gotService)
 
 				assert.NotEmpty(t, gotService.cps)
-				assert.NotNil(t, gotService.routesBuilder)
-				assert.Len(t, gotService.middlewares, len(tt.middlewares))
-				assert.NotNil(t, gotService.rcf)
-				assert.NotNil(t, gotService.acf)
 				assert.NotNil(t, gotService.termSig)
 				assert.NotNil(t, gotService.sighupHandler)
 
-				for _, comp := range tt.cps {
+				for _, comp := range temp.cps {
 					assert.Contains(t, gotService.cps, comp)
-				}
-
-				for _, mw := range tt.middlewares {
-					assert.NotNil(t, mw)
 				}
 			}
 		})
@@ -140,15 +102,19 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		"failed to run": {cp: &testComponent{errorRunning: true}, wantErr: true},
 	}
 	for name, tt := range tests {
-		tt := tt
+		temp := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort(t))
 			require.NoError(t, err)
-			svc, err := New("test", "", TextLogger())
-			require.NoError(t, err)
-			err = svc.WithComponents(tt.cp, tt.cp, tt.cp).Run(context.Background())
-			if tt.wantErr {
+			svc, err := New(
+				"test",
+				"",
+				TextLogger(),
+				Components(temp.cp, temp.cp, temp.cp))
+			assert.NoError(t, err)
+			err = svc.Run(context.Background())
+			if temp.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
@@ -172,45 +138,53 @@ func TestServer_SetupTracing(t *testing.T) {
 		{name: "success w/ custom default buckets", cp: &testComponent{}, host: "127.0.0.1", port: "6831", buckets: ".1, .3"},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		temp := tt
+		t.Run(temp.name, func(t *testing.T) {
 			defer os.Clearenv()
 
-			if tt.host != "" {
-				err := os.Setenv("PATRON_JAEGER_AGENT_HOST", tt.host)
+			if temp.host != "" {
+				err := os.Setenv("PATRON_JAEGER_AGENT_HOST", temp.host)
 				assert.NoError(t, err)
 			}
-			if tt.port != "" {
-				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", tt.port)
+			if temp.port != "" {
+				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", temp.port)
 				assert.NoError(t, err)
 			}
-			if tt.buckets != "" {
-				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.buckets)
+			if temp.buckets != "" {
+				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", temp.buckets)
 				assert.NoError(t, err)
 			}
-			svc, err := New("test", "", TextLogger())
-			require.NoError(t, err)
-			s, err := svc.WithComponents(tt.cp, tt.cp, tt.cp).build()
+
+			svc, err := New(
+				"test",
+				"",
+				TextLogger(),
+				Components(tt.cp, tt.cp, tt.cp))
 			assert.NoError(t, err)
-			err = s.run(context.Background())
+
+			err = svc.Run(context.Background())
 			assert.NoError(t, err)
 		})
 	}
 }
 
 func TestBuilder_WithComponentsTwice(t *testing.T) {
-	svc, err := New("test", "", TextLogger())
+	svc, err := New(
+		"test",
+		"",
+		TextLogger(),
+		Components(&testComponent{}, &testComponent{}))
 	require.NoError(t, err)
-	bld := svc.WithComponents(&testComponent{}).WithComponents(&testComponent{})
-	assert.Len(t, bld.cps, 2)
+	assert.Len(t, svc.cps, 2)
 }
 
 func TestBuild_FailingConditions(t *testing.T) {
 	tests := map[string]struct {
-		jaegerSamplerParam string
-		port               string
-		jaegerBuckets      string
-		expectedBuildErr   string
-		expectedRunErr     string
+		jaegerSamplerParam       string
+		port                     string
+		jaegerBuckets            string
+		expectedConstructorError string
+		expectedRunErr           string
 	}{
 		"failure with wrong w/ port":             {port: "foo", expectedRunErr: "env var for HTTP default port is not valid: strconv.ParseInt: parsing \"foo\": invalid syntax"},
 		"success with wrong w/ overflowing port": {port: "153000", expectedRunErr: "failed to create default HTTP component: invalid HTTP Port provided\n"},
@@ -220,26 +194,30 @@ func TestBuild_FailingConditions(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		tt := tt
+		temp := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
 
-			if tt.port != "" {
-				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.port)
+			if temp.port != "" {
+				err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", temp.port)
 				require.NoError(t, err)
 			}
-			if tt.jaegerSamplerParam != "" {
-				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tt.jaegerSamplerParam)
+			if temp.jaegerSamplerParam != "" {
+				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", temp.jaegerSamplerParam)
 				require.NoError(t, err)
 			}
-			if tt.jaegerBuckets != "" {
-				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.jaegerBuckets)
+			if temp.jaegerBuckets != "" {
+				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", temp.jaegerBuckets)
 				require.NoError(t, err)
 			}
 
-			svc, err := New("test", "", TextLogger())
-			if tt.expectedBuildErr != "" {
-				require.EqualError(t, err, tt.expectedBuildErr)
+			svc, err := New(
+				"test",
+				"",
+				TextLogger())
+
+			if temp.expectedConstructorError != "" {
+				require.EqualError(t, err, temp.expectedConstructorError)
 				require.Nil(t, svc)
 			} else {
 				require.NoError(t, err)
@@ -252,7 +230,7 @@ func TestBuild_FailingConditions(t *testing.T) {
 			err = svc.Run(ctx)
 
 			if tt.expectedRunErr != "" {
-				require.EqualError(t, err, tt.expectedRunErr)
+				require.EqualError(t, err, temp.expectedRunErr)
 			} else {
 				require.Equal(t, err, context.Canceled)
 			}
@@ -277,22 +255,25 @@ func TestServer_SetupReadWriteTimeouts(t *testing.T) {
 		{name: "failed w/ zero read timeout", cp: &testComponent{}, ctx: context.Background(), rt: "0s", wantErr: true},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		temp := tt
+		t.Run(temp.name, func(t *testing.T) {
 			defer os.Clearenv()
 
-			if tt.rt != "" {
-				err := os.Setenv("PATRON_HTTP_READ_TIMEOUT", tt.rt)
+			if temp.rt != "" {
+				err := os.Setenv("PATRON_HTTP_READ_TIMEOUT", temp.rt)
 				assert.NoError(t, err)
 			}
-			if tt.wt != "" {
-				err := os.Setenv("PATRON_HTTP_WRITE_TIMEOUT", tt.wt)
+			if temp.wt != "" {
+				err := os.Setenv("PATRON_HTTP_WRITE_TIMEOUT", temp.wt)
 				assert.NoError(t, err)
 			}
-			svc, err := New("test", "", TextLogger())
-			require.NoError(t, err)
+			_, err := New(
+				"test",
+				"",
+				TextLogger(),
+				Components(temp.cp, temp.cp, temp.cp))
 
-			_, err = svc.WithComponents(tt.cp, tt.cp, tt.cp).build()
-			if tt.wantErr {
+			if temp.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
@@ -319,17 +300,21 @@ func TestServer_SetupDeflateLevel(t *testing.T) {
 		{name: "failed with invalid compression deflate level", component: &testComponent{}, ctx: context.Background(), level: "blah", wantErr: true},
 	}
 	for _, tt := range tests {
+		temp := tt
 		t.Run(tt.name, func(t *testing.T) {
 			defer os.Clearenv()
 
-			if tt.level != "" {
-				err := os.Setenv("PATRON_COMPRESSION_DEFLATE_LEVEL", tt.level)
+			if temp.level != "" {
+				err := os.Setenv("PATRON_COMPRESSION_DEFLATE_LEVEL", temp.level)
 				assert.NoError(t, err)
 			}
-			svc, err := New("test", "", TextLogger())
-			require.NoError(t, err)
 
-			_, err = svc.WithComponents(tt.component, tt.component, tt.component).build()
+			_, err := New(
+				"test",
+				"",
+				TextLogger(),
+				Components(temp.component, temp.component, temp.component))
+
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -354,46 +339,4 @@ func (ts testComponent) Run(_ context.Context) error {
 		return errors.New("failed to run component")
 	}
 	return nil
-}
-
-func TestLogFields(t *testing.T) {
-	defaultFields := defaultLogFields("test", "1.0")
-	fields := map[string]interface{}{"key": "value"}
-	fields1 := defaultLogFields("name1", "version1")
-	type args struct {
-		fields map[string]interface{}
-	}
-	tests := map[string]struct {
-		args args
-		want config
-	}{
-		"success":      {args: args{fields: fields}, want: config{fields: mergeFields(defaultFields, fields)}},
-		"no overwrite": {args: args{fields: fields1}, want: config{fields: defaultFields}},
-	}
-	for name, tt := range tests {
-		tt := tt
-		t.Run(name, func(t *testing.T) {
-			cfg := config{fields: defaultFields}
-			LogFields(tt.args.fields)(&cfg)
-			assert.Equal(t, tt.want, cfg)
-		})
-	}
-}
-
-func mergeFields(ff1, ff2 map[string]interface{}) map[string]interface{} {
-	ff := map[string]interface{}{}
-	for k, v := range ff1 {
-		ff[k] = v
-	}
-	for k, v := range ff2 {
-		ff[k] = v
-	}
-	return ff
-}
-
-func TestLogger(t *testing.T) {
-	logger := std.New(os.Stderr, getLogLevel(), nil)
-	cfg := config{}
-	Logger(logger)(&cfg)
-	assert.Equal(t, logger, cfg.logger)
 }

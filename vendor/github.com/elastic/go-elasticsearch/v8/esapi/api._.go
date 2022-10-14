@@ -15,12 +15,11 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0 (6a8b801): DO NOT EDIT
+// Code generated from specification version 8.4.0 (4d73957): DO NOT EDIT
 
 package esapi
 
 // API contains the Elasticsearch APIs
-//
 type API struct {
 	Cat         *Cat
 	Cluster     *Cluster
@@ -500,6 +499,7 @@ type Security struct {
 	SamlPrepareAuthentication   SecuritySamlPrepareAuthentication
 	SamlServiceProviderMetadata SecuritySamlServiceProviderMetadata
 	SuggestUserProfiles         SecuritySuggestUserProfiles
+	UpdateAPIKey                SecurityUpdateAPIKey
 	UpdateUserProfileData       SecurityUpdateUserProfileData
 }
 
@@ -540,7 +540,6 @@ type XPack struct {
 }
 
 // New creates new API
-//
 func New(t Transport) *API {
 	return &API{
 		AutoscalingDeleteAutoscalingPolicy: newAutoscalingDeleteAutoscalingPolicyFunc(t),
@@ -963,6 +962,7 @@ func New(t Transport) *API {
 			SamlPrepareAuthentication:   newSecuritySamlPrepareAuthenticationFunc(t),
 			SamlServiceProviderMetadata: newSecuritySamlServiceProviderMetadataFunc(t),
 			SuggestUserProfiles:         newSecuritySuggestUserProfilesFunc(t),
+			UpdateAPIKey:                newSecurityUpdateAPIKeyFunc(t),
 			UpdateUserProfileData:       newSecurityUpdateUserProfileDataFunc(t),
 		},
 		SQL: &SQL{

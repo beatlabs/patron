@@ -63,7 +63,6 @@ func TestNewServer(t *testing.T) {
 	for name, tt := range tests {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 			gotService, gotErr := New(
 				"name",
 				"1.0",
@@ -168,29 +167,28 @@ func TestServer_SetupTracing(t *testing.T) {
 	}
 }
 
-func TestBuilder_WithComponentsTwice(t *testing.T) {
+func TestNewServer_WithComponentsTwice(t *testing.T) {
 	svc, err := New(
 		"test",
 		"",
 		TextLogger(),
 		Components(&testComponent{}, &testComponent{}))
 	require.NoError(t, err)
-	assert.Len(t, svc.cps, 2)
+	assert.Len(t, svc.cps, 3)
 }
 
-func TestBuild_FailingConditions(t *testing.T) {
+func TestNewServer_FailingConditions(t *testing.T) {
 	tests := map[string]struct {
 		jaegerSamplerParam       string
 		port                     string
 		jaegerBuckets            string
 		expectedConstructorError string
-		expectedRunErr           string
 	}{
-		"failure with wrong w/ port":             {port: "foo", expectedRunErr: "env var for HTTP default port is not valid: strconv.ParseInt: parsing \"foo\": invalid syntax"},
-		"success with wrong w/ overflowing port": {port: "153000", expectedRunErr: "failed to create default HTTP component: invalid HTTP Port provided\n"},
-		"failure w/ sampler param":               {jaegerSamplerParam: "foo", expectedRunErr: "env var for jaeger sampler param is not valid: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
-		"failure w/ overflowing sampler param":   {jaegerSamplerParam: "8", expectedRunErr: "cannot initialize jaeger tracer: invalid Param for probabilistic sampler; expecting value between 0 and 1, received 8"},
-		"failure w/ custom default buckets":      {jaegerSamplerParam: "1", jaegerBuckets: "foo", expectedRunErr: "env var for jaeger default buckets contains invalid value: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
+		"failure with wrong w/ port":             {port: "foo", expectedConstructorError: "env var for HTTP default port is not valid: strconv.ParseInt: parsing \"foo\": invalid syntax"},
+		"success with wrong w/ overflowing port": {port: "153000", expectedConstructorError: "invalid HTTP Port provided"},
+		"failure w/ sampler param":               {jaegerSamplerParam: "foo", expectedConstructorError: "env var for jaeger sampler param is not valid: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
+		"failure w/ overflowing sampler param":   {jaegerSamplerParam: "8", expectedConstructorError: "cannot initialize jaeger tracer: invalid Param for probabilistic sampler; expecting value between 0 and 1, received 8"},
+		"failure w/ custom default buckets":      {jaegerSamplerParam: "1", jaegerBuckets: "foo", expectedConstructorError: "env var for jaeger default buckets contains invalid value: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
 	}
 
 	for name, tt := range tests {
@@ -219,21 +217,20 @@ func TestBuild_FailingConditions(t *testing.T) {
 			if temp.expectedConstructorError != "" {
 				require.EqualError(t, err, temp.expectedConstructorError)
 				require.Nil(t, svc)
-			} else {
-				require.NoError(t, err)
-				require.NotNil(t, svc)
+
+				return
 			}
+
+			require.NoError(t, err)
+			require.NotNil(t, svc)
 
 			// start running with a canceled context, on purpose
 			ctx, cancel := context.WithCancel(context.Background())
 			cancel()
 			err = svc.Run(ctx)
+			require.NoError(t, err)
 
-			if tt.expectedRunErr != "" {
-				require.EqualError(t, err, temp.expectedRunErr)
-			} else {
-				require.Equal(t, err, context.Canceled)
-			}
+			require.Equal(t, err, context.Canceled)
 		})
 	}
 }

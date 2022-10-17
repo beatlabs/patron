@@ -13,6 +13,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
+
 	v2 "github.com/beatlabs/patron/component/http/v2"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
@@ -94,6 +96,11 @@ func (s *Service) createHTTPComponent() (Component, error) {
 	}
 	log.Debugf("creating default HTTP component at port %d", portVal)
 
+	deflateLevel, err := getHTTPDeflateLevel()
+	if err != nil {
+		return nil, err
+	}
+
 	readTimeout, err := getHTTPReadTimeout()
 	if err != nil {
 		return nil, err
@@ -102,6 +109,18 @@ func (s *Service) createHTTPComponent() (Component, error) {
 	writeTimeout, err := getHTTPWriteTimeout()
 	if err != nil {
 		return nil, err
+	}
+
+	if s.httpRouter == nil {
+		routerOptions := make([]httprouter.OptionFunc, 0)
+		if deflateLevel != nil {
+			routerOptions = append(routerOptions, httprouter.DeflateLevel(*deflateLevel))
+		}
+
+		s.httpRouter, err = httprouter.New(routerOptions...)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return s.createHTTPv2(int(portVal), readTimeout, writeTimeout)
@@ -275,9 +294,14 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 			log.Debug("SIGHUP received: nothing setup")
 		},
 		config: cfg,
+		cps:    make([]Component, 0),
 	}
 
 	var err error
+	err = setupJaegerTracing(name, version)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, option := range options {
 		err = option(s)
@@ -291,11 +315,6 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	}
 
 	err = setupLogging(cfg.fields, cfg.logger)
-	if err != nil {
-		return nil, err
-	}
-
-	err = setupJaegerTracing(name, version)
 	if err != nil {
 		return nil, err
 	}

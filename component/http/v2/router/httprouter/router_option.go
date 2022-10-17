@@ -43,6 +43,10 @@ func ReadyCheck(rcf v2.ReadyCheckFunc) OptionFunc {
 // DeflateLevel option for the compression middleware.
 func DeflateLevel(level int) OptionFunc {
 	return func(cfg *Config) error {
+		if level < -2 || level > 9 {
+			return errors.New("provided deflate level value not in the [-2, 9] range")
+		}
+
 		cfg.deflateLevel = level
 		return nil
 	}

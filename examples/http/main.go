@@ -61,11 +61,6 @@ func main() {
 
 	logger := std.New(os.Stderr, log.DebugLevel, map[string]interface{}{"env": "staging"})
 
-	service, err := patron.New(name, version, patron.Logger(logger))
-	if err != nil {
-		log.Fatalf("failed to set up service: %v", err)
-	}
-
 	// Set up a simple CORS middleware
 	corsMiddleware := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -96,8 +91,18 @@ func main() {
 		os.Exit(0)
 	}
 
+	service, err := patron.New(
+		name,
+		version,
+		patron.Logger(logger),
+		patron.Router(router),
+		patron.SIGHUP(sig))
+	if err != nil {
+		log.Fatalf("failed to set up service: %v", err)
+	}
+
 	ctx := context.Background()
-	err = service.WithRouter(router).WithSIGHUP(sig).Run(ctx)
+	err = service.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

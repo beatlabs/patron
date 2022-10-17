@@ -95,11 +95,6 @@ func main() {
 	name := "amqp"
 	version := "1.0.0"
 
-	service, err := patron.New(name, version, patron.TextLogger())
-	if err != nil {
-		log.Fatalf("failed to set up service: %v", err)
-	}
-
 	// Programmatically create an empty SQS queue for the sake of the example
 	sqsAPI, err := createSQSAPI(awsSQSEndpoint)
 	if err != nil {
@@ -145,8 +140,17 @@ func main() {
 		log.Fatalf("failed to create processor %v", err)
 	}
 
+	service, err := patron.New(
+		name,
+		version,
+		patron.TextLogger(),
+		patron.Components(amqpCmp.cmp))
+	if err != nil {
+		log.Fatalf("failed to set up service: %v", err)
+	}
+
 	ctx := context.Background()
-	err = service.WithComponents(amqpCmp.cmp).Run(ctx)
+	err = service.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

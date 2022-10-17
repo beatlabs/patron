@@ -40,20 +40,24 @@ func main() {
 	name := "grpc"
 	version := "1.0.0"
 
-	service, err := patron.New(name, version, patron.TextLogger())
-	if err != nil {
-		log.Fatalf("failed to set up service: %v", err)
-	}
-
-	cmp, err := grpc.New(50006).Create()
+	cmp, err := grpc.New(50006)
 	if err != nil {
 		log.Fatalf("failed to create gRPC component: %v", err)
 	}
 
 	examples.RegisterGreeterServer(cmp.Server(), &greeterServer{})
 
+	service, err := patron.New(
+		name,
+		version,
+		patron.TextLogger(),
+		patron.Components(cmp))
+	if err != nil {
+		log.Fatalf("failed to set up service: %v", err)
+	}
+
 	ctx := context.Background()
-	err = service.WithComponents(cmp).Run(ctx)
+	err = service.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service: %v", err)
 	}

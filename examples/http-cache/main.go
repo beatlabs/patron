@@ -34,11 +34,6 @@ func main() {
 	name := "http-cache"
 	version := "1.0.0"
 
-	service, err := patron.New(name, version, patron.TextLogger())
-	if err != nil {
-		log.Fatalf("failed to set up service: %v", err)
-	}
-
 	ctx := context.Background()
 
 	cache, err := redis.New(ctx, redis.Options{})
@@ -68,7 +63,17 @@ func main() {
 		os.Exit(0)
 	}
 
-	err = service.WithRouter(router).WithSIGHUP(sig).Run(ctx)
+	service, err := patron.New(
+		name,
+		version,
+		patron.TextLogger(),
+		patron.Router(router),
+		patron.SIGHUP(sig))
+	if err != nil {
+		log.Fatalf("failed to set up service: %v", err)
+	}
+
+	err = service.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

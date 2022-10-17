@@ -44,9 +44,6 @@ func main() {
 	name := "compression-middleware"
 	version := "1.0.0"
 
-	service, err := patron.New(name, version)
-	handle(err)
-
 	var routes v2.Routes
 	routes.Append(v2.NewGetRoute("/foo", rnd))
 	routes.Append(v2.NewGetRoute("/bar", rnd))
@@ -61,8 +58,14 @@ func main() {
 		log.Fatalf("failed to create http router: %v", err)
 	}
 
+	service, err := patron.New(
+		name,
+		version,
+		patron.Router(router))
+	handle(err)
+
 	ctx := context.Background()
-	err = service.WithRouter(router).Run(ctx)
+	err = service.Run(ctx)
 	handle(err)
 }
 

@@ -46,11 +46,6 @@ func main() {
 	name := "http-sec"
 	version := "1.0.0"
 
-	service, err := patron.New(name, version, patron.LogFields(map[string]interface{}{"env": "staging"}))
-	if err != nil {
-		log.Fatalf("failed to set up service: %v", err)
-	}
-
 	asyncComp, err := newAsyncKafkaProducer(kafkaBroker, kafkaTopic, true)
 	if err != nil {
 		log.Fatalf("failed to create processor %v", err)
@@ -73,8 +68,17 @@ func main() {
 		log.Fatalf("failed to create http router: %v", err)
 	}
 
+	service, err := patron.New(
+		name,
+		version,
+		patron.LogFields(map[string]interface{}{"env": "staging"}),
+		patron.Router(router))
+	if err != nil {
+		log.Fatalf("failed to set up service: %v", err)
+	}
+
 	ctx := context.Background()
-	err = service.WithRouter(router).Run(ctx)
+	err = service.Run(ctx)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

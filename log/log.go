@@ -234,80 +234,87 @@ func (fl *fmtLogger) Sub(map[string]interface{}) Logger {
 // Panic logging.
 func (fl *fmtLogger) Panic(args ...interface{}) {
 	IncreasePanicCounter()
-	fmt.Print(args...)
+	fmt.Println(args...)
 	panic(args)
 }
 
 // Panicf logging.
 func (fl *fmtLogger) Panicf(msg string, args ...interface{}) {
 	IncreasePanicCounter()
-	fmt.Printf(msg, args...)
+	fmt.Printf(appendNewLine(msg), args...)
 	panic(args)
 }
 
 // Fatal logging.
 func (fl *fmtLogger) Fatal(args ...interface{}) {
 	IncreaseFatalCounter()
-	fmt.Print(args...)
+	fmt.Println(args...)
 	os.Exit(1)
 }
 
 // Fatalf logging.
 func (fl *fmtLogger) Fatalf(msg string, args ...interface{}) {
 	IncreaseFatalCounter()
-	fmt.Printf(msg, args...)
+	fmt.Printf(appendNewLine(msg), args...)
 	os.Exit(1)
 }
 
 // Error logging.
 func (fl *fmtLogger) Error(args ...interface{}) {
 	IncreaseErrorCounter()
-	fmt.Print(args...)
+	fmt.Println(args...)
 }
 
 // Errorf logging.
 func (fl *fmtLogger) Errorf(msg string, args ...interface{}) {
 	IncreaseErrorCounter()
-	fmt.Printf(msg, args...)
+	fmt.Printf(appendNewLine(msg), args...)
 }
 
 // Warn logging.
 func (fl *fmtLogger) Warn(args ...interface{}) {
 	IncreaseWarnCounter()
-	fmt.Print(args...)
+	fmt.Println(args...)
 }
 
 // Warnf logging.
 func (fl *fmtLogger) Warnf(msg string, args ...interface{}) {
 	IncreaseWarnCounter()
-	fmt.Printf(msg, args...)
+	fmt.Printf(appendNewLine(msg), args...)
 }
 
 // Info logging.
 func (fl *fmtLogger) Info(args ...interface{}) {
 	IncreaseInfoCounter()
-	fmt.Print(args...)
+	fmt.Println(args...)
 }
 
 // Infof logging.
 func (fl *fmtLogger) Infof(msg string, args ...interface{}) {
 	IncreaseInfoCounter()
-	fmt.Printf(msg, args...)
+	fmt.Printf(appendNewLine(msg), args...)
 }
 
 // Debug logging.
 func (fl *fmtLogger) Debug(args ...interface{}) {
 	IncreaseDebugCounter()
-	fmt.Print(args...)
+	fmt.Println(args...)
 }
 
 // Debugf logging.
 func (fl *fmtLogger) Debugf(msg string, args ...interface{}) {
 	IncreaseDebugCounter()
-	fmt.Printf(msg, args...)
+	fmt.Printf(appendNewLine(msg), args...)
 }
 
 // Level returns the debug level of the nil logger.
 func (fl *fmtLogger) Level() Level {
 	return DebugLevel
+}
+
+func appendNewLine(msg string) string {
+	if len(msg) == 0 || msg[len(msg)-1] != '\n' {
+		return msg + "\n"
+	}
+	return msg
 }

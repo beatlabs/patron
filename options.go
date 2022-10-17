@@ -14,11 +14,11 @@ type OptionFunc func(svc *Service) error
 func Router(handler http.Handler) OptionFunc {
 	return func(svc *Service) error {
 		if handler == nil {
-			svc.errors = append(svc.errors, errors.New("provided router is nil"))
-		} else {
-			svc.httpRouter = handler
-			log.Debug("router will be used with the v2 HTTP component")
+			return errors.New("provided router is nil")
 		}
+
+		log.Debug("router will be used with the v2 HTTP component")
+		svc.httpRouter = handler
 
 		return nil
 	}
@@ -28,11 +28,11 @@ func Router(handler http.Handler) OptionFunc {
 func Components(cc ...Component) OptionFunc {
 	return func(svc *Service) error {
 		if len(cc) == 0 {
-			svc.errors = append(svc.errors, errors.New("provided components slice was empty"))
-		} else {
-			log.Debug("setting components")
-			svc.cps = append(svc.cps, cc...)
+			return errors.New("provided components slice was empty")
 		}
+
+		log.Debug("setting components")
+		svc.cps = append(svc.cps, cc...)
 
 		return nil
 	}
@@ -42,11 +42,11 @@ func Components(cc ...Component) OptionFunc {
 func SIGHUP(handler func()) OptionFunc {
 	return func(svc *Service) error {
 		if handler == nil {
-			svc.errors = append(svc.errors, errors.New("provided SIGHUP handler was nil"))
-		} else {
-			log.Debug("setting SIGHUP handler func")
-			svc.sighupHandler = handler
+			return errors.New("provided SIGHUP handler was nil")
 		}
+
+		log.Debug("setting SIGHUP handler func")
+		svc.sighupHandler = handler
 
 		return nil
 	}

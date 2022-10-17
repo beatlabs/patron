@@ -2,11 +2,12 @@ package patron
 
 import (
 	"errors"
-	"github.com/beatlabs/patron/log/std"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/beatlabs/patron/log/std"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestComponents(t *testing.T) {

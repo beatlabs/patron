@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"errors"
+
 	"google.golang.org/grpc"
 )
 

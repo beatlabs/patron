@@ -2,10 +2,11 @@ package grpc
 
 import (
 	"errors"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 func TestGRPCOptions(t *testing.T) {

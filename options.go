@@ -2,10 +2,11 @@ package patron
 
 import (
 	"errors"
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/log/std"
 	"net/http"
 	"os"
+
+	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/log/std"
 )
 
 type OptionFunc func(svc *Service) error

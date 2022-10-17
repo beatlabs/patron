@@ -256,7 +256,8 @@ type amqpComponent struct {
 }
 
 func newAmqpComponent(url, queue, snsTopicArn string, snsPub patronsns.Publisher, sqsPub patronsqscli.Publisher,
-	sqsQueueURL string) (*amqpComponent, error) {
+	sqsQueueURL string,
+) (*amqpComponent, error) {
 	amqpCmp := amqpComponent{
 		snsTopicArn: snsTopicArn,
 		snsPub:      snsPub,

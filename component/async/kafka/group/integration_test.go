@@ -300,11 +300,7 @@ func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(
-			failAndRetryTopic1,
-			"0",
-			patron.TextLogger(),
-			patron.Components(component))
+		svc, err := patron.New(failAndRetryTopic1, "0", patron.TextLogger(), patron.Components(component))
 		require.NoError(t, err)
 		err = svc.Run(patronContext)
 		require.NoError(t, err)

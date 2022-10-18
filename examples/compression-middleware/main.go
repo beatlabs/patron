@@ -58,10 +58,7 @@ func main() {
 		log.Fatalf("failed to create http router: %v", err)
 	}
 
-	service, err := patron.New(
-		name,
-		version,
-		patron.Router(router))
+	service, err := patron.New(name, version, patron.Router(router))
 	handle(err)
 
 	ctx := context.Background()

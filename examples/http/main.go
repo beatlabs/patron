@@ -91,12 +91,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	service, err := patron.New(
-		name,
-		version,
-		patron.Logger(logger),
-		patron.Router(router),
-		patron.SIGHUP(sig))
+	service, err := patron.New(name, version, patron.Logger(logger), patron.Router(router), patron.SIGHUP(sig))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}

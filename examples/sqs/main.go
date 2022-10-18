@@ -67,10 +67,7 @@ func main() {
 		log.Fatalf("failed to create sqs component: %v", err)
 	}
 
-	service, err := patron.New(
-		name,
-		version,
-		patron.Components(sqsCmp.cmp))
+	service, err := patron.New(name, version, patron.Components(sqsCmp.cmp))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}

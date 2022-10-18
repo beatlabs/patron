@@ -16,32 +16,17 @@ func TestComponents(t *testing.T) {
 	type args struct {
 		cc []Component
 	}
-	tests := []struct {
-		name           string
+	tests := map[string]struct {
 		args           args
 		wantComponents []Component
 		wantError      error
 	}{
-		{
-			name: "no components provided",
-			args: args{
-				cc: nil,
-			},
-			wantComponents: nil,
-			wantError:      errors.New("provided components slice was empty"),
-		},
-		{
-			name: "components provided",
-			args: args{
-				cc: []Component{comp},
-			},
-			wantComponents: []Component{comp},
-			wantError:      nil,
-		},
+		"no components provided": {args: args{cc: nil}, wantComponents: nil, wantError: errors.New("provided components slice was empty")},
+		"components provided":    {args: args{cc: []Component{comp}}, wantComponents: []Component{comp}, wantError: nil},
 	}
-	for _, tt := range tests {
+	for name, tt := range tests {
 		temp := tt
-		t.Run(temp.name, func(t *testing.T) {
+		t.Run(name, func(t *testing.T) {
 			svc := &Service{}
 			err := Components(temp.args.cc...)(svc)
 			assert.Equal(t, temp.wantError, err)
@@ -106,32 +91,17 @@ func TestRouter(t *testing.T) {
 		handler http.Handler
 	}
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		args        args
 		wantHandler http.Handler
 		wantError   error
 	}{
-		{
-			name: "empty value for handler",
-			args: args{
-				handler: nil,
-			},
-			wantHandler: nil,
-			wantError:   errors.New("provided router is nil"),
-		},
-		{
-			name: "non empty value for handler",
-			args: args{
-				handler: noopHTTPHandler{},
-			},
-			wantHandler: noopHTTPHandler{},
-			wantError:   nil,
-		},
+		"empty value for handler":     {args: args{handler: nil}, wantHandler: nil, wantError: errors.New("provided router is nil")},
+		"non empty value for handler": {args: args{handler: noopHTTPHandler{}}, wantHandler: noopHTTPHandler{}, wantError: nil},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			temp := tt
 			svc := &Service{}
 

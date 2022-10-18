@@ -140,11 +140,7 @@ func main() {
 		log.Fatalf("failed to create processor %v", err)
 	}
 
-	service, err := patron.New(
-		name,
-		version,
-		patron.TextLogger(),
-		patron.Components(amqpCmp.cmp))
+	service, err := patron.New(name, version, patron.TextLogger(), patron.Components(amqpCmp.cmp))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}

@@ -68,11 +68,7 @@ func main() {
 		log.Fatalf("failed to create http router: %v", err)
 	}
 
-	service, err := patron.New(
-		name,
-		version,
-		patron.LogFields(map[string]interface{}{"env": "staging"}),
-		patron.Router(router))
+	service, err := patron.New(name, version, patron.LogFields(map[string]interface{}{"env": "staging"}), patron.Router(router))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}

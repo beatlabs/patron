@@ -304,11 +304,7 @@ func TestServer_SetupDeflateLevel(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			_, err := New(
-				"test",
-				"",
-				TextLogger(),
-				Components(temp.component, temp.component, temp.component))
+			_, err := New("test", "", TextLogger(), Components(temp.component, temp.component, temp.component))
 
 			if tt.wantErr {
 				assert.Error(t, err)

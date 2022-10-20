@@ -61,14 +61,8 @@ func TestNewServer(t *testing.T) {
 	for name, tt := range tests {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
-			gotService, gotErr := New(
-				"name",
-				"1.0",
-				LogFields(temp.fields),
-				TextLogger(),
-				Components(temp.cps...),
-				SIGHUP(temp.sighupHandler),
-				Router(temp.handler))
+			gotService, gotErr := New("name", "1.0", LogFields(temp.fields), TextLogger(),
+				Components(temp.cps...), SIGHUP(temp.sighupHandler), Router(temp.handler))
 
 			if temp.wantErr != "" {
 				assert.EqualError(t, gotErr, temp.wantErr)
@@ -104,11 +98,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 			defer os.Clearenv()
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort(t))
 			require.NoError(t, err)
-			svc, err := New(
-				"test",
-				"",
-				TextLogger(),
-				Components(temp.cp, temp.cp, temp.cp))
+			svc, err := New("test", "", TextLogger(), Components(temp.cp, temp.cp, temp.cp))
 			assert.NoError(t, err)
 			err = svc.Run(context.Background())
 			if temp.wantErr {
@@ -152,11 +142,7 @@ func TestServer_SetupTracing(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			svc, err := New(
-				"test",
-				"",
-				TextLogger(),
-				Components(tt.cp, tt.cp, tt.cp))
+			svc, err := New("test", "", TextLogger(), Components(tt.cp, tt.cp, tt.cp))
 			assert.NoError(t, err)
 
 			err = svc.Run(context.Background())
@@ -166,11 +152,7 @@ func TestServer_SetupTracing(t *testing.T) {
 }
 
 func TestNewServer_WithComponentsTwice(t *testing.T) {
-	svc, err := New(
-		"test",
-		"",
-		TextLogger(),
-		Components(&testComponent{}, &testComponent{}))
+	svc, err := New("test", "", TextLogger(), Components(&testComponent{}, &testComponent{}))
 	require.NoError(t, err)
 	assert.Len(t, svc.cps, 3)
 }
@@ -207,10 +189,7 @@ func TestNewServer_FailingConditions(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			svc, err := New(
-				"test",
-				"",
-				TextLogger())
+			svc, err := New("test", "", TextLogger())
 
 			if temp.expectedConstructorError != "" {
 				require.EqualError(t, err, temp.expectedConstructorError)
@@ -262,11 +241,7 @@ func TestServer_SetupReadWriteTimeouts(t *testing.T) {
 				err := os.Setenv("PATRON_HTTP_WRITE_TIMEOUT", temp.wt)
 				assert.NoError(t, err)
 			}
-			_, err := New(
-				"test",
-				"",
-				TextLogger(),
-				Components(temp.cp, temp.cp, temp.cp))
+			_, err := New("test", "", TextLogger(), Components(temp.cp, temp.cp, temp.cp))
 
 			if temp.wantErr {
 				assert.Error(t, err)

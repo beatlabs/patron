@@ -74,54 +74,34 @@ func createSQSAPI(endpoint string) (*sqs.Client, error) {
 
 > A more detailed documentation on migrating can be found [here](https://aws.github.io/aws-sdk-go-v2/docs/migrating).
 
-## v1.0.0
+## v.0.74.0
 
 ### Instantiation of patron service
 
 The instantiation and initialisation of the patron main service has been moved from `builder pattern` to `functional options pattern`.
 The optional configuration parameters used for the builder in previous versions can now be passed as Options to the service constructor.
+Check the [examples directory](./examples) for complete examples of detailed usage.
 
-#### Creating a patron instance without additional options
-
-```go
-package main
-
-import (
-	"context"
-	"github.com/beatlabs/patron"
-	"log"
-)
-
-func main() {
-	name := "service-name"
-	version := "version"
-
-	svc, err := patron.New(name, version)
-	if err != nil {
-		log.Fatalf("failed to create patron service due to : %s", err)
-	}
-
-	ctx := context.Background()
-	err = svc.Run(ctx)
-	if err != nil {
-		log.Fatalf("failed to run service %s", err)
-	}
-}
-```
+Types, github.com/beatlabs/patron.Builder and  github.com/beatlabs/patron.Option discontinued.
 
 #### Creating a patron instance with components
 
+##### v0.73.0 and before
 ```go
-amqp, err := patronamqp.New(url, queue, amqpCmp.Process, patronamqp.Retry(10, 1*time.Second))
-if err != nil {
-    log.Fataln("failed to create amqp component due: %s",err)
+svc, err := patron.New(name, version)
+    if err != nil {
+    log.Fatalf("failed to create patron service due to : %s", err)
 }
 
-grpc,err := patrongrpc.New(1234)
+ctx := context.Background()
+err = svc.WithComponents(ampq,grpc).Run(ctx)
 if err != nil {
-    log.Fatalf("failed to create gRPC component: %v", err)
+    log.Fatalf("failed to run service %s", err)
 }
+```
 
+##### v0.74.0
+```go
 svc, err := patron.New(name, version, patron.Components(amqp,grpc))
     if err != nil {
     log.Fatalf("failed to create patron service due to : %s", err)
@@ -134,238 +114,112 @@ if err != nil {
 }
 
 ```
-Check the [examples directory](./examples) for complete examples of detailed usage.
-
-#### Creating a patron instance with a custom logger 
-
-```go
-package main
-
-import (
-	"context"
-	"github.com/beatlabs/patron"
-	"github.com/beatlabs/patron/log/std"
-	"log"
-)
-
-func main() {
-	name := "service-name"
-	version := "version"
-
-	logger := std.New(os.Stderr, log.DebugLevel, map[string]interface{}{"env": "staging"})
-	
-	svc, err := patron.New(name, version, patron.Logger(logger))
-	if err != nil {
-		log.Fatalf("failed to create patron service due to : %s", err)
-	}
-
-	ctx := context.Background()
-	err = svc.Run(ctx)
-	if err != nil {
-		log.Fatalf("failed to run service %s", err)
-	}
-}
-```
-
-#### Creating a patron instance with default text logger option
-
-```go
-package main
-
-import (
-	"context"
-	"github.com/beatlabs/patron"
-	"log"
-)
-
-func main() {
-	name := "service-name"
-	version := "version"
-	
-	svc, err := patron.New(name, version, patron.TextLogger())
-	if err != nil {
-		log.Fatalf("failed to create patron service due to : %s", err)
-	}
-
-	ctx := context.Background()
-	err = svc.Run(ctx)
-	if err != nil {
-		log.Fatalf("failed to run service %s", err)
-	}
-}
-```
-
-#### Creating a patron instance with custom log fields option
-
-```go
-package main
-
-import (
-	"context"
-	"github.com/beatlabs/patron"
-	"log"
-)
-
-func main() {
-	name := "service-name"
-	version := "version"
-	
-	svc, err := patron.New(name, version, patron.LogFields(map[string]interface{}{"key": "value"}))
-	if err != nil {
-		log.Fatalf("failed to create patron service due to : %s", err)
-	}
-
-	ctx := context.Background()
-	err = svc.Run(ctx)
-	if err != nil {
-		log.Fatalf("failed to run service %s", err)
-	}
-}
-```
-
 #### Creating a patron instance with SIGHUP handler option
 
+##### v0.73.0 and before
 ```go
-package main
-
-import (
-	"context"
-	"github.com/beatlabs/patron"
-	"log"
-	"os"
-)
-
-func main() {
-	name := "service-name"
-	version := "version"
-
-	sig := func() {
-		log.Println("exit gracefully...")
-		os.Exit(0)
-	}
-	
-	svc, err := patron.New(name, version, patron.SIGHUP(sig))
-	if err != nil {
-		log.Fatalf("failed to create patron service due to : %s", err)
-	}
-
-	ctx := context.Background()
-	err = svc.Run(ctx)
-	if err != nil {
-		log.Fatalf("failed to run service %s", err)
-	}
+svc, err := patron.New(name, version)
+    if err != nil {
+    log.Fatalf("failed to create patron service due to : %s", err)
 }
+
+ctx := context.Background()
+err = svc.WithSIGHUP(sighup).Run(ctx)
+if err != nil {
+    log.Fatalf("failed to run service %s", err)
+}
+```
+
+##### v0.74.0
+```go
+svc, err := patron.New(name, version, patron.SIGHUP(sighup))
+    if err != nil {
+    log.Fatalf("failed to create patron service due to : %s", err)
+}
+
+ctx := context.Background()
+err = svc.Run(ctx)
+if err != nil {
+    log.Fatalf("failed to run service %s", err)
+}
+
 ```
 
 #### Creating a patron instance with a custom HTTP Router
 
+##### v0.73.0 and before
 ```go
-package main
-
-import (
-	"context"
-	"github.com/beatlabs/patron"
-	"log"
-	"net/http"
-	v2 "github.com/beatlabs/patron/component/http/v2"
-	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
-)
-
-func main() {
-	name := "service-name"
-	version := "version"
-	
-	var routes v2.Routes
-	routes.Append(v2.NewGetRoute("/hello", hello))
-
-	rr, err := routes.Result()
-	if err != nil {
-		log.Fatalf("failed to create routes: %v", err)
-	}
-
-	router, err := httprouter.New(httprouter.Routes(rr...))
-	if err != nil {
-		log.Fatalf("failed to create http router: %v", err)
-	}
-
-	svc, err := patron.New(name, version, patron.Router(router))
-	if err != nil {
-		log.Fatalf("failed to create patron service due to : %s", err)
-	}
-
-	ctx := context.Background()
-	err = svc.Run(ctx)
-	if err != nil {
-		log.Fatalf("failed to run service %s", err)
-	}
+svc, err := patron.New(name, version)
+    if err != nil {
+    log.Fatalf("failed to create patron service due to : %s", err)
 }
 
-func hello(rw http.ResponseWriter, _ *http.Request) {
-	rw.WriteHeader(http.StatusCreated)
-	_, _ = rw.Write([]byte("hello!"))
-	return
+ctx := context.Background()
+err = svc.WithRouter(router).Run(ctx)
+if err != nil {
+    log.Fatalf("failed to run service %s", err)
 }
+```
+
+##### v0.74.0
+```go
+svc, err := patron.New(name, version, patron.Router(router))
+    if err != nil {
+    log.Fatalf("failed to create patron service due to : %s", err)
+}
+
+ctx := context.Background()
+err = svc.Run(ctx)
+if err != nil {
+    log.Fatalf("failed to run service %s", err)
+}
+
 ```
 
 ### Instantiation of v2 GRPC Component 
 
 The instantiation and initialisation of the GRPC component has been moved from `builder pattern` to `functional options pattern`.
 The configuration parameters used for the builder in previous versions can now be passed as Options to the component constructor.
-An example of configuring a client for a service (e.g. `SQS`) and plugging it on a patron component is demonstrated below:
 
-#### Creating a new grpc component without additional options
-```go
-package main
-
-import (
-	"github.com/beatlabs/patron/component/grpc"
-	"log"
-)
-
-func main(){
-	port := 5000
-	comp,err := grpc.New(port)
-	if err != nil{
-		log.Fatalf("failed to create new grpc component due: %s",err)
-    }
-}
-
-```
-
-#### Creating a new grpc component with grpc server options
-
+##### v0.73.0 and before
 ```go
 package main
 
 import (
 	patrongrpc "github.com/beatlabs/patron/component/grpc"
+	"google.golang.org/grpc"
 	"log"
-   "google.golang.org/grpc"
 	"time"
 )
 
 func main(){
 	port := 5000
-	comp,err := patrongrpc.New(port, patrongrpc.ServerOptions(grpc.ConnectionTimeout(1*time.Second)))
+	builder,err := grpc.WithOptions(grpc.ConnectionTimeout(1*time.Second)).WithReflection().New(port)
 	if err != nil{
-		log.Fatalf("failed to create new grpc component due: %s",err)
+		log.Fatalf("failed to create new grpc builder due: %s",err)
+    }
+	
+	comp,err := builder.Create()
+	if err != nil{
+		log.Fatalf("failed to create grpc component due: %s",err)
 	}
 }
 ```
 
-#### Creating a new grpc component with reflection
-
+##### v0.74.0
 ```go
 package main
 
 import (
 	patrongrpc "github.com/beatlabs/patron/component/grpc"
 	"log"
+	"google.golang.org/grpc"
+	"time"
 )
 
 func main(){
 	port := 5000
-	comp,err := patrongrpc.New(port, patrongrpc.Reflection())
+	comp,err := patrongrpc.New(port, patrongrpc.ServerOptions(grpc.ConnectionTimeout(1*time.Second)),patrongrpc.Reflection())
 	if err != nil{
 		log.Fatalf("failed to create new grpc component due: %s",err)
 	}

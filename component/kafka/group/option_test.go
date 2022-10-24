@@ -34,7 +34,7 @@ func TestFailureStrategy(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := FailureStrategy(tt.args.strategy)(c)
+			err := WithFailureStrategy(tt.args.strategy)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -47,7 +47,7 @@ func TestFailureStrategy(t *testing.T) {
 
 func TestRetries(t *testing.T) {
 	c := &Component{}
-	err := Retries(20)(c)
+	err := WithRetries(20)(c)
 	assert.NoError(t, err)
 	assert.Equal(t, c.retries, uint(20))
 }
@@ -74,7 +74,7 @@ func TestRetryWait(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := RetryWait(tt.args.retryWait)(c)
+			err := WithRetryWait(tt.args.retryWait)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -107,7 +107,7 @@ func TestBatchSize(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := BatchSize(tt.args.batchSize)(c)
+			err := WithBatchSize(tt.args.batchSize)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -140,7 +140,7 @@ func TestBatchTimeout(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := BatchTimeout(tt.args.batchTimeout)(c)
+			err := WithBatchTimeout(tt.args.batchTimeout)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -175,7 +175,7 @@ func TestNewSessionCallback(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := NewSessionCallback(tt.args.sessionCallback)(c)
+			err := WithNewSessionCallback(tt.args.sessionCallback)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, c.sessionCallback)
@@ -189,7 +189,7 @@ func TestNewSessionCallback(t *testing.T) {
 
 func TestBatchMessageDeduplication(t *testing.T) {
 	c := &Component{}
-	err := BatchMessageDeduplication()(c)
+	err := WithBatchMessageDeduplication()(c)
 	assert.NoError(t, err)
 	assert.Equal(t, c.batchMessageDeduplication, true)
 }

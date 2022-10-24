@@ -119,12 +119,12 @@ func TestNew(t *testing.T) {
 				tt.args.topics,
 				tt.args.p,
 				tt.args.saramaCfg,
-				FailureStrategy(tt.args.fs),
-				Retries(tt.args.retries),
-				RetryWait(tt.args.retryWait),
-				BatchSize(tt.args.batchSize),
-				BatchTimeout(tt.args.batchTimeout),
-				CommitSync())
+				WithFailureStrategy(tt.args.fs),
+				WithRetries(tt.args.retries),
+				WithRetryWait(tt.args.retryWait),
+				WithBatchSize(tt.args.batchSize),
+				WithBatchTimeout(tt.args.batchTimeout),
+				WithCommitSync())
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)

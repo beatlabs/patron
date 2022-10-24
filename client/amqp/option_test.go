@@ -22,7 +22,7 @@ func TestTimeout(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := TracedPublisher{cfg: defaultCfg}
-			err := Timeout(tt.args.timeout)(&p)
+			err := WithTimeout(tt.args.timeout)(&p)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

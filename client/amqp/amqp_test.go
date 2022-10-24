@@ -46,7 +46,7 @@ func TestNewPublisher(t *testing.T) {
 	}{
 		{name: "fail, missing url", args: args{}, wantErr: true},
 		{name: "fail, missing exchange", args: args{url: "url"}, wantErr: true},
-		{name: "fail, missing exchange", args: args{url: "url", exc: "exc", opt: Timeout(0)}, wantErr: true},
+		{name: "fail, missing exchange", args: args{url: "url", exc: "exc", opt: WithTimeout(0)}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -13,8 +13,8 @@ import (
 // OptionFunc definition for configuring the consumer in a functional way.
 type OptionFunc func(*ConsumerConfig) error
 
-// Version for setting the Kafka version.
-func Version(version string) OptionFunc {
+// WithVersion for setting the Kafka version.
+func WithVersion(version string) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		if version == "" {
 			return errors.New("versions has to be provided")
@@ -29,8 +29,8 @@ func Version(version string) OptionFunc {
 	}
 }
 
-// Buffer for adjusting the incoming messages buffer.
-func Buffer(buf int) OptionFunc {
+// WithBuffer for adjusting the incoming messages buffer.
+func WithBuffer(buf int) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		if buf < 0 {
 			return errors.New("buffer must greater or equal than 0")
@@ -40,40 +40,40 @@ func Buffer(buf int) OptionFunc {
 	}
 }
 
-// Timeout for adjusting the timeout of the connection.
-func Timeout(timeout time.Duration) OptionFunc {
+// WithTimeout for adjusting the timeout of the connection.
+func WithTimeout(timeout time.Duration) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Net.DialTimeout = timeout
 		return nil
 	}
 }
 
-// Start for adjusting the starting offset.
-func Start(offset int64) OptionFunc {
+// WithStart for adjusting the starting offset.
+func WithStart(offset int64) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Consumer.Offsets.Initial = offset
 		return nil
 	}
 }
 
-// StartFromOldest for adjusting the starting offset to oldest.
-func StartFromOldest() OptionFunc {
+// WithStartFromOldest for adjusting the starting offset to oldest.
+func WithStartFromOldest() OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
 		return nil
 	}
 }
 
-// StartFromNewest for adjusting the starting offset to newest.
-func StartFromNewest() OptionFunc {
+// WithStartFromNewest for adjusting the starting offset to newest.
+func WithStartFromNewest() OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetNewest
 		return nil
 	}
 }
 
-// Decoder for injecting a specific decoder implementation.
-func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
+// WithDecoder for injecting a specific decoder implementation.
+func WithDecoder(dec encoding.DecodeRawFunc) OptionFunc {
 	return func(c *ConsumerConfig) error {
 		if dec == nil {
 			return errors.New("decoder is nil")
@@ -83,8 +83,8 @@ func Decoder(dec encoding.DecodeRawFunc) OptionFunc {
 	}
 }
 
-// DecoderJSON for injecting json decoder.
-func DecoderJSON() OptionFunc {
+// WithDecoderJSON for injecting json decoder.
+func WithDecoderJSON() OptionFunc {
 	return func(c *ConsumerConfig) error {
 		c.DecoderFunc = json.DecodeRaw
 		return nil

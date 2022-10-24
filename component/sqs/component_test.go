@@ -32,7 +32,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
-				oo:        []OptionFunc{Retries(5)},
+				oo:        []OptionFunc{WithRetries(5)},
 			},
 		},
 		"missing name": {
@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
-				oo:        []OptionFunc{Retries(5)},
+				oo:        []OptionFunc{WithRetries(5)},
 			},
 			expectedErr: "component name is empty",
 		},
@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 				queueName: "",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
-				oo:        []OptionFunc{Retries(5)},
+				oo:        []OptionFunc{WithRetries(5)},
 			},
 			expectedErr: "queue name is empty",
 		},
@@ -63,7 +63,7 @@ func TestNew(t *testing.T) {
 					getQueueUrlWithContextErr: errors.New("QUEUE URL ERROR"),
 				},
 				proc: sp.process,
-				oo:   []OptionFunc{Retries(5)},
+				oo:   []OptionFunc{WithRetries(5)},
 			},
 			expectedErr: "failed to get queue URL: QUEUE URL ERROR",
 		},
@@ -73,7 +73,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				sqsAPI:    nil,
 				proc:      sp.process,
-				oo:        []OptionFunc{Retries(5)},
+				oo:        []OptionFunc{WithRetries(5)},
 			},
 			expectedErr: "SQS API is nil",
 		},
@@ -83,7 +83,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      nil,
-				oo:        []OptionFunc{Retries(5)},
+				oo:        []OptionFunc{WithRetries(5)},
 			},
 			expectedErr: "process function is nil",
 		},
@@ -93,7 +93,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
-				oo:        []OptionFunc{RetryWait(-1 * time.Second)},
+				oo:        []OptionFunc{WithRetryWait(-1 * time.Second)},
 			},
 			expectedErr: "retry wait time should be a positive number",
 		},
@@ -103,7 +103,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
-				oo:        []OptionFunc{QueueOwner("10201020")},
+				oo:        []OptionFunc{WithQueueOwner("10201020")},
 			},
 		},
 		"queue owner fails": {
@@ -112,7 +112,7 @@ func TestNew(t *testing.T) {
 				queueName: "queueName",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
-				oo:        []OptionFunc{QueueOwner("")},
+				oo:        []OptionFunc{WithQueueOwner("")},
 			},
 			expectedErr: "queue owner should not be empty",
 		},
@@ -142,7 +142,7 @@ func TestComponent_Run_Success(t *testing.T) {
 		succeededMessage: createMessage(nil, "1"),
 		failedMessage:    createMessage(nil, "2"),
 	}
-	cmp, err := New("name", queueName, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
+	cmp, err := New("name", queueName, sqsAPI, sp.process, WithQueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
@@ -168,7 +168,7 @@ func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
 		failedMessage:                    createMessage(nil, "2"),
 		getQueueAttributesWithContextErr: errors.New("STATS FAIL"),
 	}
-	cmp, err := New("name", queueName, sqsAPI, sp.process, QueueStatsInterval(10*time.Millisecond))
+	cmp, err := New("name", queueName, sqsAPI, sp.process, WithQueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
@@ -194,7 +194,7 @@ func TestComponent_Run_Error(t *testing.T) {
 		succeededMessage:             createMessage(nil, "1"),
 		failedMessage:                createMessage(nil, "2"),
 	}
-	cmp, err := New("name", queueName, sqsAPI, sp.process, Retries(2), RetryWait(10*time.Millisecond))
+	cmp, err := New("name", queueName, sqsAPI, sp.process, WithRetries(2), WithRetryWait(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}

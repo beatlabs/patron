@@ -98,7 +98,7 @@ func TestFactory_Create(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success", wantErr: false},
-		{name: "failed with invalid option", fields: fields{oo: []kafka.OptionFunc{kafka.Buffer(-100)}}, wantErr: true},
+		{name: "failed with invalid option", fields: fields{oo: []kafka.OptionFunc{kafka.WithBuffer(-100)}}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

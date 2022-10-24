@@ -7,8 +7,8 @@ import (
 // OptionFunc definition for configuring the publisher in a functional way.
 type OptionFunc func(*Publisher) error
 
-// Config option for providing dial configuration.
-func Config(cfg amqp.Config) OptionFunc {
+// WithConfig option for providing dial configuration.
+func WithConfig(cfg amqp.Config) OptionFunc {
 	return func(p *Publisher) error {
 		p.cfg = &cfg
 		return nil

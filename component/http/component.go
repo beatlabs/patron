@@ -192,7 +192,7 @@ func (cb *Builder) WithMiddlewares(mm ...middleware.Func) *Builder {
 	return cb
 }
 
-// WithReadTimeout sets the Read Timeout for the HTTP component.
+// WithReadTimeout sets the Read WithTimeout for the HTTP component.
 func (cb *Builder) WithReadTimeout(rt time.Duration) *Builder {
 	if rt <= 0*time.Second {
 		cb.errors = append(cb.errors, errors.New("negative or zero read timeout provided"))

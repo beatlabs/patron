@@ -47,7 +47,7 @@ func main() {
 
 	examples.RegisterGreeterServer(cmp.Server(), &greeterServer{})
 
-	service, err := patron.New(name, version, patron.TextLogger(), patron.Components(cmp))
+	service, err := patron.New(name, version, patron.WithTextLogger(), patron.WithComponents(cmp))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}

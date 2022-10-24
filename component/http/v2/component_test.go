@@ -30,15 +30,15 @@ func TestNew(t *testing.T) {
 	}{
 		"success": {args: args{
 			handler: &stubHandler{},
-			oo:      []OptionFunc{Port(50000)},
+			oo:      []OptionFunc{WithPort(50000)},
 		}},
 		"missing handler": {args: args{
 			handler: nil,
-			oo:      []OptionFunc{Port(50000)},
+			oo:      []OptionFunc{WithPort(50000)},
 		}, expectedErr: "handler is nil"},
 		"option error": {args: args{
 			handler: &stubHandler{},
-			oo:      []OptionFunc{Port(500000)},
+			oo:      []OptionFunc{WithPort(500000)},
 		}, expectedErr: "invalid HTTP Port provided"},
 	}
 	for name, tt := range tests {
@@ -64,7 +64,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 	assert.True(t, ok)
 	require.NoError(t, listener.Close())
 
-	cmp, err := New(&stubHandler{}, Port(port.Port))
+	cmp, err := New(&stubHandler{}, WithPort(port.Port))
 	assert.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())

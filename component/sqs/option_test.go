@@ -33,7 +33,7 @@ func TestMaxMessages(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := MaxMessages(tt.args.maxMessages)(c)
+			err := WithMaxMessages(tt.args.maxMessages)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -70,7 +70,7 @@ func TestPollWaitSeconds(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := PollWaitSeconds(tt.args.waitSeconds)(c)
+			err := WithPollWaitSeconds(tt.args.waitSeconds)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -107,7 +107,7 @@ func TestVisibilityTimeout(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := VisibilityTimeout(tt.args.timeout)(c)
+			err := WithVisibilityTimeout(tt.args.timeout)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -140,7 +140,7 @@ func TestQueueStatsInterval(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := QueueStatsInterval(tt.args.interval)(c)
+			err := WithQueueStatsInterval(tt.args.interval)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -153,7 +153,7 @@ func TestQueueStatsInterval(t *testing.T) {
 
 func TestRetries(t *testing.T) {
 	c := &Component{}
-	err := Retries(20)(c)
+	err := WithRetries(20)(c)
 	assert.NoError(t, err)
 	assert.Equal(t, c.retry.count, uint(20))
 }
@@ -180,7 +180,7 @@ func TestRetryWait(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := RetryWait(tt.args.retryWait)(c)
+			err := WithRetryWait(tt.args.retryWait)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -213,7 +213,7 @@ func TestQueueOwner(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := QueueOwner(tt.args.queueOwner)(c)
+			err := WithQueueOwner(tt.args.queueOwner)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {

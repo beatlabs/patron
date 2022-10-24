@@ -22,7 +22,7 @@ func TestBuffer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := consumer{}
-			err := Buffer(tt.args.buf)(&c)
+			err := WithBuffer(tt.args.buf)(&c)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -34,13 +34,13 @@ func TestBuffer(t *testing.T) {
 
 func TestRequeue(t *testing.T) {
 	c := consumer{}
-	err := Requeue(false)(&c)
+	err := WithRequeue(false)(&c)
 	assert.NoError(t, err)
 }
 
 func TestTimeout(t *testing.T) {
 	c := consumer{}
-	err := Timeout(time.Second)(&c)
+	err := WithTimeout(time.Second)(&c)
 	assert.NoError(t, err)
 }
 
@@ -60,7 +60,7 @@ func TestBindings(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := consumer{}
-			err := Bindings(tt.args.bindings...)(&c)
+			err := WithBindings(tt.args.bindings...)(&c)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

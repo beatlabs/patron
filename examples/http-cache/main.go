@@ -42,7 +42,7 @@ func main() {
 	}
 
 	var routes v2.Routes
-	routes.Append(v2.NewGetRoute("/", handler, v2.Cache(cache, httpcache.Age{
+	routes.Append(v2.NewGetRoute("/", handler, v2.WithCache(cache, httpcache.Age{
 		// we won't allow to override the cache more than once per 15 seconds
 		Min: 15 * time.Second,
 		// by default, we might send stale response for up to 1 minute
@@ -53,7 +53,7 @@ func main() {
 		log.Fatalf("failed to create routes: %v", err)
 	}
 
-	router, err := httprouter.New(httprouter.Routes(rr...))
+	router, err := httprouter.New(httprouter.WithRoutes(rr...))
 	if err != nil {
 		log.Fatalf("failed to create http router: %v", err)
 	}
@@ -63,7 +63,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	service, err := patron.New(name, version, patron.TextLogger(), patron.Router(router), patron.SIGHUP(sig))
+	service, err := patron.New(name, version, patron.WithTextLogger(), patron.WithRouter(router), patron.WithSIGHUP(sig))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}

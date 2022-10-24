@@ -26,7 +26,7 @@ func TestBuffer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := ConsumerConfig{}
-			err := Buffer(tt.args.buf)(&c)
+			err := WithBuffer(tt.args.buf)(&c)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -40,7 +40,7 @@ func TestBuffer(t *testing.T) {
 func TestTimeout(t *testing.T) {
 	c := ConsumerConfig{}
 	c.SaramaConfig = sarama.NewConfig()
-	err := Timeout(time.Second)(&c)
+	err := WithTimeout(time.Second)(&c)
 	assert.NoError(t, err)
 }
 
@@ -62,7 +62,7 @@ func TestVersion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := ConsumerConfig{}
 			c.SaramaConfig = sarama.NewConfig()
-			err := Version(tt.args.version)(&c)
+			err := WithVersion(tt.args.version)(&c)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -79,16 +79,16 @@ func TestStart(t *testing.T) {
 		optionFunc      OptionFunc
 		expectedOffsets int64
 	}{
-		"Start": {
-			Start(5),
+		"WithStart": {
+			WithStart(5),
 			int64(5),
 		},
-		"StartFromNewest": {
-			StartFromNewest(),
+		"WithStartFromNewest": {
+			WithStartFromNewest(),
 			sarama.OffsetNewest,
 		},
-		"StartFromOldest": {
-			StartFromOldest(),
+		"WithStartFromOldest": {
+			WithStartFromOldest(),
 			sarama.OffsetOldest,
 		},
 	}
@@ -128,7 +128,7 @@ func TestDecoder1(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := ConsumerConfig{}
-			err := Decoder(tt.dec)(&c)
+			err := WithDecoder(tt.dec)(&c)
 			if tt.err {
 				assert.Error(t, err)
 			} else {
@@ -145,7 +145,7 @@ func TestDecoder1(t *testing.T) {
 
 func TestDecoderJSON(t *testing.T) {
 	c := ConsumerConfig{}
-	err := DecoderJSON()(&c)
+	err := WithDecoderJSON()(&c)
 	assert.NoError(t, err)
 	assert.Equal(t,
 		reflect.ValueOf(json.DecodeRaw).Pointer(),

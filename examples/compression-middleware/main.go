@@ -53,12 +53,12 @@ func main() {
 		log.Fatalf("failed to create routes: %v", err)
 	}
 
-	router, err := httprouter.New(httprouter.Routes(rr...))
+	router, err := httprouter.New(httprouter.WithRoutes(rr...))
 	if err != nil {
 		log.Fatalf("failed to create http router: %v", err)
 	}
 
-	service, err := patron.New(name, version, patron.Router(router))
+	service, err := patron.New(name, version, patron.WithRouter(router))
 	handle(err)
 
 	ctx := context.Background()

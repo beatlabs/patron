@@ -32,9 +32,9 @@ func TestTracedClient_Do(t *testing.T) {
 	opentracing.SetGlobalTracer(mtr)
 	c, err := New()
 	assert.NoError(t, err)
-	cb, err := New(CircuitBreaker("test", circuitbreaker.Setting{}))
+	cb, err := New(WithCircuitBreaker("test", circuitbreaker.Setting{}))
 	assert.NoError(t, err)
-	ct, err := New(Transport(&http.Transport{}))
+	ct, err := New(WithTransport(&http.Transport{}))
 	assert.NoError(t, err)
 	req, err := http.NewRequest("GET", ts.URL, nil)
 	assert.NoError(t, err)
@@ -89,7 +89,7 @@ func TestTracedClient_Do_Redirect(t *testing.T) {
 		http.Redirect(w, r, "https://google.com", http.StatusSeeOther)
 	}))
 	defer ts.Close()
-	c, err := New(CheckRedirect(func(req *http.Request, via []*http.Request) error {
+	c, err := New(WithCheckRedirect(func(req *http.Request, via []*http.Request) error {
 		return errors.New("stop redirects")
 	}))
 	assert.NoError(t, err)
@@ -113,15 +113,15 @@ func TestNew(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success", args: args{oo: []OptionFunc{
-			Timeout(time.Second),
-			CircuitBreaker("test", circuitbreaker.Setting{}),
-			Transport(&http.Transport{}),
-			CheckRedirect(func(req *http.Request, via []*http.Request) error { return nil }),
+			WithTimeout(time.Second),
+			WithCircuitBreaker("test", circuitbreaker.Setting{}),
+			WithTransport(&http.Transport{}),
+			WithCheckRedirect(func(req *http.Request, via []*http.Request) error { return nil }),
 		}}, wantErr: false},
-		{name: "failure, invalid timeout", args: args{oo: []OptionFunc{Timeout(0 * time.Second)}}, wantErr: true},
-		{name: "failure, invalid circuit breaker", args: args{[]OptionFunc{CircuitBreaker("", circuitbreaker.Setting{})}}, wantErr: true},
-		{name: "failure, invalid transport", args: args{[]OptionFunc{Transport(nil)}}, wantErr: true},
-		{name: "failure, invalid check redirect", args: args{[]OptionFunc{CheckRedirect(nil)}}, wantErr: true},
+		{name: "failure, invalid timeout", args: args{oo: []OptionFunc{WithTimeout(0 * time.Second)}}, wantErr: true},
+		{name: "failure, invalid circuit breaker", args: args{[]OptionFunc{WithCircuitBreaker("", circuitbreaker.Setting{})}}, wantErr: true},
+		{name: "failure, invalid transport", args: args{[]OptionFunc{WithTransport(nil)}}, wantErr: true},
+		{name: "failure, invalid check redirect", args: args{[]OptionFunc{WithCheckRedirect(nil)}}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

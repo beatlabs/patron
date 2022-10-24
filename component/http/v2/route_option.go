@@ -12,16 +12,16 @@ import (
 	"golang.org/x/time/rate"
 )
 
-// RateLimiting option for setting a route rate limiter.
-func RateLimiting(limit float64, burst int) RouteOptionFunc {
+// WithRateLimiting option for setting a route rate limiter.
+func WithRateLimiting(limit float64, burst int) RouteOptionFunc {
 	return func(r *Route) error {
 		r.middlewares = append(r.middlewares, patronhttp.NewRateLimiting(rate.NewLimiter(rate.Limit(limit), burst)))
 		return nil
 	}
 }
 
-// Middlewares option for setting the route optionFuncs.
-func Middlewares(mm ...patronhttp.Func) RouteOptionFunc {
+// WithMiddlewares option for setting the route optionFuncs.
+func WithMiddlewares(mm ...patronhttp.Func) RouteOptionFunc {
 	return func(r *Route) error {
 		if len(mm) == 0 {
 			return errors.New("middlewares are empty")
@@ -31,8 +31,8 @@ func Middlewares(mm ...patronhttp.Func) RouteOptionFunc {
 	}
 }
 
-// Auth option for setting the route auth.
-func Auth(auth auth.Authenticator) RouteOptionFunc {
+// WithAuth option for setting the route auth.
+func WithAuth(auth auth.Authenticator) RouteOptionFunc {
 	return func(r *Route) error {
 		if auth == nil {
 			return errors.New("authenticator is nil")
@@ -42,8 +42,8 @@ func Auth(auth auth.Authenticator) RouteOptionFunc {
 	}
 }
 
-// Cache option for setting the route cache.
-func Cache(cache cache.TTLCache, ageBounds httpcache.Age) RouteOptionFunc {
+// WithCache option for setting the route cache.
+func WithCache(cache cache.TTLCache, ageBounds httpcache.Age) RouteOptionFunc {
 	return func(r *Route) error {
 		if r.method != http.MethodGet {
 			return errors.New("cannot apply cache to a route with any method other than GET")

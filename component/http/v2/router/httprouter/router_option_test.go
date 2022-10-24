@@ -26,7 +26,7 @@ func TestRoutes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
-			err := Routes(tt.args.routes...)(cfg)
+			err := WithRoutes(tt.args.routes...)(cfg)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -53,7 +53,7 @@ func TestAliveCheck(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
-			err := AliveCheck(tt.args.acf)(cfg)
+			err := WithAliveCheck(tt.args.acf)(cfg)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -80,7 +80,7 @@ func TestReadyCheck(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
-			err := ReadyCheck(tt.args.rcf)(cfg)
+			err := WithReadyCheck(tt.args.rcf)(cfg)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -110,7 +110,7 @@ func TestDeflateLevel(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
-			err := DeflateLevel(temp.args.deflateLevel)(cfg)
+			err := WithDeflateLevel(temp.args.deflateLevel)(cfg)
 			if temp.expectedErr != "" {
 				assert.EqualError(t, err, temp.expectedErr)
 				return
@@ -138,7 +138,7 @@ func TestMiddlewares(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
-			err := Middlewares(tt.args.mm...)(cfg)
+			err := WithMiddlewares(tt.args.mm...)(cfg)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -151,7 +151,7 @@ func TestMiddlewares(t *testing.T) {
 func TestDisableProfiling(t *testing.T) {
 	t.Parallel()
 	cfg := &Config{}
-	err := EnableExpVarProfiling()(cfg)
+	err := WithEnableExpVarProfiling()(cfg)
 	assert.NoError(t, err)
 	assert.True(t, cfg.enableProfilingExpVar)
 }
@@ -173,7 +173,7 @@ func TestEnableAppNameHeaders(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			cfg := &Config{}
-			err := EnableAppNameHeaders(tt.args.name, tt.args.version)(cfg)
+			err := WithEnableAppNameHeaders(tt.args.name, tt.args.version)(cfg)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

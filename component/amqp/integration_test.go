@@ -60,7 +60,7 @@ func TestRun(t *testing.T) {
 		}
 	}
 
-	cmp, err := New(endpoint, rabbitMQQueue, procFunc, StatsInterval(10*time.Millisecond))
+	cmp, err := New(endpoint, rabbitMQQueue, procFunc, WithStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 
 	chDone := make(chan struct{})

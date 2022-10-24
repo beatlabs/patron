@@ -26,7 +26,7 @@ func TestTLS(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
-			err := TLS(tt.args.cert, tt.args.key)(cmp)
+			err := WithTLS(tt.args.cert, tt.args.key)(cmp)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -56,7 +56,7 @@ func TestReadTimeout(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
-			err := ReadTimeout(tt.args.rt)(cmp)
+			err := WithReadTimeout(tt.args.rt)(cmp)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -85,7 +85,7 @@ func TestWriteTimeout(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
-			err := WriteTimeout(tt.args.wt)(cmp)
+			err := WithWriteTimeout(tt.args.wt)(cmp)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -114,7 +114,7 @@ func TestHandlerTimeout(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
-			err := HandlerTimeout(tt.args.wt)(cmp)
+			err := WithHandlerTimeout(tt.args.wt)(cmp)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -143,7 +143,7 @@ func TestShutdownGracePeriod(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
-			err := ShutdownGracePeriod(tt.args.gp)(cmp)
+			err := WithShutdownGracePeriod(tt.args.gp)(cmp)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
@@ -172,7 +172,7 @@ func TestPort(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
-			err := Port(tt.args.port)(cmp)
+			err := WithPort(tt.args.port)(cmp)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

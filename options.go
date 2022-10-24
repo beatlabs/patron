@@ -11,8 +11,8 @@ import (
 
 type OptionFunc func(svc *Service) error
 
-// Router replaces the default v1 HTTP component with a new component v2 based on http.Handler.
-func Router(handler http.Handler) OptionFunc {
+// WithRouter replaces the default v1 HTTP component with a new component v2 based on http.Handler.
+func WithRouter(handler http.Handler) OptionFunc {
 	return func(svc *Service) error {
 		if handler == nil {
 			return errors.New("provided router is nil")
@@ -25,8 +25,8 @@ func Router(handler http.Handler) OptionFunc {
 	}
 }
 
-// Components adds custom components to the Patron Service.
-func Components(cc ...Component) OptionFunc {
+// WithComponents adds custom components to the Patron Service.
+func WithComponents(cc ...Component) OptionFunc {
 	return func(svc *Service) error {
 		if len(cc) == 0 {
 			return errors.New("provided components slice was empty")
@@ -39,22 +39,22 @@ func Components(cc ...Component) OptionFunc {
 	}
 }
 
-// SIGHUP adds a custom handler for handling SIGHUP.
-func SIGHUP(handler func()) OptionFunc {
+// WithSIGHUP adds a custom handler for handling WithSIGHUP.
+func WithSIGHUP(handler func()) OptionFunc {
 	return func(svc *Service) error {
 		if handler == nil {
-			return errors.New("provided SIGHUP handler was nil")
+			return errors.New("provided WithSIGHUP handler was nil")
 		}
 
-		log.Debug("setting SIGHUP handler func")
+		log.Debug("setting WithSIGHUP handler func")
 		svc.sighupHandler = handler
 
 		return nil
 	}
 }
 
-// LogFields options to pass in additional log fields.
-func LogFields(fields map[string]interface{}) OptionFunc {
+// WithLogFields options to pass in additional log fields.
+func WithLogFields(fields map[string]interface{}) OptionFunc {
 	return func(svc *Service) error {
 		for k, v := range fields {
 			if k == srv || k == ver || k == host {
@@ -68,8 +68,8 @@ func LogFields(fields map[string]interface{}) OptionFunc {
 	}
 }
 
-// Logger to pass in custom logger.
-func Logger(logger log.Logger) OptionFunc {
+// WithLogger to pass in custom logger.
+func WithLogger(logger log.Logger) OptionFunc {
 	return func(svc *Service) error {
 		svc.config.logger = logger
 
@@ -77,8 +77,8 @@ func Logger(logger log.Logger) OptionFunc {
 	}
 }
 
-// TextLogger to use Go's standard logger.
-func TextLogger() OptionFunc {
+// WithTextLogger to use Go's standard logger.
+func WithTextLogger() OptionFunc {
 	return func(svc *Service) error {
 		svc.config.logger = std.New(os.Stderr, getLogLevel(), svc.config.fields)
 

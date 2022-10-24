@@ -28,7 +28,7 @@ if err != nil {
 
 ##### v0.74.0
 ```go
-svc, err := patron.New(name, version, patron.Components(amqp,grpc))
+svc, err := patron.New(name, version, patron.WithComponents(amqp,grpc))
 if err != nil {
     log.Fatalf("failed to create patron service due to : %s", err)
 }
@@ -58,7 +58,7 @@ if err != nil {
 
 ##### v0.74.0
 ```go
-svc, err := patron.New(name, version, patron.SIGHUP(sighup))
+svc, err := patron.New(name, version, patron.WithSIGHUP(sighup))
 if err != nil {
     log.Fatalf("failed to create patron service due to : %s", err)
 }
@@ -89,7 +89,7 @@ if err != nil {
 
 ##### v0.74.0
 ```go
-svc, err := patron.New(name, version, patron.Router(router))
+svc, err := patron.New(name, version, patron.WithRouter(router))
 if err != nil {
     log.Fatalf("failed to create patron service due to : %s", err)
 }
@@ -145,13 +145,22 @@ import (
 
 func main(){
 	port := 5000
-	comp,err := patrongrpc.New(port, patrongrpc.ServerOptions(grpc.ConnectionTimeout(1*time.Second)),patrongrpc.Reflection())
+	comp,err := patrongrpc.New(port, patrongrpc.WithServerOptions(grpc.ConnectionTimeout(1*time.Second)),patrongrpc.WithReflection())
 	if err != nil{
 		log.Fatalf("failed to create new grpc component due: %s",err)
 	}
 }
 ```
 
+#### Changes to method Signatures
+
+All names of option functions for `components/clients` prefixed by `With`
+
+i.e.
+
+considering package `github.com/beatlabs/patron/client/ampq/v2`
+
+option function `func Config(cfg amqp.Config) OptionFunc` is renamed to `func Config(cfg amqp.Config) OptionFunc`
 ## v0.73.0
 
 ### Migrating from `aws-sdk-go` v1 to v2

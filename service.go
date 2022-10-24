@@ -113,7 +113,7 @@ func (s *Service) createHTTPComponent() (Component, error) {
 	if s.httpRouter == nil {
 		routerOptions := make([]httprouter.OptionFunc, 0)
 		if deflateLevel != nil {
-			routerOptions = append(routerOptions, httprouter.DeflateLevel(*deflateLevel))
+			routerOptions = append(routerOptions, httprouter.WithDeflateLevel(*deflateLevel))
 		}
 
 		s.httpRouter, err = httprouter.New(routerOptions...)
@@ -162,14 +162,14 @@ func getHTTPDeflateLevel() (*int, error) {
 }
 
 func (s *Service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duration) (Component, error) {
-	oo := []v2.OptionFunc{v2.Port(port)}
+	oo := []v2.OptionFunc{v2.WithPort(port)}
 
 	if readTimeout != nil {
-		oo = append(oo, v2.ReadTimeout(*readTimeout))
+		oo = append(oo, v2.WithReadTimeout(*readTimeout))
 	}
 
 	if writeTimeout != nil {
-		oo = append(oo, v2.WriteTimeout(*writeTimeout))
+		oo = append(oo, v2.WithWriteTimeout(*writeTimeout))
 	}
 
 	return v2.New(s.httpRouter, oo...)
@@ -289,7 +289,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		version: version,
 		termSig: make(chan os.Signal, 1),
 		sighupHandler: func() {
-			log.Debug("SIGHUP received: nothing setup")
+			log.Debug("WithSIGHUP received: nothing setup")
 		},
 		config: cfg,
 		cps:    make([]Component, 0),

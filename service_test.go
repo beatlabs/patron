@@ -23,7 +23,7 @@ func TestNewServer(t *testing.T) {
 	}
 
 	httpBuilderAllErrors := "provided components slice was empty\n" +
-		"provided SIGHUP handler was nil\n" +
+		"provided WithSIGHUP handler was nil\n" +
 		"provided router is nil\n"
 
 	tests := map[string]struct {
@@ -37,7 +37,7 @@ func TestNewServer(t *testing.T) {
 		"success": {
 			fields:            map[string]interface{}{"env": "dev"},
 			cps:               []Component{&testComponent{}, &testComponent{}},
-			sighupHandler:     func() { log.Info("SIGHUP received: nothing setup") },
+			sighupHandler:     func() { log.Info("WithSIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
 			handler:           mw(nil),
 			wantErr:           "",
@@ -61,8 +61,8 @@ func TestNewServer(t *testing.T) {
 	for name, tt := range tests {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
-			gotService, gotErr := New("name", "1.0", LogFields(temp.fields), TextLogger(),
-				Components(temp.cps...), SIGHUP(temp.sighupHandler), Router(temp.handler))
+			gotService, gotErr := New("name", "1.0", WithLogFields(temp.fields), WithTextLogger(),
+				WithComponents(temp.cps...), WithSIGHUP(temp.sighupHandler), WithRouter(temp.handler))
 
 			if temp.wantErr != "" {
 				assert.EqualError(t, gotErr, temp.wantErr)
@@ -98,7 +98,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 			defer os.Clearenv()
 			err := os.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort(t))
 			require.NoError(t, err)
-			svc, err := New("test", "", TextLogger(), Components(temp.cp, temp.cp, temp.cp))
+			svc, err := New("test", "", WithTextLogger(), WithComponents(temp.cp, temp.cp, temp.cp))
 			assert.NoError(t, err)
 			err = svc.Run(context.Background())
 			if temp.wantErr {
@@ -142,7 +142,7 @@ func TestServer_SetupTracing(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			svc, err := New("test", "", TextLogger(), Components(tt.cp, tt.cp, tt.cp))
+			svc, err := New("test", "", WithTextLogger(), WithComponents(tt.cp, tt.cp, tt.cp))
 			assert.NoError(t, err)
 
 			err = svc.Run(context.Background())
@@ -152,7 +152,7 @@ func TestServer_SetupTracing(t *testing.T) {
 }
 
 func TestNewServer_WithComponentsTwice(t *testing.T) {
-	svc, err := New("test", "", TextLogger(), Components(&testComponent{}, &testComponent{}))
+	svc, err := New("test", "", WithTextLogger(), WithComponents(&testComponent{}, &testComponent{}))
 	require.NoError(t, err)
 	assert.Len(t, svc.cps, 3)
 }
@@ -189,7 +189,7 @@ func TestNewServer_FailingConditions(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			svc, err := New("test", "", TextLogger())
+			svc, err := New("test", "", WithTextLogger())
 
 			if temp.expectedConstructorError != "" {
 				require.EqualError(t, err, temp.expectedConstructorError)
@@ -241,7 +241,7 @@ func TestServer_SetupReadWriteTimeouts(t *testing.T) {
 				err := os.Setenv("PATRON_HTTP_WRITE_TIMEOUT", temp.wt)
 				assert.NoError(t, err)
 			}
-			_, err := New("test", "", TextLogger(), Components(temp.cp, temp.cp, temp.cp))
+			_, err := New("test", "", WithTextLogger(), WithComponents(temp.cp, temp.cp, temp.cp))
 
 			if temp.wantErr {
 				assert.Error(t, err)
@@ -279,7 +279,7 @@ func TestServer_SetupDeflateLevel(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			_, err := New("test", "", TextLogger(), Components(temp.component, temp.component, temp.component))
+			_, err := New("test", "", WithTextLogger(), WithComponents(temp.component, temp.component, temp.component))
 
 			if tt.wantErr {
 				assert.Error(t, err)

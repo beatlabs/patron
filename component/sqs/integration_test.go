@@ -65,8 +65,8 @@ func Test_SQS_Consume(t *testing.T) {
 		}
 	}
 
-	cmp, err := New("123", queueName, api, procFunc, MaxMessages(10),
-		PollWaitSeconds(20), VisibilityTimeout(30), QueueStatsInterval(10*time.Millisecond))
+	cmp, err := New("123", queueName, api, procFunc, WithMaxMessages(10),
+		WithPollWaitSeconds(20), WithVisibilityTimeout(30), WithQueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 
 	go func() { require.NoError(t, cmp.Run(context.Background())) }()

@@ -12,7 +12,7 @@ import (
 
 func TestTransport(t *testing.T) {
 	transport := &http.Transport{}
-	client, err := New(Transport(transport))
+	client, err := New(WithTransport(transport))
 
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
@@ -20,14 +20,14 @@ func TestTransport(t *testing.T) {
 }
 
 func TestTransport_Nil(t *testing.T) {
-	client, err := New(Transport(nil))
+	client, err := New(WithTransport(nil))
 
 	assert.Nil(t, client)
 	assert.Error(t, err, "transport must be supplied")
 }
 
 func TestCheckRedirect_Nil(t *testing.T) {
-	client, err := New(CheckRedirect(nil))
+	client, err := New(WithCheckRedirect(nil))
 
 	assert.Nil(t, client)
 	assert.Error(t, err, "check redirect must be supplied")
@@ -38,7 +38,7 @@ func TestCheckRedirect(t *testing.T) {
 		return nil
 	}
 
-	client, err := New(CheckRedirect(cr))
+	client, err := New(WithCheckRedirect(cr))
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
 

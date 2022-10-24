@@ -61,7 +61,7 @@ func main() {
 		log.Fatalf("failed to create processor %v", err)
 	}
 
-	service, err := patron.New(name, version, patron.TextLogger(), patron.Components(kafkaCmp.cmp))
+	service, err := patron.New(name, version, patron.WithTextLogger(), patron.WithComponents(kafkaCmp.cmp))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}
@@ -88,7 +88,7 @@ func newKafkaComponent(name, broker, topic, groupID string, publisher *patronamq
 		return nil, err
 	}
 
-	cf, err := group.New(name, groupID, []string{topic}, []string{broker}, saramaCfg, kafka.Decoder(json.DecodeRaw))
+	cf, err := group.New(name, groupID, []string{topic}, []string{broker}, saramaCfg, kafka.WithDecoder(json.DecodeRaw))
 	if err != nil {
 		return nil, err
 	}

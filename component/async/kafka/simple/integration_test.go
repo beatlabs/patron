@@ -36,8 +36,8 @@ func TestSimpleConsume(t *testing.T) {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer", true)
 		require.NoError(t, err)
 
-		factory, err := New("test1", simpleTopic1, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromNewest())
+		factory, err := New("test1", simpleTopic1, []string{broker}, saramaCfg, kafka.WithDecoderJSON(), kafka.WithVersion(sarama.V2_1_0_0.String()),
+			kafka.WithStartFromNewest())
 		if err != nil {
 			chErr <- err
 			return
@@ -90,8 +90,8 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-claim", true)
 		require.NoError(t, err)
 
-		factory, err := New("test1", simpleTopic2, []string{broker}, saramaCfg, kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromNewest())
+		factory, err := New("test1", simpleTopic2, []string{broker}, saramaCfg, kafka.WithVersion(sarama.V2_1_0_0.String()),
+			kafka.WithStartFromNewest())
 		if err != nil {
 			chErr <- err
 			return
@@ -153,8 +153,8 @@ func TestSimpleConsume_WithDurationOffset(t *testing.T) {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-w-duration", true)
 		require.NoError(t, err)
 
-		factory, err := New("test1", simpleTopic3, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromNewest(), WithDurationOffset(4*time.Hour, timestampExtractor))
+		factory, err := New("test1", simpleTopic3, []string{broker}, saramaCfg, kafka.WithDecoderJSON(), kafka.WithVersion(sarama.V2_1_0_0.String()),
+			kafka.WithStartFromNewest(), WithDurationOffset(4*time.Hour, timestampExtractor))
 		if err != nil {
 			chErr <- err
 			return
@@ -220,8 +220,8 @@ func TestSimpleConsume_WithTimestampOffset(t *testing.T) {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-w-timestamp", true)
 		require.NoError(t, err)
 
-		factory, err := New("test1", simpleTopic6, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromNewest(), WithTimestampOffset(4*time.Hour))
+		factory, err := New("test1", simpleTopic6, []string{broker}, saramaCfg, kafka.WithDecoderJSON(), kafka.WithVersion(sarama.V2_1_0_0.String()),
+			kafka.WithStartFromNewest(), WithTimestampOffset(4*time.Hour))
 		if err != nil {
 			chErr <- err
 			return
@@ -276,8 +276,8 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer-w-notif", true)
 		require.NoError(t, err)
 
-		factory, err := New("test4", simpleTopic4, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromOldest(), WithNotificationOnceReachingLatestOffset(chNotif))
+		factory, err := New("test4", simpleTopic4, []string{broker}, saramaCfg, kafka.WithDecoderJSON(), kafka.WithVersion(sarama.V2_1_0_0.String()),
+			kafka.WithStartFromOldest(), WithNotificationOnceReachingLatestOffset(chNotif))
 		if err != nil {
 			chErr <- err
 			return
@@ -328,8 +328,8 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_NoMessages(t *te
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer", true)
 		require.NoError(t, err)
 
-		factory, err := New("test5", simpleTopic5, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
-			kafka.StartFromOldest(), WithNotificationOnceReachingLatestOffset(chNotif))
+		factory, err := New("test5", simpleTopic5, []string{broker}, saramaCfg, kafka.WithDecoderJSON(), kafka.WithVersion(sarama.V2_1_0_0.String()),
+			kafka.WithStartFromOldest(), WithNotificationOnceReachingLatestOffset(chNotif))
 		if err != nil {
 			chErr <- err
 			return
@@ -393,7 +393,7 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_WithTimestampOff
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-simple-consumer", true)
 		require.NoError(t, err)
 
-		factory, err := New("test7", simpleTopic7, []string{broker}, saramaCfg, kafka.DecoderJSON(), kafka.Version(sarama.V2_1_0_0.String()),
+		factory, err := New("test7", simpleTopic7, []string{broker}, saramaCfg, kafka.WithDecoderJSON(), kafka.WithVersion(sarama.V2_1_0_0.String()),
 			WithTimestampOffset(4*time.Hour), WithNotificationOnceReachingLatestOffset(chNotif))
 		if err != nil {
 			chErr <- err

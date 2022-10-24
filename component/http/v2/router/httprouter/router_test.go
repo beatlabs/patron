@@ -23,8 +23,8 @@ func TestNew(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":            {args: args{oo: []OptionFunc{Routes(route)}}},
-		"option func failed": {args: args{oo: []OptionFunc{AliveCheck(nil)}}, expectedErr: "alive check function is nil"},
+		"success":            {args: args{oo: []OptionFunc{WithRoutes(route)}}},
+		"option func failed": {args: args{oo: []OptionFunc{WithAliveCheck(nil)}}, expectedErr: "alive check function is nil"},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -51,7 +51,7 @@ func TestVerifyRouter(t *testing.T) {
 	appVersionHeader := "X-App-Version"
 	appNameHeader := "X-App-Name"
 
-	router, err := New(Routes(route), EnableAppNameHeaders(appName, appVersion))
+	router, err := New(WithRoutes(route), WithEnableAppNameHeaders(appName, appVersion))
 	require.NoError(t, err)
 
 	srv := httptest.NewServer(router)

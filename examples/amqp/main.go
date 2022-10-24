@@ -140,7 +140,7 @@ func main() {
 		log.Fatalf("failed to create processor %v", err)
 	}
 
-	service, err := patron.New(name, version, patron.TextLogger(), patron.Components(amqpCmp.cmp))
+	service, err := patron.New(name, version, patron.WithTextLogger(), patron.WithComponents(amqpCmp.cmp))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}
@@ -261,7 +261,7 @@ func newAmqpComponent(url, queue, snsTopicArn string, snsPub patronsns.Publisher
 		sqsQueueURL: sqsQueueURL,
 	}
 
-	cmp, err := patronamqp.New(url, queue, amqpCmp.Process, patronamqp.Retry(10, 1*time.Second))
+	cmp, err := patronamqp.New(url, queue, amqpCmp.Process, patronamqp.WithRetry(10, 1*time.Second))
 	if err != nil {
 		return nil, err
 	}

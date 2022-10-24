@@ -13,6 +13,6 @@ func TestTimeout(t *testing.T) {
 	}
 
 	p := Publisher{}
-	assert.NoError(t, Config(cfg)(&p))
+	assert.NoError(t, WithConfig(cfg)(&p))
 	assert.Equal(t, cfg, *p.cfg)
 }

@@ -43,8 +43,8 @@ func TestGroupConsume(t *testing.T) {
 		saramaCfg, err := kafkacmp.DefaultConsumerSaramaConfig("test-group-consumer", true)
 		require.NoError(t, err)
 
-		factory, err := New("test1", uuid.New().String(), []string{groupTopic1}, []string{broker}, saramaCfg, kafka.DecoderJSON(),
-			kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+		factory, err := New("test1", uuid.New().String(), []string{groupTopic1}, []string{broker}, saramaCfg, kafka.WithDecoderJSON(),
+			kafka.WithVersion(sarama.V2_1_0_0.String()), kafka.WithStartFromNewest())
 		if err != nil {
 			chErr <- err
 			return
@@ -100,7 +100,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 
 	// Consumer will error out in ClaimMessage as no DecoderFunc has been set
 	factory, err := New("test1", uuid.New().String(), []string{groupTopic2}, []string{broker}, saramaCfg,
-		kafka.Version(sarama.V2_1_0_0.String()), kafka.StartFromNewest())
+		kafka.WithVersion(sarama.V2_1_0_0.String()), kafka.WithStartFromNewest())
 	require.NoError(t, err)
 	consumer, err := factory.Create()
 	require.NoError(t, err)
@@ -154,7 +154,7 @@ func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 	patronContext, patronCancel := context.WithCancel(context.Background())
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
-	svc, err := patron.New(successTopic1, "0", patron.TextLogger(), patron.Components(component))
+	svc, err := patron.New(successTopic1, "0", patron.WithTextLogger(), patron.WithComponents(component))
 	require.NoError(t, err)
 
 	go func() {
@@ -233,7 +233,7 @@ func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
 	}()
 
 	// Run Patron with the component - no need for goroutine since we expect it to stop after the retries fail
-	svc, err := patron.New(failAllRetriesTopic1, "0", patron.TextLogger(), patron.Components(component))
+	svc, err := patron.New(failAllRetriesTopic1, "0", patron.WithTextLogger(), patron.WithComponents(component))
 	require.NoError(t, err)
 	err = svc.Run(context.Background())
 	assert.Error(t, err)
@@ -292,7 +292,7 @@ func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(failAndRetryTopic1, "0", patron.TextLogger(), patron.Components(component))
+		svc, err := patron.New(failAndRetryTopic1, "0", patron.WithTextLogger(), patron.WithComponents(component))
 		require.NoError(t, err)
 		err = svc.Run(patronContext)
 		require.NoError(t, err)
@@ -330,7 +330,7 @@ func newKafkaAsyncPackageComponent(t *testing.T, name string, retries uint, proc
 	require.NoError(t, err)
 
 	factory, err := New(name, name+"-group", []string{name},
-		[]string{broker}, saramaCfg, kafka.Decoder(decode), kafka.Start(sarama.OffsetOldest))
+		[]string{broker}, saramaCfg, kafka.WithDecoder(decode), kafka.WithStart(sarama.OffsetOldest))
 	require.NoError(t, err)
 
 	cmp, err := async.New(name, factory, processorFunc).WithRetries(retries).

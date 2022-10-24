@@ -45,8 +45,8 @@ func TestCreate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, err := New(tt.args.port,
-				ServerOptions(grpc.ConnectionTimeout(1*time.Second)),
-				Reflection())
+				WithServerOptions(grpc.ConnectionTimeout(1*time.Second)),
+				WithReflection())
 			if tt.expErr != "" {
 				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, got)
@@ -61,7 +61,7 @@ func TestCreate(t *testing.T) {
 
 func TestComponent_Run_Unary(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
-	cmp, err := New(60000, Reflection())
+	cmp, err := New(60000, WithReflection())
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())
@@ -126,7 +126,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 
 func TestComponent_Run_Stream(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
-	cmp, err := New(60000, Reflection())
+	cmp, err := New(60000, WithReflection())
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
 	ctx, cnl := context.WithCancel(context.Background())

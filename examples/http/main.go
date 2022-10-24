@@ -73,7 +73,7 @@ func main() {
 	}
 
 	var routes patronhttp.Routes
-	routes.Append(patronhttp.NewGetRoute("/api", getHandler, patronhttp.RateLimiting(50, 50)))
+	routes.Append(patronhttp.NewGetRoute("/api", getHandler, patronhttp.WithRateLimiting(50, 50)))
 	routes.Append(patronhttp.NewPostRoute("/api", httpHandler))
 	routes.Append(httprouter.NewFileServerRoute("/frontend/*path", assetsFolder, assetsFolder+"/index.html"))
 	rr, err := routes.Result()
@@ -81,7 +81,7 @@ func main() {
 		log.Fatalf("failed to create routes: %v", err)
 	}
 
-	router, err := httprouter.New(httprouter.Middlewares(corsMiddleware), httprouter.Routes(rr...))
+	router, err := httprouter.New(httprouter.WithMiddlewares(corsMiddleware), httprouter.WithRoutes(rr...))
 	if err != nil {
 		log.Fatalf("failed to create http router: %v", err)
 	}
@@ -91,7 +91,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	service, err := patron.New(name, version, patron.Logger(logger), patron.Router(router), patron.SIGHUP(sig))
+	service, err := patron.New(name, version, patron.WithLogger(logger), patron.WithRouter(router), patron.WithSIGHUP(sig))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}
@@ -151,7 +151,7 @@ func httpHandler(rw http.ResponseWriter, r *http.Request) {
 	httpRequest.Header.Add("Content-Type", protobuf.Type)
 	httpRequest.Header.Add("Accept", protobuf.Type)
 	httpRequest.Header.Add("Authorization", "Apikey 123456")
-	cl, err := patronhttpclient.New(patronhttpclient.Timeout(5 * time.Second))
+	cl, err := patronhttpclient.New(patronhttpclient.WithTimeout(5 * time.Second))
 	if err != nil {
 		patronhttpjson.WriteResponse(rw, http.StatusInternalServerError, newHttpError(fmt.Sprintf("failed execute request: %v", err)))
 		return
@@ -172,7 +172,7 @@ func DoIntervalRequest() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed create route request: %w", err)
 	}
-	cl, err := patronhttpclient.New(patronhttpclient.Timeout(5 * time.Second))
+	cl, err := patronhttpclient.New(patronhttpclient.WithTimeout(5 * time.Second))
 	if err != nil {
 		return "", fmt.Errorf("could not create http client: %w", err)
 	}

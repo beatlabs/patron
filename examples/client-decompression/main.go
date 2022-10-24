@@ -38,7 +38,7 @@ func main() {
 		log.Fatalf("failed to create and run service %v", err)
 	}
 
-	cl, err := clienthttp.New(clienthttp.Timeout(1 * time.Second))
+	cl, err := clienthttp.New(clienthttp.WithTimeout(1 * time.Second))
 
 	noCompReq, err := http.NewRequest("GET", "http://localhost:50000/hello", nil)
 	rsp1, err := cl.Do(noCompReq)

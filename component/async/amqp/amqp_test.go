@@ -87,9 +87,9 @@ func TestNew(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"success", args{url: "amqp://guest:guest@localhost:5672/", queue: "q", exchange: *validExch, opt: Buffer(100)}, false},
-		{"fail, invalid url", args{url: "", queue: "q", exchange: *validExch, opt: Buffer(100)}, true},
-		{"fail, invalid queue name", args{url: "url", queue: "", exchange: *validExch, opt: Buffer(100)}, true},
+		{"success", args{url: "amqp://guest:guest@localhost:5672/", queue: "q", exchange: *validExch, opt: WithBuffer(100)}, false},
+		{"fail, invalid url", args{url: "", queue: "q", exchange: *validExch, opt: WithBuffer(100)}, true},
+		{"fail, invalid queue name", args{url: "url", queue: "", exchange: *validExch, opt: WithBuffer(100)}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -115,7 +115,7 @@ func TestFactory_Create(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success", wantErr: false},
-		{name: "invalid option", fields: fields{oo: []OptionFunc{Buffer(-10)}}, wantErr: true},
+		{name: "invalid option", fields: fields{oo: []OptionFunc{WithBuffer(-10)}}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

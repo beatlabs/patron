@@ -7,8 +7,8 @@ import (
 	v2 "github.com/beatlabs/patron/component/http/v2"
 )
 
-// Routes option for providing routes to the router.
-func Routes(routes ...*v2.Route) OptionFunc {
+// WithRoutes option for providing routes to the router.
+func WithRoutes(routes ...*v2.Route) OptionFunc {
 	return func(cfg *Config) error {
 		if len(routes) == 0 {
 			return errors.New("routes are empty")
@@ -18,8 +18,8 @@ func Routes(routes ...*v2.Route) OptionFunc {
 	}
 }
 
-// AliveCheck option for the router.
-func AliveCheck(acf v2.LivenessCheckFunc) OptionFunc {
+// WithAliveCheck option for the router.
+func WithAliveCheck(acf v2.LivenessCheckFunc) OptionFunc {
 	return func(cfg *Config) error {
 		if acf == nil {
 			return errors.New("alive check function is nil")
@@ -29,8 +29,8 @@ func AliveCheck(acf v2.LivenessCheckFunc) OptionFunc {
 	}
 }
 
-// ReadyCheck option for the router.
-func ReadyCheck(rcf v2.ReadyCheckFunc) OptionFunc {
+// WithReadyCheck option for the router.
+func WithReadyCheck(rcf v2.ReadyCheckFunc) OptionFunc {
 	return func(cfg *Config) error {
 		if rcf == nil {
 			return errors.New("ready check function is nil")
@@ -40,8 +40,8 @@ func ReadyCheck(rcf v2.ReadyCheckFunc) OptionFunc {
 	}
 }
 
-// DeflateLevel option for the compression middleware.
-func DeflateLevel(level int) OptionFunc {
+// WithDeflateLevel option for the compression middleware.
+func WithDeflateLevel(level int) OptionFunc {
 	return func(cfg *Config) error {
 		if level < -2 || level > 9 {
 			return errors.New("provided deflate level value not in the [-2, 9] range")
@@ -52,8 +52,8 @@ func DeflateLevel(level int) OptionFunc {
 	}
 }
 
-// Middlewares option for middlewares.
-func Middlewares(mm ...middleware.Func) OptionFunc {
+// WithMiddlewares option for middlewares.
+func WithMiddlewares(mm ...middleware.Func) OptionFunc {
 	return func(cfg *Config) error {
 		if len(mm) == 0 {
 			return errors.New("middlewares are empty")
@@ -63,16 +63,16 @@ func Middlewares(mm ...middleware.Func) OptionFunc {
 	}
 }
 
-// EnableExpVarProfiling option for enabling expVar in profiling endpoints.
-func EnableExpVarProfiling() OptionFunc {
+// WithEnableExpVarProfiling option for enabling expVar in profiling endpoints.
+func WithEnableExpVarProfiling() OptionFunc {
 	return func(cfg *Config) error {
 		cfg.enableProfilingExpVar = true
 		return nil
 	}
 }
 
-// EnableAppNameHeaders option for adding name and version header to the response.
-func EnableAppNameHeaders(name, version string) OptionFunc {
+// WithEnableAppNameHeaders option for adding name and version header to the response.
+func WithEnableAppNameHeaders(name, version string) OptionFunc {
 	return func(cfg *Config) error {
 		if name == "" {
 			return errors.New("app name was not provided")

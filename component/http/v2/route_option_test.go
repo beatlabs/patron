@@ -27,7 +27,7 @@ func (mo mockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
 func TestRateLimiting(t *testing.T) {
 	t.Parallel()
 	route := &Route{}
-	assert.NoError(t, RateLimiting(0, 0)(route))
+	assert.NoError(t, WithRateLimiting(0, 0)(route))
 }
 
 func TestRouteMiddlewares(t *testing.T) {
@@ -47,7 +47,7 @@ func TestRouteMiddlewares(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route := &Route{}
-			err := Middlewares(tt.args.mm...)(route)
+			err := WithMiddlewares(tt.args.mm...)(route)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -74,7 +74,7 @@ func TestAuth(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route := &Route{}
-			err := Auth(tt.args.auth)(route)
+			err := WithAuth(tt.args.auth)(route)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -119,7 +119,7 @@ func TestCache(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route := &Route{method: tt.fields.httpMethod}
-			err := Cache(tt.args.cache, tt.args.ageBounds)(route)
+			err := WithCache(tt.args.cache, tt.args.ageBounds)(route)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {

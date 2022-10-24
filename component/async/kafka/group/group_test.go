@@ -108,7 +108,7 @@ func TestFactory_Create(t *testing.T) {
 				clientName: "clientB",
 				topics:     []string{"topicA"},
 				brokers:    []string{"192.168.1.1"},
-				oo:         []kafka.OptionFunc{kafka.Buffer(-100)},
+				oo:         []kafka.OptionFunc{kafka.WithBuffer(-100)},
 			},
 			wantErr: true,
 		},

@@ -28,7 +28,7 @@ func TestComponents(t *testing.T) {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
 			svc := &Service{}
-			err := Components(temp.args.cc...)(svc)
+			err := WithComponents(temp.args.cc...)(svc)
 			assert.Equal(t, temp.wantError, err)
 			assert.Equal(t, temp.wantComponents, svc.cps)
 		})
@@ -58,7 +58,7 @@ func TestLogFields(t *testing.T) {
 				},
 			}
 
-			err := LogFields(temp.args.fields)(svc)
+			err := WithLogFields(temp.args.fields)(svc)
 			assert.NoError(t, err)
 
 			assert.Equal(t, temp.want, svc.config)
@@ -81,7 +81,7 @@ func TestLogger(t *testing.T) {
 	logger := std.New(os.Stderr, getLogLevel(), nil)
 	svc := &Service{}
 
-	err := Logger(logger)(svc)
+	err := WithLogger(logger)(svc)
 	assert.NoError(t, err)
 	assert.Equal(t, logger, svc.config.logger)
 }
@@ -105,7 +105,7 @@ func TestRouter(t *testing.T) {
 			temp := tt
 			svc := &Service{}
 
-			err := Router(temp.args.handler)(svc)
+			err := WithRouter(temp.args.handler)(svc)
 			assert.Equal(t, temp.wantError, err)
 			assert.Equal(t, temp.wantHandler, svc.httpRouter)
 		})
@@ -129,8 +129,8 @@ func TestSIGHUP(t *testing.T) {
 		t.Parallel()
 		svc := &Service{}
 
-		err := SIGHUP(nil)(svc)
-		assert.Equal(t, errors.New("provided SIGHUP handler was nil"), err)
+		err := WithSIGHUP(nil)(svc)
+		assert.Equal(t, errors.New("provided WithSIGHUP handler was nil"), err)
 		assert.Nil(t, nil, svc.sighupHandler)
 	})
 
@@ -140,7 +140,7 @@ func TestSIGHUP(t *testing.T) {
 		svc := &Service{}
 		comp := &testSighupAlterable{}
 
-		err := SIGHUP(testSighupHandle(comp))(svc)
+		err := WithSIGHUP(testSighupHandle(comp))(svc)
 		assert.Equal(t, nil, err)
 		assert.NotNil(t, svc.sighupHandler)
 		svc.sighupHandler()

@@ -25,7 +25,7 @@ func TestGRPCOptions(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			comp := new(Component)
-			err := ServerOptions(tt.args.options...)(comp)
+			err := WithServerOptions(tt.args.options...)(comp)
 			if tt.expectedError == nil {
 				assert.Equal(t, tt.args.options, comp.serverOptions)
 			} else {
@@ -44,7 +44,7 @@ func TestReflection(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			comp := new(Component)
-			err := Reflection()(comp)
+			err := WithReflection()(comp)
 			if tt.expectedError == nil {
 				assert.Equal(t, true, comp.enableReflection)
 			} else {

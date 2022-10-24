@@ -11,7 +11,7 @@ import (
 func TestAMQPConfig(t *testing.T) {
 	cfg := amqp.Config{Locale: "123"}
 	c := &Component{}
-	assert.NoError(t, Config(cfg)(c))
+	assert.NoError(t, WithConfig(cfg)(c))
 	assert.Equal(t, cfg, c.cfg)
 }
 
@@ -34,7 +34,7 @@ func TestBatching(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := Batching(tt.args.count, tt.args.timeout)(c)
+			err := WithBatching(tt.args.count, tt.args.timeout)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
@@ -50,14 +50,14 @@ func TestRetry(t *testing.T) {
 	retryCount := uint(5)
 	retryDelay := 2 * time.Second
 	c := &Component{}
-	assert.NoError(t, Retry(retryCount, retryDelay)(c))
+	assert.NoError(t, WithRetry(retryCount, retryDelay)(c))
 	assert.Equal(t, retryCount, c.retryCfg.count)
 	assert.Equal(t, retryDelay, c.retryCfg.delay)
 }
 
 func TestRequeue(t *testing.T) {
 	c := &Component{}
-	assert.NoError(t, Requeue(false)(c))
+	assert.NoError(t, WithRequeue(false)(c))
 	assert.False(t, c.queueCfg.requeue)
 }
 
@@ -78,7 +78,7 @@ func TestStatsInterval(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
-			err := StatsInterval(tt.args.interval)(c)
+			err := WithStatsInterval(tt.args.interval)(c)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {

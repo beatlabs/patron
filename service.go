@@ -44,7 +44,6 @@ type Service struct {
 	sighupHandler     func()
 	uncompressedPaths []string
 	httpRouter        http.Handler
-	errors            []error
 	config            config
 }
 
@@ -289,7 +288,6 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		name:    name,
 		version: version,
 		termSig: make(chan os.Signal, 1),
-		errors:  make([]error, 0),
 		sighupHandler: func() {
 			log.Debug("SIGHUP received: nothing setup")
 		},
@@ -303,15 +301,16 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		return nil, err
 	}
 
+	optionErrors := make([]error, 0)
 	for _, option := range options {
 		err = option(s)
 		if err != nil {
-			s.errors = append(s.errors, err)
+			optionErrors = append(optionErrors, err)
 		}
 	}
 
-	if len(s.errors) > 0 {
-		return nil, patronErrors.Aggregate(s.errors...)
+	if len(optionErrors) > 0 {
+		return nil, patronErrors.Aggregate(optionErrors...)
 	}
 
 	err = setupLogging(cfg.fields, cfg.logger)

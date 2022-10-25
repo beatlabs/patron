@@ -14,7 +14,7 @@ import (
 type OptionFunc func(*Component) error
 
 // WithFailureStrategy sets the strategy to follow for the component when it encounters an error.
-// The kafka.ExitStrategy will fail the component, if there are WithRetries > 0 then the component will reconnect and retry
+// The kafka.ExitStrategy will fail the component, if there are retries > 0 then the component will reconnect and retry
 // the failed message.
 // The kafka.SkipStrategy will skip the message on failure. If a client wants to retry a message before failing then
 // this needs to be handled in the kafka.BatchProcessorFunc.

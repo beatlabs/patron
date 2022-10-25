@@ -161,6 +161,7 @@ i.e.
 considering package `github.com/beatlabs/patron/client/ampq/v2`
 
 option function `func Config(cfg amqp.Config) OptionFunc` is renamed to `func Config(cfg amqp.Config) OptionFunc`
+
 ## v0.73.0
 
 ### Migrating from `aws-sdk-go` v1 to v2

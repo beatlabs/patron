@@ -63,16 +63,16 @@ func WithMiddlewares(mm ...middleware.Func) OptionFunc {
 	}
 }
 
-// WithEnableExpVarProfiling option for enabling expVar in profiling endpoints.
-func WithEnableExpVarProfiling() OptionFunc {
+// WithExpVarProfiling option for enabling expVar in profiling endpoints.
+func WithExpVarProfiling() OptionFunc {
 	return func(cfg *Config) error {
 		cfg.enableProfilingExpVar = true
 		return nil
 	}
 }
 
-// WithEnableAppNameHeaders option for adding name and version header to the response.
-func WithEnableAppNameHeaders(name, version string) OptionFunc {
+// WithAppNameHeaders option for adding name and version header to the response.
+func WithAppNameHeaders(name, version string) OptionFunc {
 	return func(cfg *Config) error {
 		if name == "" {
 			return errors.New("app name was not provided")

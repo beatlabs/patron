@@ -154,13 +154,20 @@ func main(){
 
 #### Changes to method Signatures
 
-All names of option functions for `components/clients` prefixed by `With`
+In package `github.com/beatlabs/patron/component/http/v2/router/httprouter`,
+
+- `func EnableAppNameHeaders(name, version string) OptionFunc` renamed to `func WithAppNameHeaders(name, version string) OptionFunc`
+
+- `func EnableExpVarProfiling() OptionFunc` renamed to `func WithExpVarProfiling() OptionFunc`
+
+All names of other option functions for `components/clients` prefixed by `With`
 
 i.e.
 
 considering package `github.com/beatlabs/patron/client/ampq/v2`
 
 option function `func Config(cfg amqp.Config) OptionFunc` is renamed to `func Config(cfg amqp.Config) OptionFunc`
+
 
 ## v0.73.0
 

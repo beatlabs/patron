@@ -151,7 +151,7 @@ func TestMiddlewares(t *testing.T) {
 func TestDisableProfiling(t *testing.T) {
 	t.Parallel()
 	cfg := &Config{}
-	err := WithEnableExpVarProfiling()(cfg)
+	err := WithExpVarProfiling()(cfg)
 	assert.NoError(t, err)
 	assert.True(t, cfg.enableProfilingExpVar)
 }
@@ -173,7 +173,7 @@ func TestEnableAppNameHeaders(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			cfg := &Config{}
-			err := WithEnableAppNameHeaders(tt.args.name, tt.args.version)(cfg)
+			err := WithAppNameHeaders(tt.args.name, tt.args.version)(cfg)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

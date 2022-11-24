@@ -2,7 +2,7 @@
 
 ## v0.75.0
 
-The `cache` package has introduced the `context.Context` as the first argument in each method and removed it for the constructors.
+The `cache` package has introduced the `context.Context` as the first argument in each method and removed it from the constructors.
 
 ## v0.74.0
 

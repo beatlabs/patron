@@ -1,4 +1,4 @@
-// Package lru implementation of the cache interface.
+// Package lru implements a LRU based cache.
 package lru
 
 import (
@@ -10,8 +10,7 @@ import (
 
 var _ cache.Cache = &Cache{}
 
-// Cache encapsulates a thread-safe fixed size LRU cache
-// as defined in hashicorp/golang-lru.
+// Cache encapsulates a thread-safe fixed size LRU cache.
 type Cache struct {
 	cache *lru.Cache
 }

@@ -15,9 +15,8 @@ import (
 	httpcache "github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/component/http/middleware"
 	"github.com/beatlabs/patron/encoding"
-	"github.com/stretchr/testify/require"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type cacheState struct {
@@ -502,7 +501,7 @@ func newTestingCache() *testingCache {
 	return &testingCache{cache: make(map[string]testingCacheEntity)}
 }
 
-func (t *testingCache) Get(key string) (interface{}, bool, error) {
+func (t *testingCache) Get(_ context.Context, key string) (interface{}, bool, error) {
 	t.getCount++
 	if t.getErr != nil {
 		return nil, false, t.getErr
@@ -514,20 +513,20 @@ func (t *testingCache) Get(key string) (interface{}, bool, error) {
 	return r.v, ok, nil
 }
 
-func (t *testingCache) Purge() error {
+func (t *testingCache) Purge(ctx context.Context) error {
 	for k := range t.cache {
-		_ = t.Remove(k)
+		_ = t.Remove(ctx, k)
 	}
 	return nil
 }
 
-func (t *testingCache) Remove(key string) error {
+func (t *testingCache) Remove(_ context.Context, key string) error {
 	delete(t.cache, key)
 	return nil
 }
 
 // Note : this method will effectively not cache anything e.g. testingCacheEntity.t is `0`.
-func (t *testingCache) Set(key string, value interface{}) error {
+func (t *testingCache) Set(_ context.Context, key string, value interface{}) error {
 	t.setCount++
 	if t.setErr != nil {
 		return t.getErr
@@ -538,7 +537,7 @@ func (t *testingCache) Set(key string, value interface{}) error {
 	return nil
 }
 
-func (t *testingCache) SetTTL(key string, value interface{}, ttl time.Duration) error {
+func (t *testingCache) SetTTL(_ context.Context, key string, value interface{}, ttl time.Duration) error {
 	t.setCount++
 	if t.setErr != nil {
 		return t.getErr

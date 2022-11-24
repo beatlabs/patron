@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 
 // handlerRequest is the dedicated request object for the cache handler.
 type handlerRequest struct {
+	ctx    context.Context
 	header string
 	path   string
 	query  string
@@ -26,6 +28,7 @@ func toCacheHandlerRequest(req *http.Request) *handlerRequest {
 		query = req.URL.RawQuery
 	}
 	return &handlerRequest{
+		ctx:    req.Context(),
 		header: header,
 		path:   path,
 		query:  query,

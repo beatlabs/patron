@@ -1,20 +1,21 @@
-// Package cache provide abstractions for concrete cache implementations.
+// Package cache provides abstractions to allow the creation of concrete implementations.
 package cache
 
 import (
+	"context"
 	"time"
 )
 
-// Cache interface.
+// Cache interface that defines the methods required.
 type Cache interface {
-	Get(key string) (interface{}, bool, error)
-	Purge() error
-	Remove(key string) error
-	Set(key string, value interface{}) error
+	Get(ctx context.Context, key string) (interface{}, bool, error)
+	Purge(ctx context.Context) error
+	Remove(ctx context.Context, key string) error
+	Set(ctx context.Context, key string, value interface{}) error
 }
 
-// TTLCache interface adds support for expiring key-value pairs.
+// TTLCache interface adds support for expiring key value pairs.
 type TTLCache interface {
 	Cache
-	SetTTL(key string, value interface{}, ttl time.Duration) error
+	SetTTL(ctx context.Context, key string, value interface{}, ttl time.Duration) error
 }

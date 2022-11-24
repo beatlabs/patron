@@ -2,6 +2,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"hash/crc32"
 	"net/http"
@@ -92,14 +93,14 @@ func handler(exec executor, rc *RouteCache) func(request *handlerRequest) (respo
 			cfg.expiryValidator = expiryCheck
 		}
 
-		rsp = getResponse(cfg, request.path, key, now, rc, exec)
+		rsp = getResponse(request.ctx, cfg, request.path, key, now, rc, exec)
 		e = rsp.Err
 
 		if e == nil {
 			handlerResponse = &rsp.Response
 			addResponseHeaders(now, handlerResponse.Header, rsp, rc.age.max)
 			if !rsp.FromCache && !cfg.noCache {
-				save(request.path, key, rsp, rc.cache, time.Duration(rc.age.max)*time.Second)
+				save(request.ctx, request.path, key, rsp, rc.cache, time.Duration(rc.age.max)*time.Second)
 			}
 		}
 
@@ -108,12 +109,12 @@ func handler(exec executor, rc *RouteCache) func(request *handlerRequest) (respo
 }
 
 // getResponse will get the appropriate Response either using the cache or the executor.
-func getResponse(cfg *control, path, key string, now int64, rc *RouteCache, exec executor) *response {
+func getResponse(ctx context.Context, cfg *control, path, key string, now int64, rc *RouteCache, exec executor) *response {
 	if cfg.noCache {
 		return exec(now, key)
 	}
 
-	rsp := get(key, rc)
+	rsp := get(ctx, key, rc)
 	if rsp == nil {
 		monitor.miss(path)
 		response := exec(now, key)
@@ -159,8 +160,8 @@ func isValid(age, maxAge int64, validators ...validator) (bool, validationContex
 
 // get is the implementation that will provide a response instance from the cache,
 // if it exists.
-func get(key string, rc *RouteCache) *response {
-	resp, ok, err := rc.cache.Get(key)
+func get(ctx context.Context, key string, rc *RouteCache) *response {
+	resp, ok, err := rc.cache.Get(ctx, key)
 	if err != nil {
 		return &response{Err: fmt.Errorf("could not read cache value for [ key = %v , Err = %w ]", key, err)}
 	}
@@ -192,7 +193,7 @@ func get(key string, rc *RouteCache) *response {
 
 // save caches the given Response if required with a ttl
 // as we are putting the objects in the cache, if it's a TTL one, we need to manage the expiration on our own.
-func save(path, key string, rsp *response, cache cache.TTLCache, maxAge time.Duration) {
+func save(ctx context.Context, path, key string, rsp *response, cache cache.TTLCache, maxAge time.Duration) {
 	if !rsp.FromCache && rsp.Err == nil {
 		// encode to a byte array on our side to avoid cache specific encoding / marshaling requirements
 		bytes, err := rsp.encode()
@@ -201,7 +202,7 @@ func save(path, key string, rsp *response, cache cache.TTLCache, maxAge time.Dur
 			monitor.err(path)
 			return
 		}
-		if err := cache.SetTTL(key, bytes, maxAge); err != nil {
+		if err := cache.SetTTL(ctx, key, bytes, maxAge); err != nil {
 			log.Errorf("could not cache response for request key %s: %v", key, err)
 			monitor.err(path)
 			return

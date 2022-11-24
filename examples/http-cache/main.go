@@ -36,7 +36,7 @@ func main() {
 
 	ctx := context.Background()
 
-	cache, err := redis.New(ctx, redis.Options{})
+	cache, err := redis.New(redis.Options{})
 	if err != nil {
 		log.Fatalf("failed to set up redis cache: %v", err)
 	}

@@ -163,7 +163,7 @@ func NewAuth(auth auth.Authenticator) Func {
 func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			corID := correlation.GetOrSetHeaderID(r.Header)
+			corID := getOrSetCorrelationID(r.Header)
 			sp, r := span(path, corID, r)
 			lw := newResponseWriter(w, true)
 			next.ServeHTTP(lw, r)
@@ -180,13 +180,33 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Fu
 func NewInjectObservability() Func {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			corID := correlation.GetOrSetHeaderID(r.Header)
+			corID := getOrSetCorrelationID(r.Header)
 			ctx := correlation.ContextWithID(r.Context(), corID)
 			logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 			ctx = log.WithContext(ctx, logger)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func getOrSetCorrelationID(h http.Header) string {
+	cor, ok := h[correlation.HeaderID]
+	if !ok {
+		corID := correlation.New()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	if len(cor) == 0 {
+		corID := correlation.New()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	if cor[0] == "" {
+		corID := correlation.New()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	return cor[0]
 }
 
 func initHTTPServerMetrics() {

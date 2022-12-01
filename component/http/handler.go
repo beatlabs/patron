@@ -30,7 +30,7 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 		// TODO : for cached responses this becomes inconsistent, to be fixed in #160
 		// the corID will be passed to all consecutive responses
 		// if it was missing from the initial request
-		corID := correlation.GetOrSetHeaderID(r.Header)
+		corID := getOrSetCorrelationID(r.Header)
 		ctx := correlation.ContextWithID(r.Context(), corID)
 		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
 		ctx = log.WithContext(ctx, logger)
@@ -50,6 +50,26 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}
+}
+
+func getOrSetCorrelationID(h http.Header) string {
+	cor, ok := h[correlation.HeaderID]
+	if !ok {
+		corID := correlation.New()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	if len(cor) == 0 {
+		corID := correlation.New()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	if cor[0] == "" {
+		corID := correlation.New()
+		h.Set(correlation.HeaderID, corID)
+		return corID
+	}
+	return cor[0]
 }
 
 func determineEncoding(h http.Header) (string, encoding.DecodeFunc, encoding.EncodeFunc, error) {

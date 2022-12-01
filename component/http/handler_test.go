@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
@@ -200,6 +201,33 @@ func Test_handleError(t *testing.T) {
 			for k, v := range tt.expectedHeaders {
 				assert.Equal(t, v, rsp.Header().Get(k))
 			}
+		})
+	}
+}
+
+func Test_getOrSetCorrelationID(t *testing.T) {
+	t.Parallel()
+	withID := http.Header{correlation.HeaderID: []string{"123"}}
+	withoutID := http.Header{correlation.HeaderID: []string{}}
+	withEmptyID := http.Header{correlation.HeaderID: []string{""}}
+	missingHeader := http.Header{}
+	type args struct {
+		hdr http.Header
+	}
+	tests := map[string]struct {
+		args args
+	}{
+		"with id":        {args: args{hdr: withID}},
+		"without id":     {args: args{hdr: withoutID}},
+		"with empty id":  {args: args{hdr: withEmptyID}},
+		"missing Header": {args: args{hdr: missingHeader}},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			assert.NotEmpty(t, getOrSetCorrelationID(tt.args.hdr))
+			assert.NotEmpty(t, tt.args.hdr[correlation.HeaderID][0])
 		})
 	}
 }

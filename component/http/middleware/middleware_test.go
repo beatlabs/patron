@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	httpcache "github.com/beatlabs/patron/component/http/cache"
+	"github.com/beatlabs/patron/correlation"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -826,6 +827,33 @@ func TestNewAppVersion(t *testing.T) {
 				assert.Equal(t, "", rc.Header().Get(appVersionHeader))
 				assert.Equal(t, "", rc.Header().Get(appNameHeader))
 			}
+		})
+	}
+}
+
+func Test_getOrSetCorrelationID(t *testing.T) {
+	t.Parallel()
+	withID := http.Header{correlation.HeaderID: []string{"123"}}
+	withoutID := http.Header{correlation.HeaderID: []string{}}
+	withEmptyID := http.Header{correlation.HeaderID: []string{""}}
+	missingHeader := http.Header{}
+	type args struct {
+		hdr http.Header
+	}
+	tests := map[string]struct {
+		args args
+	}{
+		"with id":        {args: args{hdr: withID}},
+		"without id":     {args: args{hdr: withoutID}},
+		"with empty id":  {args: args{hdr: withEmptyID}},
+		"missing Header": {args: args{hdr: missingHeader}},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			assert.NotEmpty(t, getOrSetCorrelationID(tt.args.hdr))
+			assert.NotEmpty(t, tt.args.hdr[correlation.HeaderID][0])
 		})
 	}
 }

@@ -19,16 +19,18 @@ func TestNew(t *testing.T) {
 		attempts int
 		delay    time.Duration
 	}
-	tests := []struct {
+	tests := map[string]struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{name: "success", args: args{attempts: 3, delay: 3 * time.Second}, wantErr: false},
-		{name: "invalid attempts", args: args{attempts: -1, delay: 3 * time.Second}, wantErr: true},
+		"success":          {args: args{attempts: 3, delay: 3 * time.Second}, wantErr: false},
+		"invalid attempts": {args: args{attempts: -1, delay: 3 * time.Second}, wantErr: true},
+		"invalid delay":    {args: args{attempts: 3, delay: 0 * time.Second}, wantErr: true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
 			got, err := New(tt.args.attempts, tt.args.delay)
 			if tt.wantErr {
 				assert.Error(t, err)

@@ -18,11 +18,11 @@ const (
 	AcceptEncodingHeader string = "Accept-Encoding"
 )
 
-// DecodeFunc function definition of a JSON decoding function.
+// DecodeFunc definition of a decoding function.
 type DecodeFunc func(data io.Reader, v interface{}) error
 
-// DecodeRawFunc function definition of a JSON decoding function from a byte slice.
+// DecodeRawFunc definition of a decoding function from a byte slice.
 type DecodeRawFunc func(data []byte, v interface{}) error
 
-// EncodeFunc function definition of a JSON encoding function.
+// EncodeFunc definition of an encoding function.
 type EncodeFunc func(v interface{}) ([]byte, error)

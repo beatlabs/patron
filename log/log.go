@@ -11,23 +11,23 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// The Level type definition.
+// Level type definition.
 type Level string
 
 const (
-	// DebugLevel level.
+	// DebugLevel definition.
 	DebugLevel Level = "debug"
-	// InfoLevel level.
+	// InfoLevel definition.
 	InfoLevel Level = "info"
-	// WarnLevel level.
+	// WarnLevel definition.
 	WarnLevel Level = "warn"
-	// ErrorLevel level.
+	// ErrorLevel definition.
 	ErrorLevel Level = "error"
-	// FatalLevel level.
+	// FatalLevel definition.
 	FatalLevel Level = "fatal"
-	// PanicLevel level.
+	// PanicLevel definition.
 	PanicLevel Level = "panic"
-	// NoLevel level.
+	// NoLevel definition.
 	NoLevel Level = ""
 )
 
@@ -52,7 +52,7 @@ var (
 	)
 )
 
-// Logger interface definition of a logger.
+// Logger interface definition.
 type Logger interface {
 	Sub(map[string]interface{}) Logger
 	Fatal(...interface{})
@@ -81,42 +81,42 @@ func init() {
 	prometheus.MustRegister(logCounter)
 }
 
-// LevelCount returns the total level count.
+// LevelCount returns the total level prometheus counter.
 func LevelCount(level string) prometheus.Counter {
 	return logCounter.WithLabelValues(level)
 }
 
-// ResetLogCounter resets the log counter.
+// ResetLogCounter resets the prometheus counter.
 func ResetLogCounter() {
 	logCounter.Reset()
 }
 
-// IncreaseFatalCounter increases the fatal counter.
+// IncreaseFatalCounter by one.
 func IncreaseFatalCounter() {
 	logCounter.WithLabelValues(string(FatalLevel)).Inc()
 }
 
-// IncreasePanicCounter increases the panic counter.
+// IncreasePanicCounter by one.
 func IncreasePanicCounter() {
 	logCounter.WithLabelValues(string(PanicLevel)).Inc()
 }
 
-// IncreaseErrorCounter increases the error counter.
+// IncreaseErrorCounter by one.
 func IncreaseErrorCounter() {
 	logCounter.WithLabelValues(string(ErrorLevel)).Inc()
 }
 
-// IncreaseWarnCounter increases the warn counter.
+// IncreaseWarnCounter by one.
 func IncreaseWarnCounter() {
 	logCounter.WithLabelValues(string(WarnLevel)).Inc()
 }
 
-// IncreaseInfoCounter increases the info counter.
+// IncreaseInfoCounter by one.
 func IncreaseInfoCounter() {
 	logCounter.WithLabelValues(string(InfoLevel)).Inc()
 }
 
-// IncreaseDebugCounter increases the debug counter.
+// IncreaseDebugCounter by one.
 func IncreaseDebugCounter() {
 	logCounter.WithLabelValues(string(DebugLevel)).Inc()
 }
@@ -126,7 +126,7 @@ func LevelOrder(lvl Level) int {
 	return levelOrder[lvl]
 }
 
-// Setup logging by providing a logger factory.
+// Setup logging by providing a logger. The logger can only be set once.
 func Setup(l Logger) error {
 	if l == nil {
 		return errors.New("logger is nil")
@@ -138,7 +138,7 @@ func Setup(l Logger) error {
 	return nil
 }
 
-// FromContext returns the logger in the context or a nil logger.
+// FromContext returns the logger, if it exists in the context, or nil.
 func FromContext(ctx context.Context) Logger {
 	if l, ok := ctx.Value(ctxKey{}).(Logger); ok {
 		if l == nil {
@@ -149,7 +149,7 @@ func FromContext(ctx context.Context) Logger {
 	return logger
 }
 
-// WithContext associates a logger with a context for later reuse.
+// WithContext associates a logger to a context.
 func WithContext(ctx context.Context, l Logger) context.Context {
 	return context.WithValue(ctx, ctxKey{}, l)
 }
@@ -164,7 +164,7 @@ func Panic(args ...interface{}) {
 	logger.Panic(args...)
 }
 
-// Panicf logging.
+// Panicf logging with message.
 func Panicf(msg string, args ...interface{}) {
 	logger.Panicf(msg, args...)
 }
@@ -174,7 +174,7 @@ func Fatal(args ...interface{}) {
 	logger.Fatal(args...)
 }
 
-// Fatalf logging.
+// Fatalf logging with message.
 func Fatalf(msg string, args ...interface{}) {
 	logger.Fatalf(msg, args...)
 }
@@ -184,7 +184,7 @@ func Error(args ...interface{}) {
 	logger.Error(args...)
 }
 
-// Errorf logging.
+// Errorf logging with message.
 func Errorf(msg string, args ...interface{}) {
 	logger.Errorf(msg, args...)
 }
@@ -194,7 +194,7 @@ func Warn(args ...interface{}) {
 	logger.Warn(args...)
 }
 
-// Warnf logging.
+// Warnf logging with message.
 func Warnf(msg string, args ...interface{}) {
 	logger.Warnf(msg, args...)
 }
@@ -204,7 +204,7 @@ func Info(args ...interface{}) {
 	logger.Info(args...)
 }
 
-// Infof logging.
+// Infof logging with message.
 func Infof(msg string, args ...interface{}) {
 	logger.Infof(msg, args...)
 }
@@ -214,12 +214,12 @@ func Debug(args ...interface{}) {
 	logger.Debug(args...)
 }
 
-// Debugf logging.
+// Debugf logging with message.
 func Debugf(msg string, args ...interface{}) {
 	logger.Debugf(msg, args...)
 }
 
-// Enabled shows if the logger logs for the given level.
+// Enabled returns true for the appropriate level otherwise false.
 func Enabled(l Level) bool {
 	return levelOrder[logger.Level()] <= levelOrder[l]
 }
@@ -238,7 +238,7 @@ func (fl *fmtLogger) Panic(args ...interface{}) {
 	panic(args)
 }
 
-// Panicf logging.
+// Panicf logging with message.
 func (fl *fmtLogger) Panicf(msg string, args ...interface{}) {
 	IncreasePanicCounter()
 	fmt.Printf(appendNewLine(msg), args...)
@@ -252,7 +252,7 @@ func (fl *fmtLogger) Fatal(args ...interface{}) {
 	os.Exit(1)
 }
 
-// Fatalf logging.
+// Fatalf logging with message.
 func (fl *fmtLogger) Fatalf(msg string, args ...interface{}) {
 	IncreaseFatalCounter()
 	fmt.Printf(appendNewLine(msg), args...)
@@ -265,7 +265,7 @@ func (fl *fmtLogger) Error(args ...interface{}) {
 	fmt.Println(args...)
 }
 
-// Errorf logging.
+// Errorf logging with message.
 func (fl *fmtLogger) Errorf(msg string, args ...interface{}) {
 	IncreaseErrorCounter()
 	fmt.Printf(appendNewLine(msg), args...)
@@ -277,7 +277,7 @@ func (fl *fmtLogger) Warn(args ...interface{}) {
 	fmt.Println(args...)
 }
 
-// Warnf logging.
+// Warnf logging with message.
 func (fl *fmtLogger) Warnf(msg string, args ...interface{}) {
 	IncreaseWarnCounter()
 	fmt.Printf(appendNewLine(msg), args...)
@@ -289,7 +289,7 @@ func (fl *fmtLogger) Info(args ...interface{}) {
 	fmt.Println(args...)
 }
 
-// Infof logging.
+// Infof logging with message.
 func (fl *fmtLogger) Infof(msg string, args ...interface{}) {
 	IncreaseInfoCounter()
 	fmt.Printf(appendNewLine(msg), args...)
@@ -301,13 +301,13 @@ func (fl *fmtLogger) Debug(args ...interface{}) {
 	fmt.Println(args...)
 }
 
-// Debugf logging.
+// Debugf logging with message.
 func (fl *fmtLogger) Debugf(msg string, args ...interface{}) {
 	IncreaseDebugCounter()
 	fmt.Printf(appendNewLine(msg), args...)
 }
 
-// Level returns the debug level of the nil logger.
+// Level returns always the debug level.
 func (fl *fmtLogger) Level() Level {
 	return DebugLevel
 }

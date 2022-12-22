@@ -20,9 +20,6 @@ func New(attempts int, delay time.Duration) (*Retry, error) {
 	if attempts <= 1 {
 		return nil, errors.New("attempts should be greater than 1")
 	}
-	if delay <= 0 {
-		return nil, errors.New("delay should be greater than 0")
-	}
 
 	return &Retry{attempts: attempts, delay: delay}, nil
 }

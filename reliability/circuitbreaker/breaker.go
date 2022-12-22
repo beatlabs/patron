@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// OpenError defines a error for a open state.
+// OpenError definition for the open state.
 type OpenError struct{}
 
 func (oe OpenError) Error() string {

@@ -1,4 +1,4 @@
-// Package encoding provides abstractions for concrete encoding implementations.
+// Package encoding provides abstractions for tha support concrete encoding implementations.
 package encoding
 
 import (
@@ -6,15 +6,15 @@ import (
 )
 
 const (
-	// AcceptHeader for defining accept encoding.
+	// AcceptHeader definition.
 	AcceptHeader string = "Accept"
-	// ContentTypeHeader for defining content type header.
+	// ContentTypeHeader definition.
 	ContentTypeHeader string = "Content-Type"
-	// ContentEncodingHeader for defining content encoding header.
+	// ContentEncodingHeader definition.
 	ContentEncodingHeader string = "Content-Encoding"
-	// ContentLengthHeader for defining content length header.
+	// ContentLengthHeader definition.
 	ContentLengthHeader string = "Content-Length"
-	// AcceptEncodingHeader for defining accept encoding header, usually a compression algorithm.
+	// AcceptEncodingHeader definition, usually a compression algorithm.
 	AcceptEncodingHeader string = "Accept-Encoding"
 )
 

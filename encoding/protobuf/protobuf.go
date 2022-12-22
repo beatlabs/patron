@@ -16,7 +16,7 @@ const (
 	TypeGoogle string = "application/x-google-protobuf"
 )
 
-// Decode a protobuf input in the form of a reader.
+// Decode a reader input into a model.
 func Decode(data io.Reader, v interface{}) error {
 	b, err := ioutil.ReadAll(data)
 	if err != nil {
@@ -25,7 +25,7 @@ func Decode(data io.Reader, v interface{}) error {
 	return DecodeRaw(b, v)
 }
 
-// DecodeRaw a protobuf input in the form of a byte slice.
+// DecodeRaw by taking byte slice input into a model.
 func DecodeRaw(data []byte, v interface{}) error {
 	val, ok := v.(proto.Message)
 	if !ok {
@@ -34,7 +34,7 @@ func DecodeRaw(data []byte, v interface{}) error {
 	return proto.Unmarshal(data, val)
 }
 
-// Encode a model to protobuf.
+// Encode a model to protobuf and return a byte slice.
 func Encode(v interface{}) ([]byte, error) {
 	val, ok := v.(proto.Message)
 	if !ok {

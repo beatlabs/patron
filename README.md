@@ -39,7 +39,6 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
   - [Observability](docs/observability/Observability.md)
   - [Logging](docs/observability/Logging.md)
   - [Distributed Tracing](docs/observability/DistributedTracing.md)  
-  - [Encoding](docs/other/Encoding.md)
   - [Errors](docs/other/Errors.md)
 - [Examples](docs/Examples.md)
 - [Code of Conduct](docs/CodeOfConduct.md)

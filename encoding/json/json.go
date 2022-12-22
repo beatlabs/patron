@@ -23,7 +23,7 @@ func DecodeRaw(data []byte, v interface{}) error {
 	return json.Unmarshal(data, v)
 }
 
-// Encode a JSON and return a byte slice.
+// Encode a JSON model and return a byte slice.
 func Encode(v interface{}) ([]byte, error) {
 	return json.Marshal(v)
 }

@@ -33,7 +33,7 @@ func DecodeRaw(data []byte, v interface{}) error {
 	return proto.Unmarshal(data, val)
 }
 
-// Encode a model to protobuf and return a byte slice.
+// Encode a protobuf model into a byte slice.
 func Encode(v interface{}) ([]byte, error) {
 	val, ok := v.(proto.Message)
 	if !ok {

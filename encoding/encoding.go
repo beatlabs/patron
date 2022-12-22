@@ -1,4 +1,4 @@
-// Package encoding provides abstractions for the support of concrete encoding implementations.
+// Package encoding provides abstractions for supporting concrete encoding implementations.
 package encoding
 
 import (
@@ -18,11 +18,11 @@ const (
 	AcceptEncodingHeader string = "Accept-Encoding"
 )
 
-// DecodeFunc definition of a decoding function.
+// DecodeFunc definition that supports a reader.
 type DecodeFunc func(data io.Reader, v interface{}) error
 
-// DecodeRawFunc definition of a decoding function from a byte slice.
+// DecodeRawFunc definition that supports byte slices.
 type DecodeRawFunc func(data []byte, v interface{}) error
 
-// EncodeFunc definition of an encoding function.
+// EncodeFunc definition that returns a byte slice.
 type EncodeFunc func(v interface{}) ([]byte, error)

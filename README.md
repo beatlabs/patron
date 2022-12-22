@@ -35,7 +35,6 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
   - [AMQP](docs/components/AMQP.md)
 - [Clients](docs/clients/Clients.md)
 - Packages
-  - [Reliability](docs/other/Reliability.md)
   - [Observability](docs/observability/Observability.md)
   - [Logging](docs/observability/Logging.md)
   - [Distributed Tracing](docs/observability/DistributedTracing.md)  

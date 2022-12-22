@@ -1,4 +1,4 @@
-// Package std is the implementation of the logger interface with the standard log package.
+// Package std is a concrete implementation of the log abstractions based on std log.
 package std
 
 import (
@@ -21,7 +21,7 @@ var levelMap = map[patronLog.Level]string{
 	patronLog.PanicLevel: "PNC",
 }
 
-// Logger implementation of the std log.
+// Logger based on the std log.
 type Logger struct {
 	level      patronLog.Level
 	fields     map[string]interface{}
@@ -35,12 +35,12 @@ type Logger struct {
 	fatal      *log.Logger
 }
 
-// New constructor.
+// New returns a new logger.
 func New(out io.Writer, lvl patronLog.Level, fields map[string]interface{}) *Logger {
 	return NewWithFlags(out, lvl, fields, log.LstdFlags|log.Lmicroseconds|log.LUTC|log.Lmsgprefix)
 }
 
-// NewWithFlags constructor.
+// NewWithFlags returns a new logger with additional flags.
 func NewWithFlags(out io.Writer, lvl patronLog.Level, fields map[string]interface{}, flags int) *Logger {
 	fieldsLine := createFieldsLine(fields)
 
@@ -108,7 +108,7 @@ func (l *Logger) Fatal(args ...interface{}) {
 	os.Exit(1)
 }
 
-// Fatalf logging.
+// Fatalf logging with message.
 func (l *Logger) Fatalf(msg string, args ...interface{}) {
 	patronLog.IncreaseFatalCounter()
 	if !l.shouldLog(patronLog.FatalLevel) {
@@ -129,7 +129,7 @@ func (l *Logger) Panic(args ...interface{}) {
 	panic(output(l.panic, args...))
 }
 
-// Panicf logging.
+// Panicf logging with message.
 func (l *Logger) Panicf(msg string, args ...interface{}) {
 	patronLog.IncreasePanicCounter()
 	if !l.shouldLog(patronLog.PanicLevel) {
@@ -149,7 +149,7 @@ func (l *Logger) Error(args ...interface{}) {
 	output(l.error, args...)
 }
 
-// Errorf logging.
+// Errorf logging with message.
 func (l *Logger) Errorf(msg string, args ...interface{}) {
 	patronLog.IncreaseErrorCounter()
 	if !l.shouldLog(patronLog.ErrorLevel) {
@@ -169,7 +169,7 @@ func (l *Logger) Warn(args ...interface{}) {
 	output(l.warn, args...)
 }
 
-// Warnf logging.
+// Warnf logging with message.
 func (l *Logger) Warnf(msg string, args ...interface{}) {
 	patronLog.IncreaseWarnCounter()
 	if !l.shouldLog(patronLog.WarnLevel) {
@@ -189,7 +189,7 @@ func (l *Logger) Info(args ...interface{}) {
 	output(l.info, args...)
 }
 
-// Infof logging.
+// Infof logging with message.
 func (l *Logger) Infof(msg string, args ...interface{}) {
 	patronLog.IncreaseInfoCounter()
 	if !l.shouldLog(patronLog.InfoLevel) {
@@ -209,7 +209,7 @@ func (l *Logger) Debug(args ...interface{}) {
 	output(l.debug, args...)
 }
 
-// Debugf logging.
+// Debugf logging with message.
 func (l *Logger) Debugf(msg string, args ...interface{}) {
 	patronLog.IncreaseDebugCounter()
 	if !l.shouldLog(patronLog.DebugLevel) {
@@ -219,7 +219,7 @@ func (l *Logger) Debugf(msg string, args ...interface{}) {
 	outputf(l.debug, msg, args...)
 }
 
-// Level of the logging.
+// Level of the logger.
 func (l *Logger) Level() patronLog.Level {
 	return l.level
 }

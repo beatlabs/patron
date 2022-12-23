@@ -6,15 +6,9 @@ import (
 
 	"github.com/beatlabs/patron"
 	patronamqp "github.com/beatlabs/patron/component/amqp"
+	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 	"github.com/streadway/amqp"
-)
-
-const (
-	amqpURL          = "amqp://guest:guest@localhost:5672/"
-	amqpQueue        = "patron"
-	amqpExchangeName = "patron"
-	amqpExchangeType = amqp.ExchangeFanout
 )
 
 func createAMQPConsumer() (patron.Component, error) {
@@ -30,11 +24,11 @@ func createAMQPConsumer() (patron.Component, error) {
 		}
 	}
 
-	return patronamqp.New(amqpURL, amqpQueue, process, patronamqp.WithRetry(10, 1*time.Second))
+	return patronamqp.New(examples.AMQPURL, examples.AMQPQueue, process, patronamqp.WithRetry(10, 1*time.Second))
 }
 
 func setupQueueAndExchange() error {
-	conn, err := amqp.Dial(amqpURL)
+	conn, err := amqp.Dial(examples.AMQPURL)
 	if err != nil {
 		return err
 	}
@@ -43,17 +37,17 @@ func setupQueueAndExchange() error {
 		return err
 	}
 
-	err = channel.ExchangeDeclare(amqpExchangeName, amqpExchangeType, true, false, false, false, nil)
+	err = channel.ExchangeDeclare(examples.AMQPExchangeName, examples.AMQPExchangeType, true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 
-	q, err := channel.QueueDeclare(amqpQueue, true, false, false, false, nil)
+	q, err := channel.QueueDeclare(examples.AMQPQueue, true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 
-	err = channel.QueueBind(q.Name, "", amqpExchangeName, false, nil)
+	err = channel.QueueBind(q.Name, "", examples.AMQPExchangeName, false, nil)
 	if err != nil {
 		return err
 	}

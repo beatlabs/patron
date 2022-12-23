@@ -12,8 +12,6 @@ import (
 	"github.com/beatlabs/patron/log"
 )
 
-const gRPCPort = "50002"
-
 type greeterServer struct {
 	examples.UnimplementedGreeterServer
 }
@@ -25,14 +23,14 @@ func (gs *greeterServer) SayHello(ctx context.Context, req *examples.HelloReques
 }
 
 func createGrpcServer() (patron.Component, error) {
-	port, err := strconv.Atoi(gRPCPort)
+	port, err := strconv.Atoi(examples.GRPCPort)
 	if err != nil {
 		return nil, errors.New("failed to convert grpc port")
 	}
 
 	cmp, err := grpc.New(port)
 	if err != nil {
-		log.Fatalf("failed to create gRPC component: %v", err)
+		return nil, fmt.Errorf("failed to create gRPC component: %v", err)
 	}
 
 	examples.RegisterGreeterServer(cmp.Server(), &greeterServer{})

@@ -7,13 +7,8 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/component/kafka/group"
+	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
-)
-
-const (
-	kafkaTopic  = "patron-topic"
-	kafkaGroup  = "patron-group"
-	kafkaBroker = "localhost:9092"
 )
 
 func createKafkaConsumer() (patron.Component, error) {
@@ -31,7 +26,7 @@ func createKafkaConsumer() (patron.Component, error) {
 		return nil
 	}
 
-	return group.New(name, kafkaGroup, []string{kafkaBroker}, []string{kafkaTopic}, process, cfg,
+	return group.New(name, examples.KafkaGroup, []string{examples.KafkaBroker}, []string{examples.KafkaTopic}, process, cfg,
 		group.WithFailureStrategy(kafka.SkipStrategy), group.WithBatchSize(1), group.WithBatchTimeout(1*time.Second),
 		group.WithRetries(10), group.WithRetryWait(3*time.Second), group.WithCommitSync())
 }

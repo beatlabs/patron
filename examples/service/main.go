@@ -5,18 +5,17 @@ import (
 	"os"
 
 	"github.com/beatlabs/patron"
+	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 )
 
 const (
 	name    = "example"
 	version = "1.0.0"
-
-	httpPort = "50001"
 )
 
 func init() {
-	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
+	err := os.Setenv("PATRON_LOG_LEVEL", "info")
 	if err != nil {
 		log.Fatalf("failed to set log level env var: %v", err)
 	}
@@ -24,7 +23,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("failed to set sampler env vars: %v", err)
 	}
-	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", httpPort)
+	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", examples.HTTPPort)
 	if err != nil {
 		log.Fatalf("failed to set default patron port env vars: %v", err)
 	}

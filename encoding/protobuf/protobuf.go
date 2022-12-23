@@ -4,7 +4,6 @@ package protobuf
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -16,16 +15,16 @@ const (
 	TypeGoogle string = "application/x-google-protobuf"
 )
 
-// Decode a protobuf input in the form of a reader.
+// Decode a reader input into a protobuf model.
 func Decode(data io.Reader, v interface{}) error {
-	b, err := ioutil.ReadAll(data)
+	b, err := io.ReadAll(data)
 	if err != nil {
 		return err
 	}
 	return DecodeRaw(b, v)
 }
 
-// DecodeRaw a protobuf input in the form of a byte slice.
+// DecodeRaw a byte slice input into a protobuf model.
 func DecodeRaw(data []byte, v interface{}) error {
 	val, ok := v.(proto.Message)
 	if !ok {
@@ -34,7 +33,7 @@ func DecodeRaw(data []byte, v interface{}) error {
 	return proto.Unmarshal(data, val)
 }
 
-// Encode a model to protobuf.
+// Encode a protobuf model into a byte slice.
 func Encode(v interface{}) ([]byte, error) {
 	val, ok := v.(proto.Message)
 	if !ok {

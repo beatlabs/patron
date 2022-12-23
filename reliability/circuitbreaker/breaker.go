@@ -51,13 +51,13 @@ func breakerCounterInc(name string, st status) {
 
 // Setting definition.
 type Setting struct {
-	// The failure threshold for the circuit to open.
+	// FailureThreshold for the circuit to open.
 	FailureThreshold uint
-	// The retry timeout after which we set the state to half-open and allow a retry.
+	// RetryTimeout after which we set the state to half-open and allow a retry.
 	RetryTimeout time.Duration
-	// The retry success threshold which returns the state to open.
+	// RetrySuccessThreshold which returns the state to open.
 	RetrySuccessThreshold uint
-	// The threshold of how many retry executions are allowed when the status is half-open.
+	// MaxRetryExecutionThreshold which defines how many tries are allowed when the status is half-open.
 	MaxRetryExecutionThreshold uint
 }
 

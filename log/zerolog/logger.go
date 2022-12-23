@@ -1,4 +1,4 @@
-// Package zerolog is a concrete implementation of the log abstractions.
+// Package zerolog is a concrete implementation of the log abstractions based on zerolog.
 package zerolog
 
 import (
@@ -37,14 +37,14 @@ func init() {
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 }
 
-// Logger abstraction based on zerolog.
+// Logger based on zerolog.
 type Logger struct {
 	logger  *zerolog.Logger
 	loggerf *zerolog.Logger
 	level   log.Level
 }
 
-// New creates a new logger.
+// New returns a new logger.
 func New(out io.Writer, lvl log.Level, f map[string]interface{}) log.Logger {
 	zl := zerolog.New(out).With().Timestamp().Logger().Hook(defaultSourceHook)
 	zlf := zerolog.New(out).With().Timestamp().Logger().Hook(defaultSourceHookWithFormat)
@@ -73,7 +73,7 @@ func (l *Logger) Panic(args ...interface{}) {
 	l.logger.Panic().Msg(fmt.Sprint(args...))
 }
 
-// Panicf logging.
+// Panicf logging with message.
 func (l *Logger) Panicf(msg string, args ...interface{}) {
 	log.IncreasePanicCounter()
 	l.loggerf.Panic().Msgf(msg, args...)
@@ -85,7 +85,7 @@ func (l *Logger) Fatal(args ...interface{}) {
 	l.logger.Fatal().Msg(fmt.Sprint(args...))
 }
 
-// Fatalf logging.
+// Fatalf logging with message.
 func (l *Logger) Fatalf(msg string, args ...interface{}) {
 	log.IncreaseFatalCounter()
 	l.loggerf.Fatal().Msgf(msg, args...)
@@ -97,7 +97,7 @@ func (l *Logger) Error(args ...interface{}) {
 	l.logger.Error().Msg(fmt.Sprint(args...))
 }
 
-// Errorf logging.
+// Errorf logging with message.
 func (l *Logger) Errorf(msg string, args ...interface{}) {
 	log.IncreaseErrorCounter()
 	l.loggerf.Error().Msgf(msg, args...)
@@ -109,7 +109,7 @@ func (l *Logger) Warn(args ...interface{}) {
 	l.logger.Warn().Msg(fmt.Sprint(args...))
 }
 
-// Warnf logging.
+// Warnf logging with message.
 func (l *Logger) Warnf(msg string, args ...interface{}) {
 	log.IncreaseWarnCounter()
 	l.loggerf.Warn().Msgf(msg, args...)
@@ -121,7 +121,7 @@ func (l *Logger) Info(args ...interface{}) {
 	l.logger.Info().Msg(fmt.Sprint(args...))
 }
 
-// Infof logging.
+// Infof logging with message.
 func (l *Logger) Infof(msg string, args ...interface{}) {
 	log.IncreaseInfoCounter()
 	l.loggerf.Info().Msgf(msg, args...)
@@ -133,13 +133,13 @@ func (l *Logger) Debug(args ...interface{}) {
 	l.logger.Debug().Msg(fmt.Sprint(args...))
 }
 
-// Debugf logging.
+// Debugf logging with message.
 func (l *Logger) Debugf(msg string, args ...interface{}) {
 	log.IncreaseDebugCounter()
 	l.loggerf.Debug().Msgf(msg, args...)
 }
 
-// Level return the logging level.
+// Level of the logger.
 func (l *Logger) Level() log.Level {
 	return l.level
 }

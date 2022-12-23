@@ -15,9 +15,11 @@ import (
 func createSQSConsumer() (patron.Component, error) {
 	process := func(_ context.Context, btc patronsqs.Batch) {
 		for _, msg := range btc.Messages() {
-			log.FromContext(msg.Context()).Infof("AWS SQS message received: %s", msg.ID())
-
-			msg.NACK()
+			err := msg.ACK()
+			if err != nil {
+				log.FromContext(msg.Context()).Infof("AWS SQS message %s received but ack failed: %v", msg.ID(), err)
+			}
+			log.FromContext(msg.Context()).Infof("AWS SQS message %s received and acked", msg.ID())
 		}
 	}
 

@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,24 +26,83 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type process func(context.Context) error
+
+var modesMap = map[string]process{
+	"http":  sendHTTPRequest,
+	"grpc":  sendGRPCRequest,
+	"kafka": sendKafkaMessage,
+	"amqp":  sendAMQPMessage,
+	"sqs":   sendSQSMessage,
+}
+
+type mode string
+
+const (
+	modeAll   mode = "all"
+	modeHTTP  mode = "http"
+	modeGRPC  mode = "grpc"
+	modeKafka mode = "kafka"
+	modeAMQP  mode = "amqp"
+	modeSQS   mode = "sqs"
+)
+
 func main() {
-	ctx, cnl := context.WithCancel(context.Background())
+	var modes string
+	flag.StringVar(&modes, "modes", string(modeAll), `modes determines what clients to run. 
+	Multiple modes are allowed in a comma separated fashion. 
+	Valid values are: all, http, grpc, kafka, amqp, sqs. Default value is all.`)
+
+	flag.Parse()
+
+	prs, err := processModes(modes)
+	if err != nil {
+		fmt.Printf("failed to parse flags: %v\n", err)
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	ctx, cnl := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cnl()
 
-	err := sendHTTPRequest(ctx)
-	handleError(err)
+	for _, process := range prs {
+		err = process(ctx)
+		handleError(err)
+	}
+}
 
-	err = sendGRPCRequest(ctx)
-	handleError(err)
+func processModes(modes string) ([]process, error) {
+	if modes == "" {
+		return nil, errors.New("modes was empty")
+	}
 
-	err = sendKafkaMessage(ctx)
-	handleError(err)
+	mds := strings.Split(modes, ",")
+	if len(mds) == 0 {
+		return nil, errors.New("modes was empty")
+	}
 
-	err = sendAMQPMessage(ctx)
-	handleError(err)
+	var prs []process
 
-	err = sendSQSMessage(ctx)
-	handleError(err)
+	for _, mode := range mds {
+		switch mode {
+		case string(modeAll):
+			return []process{sendHTTPRequest, sendGRPCRequest, sendKafkaMessage, sendAMQPMessage, sendSQSMessage}, nil
+		case string(modeHTTP):
+			prs = append(prs, sendHTTPRequest)
+		case string(modeGRPC):
+			prs = append(prs, sendGRPCRequest)
+		case string(modeKafka):
+			prs = append(prs, sendKafkaMessage)
+		case string(modeAMQP):
+			prs = append(prs, sendAMQPMessage)
+		case string(modeSQS):
+			prs = append(prs, sendSQSMessage)
+		default:
+			return nil, fmt.Errorf("unsupported mode %s", mode)
+		}
+	}
+
+	return prs, nil
 }
 
 func sendHTTPRequest(ctx context.Context) error {

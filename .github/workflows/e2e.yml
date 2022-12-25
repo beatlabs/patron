@@ -22,7 +22,7 @@ jobs:
         working-directory: ./examples/
 
       - name: Starting service
-        run:  go run * >> /dev/null 2>&1 & 
+        run:  go build . && ./service >> /dev/null 2>&1 & 
         working-directory: ./examples/service
 
       - name: Starting client

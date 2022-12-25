@@ -25,12 +25,11 @@ jobs:
       - name: Starting service
         run:  |
           go build . 
-          sleep 60
           nohup ./service &
         working-directory: ./examples/service
 
       - name: Starting client
         run:  |
-          sleep 60
+          sleep 10
           go run main.go
         working-directory: ./examples/client

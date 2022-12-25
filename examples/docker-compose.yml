@@ -1,46 +1,9 @@
 version: '2.1'
 
 services:
-  jaeger:
-    image: jaegertracing/all-in-one:1.20.0
-    environment:
-      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
-    networks:
-      examplenw:
-        aliases:
-          - jaeger
-    expose:
-      - "9411"
-      - "16686"
-      - "5778"
-      - "14268"
-    ports:
-      - "9411:9411"
-      - "16686:16686"
-      - "5778:5778"
-      - "14268:14268"
-      - "5775:5775/udp"
-      - "6831:6831/udp"
-      - "6832:6832/udp"
-  prometheus:
-    image: prom/prometheus:v2.22.0
-    networks:
-      examplenw:
-        aliases:
-          - prometheus
-    volumes:
-      - ${PWD}/config/prometheus.yml:/etc/prometheus/prometheus.yml
-    expose:
-      - "9090"
-    ports:
-      - "9090:9090"
   rabbitmq:
     image: rabbitmq:3-management
     hostname: "rabbitmq"
-    networks:
-      examplenw:
-        aliases:
-          - rabbitmq
     expose:
       - "15672"
       - "5672"
@@ -50,10 +13,6 @@ services:
   zookeeper:
     image: confluentinc/cp-zookeeper:6.0.0
     hostname: "zookeeper"
-    networks:
-      examplenw:
-        aliases:
-          - zookeeper
     expose:
       - "2181"
     ports:
@@ -64,10 +23,6 @@ services:
   kafka:
     image: confluentinc/cp-kafka:6.0.0
     hostname: "kafka"
-    networks:
-      examplenw:
-        aliases:
-          - kafka
     expose:
       - "9092"
       - "29092"
@@ -81,26 +36,9 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  pg:
-    image:  postgres:13
-    hostname: "pg"
-    networks:
-      examplenw:
-        aliases:
-          - pg
-    expose:
-      - "5432"
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_PASSWORD=test123
   localstack:
     image: localstack/localstack:0.12.0
     hostname: localstack
-    networks:
-      examplenw:
-        aliases:
-          - localstack
     ports:
       - "4566:4566"
     environment:
@@ -112,21 +50,3 @@ services:
       - AWS_DEFAULT_REGION=eu-west-1
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
-  redis:
-    image: bitnami/redis:6.0
-    hostname: 'redis'
-    environment:
-    - ALLOW_EMPTY_PASSWORD=yes
-    - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-    networks:
-      examplenw:
-        aliases:
-          - cache
-    expose:
-      - "6379"
-    ports:
-      - "6379:6379"
-
-networks:
-  examplenw: {}
-

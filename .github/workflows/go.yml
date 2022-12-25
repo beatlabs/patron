@@ -39,6 +39,9 @@ jobs:
       - name: Start dependencies
         run: make deps-start
 
+      - name: Wait dependencies
+        run: sleep 60
+
       - name: Running CI
         run: make ci
 

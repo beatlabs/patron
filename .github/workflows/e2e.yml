@@ -18,13 +18,19 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Starting dependencies
-        run:  docker-compose up -d && sleep 5
+        run:  |
+          docker-compose up -d
         working-directory: ./examples/
 
       - name: Starting service
-        run:  go build . && ./service >> /dev/null 2>&1 & 
+        run:  |
+          go build . 
+          sleep 60
+          ./service
         working-directory: ./examples/service
 
       - name: Starting client
-        run:  sleep 5 && go run main.go
+        run:  |
+          sleep 60
+          go run main.go
         working-directory: ./examples/client

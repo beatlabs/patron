@@ -4,7 +4,7 @@
 // 	protoc        v3.19.1
 // source: user.proto
 
-package examples
+package test
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -103,7 +103,7 @@ func file_user_proto_rawDescGZIP() []byte {
 
 var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_user_proto_goTypes = []interface{}{
-	(*User)(nil), // 0: examples.User
+	(*User)(nil), // 0: test.User
 }
 var file_user_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type

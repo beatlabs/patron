@@ -5,17 +5,17 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/test"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEncodeDecode(t *testing.T) {
-	user1 := examples.User{
+	user1 := test.User{
 		Firstname: "John",
 		Lastname:  "Doe",
 	}
-	user2 := examples.User{}
-	user3 := examples.User{}
+	user2 := test.User{}
+	user3 := test.User{}
 
 	b, err := Encode(&user1)
 	assert.NoError(t, err)
@@ -32,7 +32,7 @@ func TestEncodeDecode(t *testing.T) {
 }
 
 func TestDecodeError(t *testing.T) {
-	user := examples.User{}
+	user := test.User{}
 	err := Decode(errReader(0), &user)
 	assert.Error(t, err)
 }

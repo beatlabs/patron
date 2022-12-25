@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package examples;
+package test;
 
-option go_package = "github.com/beatlabs/patron/examples";
+option go_package = "github.com/beatlabs/patron/test";
 
 message User {
   string Firstname = 1;

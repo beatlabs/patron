@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/beatlabs/patron/cache"
-	lru "github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru"
 )
 
 var _ cache.Cache = &Cache{}

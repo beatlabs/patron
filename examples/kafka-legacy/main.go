@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron"
-	patronamqp "github.com/beatlabs/patron/client/amqp/v2"
+	patronamqp "github.com/beatlabs/patron/client/amqp"
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/component/async/kafka/group"

@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package kafka
 
@@ -7,6 +6,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Shopify/sarama"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -22,27 +22,40 @@ const (
 var brokers = []string{"127.0.0.1:9093"}
 
 func TestNewAsyncProducer_Success(t *testing.T) {
-	ap, chErr, err := NewBuilder(brokers).CreateAsync()
+	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
+	require.Nil(t, err)
+
+	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
 }
 
 func TestNewSyncProducer_Success(t *testing.T) {
-	p, err := NewBuilder(brokers).CreateSync()
+	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
+	require.Nil(t, err)
+
+	p, err := New(brokers, saramaCfg).Create()
 	assert.NoError(t, err)
 	assert.NotNil(t, p)
 }
 
 func TestAsyncProducer_SendMessage_Close(t *testing.T) {
+	saramaCfg, err := DefaultProducerSaramaConfig("test-consumer", false)
+	require.Nil(t, err)
+
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
-	ap, chErr, err := NewBuilder(brokers).CreateAsync()
+	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
-	msg := NewMessage(clientTopic, "TEST")
+	msg := &sarama.ProducerMessage{
+		Topic:   clientTopic,
+		Value:   sarama.StringEncoder("TEST"),
+		Headers: []sarama.RecordHeader{{Key: []byte("123"), Value: []byte("123")}},
+	}
 	err = ap.Send(context.Background(), msg)
 	assert.NoError(t, err)
 	assert.NoError(t, ap.Close())
@@ -57,20 +70,29 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 		"version":   "dev",
 	}
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
 	// Metrics
-	assert.Equal(t, 1, testutil.CollectAndCount(messageStatus, "component_kafka_producer_message_status"))
+	assert.Equal(t, 1, testutil.CollectAndCount(messageStatus, "client_kafka_producer_message_status"))
 }
 
 func TestSyncProducer_SendMessage_Close(t *testing.T) {
+	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
+	require.NoError(t, err)
+
 	mtr := mocktracer.New()
 	defer mtr.Reset()
 	opentracing.SetGlobalTracer(mtr)
-	p, err := NewBuilder(brokers).CreateSync()
+	p, err := New(brokers, saramaCfg).Create()
 	require.NoError(t, err)
 	assert.NotNil(t, p)
-	msg := NewMessage(clientTopic, "TEST")
-	err = p.Send(context.Background(), msg)
+	msg := &sarama.ProducerMessage{
+		Topic: clientTopic,
+		Value: sarama.StringEncoder("TEST"),
+	}
+	partition, offset, err := p.Send(context.Background(), msg)
 	assert.NoError(t, err)
+	assert.True(t, partition >= 0)
+	assert.True(t, offset >= 0)
 	assert.NoError(t, p.Close())
 	assert.Len(t, mtr.FinishedSpans(), 1)
 
@@ -85,8 +107,45 @@ func TestSyncProducer_SendMessage_Close(t *testing.T) {
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 }
 
+func TestSyncProducer_SendMessages_Close(t *testing.T) {
+	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
+	require.NoError(t, err)
+
+	mtr := mocktracer.New()
+	defer mtr.Reset()
+	opentracing.SetGlobalTracer(mtr)
+	p, err := New(brokers, saramaCfg).Create()
+	require.NoError(t, err)
+	assert.NotNil(t, p)
+	msg1 := &sarama.ProducerMessage{
+		Topic: clientTopic,
+		Value: sarama.StringEncoder("TEST1"),
+	}
+	msg2 := &sarama.ProducerMessage{
+		Topic: clientTopic,
+		Value: sarama.StringEncoder("TEST2"),
+	}
+	err = p.SendBatch(context.Background(), []*sarama.ProducerMessage{msg1, msg2})
+	assert.NoError(t, err)
+	assert.NoError(t, p.Close())
+	assert.Len(t, mtr.FinishedSpans(), 2)
+
+	expected := map[string]interface{}{
+		"component": "kafka-sync-producer",
+		"error":     false,
+		"span.kind": ext.SpanKindEnum("producer"),
+		"topic":     "batch",
+		"type":      "sync",
+		"version":   "dev",
+	}
+	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+}
+
 func TestAsyncProducerActiveBrokers(t *testing.T) {
-	ap, chErr, err := NewBuilder(brokers).CreateAsync()
+	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
+	require.NoError(t, err)
+
+	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
@@ -95,7 +154,10 @@ func TestAsyncProducerActiveBrokers(t *testing.T) {
 }
 
 func TestSyncProducerActiveBrokers(t *testing.T) {
-	ap, err := NewBuilder(brokers).CreateSync()
+	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
+	require.NoError(t, err)
+
+	ap, err := New(brokers, saramaCfg).Create()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotEmpty(t, ap.ActiveBrokers())

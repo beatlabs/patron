@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	kafkaclient "github.com/beatlabs/patron/client/kafka/v2"
+	kafkaclient "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/correlation"
 	testkafka "github.com/beatlabs/patron/test/kafka"

@@ -10,7 +10,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
 	clienthttp "github.com/beatlabs/patron/client/http"
-	patronkafka "github.com/beatlabs/patron/client/kafka/v2"
+	patronkafka "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/component/http/auth/apikey"
 	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/beatlabs/patron/component/http/v2/router/httprouter"

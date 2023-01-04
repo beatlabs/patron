@@ -33,7 +33,7 @@ func WithComponents(cc ...Component) OptionFunc {
 		}
 
 		log.Debug("setting components")
-		svc.cps = append(svc.cps, cc...)
+		svc.components = append(svc.components, cc...)
 
 		return nil
 	}

@@ -36,18 +36,72 @@ type Component interface {
 // Service is responsible for managing and setting up everything.
 // The Service will start by default an HTTP component in order to host management endpoint.
 type Service struct {
-	name              string
-	version           string
-	cps               []Component
-	termSig           chan os.Signal
-	sighupHandler     func()
-	uncompressedPaths []string
-	httpRouter        http.Handler
-	config            config
+	name          string
+	version       string
+	components    []Component
+	termSig       chan os.Signal
+	sighupHandler func()
+	httpRouter    http.Handler
+	config        config
 }
 
-func (s *Service) setupOSSignal() {
-	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+func New(name, version string, options ...OptionFunc) (*Service, error) {
+	if name == "" {
+		return nil, errors.New("name is required")
+	}
+	if version == "" {
+		version = "dev"
+	}
+
+	// default config with structured logger and default fields.
+	cfg := config{
+		logger: patronzerolog.New(os.Stderr, getLogLevel(), nil),
+		fields: defaultLogFields(name, version),
+	}
+
+	s := &Service{
+		name:    name,
+		version: version,
+		termSig: make(chan os.Signal, 1),
+		sighupHandler: func() {
+			log.Debug("WithSIGHUP received: nothing setup")
+		},
+		config:     cfg,
+		components: make([]Component, 0),
+	}
+
+	var err error
+	err = setupJaegerTracing(name, version)
+	if err != nil {
+		return nil, err
+	}
+
+	optionErrors := make([]error, 0)
+	for _, option := range options {
+		err = option(s)
+		if err != nil {
+			optionErrors = append(optionErrors, err)
+		}
+	}
+
+	if len(optionErrors) > 0 {
+		return nil, patronErrors.Aggregate(optionErrors...)
+	}
+
+	err = setupLogging(cfg.fields, cfg.logger)
+	if err != nil {
+		return nil, err
+	}
+
+	httpCp, err := s.createHTTPComponent()
+	if err != nil {
+		return nil, err
+	}
+
+	s.components = append(s.components, httpCp)
+	s.setupOSSignal()
+
+	return s, nil
 }
 
 func (s *Service) Run(ctx context.Context) error {
@@ -57,19 +111,19 @@ func (s *Service) Run(ctx context.Context) error {
 			log.Errorf("failed to close trace %v", err)
 		}
 	}()
-	cctx, cnl := context.WithCancel(ctx)
-	chErr := make(chan error, len(s.cps))
+	ctx, cnl := context.WithCancel(ctx)
+	chErr := make(chan error, len(s.components))
 	wg := sync.WaitGroup{}
-	wg.Add(len(s.cps))
-	for _, cp := range s.cps {
+	wg.Add(len(s.components))
+	for _, cp := range s.components {
 		go func(c Component) {
 			defer wg.Done()
-			chErr <- c.Run(cctx)
+			chErr <- c.Run(ctx)
 		}(cp)
 	}
 
 	log.FromContext(ctx).Infof("Service %s started", s.name)
-	ee := make([]error, 0, len(s.cps))
+	ee := make([]error, 0, len(s.components))
 	ee = append(ee, s.waitTermination(chErr))
 	cnl()
 
@@ -80,6 +134,10 @@ func (s *Service) Run(ctx context.Context) error {
 		ee = append(ee, err)
 	}
 	return patronErrors.Aggregate(ee...)
+}
+
+func (s *Service) setupOSSignal() {
+	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 }
 
 func (s *Service) createHTTPComponent() (Component, error) {
@@ -267,63 +325,4 @@ func setupJaegerTracing(name, version string) error {
 
 	log.Debugf("setting up default tracing %s, %s with param %f", agent, tp, prmVal)
 	return trace.Setup(name, version, agent, tp, prmVal, buckets)
-}
-
-func New(name, version string, options ...OptionFunc) (*Service, error) {
-	if name == "" {
-		return nil, errors.New("name is required")
-	}
-	if version == "" {
-		version = "dev"
-	}
-
-	// default config with structured logger and default fields.
-	cfg := config{
-		logger: patronzerolog.New(os.Stderr, getLogLevel(), nil),
-		fields: defaultLogFields(name, version),
-	}
-
-	s := &Service{
-		name:    name,
-		version: version,
-		termSig: make(chan os.Signal, 1),
-		sighupHandler: func() {
-			log.Debug("WithSIGHUP received: nothing setup")
-		},
-		config: cfg,
-		cps:    make([]Component, 0),
-	}
-
-	var err error
-	err = setupJaegerTracing(name, version)
-	if err != nil {
-		return nil, err
-	}
-
-	optionErrors := make([]error, 0)
-	for _, option := range options {
-		err = option(s)
-		if err != nil {
-			optionErrors = append(optionErrors, err)
-		}
-	}
-
-	if len(optionErrors) > 0 {
-		return nil, patronErrors.Aggregate(optionErrors...)
-	}
-
-	err = setupLogging(cfg.fields, cfg.logger)
-	if err != nil {
-		return nil, err
-	}
-
-	httpCp, err := s.createHTTPComponent()
-	if err != nil {
-		return nil, err
-	}
-
-	s.cps = append(s.cps, httpCp)
-	s.setupOSSignal()
-
-	return s, nil
 }

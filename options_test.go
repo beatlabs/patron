@@ -30,7 +30,7 @@ func TestComponents(t *testing.T) {
 			svc := &Service{}
 			err := WithComponents(temp.args.cc...)(svc)
 			assert.Equal(t, temp.wantError, err)
-			assert.Equal(t, temp.wantComponents, svc.cps)
+			assert.Equal(t, temp.wantComponents, svc.components)
 		})
 	}
 }

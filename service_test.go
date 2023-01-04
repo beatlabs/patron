@@ -69,12 +69,12 @@ func TestNewServer(t *testing.T) {
 				assert.NotNil(t, gotService)
 				assert.IsType(t, &Service{}, gotService)
 
-				assert.NotEmpty(t, gotService.cps)
+				assert.NotEmpty(t, gotService.components)
 				assert.NotNil(t, gotService.termSig)
 				assert.NotNil(t, gotService.sighupHandler)
 
 				for _, comp := range temp.cps {
-					assert.Contains(t, gotService.cps, comp)
+					assert.Contains(t, gotService.components, comp)
 				}
 			}
 		})
@@ -152,7 +152,7 @@ func TestServer_SetupTracing(t *testing.T) {
 func TestNewServer_WithComponentsTwice(t *testing.T) {
 	svc, err := New("test", "", WithTextLogger(), WithComponents(&testComponent{}, &testComponent{}))
 	require.NoError(t, err)
-	assert.Len(t, svc.cps, 3)
+	assert.Len(t, svc.components, 3)
 }
 
 func TestNewServer_FailingConditions(t *testing.T) {

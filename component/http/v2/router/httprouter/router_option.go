@@ -72,17 +72,13 @@ func WithExpVarProfiling() OptionFunc {
 }
 
 // WithAppNameHeaders option for adding name and version header to the response.
-func WithAppNameHeaders(name, version string) OptionFunc {
-	return func(cfg *Config) error {
-		if name == "" {
-			return errors.New("app name was not provided")
-		}
-
-		if version == "" {
-			return errors.New("app version was not provided")
-		}
-
-		cfg.appNameVersionMiddleware = middleware.NewAppNameVersion(name, version)
-		return nil
+func WithAppNameHeaders(name, version string) (OptionFunc, error) {
+	appNameVersionMiddleware, err := middleware.NewAppNameVersion(name, version)
+	if err != nil {
+		return nil, err
 	}
+	return func(cfg *Config) error {
+		cfg.appNameVersionMiddleware = appNameVersionMiddleware
+		return nil
+	}, nil
 }

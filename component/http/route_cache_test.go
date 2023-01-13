@@ -51,6 +51,9 @@ func TestCachingMiddleware(t *testing.T) {
 	routeCache, errs := httpcache.NewRouteCache(testingCache, httpcache.Age{Max: 1 * time.Second})
 	assert.Empty(t, errs)
 
+	cachingMiddleware, err := middleware.NewCaching(routeCache)
+	require.NoError(t, err)
+
 	tests := []struct {
 		name         string
 		args         args
@@ -66,7 +69,7 @@ func TestCachingMiddleware(t *testing.T) {
 				i, err := w.Write([]byte{1, 2, 3, 4})
 				assert.NoError(t, err)
 				assert.Equal(t, 4, i)
-			}), mws: []middleware.Func{middleware.NewCaching(routeCache)}},
+			}), mws: []middleware.Func{cachingMiddleware}},
 			postRequest, 202, "\x01\x02\x03\x04",
 			cacheState{},
 		},
@@ -77,7 +80,7 @@ func TestCachingMiddleware(t *testing.T) {
 				i, err := w.Write([]byte{1, 2, 3, 4})
 				assert.NoError(t, err)
 				assert.Equal(t, 4, i)
-			}), mws: []middleware.Func{middleware.NewCaching(routeCache)}},
+			}), mws: []middleware.Func{cachingMiddleware}},
 			getRequest, 200, "\x01\x02\x03\x04",
 			cacheState{
 				setOps: 1,
@@ -246,6 +249,9 @@ func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
 
 	routeCache, errs := httpcache.NewRouteCache(cc, httpcache.Age{Max: 10 * time.Second})
 	assert.Empty(t, errs)
+	cachingMiddleware, err := middleware.NewCaching(routeCache)
+	require.NoError(t, err)
+
 	routeBuilder := NewRouteBuilder("/path", func(context context.Context, request *Request) (response *Response, e error) {
 		atomic.AddUint32(&executions, 1)
 		newResponse := NewResponse("body")
@@ -254,7 +260,7 @@ func TestRouteCacheAsMiddleware_WithSingleRequest(t *testing.T) {
 	}).
 		WithMiddlewares(
 			preWrapper.middleware,
-			middleware.NewCaching(routeCache),
+			cachingMiddleware,
 			postWrapper.middleware).
 		MethodGet()
 

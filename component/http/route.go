@@ -172,15 +172,27 @@ func (rb *RouteBuilder) Build() (Route, error) {
 	var middlewares []middleware.Func
 	if rb.jaegerTrace {
 		// uses Jaeger/OpenTracing and Patron's response logging
-		middlewares = append(middlewares, middleware.NewLoggingTracing(rb.path, statusCodeLogger))
+		loggingTracingMiddleware, err := middleware.NewLoggingTracing(rb.path, statusCodeLogger)
+		if err != nil {
+			return Route{}, err
+		}
+		middlewares = append(middlewares, loggingTracingMiddleware)
 	}
 
 	// uses a custom Patron metric for HTTP responses (with complete status code)
 	// it does not use Jaeger/OpenTracing
-	middlewares = append(middlewares, middleware.NewRequestObserver(rb.method, rb.path))
+	requestObserverMiddleware, err := middleware.NewRequestObserver(rb.method, rb.path)
+	if err != nil {
+		return Route{}, err
+	}
+	middlewares = append(middlewares, requestObserverMiddleware)
 
 	if rb.rateLimiter != nil {
-		middlewares = append(middlewares, middleware.NewRateLimiting(rb.rateLimiter))
+		rateLimiterMiddleware, err := middleware.NewRateLimiting(rb.rateLimiter)
+		if err != nil {
+			return Route{}, err
+		}
+		middlewares = append(middlewares, rateLimiterMiddleware)
 	}
 	if rb.authenticator != nil {
 		middlewares = append(middlewares, middleware.NewAuth(rb.authenticator))
@@ -193,7 +205,11 @@ func (rb *RouteBuilder) Build() (Route, error) {
 		if rb.method != http.MethodGet {
 			return Route{}, errors.New("cannot apply cache to a route with any method other than GET ")
 		}
-		middlewares = append(middlewares, middleware.NewCaching(rb.routeCache))
+		cachingMiddleware, err := middleware.NewCaching(rb.routeCache)
+		if err != nil {
+			return Route{}, err
+		}
+		middlewares = append(middlewares, cachingMiddleware)
 	}
 
 	return Route{

@@ -51,7 +51,10 @@ func TestVerifyRouter(t *testing.T) {
 	appVersionHeader := "X-App-Version"
 	appNameHeader := "X-App-Name"
 
-	router, err := New(WithRoutes(route), WithAppNameHeaders(appName, appVersion))
+	appNameVersionOptionFunc, err := WithAppNameHeaders(appName, appVersion)
+	require.NoError(t, err)
+
+	router, err := New(WithRoutes(route), appNameVersionOptionFunc)
 	require.NoError(t, err)
 
 	srv := httptest.NewServer(router)

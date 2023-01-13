@@ -166,21 +166,24 @@ func TestEnableAppNameHeaders(t *testing.T) {
 		expectedErr string
 	}{
 		"success":         {args: args{name: "name", version: "version"}},
-		"missing name":    {args: args{name: "", version: "version"}, expectedErr: "app name was not provided"},
-		"missing version": {args: args{name: "name", version: ""}, expectedErr: "app version was not provided"},
+		"missing name":    {args: args{name: "", version: "version"}, expectedErr: "app name cannot be empty"},
+		"missing version": {args: args{name: "name", version: ""}, expectedErr: "app version cannot be empty"},
 	}
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			cfg := &Config{}
-			err := WithAppNameHeaders(tt.args.name, tt.args.version)(cfg)
+			optionFunc, err := WithAppNameHeaders(tt.args.name, tt.args.version)
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
-				assert.Nil(t, cfg.appNameVersionMiddleware)
+				assert.Nil(t, optionFunc)
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, cfg.appNameVersionMiddleware)
+				assert.NotNil(t, optionFunc)
+				cfg := &Config{}
+				err = optionFunc(cfg)
+				assert.NoError(t, err)
+				assert.NotNil(t, optionFunc)
 			}
 		})
 	}

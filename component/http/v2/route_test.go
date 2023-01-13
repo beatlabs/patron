@@ -13,6 +13,8 @@ func TestNewRoute(t *testing.T) {
 	t.Parallel()
 
 	handler := func(http.ResponseWriter, *http.Request) {}
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 
 	type args struct {
 		method      string
@@ -20,6 +22,7 @@ func TestNewRoute(t *testing.T) {
 		handler     http.HandlerFunc
 		optionFuncs []RouteOptionFunc
 	}
+
 	tests := map[string]struct {
 		args        args
 		expectedErr string
@@ -28,25 +31,25 @@ func TestNewRoute(t *testing.T) {
 			method:      http.MethodGet,
 			path:        "/api",
 			handler:     handler,
-			optionFuncs: []RouteOptionFunc{WithRateLimiting(1, 1)},
+			optionFuncs: []RouteOptionFunc{rateLimiting},
 		}},
 		"missing method": {args: args{
 			method:      "",
 			path:        "/api",
 			handler:     handler,
-			optionFuncs: []RouteOptionFunc{WithRateLimiting(1, 1)},
+			optionFuncs: []RouteOptionFunc{rateLimiting},
 		}, expectedErr: "method is empty"},
 		"missing path": {args: args{
 			method:      http.MethodGet,
 			path:        "",
 			handler:     handler,
-			optionFuncs: []RouteOptionFunc{WithRateLimiting(1, 1)},
+			optionFuncs: []RouteOptionFunc{rateLimiting},
 		}, expectedErr: "path is empty"},
 		"missing handler": {args: args{
 			method:      http.MethodGet,
 			path:        "/api",
 			handler:     nil,
-			optionFuncs: []RouteOptionFunc{WithRateLimiting(1, 1)},
+			optionFuncs: []RouteOptionFunc{rateLimiting},
 		}, expectedErr: "handler is nil"},
 		"missing middlewares": {args: args{
 			method:      http.MethodGet,
@@ -73,64 +76,82 @@ func TestNewRoute(t *testing.T) {
 }
 
 func TestNewGetRoute(t *testing.T) {
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 	route, err := NewGetRoute("/api", func(writer http.ResponseWriter, request *http.Request) {},
-		[]RouteOptionFunc{WithRateLimiting(1, 1)}...)
+		[]RouteOptionFunc{rateLimiting}...)
 	require.NoError(t, err)
 	assertRoute(t, http.MethodGet, "/api", route)
 }
 
 func TestNewHeadRoute(t *testing.T) {
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 	route, err := NewHeadRoute("/api", func(writer http.ResponseWriter, request *http.Request) {},
-		[]RouteOptionFunc{WithRateLimiting(1, 1)}...)
+		[]RouteOptionFunc{rateLimiting}...)
 	require.NoError(t, err)
 	assertRoute(t, http.MethodHead, "/api", route)
 }
 
 func TestNewPostRoute(t *testing.T) {
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 	route, err := NewPostRoute("/api", func(writer http.ResponseWriter, request *http.Request) {},
-		[]RouteOptionFunc{WithRateLimiting(1, 1)}...)
+		[]RouteOptionFunc{rateLimiting}...)
 	require.NoError(t, err)
 	assertRoute(t, http.MethodPost, "/api", route)
 }
 
 func TestNewPutRoute(t *testing.T) {
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 	route, err := NewPutRoute("/api", func(writer http.ResponseWriter, request *http.Request) {},
-		[]RouteOptionFunc{WithRateLimiting(1, 1)}...)
+		[]RouteOptionFunc{rateLimiting}...)
 	require.NoError(t, err)
 	assertRoute(t, http.MethodPut, "/api", route)
 }
 
 func TestNewPatchRoute(t *testing.T) {
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 	route, err := NewPatchRoute("/api", func(writer http.ResponseWriter, request *http.Request) {},
-		[]RouteOptionFunc{WithRateLimiting(1, 1)}...)
+		[]RouteOptionFunc{rateLimiting}...)
 	require.NoError(t, err)
 	assertRoute(t, http.MethodPatch, "/api", route)
 }
 
 func TestNewDeleteRoute(t *testing.T) {
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 	route, err := NewDeleteRoute("/api", func(writer http.ResponseWriter, request *http.Request) {},
-		[]RouteOptionFunc{WithRateLimiting(1, 1)}...)
+		[]RouteOptionFunc{rateLimiting}...)
 	require.NoError(t, err)
 	assertRoute(t, http.MethodDelete, "/api", route)
 }
 
 func TestNewConnectRoute(t *testing.T) {
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 	route, err := NewConnectRoute("/api", func(writer http.ResponseWriter, request *http.Request) {},
-		[]RouteOptionFunc{WithRateLimiting(1, 1)}...)
+		[]RouteOptionFunc{rateLimiting}...)
 	require.NoError(t, err)
 	assertRoute(t, http.MethodConnect, "/api", route)
 }
 
 func TestNewOptionsRoute(t *testing.T) {
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 	route, err := NewOptionsRoute("/api", func(writer http.ResponseWriter, request *http.Request) {},
-		[]RouteOptionFunc{WithRateLimiting(1, 1)}...)
+		[]RouteOptionFunc{rateLimiting}...)
 	require.NoError(t, err)
 	assertRoute(t, http.MethodOptions, "/api", route)
 }
 
 func TestNewTraceRoute(t *testing.T) {
+	rateLimiting, err := WithRateLimiting(1, 1)
+	require.NoError(t, err)
 	route, err := NewTraceRoute("/api", func(writer http.ResponseWriter, request *http.Request) {},
-		[]RouteOptionFunc{WithRateLimiting(1, 1)}...)
+		[]RouteOptionFunc{rateLimiting}...)
 	require.NoError(t, err)
 	assertRoute(t, http.MethodTrace, "/api", route)
 }

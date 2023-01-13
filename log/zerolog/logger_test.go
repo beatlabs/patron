@@ -48,6 +48,7 @@ func TestLogMetrics(t *testing.T) {
 	}
 	for name, tt := range tests {
 		tt := tt
+		name := name
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			assert.Equal(t, 0.0, testutil.ToFloat64(log.LevelCount(string(tt.lvl))))

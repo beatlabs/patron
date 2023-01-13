@@ -8,7 +8,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
-	patronamqp "github.com/beatlabs/patron/client/amqp/v2"
+	patronamqp "github.com/beatlabs/patron/client/amqp"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/component/kafka/group"
 	"github.com/beatlabs/patron/encoding/json"

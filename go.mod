@@ -24,7 +24,7 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/rs/zerolog v1.28.0
 	github.com/streadway/amqp v1.0.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.2-0.20210604143007-135cf5605a6d+incompatible
 	go.mongodb.org/mongo-driver v1.11.1

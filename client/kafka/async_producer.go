@@ -1,53 +1,48 @@
 // Package kafka provides a client with included tracing capabilities.
-//
-// Deprecated: The Kafka client package is superseded by the `github.com/beatlabs/patron/client/kafka/v2` package.
-// Please refer to the documents and the examples for the usage.
-//
-// This package is frozen and no new functionality will be added.
 package kafka
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/beatlabs/patron/trace"
-
 	"github.com/Shopify/sarama"
-	opentracing "github.com/opentracing/opentracing-go"
+	patronerrors "github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/trace"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
+
+var asyncTag = opentracing.Tag{Key: "type", Value: deliveryTypeAsync}
 
 // AsyncProducer is an asynchronous Kafka producer.
 type AsyncProducer struct {
 	baseProducer
 	asyncProd sarama.AsyncProducer
-	chErr     chan error
 }
 
 // Send a message to a topic, asynchronously. Producer errors are queued on the
 // channel obtained during the AsyncProducer creation.
-func (ap *AsyncProducer) Send(ctx context.Context, msg *Message) error {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(asyncProducerComponent, msg.topic),
-		asyncProducerComponent, ext.SpanKindProducer, ap.tag,
-		opentracing.Tag{Key: "topic", Value: msg.topic})
-	pm, err := ap.createProducerMessage(ctx, msg, sp)
+func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) error {
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeAsync, msg.Topic), componentTypeAsync,
+		ext.SpanKindProducer, asyncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
+
+	err := injectTracingAndCorrelationHeaders(ctx, msg, sp)
 	if err != nil {
-		ap.statusCountInc(messageCreationErrors, msg.topic)
+		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
-		return err
+		return fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
-	ap.statusCountInc(messageSent, msg.topic)
-	ap.asyncProd.Input() <- pm
+	ap.asyncProd.Input() <- msg
+	statusCountAdd(deliveryTypeAsync, deliveryStatusSent, msg.Topic, 1)
 	trace.SpanSuccess(sp)
-
 	return nil
 }
 
-func (ap *AsyncProducer) propagateError() {
+func (ap *AsyncProducer) propagateError(chErr chan<- error) {
 	for pe := range ap.asyncProd.Errors() {
-		ap.statusCountInc(messageSendErrors, pe.Msg.Topic)
-		ap.chErr <- fmt.Errorf("failed to send message: %w", pe)
+		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, pe.Msg.Topic, 1)
+		chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
 }
 
@@ -55,16 +50,10 @@ func (ap *AsyncProducer) propagateError() {
 // flushed. You must call this function before a producer object passes out of
 // scope, as it may otherwise leak memory.
 func (ap *AsyncProducer) Close() error {
-	err := ap.asyncProd.Close()
-	if err != nil {
-		// always close client
-		_ = ap.prodClient.Close()
-
-		return fmt.Errorf("failed to close async producer client: %w", err)
+	if err := ap.asyncProd.Close(); err != nil {
+		return patronerrors.Aggregate(fmt.Errorf("failed to close async producer client: %w", err), ap.prodClient.Close())
 	}
-
-	err = ap.prodClient.Close()
-	if err != nil {
+	if err := ap.prodClient.Close(); err != nil {
 		return fmt.Errorf("failed to close async producer: %w", err)
 	}
 	return nil

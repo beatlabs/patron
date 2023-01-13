@@ -2,44 +2,83 @@ package kafka
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/beatlabs/patron/trace"
-
 	"github.com/Shopify/sarama"
+	patronerrors "github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
 
+const batchTarget = "batch"
+
+var syncTag = opentracing.Tag{Key: "type", Value: deliveryTypeSync}
+
 // SyncProducer is a synchronous Kafka producer.
 type SyncProducer struct {
 	baseProducer
-
 	syncProd sarama.SyncProducer
 }
 
 // Send a message to a topic.
-func (p *SyncProducer) Send(ctx context.Context, msg *Message) error {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(syncProducerComponent, msg.topic),
-		syncProducerComponent, ext.SpanKindProducer, p.tag,
-		opentracing.Tag{Key: "topic", Value: msg.topic})
-	pm, err := p.createProducerMessage(ctx, msg, sp)
+func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (partition int32, offset int64, err error) {
+	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeSync, msg.Topic), componentTypeSync,
+		ext.SpanKindProducer, syncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
+
+	err = injectTracingAndCorrelationHeaders(ctx, msg, sp)
 	if err != nil {
-		p.statusCountInc(messageCreationErrors, msg.topic)
+		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
-		return err
+		return -1, -1, fmt.Errorf("failed to inject tracing headers: %w", err)
 	}
 
-	_, _, err = p.syncProd.SendMessage(pm)
+	partition, offset, err = p.syncProd.SendMessage(msg)
 	if err != nil {
-		p.statusCountInc(messageCreationErrors, msg.topic)
+		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
 		trace.SpanError(sp)
-		return err
+		return -1, -1, err
 	}
 
-	p.statusCountInc(messageSent, msg.topic)
+	statusCountAdd(deliveryTypeSync, deliveryStatusSent, msg.Topic, 1)
 	trace.SpanSuccess(sp)
+	return partition, offset, nil
+}
 
+// SendBatch sends a batch to a topic.
+func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.ProducerMessage) error {
+	if len(messages) == 0 {
+		return errors.New("messages are empty or nil")
+	}
+
+	spans := make([]opentracing.Span, 0, len(messages))
+
+	for _, msg := range messages {
+		sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeSync, batchTarget), componentTypeSync,
+			ext.SpanKindProducer, syncTag, opentracing.Tag{Key: "topic", Value: batchTarget})
+
+		if err := injectTracingAndCorrelationHeaders(ctx, msg, sp); err != nil {
+			statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, len(messages))
+			trace.SpanError(sp)
+			return fmt.Errorf("failed to inject tracing headers: %w", err)
+		}
+		spans = append(spans, sp)
+	}
+
+	if err := p.syncProd.SendMessages(messages); err != nil {
+		statusCountBatchAdd(deliveryTypeSync, deliveryStatusSendError, messages)
+		for _, sp := range spans {
+			trace.SpanError(sp)
+		}
+
+		return err
+	}
+
+	statusCountBatchAdd(deliveryTypeSync, deliveryStatusSent, messages)
+	for _, sp := range spans {
+		trace.SpanSuccess(sp)
+	}
 	return nil
 }
 
@@ -47,17 +86,17 @@ func (p *SyncProducer) Send(ctx context.Context, msg *Message) error {
 // flushed. You must call this function before a producer object passes out of
 // scope, as it may otherwise leak memory.
 func (p *SyncProducer) Close() error {
-	err := p.syncProd.Close()
-	if err != nil {
-		// always close client
-		_ = p.prodClient.Close()
-
-		return fmt.Errorf("failed to close sync producer client: %w", err)
+	if err := p.syncProd.Close(); err != nil {
+		return patronerrors.Aggregate(fmt.Errorf("failed to close sync producer client: %w", err), p.prodClient.Close())
 	}
-
-	err = p.prodClient.Close()
-	if err != nil {
+	if err := p.prodClient.Close(); err != nil {
 		return fmt.Errorf("failed to close sync producer: %w", err)
 	}
 	return nil
+}
+
+func statusCountBatchAdd(deliveryType string, status deliveryStatus, messages []*sarama.ProducerMessage) {
+	for _, msg := range messages {
+		statusCountAdd(deliveryType, status, msg.Topic, 1)
+	}
 }

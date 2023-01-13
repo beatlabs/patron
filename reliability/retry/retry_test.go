@@ -45,7 +45,7 @@ func TestNew(t *testing.T) {
 func Test_Retry_Execute(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
+	tests := map[string]struct {
 		attempts           int
 		delay              time.Duration
 		action             mockAction
@@ -87,7 +87,7 @@ func Test_Retry_Execute(t *testing.T) {
 			expectErr:          true,
 		},
 	}
-	for name, tt := range testCases {
+	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()

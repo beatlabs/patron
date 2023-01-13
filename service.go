@@ -13,9 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
-
 	v2 "github.com/beatlabs/patron/component/http/v2"
+	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	patronzerolog "github.com/beatlabs/patron/log/zerolog"

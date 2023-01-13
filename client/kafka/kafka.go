@@ -4,59 +4,37 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/encoding"
+	"os"
 
 	"github.com/Shopify/sarama"
+	"github.com/beatlabs/patron/correlation"
+	patronerrors "github.com/beatlabs/patron/errors"
+	"github.com/beatlabs/patron/internal/validation"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+type (
+	deliveryStatus string
+)
+
 const (
-	asyncProducerComponent = "kafka-async-producer"
-	syncProducerComponent  = "kafka-sync-producer"
-	messageCreationErrors  = "creation-errors"
-	messageSendErrors      = "send-errors"
-	messageSent            = "sent"
+	deliveryTypeSync  = "sync"
+	deliveryTypeAsync = "async"
+
+	deliveryStatusSent      deliveryStatus = "sent"
+	deliveryStatusSendError deliveryStatus = "send-errors"
+
+	componentTypeAsync = "kafka-async-producer"
+	componentTypeSync  = "kafka-sync-producer"
 )
 
 var messageStatus *prometheus.CounterVec
 
-// Producer interface for Kafka.
-type Producer interface {
-	Send(ctx context.Context, msg *Message) error
-	Close() error
-}
-
-type baseProducer struct {
-	cfg         *sarama.Config
-	prodClient  sarama.Client
-	tag         opentracing.Tag
-	enc         encoding.EncodeFunc
-	contentType string
-	// deliveryType can be 'sync' or 'async'
-	deliveryType  string
-	messageStatus *prometheus.CounterVec
-}
-
-var (
-	_ Producer = &AsyncProducer{}
-	_ Producer = &SyncProducer{}
-)
-
-// Message abstraction of a Kafka message.
-type Message struct {
-	topic   string
-	body    interface{}
-	key     *string
-	headers kafkaHeadersCarrier
-}
-
 func init() {
 	messageStatus = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "component",
+			Namespace: "client",
 			Subsystem: "kafka_producer",
 			Name:      "message_status",
 			Help:      "Message status counter (produced, encoded, encoding-errors) classified by topic",
@@ -66,28 +44,12 @@ func init() {
 	prometheus.MustRegister(messageStatus)
 }
 
-// NewMessage creates a new message.
-func NewMessage(t string, b interface{}) *Message {
-	return &Message{topic: t, body: b}
+func statusCountAdd(deliveryType string, status deliveryStatus, topic string, cnt int) {
+	messageStatus.WithLabelValues(string(status), topic, deliveryType).Add(float64(cnt))
 }
 
-// SetHeader allows to set a message header.
-// Multiple headers with the same key are supported.
-// Headers are only set if Kafka is version 0.11+.
-func (m *Message) SetHeader(key, value string) {
-	m.headers.Set(key, value)
-}
-
-// NewMessageWithKey creates a new message with an associated key.
-func NewMessageWithKey(t string, b interface{}, k string) (*Message, error) {
-	if k == "" {
-		return nil, errors.New("key string can not be null")
-	}
-	return &Message{topic: t, body: b, key: &k}, nil
-}
-
-func (p *baseProducer) statusCountInc(status, topic string) {
-	p.messageStatus.WithLabelValues(status, topic, p.deliveryType).Inc()
+type baseProducer struct {
+	prodClient sarama.Client
 }
 
 // ActiveBrokers returns a list of active brokers' addresses.
@@ -100,31 +62,102 @@ func (p *baseProducer) ActiveBrokers() []string {
 	return activeBrokerAddresses
 }
 
-func (p *baseProducer) createProducerMessage(ctx context.Context, msg *Message, sp opentracing.Span) (*sarama.ProducerMessage, error) {
-	c := msg.headers
-	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
+// Builder definition for creating sync and async producers.
+type Builder struct {
+	brokers []string
+	cfg     *sarama.Config
+	errs    []error
+}
+
+// New initiates the AsyncProducer/SyncProducer builder chain with the specified Sarama configuration.
+func New(brokers []string, saramaConfig *sarama.Config) *Builder {
+	var ee []error
+	if validation.IsStringSliceEmpty(brokers) {
+		ee = append(ee, errors.New("brokers are empty or have an empty value"))
+	}
+	if saramaConfig == nil {
+		ee = append(ee, errors.New("no Sarama configuration specified"))
+	}
+
+	return &Builder{
+		brokers: brokers,
+		errs:    ee,
+		cfg:     saramaConfig,
+	}
+}
+
+// DefaultProducerSaramaConfig creates a default Sarama configuration with idempotency enabled.
+// See also:
+// * https://pkg.go.dev/github.com/Shopify/sarama#RequiredAcks
+// * https://pkg.go.dev/github.com/Shopify/sarama#Config
+func DefaultProducerSaramaConfig(name string, idempotent bool) (*sarama.Config, error) {
+	host, err := os.Hostname()
 	if err != nil {
-		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)
-	}
-	c.Set(encoding.ContentTypeHeader, p.contentType)
-
-	var saramaKey sarama.Encoder
-	if msg.key != nil {
-		saramaKey = sarama.StringEncoder(*msg.key)
+		return nil, errors.New("failed to get hostname")
 	}
 
-	b, err := p.enc(msg.body)
+	cfg := sarama.NewConfig()
+	cfg.ClientID = fmt.Sprintf("%s-%s", host, name)
+
+	if idempotent {
+		cfg.Net.MaxOpenRequests = 1
+		cfg.Producer.Idempotent = true
+	}
+	cfg.Producer.RequiredAcks = sarama.WaitForAll
+
+	return cfg, nil
+}
+
+// Create a new synchronous producer.
+func (b *Builder) Create() (*SyncProducer, error) {
+	if len(b.errs) > 0 {
+		return nil, patronerrors.Aggregate(b.errs...)
+	}
+
+	// required for any SyncProducer; 'Errors' is already true by default for both async/sync producers
+	b.cfg.Producer.Return.Successes = true
+
+	p := SyncProducer{}
+
+	var err error
+	p.prodClient, err = sarama.NewClient(b.brokers, b.cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encode message body: %w", err)
+		return nil, fmt.Errorf("failed to create producer client: %w", err)
 	}
 
-	c.Set(correlation.HeaderID, correlation.IDFromContext(ctx))
-	return &sarama.ProducerMessage{
-		Topic:   msg.topic,
-		Key:     saramaKey,
-		Value:   sarama.ByteEncoder(b),
-		Headers: c,
-	}, nil
+	p.syncProd, err = sarama.NewSyncProducerFromClient(p.prodClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create sync producer: %w", err)
+	}
+
+	return &p, nil
+}
+
+// CreateAsync a new asynchronous producer.
+func (b Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
+	if len(b.errs) > 0 {
+		return nil, nil, patronerrors.Aggregate(b.errs...)
+	}
+
+	ap := &AsyncProducer{
+		baseProducer: baseProducer{},
+		asyncProd:    nil,
+	}
+
+	var err error
+	ap.prodClient, err = sarama.NewClient(b.brokers, b.cfg)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create producer client: %w", err)
+	}
+
+	ap.asyncProd, err = sarama.NewAsyncProducerFromClient(ap.prodClient)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create async producer: %w", err)
+	}
+	chErr := make(chan error)
+	go ap.propagateError(chErr)
+
+	return ap, chErr, nil
 }
 
 type kafkaHeadersCarrier []sarama.RecordHeader
@@ -132,4 +165,15 @@ type kafkaHeadersCarrier []sarama.RecordHeader
 // Set implements Set() of opentracing.TextMapWriter.
 func (c *kafkaHeadersCarrier) Set(key, val string) {
 	*c = append(*c, sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
+}
+
+func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.ProducerMessage, sp opentracing.Span) error {
+	msg.Headers = append(msg.Headers, sarama.RecordHeader{
+		Key:   []byte(correlation.HeaderID),
+		Value: []byte(correlation.IDFromContext(ctx)),
+	})
+	c := kafkaHeadersCarrier(msg.Headers)
+	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
+	msg.Headers = c
+	return err
 }

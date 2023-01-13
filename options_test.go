@@ -115,15 +115,10 @@ func TestRouter(t *testing.T) {
 type noopHTTPHandler struct{}
 
 func (noopHTTPHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	return
 }
 
 func TestSIGHUP(t *testing.T) {
 	t.Parallel()
-
-	type args struct {
-		handler func()
-	}
 
 	t.Run("empty value for sighup handler", func(t *testing.T) {
 		t.Parallel()

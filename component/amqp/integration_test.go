@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	v2 "github.com/beatlabs/patron/client/amqp/v2"
+	patronamqp "github.com/beatlabs/patron/client/amqp"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -28,7 +28,7 @@ func TestRun(t *testing.T) {
 
 	ctx, cnl := context.WithCancel(context.Background())
 
-	pub, err := v2.New(endpoint)
+	pub, err := patronamqp.New(endpoint)
 	require.NoError(t, err)
 
 	sent := []string{"one", "two"}

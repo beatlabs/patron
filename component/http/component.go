@@ -101,7 +101,8 @@ func (c *Component) createHTTPServer() *http.Server {
 	}
 	// Add first the recovery middleware to ensure that no panic occur.
 	routerAfterMiddleware := middleware.Chain(router, middleware.NewRecovery())
-	c.middlewares = append(c.middlewares, middleware.NewCompression(c.deflateLevel, c.uncompressedPaths...))
+	compressionMiddleware, _ := middleware.NewCompression(c.deflateLevel, c.uncompressedPaths...)
+	c.middlewares = append(c.middlewares, compressionMiddleware)
 	routerAfterMiddleware = middleware.Chain(routerAfterMiddleware, c.middlewares...)
 
 	return &http.Server{

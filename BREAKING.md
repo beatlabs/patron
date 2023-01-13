@@ -1,5 +1,14 @@
 # Breaking Changes Migration Guide
 
+## v0.76.0
+
+### Introduction of an addition `error` return variable in http middleware and router helper functions
+
+The `middleware` package functions now return an `error` in case the input validation fails.
+
+The `WithRateLimiting` function  in `http/v2` package now returns an `error` in case the input validation fails.
+
+The `WithAppNameHeaders` helper function  in `httprouter` package now returns an error in case the input validation fails.
 ## v0.75.0
 
 The `cache` package has introduced the `context.Context` as the first argument in each method and removed it from the constructors.

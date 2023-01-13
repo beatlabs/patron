@@ -83,9 +83,21 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	for _, route := range cfg.routes {
 		var middlewares []middleware.Func
 		middlewares = append(middlewares, stdMiddlewares...)
-		middlewares = append(middlewares, middleware.NewLoggingTracing(route.Path(), statusCodeLogger))
-		middlewares = append(middlewares, middleware.NewRequestObserver(route.Method(), route.Path()))
-		middlewares = append(middlewares, middleware.NewCompression(cfg.deflateLevel))
+		loggingTracingMiddleware, err := middleware.NewLoggingTracing(route.Path(), statusCodeLogger)
+		if err != nil {
+			return nil, err
+		}
+		middlewares = append(middlewares, loggingTracingMiddleware)
+		requestObserverMiddleware, err := middleware.NewRequestObserver(route.Method(), route.Path())
+		if err != nil {
+			return nil, err
+		}
+		middlewares = append(middlewares, requestObserverMiddleware)
+		compressionMiddleware, err := middleware.NewCompression(cfg.deflateLevel)
+		if err != nil {
+			return nil, err
+		}
+		middlewares = append(middlewares, compressionMiddleware)
 
 		// add router middlewares
 		middlewares = append(middlewares, cfg.middlewares...)

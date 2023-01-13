@@ -10,6 +10,7 @@ import (
 	httpcache "github.com/beatlabs/patron/component/http/cache"
 	patronhttp "github.com/beatlabs/patron/component/http/middleware"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type mockAuthenticator struct {
@@ -26,8 +27,32 @@ func (mo mockAuthenticator) Authenticate(_ *http.Request) (bool, error) {
 
 func TestRateLimiting(t *testing.T) {
 	t.Parallel()
-	route := &Route{}
-	assert.NoError(t, WithRateLimiting(0, 0)(route))
+	type args struct {
+		limit float64
+		bust  int
+	}
+	tests := map[string]struct {
+		args        args
+		expectedErr string
+	}{
+		"negative limit should return error": {args: args{limit: -1, bust: 1}, expectedErr: "invalid limit"},
+		"negative burst should return error": {args: args{limit: 1, bust: -1}, expectedErr: "invalid burst"},
+		"correct params success":             {args: args{limit: 1, bust: 1}, expectedErr: ""},
+	}
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			route := &Route{}
+			rateLimiting, err := WithRateLimiting(tt.args.limit, tt.args.bust)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+			} else {
+				require.NoError(t, err)
+				assert.NoError(t, rateLimiting(route))
+			}
+		})
+	}
 }
 
 func TestRouteMiddlewares(t *testing.T) {

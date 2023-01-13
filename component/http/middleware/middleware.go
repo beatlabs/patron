@@ -124,19 +124,23 @@ func NewRecovery() Func {
 	}
 }
 
-// NewAppNameVersion adds an app name header and an app version header to all responses. Existing values of these headers are overwritten.
-func NewAppNameVersion(name, version string) Func {
+// NewAppNameVersion adds an app method header and an app path header to all responses. Existing values of these headers are overwritten.
+func NewAppNameVersion(name, version string) (Func, error) {
+	if name == "" {
+		return nil, errors.New("app name cannot be empty")
+	}
+
+	if version == "" {
+		return nil, errors.New("app version cannot be empty")
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if version != "" {
-				w.Header().Set(appVersionHeader, version)
-			}
-			if name != "" {
-				w.Header().Set(appNameHeader, name)
-			}
+			w.Header().Set(appVersionHeader, version)
+			w.Header().Set(appNameHeader, name)
 			next.ServeHTTP(w, r)
 		})
-	}
+	}, nil
 }
 
 // NewAuth creates a Func that implements authentication using an Authenticator.
@@ -160,7 +164,11 @@ func NewAuth(auth auth.Authenticator) Func {
 
 // NewLoggingTracing creates a Func that continues a tracing span and finishes it.
 // It uses Jaeger and OpenTracing and will also log the HTTP request on debug level if configured so.
-func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Func {
+func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) (Func, error) {
+	if path == "" {
+		return nil, errors.New("path cannot be empty")
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			corID := getOrSetCorrelationID(r.Header)
@@ -173,7 +181,7 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) Fu
 				log.FromContext(r.Context()).Errorf("%s %d error: %v", path, lw.status, lw.responsePayload.String())
 			}
 		})
-	}
+	}, nil
 }
 
 // NewInjectObservability injects a correlation ID unless one is already present.
@@ -234,7 +242,15 @@ func initHTTPServerMetrics() {
 // NewRequestObserver creates a Func that captures status code and duration metrics about the responses returned;
 // metrics are exposed via Prometheus.
 // This middleware is enabled by default.
-func NewRequestObserver(method, path string) Func {
+func NewRequestObserver(method, path string) (Func, error) {
+	if method == "" {
+		return nil, errors.New("method cannot be empty")
+	}
+
+	if path == "" {
+		return nil, errors.New("path cannot be empty")
+	}
+
 	// register Prometheus metrics on first use
 	httpStatusTracingInit.Do(initHTTPServerMetrics)
 
@@ -257,11 +273,15 @@ func NewRequestObserver(method, path string) Func {
 			}
 			httpLatencyMetricObserver.Observe(r.Context(), time.Since(now).Seconds())
 		})
-	}
+	}, nil
 }
 
 // NewRateLimiting creates a Func that adds a rate limit to a route.
-func NewRateLimiting(limiter *rate.Limiter) Func {
+func NewRateLimiting(limiter *rate.Limiter) (Func, error) {
+	if limiter == nil {
+		return nil, errors.New("limiter cannot be nil")
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !limiter.Allow() {
@@ -271,7 +291,7 @@ func NewRateLimiting(limiter *rate.Limiter) Func {
 			}
 			next.ServeHTTP(w, r)
 		})
-	}
+	}, nil
 }
 
 // ignore checks if the given url ignored from compression or not.
@@ -361,7 +381,10 @@ func selectByWeight(weighted map[float64]string) (string, error) {
 // NewCompression initializes a compression middleware.
 // As per Section 3.5 of the HTTP/1.1 RFC, GZIP and Deflate compression methods are supported.
 // https://tools.ietf.org/html/rfc2616#section-14.3
-func NewCompression(deflateLevel int, ignoreRoutes ...string) Func {
+func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
+	if deflateLevel < -2 || deflateLevel > 9 { // https://www.rfc-editor.org/rfc/rfc1950#page-6
+		return nil, fmt.Errorf("invalid compression level %d: want value in range [-2, 9]", deflateLevel)
+	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ignore(ignoreRoutes, r.URL.String()) {
@@ -394,7 +417,7 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) Func {
 
 			next.ServeHTTP(dw, r)
 		})
-	}
+	}, nil
 }
 
 // isErrConnectionReset detects if an error has happened due to a connection reset, broken pipe or similar.
@@ -499,7 +522,11 @@ func (w *dynamicCompressionResponseWriter) Close() error {
 // NewCaching creates a cache layer as a middleware
 // when used as part of a middleware chain any middleware later in the chain,
 // will not be executed, but the headers it appends will be part of the cache.
-func NewCaching(rc *cache.RouteCache) Func {
+func NewCaching(rc *cache.RouteCache) (Func, error) {
+	if rc == nil {
+		return nil, errors.New("route cache cannot be nil")
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != http.MethodGet {
@@ -512,7 +539,7 @@ func NewCaching(rc *cache.RouteCache) Func {
 				return
 			}
 		})
-	}
+	}, nil
 }
 
 // Chain chains middlewares to a handler func.

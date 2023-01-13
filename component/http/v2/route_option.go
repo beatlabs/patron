@@ -13,11 +13,23 @@ import (
 )
 
 // WithRateLimiting option for setting a route rate limiter.
-func WithRateLimiting(limit float64, burst int) RouteOptionFunc {
-	return func(r *Route) error {
-		r.middlewares = append(r.middlewares, patronhttp.NewRateLimiting(rate.NewLimiter(rate.Limit(limit), burst)))
-		return nil
+func WithRateLimiting(limit float64, burst int) (RouteOptionFunc, error) {
+	if limit < 0 {
+		return nil, errors.New("invalid limit")
 	}
+
+	if burst < 0 {
+		return nil, errors.New("invalid burst")
+	}
+	m, err := patronhttp.NewRateLimiting(rate.NewLimiter(rate.Limit(limit), burst))
+	if err != nil {
+		return nil, err
+	}
+
+	return func(r *Route) error {
+		r.middlewares = append(r.middlewares, m)
+		return nil
+	}, nil
 }
 
 // WithMiddlewares option for setting the route optionFuncs.
@@ -52,7 +64,11 @@ func WithCache(cache cache.TTLCache, ageBounds httpcache.Age) RouteOptionFunc {
 		if len(ee) != 0 {
 			return errs.Aggregate(ee...)
 		}
-		r.middlewares = append(r.middlewares, patronhttp.NewCaching(rc))
+		m, err := patronhttp.NewCaching(rc)
+		if err != nil {
+			return errs.Aggregate(err)
+		}
+		r.middlewares = append(r.middlewares, m)
 		return nil
 	}
 }

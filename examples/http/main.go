@@ -73,7 +73,8 @@ func main() {
 	}
 
 	var routes patronhttp.Routes
-	routes.Append(patronhttp.NewGetRoute("/api", getHandler, patronhttp.WithRateLimiting(50, 50)))
+	rateLimitingOptionFunc, _ := patronhttp.WithRateLimiting(50, 50)
+	routes.Append(patronhttp.NewGetRoute("/api", getHandler, rateLimitingOptionFunc))
 	routes.Append(patronhttp.NewPostRoute("/api", httpHandler))
 	routes.Append(httprouter.NewFileServerRoute("/frontend/*path", assetsFolder, assetsFolder+"/index.html"))
 	rr, err := routes.Result()

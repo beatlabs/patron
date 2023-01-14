@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0: DO NOT EDIT
+// Code generated from specification version 8.6.0: DO NOT EDIT
 
 package esapi
 
@@ -39,14 +39,10 @@ func newSecurityEnableUserProfileFunc(t Transport) SecurityEnableUserProfile {
 
 // SecurityEnableUserProfile - Enables a user profile so it's visible in user profile searches.
 //
-// This API is experimental.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/security-api-enable-user-profile.html.
-//
 type SecurityEnableUserProfile func(uid string, o ...func(*SecurityEnableUserProfileRequest)) (*Response, error)
 
 // SecurityEnableUserProfileRequest configures the Security Enable User Profile API request.
-//
 type SecurityEnableUserProfileRequest struct {
 	UID string
 
@@ -63,7 +59,6 @@ type SecurityEnableUserProfileRequest struct {
 }
 
 // Do executes the request and returns response or error.
-//
 func (r SecurityEnableUserProfileRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
@@ -150,7 +145,6 @@ func (r SecurityEnableUserProfileRequest) Do(ctx context.Context, transport Tran
 }
 
 // WithContext sets the request context.
-//
 func (f SecurityEnableUserProfile) WithContext(v context.Context) func(*SecurityEnableUserProfileRequest) {
 	return func(r *SecurityEnableUserProfileRequest) {
 		r.ctx = v
@@ -158,7 +152,6 @@ func (f SecurityEnableUserProfile) WithContext(v context.Context) func(*Security
 }
 
 // WithRefresh - if `true` then refresh the affected shards to make this operation visible to search, if `wait_for` (the default) then wait for a refresh to make this operation visible to search, if `false` then do nothing with refreshes..
-//
 func (f SecurityEnableUserProfile) WithRefresh(v string) func(*SecurityEnableUserProfileRequest) {
 	return func(r *SecurityEnableUserProfileRequest) {
 		r.Refresh = v
@@ -166,7 +159,6 @@ func (f SecurityEnableUserProfile) WithRefresh(v string) func(*SecurityEnableUse
 }
 
 // WithPretty makes the response body pretty-printed.
-//
 func (f SecurityEnableUserProfile) WithPretty() func(*SecurityEnableUserProfileRequest) {
 	return func(r *SecurityEnableUserProfileRequest) {
 		r.Pretty = true
@@ -174,7 +166,6 @@ func (f SecurityEnableUserProfile) WithPretty() func(*SecurityEnableUserProfileR
 }
 
 // WithHuman makes statistical values human-readable.
-//
 func (f SecurityEnableUserProfile) WithHuman() func(*SecurityEnableUserProfileRequest) {
 	return func(r *SecurityEnableUserProfileRequest) {
 		r.Human = true
@@ -182,7 +173,6 @@ func (f SecurityEnableUserProfile) WithHuman() func(*SecurityEnableUserProfileRe
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-//
 func (f SecurityEnableUserProfile) WithErrorTrace() func(*SecurityEnableUserProfileRequest) {
 	return func(r *SecurityEnableUserProfileRequest) {
 		r.ErrorTrace = true
@@ -190,7 +180,6 @@ func (f SecurityEnableUserProfile) WithErrorTrace() func(*SecurityEnableUserProf
 }
 
 // WithFilterPath filters the properties of the response body.
-//
 func (f SecurityEnableUserProfile) WithFilterPath(v ...string) func(*SecurityEnableUserProfileRequest) {
 	return func(r *SecurityEnableUserProfileRequest) {
 		r.FilterPath = v
@@ -198,7 +187,6 @@ func (f SecurityEnableUserProfile) WithFilterPath(v ...string) func(*SecurityEna
 }
 
 // WithHeader adds the headers to the HTTP request.
-//
 func (f SecurityEnableUserProfile) WithHeader(h map[string]string) func(*SecurityEnableUserProfileRequest) {
 	return func(r *SecurityEnableUserProfileRequest) {
 		if r.Header == nil {
@@ -211,7 +199,6 @@ func (f SecurityEnableUserProfile) WithHeader(h map[string]string) func(*Securit
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-//
 func (f SecurityEnableUserProfile) WithOpaqueID(s string) func(*SecurityEnableUserProfileRequest) {
 	return func(r *SecurityEnableUserProfileRequest) {
 		if r.Header == nil {

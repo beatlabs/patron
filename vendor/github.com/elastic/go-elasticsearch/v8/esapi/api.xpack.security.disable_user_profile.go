@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0: DO NOT EDIT
+// Code generated from specification version 8.6.0: DO NOT EDIT
 
 package esapi
 
@@ -39,14 +39,10 @@ func newSecurityDisableUserProfileFunc(t Transport) SecurityDisableUserProfile {
 
 // SecurityDisableUserProfile - Disables a user profile so it's not visible in user profile searches.
 //
-// This API is experimental.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/security-api-disable-user-profile.html.
-//
 type SecurityDisableUserProfile func(uid string, o ...func(*SecurityDisableUserProfileRequest)) (*Response, error)
 
 // SecurityDisableUserProfileRequest configures the Security Disable User Profile API request.
-//
 type SecurityDisableUserProfileRequest struct {
 	UID string
 
@@ -63,7 +59,6 @@ type SecurityDisableUserProfileRequest struct {
 }
 
 // Do executes the request and returns response or error.
-//
 func (r SecurityDisableUserProfileRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
@@ -150,7 +145,6 @@ func (r SecurityDisableUserProfileRequest) Do(ctx context.Context, transport Tra
 }
 
 // WithContext sets the request context.
-//
 func (f SecurityDisableUserProfile) WithContext(v context.Context) func(*SecurityDisableUserProfileRequest) {
 	return func(r *SecurityDisableUserProfileRequest) {
 		r.ctx = v
@@ -158,7 +152,6 @@ func (f SecurityDisableUserProfile) WithContext(v context.Context) func(*Securit
 }
 
 // WithRefresh - if `true` then refresh the affected shards to make this operation visible to search, if `wait_for` (the default) then wait for a refresh to make this operation visible to search, if `false` then do nothing with refreshes..
-//
 func (f SecurityDisableUserProfile) WithRefresh(v string) func(*SecurityDisableUserProfileRequest) {
 	return func(r *SecurityDisableUserProfileRequest) {
 		r.Refresh = v
@@ -166,7 +159,6 @@ func (f SecurityDisableUserProfile) WithRefresh(v string) func(*SecurityDisableU
 }
 
 // WithPretty makes the response body pretty-printed.
-//
 func (f SecurityDisableUserProfile) WithPretty() func(*SecurityDisableUserProfileRequest) {
 	return func(r *SecurityDisableUserProfileRequest) {
 		r.Pretty = true
@@ -174,7 +166,6 @@ func (f SecurityDisableUserProfile) WithPretty() func(*SecurityDisableUserProfil
 }
 
 // WithHuman makes statistical values human-readable.
-//
 func (f SecurityDisableUserProfile) WithHuman() func(*SecurityDisableUserProfileRequest) {
 	return func(r *SecurityDisableUserProfileRequest) {
 		r.Human = true
@@ -182,7 +173,6 @@ func (f SecurityDisableUserProfile) WithHuman() func(*SecurityDisableUserProfile
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-//
 func (f SecurityDisableUserProfile) WithErrorTrace() func(*SecurityDisableUserProfileRequest) {
 	return func(r *SecurityDisableUserProfileRequest) {
 		r.ErrorTrace = true
@@ -190,7 +180,6 @@ func (f SecurityDisableUserProfile) WithErrorTrace() func(*SecurityDisableUserPr
 }
 
 // WithFilterPath filters the properties of the response body.
-//
 func (f SecurityDisableUserProfile) WithFilterPath(v ...string) func(*SecurityDisableUserProfileRequest) {
 	return func(r *SecurityDisableUserProfileRequest) {
 		r.FilterPath = v
@@ -198,7 +187,6 @@ func (f SecurityDisableUserProfile) WithFilterPath(v ...string) func(*SecurityDi
 }
 
 // WithHeader adds the headers to the HTTP request.
-//
 func (f SecurityDisableUserProfile) WithHeader(h map[string]string) func(*SecurityDisableUserProfileRequest) {
 	return func(r *SecurityDisableUserProfileRequest) {
 		if r.Header == nil {
@@ -211,7 +199,6 @@ func (f SecurityDisableUserProfile) WithHeader(h map[string]string) func(*Securi
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-//
 func (f SecurityDisableUserProfile) WithOpaqueID(s string) func(*SecurityDisableUserProfileRequest) {
 	return func(r *SecurityDisableUserProfileRequest) {
 		if r.Header == nil {

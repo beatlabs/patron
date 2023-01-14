@@ -15,18 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0: DO NOT EDIT
+// Code generated from specification version 8.6.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 )
 
 func newSecurityGetUserProfileFunc(t Transport) SecurityGetUserProfile {
-	return func(uid string, o ...func(*SecurityGetUserProfileRequest)) (*Response, error) {
+	return func(uid []string, o ...func(*SecurityGetUserProfileRequest)) (*Response, error) {
 		var r = SecurityGetUserProfileRequest{UID: uid}
 		for _, f := range o {
 			f(&r)
@@ -37,18 +38,14 @@ func newSecurityGetUserProfileFunc(t Transport) SecurityGetUserProfile {
 
 // ----- API Definition -------------------------------------------------------
 
-// SecurityGetUserProfile - Retrieves user profile for the given unique ID.
-//
-// This API is experimental.
+// SecurityGetUserProfile - Retrieves user profiles for the given unique ID(s).
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-user-profile.html.
-//
-type SecurityGetUserProfile func(uid string, o ...func(*SecurityGetUserProfileRequest)) (*Response, error)
+type SecurityGetUserProfile func(uid []string, o ...func(*SecurityGetUserProfileRequest)) (*Response, error)
 
 // SecurityGetUserProfileRequest configures the Security Get User Profile API request.
-//
 type SecurityGetUserProfileRequest struct {
-	UID string
+	UID []string
 
 	Data []string
 
@@ -63,7 +60,6 @@ type SecurityGetUserProfileRequest struct {
 }
 
 // Do executes the request and returns response or error.
-//
 func (r SecurityGetUserProfileRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
@@ -73,14 +69,18 @@ func (r SecurityGetUserProfileRequest) Do(ctx context.Context, transport Transpo
 
 	method = "GET"
 
-	path.Grow(7 + 1 + len("_security") + 1 + len("profile") + 1 + len(r.UID))
+	if len(r.UID) == 0 {
+		return nil, errors.New("uid is required and cannot be nil or empty")
+	}
+
+	path.Grow(7 + 1 + len("_security") + 1 + len("profile") + 1 + len(strings.Join(r.UID, ",")))
 	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_security")
 	path.WriteString("/")
 	path.WriteString("profile")
 	path.WriteString("/")
-	path.WriteString(r.UID)
+	path.WriteString(strings.Join(r.UID, ","))
 
 	params = make(map[string]string)
 
@@ -148,7 +148,6 @@ func (r SecurityGetUserProfileRequest) Do(ctx context.Context, transport Transpo
 }
 
 // WithContext sets the request context.
-//
 func (f SecurityGetUserProfile) WithContext(v context.Context) func(*SecurityGetUserProfileRequest) {
 	return func(r *SecurityGetUserProfileRequest) {
 		r.ctx = v
@@ -156,7 +155,6 @@ func (f SecurityGetUserProfile) WithContext(v context.Context) func(*SecurityGet
 }
 
 // WithData - a list of keys for which the corresponding application data are retrieved..
-//
 func (f SecurityGetUserProfile) WithData(v ...string) func(*SecurityGetUserProfileRequest) {
 	return func(r *SecurityGetUserProfileRequest) {
 		r.Data = v
@@ -164,7 +162,6 @@ func (f SecurityGetUserProfile) WithData(v ...string) func(*SecurityGetUserProfi
 }
 
 // WithPretty makes the response body pretty-printed.
-//
 func (f SecurityGetUserProfile) WithPretty() func(*SecurityGetUserProfileRequest) {
 	return func(r *SecurityGetUserProfileRequest) {
 		r.Pretty = true
@@ -172,7 +169,6 @@ func (f SecurityGetUserProfile) WithPretty() func(*SecurityGetUserProfileRequest
 }
 
 // WithHuman makes statistical values human-readable.
-//
 func (f SecurityGetUserProfile) WithHuman() func(*SecurityGetUserProfileRequest) {
 	return func(r *SecurityGetUserProfileRequest) {
 		r.Human = true
@@ -180,7 +176,6 @@ func (f SecurityGetUserProfile) WithHuman() func(*SecurityGetUserProfileRequest)
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-//
 func (f SecurityGetUserProfile) WithErrorTrace() func(*SecurityGetUserProfileRequest) {
 	return func(r *SecurityGetUserProfileRequest) {
 		r.ErrorTrace = true
@@ -188,7 +183,6 @@ func (f SecurityGetUserProfile) WithErrorTrace() func(*SecurityGetUserProfileReq
 }
 
 // WithFilterPath filters the properties of the response body.
-//
 func (f SecurityGetUserProfile) WithFilterPath(v ...string) func(*SecurityGetUserProfileRequest) {
 	return func(r *SecurityGetUserProfileRequest) {
 		r.FilterPath = v
@@ -196,7 +190,6 @@ func (f SecurityGetUserProfile) WithFilterPath(v ...string) func(*SecurityGetUse
 }
 
 // WithHeader adds the headers to the HTTP request.
-//
 func (f SecurityGetUserProfile) WithHeader(h map[string]string) func(*SecurityGetUserProfileRequest) {
 	return func(r *SecurityGetUserProfileRequest) {
 		if r.Header == nil {
@@ -209,7 +202,6 @@ func (f SecurityGetUserProfile) WithHeader(h map[string]string) func(*SecurityGe
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-//
 func (f SecurityGetUserProfile) WithOpaqueID(s string) func(*SecurityGetUserProfileRequest) {
 	return func(r *SecurityGetUserProfileRequest) {
 		if r.Header == nil {

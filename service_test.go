@@ -2,12 +2,9 @@ package patron
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
-	"math/big"
 	"net/http"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/beatlabs/patron/log"
@@ -96,7 +93,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
 			defer os.Clearenv()
-			t.Setenv("PATRON_HTTP_DEFAULT_PORT", getRandomPort(t))
+			t.Setenv("PATRON_HTTP_DEFAULT_PORT", "50099")
 			svc, err := New("test", "", WithTextLogger(), WithComponents(temp.cp, temp.cp, temp.cp))
 			assert.NoError(t, err)
 			err = svc.Run(context.Background())
@@ -287,12 +284,6 @@ func TestServer_SetupDeflateLevel(t *testing.T) {
 			}
 		})
 	}
-}
-
-func getRandomPort(t *testing.T) string {
-	bg, err := rand.Int(rand.Reader, big.NewInt(10000))
-	require.NoError(t, err)
-	return strconv.FormatInt(bg.Int64(), 10)
 }
 
 type testComponent struct {

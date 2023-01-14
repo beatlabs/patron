@@ -13,10 +13,10 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	patronamqp "github.com/beatlabs/patron/client/amqp/v2"
+	patronamqp "github.com/beatlabs/patron/client/amqp"
 	patrongrpc "github.com/beatlabs/patron/client/grpc"
 	patronhttp "github.com/beatlabs/patron/client/http"
-	patronkafka "github.com/beatlabs/patron/client/kafka/v2"
+	patronkafka "github.com/beatlabs/patron/client/kafka"
 	patronsqs "github.com/beatlabs/patron/client/sqs"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/protobuf"
@@ -27,14 +27,6 @@ import (
 )
 
 type process func(context.Context) error
-
-var modesMap = map[string]process{
-	"http":  sendHTTPRequest,
-	"grpc":  sendGRPCRequest,
-	"kafka": sendKafkaMessage,
-	"amqp":  sendAMQPMessage,
-	"sqs":   sendSQSMessage,
-}
 
 type mode string
 

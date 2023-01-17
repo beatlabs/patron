@@ -1,6 +1,6 @@
 # Running the example
 
-The example consists of a service and it's client implementation.
+The example consists of a service and its client implementation.
 The service implementation uses the following components:
 
 - HTTP

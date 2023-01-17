@@ -9,7 +9,7 @@ The service implementation uses the following components:
 - AWS SQS
 - AMQP
 
-The client implements all Patron clients for the components use by the service. There is also a flag that allows to target a specific service component.
+The client implements all Patron clients for the components used by the service. There is also a flag that allows targeting a specific service component.
 
 ## How to run
 

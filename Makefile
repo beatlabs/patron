@@ -25,10 +25,10 @@ fmtcheck:
 	@sh -c "'$(CURDIR)/script/gofmtcheck.sh'"
 
 lint: fmtcheck
-	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.44.2 golangci-lint -v run
+	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.50.1 golangci-lint -v run
 
 deeplint: fmtcheck
-	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.44.2 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
+	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.50.1 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
 
 modsync: fmtcheck
 	go mod tidy && 	go mod vendor

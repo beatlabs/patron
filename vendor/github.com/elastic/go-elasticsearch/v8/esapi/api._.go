@@ -15,12 +15,11 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0 (6a8b801): DO NOT EDIT
+// Code generated from specification version 8.6.0 (5d47733): DO NOT EDIT
 
 package esapi
 
 // API contains the Elasticsearch APIs
-//
 type API struct {
 	Cat         *Cat
 	Cluster     *Cluster
@@ -111,6 +110,7 @@ type API struct {
 	SearchableSnapshotsClearCache      SearchableSnapshotsClearCache
 	SearchableSnapshotsMount           SearchableSnapshotsMount
 	SearchableSnapshotsStats           SearchableSnapshotsStats
+	SemanticSearch                     SemanticSearch
 	ShutdownDeleteNode                 ShutdownDeleteNode
 	ShutdownGetNode                    ShutdownGetNode
 	ShutdownPutNode                    ShutdownPutNode
@@ -206,6 +206,7 @@ type Indices struct {
 	Delete                IndicesDelete
 	DeleteTemplate        IndicesDeleteTemplate
 	DiskUsage             IndicesDiskUsage
+	Downsample            IndicesDownsample
 	ExistsAlias           IndicesExistsAlias
 	ExistsIndexTemplate   IndicesExistsIndexTemplate
 	Exists                IndicesExists
@@ -355,77 +356,79 @@ type Migration struct {
 
 // ML contains the ML APIs
 type ML struct {
-	CloseJob                      MLCloseJob
-	DeleteCalendarEvent           MLDeleteCalendarEvent
-	DeleteCalendarJob             MLDeleteCalendarJob
-	DeleteCalendar                MLDeleteCalendar
-	DeleteDataFrameAnalytics      MLDeleteDataFrameAnalytics
-	DeleteDatafeed                MLDeleteDatafeed
-	DeleteExpiredData             MLDeleteExpiredData
-	DeleteFilter                  MLDeleteFilter
-	DeleteForecast                MLDeleteForecast
-	DeleteJob                     MLDeleteJob
-	DeleteModelSnapshot           MLDeleteModelSnapshot
-	DeleteTrainedModelAlias       MLDeleteTrainedModelAlias
-	DeleteTrainedModel            MLDeleteTrainedModel
-	EstimateModelMemory           MLEstimateModelMemory
-	EvaluateDataFrame             MLEvaluateDataFrame
-	ExplainDataFrameAnalytics     MLExplainDataFrameAnalytics
-	FlushJob                      MLFlushJob
-	Forecast                      MLForecast
-	GetBuckets                    MLGetBuckets
-	GetCalendarEvents             MLGetCalendarEvents
-	GetCalendars                  MLGetCalendars
-	GetCategories                 MLGetCategories
-	GetDataFrameAnalytics         MLGetDataFrameAnalytics
-	GetDataFrameAnalyticsStats    MLGetDataFrameAnalyticsStats
-	GetDatafeedStats              MLGetDatafeedStats
-	GetDatafeeds                  MLGetDatafeeds
-	GetFilters                    MLGetFilters
-	GetInfluencers                MLGetInfluencers
-	GetJobStats                   MLGetJobStats
-	GetJobs                       MLGetJobs
-	GetMemoryStats                MLGetMemoryStats
-	GetModelSnapshotUpgradeStats  MLGetModelSnapshotUpgradeStats
-	GetModelSnapshots             MLGetModelSnapshots
-	GetOverallBuckets             MLGetOverallBuckets
-	GetRecords                    MLGetRecords
-	GetTrainedModels              MLGetTrainedModels
-	GetTrainedModelsStats         MLGetTrainedModelsStats
-	InferTrainedModel             MLInferTrainedModel
-	Info                          MLInfo
-	OpenJob                       MLOpenJob
-	PostCalendarEvents            MLPostCalendarEvents
-	PostData                      MLPostData
-	PreviewDataFrameAnalytics     MLPreviewDataFrameAnalytics
-	PreviewDatafeed               MLPreviewDatafeed
-	PutCalendarJob                MLPutCalendarJob
-	PutCalendar                   MLPutCalendar
-	PutDataFrameAnalytics         MLPutDataFrameAnalytics
-	PutDatafeed                   MLPutDatafeed
-	PutFilter                     MLPutFilter
-	PutJob                        MLPutJob
-	PutTrainedModelAlias          MLPutTrainedModelAlias
-	PutTrainedModelDefinitionPart MLPutTrainedModelDefinitionPart
-	PutTrainedModel               MLPutTrainedModel
-	PutTrainedModelVocabulary     MLPutTrainedModelVocabulary
-	ResetJob                      MLResetJob
-	RevertModelSnapshot           MLRevertModelSnapshot
-	SetUpgradeMode                MLSetUpgradeMode
-	StartDataFrameAnalytics       MLStartDataFrameAnalytics
-	StartDatafeed                 MLStartDatafeed
-	StartTrainedModelDeployment   MLStartTrainedModelDeployment
-	StopDataFrameAnalytics        MLStopDataFrameAnalytics
-	StopDatafeed                  MLStopDatafeed
-	StopTrainedModelDeployment    MLStopTrainedModelDeployment
-	UpdateDataFrameAnalytics      MLUpdateDataFrameAnalytics
-	UpdateDatafeed                MLUpdateDatafeed
-	UpdateFilter                  MLUpdateFilter
-	UpdateJob                     MLUpdateJob
-	UpdateModelSnapshot           MLUpdateModelSnapshot
-	UpgradeJobSnapshot            MLUpgradeJobSnapshot
-	ValidateDetector              MLValidateDetector
-	Validate                      MLValidate
+	ClearTrainedModelDeploymentCache MLClearTrainedModelDeploymentCache
+	CloseJob                         MLCloseJob
+	DeleteCalendarEvent              MLDeleteCalendarEvent
+	DeleteCalendarJob                MLDeleteCalendarJob
+	DeleteCalendar                   MLDeleteCalendar
+	DeleteDataFrameAnalytics         MLDeleteDataFrameAnalytics
+	DeleteDatafeed                   MLDeleteDatafeed
+	DeleteExpiredData                MLDeleteExpiredData
+	DeleteFilter                     MLDeleteFilter
+	DeleteForecast                   MLDeleteForecast
+	DeleteJob                        MLDeleteJob
+	DeleteModelSnapshot              MLDeleteModelSnapshot
+	DeleteTrainedModelAlias          MLDeleteTrainedModelAlias
+	DeleteTrainedModel               MLDeleteTrainedModel
+	EstimateModelMemory              MLEstimateModelMemory
+	EvaluateDataFrame                MLEvaluateDataFrame
+	ExplainDataFrameAnalytics        MLExplainDataFrameAnalytics
+	FlushJob                         MLFlushJob
+	Forecast                         MLForecast
+	GetBuckets                       MLGetBuckets
+	GetCalendarEvents                MLGetCalendarEvents
+	GetCalendars                     MLGetCalendars
+	GetCategories                    MLGetCategories
+	GetDataFrameAnalytics            MLGetDataFrameAnalytics
+	GetDataFrameAnalyticsStats       MLGetDataFrameAnalyticsStats
+	GetDatafeedStats                 MLGetDatafeedStats
+	GetDatafeeds                     MLGetDatafeeds
+	GetFilters                       MLGetFilters
+	GetInfluencers                   MLGetInfluencers
+	GetJobStats                      MLGetJobStats
+	GetJobs                          MLGetJobs
+	GetMemoryStats                   MLGetMemoryStats
+	GetModelSnapshotUpgradeStats     MLGetModelSnapshotUpgradeStats
+	GetModelSnapshots                MLGetModelSnapshots
+	GetOverallBuckets                MLGetOverallBuckets
+	GetRecords                       MLGetRecords
+	GetTrainedModels                 MLGetTrainedModels
+	GetTrainedModelsStats            MLGetTrainedModelsStats
+	InferTrainedModel                MLInferTrainedModel
+	Info                             MLInfo
+	OpenJob                          MLOpenJob
+	PostCalendarEvents               MLPostCalendarEvents
+	PostData                         MLPostData
+	PreviewDataFrameAnalytics        MLPreviewDataFrameAnalytics
+	PreviewDatafeed                  MLPreviewDatafeed
+	PutCalendarJob                   MLPutCalendarJob
+	PutCalendar                      MLPutCalendar
+	PutDataFrameAnalytics            MLPutDataFrameAnalytics
+	PutDatafeed                      MLPutDatafeed
+	PutFilter                        MLPutFilter
+	PutJob                           MLPutJob
+	PutTrainedModelAlias             MLPutTrainedModelAlias
+	PutTrainedModelDefinitionPart    MLPutTrainedModelDefinitionPart
+	PutTrainedModel                  MLPutTrainedModel
+	PutTrainedModelVocabulary        MLPutTrainedModelVocabulary
+	ResetJob                         MLResetJob
+	RevertModelSnapshot              MLRevertModelSnapshot
+	SetUpgradeMode                   MLSetUpgradeMode
+	StartDataFrameAnalytics          MLStartDataFrameAnalytics
+	StartDatafeed                    MLStartDatafeed
+	StartTrainedModelDeployment      MLStartTrainedModelDeployment
+	StopDataFrameAnalytics           MLStopDataFrameAnalytics
+	StopDatafeed                     MLStopDatafeed
+	StopTrainedModelDeployment       MLStopTrainedModelDeployment
+	UpdateDataFrameAnalytics         MLUpdateDataFrameAnalytics
+	UpdateDatafeed                   MLUpdateDatafeed
+	UpdateFilter                     MLUpdateFilter
+	UpdateJob                        MLUpdateJob
+	UpdateModelSnapshot              MLUpdateModelSnapshot
+	UpdateTrainedModelDeployment     MLUpdateTrainedModelDeployment
+	UpgradeJobSnapshot               MLUpgradeJobSnapshot
+	ValidateDetector                 MLValidateDetector
+	Validate                         MLValidate
 }
 
 // Monitoring contains the Monitoring APIs
@@ -440,7 +443,6 @@ type Rollup struct {
 	GetCaps      RollupGetRollupCaps
 	GetIndexCaps RollupGetRollupIndexCaps
 	PutJob       RollupPutJob
-	Rollup       RollupRollup
 	Search       RollupRollupSearch
 	StartJob     RollupStartJob
 	StopJob      RollupStopJob
@@ -450,6 +452,7 @@ type Rollup struct {
 type Security struct {
 	ActivateUserProfile         SecurityActivateUserProfile
 	Authenticate                SecurityAuthenticate
+	BulkUpdateAPIKeys           SecurityBulkUpdateAPIKeys
 	ChangePassword              SecurityChangePassword
 	ClearAPIKeyCache            SecurityClearAPIKeyCache
 	ClearCachedPrivileges       SecurityClearCachedPrivileges
@@ -500,6 +503,7 @@ type Security struct {
 	SamlPrepareAuthentication   SecuritySamlPrepareAuthentication
 	SamlServiceProviderMetadata SecuritySamlServiceProviderMetadata
 	SuggestUserProfiles         SecuritySuggestUserProfiles
+	UpdateAPIKey                SecurityUpdateAPIKey
 	UpdateUserProfileData       SecurityUpdateUserProfileData
 }
 
@@ -540,7 +544,6 @@ type XPack struct {
 }
 
 // New creates new API
-//
 func New(t Transport) *API {
 	return &API{
 		AutoscalingDeleteAutoscalingPolicy: newAutoscalingDeleteAutoscalingPolicyFunc(t),
@@ -610,6 +613,7 @@ func New(t Transport) *API {
 		SearchableSnapshotsClearCache:      newSearchableSnapshotsClearCacheFunc(t),
 		SearchableSnapshotsMount:           newSearchableSnapshotsMountFunc(t),
 		SearchableSnapshotsStats:           newSearchableSnapshotsStatsFunc(t),
+		SemanticSearch:                     newSemanticSearchFunc(t),
 		ShutdownDeleteNode:                 newShutdownDeleteNodeFunc(t),
 		ShutdownGetNode:                    newShutdownGetNodeFunc(t),
 		ShutdownPutNode:                    newShutdownPutNodeFunc(t),
@@ -698,6 +702,7 @@ func New(t Transport) *API {
 			Delete:                newIndicesDeleteFunc(t),
 			DeleteTemplate:        newIndicesDeleteTemplateFunc(t),
 			DiskUsage:             newIndicesDiskUsageFunc(t),
+			Downsample:            newIndicesDownsampleFunc(t),
 			ExistsAlias:           newIndicesExistsAliasFunc(t),
 			ExistsIndexTemplate:   newIndicesExistsIndexTemplateFunc(t),
 			Exists:                newIndicesExistsFunc(t),
@@ -824,77 +829,79 @@ func New(t Transport) *API {
 			PostFeatureUpgrade:      newMigrationPostFeatureUpgradeFunc(t),
 		},
 		ML: &ML{
-			CloseJob:                      newMLCloseJobFunc(t),
-			DeleteCalendarEvent:           newMLDeleteCalendarEventFunc(t),
-			DeleteCalendarJob:             newMLDeleteCalendarJobFunc(t),
-			DeleteCalendar:                newMLDeleteCalendarFunc(t),
-			DeleteDataFrameAnalytics:      newMLDeleteDataFrameAnalyticsFunc(t),
-			DeleteDatafeed:                newMLDeleteDatafeedFunc(t),
-			DeleteExpiredData:             newMLDeleteExpiredDataFunc(t),
-			DeleteFilter:                  newMLDeleteFilterFunc(t),
-			DeleteForecast:                newMLDeleteForecastFunc(t),
-			DeleteJob:                     newMLDeleteJobFunc(t),
-			DeleteModelSnapshot:           newMLDeleteModelSnapshotFunc(t),
-			DeleteTrainedModelAlias:       newMLDeleteTrainedModelAliasFunc(t),
-			DeleteTrainedModel:            newMLDeleteTrainedModelFunc(t),
-			EstimateModelMemory:           newMLEstimateModelMemoryFunc(t),
-			EvaluateDataFrame:             newMLEvaluateDataFrameFunc(t),
-			ExplainDataFrameAnalytics:     newMLExplainDataFrameAnalyticsFunc(t),
-			FlushJob:                      newMLFlushJobFunc(t),
-			Forecast:                      newMLForecastFunc(t),
-			GetBuckets:                    newMLGetBucketsFunc(t),
-			GetCalendarEvents:             newMLGetCalendarEventsFunc(t),
-			GetCalendars:                  newMLGetCalendarsFunc(t),
-			GetCategories:                 newMLGetCategoriesFunc(t),
-			GetDataFrameAnalytics:         newMLGetDataFrameAnalyticsFunc(t),
-			GetDataFrameAnalyticsStats:    newMLGetDataFrameAnalyticsStatsFunc(t),
-			GetDatafeedStats:              newMLGetDatafeedStatsFunc(t),
-			GetDatafeeds:                  newMLGetDatafeedsFunc(t),
-			GetFilters:                    newMLGetFiltersFunc(t),
-			GetInfluencers:                newMLGetInfluencersFunc(t),
-			GetJobStats:                   newMLGetJobStatsFunc(t),
-			GetJobs:                       newMLGetJobsFunc(t),
-			GetMemoryStats:                newMLGetMemoryStatsFunc(t),
-			GetModelSnapshotUpgradeStats:  newMLGetModelSnapshotUpgradeStatsFunc(t),
-			GetModelSnapshots:             newMLGetModelSnapshotsFunc(t),
-			GetOverallBuckets:             newMLGetOverallBucketsFunc(t),
-			GetRecords:                    newMLGetRecordsFunc(t),
-			GetTrainedModels:              newMLGetTrainedModelsFunc(t),
-			GetTrainedModelsStats:         newMLGetTrainedModelsStatsFunc(t),
-			InferTrainedModel:             newMLInferTrainedModelFunc(t),
-			Info:                          newMLInfoFunc(t),
-			OpenJob:                       newMLOpenJobFunc(t),
-			PostCalendarEvents:            newMLPostCalendarEventsFunc(t),
-			PostData:                      newMLPostDataFunc(t),
-			PreviewDataFrameAnalytics:     newMLPreviewDataFrameAnalyticsFunc(t),
-			PreviewDatafeed:               newMLPreviewDatafeedFunc(t),
-			PutCalendarJob:                newMLPutCalendarJobFunc(t),
-			PutCalendar:                   newMLPutCalendarFunc(t),
-			PutDataFrameAnalytics:         newMLPutDataFrameAnalyticsFunc(t),
-			PutDatafeed:                   newMLPutDatafeedFunc(t),
-			PutFilter:                     newMLPutFilterFunc(t),
-			PutJob:                        newMLPutJobFunc(t),
-			PutTrainedModelAlias:          newMLPutTrainedModelAliasFunc(t),
-			PutTrainedModelDefinitionPart: newMLPutTrainedModelDefinitionPartFunc(t),
-			PutTrainedModel:               newMLPutTrainedModelFunc(t),
-			PutTrainedModelVocabulary:     newMLPutTrainedModelVocabularyFunc(t),
-			ResetJob:                      newMLResetJobFunc(t),
-			RevertModelSnapshot:           newMLRevertModelSnapshotFunc(t),
-			SetUpgradeMode:                newMLSetUpgradeModeFunc(t),
-			StartDataFrameAnalytics:       newMLStartDataFrameAnalyticsFunc(t),
-			StartDatafeed:                 newMLStartDatafeedFunc(t),
-			StartTrainedModelDeployment:   newMLStartTrainedModelDeploymentFunc(t),
-			StopDataFrameAnalytics:        newMLStopDataFrameAnalyticsFunc(t),
-			StopDatafeed:                  newMLStopDatafeedFunc(t),
-			StopTrainedModelDeployment:    newMLStopTrainedModelDeploymentFunc(t),
-			UpdateDataFrameAnalytics:      newMLUpdateDataFrameAnalyticsFunc(t),
-			UpdateDatafeed:                newMLUpdateDatafeedFunc(t),
-			UpdateFilter:                  newMLUpdateFilterFunc(t),
-			UpdateJob:                     newMLUpdateJobFunc(t),
-			UpdateModelSnapshot:           newMLUpdateModelSnapshotFunc(t),
-			UpgradeJobSnapshot:            newMLUpgradeJobSnapshotFunc(t),
-			ValidateDetector:              newMLValidateDetectorFunc(t),
-			Validate:                      newMLValidateFunc(t),
+			ClearTrainedModelDeploymentCache: newMLClearTrainedModelDeploymentCacheFunc(t),
+			CloseJob:                         newMLCloseJobFunc(t),
+			DeleteCalendarEvent:              newMLDeleteCalendarEventFunc(t),
+			DeleteCalendarJob:                newMLDeleteCalendarJobFunc(t),
+			DeleteCalendar:                   newMLDeleteCalendarFunc(t),
+			DeleteDataFrameAnalytics:         newMLDeleteDataFrameAnalyticsFunc(t),
+			DeleteDatafeed:                   newMLDeleteDatafeedFunc(t),
+			DeleteExpiredData:                newMLDeleteExpiredDataFunc(t),
+			DeleteFilter:                     newMLDeleteFilterFunc(t),
+			DeleteForecast:                   newMLDeleteForecastFunc(t),
+			DeleteJob:                        newMLDeleteJobFunc(t),
+			DeleteModelSnapshot:              newMLDeleteModelSnapshotFunc(t),
+			DeleteTrainedModelAlias:          newMLDeleteTrainedModelAliasFunc(t),
+			DeleteTrainedModel:               newMLDeleteTrainedModelFunc(t),
+			EstimateModelMemory:              newMLEstimateModelMemoryFunc(t),
+			EvaluateDataFrame:                newMLEvaluateDataFrameFunc(t),
+			ExplainDataFrameAnalytics:        newMLExplainDataFrameAnalyticsFunc(t),
+			FlushJob:                         newMLFlushJobFunc(t),
+			Forecast:                         newMLForecastFunc(t),
+			GetBuckets:                       newMLGetBucketsFunc(t),
+			GetCalendarEvents:                newMLGetCalendarEventsFunc(t),
+			GetCalendars:                     newMLGetCalendarsFunc(t),
+			GetCategories:                    newMLGetCategoriesFunc(t),
+			GetDataFrameAnalytics:            newMLGetDataFrameAnalyticsFunc(t),
+			GetDataFrameAnalyticsStats:       newMLGetDataFrameAnalyticsStatsFunc(t),
+			GetDatafeedStats:                 newMLGetDatafeedStatsFunc(t),
+			GetDatafeeds:                     newMLGetDatafeedsFunc(t),
+			GetFilters:                       newMLGetFiltersFunc(t),
+			GetInfluencers:                   newMLGetInfluencersFunc(t),
+			GetJobStats:                      newMLGetJobStatsFunc(t),
+			GetJobs:                          newMLGetJobsFunc(t),
+			GetMemoryStats:                   newMLGetMemoryStatsFunc(t),
+			GetModelSnapshotUpgradeStats:     newMLGetModelSnapshotUpgradeStatsFunc(t),
+			GetModelSnapshots:                newMLGetModelSnapshotsFunc(t),
+			GetOverallBuckets:                newMLGetOverallBucketsFunc(t),
+			GetRecords:                       newMLGetRecordsFunc(t),
+			GetTrainedModels:                 newMLGetTrainedModelsFunc(t),
+			GetTrainedModelsStats:            newMLGetTrainedModelsStatsFunc(t),
+			InferTrainedModel:                newMLInferTrainedModelFunc(t),
+			Info:                             newMLInfoFunc(t),
+			OpenJob:                          newMLOpenJobFunc(t),
+			PostCalendarEvents:               newMLPostCalendarEventsFunc(t),
+			PostData:                         newMLPostDataFunc(t),
+			PreviewDataFrameAnalytics:        newMLPreviewDataFrameAnalyticsFunc(t),
+			PreviewDatafeed:                  newMLPreviewDatafeedFunc(t),
+			PutCalendarJob:                   newMLPutCalendarJobFunc(t),
+			PutCalendar:                      newMLPutCalendarFunc(t),
+			PutDataFrameAnalytics:            newMLPutDataFrameAnalyticsFunc(t),
+			PutDatafeed:                      newMLPutDatafeedFunc(t),
+			PutFilter:                        newMLPutFilterFunc(t),
+			PutJob:                           newMLPutJobFunc(t),
+			PutTrainedModelAlias:             newMLPutTrainedModelAliasFunc(t),
+			PutTrainedModelDefinitionPart:    newMLPutTrainedModelDefinitionPartFunc(t),
+			PutTrainedModel:                  newMLPutTrainedModelFunc(t),
+			PutTrainedModelVocabulary:        newMLPutTrainedModelVocabularyFunc(t),
+			ResetJob:                         newMLResetJobFunc(t),
+			RevertModelSnapshot:              newMLRevertModelSnapshotFunc(t),
+			SetUpgradeMode:                   newMLSetUpgradeModeFunc(t),
+			StartDataFrameAnalytics:          newMLStartDataFrameAnalyticsFunc(t),
+			StartDatafeed:                    newMLStartDatafeedFunc(t),
+			StartTrainedModelDeployment:      newMLStartTrainedModelDeploymentFunc(t),
+			StopDataFrameAnalytics:           newMLStopDataFrameAnalyticsFunc(t),
+			StopDatafeed:                     newMLStopDatafeedFunc(t),
+			StopTrainedModelDeployment:       newMLStopTrainedModelDeploymentFunc(t),
+			UpdateDataFrameAnalytics:         newMLUpdateDataFrameAnalyticsFunc(t),
+			UpdateDatafeed:                   newMLUpdateDatafeedFunc(t),
+			UpdateFilter:                     newMLUpdateFilterFunc(t),
+			UpdateJob:                        newMLUpdateJobFunc(t),
+			UpdateModelSnapshot:              newMLUpdateModelSnapshotFunc(t),
+			UpdateTrainedModelDeployment:     newMLUpdateTrainedModelDeploymentFunc(t),
+			UpgradeJobSnapshot:               newMLUpgradeJobSnapshotFunc(t),
+			ValidateDetector:                 newMLValidateDetectorFunc(t),
+			Validate:                         newMLValidateFunc(t),
 		},
 		Monitoring: &Monitoring{
 			Bulk: newMonitoringBulkFunc(t),
@@ -905,7 +912,6 @@ func New(t Transport) *API {
 			GetCaps:      newRollupGetRollupCapsFunc(t),
 			GetIndexCaps: newRollupGetRollupIndexCapsFunc(t),
 			PutJob:       newRollupPutJobFunc(t),
-			Rollup:       newRollupRollupFunc(t),
 			Search:       newRollupRollupSearchFunc(t),
 			StartJob:     newRollupStartJobFunc(t),
 			StopJob:      newRollupStopJobFunc(t),
@@ -913,6 +919,7 @@ func New(t Transport) *API {
 		Security: &Security{
 			ActivateUserProfile:         newSecurityActivateUserProfileFunc(t),
 			Authenticate:                newSecurityAuthenticateFunc(t),
+			BulkUpdateAPIKeys:           newSecurityBulkUpdateAPIKeysFunc(t),
 			ChangePassword:              newSecurityChangePasswordFunc(t),
 			ClearAPIKeyCache:            newSecurityClearAPIKeyCacheFunc(t),
 			ClearCachedPrivileges:       newSecurityClearCachedPrivilegesFunc(t),
@@ -963,6 +970,7 @@ func New(t Transport) *API {
 			SamlPrepareAuthentication:   newSecuritySamlPrepareAuthenticationFunc(t),
 			SamlServiceProviderMetadata: newSecuritySamlServiceProviderMetadataFunc(t),
 			SuggestUserProfiles:         newSecuritySuggestUserProfilesFunc(t),
+			UpdateAPIKey:                newSecurityUpdateAPIKeyFunc(t),
 			UpdateUserProfileData:       newSecurityUpdateUserProfileDataFunc(t),
 		},
 		SQL: &SQL{

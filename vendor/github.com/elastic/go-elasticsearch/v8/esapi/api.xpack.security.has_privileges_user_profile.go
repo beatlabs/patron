@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0: DO NOT EDIT
+// Code generated from specification version 8.6.0: DO NOT EDIT
 
 package esapi
 
@@ -40,14 +40,10 @@ func newSecurityHasPrivilegesUserProfileFunc(t Transport) SecurityHasPrivilegesU
 
 // SecurityHasPrivilegesUserProfile - Determines whether the users associated with the specified profile IDs have all the requested privileges.
 //
-// This API is experimental.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-has-privileges-user-profile.html.
-//
 type SecurityHasPrivilegesUserProfile func(body io.Reader, o ...func(*SecurityHasPrivilegesUserProfileRequest)) (*Response, error)
 
 // SecurityHasPrivilegesUserProfileRequest configures the Security Has Privileges User Profile API request.
-//
 type SecurityHasPrivilegesUserProfileRequest struct {
 	Body io.Reader
 
@@ -62,7 +58,6 @@ type SecurityHasPrivilegesUserProfileRequest struct {
 }
 
 // Do executes the request and returns response or error.
-//
 func (r SecurityHasPrivilegesUserProfileRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
@@ -107,10 +102,6 @@ func (r SecurityHasPrivilegesUserProfileRequest) Do(ctx context.Context, transpo
 		req.URL.RawQuery = q.Encode()
 	}
 
-	if r.Body != nil {
-		req.Header[headerContentType] = headerContentTypeJSON
-	}
-
 	if len(r.Header) > 0 {
 		if len(req.Header) == 0 {
 			req.Header = r.Header
@@ -121,6 +112,10 @@ func (r SecurityHasPrivilegesUserProfileRequest) Do(ctx context.Context, transpo
 				}
 			}
 		}
+	}
+
+	if r.Body != nil && req.Header.Get(headerContentType) == "" {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if ctx != nil {
@@ -142,7 +137,6 @@ func (r SecurityHasPrivilegesUserProfileRequest) Do(ctx context.Context, transpo
 }
 
 // WithContext sets the request context.
-//
 func (f SecurityHasPrivilegesUserProfile) WithContext(v context.Context) func(*SecurityHasPrivilegesUserProfileRequest) {
 	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.ctx = v
@@ -150,7 +144,6 @@ func (f SecurityHasPrivilegesUserProfile) WithContext(v context.Context) func(*S
 }
 
 // WithPretty makes the response body pretty-printed.
-//
 func (f SecurityHasPrivilegesUserProfile) WithPretty() func(*SecurityHasPrivilegesUserProfileRequest) {
 	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.Pretty = true
@@ -158,7 +151,6 @@ func (f SecurityHasPrivilegesUserProfile) WithPretty() func(*SecurityHasPrivileg
 }
 
 // WithHuman makes statistical values human-readable.
-//
 func (f SecurityHasPrivilegesUserProfile) WithHuman() func(*SecurityHasPrivilegesUserProfileRequest) {
 	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.Human = true
@@ -166,7 +158,6 @@ func (f SecurityHasPrivilegesUserProfile) WithHuman() func(*SecurityHasPrivilege
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-//
 func (f SecurityHasPrivilegesUserProfile) WithErrorTrace() func(*SecurityHasPrivilegesUserProfileRequest) {
 	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.ErrorTrace = true
@@ -174,7 +165,6 @@ func (f SecurityHasPrivilegesUserProfile) WithErrorTrace() func(*SecurityHasPriv
 }
 
 // WithFilterPath filters the properties of the response body.
-//
 func (f SecurityHasPrivilegesUserProfile) WithFilterPath(v ...string) func(*SecurityHasPrivilegesUserProfileRequest) {
 	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		r.FilterPath = v
@@ -182,7 +172,6 @@ func (f SecurityHasPrivilegesUserProfile) WithFilterPath(v ...string) func(*Secu
 }
 
 // WithHeader adds the headers to the HTTP request.
-//
 func (f SecurityHasPrivilegesUserProfile) WithHeader(h map[string]string) func(*SecurityHasPrivilegesUserProfileRequest) {
 	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		if r.Header == nil {
@@ -195,7 +184,6 @@ func (f SecurityHasPrivilegesUserProfile) WithHeader(h map[string]string) func(*
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-//
 func (f SecurityHasPrivilegesUserProfile) WithOpaqueID(s string) func(*SecurityHasPrivilegesUserProfileRequest) {
 	return func(r *SecurityHasPrivilegesUserProfileRequest) {
 		if r.Header == nil {

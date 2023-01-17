@@ -182,8 +182,10 @@ func NewClient(cfg Config) (*Client, error) {
 
 	return &Client{
 		elasticsearch.Client{
-			Transport: tp,
-			API:       esapi.New(tp),
+			BaseClient: elasticsearch.BaseClient{
+				Transport: tp,
+			},
+			API: esapi.New(tp),
 		},
 	}, nil
 }

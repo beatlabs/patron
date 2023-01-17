@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0: DO NOT EDIT
+// Code generated from specification version 8.6.0: DO NOT EDIT
 
 package esapi
 
@@ -23,6 +23,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -41,13 +42,13 @@ func newSecurityQueryAPIKeysFunc(t Transport) SecurityQueryAPIKeys {
 // SecurityQueryAPIKeys - Retrieves information for API keys using a subset of query DSL
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-query-api-key.html.
-//
 type SecurityQueryAPIKeys func(o ...func(*SecurityQueryAPIKeysRequest)) (*Response, error)
 
 // SecurityQueryAPIKeysRequest configures the Security QueryAPI Keys API request.
-//
 type SecurityQueryAPIKeysRequest struct {
 	Body io.Reader
+
+	WithLimitedBy *bool
 
 	Pretty     bool
 	Human      bool
@@ -60,7 +61,6 @@ type SecurityQueryAPIKeysRequest struct {
 }
 
 // Do executes the request and returns response or error.
-//
 func (r SecurityQueryAPIKeysRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
@@ -75,6 +75,10 @@ func (r SecurityQueryAPIKeysRequest) Do(ctx context.Context, transport Transport
 	path.WriteString("/_security/_query/api_key")
 
 	params = make(map[string]string)
+
+	if r.WithLimitedBy != nil {
+		params["with_limited_by"] = strconv.FormatBool(*r.WithLimitedBy)
+	}
 
 	if r.Pretty {
 		params["pretty"] = "true"
@@ -105,10 +109,6 @@ func (r SecurityQueryAPIKeysRequest) Do(ctx context.Context, transport Transport
 		req.URL.RawQuery = q.Encode()
 	}
 
-	if r.Body != nil {
-		req.Header[headerContentType] = headerContentTypeJSON
-	}
-
 	if len(r.Header) > 0 {
 		if len(req.Header) == 0 {
 			req.Header = r.Header
@@ -119,6 +119,10 @@ func (r SecurityQueryAPIKeysRequest) Do(ctx context.Context, transport Transport
 				}
 			}
 		}
+	}
+
+	if r.Body != nil && req.Header.Get(headerContentType) == "" {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if ctx != nil {
@@ -140,7 +144,6 @@ func (r SecurityQueryAPIKeysRequest) Do(ctx context.Context, transport Transport
 }
 
 // WithContext sets the request context.
-//
 func (f SecurityQueryAPIKeys) WithContext(v context.Context) func(*SecurityQueryAPIKeysRequest) {
 	return func(r *SecurityQueryAPIKeysRequest) {
 		r.ctx = v
@@ -148,15 +151,20 @@ func (f SecurityQueryAPIKeys) WithContext(v context.Context) func(*SecurityQuery
 }
 
 // WithBody - From, size, query, sort and search_after.
-//
 func (f SecurityQueryAPIKeys) WithBody(v io.Reader) func(*SecurityQueryAPIKeysRequest) {
 	return func(r *SecurityQueryAPIKeysRequest) {
 		r.Body = v
 	}
 }
 
+// WithWithLimitedBy - flag to show the limited-by role descriptors of api keys.
+func (f SecurityQueryAPIKeys) WithWithLimitedBy(v bool) func(*SecurityQueryAPIKeysRequest) {
+	return func(r *SecurityQueryAPIKeysRequest) {
+		r.WithLimitedBy = &v
+	}
+}
+
 // WithPretty makes the response body pretty-printed.
-//
 func (f SecurityQueryAPIKeys) WithPretty() func(*SecurityQueryAPIKeysRequest) {
 	return func(r *SecurityQueryAPIKeysRequest) {
 		r.Pretty = true
@@ -164,7 +172,6 @@ func (f SecurityQueryAPIKeys) WithPretty() func(*SecurityQueryAPIKeysRequest) {
 }
 
 // WithHuman makes statistical values human-readable.
-//
 func (f SecurityQueryAPIKeys) WithHuman() func(*SecurityQueryAPIKeysRequest) {
 	return func(r *SecurityQueryAPIKeysRequest) {
 		r.Human = true
@@ -172,7 +179,6 @@ func (f SecurityQueryAPIKeys) WithHuman() func(*SecurityQueryAPIKeysRequest) {
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-//
 func (f SecurityQueryAPIKeys) WithErrorTrace() func(*SecurityQueryAPIKeysRequest) {
 	return func(r *SecurityQueryAPIKeysRequest) {
 		r.ErrorTrace = true
@@ -180,7 +186,6 @@ func (f SecurityQueryAPIKeys) WithErrorTrace() func(*SecurityQueryAPIKeysRequest
 }
 
 // WithFilterPath filters the properties of the response body.
-//
 func (f SecurityQueryAPIKeys) WithFilterPath(v ...string) func(*SecurityQueryAPIKeysRequest) {
 	return func(r *SecurityQueryAPIKeysRequest) {
 		r.FilterPath = v
@@ -188,7 +193,6 @@ func (f SecurityQueryAPIKeys) WithFilterPath(v ...string) func(*SecurityQueryAPI
 }
 
 // WithHeader adds the headers to the HTTP request.
-//
 func (f SecurityQueryAPIKeys) WithHeader(h map[string]string) func(*SecurityQueryAPIKeysRequest) {
 	return func(r *SecurityQueryAPIKeysRequest) {
 		if r.Header == nil {
@@ -201,7 +205,6 @@ func (f SecurityQueryAPIKeys) WithHeader(h map[string]string) func(*SecurityQuer
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-//
 func (f SecurityQueryAPIKeys) WithOpaqueID(s string) func(*SecurityQueryAPIKeysRequest) {
 	return func(r *SecurityQueryAPIKeysRequest) {
 		if r.Header == nil {

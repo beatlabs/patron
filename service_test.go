@@ -92,7 +92,9 @@ func TestServer_Run_Shutdown(t *testing.T) {
 	for name, tt := range tests {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
-			defer os.Clearenv()
+			defer func() {
+				os.Clearenv()
+			}()
 			t.Setenv("PATRON_HTTP_DEFAULT_PORT", "50099")
 			svc, err := New("test", "", WithTextLogger(), WithComponents(temp.cp, temp.cp, temp.cp))
 			assert.NoError(t, err)

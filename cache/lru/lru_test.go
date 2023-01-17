@@ -14,8 +14,8 @@ func TestNew(t *testing.T) {
 		wantErr bool
 		err     string
 	}{
-		{name: "negative size", size: -1, wantErr: true, err: "Must provide a positive size"},
-		{name: "zero size", size: 0, wantErr: true, err: "Must provide a positive size"},
+		{name: "negative size", size: -1, wantErr: true, err: "must provide a positive size"},
+		{name: "zero size", size: 0, wantErr: true, err: "must provide a positive size"},
 		{name: "positive size", size: 1024, wantErr: false},
 	}
 

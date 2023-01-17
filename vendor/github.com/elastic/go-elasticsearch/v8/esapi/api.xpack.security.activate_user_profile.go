@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0: DO NOT EDIT
+// Code generated from specification version 8.6.0: DO NOT EDIT
 
 package esapi
 
@@ -40,14 +40,10 @@ func newSecurityActivateUserProfileFunc(t Transport) SecurityActivateUserProfile
 
 // SecurityActivateUserProfile - Creates or updates the user profile on behalf of another user.
 //
-// This API is experimental.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-activate-user-profile.html.
-//
 type SecurityActivateUserProfile func(body io.Reader, o ...func(*SecurityActivateUserProfileRequest)) (*Response, error)
 
 // SecurityActivateUserProfileRequest configures the Security Activate User Profile API request.
-//
 type SecurityActivateUserProfileRequest struct {
 	Body io.Reader
 
@@ -62,7 +58,6 @@ type SecurityActivateUserProfileRequest struct {
 }
 
 // Do executes the request and returns response or error.
-//
 func (r SecurityActivateUserProfileRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
@@ -107,10 +102,6 @@ func (r SecurityActivateUserProfileRequest) Do(ctx context.Context, transport Tr
 		req.URL.RawQuery = q.Encode()
 	}
 
-	if r.Body != nil {
-		req.Header[headerContentType] = headerContentTypeJSON
-	}
-
 	if len(r.Header) > 0 {
 		if len(req.Header) == 0 {
 			req.Header = r.Header
@@ -121,6 +112,10 @@ func (r SecurityActivateUserProfileRequest) Do(ctx context.Context, transport Tr
 				}
 			}
 		}
+	}
+
+	if r.Body != nil && req.Header.Get(headerContentType) == "" {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if ctx != nil {
@@ -142,7 +137,6 @@ func (r SecurityActivateUserProfileRequest) Do(ctx context.Context, transport Tr
 }
 
 // WithContext sets the request context.
-//
 func (f SecurityActivateUserProfile) WithContext(v context.Context) func(*SecurityActivateUserProfileRequest) {
 	return func(r *SecurityActivateUserProfileRequest) {
 		r.ctx = v
@@ -150,7 +144,6 @@ func (f SecurityActivateUserProfile) WithContext(v context.Context) func(*Securi
 }
 
 // WithPretty makes the response body pretty-printed.
-//
 func (f SecurityActivateUserProfile) WithPretty() func(*SecurityActivateUserProfileRequest) {
 	return func(r *SecurityActivateUserProfileRequest) {
 		r.Pretty = true
@@ -158,7 +151,6 @@ func (f SecurityActivateUserProfile) WithPretty() func(*SecurityActivateUserProf
 }
 
 // WithHuman makes statistical values human-readable.
-//
 func (f SecurityActivateUserProfile) WithHuman() func(*SecurityActivateUserProfileRequest) {
 	return func(r *SecurityActivateUserProfileRequest) {
 		r.Human = true
@@ -166,7 +158,6 @@ func (f SecurityActivateUserProfile) WithHuman() func(*SecurityActivateUserProfi
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-//
 func (f SecurityActivateUserProfile) WithErrorTrace() func(*SecurityActivateUserProfileRequest) {
 	return func(r *SecurityActivateUserProfileRequest) {
 		r.ErrorTrace = true
@@ -174,7 +165,6 @@ func (f SecurityActivateUserProfile) WithErrorTrace() func(*SecurityActivateUser
 }
 
 // WithFilterPath filters the properties of the response body.
-//
 func (f SecurityActivateUserProfile) WithFilterPath(v ...string) func(*SecurityActivateUserProfileRequest) {
 	return func(r *SecurityActivateUserProfileRequest) {
 		r.FilterPath = v
@@ -182,7 +172,6 @@ func (f SecurityActivateUserProfile) WithFilterPath(v ...string) func(*SecurityA
 }
 
 // WithHeader adds the headers to the HTTP request.
-//
 func (f SecurityActivateUserProfile) WithHeader(h map[string]string) func(*SecurityActivateUserProfileRequest) {
 	return func(r *SecurityActivateUserProfileRequest) {
 		if r.Header == nil {
@@ -195,7 +184,6 @@ func (f SecurityActivateUserProfile) WithHeader(h map[string]string) func(*Secur
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-//
 func (f SecurityActivateUserProfile) WithOpaqueID(s string) func(*SecurityActivateUserProfileRequest) {
 	return func(r *SecurityActivateUserProfileRequest) {
 		if r.Header == nil {

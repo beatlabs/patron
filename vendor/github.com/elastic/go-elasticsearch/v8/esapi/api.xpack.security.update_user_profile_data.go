@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0: DO NOT EDIT
+// Code generated from specification version 8.6.0: DO NOT EDIT
 
 package esapi
 
@@ -41,14 +41,10 @@ func newSecurityUpdateUserProfileDataFunc(t Transport) SecurityUpdateUserProfile
 
 // SecurityUpdateUserProfileData - Update application specific data for the user profile of the given unique ID.
 //
-// This API is experimental.
-//
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-update-user-profile-data.html.
-//
 type SecurityUpdateUserProfileData func(body io.Reader, uid string, o ...func(*SecurityUpdateUserProfileDataRequest)) (*Response, error)
 
 // SecurityUpdateUserProfileDataRequest configures the Security Update User Profile Data API request.
-//
 type SecurityUpdateUserProfileDataRequest struct {
 	Body io.Reader
 
@@ -69,7 +65,6 @@ type SecurityUpdateUserProfileDataRequest struct {
 }
 
 // Do executes the request and returns response or error.
-//
 func (r SecurityUpdateUserProfileDataRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
@@ -133,10 +128,6 @@ func (r SecurityUpdateUserProfileDataRequest) Do(ctx context.Context, transport 
 		req.URL.RawQuery = q.Encode()
 	}
 
-	if r.Body != nil {
-		req.Header[headerContentType] = headerContentTypeJSON
-	}
-
 	if len(r.Header) > 0 {
 		if len(req.Header) == 0 {
 			req.Header = r.Header
@@ -147,6 +138,10 @@ func (r SecurityUpdateUserProfileDataRequest) Do(ctx context.Context, transport 
 				}
 			}
 		}
+	}
+
+	if r.Body != nil && req.Header.Get(headerContentType) == "" {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if ctx != nil {
@@ -168,7 +163,6 @@ func (r SecurityUpdateUserProfileDataRequest) Do(ctx context.Context, transport 
 }
 
 // WithContext sets the request context.
-//
 func (f SecurityUpdateUserProfileData) WithContext(v context.Context) func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		r.ctx = v
@@ -176,7 +170,6 @@ func (f SecurityUpdateUserProfileData) WithContext(v context.Context) func(*Secu
 }
 
 // WithIfPrimaryTerm - only perform the update operation if the last operation that has changed the document has the specified primary term.
-//
 func (f SecurityUpdateUserProfileData) WithIfPrimaryTerm(v int) func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		r.IfPrimaryTerm = &v
@@ -184,7 +177,6 @@ func (f SecurityUpdateUserProfileData) WithIfPrimaryTerm(v int) func(*SecurityUp
 }
 
 // WithIfSeqNo - only perform the update operation if the last operation that has changed the document has the specified sequence number.
-//
 func (f SecurityUpdateUserProfileData) WithIfSeqNo(v int) func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		r.IfSeqNo = &v
@@ -192,7 +184,6 @@ func (f SecurityUpdateUserProfileData) WithIfSeqNo(v int) func(*SecurityUpdateUs
 }
 
 // WithRefresh - if `true` (the default) then refresh the affected shards to make this operation visible to search, if `wait_for` then wait for a refresh to make this operation visible to search, if `false` then do nothing with refreshes..
-//
 func (f SecurityUpdateUserProfileData) WithRefresh(v string) func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		r.Refresh = v
@@ -200,7 +191,6 @@ func (f SecurityUpdateUserProfileData) WithRefresh(v string) func(*SecurityUpdat
 }
 
 // WithPretty makes the response body pretty-printed.
-//
 func (f SecurityUpdateUserProfileData) WithPretty() func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		r.Pretty = true
@@ -208,7 +198,6 @@ func (f SecurityUpdateUserProfileData) WithPretty() func(*SecurityUpdateUserProf
 }
 
 // WithHuman makes statistical values human-readable.
-//
 func (f SecurityUpdateUserProfileData) WithHuman() func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		r.Human = true
@@ -216,7 +205,6 @@ func (f SecurityUpdateUserProfileData) WithHuman() func(*SecurityUpdateUserProfi
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-//
 func (f SecurityUpdateUserProfileData) WithErrorTrace() func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		r.ErrorTrace = true
@@ -224,7 +212,6 @@ func (f SecurityUpdateUserProfileData) WithErrorTrace() func(*SecurityUpdateUser
 }
 
 // WithFilterPath filters the properties of the response body.
-//
 func (f SecurityUpdateUserProfileData) WithFilterPath(v ...string) func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		r.FilterPath = v
@@ -232,7 +219,6 @@ func (f SecurityUpdateUserProfileData) WithFilterPath(v ...string) func(*Securit
 }
 
 // WithHeader adds the headers to the HTTP request.
-//
 func (f SecurityUpdateUserProfileData) WithHeader(h map[string]string) func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		if r.Header == nil {
@@ -245,7 +231,6 @@ func (f SecurityUpdateUserProfileData) WithHeader(h map[string]string) func(*Sec
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-//
 func (f SecurityUpdateUserProfileData) WithOpaqueID(s string) func(*SecurityUpdateUserProfileDataRequest) {
 	return func(r *SecurityUpdateUserProfileDataRequest) {
 		if r.Header == nil {

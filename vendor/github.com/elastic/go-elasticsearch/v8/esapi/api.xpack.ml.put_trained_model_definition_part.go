@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.3.0: DO NOT EDIT
+// Code generated from specification version 8.6.0: DO NOT EDIT
 
 package esapi
 
@@ -42,14 +42,12 @@ func newMLPutTrainedModelDefinitionPartFunc(t Transport) MLPutTrainedModelDefini
 
 // MLPutTrainedModelDefinitionPart - Creates part of a trained model definition
 //
-// This API is experimental.
+// This API is beta.
 //
 // See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/current/put-trained-model-definition-part.html.
-//
 type MLPutTrainedModelDefinitionPart func(body io.Reader, model_id string, part *int, o ...func(*MLPutTrainedModelDefinitionPartRequest)) (*Response, error)
 
 // MLPutTrainedModelDefinitionPartRequest configures the ML Put Trained Model Definition Part API request.
-//
 type MLPutTrainedModelDefinitionPartRequest struct {
 	Body io.Reader
 
@@ -67,7 +65,6 @@ type MLPutTrainedModelDefinitionPartRequest struct {
 }
 
 // Do executes the request and returns response or error.
-//
 func (r MLPutTrainedModelDefinitionPartRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
@@ -125,10 +122,6 @@ func (r MLPutTrainedModelDefinitionPartRequest) Do(ctx context.Context, transpor
 		req.URL.RawQuery = q.Encode()
 	}
 
-	if r.Body != nil {
-		req.Header[headerContentType] = headerContentTypeJSON
-	}
-
 	if len(r.Header) > 0 {
 		if len(req.Header) == 0 {
 			req.Header = r.Header
@@ -139,6 +132,10 @@ func (r MLPutTrainedModelDefinitionPartRequest) Do(ctx context.Context, transpor
 				}
 			}
 		}
+	}
+
+	if r.Body != nil && req.Header.Get(headerContentType) == "" {
+		req.Header[headerContentType] = headerContentTypeJSON
 	}
 
 	if ctx != nil {
@@ -160,7 +157,6 @@ func (r MLPutTrainedModelDefinitionPartRequest) Do(ctx context.Context, transpor
 }
 
 // WithContext sets the request context.
-//
 func (f MLPutTrainedModelDefinitionPart) WithContext(v context.Context) func(*MLPutTrainedModelDefinitionPartRequest) {
 	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.ctx = v
@@ -168,7 +164,6 @@ func (f MLPutTrainedModelDefinitionPart) WithContext(v context.Context) func(*ML
 }
 
 // WithPretty makes the response body pretty-printed.
-//
 func (f MLPutTrainedModelDefinitionPart) WithPretty() func(*MLPutTrainedModelDefinitionPartRequest) {
 	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.Pretty = true
@@ -176,7 +171,6 @@ func (f MLPutTrainedModelDefinitionPart) WithPretty() func(*MLPutTrainedModelDef
 }
 
 // WithHuman makes statistical values human-readable.
-//
 func (f MLPutTrainedModelDefinitionPart) WithHuman() func(*MLPutTrainedModelDefinitionPartRequest) {
 	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.Human = true
@@ -184,7 +178,6 @@ func (f MLPutTrainedModelDefinitionPart) WithHuman() func(*MLPutTrainedModelDefi
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-//
 func (f MLPutTrainedModelDefinitionPart) WithErrorTrace() func(*MLPutTrainedModelDefinitionPartRequest) {
 	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.ErrorTrace = true
@@ -192,7 +185,6 @@ func (f MLPutTrainedModelDefinitionPart) WithErrorTrace() func(*MLPutTrainedMode
 }
 
 // WithFilterPath filters the properties of the response body.
-//
 func (f MLPutTrainedModelDefinitionPart) WithFilterPath(v ...string) func(*MLPutTrainedModelDefinitionPartRequest) {
 	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		r.FilterPath = v
@@ -200,7 +192,6 @@ func (f MLPutTrainedModelDefinitionPart) WithFilterPath(v ...string) func(*MLPut
 }
 
 // WithHeader adds the headers to the HTTP request.
-//
 func (f MLPutTrainedModelDefinitionPart) WithHeader(h map[string]string) func(*MLPutTrainedModelDefinitionPartRequest) {
 	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		if r.Header == nil {
@@ -213,7 +204,6 @@ func (f MLPutTrainedModelDefinitionPart) WithHeader(h map[string]string) func(*M
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-//
 func (f MLPutTrainedModelDefinitionPart) WithOpaqueID(s string) func(*MLPutTrainedModelDefinitionPartRequest) {
 	return func(r *MLPutTrainedModelDefinitionPartRequest) {
 		if r.Header == nil {

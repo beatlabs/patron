@@ -133,11 +133,11 @@ func Test_createHTTPServerUsingBuilder(t *testing.T) {
 		"success": {
 			acf: DefaultAliveCheck,
 			rcf: DefaultReadyCheck,
-			p:   httpPort,
-			rt:  httpReadTimeout,
-			wt:  httpIdleTimeout,
-			dl:  deflateLevel,
-			gp:  shutdownGracePeriod,
+			p:   defaultPort,
+			rt:  defaultReadTimeout,
+			wt:  defaultIdleTimeout,
+			dl:  defaultDeflateLevel,
+			gp:  defaultShutdownGracePeriod,
 			rb:  rb,
 			mm: []middleware.Func{
 				middleware.NewRecovery(),

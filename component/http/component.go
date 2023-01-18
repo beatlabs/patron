@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -15,12 +17,12 @@ import (
 )
 
 const (
-	httpPort            = 50000
-	httpReadTimeout     = 30 * time.Second
-	httpWriteTimeout    = 60 * time.Second
-	httpIdleTimeout     = 240 * time.Second
-	shutdownGracePeriod = 5 * time.Second
-	deflateLevel        = 6
+	defaultPort                = 50000
+	defaultReadTimeout         = 30 * time.Second
+	defaultWriteTimeout        = 60 * time.Second
+	defaultIdleTimeout         = 240 * time.Second
+	defaultShutdownGracePeriod = 5 * time.Second
+	defaultDeflateLevel        = 6
 )
 
 var (
@@ -109,9 +111,67 @@ func (c *Component) createHTTPServer() *http.Server {
 		Addr:         fmt.Sprintf(":%d", c.httpPort),
 		ReadTimeout:  c.httpReadTimeout,
 		WriteTimeout: c.httpWriteTimeout,
-		IdleTimeout:  httpIdleTimeout,
+		IdleTimeout:  defaultIdleTimeout,
 		Handler:      routerAfterMiddleware,
 	}
+}
+
+func port() (int, error) {
+	var err error
+	portVal := int64(defaultPort)
+	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
+	if !ok {
+		log.Debugf("using default port %d", defaultPort)
+		return defaultPort, nil
+	}
+	portVal, err = strconv.ParseInt(port, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
+	}
+	log.Debugf("using port %d", portVal)
+	return int(portVal), nil
+}
+
+func readTimeout() (time.Duration, error) {
+	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
+	if !ok {
+		log.Debugf("using default read timeout %s", defaultReadTimeout)
+		return defaultReadTimeout, nil
+	}
+	timeout, err := time.ParseDuration(httpTimeout)
+	if err != nil {
+		return 0, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
+	}
+	log.Debugf("using read timeout %s", timeout)
+	return timeout, nil
+}
+
+func writeTimeout() (time.Duration, error) {
+	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
+	if !ok {
+		log.Debugf("using default write timeout %s", defaultWriteTimeout)
+		return defaultWriteTimeout, nil
+	}
+	timeout, err := time.ParseDuration(httpTimeout)
+	if err != nil {
+		return 0, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
+	}
+	log.Debugf("using write timeout %s", timeout)
+	return timeout, nil
+}
+
+func deflateLevel() (int, error) {
+	deflateLevel, ok := os.LookupEnv("PATRON_COMPRESSION_DEFLATE_LEVEL")
+	if !ok {
+		log.Debugf("using default deflate level %d", defaultDeflateLevel)
+		return defaultDeflateLevel, nil
+	}
+	deflateLevelInt, err := strconv.Atoi(deflateLevel)
+	if err != nil {
+		return 0, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
+	}
+	log.Debugf("using deflate level %d", deflateLevelInt)
+	return deflateLevelInt, nil
 }
 
 // Builder gathers all required and optional properties, in order
@@ -142,18 +202,39 @@ type Builder struct {
 // Deprecated: Please use the new v2 package.
 // This package is frozen and no new functionality will be added.
 func NewBuilder() *Builder {
-	var errs []error
+	var ee []error
+
+	port, err := port()
+	if err != nil {
+		ee = append(ee, err)
+	}
+
+	readTimeout, err := readTimeout()
+	if err != nil {
+		ee = append(ee, err)
+	}
+
+	writeTimeout, err := writeTimeout()
+	if err != nil {
+		ee = append(ee, err)
+	}
+
+	deflateLevel, err := deflateLevel()
+	if err != nil {
+		ee = append(ee, err)
+	}
+
 	return &Builder{
 		ac:                  DefaultAliveCheck,
 		rc:                  DefaultReadyCheck,
-		httpPort:            httpPort,
-		httpReadTimeout:     httpReadTimeout,
-		httpWriteTimeout:    httpWriteTimeout,
+		httpPort:            port,
+		httpReadTimeout:     readTimeout,
+		httpWriteTimeout:    writeTimeout,
 		deflateLevel:        deflateLevel,
 		uncompressedPaths:   []string{MetricsPath, AlivePath, ReadyPath},
-		shutdownGracePeriod: shutdownGracePeriod,
+		shutdownGracePeriod: defaultShutdownGracePeriod,
 		routesBuilder:       NewRoutesBuilder(),
-		errors:              errs,
+		errors:              ee,
 	}
 }
 

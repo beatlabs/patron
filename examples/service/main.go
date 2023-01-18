@@ -30,25 +30,23 @@ func init() {
 }
 
 func main() {
-	var options []patron.OptionFunc
-
-	options = append(options, patron.WithTextLogger())
+	var components []patron.Component
 
 	// Setup HTTP
-	router, err := createHttpRouter()
+	cmp, err := createHttpRouter()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	options = append(options, patron.WithRouter(router))
+	components = append(components, cmp)
 
 	// Setup gRPC
-	cmp, err := createGrpcServer()
+	cmp, err = createGrpcServer()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	options = append(options, patron.WithComponents(cmp))
+	components = append(components, cmp)
 
 	// Setup Kafka
 	cmp, err = createKafkaConsumer()
@@ -56,7 +54,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	options = append(options, patron.WithComponents(cmp))
+	components = append(components, cmp)
 
 	// Setup SQS
 	cmp, err = createSQSConsumer()
@@ -64,7 +62,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	options = append(options, patron.WithComponents(cmp))
+	components = append(components, cmp)
 
 	// Setup AMQP
 	cmp, err = createAMQPConsumer()
@@ -72,11 +70,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	options = append(options, patron.WithComponents(cmp))
+	components = append(components, cmp)
 
 	ctx := context.Background()
 
-	service, err := patron.New(name, version, options...)
+	service, err := patron.New(name, version, patron.WithTextLogger(), patron.WithComponents(components...))
 	if err != nil {
 		log.Fatalf("failed to set up service: %v", err)
 	}

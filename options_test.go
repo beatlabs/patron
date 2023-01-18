@@ -86,32 +86,6 @@ func TestLogger(t *testing.T) {
 	assert.Equal(t, logger, svc.config.logger)
 }
 
-func TestRouter(t *testing.T) {
-	type args struct {
-		handler http.Handler
-	}
-
-	tests := map[string]struct {
-		args        args
-		wantHandler http.Handler
-		wantError   error
-	}{
-		"empty value for handler":     {args: args{handler: nil}, wantHandler: nil, wantError: errors.New("provided router is nil")},
-		"non empty value for handler": {args: args{handler: noopHTTPHandler{}}, wantHandler: noopHTTPHandler{}, wantError: nil},
-	}
-
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			temp := tt
-			svc := &Service{}
-
-			err := WithRouter(temp.args.handler)(svc)
-			assert.Equal(t, temp.wantError, err)
-			assert.Equal(t, temp.wantHandler, svc.httpRouter)
-		})
-	}
-}
-
 type noopHTTPHandler struct{}
 
 func (noopHTTPHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {

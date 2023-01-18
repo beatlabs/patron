@@ -5,12 +5,13 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/beatlabs/patron"
 	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
 	"github.com/beatlabs/patron/log"
 )
 
-func createHttpRouter() (http.Handler, error) {
+func createHttpRouter() (patron.Component, error) {
 	handler := func(rw http.ResponseWriter, req *http.Request) {
 		body, err := io.ReadAll(req.Body)
 		if err != nil {
@@ -36,5 +37,5 @@ func createHttpRouter() (http.Handler, error) {
 		return nil, fmt.Errorf("failed to create http router: %w", err)
 	}
 
-	return router, err
+	return v2.New(router)
 }

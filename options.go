@@ -2,7 +2,6 @@ package patron
 
 import (
 	"errors"
-	"net/http"
 	"os"
 
 	"github.com/beatlabs/patron/log"
@@ -10,20 +9,6 @@ import (
 )
 
 type OptionFunc func(svc *Service) error
-
-// WithRouter replaces the default v1 HTTP component with a new component v2 based on http.Handler.
-func WithRouter(handler http.Handler) OptionFunc {
-	return func(svc *Service) error {
-		if handler == nil {
-			return errors.New("provided router is nil")
-		}
-
-		log.Debug("router will be used with the v2 HTTP component")
-		svc.httpRouter = handler
-
-		return nil
-	}
-}
 
 // WithComponents adds custom components to the Patron Service.
 func WithComponents(cc ...Component) OptionFunc {

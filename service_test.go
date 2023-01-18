@@ -3,7 +3,6 @@ package patron
 import (
 	"context"
 	"errors"
-	"net/http"
 	"os"
 	"testing"
 
@@ -13,15 +12,8 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	mw := func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			h.ServeHTTP(w, r)
-		})
-	}
-
 	httpBuilderAllErrors := "provided components slice was empty\n" +
-		"provided WithSIGHUP handler was nil\n" +
-		"provided router is nil\n"
+		"provided WithSIGHUP handler was nil\n"
 
 	tests := map[string]struct {
 		name              string
@@ -29,7 +21,6 @@ func TestNewServer(t *testing.T) {
 		cps               []Component
 		sighupHandler     func()
 		uncompressedPaths []string
-		handler           http.Handler
 		wantErr           string
 	}{
 		"success": {
@@ -38,14 +29,12 @@ func TestNewServer(t *testing.T) {
 			cps:               []Component{&testComponent{}, &testComponent{}},
 			sighupHandler:     func() { log.Info("WithSIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
-			handler:           mw(nil),
 			wantErr:           "",
 		},
 		"name missing": {
 			cps:               nil,
 			sighupHandler:     nil,
 			uncompressedPaths: nil,
-			handler:           nil,
 			wantErr:           "name is required",
 		},
 		"nil inputs steps": {
@@ -53,7 +42,6 @@ func TestNewServer(t *testing.T) {
 			cps:               nil,
 			sighupHandler:     nil,
 			uncompressedPaths: nil,
-			handler:           nil,
 			wantErr:           httpBuilderAllErrors,
 		},
 		"error in all builder steps": {
@@ -61,7 +49,6 @@ func TestNewServer(t *testing.T) {
 			cps:               []Component{},
 			sighupHandler:     nil,
 			uncompressedPaths: []string{},
-			handler:           nil,
 			wantErr:           httpBuilderAllErrors,
 		},
 	}
@@ -70,7 +57,7 @@ func TestNewServer(t *testing.T) {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
 			gotService, gotErr := New(tt.name, "1.0", WithLogFields(temp.fields), WithTextLogger(),
-				WithComponents(temp.cps...), WithSIGHUP(temp.sighupHandler), WithRouter(temp.handler))
+				WithComponents(temp.cps...), WithSIGHUP(temp.sighupHandler))
 
 			if temp.wantErr != "" {
 				assert.EqualError(t, gotErr, temp.wantErr)

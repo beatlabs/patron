@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// OpenError defines a open error.
+// OpenError definition for the open state.
 type OpenError struct{}
 
 func (oe OpenError) Error() string {
@@ -51,13 +51,13 @@ func breakerCounterInc(name string, st status) {
 
 // Setting definition.
 type Setting struct {
-	// The threshold for the circuit to open.
+	// FailureThreshold for the circuit to open.
 	FailureThreshold uint
-	// The timeout after which we set the state to half-open and allow a retry.
+	// RetryTimeout after which we set the state to half-open and allow a retry.
 	RetryTimeout time.Duration
-	// The threshold of the retry successes which returns the state to open.
+	// RetrySuccessThreshold which returns the state to open.
 	RetrySuccessThreshold uint
-	// The threshold of how many retry executions are allowed when the status is half-open.
+	// MaxRetryExecutionThreshold which defines how many tries are allowed when the status is half-open.
 	MaxRetryExecutionThreshold uint
 }
 
@@ -76,7 +76,7 @@ type CircuitBreaker struct {
 	nextRetry  int64
 }
 
-// New constructor.
+// New returns a new instance.
 func New(name string, s Setting) (*CircuitBreaker, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
@@ -121,7 +121,7 @@ func (cb *CircuitBreaker) isClose() bool {
 	return cb.status == close
 }
 
-// Execute the function enclosed.
+// Execute the provided action.
 func (cb *CircuitBreaker) Execute(act Action) (interface{}, error) {
 	if cb.isOpen() {
 		return nil, errOpen

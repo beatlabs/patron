@@ -9,23 +9,27 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	validSetting := Setting{RetrySuccessThreshold: uint(1), MaxRetryExecutionThreshold: 1}
 	invalidSetting := Setting{RetrySuccessThreshold: 2, MaxRetryExecutionThreshold: 1}
 	type args struct {
 		name string
 		s    Setting
 	}
-	tests := []struct {
-		name    string
+	tests := map[string]struct {
 		args    args
 		wantErr bool
 	}{
-		{name: "success", args: args{name: "test", s: validSetting}, wantErr: false},
-		{name: "missing name", args: args{name: "", s: validSetting}, wantErr: true},
-		{name: "invalid settings", args: args{name: "test", s: invalidSetting}, wantErr: true},
+		"success":          {args: args{name: "test", s: validSetting}, wantErr: false},
+		"missing name":     {args: args{name: "", s: validSetting}, wantErr: true},
+		"invalid settings": {args: args{name: "test", s: invalidSetting}, wantErr: true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := New(tt.args.name, tt.args.s)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -39,21 +43,25 @@ func TestNew(t *testing.T) {
 }
 
 func TestCircuitBreaker_isHalfOpen(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		status    status
 		nextRetry int64
 	}
-	tests := []struct {
-		name   string
+	tests := map[string]struct {
 		fields fields
 		want   bool
 	}{
-		{name: "closed", fields: fields{status: close, nextRetry: tsFuture}, want: false},
-		{name: "open", fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
-		{name: "half open", fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: true},
+		"closed":    {fields: fields{status: close, nextRetry: tsFuture}, want: false},
+		"open":      {fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
+		"half open": {fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			cb := &CircuitBreaker{
 				status:    tt.fields.status,
 				nextRetry: tt.fields.nextRetry,
@@ -64,21 +72,25 @@ func TestCircuitBreaker_isHalfOpen(t *testing.T) {
 }
 
 func TestCircuitBreaker_isOpen(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		status    status
 		nextRetry int64
 	}
-	tests := []struct {
-		name   string
+	tests := map[string]struct {
 		fields fields
 		want   bool
 	}{
-		{name: "closed", fields: fields{status: close, nextRetry: tsFuture}, want: false},
-		{name: "half open", fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
-		{name: "open", fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: true},
+		"closed":    {fields: fields{status: close, nextRetry: tsFuture}, want: false},
+		"half open": {fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
+		"open":      {fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			cb := &CircuitBreaker{
 				status:    tt.fields.status,
 				nextRetry: tt.fields.nextRetry,
@@ -89,21 +101,25 @@ func TestCircuitBreaker_isOpen(t *testing.T) {
 }
 
 func TestCircuitBreaker_isClose(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		status    status
 		nextRetry int64
 	}
-	tests := []struct {
-		name   string
+	tests := map[string]struct {
 		fields fields
 		want   bool
 	}{
-		{name: "closed", fields: fields{status: close, nextRetry: tsFuture}, want: true},
-		{name: "half open", fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
-		{name: "open", fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
+		"closed":    {fields: fields{status: close, nextRetry: tsFuture}, want: true},
+		"half open": {fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
+		"open":      {fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			cb := &CircuitBreaker{
 				status:    tt.fields.status,
 				nextRetry: tt.fields.nextRetry,
@@ -181,7 +197,12 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 var err error
 
 func BenchmarkCircuitBreaker_Execute(b *testing.B) {
-	set := Setting{FailureThreshold: uint(1), RetryTimeout: 1 * time.Second, RetrySuccessThreshold: uint(1), MaxRetryExecutionThreshold: 1}
+	set := Setting{
+		FailureThreshold:           uint(1),
+		RetryTimeout:               1 * time.Second,
+		RetrySuccessThreshold:      uint(1),
+		MaxRetryExecutionThreshold: 1,
+	}
 	var cb *CircuitBreaker
 	cb, err = New("test", set)
 	b.ReportAllocs()

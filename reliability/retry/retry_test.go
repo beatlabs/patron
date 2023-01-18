@@ -19,16 +19,17 @@ func TestNew(t *testing.T) {
 		attempts int
 		delay    time.Duration
 	}
-	tests := []struct {
+	tests := map[string]struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{name: "success", args: args{attempts: 3, delay: 3 * time.Second}, wantErr: false},
-		{name: "invalid attempts", args: args{attempts: -1, delay: 3 * time.Second}, wantErr: true},
+		"success":          {args: args{attempts: 3, delay: 3 * time.Second}, wantErr: false},
+		"invalid attempts": {args: args{attempts: -1, delay: 3 * time.Second}, wantErr: true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
 			got, err := New(tt.args.attempts, tt.args.delay)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -42,7 +43,9 @@ func TestNew(t *testing.T) {
 }
 
 func Test_Retry_Execute(t *testing.T) {
-	testCases := map[string]struct {
+	t.Parallel()
+
+	tests := map[string]struct {
 		attempts           int
 		delay              time.Duration
 		action             mockAction
@@ -84,18 +87,21 @@ func Test_Retry_Execute(t *testing.T) {
 			expectErr:          true,
 		},
 	}
-	for name, tC := range testCases {
+	for name, tt := range tests {
+		tt := tt
 		t.Run(name, func(t *testing.T) {
-			r, err := New(tC.attempts, tC.delay)
+			t.Parallel()
+
+			r, err := New(tt.attempts, tt.delay)
 			require.NoError(t, err)
 
 			start := time.Now()
 			res, err := r.Execute(func() (interface{}, error) {
-				return tC.action.Execute()
+				return tt.action.Execute()
 			})
 			elapsed := time.Since(start)
 
-			if tC.expectErr {
+			if tt.expectErr {
 				assert.Equal(t, err, errTest)
 				assert.Nil(t, res)
 			} else {
@@ -103,10 +109,10 @@ func Test_Retry_Execute(t *testing.T) {
 				assert.Equal(t, testResult, res)
 			}
 
-			assert.Equal(t, tC.expectedExecutions, tC.action.executions)
+			assert.Equal(t, tt.expectedExecutions, tt.action.executions)
 
 			// Assert that the total time takes into account the delay between attempts
-			assert.True(t, elapsed > tC.delay*time.Duration(tC.expectedExecutions-1))
+			assert.True(t, elapsed > tt.delay*time.Duration(tt.expectedExecutions-1))
 		})
 	}
 }

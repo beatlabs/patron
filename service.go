@@ -11,10 +11,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 
-	v2 "github.com/beatlabs/patron/component/http/v2"
-	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	patronzerolog "github.com/beatlabs/patron/log/zerolog"
@@ -93,12 +90,6 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		return nil, err
 	}
 
-	httpCp, err := s.createHTTPComponent()
-	if err != nil {
-		return nil, err
-	}
-
-	s.components = append(s.components, httpCp)
 	s.setupOSSignal()
 
 	return s, nil
@@ -138,98 +129,6 @@ func (s *Service) Run(ctx context.Context) error {
 
 func (s *Service) setupOSSignal() {
 	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
-}
-
-func (s *Service) createHTTPComponent() (Component, error) {
-	var err error
-	portVal := int64(50000)
-	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
-	if ok {
-		portVal, err = strconv.ParseInt(port, 10, 32)
-		if err != nil {
-			return nil, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
-		}
-	}
-	log.Debugf("creating default HTTP component at port %d", portVal)
-
-	deflateLevel, err := getHTTPDeflateLevel()
-	if err != nil {
-		return nil, err
-	}
-
-	readTimeout, err := getHTTPReadTimeout()
-	if err != nil {
-		return nil, err
-	}
-
-	writeTimeout, err := getHTTPWriteTimeout()
-	if err != nil {
-		return nil, err
-	}
-
-	if s.httpRouter == nil {
-		routerOptions := make([]httprouter.OptionFunc, 0)
-		if deflateLevel != nil {
-			routerOptions = append(routerOptions, httprouter.WithDeflateLevel(*deflateLevel))
-		}
-
-		s.httpRouter, err = httprouter.New(routerOptions...)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return s.createHTTPv2(int(portVal), readTimeout, writeTimeout)
-}
-
-func getHTTPReadTimeout() (*time.Duration, error) {
-	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
-	if !ok {
-		return nil, nil
-	}
-	timeout, err := time.ParseDuration(httpTimeout)
-	if err != nil {
-		return nil, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
-	}
-	return &timeout, nil
-}
-
-func getHTTPWriteTimeout() (*time.Duration, error) {
-	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
-	if !ok {
-		return nil, nil
-	}
-	timeout, err := time.ParseDuration(httpTimeout)
-	if err != nil {
-		return nil, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
-	}
-	return &timeout, nil
-}
-
-func getHTTPDeflateLevel() (*int, error) {
-	deflateLevel, ok := os.LookupEnv("PATRON_COMPRESSION_DEFLATE_LEVEL")
-	if !ok {
-		return nil, nil
-	}
-	deflateLevelInt, err := strconv.Atoi(deflateLevel)
-	if err != nil {
-		return nil, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
-	}
-	return &deflateLevelInt, nil
-}
-
-func (s *Service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duration) (Component, error) {
-	oo := []v2.OptionFunc{v2.WithPort(port)}
-
-	if readTimeout != nil {
-		oo = append(oo, v2.WithReadTimeout(*readTimeout))
-	}
-
-	if writeTimeout != nil {
-		oo = append(oo, v2.WithWriteTimeout(*writeTimeout))
-	}
-
-	return v2.New(s.httpRouter, oo...)
 }
 
 func (s *Service) waitTermination(chErr <-chan error) error {

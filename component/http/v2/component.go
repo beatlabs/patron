@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -13,13 +15,57 @@ import (
 )
 
 const (
-	port                = 50000
-	readTimeout         = 30 * time.Second
-	writeTimeout        = 60 * time.Second
-	idleTimeout         = 240 * time.Second
-	handlerTimeout      = 59 * time.Second // should be smaller than write timeout
-	shutdownGracePeriod = 5 * time.Second
+	defaultPort                = 50000
+	defaultReadTimeout         = 30 * time.Second
+	defaultWriteTimeout        = 60 * time.Second
+	defaultIdleTimeout         = 240 * time.Second
+	defaultHandlerTimeout      = 59 * time.Second // should be smaller than write timeout
+	defaultShutdownGracePeriod = 5 * time.Second
 )
+
+func port() (int, error) {
+	var err error
+	portVal := int64(defaultPort)
+	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
+	if !ok {
+		log.Debugf("using default port %d", defaultPort)
+		return defaultPort, nil
+	}
+	portVal, err = strconv.ParseInt(port, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
+	}
+	log.Debugf("using port %d", portVal)
+	return int(portVal), nil
+}
+
+func readTimeout() (time.Duration, error) {
+	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
+	if !ok {
+		log.Debugf("using default read timeout %s", defaultReadTimeout)
+		return defaultReadTimeout, nil
+	}
+	timeout, err := time.ParseDuration(httpTimeout)
+	if err != nil {
+		return 0, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
+	}
+	log.Debugf("using read timeout %s", timeout)
+	return timeout, nil
+}
+
+func writeTimeout() (time.Duration, error) {
+	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
+	if !ok {
+		log.Debugf("using default write timeout %s", defaultWriteTimeout)
+		return defaultWriteTimeout, nil
+	}
+	timeout, err := time.ParseDuration(httpTimeout)
+	if err != nil {
+		return 0, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
+	}
+	log.Debugf("using write timeout %s", timeout)
+	return timeout, nil
+}
 
 // Component implementation of an HTTP router.
 type Component struct {
@@ -40,12 +86,27 @@ func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 		return nil, errors.New("handler is nil")
 	}
 
+	port, err := port()
+	if err != nil {
+		return nil, err
+	}
+
+	readTimeout, err := readTimeout()
+	if err != nil {
+		return nil, err
+	}
+
+	writeTimeout, err := writeTimeout()
+	if err != nil {
+		return nil, err
+	}
+
 	cmp := &Component{
 		port:                port,
 		readTimeout:         readTimeout,
 		writeTimeout:        writeTimeout,
-		shutdownGracePeriod: shutdownGracePeriod,
-		handlerTimeout:      handlerTimeout,
+		shutdownGracePeriod: defaultShutdownGracePeriod,
+		handlerTimeout:      defaultHandlerTimeout,
 		handler:             handler,
 	}
 
@@ -83,7 +144,7 @@ func (c *Component) createHTTPServer() *http.Server {
 		Addr:         fmt.Sprintf(":%d", c.port),
 		ReadTimeout:  c.readTimeout,
 		WriteTimeout: c.writeTimeout,
-		IdleTimeout:  idleTimeout,
+		IdleTimeout:  defaultIdleTimeout,
 		Handler:      http.TimeoutHandler(c.handler, c.handlerTimeout, ""),
 	}
 }

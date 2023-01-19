@@ -47,12 +47,6 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		version = "dev"
 	}
 
-	// default config with structured logger and default fields.
-	cfg := config{
-		logger: patronzerolog.New(os.Stderr, getLogLevel(), nil),
-		fields: defaultLogFields(name, version),
-	}
-
 	s := &Service{
 		name:    name,
 		version: version,
@@ -60,7 +54,10 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		sighupHandler: func() {
 			log.Debug("WithSIGHUP received: nothing setup")
 		},
-		config: cfg,
+		config: config{
+			logger: patronzerolog.New(os.Stderr, getLogLevel(), nil),
+			fields: defaultLogFields(name, version),
+		},
 	}
 
 	var err error
@@ -81,7 +78,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		return nil, patronErrors.Aggregate(optionErrors...)
 	}
 
-	err = setupLogging(cfg.fields, cfg.logger)
+	err = setupLogging(s.config.fields, s.config.logger)
 	if err != nil {
 		return nil, err
 	}

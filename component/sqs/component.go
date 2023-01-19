@@ -243,7 +243,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			return
 		}
 
-		logger.Debugf("Consume: received %d messages", len(output.Messages))
+		logger.Debugf("consume: received %d messages", len(output.Messages))
 		messageCountInc(c.queue.name, fetchedMessageState, false, len(output.Messages))
 
 		if len(output.Messages) == 0 {

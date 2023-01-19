@@ -15,7 +15,7 @@ const (
 )
 
 func init() {
-	err := os.Setenv("PATRON_LOG_LEVEL", "info")
+	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
 		log.Fatalf("failed to set log level env var: %v", err)
 	}

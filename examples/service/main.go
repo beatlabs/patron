@@ -30,6 +30,13 @@ func init() {
 }
 
 func main() {
+	ctx := context.Background()
+
+	service, err := patron.New(name, version, patron.WithTextLogger())
+	if err != nil {
+		log.Fatalf("failed to set up service: %v", err)
+	}
+
 	var components []patron.Component
 
 	// Setup HTTP
@@ -72,14 +79,7 @@ func main() {
 
 	components = append(components, cmp)
 
-	ctx := context.Background()
-
-	service, err := patron.New(name, version, patron.WithTextLogger(), patron.WithComponents(components...))
-	if err != nil {
-		log.Fatalf("failed to set up service: %v", err)
-	}
-
-	err = service.Run(ctx)
+	err = service.Run(ctx, components...)
 	if err != nil {
 		log.Fatalf("failed to create and run service %v", err)
 	}

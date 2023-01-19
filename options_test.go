@@ -2,38 +2,12 @@ package patron
 
 import (
 	"errors"
-	"net/http"
 	"os"
 	"testing"
 
 	"github.com/beatlabs/patron/log/std"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestComponents(t *testing.T) {
-	comp := &testComponent{}
-
-	type args struct {
-		cc []Component
-	}
-	tests := map[string]struct {
-		args           args
-		wantComponents []Component
-		wantError      error
-	}{
-		"no components provided": {args: args{cc: nil}, wantComponents: nil, wantError: errors.New("provided components slice was empty")},
-		"components provided":    {args: args{cc: []Component{comp}}, wantComponents: []Component{comp}, wantError: nil},
-	}
-	for name, tt := range tests {
-		temp := tt
-		t.Run(name, func(t *testing.T) {
-			svc := &Service{}
-			err := WithComponents(temp.args.cc...)(svc)
-			assert.Equal(t, temp.wantError, err)
-			assert.Equal(t, temp.wantComponents, svc.components)
-		})
-	}
-}
 
 func TestLogFields(t *testing.T) {
 	defaultFields := defaultLogFields("test", "1.0")
@@ -84,11 +58,6 @@ func TestLogger(t *testing.T) {
 	err := WithLogger(logger)(svc)
 	assert.NoError(t, err)
 	assert.Equal(t, logger, svc.config.logger)
-}
-
-type noopHTTPHandler struct{}
-
-func (noopHTTPHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 }
 
 func TestSIGHUP(t *testing.T) {

@@ -154,11 +154,11 @@ func TestKafkaAsyncPackageComponent_Success(t *testing.T) {
 	patronContext, patronCancel := context.WithCancel(context.Background())
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
-	svc, err := patron.New(successTopic1, "0", patron.WithTextLogger(), patron.WithComponents(component))
+	svc, err := patron.New(successTopic1, "0", patron.WithTextLogger())
 	require.NoError(t, err)
 
 	go func() {
-		err = svc.Run(patronContext)
+		err = svc.Run(patronContext, component)
 		require.NoError(t, err)
 		patronWG.Done()
 	}()
@@ -233,9 +233,9 @@ func TestKafkaAsyncPackageComponent_FailAllRetries(t *testing.T) {
 	}()
 
 	// Run Patron with the component - no need for goroutine since we expect it to stop after the retries fail
-	svc, err := patron.New(failAllRetriesTopic1, "0", patron.WithTextLogger(), patron.WithComponents(component))
+	svc, err := patron.New(failAllRetriesTopic1, "0", patron.WithTextLogger())
 	require.NoError(t, err)
-	err = svc.Run(context.Background())
+	err = svc.Run(context.Background(), component)
 	assert.Error(t, err)
 
 	// Wait for the producer & consumer to finish
@@ -292,9 +292,9 @@ func TestKafkaAsyncPackageComponent_FailOnceAndRetry(t *testing.T) {
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		svc, err := patron.New(failAndRetryTopic1, "0", patron.WithTextLogger(), patron.WithComponents(component))
+		svc, err := patron.New(failAndRetryTopic1, "0", patron.WithTextLogger())
 		require.NoError(t, err)
-		err = svc.Run(patronContext)
+		err = svc.Run(patronContext, component)
 		require.NoError(t, err)
 		patronWG.Done()
 	}()

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -35,10 +34,8 @@ type Component interface {
 type Service struct {
 	name          string
 	version       string
-	components    []Component
 	termSig       chan os.Signal
 	sighupHandler func()
-	httpRouter    http.Handler
 	config        config
 }
 
@@ -63,8 +60,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		sighupHandler: func() {
 			log.Debug("WithSIGHUP received: nothing setup")
 		},
-		config:     cfg,
-		components: make([]Component, 0),
+		config: cfg,
 	}
 
 	var err error
@@ -95,7 +91,11 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	return s, nil
 }
 
-func (s *Service) Run(ctx context.Context) error {
+func (s *Service) Run(ctx context.Context, components ...Component) error {
+	if len(components) == 0 || components[0] == nil {
+		return errors.New("components are empty or nil")
+	}
+
 	defer func() {
 		err := trace.Close()
 		if err != nil {
@@ -103,18 +103,18 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 	}()
 	ctx, cnl := context.WithCancel(ctx)
-	chErr := make(chan error, len(s.components))
+	chErr := make(chan error, len(components))
 	wg := sync.WaitGroup{}
-	wg.Add(len(s.components))
-	for _, cp := range s.components {
+	wg.Add(len(components))
+	for _, cp := range components {
 		go func(c Component) {
 			defer wg.Done()
 			chErr <- c.Run(ctx)
 		}(cp)
 	}
 
-	log.FromContext(ctx).Infof("Service %s started", s.name)
-	ee := make([]error, 0, len(s.components))
+	log.FromContext(ctx).Infof("service %s started", s.name)
+	ee := make([]error, 0, len(components))
 	ee = append(ee, s.waitTermination(chErr))
 	cnl()
 

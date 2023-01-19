@@ -11,14 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewServer(t *testing.T) {
-	httpBuilderAllErrors := "provided components slice was empty\n" +
-		"provided WithSIGHUP handler was nil\n"
+func TestNew(t *testing.T) {
+	httpBuilderAllErrors := "provided WithSIGHUP handler was nil\n"
 
 	tests := map[string]struct {
 		name              string
 		fields            map[string]interface{}
-		cps               []Component
 		sighupHandler     func()
 		uncompressedPaths []string
 		wantErr           string
@@ -26,27 +24,23 @@ func TestNewServer(t *testing.T) {
 		"success": {
 			name:              "name",
 			fields:            map[string]interface{}{"env": "dev"},
-			cps:               []Component{&testComponent{}, &testComponent{}},
 			sighupHandler:     func() { log.Info("WithSIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
 			wantErr:           "",
 		},
 		"name missing": {
-			cps:               nil,
 			sighupHandler:     nil,
 			uncompressedPaths: nil,
 			wantErr:           "name is required",
 		},
 		"nil inputs steps": {
 			name:              "name",
-			cps:               nil,
 			sighupHandler:     nil,
 			uncompressedPaths: nil,
 			wantErr:           httpBuilderAllErrors,
 		},
 		"error in all builder steps": {
 			name:              "name",
-			cps:               []Component{},
 			sighupHandler:     nil,
 			uncompressedPaths: []string{},
 			wantErr:           httpBuilderAllErrors,
@@ -57,7 +51,7 @@ func TestNewServer(t *testing.T) {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
 			gotService, gotErr := New(tt.name, "1.0", WithLogFields(temp.fields), WithTextLogger(),
-				WithComponents(temp.cps...), WithSIGHUP(temp.sighupHandler))
+				WithSIGHUP(temp.sighupHandler))
 
 			if temp.wantErr != "" {
 				assert.EqualError(t, gotErr, temp.wantErr)
@@ -66,14 +60,8 @@ func TestNewServer(t *testing.T) {
 				assert.Nil(t, gotErr)
 				assert.NotNil(t, gotService)
 				assert.IsType(t, &Service{}, gotService)
-
-				assert.NotEmpty(t, gotService.components)
 				assert.NotNil(t, gotService.termSig)
 				assert.NotNil(t, gotService.sighupHandler)
-
-				for _, comp := range temp.cps {
-					assert.Contains(t, gotService.components, comp)
-				}
 			}
 		})
 	}
@@ -94,9 +82,9 @@ func TestServer_Run_Shutdown(t *testing.T) {
 				os.Clearenv()
 			}()
 			t.Setenv("PATRON_HTTP_DEFAULT_PORT", "50099")
-			svc, err := New("test", "", WithTextLogger(), WithComponents(temp.cp, temp.cp, temp.cp))
+			svc, err := New("test", "", WithTextLogger())
 			assert.NoError(t, err)
-			err = svc.Run(context.Background())
+			err = svc.Run(context.Background(), tt.cp)
 			if temp.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -138,19 +126,13 @@ func TestServer_SetupTracing(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			svc, err := New("test", "", WithTextLogger(), WithComponents(tt.cp, tt.cp, tt.cp))
+			svc, err := New("test", "", WithTextLogger())
 			assert.NoError(t, err)
 
-			err = svc.Run(context.Background())
+			err = svc.Run(context.Background(), tt.cp)
 			assert.NoError(t, err)
 		})
 	}
-}
-
-func TestNewServer_WithComponentsTwice(t *testing.T) {
-	svc, err := New("test", "", WithTextLogger(), WithComponents(&testComponent{}, &testComponent{}))
-	require.NoError(t, err)
-	assert.Len(t, svc.components, 2)
 }
 
 func TestNewServer_FailingConditions(t *testing.T) {

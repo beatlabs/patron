@@ -117,14 +117,12 @@ func (c *Component) createHTTPServer() *http.Server {
 }
 
 func port() (int, error) {
-	var err error
-	portVal := int64(defaultPort)
 	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
 	if !ok {
 		log.Debugf("using default port %d", defaultPort)
 		return defaultPort, nil
 	}
-	portVal, err = strconv.ParseInt(port, 10, 32)
+	portVal, err := strconv.ParseInt(port, 10, 32)
 	if err != nil {
 		return 0, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
 	}

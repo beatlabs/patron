@@ -25,7 +25,7 @@ jobs:
     name: CI on Go ${{ matrix.go-image-version}}
     strategy:
       matrix:
-        go-image-version: ["1.17", "1.18", "1.19"]
+        go-image-version: ["1.18", "1.19", "1.20"]
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go ${{ matrix.go-image-version }}

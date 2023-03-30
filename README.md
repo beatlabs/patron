@@ -22,7 +22,6 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 ## Table of Contents
 
 - [Architecture](docs/Architecture.md)
-- [CLI](docs/other/CLI.md)
 - Components
   - [Async](docs/components/async/Async.md)
     - [Kafka](docs/components/async/Kafka.md)

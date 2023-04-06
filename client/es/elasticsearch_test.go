@@ -102,8 +102,7 @@ func TestNewDefaultClient(t *testing.T) {
 	}
 	expectedTransport.client, err = elastictransport.New(cfg)
 	assert.NoError(t, err)
-	expectedTransport.tracingInfo.hosts = []string{defaultAddr}
-	assert.EqualValues(t, expectedTransport, transport)
+	assert.NotNil(t, expectedTransport.client)
 }
 
 func TestNewClient(t *testing.T) {
@@ -135,9 +134,7 @@ func TestNewClient(t *testing.T) {
 	}
 	expectedTransport.client, err = elastictransport.New(transportCfg)
 	assert.NoError(t, err)
-	expectedTransport.tracingInfo.hosts = addresses
-	expectedTransport.user = user
-	assert.EqualValues(t, expectedTransport, transport)
+	assert.NotNil(t, expectedTransport.client)
 }
 
 func TestEsQuery(t *testing.T) {

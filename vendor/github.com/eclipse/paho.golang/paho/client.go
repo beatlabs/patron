@@ -33,7 +33,11 @@ type (
 	// are required to be set, defaults are provided for Persistence, MIDs,
 	// PingHandler, PacketTimeout and Router.
 	ClientConfig struct {
-		ClientID      string
+		ClientID string
+		// Conn is the connection to broker.
+		// BEWARE that most wrapped net.Conn implementations like tls.Conn are
+		// not thread safe for writing. To fix, use packets.NewThreadSafeConn
+		// wrapper or extend the custom net.Conn struct with sync.Locker.
 		Conn          net.Conn
 		MIDs          MIDService
 		AuthHandler   Auther
@@ -213,7 +217,7 @@ func (c *Client) Connect(ctx context.Context, cp *Connect) (*Connack, error) {
 		return nil, err
 	}
 
-	c.debug.Println("waiting for CONNACK")
+	c.debug.Println("waiting for CONNACK/AUTH")
 	var (
 		caPacket    *packets.Connack
 		caPacketCh  = make(chan *packets.Connack)
@@ -864,12 +868,32 @@ func (c *Client) expectConnack(packet chan<- *packets.Connack, errs chan<- error
 		errs <- err
 		return
 	}
-	if recv.Type != packets.CONNACK {
+	switch r := recv.Content.(type) {
+	case *packets.Connack:
+		c.debug.Println("received CONNACK")
+		if r.ReasonCode == packets.ConnackSuccess && r.Properties != nil && r.Properties.AuthMethod != "" {
+			// Successful connack and AuthMethod is defined, must have successfully authed during connect
+			go c.AuthHandler.Authenticated()
+		}
+		packet <- r
+	case *packets.Auth:
+		c.debug.Println("received AUTH")
+		if c.AuthHandler == nil {
+			errs <- fmt.Errorf("enhanced authentication flow started but no AuthHandler configured")
+			return
+		}
+		c.debug.Println("sending AUTH")
+		_, err := c.AuthHandler.Authenticate(AuthFromPacketAuth(r)).Packet().WriteTo(c.Conn)
+		if err != nil {
+			errs <- fmt.Errorf("error sending authentication packet: %w", err)
+			return
+		}
+		// go round again, either another AUTH or CONNACK
+		go c.expectConnack(packet, errs)
+	default:
 		errs <- fmt.Errorf("received unexpected packet %v", recv.Type)
-		return
 	}
-	c.debug.Println("received CONNACK")
-	packet <- recv.Content.(*packets.Connack)
+
 }
 
 // Disconnect is used to send a Disconnect packet to the MQTT server

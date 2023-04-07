@@ -15,27 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // Segment type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/indices/segments/types.ts#L28-L39
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/segments/types.ts#L28-L38
 type Segment struct {
-	Attributes    map[string]string `json:"attributes"`
-	Committed     bool              `json:"committed"`
-	Compound      bool              `json:"compound"`
-	DeletedDocs   int64             `json:"deleted_docs"`
-	Generation    int               `json:"generation"`
-	MemoryInBytes float64           `json:"memory_in_bytes"`
-	NumDocs       int64             `json:"num_docs"`
-	Search        bool              `json:"search"`
-	SizeInBytes   float64           `json:"size_in_bytes"`
-	Version       string            `json:"version"`
+	Attributes  map[string]string `json:"attributes"`
+	Committed   bool              `json:"committed"`
+	Compound    bool              `json:"compound"`
+	DeletedDocs int64             `json:"deleted_docs"`
+	Generation  int               `json:"generation"`
+	NumDocs     int64             `json:"num_docs"`
+	Search      bool              `json:"search"`
+	SizeInBytes Float64           `json:"size_in_bytes"`
+	Version     string            `json:"version"`
 }
 
 // NewSegment returns a Segment.

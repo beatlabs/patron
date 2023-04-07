@@ -15,31 +15,33 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // UserProfileWithMetadata type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/security/_types/UserProfile.ts#L50-L53
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/security/_types/UserProfile.ts#L50-L53
 type UserProfileWithMetadata struct {
-	Data             map[string]interface{} `json:"data"`
-	Doc_             UserProfileHitMetadata `json:"_doc"`
-	Enabled          *bool                  `json:"enabled,omitempty"`
-	Labels           map[string]interface{} `json:"labels"`
-	LastSynchronized int64                  `json:"last_synchronized"`
-	Uid              string                 `json:"uid"`
-	User             UserProfileUser        `json:"user"`
+	Data             map[string]json.RawMessage `json:"data"`
+	Doc_             UserProfileHitMetadata     `json:"_doc"`
+	Enabled          *bool                      `json:"enabled,omitempty"`
+	Labels           map[string]json.RawMessage `json:"labels"`
+	LastSynchronized int64                      `json:"last_synchronized"`
+	Uid              string                     `json:"uid"`
+	User             UserProfileUser            `json:"user"`
 }
 
 // NewUserProfileWithMetadata returns a UserProfileWithMetadata.
 func NewUserProfileWithMetadata() *UserProfileWithMetadata {
 	r := &UserProfileWithMetadata{
-		Data:   make(map[string]interface{}, 0),
-		Labels: make(map[string]interface{}, 0),
+		Data:   make(map[string]json.RawMessage, 0),
+		Labels: make(map[string]json.RawMessage, 0),
 	}
 
 	return r

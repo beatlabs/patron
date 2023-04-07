@@ -15,19 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // DataframeClassificationSummaryAccuracy type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/ml/evaluate_data_frame/types.ts#L70-L73
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/evaluate_data_frame/types.ts#L70-L73
 type DataframeClassificationSummaryAccuracy struct {
 	Classes         []DataframeEvaluationClass `json:"classes"`
-	OverallAccuracy float64                    `json:"overall_accuracy"`
+	OverallAccuracy Float64                    `json:"overall_accuracy"`
 }
 
 // NewDataframeClassificationSummaryAccuracy returns a DataframeClassificationSummaryAccuracy.

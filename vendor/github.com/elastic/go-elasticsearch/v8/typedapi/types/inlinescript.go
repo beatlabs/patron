@@ -15,24 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/scriptlanguage"
 )
 
 // InlineScript type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/Scripting.ts#L45-L50
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/Scripting.ts#L45-L50
 type InlineScript struct {
 	Lang    *scriptlanguage.ScriptLanguage `json:"lang,omitempty"`
 	Options map[string]string              `json:"options,omitempty"`
-	Params  map[string]interface{}         `json:"params,omitempty"`
+	Params  map[string]json.RawMessage     `json:"params,omitempty"`
 	Source  string                         `json:"source"`
 }
 
@@ -40,7 +40,7 @@ type InlineScript struct {
 func NewInlineScript() *InlineScript {
 	r := &InlineScript{
 		Options: make(map[string]string, 0),
-		Params:  make(map[string]interface{}, 0),
+		Params:  make(map[string]json.RawMessage, 0),
 	}
 
 	return r

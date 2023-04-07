@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
@@ -28,11 +26,11 @@ import (
 
 // TrainedModelConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/ml/_types/TrainedModel.ts#L156-L188
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/TrainedModel.ts#L157-L189
 type TrainedModelConfig struct {
 	CompressedDefinition *string `json:"compressed_definition,omitempty"`
 	// CreateTime The time when the trained model was created.
-	CreateTime *DateTime `json:"create_time,omitempty"`
+	CreateTime DateTime `json:"create_time,omitempty"`
 	// CreatedBy Information on the creator of the trained model.
 	CreatedBy *string `json:"created_by,omitempty"`
 	// DefaultFieldMap Any field map described in the inference configuration takes precedence.
@@ -56,8 +54,8 @@ type TrainedModelConfig struct {
 	// created by data frame analytics contain analysis_config and input objects.
 	Metadata *TrainedModelConfigMetadata `json:"metadata,omitempty"`
 	// ModelId Identifier for the trained model.
-	ModelId        string    `json:"model_id"`
-	ModelSizeBytes *ByteSize `json:"model_size_bytes,omitempty"`
+	ModelId        string   `json:"model_id"`
+	ModelSizeBytes ByteSize `json:"model_size_bytes,omitempty"`
 	// ModelType The model type
 	ModelType *trainedmodeltype.TrainedModelType `json:"model_type,omitempty"`
 	// Tags A comma delimited string of tags. A trained model can have many tags, or

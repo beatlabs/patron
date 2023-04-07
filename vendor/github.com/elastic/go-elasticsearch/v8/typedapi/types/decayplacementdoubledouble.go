@@ -15,21 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // DecayPlacementdoubledouble type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/query_dsl/compound.ts#L77-L82
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/compound.ts#L77-L82
 type DecayPlacementdoubledouble struct {
-	Decay  *float64 `json:"decay,omitempty"`
-	Offset *float64 `json:"offset,omitempty"`
-	Origin *float64 `json:"origin,omitempty"`
-	Scale  *float64 `json:"scale,omitempty"`
+	Decay  *Float64 `json:"decay,omitempty"`
+	Offset *Float64 `json:"offset,omitempty"`
+	Origin *Float64 `json:"origin,omitempty"`
+	Scale  *Float64 `json:"scale,omitempty"`
 }
 
 // NewDecayPlacementdoubledouble returns a DecayPlacementdoubledouble.

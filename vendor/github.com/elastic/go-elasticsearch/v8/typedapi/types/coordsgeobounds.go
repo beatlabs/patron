@@ -15,21 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // CoordsGeoBounds type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/Geo.ts#L138-L143
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/Geo.ts#L138-L143
 type CoordsGeoBounds struct {
-	Bottom float64 `json:"bottom"`
-	Left   float64 `json:"left"`
-	Right  float64 `json:"right"`
-	Top    float64 `json:"top"`
+	Bottom Float64 `json:"bottom"`
+	Left   Float64 `json:"left"`
+	Right  Float64 `json:"right"`
+	Top    Float64 `json:"top"`
 }
 
 // NewCoordsGeoBounds returns a CoordsGeoBounds.

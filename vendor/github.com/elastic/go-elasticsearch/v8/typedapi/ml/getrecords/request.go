@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package getrecords
 
@@ -31,22 +29,22 @@ import (
 
 // Request holds the request body struct for the package getrecords
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/ml/get_records/MlGetAnomalyRecordsRequest.ts#L26-L127
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/get_records/MlGetAnomalyRecordsRequest.ts#L26-L127
 type Request struct {
 
 	// Desc Refer to the description for the `desc` query parameter.
 	Desc *bool `json:"desc,omitempty"`
 	// End Refer to the description for the `end` query parameter.
-	End *types.DateTime `json:"end,omitempty"`
+	End types.DateTime `json:"end,omitempty"`
 	// ExcludeInterim Refer to the description for the `exclude_interim` query parameter.
 	ExcludeInterim *bool       `json:"exclude_interim,omitempty"`
 	Page           *types.Page `json:"page,omitempty"`
 	// RecordScore Refer to the description for the `record_score` query parameter.
-	RecordScore *float64 `json:"record_score,omitempty"`
+	RecordScore *types.Float64 `json:"record_score,omitempty"`
 	// Sort Refer to the description for the `sort` query parameter.
 	Sort *string `json:"sort,omitempty"`
 	// Start Refer to the description for the `start` query parameter.
-	Start *types.DateTime `json:"start,omitempty"`
+	Start types.DateTime `json:"start,omitempty"`
 }
 
 // NewRequest returns a Request
@@ -56,7 +54,7 @@ func NewRequest() *Request {
 }
 
 // FromJSON allows to load an arbitrary json into the request structure
-func (rb *Request) FromJSON(data string) (*Request, error) {
+func (r *Request) FromJSON(data string) (*Request, error) {
 	var req Request
 	err := json.Unmarshal([]byte(data), &req)
 

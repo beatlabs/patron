@@ -15,20 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // FielddataStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/Stats.ts#L69-L74
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/Stats.ts#L69-L74
 type FielddataStats struct {
 	Evictions         *int64                      `json:"evictions,omitempty"`
 	Fields            map[string]FieldMemoryUsage `json:"fields,omitempty"`
-	MemorySize        *ByteSize                   `json:"memory_size,omitempty"`
+	MemorySize        ByteSize                    `json:"memory_size,omitempty"`
 	MemorySizeInBytes int64                       `json:"memory_size_in_bytes"`
 }
 

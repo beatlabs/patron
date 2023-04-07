@@ -15,25 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // FunctionScore type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/query_dsl/compound.ts#L107-L127
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/compound.ts#L107-L127
 type FunctionScore struct {
-	Exp              *DecayFunction                 `json:"exp,omitempty"`
+	Exp              DecayFunction                  `json:"exp,omitempty"`
 	FieldValueFactor *FieldValueFactorScoreFunction `json:"field_value_factor,omitempty"`
 	Filter           *Query                         `json:"filter,omitempty"`
-	Gauss            *DecayFunction                 `json:"gauss,omitempty"`
-	Linear           *DecayFunction                 `json:"linear,omitempty"`
+	Gauss            DecayFunction                  `json:"gauss,omitempty"`
+	Linear           DecayFunction                  `json:"linear,omitempty"`
 	RandomScore      *RandomScoreFunction           `json:"random_score,omitempty"`
 	ScriptScore      *ScriptScoreFunction           `json:"script_score,omitempty"`
-	Weight           *float64                       `json:"weight,omitempty"`
+	Weight           *Float64                       `json:"weight,omitempty"`
 }
 
 // NewFunctionScore returns a FunctionScore.

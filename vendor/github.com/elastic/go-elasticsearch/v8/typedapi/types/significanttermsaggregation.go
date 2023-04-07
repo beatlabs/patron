@@ -15,20 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/termsaggregationexecutionhint"
 )
 
 // SignificantTermsAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/aggregations/bucket.ts#L342-L358
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/bucket.ts#L342-L358
 type SignificantTermsAggregation struct {
 	BackgroundFilter  *Query                                                       `json:"background_filter,omitempty"`
 	ChiSquare         *ChiSquareHeuristic                                          `json:"chi_square,omitempty"`
@@ -36,9 +36,9 @@ type SignificantTermsAggregation struct {
 	ExecutionHint     *termsaggregationexecutionhint.TermsAggregationExecutionHint `json:"execution_hint,omitempty"`
 	Field             *string                                                      `json:"field,omitempty"`
 	Gnd               *GoogleNormalizedDistanceHeuristic                           `json:"gnd,omitempty"`
-	Include           *TermsInclude                                                `json:"include,omitempty"`
+	Include           TermsInclude                                                 `json:"include,omitempty"`
 	Jlh               *EmptyObject                                                 `json:"jlh,omitempty"`
-	Meta              map[string]interface{}                                       `json:"meta,omitempty"`
+	Meta              map[string]json.RawMessage                                   `json:"meta,omitempty"`
 	MinDocCount       *int64                                                       `json:"min_doc_count,omitempty"`
 	MutualInformation *MutualInformationHeuristic                                  `json:"mutual_information,omitempty"`
 	Name              *string                                                      `json:"name,omitempty"`

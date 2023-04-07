@@ -15,16 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // Configuration type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/slm/_types/SnapshotLifecycle.ts#L99-L129
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/slm/_types/SnapshotLifecycle.ts#L99-L129
 type Configuration struct {
 	// FeatureStates A list of feature states to be included in this snapshot. A list of features
 	// available for inclusion in the snapshot and their descriptions be can be
@@ -51,7 +53,7 @@ type Configuration struct {
 	// Metadata Attaches arbitrary metadata to the snapshot, such as a record of who took the
 	// snapshot, why it was taken, or any other useful data. Metadata must be less
 	// than 1024 bytes.
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Metadata map[string]json.RawMessage `json:"metadata,omitempty"`
 	// Partial If false, the entire snapshot will fail if one or more indices included in
 	// the snapshot do not have all primary shards available.
 	Partial *bool `json:"partial,omitempty"`

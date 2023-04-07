@@ -15,16 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // InferenceResponseResult type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/ml/_types/inference.ts#L412-L459
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/inference.ts#L418-L465
 type InferenceResponseResult struct {
 	// Entities If the model is trained for named entity recognition (NER) tasks, the
 	// response contains the recognized entities.
@@ -55,9 +53,9 @@ type InferenceResponseResult struct {
 	// Additionally
 	PredictedValueSequence *string `json:"predicted_value_sequence,omitempty"`
 	// PredictionProbability Specifies a probability for the predicted value.
-	PredictionProbability *float64 `json:"prediction_probability,omitempty"`
+	PredictionProbability *Float64 `json:"prediction_probability,omitempty"`
 	// PredictionScore Specifies a confidence score for the predicted value.
-	PredictionScore *float64 `json:"prediction_score,omitempty"`
+	PredictionScore *Float64 `json:"prediction_score,omitempty"`
 	// TopClasses For fill mask, text classification, and zero shot classification tasks, the
 	// response contains a list of top
 	// class entries.

@@ -1,3 +1,30 @@
+# 8.7.0
+
+## API
+
+* `ML.DeleteJob`: Added `WithDeleteUserAnnotations`. Should annotations added by the user be deleted.
+* `ML.ResetJob`: Added `WithDeleteUserAnnotations`. Should annotations added by the user be deleted.
+* `ML.StartTrainedModelDeployment`: Added `WithPriority`. The deployment priority.
+* `TransformGetTransformStats`: Added `WithTimeout`. Controls the time to wait for the stats.
+* `TransformStartTransform`: Added `WithFrom`. Restricts the set of transformed entities to those changed after this time.
+
+**New APIs**
+
+`TransformScheduleNowTransform` [documentation](https://www.elastic.co/guide/en/elasticsearch/reference/8.7/schedule-now-transform.html).
+`HealthReport` [documentation](https://www.elastic.co/guide/en/elasticsearch/reference/8.7/health-api.html).
+
+## Typed API
+
+* Inclusion of responses structures.
+
+**Changes**
+
+* `Do` method on endpoints now return a typed response, one per endpoint.
+* `Perform` method added on endpoints, returns `http.Response` as did `Do`.
+* Elasticsearch exceptions are now handled as `types.ElasticsearchError` with `.As` and `.Is` methods.
+* `.Raw` now takes a reader as input.
+* User defined values such as `_source` in `Hits` are now `json.RawMessage` to highlight they later deserializable nature.  
+
 # 8.6.0
 
 ## API

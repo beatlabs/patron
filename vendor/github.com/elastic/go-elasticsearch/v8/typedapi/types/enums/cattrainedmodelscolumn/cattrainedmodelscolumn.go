@@ -15,17 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 // Package cattrainedmodelscolumn
 package cattrainedmodelscolumn
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/cat/_types/CatBase.ts#L561-L635
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cat/_types/CatBase.ts#L561-L635
 type CatTrainedModelsColumn struct {
 	Name string
 }
@@ -43,15 +41,15 @@ var (
 
 	Id = CatTrainedModelsColumn{"id"}
 
-	IngestCount = CatTrainedModelsColumn{"ingest.count"}
+	Ingestcount = CatTrainedModelsColumn{"ingest.count"}
 
-	IngestCurrent = CatTrainedModelsColumn{"ingest.current"}
+	Ingestcurrent = CatTrainedModelsColumn{"ingest.current"}
 
-	IngestFailed = CatTrainedModelsColumn{"ingest.failed"}
+	Ingestfailed = CatTrainedModelsColumn{"ingest.failed"}
 
-	IngestPipelines = CatTrainedModelsColumn{"ingest.pipelines"}
+	Ingestpipelines = CatTrainedModelsColumn{"ingest.pipelines"}
 
-	IngestTime = CatTrainedModelsColumn{"ingest.time"}
+	Ingesttime = CatTrainedModelsColumn{"ingest.time"}
 
 	License = CatTrainedModelsColumn{"license"}
 
@@ -80,15 +78,15 @@ func (c *CatTrainedModelsColumn) UnmarshalText(text []byte) error {
 	case "id":
 		*c = Id
 	case "ingest.count":
-		*c = IngestCount
+		*c = Ingestcount
 	case "ingest.current":
-		*c = IngestCurrent
+		*c = Ingestcurrent
 	case "ingest.failed":
-		*c = IngestFailed
+		*c = Ingestfailed
 	case "ingest.pipelines":
-		*c = IngestPipelines
+		*c = Ingestpipelines
 	case "ingest.time":
-		*c = IngestTime
+		*c = Ingesttime
 	case "license":
 		*c = License
 	case "operations":

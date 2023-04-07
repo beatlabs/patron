@@ -15,16 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // CoreKnnQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_global/knn_search/_types/Knn.ts#L25-L34
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/knn_search/_types/Knn.ts#L24-L33
 type CoreKnnQuery struct {
 	// Field The name of the vector field to search against
 	Field string `json:"field"`
@@ -33,7 +31,7 @@ type CoreKnnQuery struct {
 	// NumCandidates The number of nearest neighbor candidates to consider per shard
 	NumCandidates int64 `json:"num_candidates"`
 	// QueryVector The query vector
-	QueryVector []float64 `json:"query_vector"`
+	QueryVector []float32 `json:"query_vector"`
 }
 
 // NewCoreKnnQuery returns a CoreKnnQuery.

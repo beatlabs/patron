@@ -15,20 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // ComponentTemplateSummary type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/cluster/_types/ComponentTemplate.ts#L38-L45
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/_types/ComponentTemplate.ts#L38-L45
 type ComponentTemplateSummary struct {
 	Aliases  map[string]AliasDefinition `json:"aliases,omitempty"`
 	Mappings *TypeMapping               `json:"mappings,omitempty"`
-	Meta_    map[string]interface{}     `json:"_meta,omitempty"`
+	Meta_    map[string]json.RawMessage `json:"_meta,omitempty"`
 	Settings map[string]IndexSettings   `json:"settings,omitempty"`
 	Version  *int64                     `json:"version,omitempty"`
 }

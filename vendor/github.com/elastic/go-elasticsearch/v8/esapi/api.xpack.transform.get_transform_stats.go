@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.6.0: DO NOT EDIT
+// Code generated from specification version 8.7.0: DO NOT EDIT
 
 package esapi
 
@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func newTransformGetTransformStatsFunc(t Transport) TransformGetTransformStats {
@@ -50,6 +51,7 @@ type TransformGetTransformStatsRequest struct {
 	AllowNoMatch *bool
 	From         *int
 	Size         *int
+	Timeout      time.Duration
 
 	Pretty     bool
 	Human      bool
@@ -92,6 +94,10 @@ func (r TransformGetTransformStatsRequest) Do(ctx context.Context, transport Tra
 
 	if r.Size != nil {
 		params["size"] = strconv.FormatInt(int64(*r.Size), 10)
+	}
+
+	if r.Timeout != 0 {
+		params["timeout"] = formatDuration(r.Timeout)
 	}
 
 	if r.Pretty {
@@ -178,6 +184,13 @@ func (f TransformGetTransformStats) WithFrom(v int) func(*TransformGetTransformS
 func (f TransformGetTransformStats) WithSize(v int) func(*TransformGetTransformStatsRequest) {
 	return func(r *TransformGetTransformStatsRequest) {
 		r.Size = &v
+	}
+}
+
+// WithTimeout - controls the time to wait for the stats.
+func (f TransformGetTransformStats) WithTimeout(v time.Duration) func(*TransformGetTransformStatsRequest) {
+	return func(r *TransformGetTransformStatsRequest) {
+		r.Timeout = v
 	}
 }
 

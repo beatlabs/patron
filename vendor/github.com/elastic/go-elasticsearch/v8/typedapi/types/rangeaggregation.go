@@ -15,25 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // RangeAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/aggregations/bucket.ts#L289-L296
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/bucket.ts#L289-L296
 type RangeAggregation struct {
-	Field   *string                `json:"field,omitempty"`
-	Format  *string                `json:"format,omitempty"`
-	Keyed   *bool                  `json:"keyed,omitempty"`
-	Meta    map[string]interface{} `json:"meta,omitempty"`
-	Missing *int                   `json:"missing,omitempty"`
-	Name    *string                `json:"name,omitempty"`
-	Ranges  []AggregationRange     `json:"ranges,omitempty"`
-	Script  *Script                `json:"script,omitempty"`
+	Field   *string                    `json:"field,omitempty"`
+	Format  *string                    `json:"format,omitempty"`
+	Keyed   *bool                      `json:"keyed,omitempty"`
+	Meta    map[string]json.RawMessage `json:"meta,omitempty"`
+	Missing *int                       `json:"missing,omitempty"`
+	Name    *string                    `json:"name,omitempty"`
+	Ranges  []AggregationRange         `json:"ranges,omitempty"`
+	Script  Script                     `json:"script,omitempty"`
 }
 
 // NewRangeAggregation returns a RangeAggregation.

@@ -15,32 +15,34 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // GetResult type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_global/get/types.ts#L25-L35
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/get/types.ts#L25-L35
 type GetResult struct {
-	Fields       map[string]interface{} `json:"fields,omitempty"`
-	Found        bool                   `json:"found"`
-	Id_          string                 `json:"_id"`
-	Index_       string                 `json:"_index"`
-	PrimaryTerm_ *int64                 `json:"_primary_term,omitempty"`
-	Routing_     *string                `json:"_routing,omitempty"`
-	SeqNo_       *int64                 `json:"_seq_no,omitempty"`
-	Source_      interface{}            `json:"_source,omitempty"`
-	Version_     *int64                 `json:"_version,omitempty"`
+	Fields       map[string]json.RawMessage `json:"fields,omitempty"`
+	Found        bool                       `json:"found"`
+	Id_          string                     `json:"_id"`
+	Index_       string                     `json:"_index"`
+	PrimaryTerm_ *int64                     `json:"_primary_term,omitempty"`
+	Routing_     *string                    `json:"_routing,omitempty"`
+	SeqNo_       *int64                     `json:"_seq_no,omitempty"`
+	Source_      json.RawMessage            `json:"_source,omitempty"`
+	Version_     *int64                     `json:"_version,omitempty"`
 }
 
 // NewGetResult returns a GetResult.
 func NewGetResult() *GetResult {
 	r := &GetResult{
-		Fields: make(map[string]interface{}, 0),
+		Fields: make(map[string]json.RawMessage, 0),
 	}
 
 	return r

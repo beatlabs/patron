@@ -15,21 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // Recording type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/nodes/_types/Stats.ts#L88-L93
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/Stats.ts#L94-L99
 type Recording struct {
-	CumulativeExecutionCount      *int64    `json:"cumulative_execution_count,omitempty"`
-	CumulativeExecutionTime       *Duration `json:"cumulative_execution_time,omitempty"`
-	CumulativeExecutionTimeMillis *int64    `json:"cumulative_execution_time_millis,omitempty"`
-	Name                          *string   `json:"name,omitempty"`
+	CumulativeExecutionCount      *int64   `json:"cumulative_execution_count,omitempty"`
+	CumulativeExecutionTime       Duration `json:"cumulative_execution_time,omitempty"`
+	CumulativeExecutionTimeMillis *int64   `json:"cumulative_execution_time_millis,omitempty"`
+	Name                          *string  `json:"name,omitempty"`
 }
 
 // NewRecording returns a Recording.

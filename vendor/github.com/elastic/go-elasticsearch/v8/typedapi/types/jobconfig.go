@@ -15,22 +15,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // JobConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/ml/_types/Job.ts#L77-L95
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/Job.ts#L77-L95
 type JobConfig struct {
 	AllowLazyOpen                        *bool            `json:"allow_lazy_open,omitempty"`
 	AnalysisConfig                       AnalysisConfig   `json:"analysis_config"`
 	AnalysisLimits                       *AnalysisLimits  `json:"analysis_limits,omitempty"`
-	BackgroundPersistInterval            *Duration        `json:"background_persist_interval,omitempty"`
-	CustomSettings                       interface{}      `json:"custom_settings,omitempty"`
+	BackgroundPersistInterval            Duration         `json:"background_persist_interval,omitempty"`
+	CustomSettings                       json.RawMessage  `json:"custom_settings,omitempty"`
 	DailyModelSnapshotRetentionAfterDays *int64           `json:"daily_model_snapshot_retention_after_days,omitempty"`
 	DataDescription                      DataDescription  `json:"data_description"`
 	DatafeedConfig                       *DatafeedConfig  `json:"datafeed_config,omitempty"`

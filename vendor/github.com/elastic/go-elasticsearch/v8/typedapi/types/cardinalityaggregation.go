@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
@@ -28,14 +26,14 @@ import (
 
 // CardinalityAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/aggregations/metric.ts#L62-L66
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/metric.ts#L62-L66
 type CardinalityAggregation struct {
 	ExecutionHint      *cardinalityexecutionmode.CardinalityExecutionMode `json:"execution_hint,omitempty"`
 	Field              *string                                            `json:"field,omitempty"`
-	Missing            *Missing                                           `json:"missing,omitempty"`
+	Missing            Missing                                            `json:"missing,omitempty"`
 	PrecisionThreshold *int                                               `json:"precision_threshold,omitempty"`
 	Rehash             *bool                                              `json:"rehash,omitempty"`
-	Script             *Script                                            `json:"script,omitempty"`
+	Script             Script                                             `json:"script,omitempty"`
 }
 
 // NewCardinalityAggregation returns a CardinalityAggregation.

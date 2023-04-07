@@ -15,23 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // HealthRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/cat/health/types.ts#L23-L94
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cat/health/types.ts#L23-L94
 type HealthRecord struct {
 	// ActiveShardsPercent active number of shards in percent
 	ActiveShardsPercent *string `json:"active_shards_percent,omitempty"`
 	// Cluster cluster name
 	Cluster *string `json:"cluster,omitempty"`
 	// Epoch seconds since 1970-01-01 00:00:00
-	Epoch *StringifiedEpochTimeUnitSeconds `json:"epoch,omitempty"`
+	Epoch StringifiedEpochTimeUnitSeconds `json:"epoch,omitempty"`
 	// Init number of initializing nodes
 	Init *string `json:"init,omitempty"`
 	// MaxTaskWaitTime wait time of longest task pending

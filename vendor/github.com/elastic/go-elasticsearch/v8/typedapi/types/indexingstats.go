@@ -15,31 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // IndexingStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/Stats.ts#L101-L116
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/Stats.ts#L101-L117
 type IndexingStats struct {
 	DeleteCurrent        int64                    `json:"delete_current"`
-	DeleteTime           *Duration                `json:"delete_time,omitempty"`
+	DeleteTime           Duration                 `json:"delete_time,omitempty"`
 	DeleteTimeInMillis   int64                    `json:"delete_time_in_millis"`
 	DeleteTotal          int64                    `json:"delete_total"`
 	IndexCurrent         int64                    `json:"index_current"`
 	IndexFailed          int64                    `json:"index_failed"`
-	IndexTime            *Duration                `json:"index_time,omitempty"`
+	IndexTime            Duration                 `json:"index_time,omitempty"`
 	IndexTimeInMillis    int64                    `json:"index_time_in_millis"`
 	IndexTotal           int64                    `json:"index_total"`
 	IsThrottled          bool                     `json:"is_throttled"`
 	NoopUpdateTotal      int64                    `json:"noop_update_total"`
-	ThrottleTime         *Duration                `json:"throttle_time,omitempty"`
+	ThrottleTime         Duration                 `json:"throttle_time,omitempty"`
 	ThrottleTimeInMillis int64                    `json:"throttle_time_in_millis"`
 	Types                map[string]IndexingStats `json:"types,omitempty"`
+	WriteLoad            *Float64                 `json:"write_load,omitempty"`
 }
 
 // NewIndexingStats returns a IndexingStats.

@@ -15,20 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // DataframeEvaluationSummaryAucRocCurveItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/ml/evaluate_data_frame/types.ts#L54-L58
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/evaluate_data_frame/types.ts#L54-L58
 type DataframeEvaluationSummaryAucRocCurveItem struct {
-	Fpr       float64 `json:"fpr"`
-	Threshold float64 `json:"threshold"`
-	Tpr       float64 `json:"tpr"`
+	Fpr       Float64 `json:"fpr"`
+	Threshold Float64 `json:"threshold"`
+	Tpr       Float64 `json:"tpr"`
 }
 
 // NewDataframeEvaluationSummaryAucRocCurveItem returns a DataframeEvaluationSummaryAucRocCurveItem.

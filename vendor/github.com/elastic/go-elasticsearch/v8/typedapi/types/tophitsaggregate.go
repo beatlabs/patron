@@ -15,19 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // TopHitsAggregate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/aggregations/Aggregate.ts#L645-L648
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/Aggregate.ts#L645-L648
 type TopHitsAggregate struct {
-	Hits HitsMetadata           `json:"hits"`
-	Meta map[string]interface{} `json:"meta,omitempty"`
+	Hits HitsMetadata               `json:"hits"`
+	Meta map[string]json.RawMessage `json:"meta,omitempty"`
 }
 
 // NewTopHitsAggregate returns a TopHitsAggregate.

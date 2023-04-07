@@ -15,23 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // RefreshStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/Stats.ts#L168-L175
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/Stats.ts#L168-L175
 type RefreshStats struct {
-	ExternalTotal             int64     `json:"external_total"`
-	ExternalTotalTimeInMillis int64     `json:"external_total_time_in_millis"`
-	Listeners                 int64     `json:"listeners"`
-	Total                     int64     `json:"total"`
-	TotalTime                 *Duration `json:"total_time,omitempty"`
-	TotalTimeInMillis         int64     `json:"total_time_in_millis"`
+	ExternalTotal             int64    `json:"external_total"`
+	ExternalTotalTimeInMillis int64    `json:"external_total_time_in_millis"`
+	Listeners                 int64    `json:"listeners"`
+	Total                     int64    `json:"total"`
+	TotalTime                 Duration `json:"total_time,omitempty"`
+	TotalTimeInMillis         int64    `json:"total_time_in_millis"`
 }
 
 // NewRefreshStats returns a RefreshStats.

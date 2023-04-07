@@ -15,19 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // Checkpointing type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/transform/get_transform_stats/types.ts#L77-L84
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/transform/get_transform_stats/types.ts#L82-L89
 type Checkpointing struct {
 	ChangesLastDetectedAt         *int64           `json:"changes_last_detected_at,omitempty"`
-	ChangesLastDetectedAtDateTime *DateTime        `json:"changes_last_detected_at_date_time,omitempty"`
+	ChangesLastDetectedAtDateTime DateTime         `json:"changes_last_detected_at_date_time,omitempty"`
 	Last                          CheckpointStats  `json:"last"`
 	LastSearchTime                *int64           `json:"last_search_time,omitempty"`
 	Next                          *CheckpointStats `json:"next,omitempty"`

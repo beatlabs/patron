@@ -15,27 +15,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // ScriptTransform type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/Transform.ts#L36-L44
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/Transform.ts#L36-L44
 type ScriptTransform struct {
-	Id     *string                `json:"id,omitempty"`
-	Lang   *string                `json:"lang,omitempty"`
-	Params map[string]interface{} `json:"params,omitempty"`
-	Source *string                `json:"source,omitempty"`
+	Id     *string                    `json:"id,omitempty"`
+	Lang   *string                    `json:"lang,omitempty"`
+	Params map[string]json.RawMessage `json:"params,omitempty"`
+	Source *string                    `json:"source,omitempty"`
 }
 
 // NewScriptTransform returns a ScriptTransform.
 func NewScriptTransform() *ScriptTransform {
 	r := &ScriptTransform{
-		Params: make(map[string]interface{}, 0),
+		Params: make(map[string]json.RawMessage, 0),
 	}
 
 	return r

@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package rendersearchtemplate
 
@@ -29,23 +27,23 @@ import (
 
 // Request holds the request body struct for the package rendersearchtemplate
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_global/render_search_template/RenderSearchTemplateRequest.ts#L25-L39
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/render_search_template/RenderSearchTemplateRequest.ts#L25-L39
 type Request struct {
-	File   *string                `json:"file,omitempty"`
-	Params map[string]interface{} `json:"params,omitempty"`
-	Source *string                `json:"source,omitempty"`
+	File   *string                    `json:"file,omitempty"`
+	Params map[string]json.RawMessage `json:"params,omitempty"`
+	Source *string                    `json:"source,omitempty"`
 }
 
 // NewRequest returns a Request
 func NewRequest() *Request {
 	r := &Request{
-		Params: make(map[string]interface{}, 0),
+		Params: make(map[string]json.RawMessage, 0),
 	}
 	return r
 }
 
 // FromJSON allows to load an arbitrary json into the request structure
-func (rb *Request) FromJSON(data string) (*Request, error) {
+func (r *Request) FromJSON(data string) (*Request, error) {
 	var req Request
 	err := json.Unmarshal([]byte(data), &req)
 

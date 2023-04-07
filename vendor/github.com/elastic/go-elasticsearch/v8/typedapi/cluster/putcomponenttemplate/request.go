@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package putcomponenttemplate
 
@@ -31,11 +29,11 @@ import (
 
 // Request holds the request body struct for the package putcomponenttemplate
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/cluster/put_component_template/ClusterPutComponentTemplateRequest.ts#L29-L54
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/put_component_template/ClusterPutComponentTemplateRequest.ts#L29-L54
 type Request struct {
 	Aliases  map[string]types.AliasDefinition `json:"aliases,omitempty"`
 	Mappings *types.TypeMapping               `json:"mappings,omitempty"`
-	Meta_    map[string]interface{}           `json:"_meta,omitempty"`
+	Meta_    map[string]json.RawMessage       `json:"_meta,omitempty"`
 	Settings *types.IndexSettings             `json:"settings,omitempty"`
 	Template types.IndexState                 `json:"template"`
 	Version  *int64                           `json:"version,omitempty"`
@@ -50,7 +48,7 @@ func NewRequest() *Request {
 }
 
 // FromJSON allows to load an arbitrary json into the request structure
-func (rb *Request) FromJSON(data string) (*Request, error) {
+func (r *Request) FromJSON(data string) (*Request, error) {
 	var req Request
 	err := json.Unmarshal([]byte(data), &req)
 

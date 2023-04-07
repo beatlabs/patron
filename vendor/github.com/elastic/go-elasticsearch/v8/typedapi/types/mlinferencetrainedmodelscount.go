@@ -15,16 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // MlInferenceTrainedModelsCount type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/xpack/usage/types.ts#L230-L238
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/xpack/usage/types.ts#L238-L247
 type MlInferenceTrainedModelsCount struct {
 	Classification *int64 `json:"classification,omitempty"`
 	Ner            *int64 `json:"ner,omitempty"`
@@ -32,6 +30,7 @@ type MlInferenceTrainedModelsCount struct {
 	PassThrough    *int64 `json:"pass_through,omitempty"`
 	Prepackaged    int64  `json:"prepackaged"`
 	Regression     *int64 `json:"regression,omitempty"`
+	TextEmbedding  *int64 `json:"text_embedding,omitempty"`
 	Total          int64  `json:"total"`
 }
 

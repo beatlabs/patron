@@ -15,25 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // ClusterIndicesShards type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/cluster/stats/types.ts#L49-L61
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/stats/types.ts#L49-L61
 type ClusterIndicesShards struct {
 	// Index Contains statistics about shards assigned to selected nodes.
 	Index *ClusterIndicesShardsIndex `json:"index,omitempty"`
 	// Primaries Number of primary shards assigned to selected nodes.
-	Primaries *float64 `json:"primaries,omitempty"`
+	Primaries *Float64 `json:"primaries,omitempty"`
 	// Replication Ratio of replica shards to primary shards across all selected nodes.
-	Replication *float64 `json:"replication,omitempty"`
+	Replication *Float64 `json:"replication,omitempty"`
 	// Total Total number of shards assigned to selected nodes.
-	Total *float64 `json:"total,omitempty"`
+	Total *Float64 `json:"total,omitempty"`
 }
 
 // NewClusterIndicesShards returns a ClusterIndicesShards.

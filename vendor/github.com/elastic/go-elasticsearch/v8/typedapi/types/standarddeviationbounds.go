@@ -15,23 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // StandardDeviationBounds type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/aggregations/Aggregate.ts#L259-L266
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/Aggregate.ts#L259-L266
 type StandardDeviationBounds struct {
-	Lower           float64 `json:"lower,omitempty"`
-	LowerPopulation float64 `json:"lower_population,omitempty"`
-	LowerSampling   float64 `json:"lower_sampling,omitempty"`
-	Upper           float64 `json:"upper,omitempty"`
-	UpperPopulation float64 `json:"upper_population,omitempty"`
-	UpperSampling   float64 `json:"upper_sampling,omitempty"`
+	Lower           Float64 `json:"lower,omitempty"`
+	LowerPopulation Float64 `json:"lower_population,omitempty"`
+	LowerSampling   Float64 `json:"lower_sampling,omitempty"`
+	Upper           Float64 `json:"upper,omitempty"`
+	UpperPopulation Float64 `json:"upper_population,omitempty"`
+	UpperSampling   Float64 `json:"upper_sampling,omitempty"`
 }
 
 // NewStandardDeviationBounds returns a StandardDeviationBounds.

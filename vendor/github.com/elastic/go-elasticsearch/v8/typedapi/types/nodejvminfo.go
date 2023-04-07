@@ -15,18 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // NodeJvmInfo type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/nodes/info/types.ts#L348-L362
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/info/types.ts#L348-L362
 type NodeJvmInfo struct {
-	BundledJdk                            bool              `json:"bundled_jdk"`
 	GcCollectors                          []string          `json:"gc_collectors"`
 	InputArguments                        []string          `json:"input_arguments"`
 	Mem                                   NodeInfoJvmMemory `json:"mem"`

@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
@@ -28,13 +26,5 @@ package types
 //	NumericDecayFunction
 //	GeoDecayFunction
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/query_dsl/compound.ts#L100-L105
-type DecayFunction interface {
-	isDecayFunction()
-}
-
-func (i DateDecayFunction) isDecayFunction() {}
-
-func (i NumericDecayFunction) isDecayFunction() {}
-
-func (i GeoDecayFunction) isDecayFunction() {}
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/compound.ts#L100-L105
+type DecayFunction interface{}

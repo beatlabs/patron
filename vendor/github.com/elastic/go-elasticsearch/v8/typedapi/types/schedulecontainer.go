@@ -15,21 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // ScheduleContainer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/watcher/_types/Schedule.ts#L85-L96
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/watcher/_types/Schedule.ts#L85-L96
 type ScheduleContainer struct {
 	Cron     *string         `json:"cron,omitempty"`
 	Daily    *DailySchedule  `json:"daily,omitempty"`
 	Hourly   *HourlySchedule `json:"hourly,omitempty"`
-	Interval *Duration       `json:"interval,omitempty"`
+	Interval Duration        `json:"interval,omitempty"`
 	Monthly  []TimeOfMonth   `json:"monthly,omitempty"`
 	Weekly   []TimeOfWeek    `json:"weekly,omitempty"`
 	Yearly   []TimeOfYear    `json:"yearly,omitempty"`

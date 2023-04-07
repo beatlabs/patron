@@ -126,7 +126,7 @@ github.com/eclipse/paho.golang/paho
 ## explicit; go 1.13
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version
-# github.com/elastic/go-elasticsearch/v8 v8.6.0
+# github.com/elastic/go-elasticsearch/v8 v8.7.0
 ## explicit; go 1.13
 github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi
@@ -591,6 +591,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geoshaperelation
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geostrategy
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geovalidationmethod
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/granttype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gridaggregationtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gridtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/groupby
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/healthstatus
@@ -628,6 +629,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/language
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/level
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/licensestatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/licensetype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/lifecycleoperationmode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/matchtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/memorystatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/metric
@@ -675,6 +677,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardsstatsstage
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardstoreallocation
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shutdownstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shutdowntype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/simplequerystringflag
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/snapshotsort
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/snapshotupgradestate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/snowballlanguage
@@ -699,6 +702,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tokenchar
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tokenizationtruncate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/totalhitsrelation
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/trainedmodeltype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/trainingpriority
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/translogdurability
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/ttesttype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/type_

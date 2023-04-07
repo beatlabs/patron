@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
@@ -39,35 +37,5 @@ package types
 //	PatternTokenizer
 //	IcuTokenizer
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/analysis/tokenizers.ts#L123-L141
-type TokenizerDefinition interface {
-	isTokenizerDefinition()
-}
-
-func (i CharGroupTokenizer) isTokenizerDefinition() {}
-
-func (i EdgeNGramTokenizer) isTokenizerDefinition() {}
-
-func (i KeywordTokenizer) isTokenizerDefinition() {}
-
-func (i LetterTokenizer) isTokenizerDefinition() {}
-
-func (i LowercaseTokenizer) isTokenizerDefinition() {}
-
-func (i NGramTokenizer) isTokenizerDefinition() {}
-
-func (i NoriTokenizer) isTokenizerDefinition() {}
-
-func (i PathHierarchyTokenizer) isTokenizerDefinition() {}
-
-func (i StandardTokenizer) isTokenizerDefinition() {}
-
-func (i UaxEmailUrlTokenizer) isTokenizerDefinition() {}
-
-func (i WhitespaceTokenizer) isTokenizerDefinition() {}
-
-func (i KuromojiTokenizer) isTokenizerDefinition() {}
-
-func (i PatternTokenizer) isTokenizerDefinition() {}
-
-func (i IcuTokenizer) isTokenizerDefinition() {}
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/tokenizers.ts#L123-L141
+type TokenizerDefinition interface{}

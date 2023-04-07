@@ -15,23 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // SearchTemplateRequestBody type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/watcher/_types/Input.ts#L128-L145
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/watcher/_types/Input.ts#L128-L145
 type SearchTemplateRequestBody struct {
 	Explain *bool `json:"explain,omitempty"`
 	// Id ID of the search template to use. If no source is specified,
 	// this parameter is required.
-	Id      *string                `json:"id,omitempty"`
-	Params  map[string]interface{} `json:"params,omitempty"`
-	Profile *bool                  `json:"profile,omitempty"`
+	Id      *string                    `json:"id,omitempty"`
+	Params  map[string]json.RawMessage `json:"params,omitempty"`
+	Profile *bool                      `json:"profile,omitempty"`
 	// Source An inline search template. Supports the same parameters as the search API's
 	// request body. Also supports Mustache variables. If no id is specified, this
 	// parameter is required.
@@ -41,7 +43,7 @@ type SearchTemplateRequestBody struct {
 // NewSearchTemplateRequestBody returns a SearchTemplateRequestBody.
 func NewSearchTemplateRequestBody() *SearchTemplateRequestBody {
 	r := &SearchTemplateRequestBody{
-		Params: make(map[string]interface{}, 0),
+		Params: make(map[string]json.RawMessage, 0),
 	}
 
 	return r

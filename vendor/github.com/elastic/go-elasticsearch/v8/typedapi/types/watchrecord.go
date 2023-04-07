@@ -15,25 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/executionstatus"
 )
 
 // WatchRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/watcher/execute_watch/types.ts#L27-L39
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/watcher/execute_watch/types.ts#L27-L39
 type WatchRecord struct {
 	Condition    WatcherCondition                `json:"condition"`
 	Input        WatcherInput                    `json:"input"`
 	Messages     []string                        `json:"messages"`
-	Metadata     map[string]interface{}          `json:"metadata,omitempty"`
+	Metadata     map[string]json.RawMessage      `json:"metadata,omitempty"`
 	Node         string                          `json:"node"`
 	Result       ExecutionResult                 `json:"result"`
 	State        executionstatus.ExecutionStatus `json:"state"`

@@ -15,27 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // NodeInfoJvmMemory type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/nodes/info/types.ts#L302-L313
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/info/types.ts#L302-L313
 type NodeInfoJvmMemory struct {
-	DirectMax          *ByteSize `json:"direct_max,omitempty"`
-	DirectMaxInBytes   int64     `json:"direct_max_in_bytes"`
-	HeapInit           *ByteSize `json:"heap_init,omitempty"`
-	HeapInitInBytes    int64     `json:"heap_init_in_bytes"`
-	HeapMax            *ByteSize `json:"heap_max,omitempty"`
-	HeapMaxInBytes     int64     `json:"heap_max_in_bytes"`
-	NonHeapInit        *ByteSize `json:"non_heap_init,omitempty"`
-	NonHeapInitInBytes int64     `json:"non_heap_init_in_bytes"`
-	NonHeapMax         *ByteSize `json:"non_heap_max,omitempty"`
-	NonHeapMaxInBytes  int64     `json:"non_heap_max_in_bytes"`
+	DirectMax          ByteSize `json:"direct_max,omitempty"`
+	DirectMaxInBytes   int64    `json:"direct_max_in_bytes"`
+	HeapInit           ByteSize `json:"heap_init,omitempty"`
+	HeapInitInBytes    int64    `json:"heap_init_in_bytes"`
+	HeapMax            ByteSize `json:"heap_max,omitempty"`
+	HeapMaxInBytes     int64    `json:"heap_max_in_bytes"`
+	NonHeapInit        ByteSize `json:"non_heap_init,omitempty"`
+	NonHeapInitInBytes int64    `json:"non_heap_init_in_bytes"`
+	NonHeapMax         ByteSize `json:"non_heap_max,omitempty"`
+	NonHeapMaxInBytes  int64    `json:"non_heap_max_in_bytes"`
 }
 
 // NewNodeInfoJvmMemory returns a NodeInfoJvmMemory.

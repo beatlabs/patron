@@ -15,21 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // TransformProgress type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/transform/get_transform_stats/types.ts#L40-L46
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/transform/get_transform_stats/types.ts#L45-L51
 type TransformProgress struct {
 	DocsIndexed     int64   `json:"docs_indexed"`
 	DocsProcessed   int64   `json:"docs_processed"`
 	DocsRemaining   int64   `json:"docs_remaining"`
-	PercentComplete float64 `json:"percent_complete"`
+	PercentComplete Float64 `json:"percent_complete"`
 	TotalDocs       int64   `json:"total_docs"`
 }
 

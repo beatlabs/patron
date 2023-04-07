@@ -15,20 +15,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // ComponentTemplateNode type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/cluster/_types/ComponentTemplate.ts#L31-L36
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/_types/ComponentTemplate.ts#L31-L36
 type ComponentTemplateNode struct {
-	Meta_    map[string]interface{}   `json:"_meta,omitempty"`
-	Template ComponentTemplateSummary `json:"template"`
-	Version  *int64                   `json:"version,omitempty"`
+	Meta_    map[string]json.RawMessage `json:"_meta,omitempty"`
+	Template ComponentTemplateSummary   `json:"template"`
+	Version  *int64                     `json:"version,omitempty"`
 }
 
 // NewComponentTemplateNode returns a ComponentTemplateNode.

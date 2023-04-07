@@ -15,29 +15,31 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // UserProfile type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/security/_types/UserProfile.ts#L42-L48
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/security/_types/UserProfile.ts#L42-L48
 type UserProfile struct {
-	Data    map[string]interface{} `json:"data"`
-	Enabled *bool                  `json:"enabled,omitempty"`
-	Labels  map[string]interface{} `json:"labels"`
-	Uid     string                 `json:"uid"`
-	User    UserProfileUser        `json:"user"`
+	Data    map[string]json.RawMessage `json:"data"`
+	Enabled *bool                      `json:"enabled,omitempty"`
+	Labels  map[string]json.RawMessage `json:"labels"`
+	Uid     string                     `json:"uid"`
+	User    UserProfileUser            `json:"user"`
 }
 
 // NewUserProfile returns a UserProfile.
 func NewUserProfile() *UserProfile {
 	r := &UserProfile{
-		Data:   make(map[string]interface{}, 0),
-		Labels: make(map[string]interface{}, 0),
+		Data:   make(map[string]json.RawMessage, 0),
+		Labels: make(map[string]json.RawMessage, 0),
 	}
 
 	return r

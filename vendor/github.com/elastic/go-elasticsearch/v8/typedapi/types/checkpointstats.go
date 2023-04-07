@@ -15,22 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // CheckpointStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/transform/get_transform_stats/types.ts#L68-L75
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/transform/get_transform_stats/types.ts#L73-L80
 type CheckpointStats struct {
 	Checkpoint           int64              `json:"checkpoint"`
 	CheckpointProgress   *TransformProgress `json:"checkpoint_progress,omitempty"`
-	TimeUpperBound       *DateTime          `json:"time_upper_bound,omitempty"`
+	TimeUpperBound       DateTime           `json:"time_upper_bound,omitempty"`
 	TimeUpperBoundMillis *int64             `json:"time_upper_bound_millis,omitempty"`
-	Timestamp            *DateTime          `json:"timestamp,omitempty"`
+	Timestamp            DateTime           `json:"timestamp,omitempty"`
 	TimestampMillis      *int64             `json:"timestamp_millis,omitempty"`
 }
 

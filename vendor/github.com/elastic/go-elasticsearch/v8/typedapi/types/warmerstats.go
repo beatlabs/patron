@@ -15,21 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // WarmerStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/Stats.ts#L252-L257
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/Stats.ts#L252-L257
 type WarmerStats struct {
-	Current           int64     `json:"current"`
-	Total             int64     `json:"total"`
-	TotalTime         *Duration `json:"total_time,omitempty"`
-	TotalTimeInMillis int64     `json:"total_time_in_millis"`
+	Current           int64    `json:"current"`
+	Total             int64    `json:"total"`
+	TotalTime         Duration `json:"total_time,omitempty"`
+	TotalTimeInMillis int64    `json:"total_time_in_millis"`
 }
 
 // NewWarmerStats returns a WarmerStats.

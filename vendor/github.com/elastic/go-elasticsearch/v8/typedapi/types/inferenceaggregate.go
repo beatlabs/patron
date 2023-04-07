@@ -15,10 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
@@ -29,13 +27,13 @@ import (
 
 // InferenceAggregate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/aggregations/Aggregate.ts#L650-L661
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/Aggregate.ts#L650-L661
 type InferenceAggregate struct {
-	Data              map[string]interface{}       `json:"-"`
+	Data              map[string]json.RawMessage   `json:"-"`
 	FeatureImportance []InferenceFeatureImportance `json:"feature_importance,omitempty"`
-	Meta              map[string]interface{}       `json:"meta,omitempty"`
+	Meta              map[string]json.RawMessage   `json:"meta,omitempty"`
 	TopClasses        []InferenceTopClassEntry     `json:"top_classes,omitempty"`
-	Value             *FieldValue                  `json:"value,omitempty"`
+	Value             FieldValue                   `json:"value,omitempty"`
 	Warning           *string                      `json:"warning,omitempty"`
 }
 
@@ -70,7 +68,7 @@ func (s InferenceAggregate) MarshalJSON() ([]byte, error) {
 // NewInferenceAggregate returns a InferenceAggregate.
 func NewInferenceAggregate() *InferenceAggregate {
 	r := &InferenceAggregate{
-		Data: make(map[string]interface{}, 0),
+		Data: make(map[string]json.RawMessage, 0),
 	}
 
 	return r

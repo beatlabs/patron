@@ -15,32 +15,34 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // BoxPlotAggregate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_types/aggregations/Aggregate.ts#L697-L713
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/Aggregate.ts#L697-L713
 type BoxPlotAggregate struct {
-	Lower         float64                `json:"lower"`
-	LowerAsString *string                `json:"lower_as_string,omitempty"`
-	Max           float64                `json:"max"`
-	MaxAsString   *string                `json:"max_as_string,omitempty"`
-	Meta          map[string]interface{} `json:"meta,omitempty"`
-	Min           float64                `json:"min"`
-	MinAsString   *string                `json:"min_as_string,omitempty"`
-	Q1            float64                `json:"q1"`
-	Q1AsString    *string                `json:"q1_as_string,omitempty"`
-	Q2            float64                `json:"q2"`
-	Q2AsString    *string                `json:"q2_as_string,omitempty"`
-	Q3            float64                `json:"q3"`
-	Q3AsString    *string                `json:"q3_as_string,omitempty"`
-	Upper         float64                `json:"upper"`
-	UpperAsString *string                `json:"upper_as_string,omitempty"`
+	Lower         Float64                    `json:"lower"`
+	LowerAsString *string                    `json:"lower_as_string,omitempty"`
+	Max           Float64                    `json:"max"`
+	MaxAsString   *string                    `json:"max_as_string,omitempty"`
+	Meta          map[string]json.RawMessage `json:"meta,omitempty"`
+	Min           Float64                    `json:"min"`
+	MinAsString   *string                    `json:"min_as_string,omitempty"`
+	Q1            Float64                    `json:"q1"`
+	Q1AsString    *string                    `json:"q1_as_string,omitempty"`
+	Q2            Float64                    `json:"q2"`
+	Q2AsString    *string                    `json:"q2_as_string,omitempty"`
+	Q3            Float64                    `json:"q3"`
+	Q3AsString    *string                    `json:"q3_as_string,omitempty"`
+	Upper         Float64                    `json:"upper"`
+	UpperAsString *string                    `json:"upper_as_string,omitempty"`
 }
 
 // NewBoxPlotAggregate returns a BoxPlotAggregate.

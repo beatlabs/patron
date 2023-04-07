@@ -15,30 +15,32 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // TemplateMapping type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/indices/_types/TemplateMapping.ts#L27-L34
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/_types/TemplateMapping.ts#L27-L34
 type TemplateMapping struct {
-	Aliases       map[string]Alias       `json:"aliases"`
-	IndexPatterns []string               `json:"index_patterns"`
-	Mappings      TypeMapping            `json:"mappings"`
-	Order         int                    `json:"order"`
-	Settings      map[string]interface{} `json:"settings"`
-	Version       *int64                 `json:"version,omitempty"`
+	Aliases       map[string]Alias           `json:"aliases"`
+	IndexPatterns []string                   `json:"index_patterns"`
+	Mappings      TypeMapping                `json:"mappings"`
+	Order         int                        `json:"order"`
+	Settings      map[string]json.RawMessage `json:"settings"`
+	Version       *int64                     `json:"version,omitempty"`
 }
 
 // NewTemplateMapping returns a TemplateMapping.
 func NewTemplateMapping() *TemplateMapping {
 	r := &TemplateMapping{
 		Aliases:  make(map[string]Alias, 0),
-		Settings: make(map[string]interface{}, 0),
+		Settings: make(map[string]json.RawMessage, 0),
 	}
 
 	return r

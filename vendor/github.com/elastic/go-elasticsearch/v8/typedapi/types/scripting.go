@@ -15,26 +15,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 // Scripting type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/nodes/_types/Stats.ts#L383-L388
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/Stats.ts#L389-L395
 type Scripting struct {
-	CacheEvictions            *int64         `json:"cache_evictions,omitempty"`
-	CompilationLimitTriggered *int64         `json:"compilation_limit_triggered,omitempty"`
-	Compilations              *int64         `json:"compilations,omitempty"`
-	Contexts                  []NodesContext `json:"contexts,omitempty"`
+	CacheEvictions            *int64           `json:"cache_evictions,omitempty"`
+	CompilationLimitTriggered *int64           `json:"compilation_limit_triggered,omitempty"`
+	Compilations              *int64           `json:"compilations,omitempty"`
+	CompilationsHistory       map[string]int64 `json:"compilations_history,omitempty"`
+	Contexts                  []NodesContext   `json:"contexts,omitempty"`
 }
 
 // NewScripting returns a Scripting.
 func NewScripting() *Scripting {
-	r := &Scripting{}
+	r := &Scripting{
+		CompilationsHistory: make(map[string]int64, 0),
+	}
 
 	return r
 }

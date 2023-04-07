@@ -15,14 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/7f49eec1f23a5ae155001c058b3196d85981d5c2
-
+// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
 
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/boundaryscanner"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/highlighterencoder"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/highlighterfragmenter"
@@ -33,7 +33,7 @@ import (
 
 // Highlight type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/7f49eec1f23a5ae155001c058b3196d85981d5c2/specification/_global/search/_types/highlighting.ts#L57-L60
+// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/search/_types/highlighting.ts#L57-L60
 type Highlight struct {
 	BoundaryChars         *string                                      `json:"boundary_chars,omitempty"`
 	BoundaryMaxScan       *int                                         `json:"boundary_max_scan,omitempty"`
@@ -50,7 +50,7 @@ type Highlight struct {
 	MaxFragmentLength     *int                                         `json:"max_fragment_length,omitempty"`
 	NoMatchSize           *int                                         `json:"no_match_size,omitempty"`
 	NumberOfFragments     *int                                         `json:"number_of_fragments,omitempty"`
-	Options               map[string]interface{}                       `json:"options,omitempty"`
+	Options               map[string]json.RawMessage                   `json:"options,omitempty"`
 	Order                 *highlighterorder.HighlighterOrder           `json:"order,omitempty"`
 	PhraseLimit           *int                                         `json:"phrase_limit,omitempty"`
 	PostTags              []string                                     `json:"post_tags,omitempty"`
@@ -64,7 +64,7 @@ type Highlight struct {
 func NewHighlight() *Highlight {
 	r := &Highlight{
 		Fields:  make(map[string]HighlightField, 0),
-		Options: make(map[string]interface{}, 0),
+		Options: make(map[string]json.RawMessage, 0),
 	}
 
 	return r

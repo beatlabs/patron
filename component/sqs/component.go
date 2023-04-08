@@ -195,12 +195,12 @@ func (c *Component) Run(ctx context.Context) error {
 		case err := <-chErr:
 			return err
 		case <-ctx.Done():
-			log.FromContext(ctx).Info("context cancellation received. exiting...")
+			slog.InfoCtx(ctx, "context cancellation received. exiting...")
 			return nil
 		case <-tickerStats.C:
 			err := c.report(ctx, c.api, c.queue.url)
 			if err != nil {
-				log.FromContext(ctx).Errorf("failed to report sqsAPI stats: %v", err)
+				slog.ErrorCtx(ctx, "failed to report sqsAPI stats: %v", err)
 			}
 		}
 	}

@@ -10,12 +10,12 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	patronerrors "github.com/beatlabs/patron/errors"
-	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/streadway/amqp"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -107,7 +107,7 @@ func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishi
 	c := amqpHeadersCarrier(msg.Headers)
 
 	if err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, c); err != nil {
-		log.FromContext(ctx).Errorf("failed to inject tracing headers: %v", err)
+		slog.ErrorCtx(ctx, "failed to inject tracing headers: %v", err)
 	}
 	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 	return sp

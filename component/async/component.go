@@ -7,7 +7,6 @@ import (
 	"time"
 
 	patronErrors "github.com/beatlabs/patron/errors"
-	"github.com/beatlabs/patron/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/exp/slog"
 )
@@ -195,7 +194,7 @@ func (c *Component) processing(ctx context.Context) error {
 	for {
 		select {
 		case msg := <-chMsg:
-			log.FromContext(msg.Context()).Debug("consumer received a new message")
+			slog.DebugCtx(msg.Context(), "consumer received a new message")
 			err := c.dispatchMessage(msg)
 			if err != nil {
 				return err
@@ -241,7 +240,7 @@ func (c *Component) worker() {
 var errInvalidFS = errors.New("invalid failure strategy")
 
 func (c *Component) executeFailureStrategy(msg Message, err error) error {
-	log.FromContext(msg.Context()).Errorf("failed to process message, failure strategy executed: %v", err)
+	slog.ErrorCtx(msg.Context(), "failed to process message, failure strategy executed: %v", err)
 	switch c.failStrategy {
 	case NackExitStrategy:
 		nackErr := msg.Nack()

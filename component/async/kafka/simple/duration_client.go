@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/beatlabs/patron/log"
 	"golang.org/x/exp/slog"
 )
 
@@ -113,7 +112,7 @@ func (d durationClient) offsetBinarySearch(ctx context.Context, topic string, si
 
 		t, err := timeExtractor(msg)
 		if err != nil {
-			log.FromContext(ctx).Warnf("error while executing comparator: %v", err)
+			slog.WarnCtx(ctx, "error while executing comparator: %v", err)
 			// In case of a failure, we compress the range so that the next calculated mid is different
 			left++
 			continue

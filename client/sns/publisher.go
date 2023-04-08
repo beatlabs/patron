@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
-	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -67,7 +67,7 @@ func (p Publisher) Publish(ctx context.Context, input *sns.PublishInput) (messag
 	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, tracingTarget(input)), publisherComponent, ext.SpanKindProducer)
 
 	if err := injectHeaders(span, input); err != nil {
-		log.FromContext(ctx).Warnf("failed to inject tracing header: %v", err)
+		slog.WarnCtx(ctx, "failed to inject tracing header: %v", err)
 	}
 
 	start := time.Now()

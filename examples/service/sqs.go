@@ -9,7 +9,7 @@ import (
 	"github.com/beatlabs/patron"
 	patronsqs "github.com/beatlabs/patron/component/sqs"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 func createSQSConsumer() (patron.Component, error) {
@@ -17,9 +17,9 @@ func createSQSConsumer() (patron.Component, error) {
 		for _, msg := range btc.Messages() {
 			err := msg.ACK()
 			if err != nil {
-				log.FromContext(msg.Context()).Infof("AWS SQS message %s received but ack failed: %v", msg.ID(), err)
+				slog.InfoCtx(msg.Context(), "AWS SQS message %s received but ack failed: %v", msg.ID(), err)
 			}
-			log.FromContext(msg.Context()).Infof("AWS SQS message %s received and acked", msg.ID())
+			slog.InfoCtx(msg.Context(), "AWS SQS message %s received and acked", msg.ID())
 		}
 	}
 

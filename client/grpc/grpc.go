@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -73,7 +73,7 @@ func unaryInterceptor(target string) grpc.UnaryClientInterceptor {
 		carrier := headersCarrier{Ctx: ctx}
 		err := span.Tracer().Inject(span.Context(), opentracing.TextMap, &carrier)
 		if err != nil {
-			log.FromContext(ctx).Errorf("failed to inject tracing headers: %v", err)
+			slog.ErrorCtx(ctx, "failed to inject tracing headers: %v", err)
 		}
 
 		corID := correlation.IDFromContext(carrier.Ctx)

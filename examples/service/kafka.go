@@ -8,7 +8,7 @@ import (
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/component/kafka/group"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 func createKafkaConsumer() (patron.Component, error) {
@@ -21,7 +21,7 @@ func createKafkaConsumer() (patron.Component, error) {
 
 	process := func(batch kafka.Batch) error {
 		for _, msg := range batch.Messages() {
-			log.FromContext(msg.Context()).Infof("kafka message received: %s", string(msg.Message().Value))
+			slog.InfoCtx(msg.Context(), "kafka message received: %s", string(msg.Message().Value))
 		}
 		return nil
 	}

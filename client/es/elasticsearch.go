@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8"
@@ -20,6 +19,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -105,7 +105,7 @@ type transportClient struct {
 func (c *transportClient) Perform(req *http.Request) (*http.Response, error) {
 	sp, err := c.startSpan(req)
 	if err != nil {
-		log.FromContext(req.Context()).Errorf("failed to start span: %v", err)
+		slog.ErrorCtx(req.Context(), "failed to start span: %v", err)
 	}
 	start := time.Now()
 	rsp, err := c.client.Perform(req)

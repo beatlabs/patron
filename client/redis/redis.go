@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/go-redis/redis/extra/rediscmd"
 	"github.com/go-redis/redis/v8"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -91,7 +91,7 @@ func (th tracingHook) AfterProcessPipeline(ctx context.Context, cmds []redis.Cmd
 func observeDuration(ctx context.Context, cmd string, err error) {
 	start, ok := ctx.Value(duration{}).(time.Time)
 	if !ok {
-		log.FromContext(ctx).Error("failed to type assert to time")
+		slog.ErrorCtx(ctx, "failed to type assert to time")
 		return
 	}
 	dur := time.Since(start)

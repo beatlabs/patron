@@ -8,7 +8,7 @@ import (
 	"github.com/beatlabs/patron"
 	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/beatlabs/patron/component/http/v2/router/httprouter"
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 func createHttpRouter() (patron.Component, error) {
@@ -17,11 +17,11 @@ func createHttpRouter() (patron.Component, error) {
 		if err != nil {
 			msg := "failed to read body"
 			http.Error(rw, msg, http.StatusBadRequest)
-			log.FromContext(req.Context()).Error(msg)
+			slog.ErrorCtx(req.Context(), msg)
 			return
 		}
 
-		log.FromContext(req.Context()).Infof("HTTP request received: %s", string(body))
+		slog.InfoCtx(req.Context(), "HTTP request received: %s", string(body))
 		rw.WriteHeader(http.StatusOK)
 	}
 

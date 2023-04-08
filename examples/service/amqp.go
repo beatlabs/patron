@@ -7,8 +7,8 @@ import (
 	"github.com/beatlabs/patron"
 	patronamqp "github.com/beatlabs/patron/component/amqp"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
 	"github.com/streadway/amqp"
+	"golang.org/x/exp/slog"
 )
 
 func createAMQPConsumer() (patron.Component, error) {
@@ -21,9 +21,9 @@ func createAMQPConsumer() (patron.Component, error) {
 		for _, msg := range batch.Messages() {
 			err := msg.ACK()
 			if err != nil {
-				log.FromContext(msg.Context()).Infof("amqp message %s received but ack failed: %v", msg.ID(), err)
+				slog.InfoCtx(msg.Context(), "amqp message %s received but ack failed: %v", msg.ID(), err)
 			}
-			log.FromContext(msg.Context()).Infof("amqp message %s received and acked", msg.ID())
+			slog.InfoCtx(msg.Context(), "amqp message %s received and acked", msg.ID())
 		}
 	}
 

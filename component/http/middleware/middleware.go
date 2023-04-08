@@ -561,15 +561,9 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 		remoteAddr = remoteAddr[:i]
 	}
 
-	info := map[string]interface{}{
-		correlation.ID:   corID,
-		"method":         r.Method,
-		"url":            r.URL,
-		"status":         w.Status(),
-		"remote-address": remoteAddr,
-		"proto":          r.Proto,
-	}
-	log.FromContext(r.Context()).Sub(info).Debug("request log")
+	slog.LogAttrs(r.Context(), slog.LevelDebug, "request log", slog.String(correlation.ID, corID),
+		slog.String("method", r.Method), slog.String("url", r.URL.String()), slog.Int("status", w.Status()),
+		slog.String("remote-address", remoteAddr), slog.String("proto", r.Proto))
 }
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {

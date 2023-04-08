@@ -3,7 +3,7 @@ package v2
 import (
 	"net/http"
 
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 // AliveStatus type representing the liveness of the service via HTTP component.
@@ -46,7 +46,7 @@ func LivenessCheckRoute(acf LivenessCheckFunc) (*Route, error) {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		default:
 			w.WriteHeader(http.StatusServiceUnavailable)
-			log.FromContext(r.Context()).Errorf("wrong live check status returned: %d", val)
+			slog.ErrorCtx(r.Context(), "wrong live check status returned: %d", val)
 		}
 	}
 
@@ -64,7 +64,7 @@ func ReadyCheckRoute(rcf ReadyCheckFunc) (*Route, error) {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		default:
 			w.WriteHeader(http.StatusServiceUnavailable)
-			log.FromContext(r.Context()).Errorf("wrong ready check status returned: %d", val)
+			slog.ErrorCtx(r.Context(), "wrong ready check status returned: %d", val)
 		}
 	}
 

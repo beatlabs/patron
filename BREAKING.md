@@ -9,6 +9,7 @@ The `middleware` package functions now return an `error` in case the input valid
 The `WithRateLimiting` function  in `http/v2` package now returns an `error` in case the input validation fails.
 
 The `WithAppNameHeaders` helper function  in `httprouter` package now returns an error in case the input validation fails.
+
 ## v0.75.0
 
 The `cache` package has introduced the `context.Context` as the first argument in each method and removed it from the constructors.
@@ -30,13 +31,13 @@ Types, github.com/beatlabs/patron.Builder and  github.com/beatlabs/patron.Option
 ```go
 svc, err := patron.New(name, version)
 if err != nil {
-    log.Fatalf("failed to create patron service due to : %s", err)
+    ...
 }
 
 ctx := context.Background()
 err = svc.WithComponents(ampq,grpc).Run(ctx)
 if err != nil {
-    log.Fatalf("failed to run service %s", err)
+    ...
 }
 ```
 
@@ -45,13 +46,13 @@ if err != nil {
 ```go
 svc, err := patron.New(name, version, patron.WithComponents(amqp,grpc))
 if err != nil {
-    log.Fatalf("failed to create patron service due to : %s", err)
+    ...
 }
 
 ctx := context.Background()
 err = svc.Run(ctx)
 if err != nil {
-    log.Fatalf("failed to run service %s", err)
+    ...
 }
 
 ```
@@ -63,13 +64,13 @@ if err != nil {
 ```go
 svc, err := patron.New(name, version)
 if err != nil {
-    log.Fatalf("failed to create patron service due to : %s", err)
+    ...
 }
 
 ctx := context.Background()
 err = svc.WithSIGHUP(sighup).Run(ctx)
 if err != nil {
-    log.Fatalf("failed to run service %s", err)
+    ...
 }
 ```
 
@@ -78,13 +79,13 @@ if err != nil {
 ```go
 svc, err := patron.New(name, version, patron.WithSIGHUP(sighup))
 if err != nil {
-    log.Fatalf("failed to create patron service due to : %s", err)
+    ...
 }
 
 ctx := context.Background()
 err = svc.Run(ctx)
 if err != nil {
-    log.Fatalf("failed to run service %s", err)
+    ...
 }
 
 ```
@@ -96,13 +97,13 @@ if err != nil {
 ```go
 svc, err := patron.New(name, version)
 if err != nil {
-    log.Fatalf("failed to create patron service due to : %s", err)
+    ...
 }
 
 ctx := context.Background()
 err = svc.WithRouter(router).Run(ctx)
 if err != nil {
-    log.Fatalf("failed to run service %s", err)
+    ...
 }
 ```
 
@@ -111,13 +112,13 @@ if err != nil {
 ```go
 svc, err := patron.New(name, version, patron.WithRouter(router))
 if err != nil {
-    log.Fatalf("failed to create patron service due to : %s", err)
+    ...
 }
 
 ctx := context.Background()
 err = svc.Run(ctx)
 if err != nil {
-    log.Fatalf("failed to run service %s", err)
+    ...
 }
 
 ```
@@ -143,12 +144,12 @@ func main(){
  port := 5000
  builder,err := grpc.WithOptions(grpc.ConnectionTimeout(1*time.Second)).WithReflection().New(port)
  if err != nil{
-  log.Fatalf("failed to create new grpc builder due: %s",err)
+  ...
  }
 
  comp,err := builder.Create()
  if err != nil{
-  log.Fatalf("failed to create grpc component due: %s",err)
+  ...
  }
 }
 ```
@@ -169,7 +170,7 @@ func main(){
  port := 5000
  comp,err := patrongrpc.New(port, patrongrpc.WithServerOptions(grpc.ConnectionTimeout(1*time.Second)),patrongrpc.WithReflection())
  if err != nil{
-  log.Fatalf("failed to create new grpc component due: %s",err)
+  ...
  }
 }
 ```

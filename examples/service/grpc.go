@@ -9,7 +9,7 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/grpc"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 type greeterServer struct {
@@ -17,7 +17,7 @@ type greeterServer struct {
 }
 
 func (gs *greeterServer) SayHello(ctx context.Context, req *examples.HelloRequest) (*examples.HelloReply, error) {
-	log.FromContext(ctx).Infof("gRPC request received: %v", req.String())
+	slog.InfoCtx(ctx, "gRPC request received: %v", req.String())
 
 	return &examples.HelloReply{Message: fmt.Sprintf("Hello, %s %s!", req.GetFirstname(), req.GetLastname())}, nil
 }

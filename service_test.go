@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/beatlabs/patron/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slog"
 )
 
 func TestNew(t *testing.T) {
@@ -16,15 +16,15 @@ func TestNew(t *testing.T) {
 
 	tests := map[string]struct {
 		name              string
-		fields            map[string]interface{}
+		fields            []slog.Attr
 		sighupHandler     func()
 		uncompressedPaths []string
 		wantErr           string
 	}{
 		"success": {
 			name:              "name",
-			fields:            map[string]interface{}{"env": "dev"},
-			sighupHandler:     func() { log.Info("WithSIGHUP received: nothing setup") },
+			fields:            []slog.Attr{slog.String("env", "dev")},
+			sighupHandler:     func() { slog.Info("WithSIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
 			wantErr:           "",
 		},

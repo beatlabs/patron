@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -52,13 +53,14 @@ func init() {
 }
 
 type observer struct {
-	typ     string
-	corID   string
-	service string
-	method  string
-	sp      opentracing.Span
-	ctx     context.Context
-	started time.Time
+	typ      string
+	corID    string
+	service  string
+	method   string
+	sp       opentracing.Span
+	ctx      context.Context
+	started  time.Time
+	logAttrs []slog.Attr
 }
 
 func newObserver(ctx context.Context, typ, fullMethodName string) *observer {
@@ -67,17 +69,26 @@ func newObserver(ctx context.Context, typ, fullMethodName string) *observer {
 
 	sp, ctx := grpcSpan(ctx, fullMethodName, corID, md)
 
-	ctx = log.WithContext(ctx, log.Sub(map[string]interface{}{correlation.ID: corID}))
+	ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
 
 	svc, meth := splitMethodName(fullMethodName)
+
+	attrs := []slog.Attr{
+		slog.String("server-type", "grpc"),
+		slog.String(service, svc),
+		slog.String(method, meth),
+		slog.String(correlation.ID, corID),
+	}
+
 	return &observer{
-		typ:     typ,
-		corID:   corID,
-		ctx:     ctx,
-		method:  meth,
-		service: svc,
-		sp:      sp,
-		started: time.Now(),
+		typ:      typ,
+		corID:    corID,
+		ctx:      ctx,
+		method:   meth,
+		service:  svc,
+		sp:       sp,
+		started:  time.Now(),
+		logAttrs: attrs,
 	}
 }
 
@@ -90,23 +101,16 @@ func (o *observer) observe(err error) {
 }
 
 func (o *observer) log(err error) {
-	if !log.Enabled(log.ErrorLevel) {
+	if !log.Enabled(slog.LevelError) {
 		return
 	}
 
-	fields := map[string]interface{}{
-		"server-type":  "grpc",
-		service:        o.service,
-		method:         o.method,
-		correlation.ID: o.corID,
-	}
 	if err != nil {
-		fields["error"] = err.Error()
-		log.Sub(fields).Error()
+		slog.LogAttrs(context.Background(), slog.LevelError, err.Error(), o.logAttrs...)
 		return
 	}
 
-	log.Sub(fields).Debug()
+	slog.LogAttrs(context.Background(), slog.LevelDebug, "", o.logAttrs...)
 }
 
 func (o *observer) messageHandled(err error) {

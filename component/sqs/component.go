@@ -17,6 +17,7 @@ import (
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -199,7 +200,7 @@ func (c *Component) Run(ctx context.Context) error {
 		case <-tickerStats.C:
 			err := c.report(ctx, c.api, c.queue.url)
 			if err != nil {
-				log.FromContext(ctx).Errorf("failed to report sqsAPI stats: %v", err)
+				log.FromContext(ctx).Error("failed to report sqsAPI stats: %v", err)
 			}
 		}
 	}
@@ -214,7 +215,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 		if ctx.Err() != nil {
 			return
 		}
-		logger.Debugf("consume: polling SQS sqsAPI %s for %d messages", c.queue.name, c.cfg.maxMessages)
+		logger.Debug("consume: polling SQS sqsAPI %s for %d messages", c.queue.name, c.cfg.maxMessages)
 		output, err := c.api.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 			QueueUrl:            &c.queue.url,
 			MaxNumberOfMessages: c.cfg.maxMessages,
@@ -228,7 +229,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			},
 		})
 		if err != nil {
-			logger.Errorf("failed to receive messages: %v, sleeping for %v", err, c.retry.wait)
+			logger.Error("failed to receive messages: %v, sleeping for %v", err, c.retry.wait)
 			time.Sleep(c.retry.wait)
 			retries--
 			if retries > 0 {
@@ -243,7 +244,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			return
 		}
 
-		logger.Debugf("consume: received %d messages", len(output.Messages))
+		logger.Debug("consume: received %d messages", len(output.Messages))
 		messageCountInc(c.queue.name, fetchedMessageState, false, len(output.Messages))
 
 		if len(output.Messages) == 0 {
@@ -273,8 +274,7 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 			consumerComponent, corID, mapHeader(msg.MessageAttributes))
 
 		ctxCh = correlation.ContextWithID(ctxCh, corID)
-		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
-		ctxCh = log.WithContext(ctxCh, logger)
+		ctxCh = log.WithContext(ctxCh, slog.With(slog.String(correlation.ID, corID)))
 
 		btc.messages = append(btc.messages, message{
 			ctx:   ctxCh,
@@ -289,7 +289,7 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 }
 
 func (c *Component) report(ctx context.Context, sqsAPI API, queueURL string) error {
-	log.Debugf("retrieve stats for SQS %s", c.queue.name)
+	slog.Debug("retrieve stats for SQS %s", c.queue.name)
 	rsp, err := sqsAPI.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 		AttributeNames: []types.QueueAttributeName{
 			sqsAttributeApproximateNumberOfMessages,

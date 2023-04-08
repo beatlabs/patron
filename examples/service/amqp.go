@@ -21,9 +21,9 @@ func createAMQPConsumer() (patron.Component, error) {
 		for _, msg := range batch.Messages() {
 			err := msg.ACK()
 			if err != nil {
-				log.FromContext(msg.Context()).Infof("amqp message %s received but ack failed: %v", msg.ID(), err)
+				log.FromContext(msg.Context()).Info("amqp message %s received but ack failed: %v", msg.ID(), err)
 			}
-			log.FromContext(msg.Context()).Infof("amqp message %s received and acked", msg.ID())
+			log.FromContext(msg.Context()).Info("amqp message %s received and acked", msg.ID())
 		}
 	}
 

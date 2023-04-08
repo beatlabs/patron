@@ -16,6 +16,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/streadway/amqp"
+	"golang.org/x/exp/slog"
 )
 
 type messageState string
@@ -173,7 +174,7 @@ func (c *Component) Run(ctx context.Context) error {
 	for count > 0 {
 		sub, err := c.subscribe()
 		if err != nil {
-			log.Warnf("failed to subscribe to queue: %v, waiting for %v to reconnect", err, c.retryCfg.delay)
+			slog.Warn("failed to subscribe to queue: %v, waiting for %v to reconnect", err, c.retryCfg.delay)
 			time.Sleep(c.retryCfg.delay)
 			count--
 			continue
@@ -185,7 +186,7 @@ func (c *Component) Run(ctx context.Context) error {
 			closeSubscription(sub)
 			return nil
 		}
-		log.Warnf("process loop failure: %v, waiting for %v to reconnect", err, c.retryCfg.delay)
+		slog.Warn("process loop failure: %v, waiting for %v to reconnect", err, c.retryCfg.delay)
 		time.Sleep(c.retryCfg.delay)
 		count--
 		closeSubscription(sub)
@@ -196,9 +197,9 @@ func (c *Component) Run(ctx context.Context) error {
 func closeSubscription(sub subscription) {
 	err := sub.close()
 	if err != nil {
-		log.Errorf("failed to close amqp channel/connection: %v", err)
+		slog.Error("failed to close amqp channel/connection: %v", err)
 	}
-	log.Debug("amqp subscription closed")
+	slog.Debug("amqp subscription closed")
 }
 
 func (c *Component) processLoop(ctx context.Context, sub subscription) error {
@@ -212,22 +213,22 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Info("context cancellation received. exiting...")
+			slog.Info("context cancellation received. exiting...")
 			return ctx.Err()
 		case delivery, ok := <-sub.deliveries:
 			if !ok {
 				return errors.New("subscription channel closed")
 			}
-			log.Debugf("processing message %d", delivery.DeliveryTag)
+			slog.Debug("processing message %d", delivery.DeliveryTag)
 			observeReceivedMessageStats(c.queueCfg.queue, delivery.Timestamp)
 			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
-			log.Debugf("batch timeout expired, sending batch")
+			slog.Debug("batch timeout expired, sending batch")
 			c.sendBatch(ctx, btc)
 		case <-tickerStats.C:
 			err := c.stats(sub)
 			if err != nil {
-				log.Errorf("failed to report sqsAPI stats: %v", err)
+				slog.Error("failed to report sqsAPI stats: %v", err)
 			}
 		}
 	}
@@ -274,7 +275,7 @@ func (c *Component) subscribe() (subscription, error) {
 	sub.channel = ch
 
 	tag := uuid.New().String()
-	log.Debugf("consuming messages for tag %s", tag)
+	slog.Debug("consuming messages for tag %s", tag)
 
 	deliveries, err := ch.Consume(c.queueCfg.queue, tag, false, false, false, false, nil)
 	if err != nil {
@@ -291,7 +292,7 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 		consumerComponent, corID, mapHeader(delivery.Headers), c.traceTag)
 
 	ctxMsg = correlation.ContextWithID(ctxMsg, corID)
-	ctxMsg = log.WithContext(ctxMsg, log.Sub(map[string]interface{}{correlation.ID: corID}))
+	ctxMsg = log.WithContext(ctxMsg, slog.With(slog.String(correlation.ID, corID)))
 
 	return &message{
 		ctx:     ctxMsg,

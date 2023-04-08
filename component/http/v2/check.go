@@ -46,7 +46,7 @@ func LivenessCheckRoute(acf LivenessCheckFunc) (*Route, error) {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		default:
 			w.WriteHeader(http.StatusServiceUnavailable)
-			log.FromContext(r.Context()).Errorf("wrong live check status returned: %d", val)
+			log.FromContext(r.Context()).Error("wrong live check status returned: %d", val)
 		}
 	}
 
@@ -64,7 +64,7 @@ func ReadyCheckRoute(rcf ReadyCheckFunc) (*Route, error) {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		default:
 			w.WriteHeader(http.StatusServiceUnavailable)
-			log.FromContext(r.Context()).Errorf("wrong ready check status returned: %d", val)
+			log.FromContext(r.Context()).Error("wrong ready check status returned: %d", val)
 		}
 	}
 

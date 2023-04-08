@@ -5,31 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/log/std"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(m *testing.M) {
-	err := log.Setup(std.New(os.Stderr, log.DebugLevel, make(map[string]interface{})))
-	if err != nil {
-		os.Exit(1)
-	}
-
-	exitVal := m.Run()
-
-	os.Exit(exitVal)
-}
-
 func TestExtractCacheHeaders(t *testing.T) {
-	type caheRequestCondition struct {
+	type cacheRequestCondition struct {
 		noCache         bool
 		forceCache      bool
 		validators      int
@@ -37,7 +23,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 	}
 
 	type args struct {
-		cfg     caheRequestCondition
+		cfg     cacheRequestCondition
 		headers map[string]string
 		wrn     string
 	}
@@ -48,7 +34,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 	params := []args{
 		{
 			headers: map[string]string{HeaderCacheControl: "max-age=10"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,
@@ -58,7 +44,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// Header cannot be parsed
 		{
 			headers: map[string]string{HeaderCacheControl: "maxage=10"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 			},
@@ -67,7 +53,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// Header resets to minAge
 		{
 			headers: map[string]string{HeaderCacheControl: "max-age=twenty"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,
@@ -77,7 +63,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// Header resets to maxFresh e.g. maxAge - minAge
 		{
 			headers: map[string]string{HeaderCacheControl: "min-fresh=10"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,
@@ -87,7 +73,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// no Warning e.g. headers are within allowed values
 		{
 			headers: map[string]string{HeaderCacheControl: "min-fresh=5,max-age=5"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 2,
@@ -97,7 +83,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		// cache headers reset to min-age, note we still cache but send a Warning Header back
 		{
 			headers: map[string]string{HeaderCacheControl: "no-cache"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,
@@ -106,7 +92,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		},
 		{
 			headers: map[string]string{HeaderCacheControl: "no-store"},
-			cfg: caheRequestCondition{
+			cfg: cacheRequestCondition{
 				noCache:    false,
 				forceCache: false,
 				validators: 1,

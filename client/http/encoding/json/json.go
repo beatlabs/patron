@@ -47,7 +47,7 @@ func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) 
 	defer func() {
 		err := rsp.Body.Close()
 		if err != nil {
-			log.FromContext(ctx).Errorf("failed to close response body: %v", err)
+			log.FromContext(ctx).Error("failed to close response body: %v", err)
 		}
 	}()
 

@@ -21,7 +21,7 @@ func createKafkaConsumer() (patron.Component, error) {
 
 	process := func(batch kafka.Batch) error {
 		for _, msg := range batch.Messages() {
-			log.FromContext(msg.Context()).Infof("kafka message received: %s", string(msg.Message().Value))
+			log.FromContext(msg.Context()).Info("kafka message received: %s", string(msg.Message().Value))
 		}
 		return nil
 	}

@@ -27,6 +27,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	tracinglog "github.com/opentracing/opentracing-go/log"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 	"golang.org/x/time/rate"
 )
 
@@ -115,7 +116,7 @@ func NewRecovery() Func {
 						err = errors.New("unknown panic")
 					}
 					_ = err
-					log.Errorf("recovering from an error: %v: %s", err, string(debug.Stack()))
+					slog.Error("recovering from an error: %v: %s", err, string(debug.Stack()))
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				}
 			}()
@@ -177,8 +178,8 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) (F
 			next.ServeHTTP(lw, r)
 			finishSpan(sp, lw.Status(), &lw.responsePayload)
 			logRequestResponse(corID, lw, r)
-			if log.Enabled(log.ErrorLevel) && statusCodeLogger.shouldLog(lw.status) {
-				log.FromContext(r.Context()).Errorf("%s %d error: %v", path, lw.status, lw.responsePayload.String())
+			if log.Enabled(slog.LevelError) && statusCodeLogger.shouldLog(lw.status) {
+				log.FromContext(r.Context()).Error("%s %d error: %v", path, lw.status, lw.responsePayload.String())
 			}
 		})
 	}, nil
@@ -190,8 +191,7 @@ func NewInjectObservability() Func {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			corID := getOrSetCorrelationID(r.Header)
 			ctx := correlation.ContextWithID(r.Context(), corID)
-			logger := log.Sub(map[string]interface{}{correlation.ID: corID})
-			ctx = log.WithContext(ctx, logger)
+			ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -285,7 +285,7 @@ func NewRateLimiting(limiter *rate.Limiter) (Func, error) {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !limiter.Allow() {
-				log.Debug("Limiting requests...")
+				slog.Debug("Limiting requests...")
 				http.Error(w, "Requests greater than limit", http.StatusTooManyRequests)
 				return
 			}
@@ -395,7 +395,7 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
 			hdr := r.Header.Get(encoding.AcceptEncodingHeader)
 			selectedEncoding, err := parseAcceptEncoding(hdr)
 			if err != nil {
-				log.Debugf("encoding %q is not supported in compression middleware, "+
+				slog.Debug("encoding %q is not supported in compression middleware, "+
 					"and client doesn't accept anything else", hdr)
 				http.Error(w, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
 				return
@@ -408,9 +408,9 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
 				if err != nil {
 					msgErr := fmt.Sprintf("error in deferred call to Close() method on %v compression middleware : %v", hdr, err.Error())
 					if isErrConnectionReset(err) {
-						log.Info(msgErr)
+						slog.Info(msgErr)
 					} else {
-						log.Error(msgErr)
+						slog.Error(msgErr)
 					}
 				}
 			}(dw)
@@ -535,7 +535,7 @@ func NewCaching(rc *cache.RouteCache) (Func, error) {
 			}
 			err := cache.Handler(w, r, rc, next)
 			if err != nil {
-				log.Errorf("error encountered in the caching middleware: %v", err)
+				slog.Error("error encountered in the caching middleware: %v", err)
 				return
 			}
 		})
@@ -551,7 +551,7 @@ func Chain(f http.Handler, mm ...Func) http.Handler {
 }
 
 func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
-	if !log.Enabled(log.DebugLevel) {
+	if !log.Enabled(slog.LevelDebug) {
 		return
 	}
 
@@ -560,26 +560,27 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 		remoteAddr = remoteAddr[:i]
 	}
 
-	info := map[string]interface{}{
-		correlation.ID:   corID,
-		"method":         r.Method,
-		"url":            r.URL,
-		"status":         w.Status(),
-		"remote-address": remoteAddr,
-		"proto":          r.Proto,
+	attrs := []slog.Attr{
+		slog.String(correlation.ID, corID),
+		slog.String("method", r.Method),
+		slog.String("url", r.URL.String()),
+		slog.Int("status", w.Status()),
+		slog.String("remote-address", remoteAddr),
+		slog.String("proto", r.Proto),
 	}
-	log.FromContext(r.Context()).Sub(info).Debug("request log")
+
+	log.FromContext(r.Context()).LogAttrs(r.Context(), slog.LevelDebug, "request log", attrs...)
 }
 
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
 	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
 	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		log.Errorf("failed to extract HTTP span: %v", err)
+		slog.Error("failed to extract HTTP span: %v", err)
 	}
 
 	strippedPath, err := stripQueryString(path)
 	if err != nil {
-		log.Warnf("unable to strip query string %q: %v", path, err)
+		slog.Warn("unable to strip query string %q: %v", path, err)
 		strippedPath = path
 	}
 

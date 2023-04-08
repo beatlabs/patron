@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 // RouteCache is the builder needed to build a cache for the corresponding route.
@@ -33,7 +33,7 @@ func NewRouteCache(ttlCache cache.TTLCache, age Age) (*RouteCache, []error) {
 	}
 
 	if hasNoAgeConfig(age.Min.Milliseconds(), age.Max.Milliseconds()) {
-		log.Warnf("route cache disabled because of empty Age property %v", age)
+		slog.Warn("route cache disabled because of empty Age property %v", age)
 	}
 
 	return &RouteCache{

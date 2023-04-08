@@ -67,7 +67,7 @@ func (p Publisher) Publish(ctx context.Context, input *sns.PublishInput) (messag
 	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, tracingTarget(input)), publisherComponent, ext.SpanKindProducer)
 
 	if err := injectHeaders(span, input); err != nil {
-		log.FromContext(ctx).Warnf("failed to inject tracing header: %v", err)
+		log.FromContext(ctx).Warn("failed to inject tracing header: %v", err)
 	}
 
 	start := time.Now()

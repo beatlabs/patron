@@ -17,9 +17,9 @@ func createSQSConsumer() (patron.Component, error) {
 		for _, msg := range btc.Messages() {
 			err := msg.ACK()
 			if err != nil {
-				log.FromContext(msg.Context()).Infof("AWS SQS message %s received but ack failed: %v", msg.ID(), err)
+				log.FromContext(msg.Context()).Info("AWS SQS message %s received but ack failed: %v", msg.ID(), err)
 			}
-			log.FromContext(msg.Context()).Infof("AWS SQS message %s received and acked", msg.ID())
+			log.FromContext(msg.Context()).Info("AWS SQS message %s received and acked", msg.ID())
 		}
 	}
 

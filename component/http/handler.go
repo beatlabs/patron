@@ -11,6 +11,7 @@ import (
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
+	"golang.org/x/exp/slog"
 )
 
 func handler(hnd ProcessorFunc) http.HandlerFunc {
@@ -32,7 +33,7 @@ func handler(hnd ProcessorFunc) http.HandlerFunc {
 		// if it was missing from the initial request
 		corID := getOrSetCorrelationID(r.Header)
 		ctx := correlation.ContextWithID(r.Context(), corID)
-		logger := log.Sub(map[string]interface{}{correlation.ID: corID})
+		logger := slog.With(slog.String(correlation.ID, corID))
 		ctx = log.WithContext(ctx, logger)
 
 		h := extractHeaders(r.Header)
@@ -201,7 +202,7 @@ func handleSuccess(w http.ResponseWriter, r *http.Request, rsp *Response, enc en
 	return err
 }
 
-func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
+func handleError(logger *slog.Logger, w http.ResponseWriter, enc encoding.EncodeFunc, err error) {
 	var errAs *Error
 	if errors.As(err, &errAs) {
 		p, encErr := enc(errAs.payload)
@@ -214,7 +215,7 @@ func handleError(logger log.Logger, w http.ResponseWriter, enc encoding.EncodeFu
 		}
 		w.WriteHeader(errAs.code)
 		if _, err := w.Write(p); err != nil {
-			logger.Errorf("failed to write Response: %v", err)
+			logger.Error("failed to write Response: %v", err)
 		}
 		return
 	}

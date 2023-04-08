@@ -22,6 +22,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/streadway/amqp"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -189,10 +190,10 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info("canceling consuming messages requested")
+				slog.Info("canceling consuming messages requested")
 				return
 			case d := <-deliveries:
-				log.Debugf("processing message %d", d.DeliveryTag)
+				slog.Debug("processing message %d", d.DeliveryTag)
 				corID := getCorrelationID(d.Headers)
 
 				sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queue),
@@ -210,7 +211,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				}
 
 				ctxCh = correlation.ContextWithID(ctxCh, corID)
-				ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{correlation.ID: corID}))
+				ctxCh = log.WithContext(ctxCh, slog.With(slog.String(correlation.ID, corID)))
 
 				chMsg <- &message{
 					ctx:     ctxCh,
@@ -261,7 +262,7 @@ func (c *consumer) consume() (<-chan amqp.Delivery, error) {
 	c.ch = ch
 
 	c.tag = uuid.New().String()
-	log.Debugf("consuming messages for tag %s", c.tag)
+	slog.Debug("consuming messages for tag %s", c.tag)
 
 	err = ch.ExchangeDeclare(c.exchange.name, c.exchange.kind, true, false, false, false, nil)
 	if err != nil {

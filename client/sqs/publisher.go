@@ -62,7 +62,7 @@ func (p Publisher) Publish(ctx context.Context, msg *sqs.SendMessageInput) (mess
 	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, *msg.QueueUrl), publisherComponent, ext.SpanKindProducer)
 
 	if err := injectHeaders(ctx, span, msg); err != nil {
-		log.FromContext(ctx).Errorf("failed to inject trace headers: %v", err)
+		log.FromContext(ctx).Error("failed to inject trace headers: %v", err)
 	}
 
 	start := time.Now()

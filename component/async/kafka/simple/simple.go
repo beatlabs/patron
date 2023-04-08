@@ -12,7 +12,7 @@ import (
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/internal/validation"
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 // unixNanoToTimestampDivider divides unix nano seconds to valid timestamp for kafka messages.
@@ -166,7 +166,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	chMsg := make(chan async.Message, c.config.Buffer)
 	chErr := make(chan error, c.config.Buffer)
 
-	log.Debugf("consuming messages from topic '%s' without using consumer group", c.topic)
+	slog.Debug("consuming messages from topic '%s' without using consumer group", c.topic)
 	var pcs []sarama.PartitionConsumer
 
 	pcs, err := c.partitions(ctx)
@@ -209,7 +209,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 			for {
 				select {
 				case <-ctx.Done():
-					log.Info("canceling consuming messages requested")
+					slog.Info("canceling consuming messages requested")
 					closePartitionConsumer(consumer)
 					return
 				case consumerError := <-consumer.Errors():
@@ -426,6 +426,6 @@ func closePartitionConsumer(cns sarama.PartitionConsumer) {
 	}
 	err := cns.Close()
 	if err != nil {
-		log.Errorf("failed to close partition consumer: %v", err)
+		slog.Error("failed to close partition consumer: %v", err)
 	}
 }

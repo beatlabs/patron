@@ -13,10 +13,10 @@ import (
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/encoding/protobuf"
-	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slog"
 )
 
 func Test_extractFields(t *testing.T) {
@@ -196,7 +196,7 @@ func Test_handleError(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			rsp := httptest.NewRecorder()
-			handleError(log.Sub(nil), rsp, tt.args.enc, tt.args.err)
+			handleError(slog.With(), rsp, tt.args.enc, tt.args.err)
 			assert.Equal(t, tt.expectedCode, rsp.Code)
 			for k, v := range tt.expectedHeaders {
 				assert.Equal(t, v, rsp.Header().Get(k))

@@ -4,8 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/log/std"
+	"golang.org/x/exp/slog"
 )
 
 type OptionFunc func(svc *Service) error
@@ -17,7 +16,7 @@ func WithSIGHUP(handler func()) OptionFunc {
 			return errors.New("provided WithSIGHUP handler was nil")
 		}
 
-		log.Debug("setting WithSIGHUP handler func")
+		slog.Debug("setting WithSIGHUP handler func")
 		svc.sighupHandler = handler
 
 		return nil
@@ -25,14 +24,16 @@ func WithSIGHUP(handler func()) OptionFunc {
 }
 
 // WithLogFields options to pass in additional log fields.
-func WithLogFields(fields map[string]interface{}) OptionFunc {
+func WithLogFields(fields []slog.Attr) OptionFunc {
 	return func(svc *Service) error {
-		for k, v := range fields {
-			if k == srv || k == ver || k == host {
+		for _, field := range fields {
+
+			if field.Key == srv || field.Key == ver || field.Key == host {
 				// don't override
 				continue
 			}
-			svc.config.fields[k] = v
+
+			svc.config.fields = append(svc.config.fields, slog.Any(field.Key, field.Value))
 		}
 
 		return nil
@@ -40,10 +41,9 @@ func WithLogFields(fields map[string]interface{}) OptionFunc {
 }
 
 // WithLogger to pass in custom logger.
-func WithLogger(logger log.Logger) OptionFunc {
+func WithLogger(logger *slog.Logger) OptionFunc {
 	return func(svc *Service) error {
 		svc.config.logger = logger
-
 		return nil
 	}
 }
@@ -51,8 +51,7 @@ func WithLogger(logger log.Logger) OptionFunc {
 // WithTextLogger to use Go's standard logger.
 func WithTextLogger() OptionFunc {
 	return func(svc *Service) error {
-		svc.config.logger = std.New(os.Stderr, getLogLevel(), svc.config.fields)
-
+		svc.config.logger = slog.New(slog.NewTextHandler(os.Stderr)).With(svc.config.fields)
 		return nil
 	}
 }

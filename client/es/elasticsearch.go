@@ -105,7 +105,7 @@ type transportClient struct {
 func (c *transportClient) Perform(req *http.Request) (*http.Response, error) {
 	sp, err := c.startSpan(req)
 	if err != nil {
-		log.FromContext(req.Context()).Errorf("failed to start span: %v", err)
+		log.FromContext(req.Context()).Error("failed to start span: %v", err)
 	}
 	start := time.Now()
 	rsp, err := c.client.Perform(req)

@@ -2,25 +2,24 @@ package patron
 
 import (
 	"errors"
-	"os"
 	"testing"
 
-	"github.com/beatlabs/patron/log/std"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slog"
 )
 
 func TestLogFields(t *testing.T) {
 	defaultFields := defaultLogFields("test", "1.0")
-	fields := map[string]interface{}{"key": "value"}
+	fields := []slog.Attr{slog.String("key", "value")}
 	fields1 := defaultLogFields("name1", "version1")
 	type args struct {
-		fields map[string]interface{}
+		fields []slog.Attr
 	}
 	tests := map[string]struct {
 		args args
 		want config
 	}{
-		"success":      {args: args{fields: fields}, want: config{fields: mergeFields(defaultFields, fields)}},
+		"success":      {args: args{fields: fields}, want: config{fields: append(defaultFields, fields...)}},
 		"no overwrite": {args: args{fields: fields1}, want: config{fields: defaultFields}},
 	}
 	for name, tt := range tests {
@@ -40,24 +39,11 @@ func TestLogFields(t *testing.T) {
 	}
 }
 
-func mergeFields(ff1, ff2 map[string]interface{}) map[string]interface{} {
-	ff := map[string]interface{}{}
-	for k, v := range ff1 {
-		ff[k] = v
-	}
-	for k, v := range ff2 {
-		ff[k] = v
-	}
-	return ff
-}
-
 func TestLogger(t *testing.T) {
-	logger := std.New(os.Stderr, getLogLevel(), nil)
 	svc := &Service{}
 
-	err := WithLogger(logger)(svc)
+	err := WithLogger(slog.Default())(svc)
 	assert.NoError(t, err)
-	assert.Equal(t, logger, svc.config.logger)
 }
 
 func TestSIGHUP(t *testing.T) {

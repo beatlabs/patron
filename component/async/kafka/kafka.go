@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -151,14 +152,14 @@ func (m *message) Raw() interface{} {
 
 // ClaimMessage transforms a sarama.ConsumerMessage to an async.Message.
 func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.DecodeRawFunc, sess sarama.ConsumerGroupSession) (async.Message, error) {
-	log.Debugf("data received from topic %s", msg.Topic)
+	slog.Debug("data received from topic %s", msg.Topic)
 
 	corID := getCorrelationID(msg.Headers)
 
 	sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, msg.Topic),
 		consumerComponent, corID, mapHeader(msg.Headers))
 	ctxCh = correlation.ContextWithID(ctxCh, corID)
-	ctxCh = log.WithContext(ctxCh, log.Sub(map[string]interface{}{correlation.ID: corID}))
+	ctxCh = log.WithContext(ctxCh, slog.With(slog.String(correlation.ID, corID)))
 
 	dec, err := determineDecoder(d, msg, sp)
 	if err != nil {

@@ -22,12 +22,12 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/client_model v0.3.0
-	github.com/rs/zerolog v1.29.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.8.2
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.2-0.20210604143007-135cf5605a6d+incompatible
 	go.mongodb.org/mongo-driver v1.11.4
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/time v0.3.0
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
@@ -64,8 +64,6 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/klauspost/compress v1.15.14 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
@@ -81,7 +79,6 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect

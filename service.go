@@ -16,6 +16,7 @@ import (
 	patronzerolog "github.com/beatlabs/patron/log/zerolog"
 	"github.com/beatlabs/patron/trace"
 	"github.com/uber/jaeger-client-go"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -96,7 +97,7 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 	defer func() {
 		err := trace.Close()
 		if err != nil {
-			log.Errorf("failed to close trace %v", err)
+			slog.Error("failed to close trace %v", err)
 		}
 	}()
 	ctx, cnl := context.WithCancel(ctx)
@@ -132,7 +133,7 @@ func (s *Service) waitTermination(chErr <-chan error) error {
 	for {
 		select {
 		case sig := <-s.termSig:
-			log.Infof("signal %s received", sig.String())
+			slog.Info("signal %s received", sig.String())
 
 			switch sig {
 			case syscall.SIGHUP:
@@ -143,7 +144,7 @@ func (s *Service) waitTermination(chErr <-chan error) error {
 			}
 		case err := <-chErr:
 			if err != nil {
-				log.Info("component error received")
+				slog.Info("component error received")
 			}
 			return err
 		}
@@ -219,6 +220,6 @@ func setupJaegerTracing(name, version string) error {
 		}
 	}
 
-	log.Debugf("setting up default tracing %s, %s with param %f", agent, tp, prmVal)
+	slog.Debug("setting up default tracing %s, %s with param %f", agent, tp, prmVal)
 	return trace.Setup(name, version, agent, tp, prmVal, buckets)
 }

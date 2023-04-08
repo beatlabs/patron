@@ -34,7 +34,6 @@ require (
 )
 
 require (
-	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.27 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.21 // indirect
@@ -53,8 +52,6 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
@@ -66,25 +63,32 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
-	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
-	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	go.uber.org/atomic v1.10.0 // indirect
-	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
+	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+require (
+	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
+	github.com/montanaflynn/stats v0.6.6 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
+	go.uber.org/atomic v1.10.0 // indirect
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 )

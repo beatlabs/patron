@@ -6,6 +6,7 @@ import (
 
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/std"
+	"golang.org/x/exp/slog"
 )
 
 type OptionFunc func(svc *Service) error
@@ -17,7 +18,7 @@ func WithSIGHUP(handler func()) OptionFunc {
 			return errors.New("provided WithSIGHUP handler was nil")
 		}
 
-		log.Debug("setting WithSIGHUP handler func")
+		slog.Debug("setting WithSIGHUP handler func")
 		svc.sighupHandler = handler
 
 		return nil

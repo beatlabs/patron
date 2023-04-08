@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-client-go/rpcmetrics"
 	"github.com/uber/jaeger-lib/metrics"
 	"github.com/uber/jaeger-lib/metrics/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -69,7 +69,7 @@ func Setup(name, ver, agent, typ string, prm float64, buckets []float64) error {
 
 // Close the tracer.
 func Close() error {
-	log.Debug("closing tracer")
+	slog.Debug("closing tracer")
 	return cls.Close()
 }
 
@@ -79,7 +79,7 @@ func ConsumerSpan(ctx context.Context, opName, cmp, corID string, hdr map[string
 ) (opentracing.Span, context.Context) {
 	spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.TextMapCarrier(hdr))
 	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		log.Errorf("failed to extract consumer span: %v", err)
+		slog.Error("failed to extract consumer span: %v", err)
 	}
 	sp := opentracing.StartSpan(opName, consumerOption{ctx: spCtx})
 	ext.Component.Set(sp, cmp)

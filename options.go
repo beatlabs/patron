@@ -27,7 +27,6 @@ func WithSIGHUP(handler func()) OptionFunc {
 func WithLogFields(fields []slog.Attr) OptionFunc {
 	return func(svc *Service) error {
 		for _, field := range fields {
-
 			if field.Key == srv || field.Key == ver || field.Key == host {
 				// don't override
 				continue

@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/beatlabs/patron/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slog"
 )
 
 func TestNew(t *testing.T) {
@@ -24,7 +24,7 @@ func TestNew(t *testing.T) {
 		"success": {
 			name:              "name",
 			fields:            map[string]interface{}{"env": "dev"},
-			sighupHandler:     func() { log.Info("WithSIGHUP received: nothing setup") },
+			sighupHandler:     func() { slog.Info("WithSIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
 			wantErr:           "",
 		},

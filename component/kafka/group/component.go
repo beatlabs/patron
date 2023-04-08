@@ -19,6 +19,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -190,15 +191,15 @@ func (c *Component) processing(ctx context.Context) error {
 		client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 		componentError = err
 		if err != nil {
-			log.Errorf("error creating consumer group client for kafka component: %v", err)
+			slog.Error("error creating consumer group client for kafka component: %v", err)
 		}
 
 		if client != nil {
-			log.Debugf("consuming messages from topics '%#v' using group '%s'", c.topics, c.group)
+			slog.Debug("consuming messages from topics '%#v' using group '%s'", c.topics, c.group)
 			for {
 				// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
 				if ctx.Err() != nil {
-					log.Infof("kafka component %s terminating: context cancelled or deadline exceeded", c.name)
+					slog.Info("kafka component %s terminating: context cancelled or deadline exceeded", c.name)
 					return componentError
 				}
 
@@ -208,7 +209,7 @@ func (c *Component) processing(ctx context.Context) error {
 				err := client.Consume(ctx, c.topics, handler)
 				componentError = err
 				if err != nil {
-					log.Errorf("error from kafka consumer: %v", err)
+					slog.Error("error from kafka consumer: %v", err)
 					break
 				}
 
@@ -219,7 +220,7 @@ func (c *Component) processing(ctx context.Context) error {
 
 			err = client.Close()
 			if err != nil {
-				log.Errorf("error closing kafka consumer: %v", err)
+				slog.Error("error closing kafka consumer: %v", err)
 			}
 		}
 
@@ -235,7 +236,7 @@ func (c *Component) processing(ctx context.Context) error {
 				componentError = handler.err
 			}
 
-			log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, componentError)
+			slog.Error("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, componentError)
 			time.Sleep(c.retryWait)
 
 			if i < retries {
@@ -327,7 +328,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		select {
 		case msg, ok := <-claim.Messages():
 			if ok {
-				log.Debugf("message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
+				slog.Debug("message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
 				topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
 				messageStatusCountInc(messageReceived, c.group, msg.Topic)
 				err := c.insertMessage(session, msg)
@@ -335,7 +336,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 					return err
 				}
 			} else {
-				log.Debug("messages channel closed")
+				slog.Debug("messages channel closed")
 				return nil
 			}
 		case <-c.ticker.C:
@@ -347,7 +348,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			}
 		case <-c.ctx.Done():
 			if !errors.Is(c.ctx.Err(), context.Canceled) {
-				log.Infof("closing consumer: %v", c.ctx.Err())
+				slog.Info("closing consumer: %v", c.ctx.Err())
 			}
 			return nil
 		}
@@ -403,7 +404,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 			trace.SpanError(m.Span())
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 		}
-		log.Errorf("could not process message(s)")
+		slog.Error("could not process message(s)")
 		c.err = err
 		return err
 	case kafka.SkipStrategy:
@@ -412,9 +413,9 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
 		}
-		log.Errorf("could not process message(s) so skipping with error: %v", err)
+		slog.Error("could not process message(s) so skipping with error: %v", err)
 	default:
-		log.Errorf("unknown failure strategy executed")
+		slog.Error("unknown failure strategy executed")
 		return fmt.Errorf("unknown failure strategy: %v", c.failStrategy)
 	}
 	return nil
@@ -449,7 +450,7 @@ func getCorrelationID(hh []*sarama.RecordHeader) string {
 			break
 		}
 	}
-	log.Debug("correlation header not found, creating new correlation UUID")
+	slog.Debug("correlation header not found, creating new correlation UUID")
 	return uuid.New().String()
 }
 

@@ -53,7 +53,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		version: version,
 		termSig: make(chan os.Signal, 1),
 		sighupHandler: func() {
-			log.Debug("WithSIGHUP received: nothing setup")
+			slog.Debug("WithSIGHUP received: nothing setup")
 		},
 		config: config{
 			logger: patronzerolog.New(os.Stderr, getLogLevel(), nil),

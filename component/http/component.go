@@ -12,8 +12,8 @@ import (
 
 	"github.com/beatlabs/patron/component/http/middleware"
 	patronErrors "github.com/beatlabs/patron/errors"
-	"github.com/beatlabs/patron/log"
 	"github.com/julienschmidt/httprouter"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -61,7 +61,7 @@ type Component struct {
 // Run starts the HTTP server.
 func (c *Component) Run(ctx context.Context) error {
 	c.Lock()
-	log.Debug("applying tracing to routes")
+	slog.Debug("applying tracing to routes")
 	chFail := make(chan error)
 	srv := c.createHTTPServer()
 	go c.listenAndServe(srv, chFail)
@@ -69,7 +69,7 @@ func (c *Component) Run(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		log.Info("shutting down HTTP component")
+		slog.Info("shutting down HTTP component")
 		tctx, cancel := context.WithTimeout(context.Background(), c.shutdownGracePeriod)
 		defer cancel()
 		return srv.Shutdown(tctx)
@@ -80,16 +80,16 @@ func (c *Component) Run(ctx context.Context) error {
 
 func (c *Component) listenAndServe(srv *http.Server, ch chan<- error) {
 	if c.certFile != "" && c.keyFile != "" {
-		log.Debugf("HTTPS component listening on port %d", c.httpPort)
+		slog.Debug("HTTPS component listening on port %d", c.httpPort)
 		ch <- srv.ListenAndServeTLS(c.certFile, c.keyFile)
 	}
 
-	log.Debugf("HTTP component listening on port %d", c.httpPort)
+	slog.Debug("HTTP component listening on port %d", c.httpPort)
 	ch <- srv.ListenAndServe()
 }
 
 func (c *Component) createHTTPServer() *http.Server {
-	log.Debugf("adding %d routes", len(c.routes))
+	slog.Debug("adding %d routes", len(c.routes))
 	router := httprouter.New()
 	for _, route := range c.routes {
 		if len(route.middlewares) > 0 {
@@ -99,7 +99,7 @@ func (c *Component) createHTTPServer() *http.Server {
 			router.HandlerFunc(route.method, route.path, route.handler)
 		}
 
-		log.Debugf("added route %s %s", route.method, route.path)
+		slog.Debug("added route %s %s", route.method, route.path)
 	}
 	// Add first the recovery middleware to ensure that no panic occur.
 	routerAfterMiddleware := middleware.Chain(router, middleware.NewRecovery())
@@ -119,56 +119,56 @@ func (c *Component) createHTTPServer() *http.Server {
 func port() (int, error) {
 	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
 	if !ok {
-		log.Debugf("using default port %d", defaultPort)
+		slog.Debug("using default port %d", defaultPort)
 		return defaultPort, nil
 	}
 	portVal, err := strconv.ParseInt(port, 10, 32)
 	if err != nil {
 		return 0, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
 	}
-	log.Debugf("using port %d", portVal)
+	slog.Debug("using port %d", portVal)
 	return int(portVal), nil
 }
 
 func readTimeout() (time.Duration, error) {
 	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
 	if !ok {
-		log.Debugf("using default read timeout %s", defaultReadTimeout)
+		slog.Debug("using default read timeout %s", defaultReadTimeout)
 		return defaultReadTimeout, nil
 	}
 	timeout, err := time.ParseDuration(httpTimeout)
 	if err != nil {
 		return 0, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
 	}
-	log.Debugf("using read timeout %s", timeout)
+	slog.Debug("using read timeout %s", timeout)
 	return timeout, nil
 }
 
 func writeTimeout() (time.Duration, error) {
 	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
 	if !ok {
-		log.Debugf("using default write timeout %s", defaultWriteTimeout)
+		slog.Debug("using default write timeout %s", defaultWriteTimeout)
 		return defaultWriteTimeout, nil
 	}
 	timeout, err := time.ParseDuration(httpTimeout)
 	if err != nil {
 		return 0, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
 	}
-	log.Debugf("using write timeout %s", timeout)
+	slog.Debug("using write timeout %s", timeout)
 	return timeout, nil
 }
 
 func deflateLevel() (int, error) {
 	deflateLevel, ok := os.LookupEnv("PATRON_COMPRESSION_DEFLATE_LEVEL")
 	if !ok {
-		log.Debugf("using default deflate level %d", defaultDeflateLevel)
+		slog.Debug("using default deflate level %d", defaultDeflateLevel)
 		return defaultDeflateLevel, nil
 	}
 	deflateLevelInt, err := strconv.Atoi(deflateLevel)
 	if err != nil {
 		return 0, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
 	}
-	log.Debugf("using deflate level %d", deflateLevelInt)
+	slog.Debug("using deflate level %d", deflateLevelInt)
 	return deflateLevelInt, nil
 }
 
@@ -241,7 +241,7 @@ func (cb *Builder) WithSSL(c, k string) *Builder {
 	if c == "" || k == "" {
 		cb.errors = append(cb.errors, errors.New("invalid cert or key provided"))
 	} else {
-		log.Debug("setting cert file and key")
+		slog.Debug("setting cert file and key")
 		cb.certFile = c
 		cb.keyFile = k
 	}
@@ -254,7 +254,7 @@ func (cb *Builder) WithRoutesBuilder(rb *RoutesBuilder) *Builder {
 	if rb == nil {
 		cb.errors = append(cb.errors, errors.New("route builder is nil"))
 	} else {
-		log.Debug("setting route builder")
+		slog.Debug("setting route builder")
 		cb.routesBuilder = rb
 	}
 	return cb
@@ -265,7 +265,7 @@ func (cb *Builder) WithMiddlewares(mm ...middleware.Func) *Builder {
 	if len(mm) == 0 {
 		cb.errors = append(cb.errors, errors.New("empty list of middlewares provided"))
 	} else {
-		log.Debug("setting middlewares")
+		slog.Debug("setting middlewares")
 		cb.middlewares = append(cb.middlewares, mm...)
 	}
 
@@ -277,7 +277,7 @@ func (cb *Builder) WithReadTimeout(rt time.Duration) *Builder {
 	if rt <= 0*time.Second {
 		cb.errors = append(cb.errors, errors.New("negative or zero read timeout provided"))
 	} else {
-		log.Debug("setting read timeout")
+		slog.Debug("setting read timeout")
 		cb.httpReadTimeout = rt
 	}
 
@@ -289,7 +289,7 @@ func (cb *Builder) WithWriteTimeout(wt time.Duration) *Builder {
 	if wt <= 0*time.Second {
 		cb.errors = append(cb.errors, errors.New("negative or zero write timeout provided"))
 	} else {
-		log.Debug("setting write timeout")
+		slog.Debug("setting write timeout")
 		cb.httpWriteTimeout = wt
 	}
 
@@ -330,7 +330,7 @@ func (cb *Builder) WithShutdownGracePeriod(gp time.Duration) *Builder {
 	if gp <= 0*time.Second {
 		cb.errors = append(cb.errors, errors.New("negative or zero shutdown grace period provided"))
 	} else {
-		log.Debug("setting shutdown grace period")
+		slog.Debug("setting shutdown grace period")
 		cb.shutdownGracePeriod = gp
 	}
 
@@ -342,7 +342,7 @@ func (cb *Builder) WithPort(p int) *Builder {
 	if p <= 0 || p > 65535 {
 		cb.errors = append(cb.errors, errors.New("invalid HTTP Port provided"))
 	} else {
-		log.Debug("setting port")
+		slog.Debug("setting port")
 		cb.httpPort = p
 	}
 
@@ -354,7 +354,7 @@ func (cb *Builder) WithAliveCheckFunc(acf AliveCheckFunc) *Builder {
 	if acf == nil {
 		cb.errors = append(cb.errors, errors.New("nil AliveCheckFunc was provided"))
 	} else {
-		log.Debug("setting aliveness check")
+		slog.Debug("setting aliveness check")
 		cb.ac = acf
 	}
 
@@ -366,7 +366,7 @@ func (cb *Builder) WithReadyCheckFunc(rcf ReadyCheckFunc) *Builder {
 	if rcf == nil {
 		cb.errors = append(cb.errors, errors.New("nil ReadyCheckFunc provided"))
 	} else {
-		log.Debug("setting readiness check")
+		slog.Debug("setting readiness check")
 		cb.rc = rcf
 	}
 

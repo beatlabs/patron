@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 type durationClient struct {
@@ -103,7 +104,7 @@ func (d durationClient) offsetBinarySearch(ctx context.Context, topic string, si
 			// the offset might not be accessible anymore.
 			// In this case, we simply log a warning and restrict the interval to the right.
 			if errors.Is(err, &outOfRangeOffsetError{}) {
-				log.Warnf("offset %d on partition %d is out of range: %v", mid, partitionID, err)
+				slog.Warn("offset %d on partition %d is out of range: %v", mid, partitionID, err)
 				left = mid + 1
 				continue
 			}

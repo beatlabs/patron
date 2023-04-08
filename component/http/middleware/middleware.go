@@ -27,6 +27,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	tracinglog "github.com/opentracing/opentracing-go/log"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 	"golang.org/x/time/rate"
 )
 
@@ -115,7 +116,7 @@ func NewRecovery() Func {
 						err = errors.New("unknown panic")
 					}
 					_ = err
-					log.Errorf("recovering from an error: %v: %s", err, string(debug.Stack()))
+					slog.Error("recovering from an error: %v: %s", err, string(debug.Stack()))
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				}
 			}()
@@ -395,7 +396,7 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
 			hdr := r.Header.Get(encoding.AcceptEncodingHeader)
 			selectedEncoding, err := parseAcceptEncoding(hdr)
 			if err != nil {
-				log.Debugf("encoding %q is not supported in compression middleware, "+
+				slog.Debug("encoding %q is not supported in compression middleware, "+
 					"and client doesn't accept anything else", hdr)
 				http.Error(w, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
 				return
@@ -408,9 +409,9 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
 				if err != nil {
 					msgErr := fmt.Sprintf("error in deferred call to Close() method on %v compression middleware : %v", hdr, err.Error())
 					if isErrConnectionReset(err) {
-						log.Info(msgErr)
+						slog.Info(msgErr)
 					} else {
-						log.Error(msgErr)
+						slog.Error(msgErr)
 					}
 				}
 			}(dw)
@@ -535,7 +536,7 @@ func NewCaching(rc *cache.RouteCache) (Func, error) {
 			}
 			err := cache.Handler(w, r, rc, next)
 			if err != nil {
-				log.Errorf("error encountered in the caching middleware: %v", err)
+				slog.Error("error encountered in the caching middleware: %v", err)
 				return
 			}
 		})
@@ -574,12 +575,12 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
 	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
 	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		log.Errorf("failed to extract HTTP span: %v", err)
+		slog.Error("failed to extract HTTP span: %v", err)
 	}
 
 	strippedPath, err := stripQueryString(path)
 	if err != nil {
-		log.Warnf("unable to strip query string %q: %v", path, err)
+		slog.Warn("unable to strip query string %q: %v", path, err)
 		strippedPath = path
 	}
 

@@ -17,6 +17,7 @@ import (
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -289,7 +290,7 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 }
 
 func (c *Component) report(ctx context.Context, sqsAPI API, queueURL string) error {
-	log.Debugf("retrieve stats for SQS %s", c.queue.name)
+	slog.Debug("retrieve stats for SQS %s", c.queue.name)
 	rsp, err := sqsAPI.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 		AttributeNames: []types.QueueAttributeName{
 			sqsAttributeApproximateNumberOfMessages,

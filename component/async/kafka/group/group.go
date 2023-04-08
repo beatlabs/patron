@@ -11,8 +11,8 @@ import (
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/internal/validation"
-	"github.com/beatlabs/patron/log"
 	opentracing "github.com/opentracing/opentracing-go"
+	"golang.org/x/exp/slog"
 )
 
 // Factory definition of a consumer factory.
@@ -115,7 +115,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 		return nil, nil, fmt.Errorf("failed to create consumer: %w", err)
 	}
 	c.cg = cg
-	log.Debugf("consuming messages from topics '%s' using group '%s'", strings.Join(c.topics, ","), c.group)
+	slog.Debug("consuming messages from topics '%s' using group '%s'", strings.Join(c.topics, ","), c.group)
 
 	chMsg := make(chan async.Message, c.config.Buffer)
 	chErr := make(chan error, c.config.Buffer)
@@ -124,7 +124,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info("canceling consuming messages requested")
+				slog.Info("canceling consuming messages requested")
 				closeConsumer(c.cg)
 				return
 			case consumerError := <-c.cg.Errors():
@@ -155,7 +155,7 @@ func closeConsumer(cns sarama.ConsumerGroup) {
 	}
 	err := cns.Close()
 	if err != nil {
-		log.Errorf("failed to close consumer group: %v", err)
+		slog.Error("failed to close consumer group: %v", err)
 	}
 }
 

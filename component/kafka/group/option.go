@@ -7,7 +7,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/component/kafka"
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 // OptionFunc definition for configuring the component in a functional way.
@@ -118,7 +118,7 @@ func WithCommitSync() OptionFunc {
 	return func(c *Component) error {
 		if c.saramaConfig != nil && c.saramaConfig.Consumer.Offsets.AutoCommit.Enable {
 			// redundant commits warning
-			log.Warn("consumer is set to commit offsets after processing each batch and auto-commit is enabled")
+			slog.Warn("consumer is set to commit offsets after processing each batch and auto-commit is enabled")
 		}
 		c.commitSync = true
 		return nil

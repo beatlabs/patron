@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const componentType = "mqtt-publisher"
@@ -51,21 +51,21 @@ func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfi
 		ConnectRetryDelay: 5 * time.Second,
 		ConnectTimeout:    1 * time.Second,
 		OnConnectionUp: func(_ *autopaho.ConnectionManager, conAck *paho.Connack) {
-			log.Infof("connection is up with reason code: %d\n", conAck.ReasonCode)
+			slog.Info("connection is up with reason code: %d\n", conAck.ReasonCode)
 		},
 		OnConnectError: func(err error) {
-			log.Errorf("failed to connect: %v\n", err)
+			slog.Error("failed to connect: %v\n", err)
 		},
 		ClientConfig: paho.ClientConfig{
 			ClientID: clientID,
 			OnServerDisconnect: func(disconnect *paho.Disconnect) {
-				log.Warnf("server disconnect received with reason code: %d\n", disconnect.ReasonCode)
+				slog.Warn("server disconnect received with reason code: %d\n", disconnect.ReasonCode)
 			},
 			OnClientError: func(err error) {
-				log.Errorf("client error occurred: %v\n", err)
+				slog.Error("client error occurred: %v\n", err)
 			},
 			PublishHook: func(publish *paho.Publish) {
-				log.Debugf("message published to topic: %s\n", publish.Topic)
+				slog.Debug("message published to topic: %s\n", publish.Topic)
 			},
 		},
 	}, nil

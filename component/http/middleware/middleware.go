@@ -286,7 +286,7 @@ func NewRateLimiting(limiter *rate.Limiter) (Func, error) {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !limiter.Allow() {
-				log.Debug("Limiting requests...")
+				slog.Debug("Limiting requests...")
 				http.Error(w, "Requests greater than limit", http.StatusTooManyRequests)
 				return
 			}

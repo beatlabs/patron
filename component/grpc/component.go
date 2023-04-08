@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -64,6 +64,6 @@ func (c *Component) Run(ctx context.Context) error {
 		c.srv.GracefulStop()
 	}()
 
-	log.Debugf("gRPC component listening on port %d", c.port)
+	slog.Debug("gRPC component listening on port %d", c.port)
 	return c.srv.Serve(lis)
 }

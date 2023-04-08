@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -11,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slog"
 )
 
 func Test_New(t *testing.T) {
@@ -225,14 +226,16 @@ func ExamplePublisher() {
 		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	api := sqs.NewFromConfig(cfg)
 
 	pub, err := New(api)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	msg := &sqs.SendMessageInput{
@@ -242,7 +245,8 @@ func ExamplePublisher() {
 
 	msgID, err := pub.Publish(context.Background(), msg)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	fmt.Println(msgID)

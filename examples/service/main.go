@@ -6,7 +6,7 @@ import (
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -17,15 +17,18 @@ const (
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
-		log.Fatalf("failed to set log level env var: %v", err)
+		slog.Error("failed to set log level env var: %v", err)
+		os.Exit(1)
 	}
 	err = os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
-		log.Fatalf("failed to set sampler env vars: %v", err)
+		slog.Error("failed to set sampler env vars: %v", err)
+		os.Exit(1)
 	}
 	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", examples.HTTPPort)
 	if err != nil {
-		log.Fatalf("failed to set default patron port env vars: %v", err)
+		slog.Error("failed to set default patron port env vars: %v", err)
+		os.Exit(1)
 	}
 }
 
@@ -34,7 +37,8 @@ func main() {
 
 	service, err := patron.New(name, version, patron.WithTextLogger())
 	if err != nil {
-		log.Fatalf("failed to set up service: %v", err)
+		slog.Error("failed to set up service: %v", err)
+		os.Exit(1)
 	}
 
 	var components []patron.Component
@@ -42,7 +46,8 @@ func main() {
 	// Setup HTTP
 	cmp, err := createHttpRouter()
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	components = append(components, cmp)
@@ -50,7 +55,8 @@ func main() {
 	// Setup gRPC
 	cmp, err = createGrpcServer()
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	components = append(components, cmp)
@@ -58,7 +64,8 @@ func main() {
 	// Setup Kafka
 	cmp, err = createKafkaConsumer()
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	components = append(components, cmp)
@@ -66,7 +73,8 @@ func main() {
 	// Setup SQS
 	cmp, err = createSQSConsumer()
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	components = append(components, cmp)
@@ -74,13 +82,15 @@ func main() {
 	// Setup AMQP
 	cmp, err = createAMQPConsumer()
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	components = append(components, cmp)
 
 	err = service.Run(ctx, components...)
 	if err != nil {
-		log.Fatalf("failed to create and run service %v", err)
+		slog.Error("failed to create and run service %v", err)
+		os.Exit(1)
 	}
 }

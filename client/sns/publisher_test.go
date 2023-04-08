@@ -4,17 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slog"
 )
 
 func Test_New(t *testing.T) {
@@ -120,7 +121,8 @@ func ExamplePublisher() {
 		config.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider("aws-id", "aws-secret", "aws-token"))),
 	)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	api := sns.NewFromConfig(cfg)
@@ -128,7 +130,8 @@ func ExamplePublisher() {
 	// Create the publisher
 	pub, err := New(api)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	input := &sns.PublishInput{
@@ -139,7 +142,8 @@ func ExamplePublisher() {
 	// Publish it
 	msgID, err := pub.Publish(context.Background(), input)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	fmt.Println(msgID)

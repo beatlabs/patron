@@ -3,7 +3,7 @@
 # github.com/Shopify/sarama v1.38.1
 ## explicit; go 1.17
 github.com/Shopify/sarama
-# github.com/aws/aws-sdk-go-v2 v1.17.7
+# github.com/aws/aws-sdk-go-v2 v1.17.8
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2
 github.com/aws/aws-sdk-go-v2/aws
@@ -40,10 +40,10 @@ github.com/aws/aws-sdk-go-v2/credentials/stscreds
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds/internal/config
-# github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.31
+# github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.32
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/internal/configsources
-# github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.25
+# github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.26
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2
 # github.com/aws/aws-sdk-go-v2/internal/ini v1.3.32
@@ -57,7 +57,7 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url
 github.com/aws/aws-sdk-go-v2/service/sns
 github.com/aws/aws-sdk-go-v2/service/sns/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/sns/types
-# github.com/aws/aws-sdk-go-v2/service/sqs v1.20.6
+# github.com/aws/aws-sdk-go-v2/service/sqs v1.20.7
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/service/sqs
 github.com/aws/aws-sdk-go-v2/service/sqs/internal/endpoints

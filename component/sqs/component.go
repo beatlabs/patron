@@ -289,7 +289,7 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 }
 
 func (c *Component) report(ctx context.Context, sqsAPI API, queueURL string) error {
-	slog.Debug("retrieve stats for SQS %s", c.queue.name)
+	slog.Debug("retrieve stats for SQS", slog.String("queue", c.queue.name))
 	rsp, err := sqsAPI.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 		AttributeNames: []types.QueueAttributeName{
 			sqsAttributeApproximateNumberOfMessages,

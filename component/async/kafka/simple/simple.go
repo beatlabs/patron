@@ -166,7 +166,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 	chMsg := make(chan async.Message, c.config.Buffer)
 	chErr := make(chan error, c.config.Buffer)
 
-	slog.Debug("consuming messages from topic '%s' without using consumer group", c.topic)
+	slog.Debug("consuming messages without using consumer group", slog.String("topic", c.topic))
 	var pcs []sarama.PartitionConsumer
 
 	pcs, err := c.partitions(ctx)

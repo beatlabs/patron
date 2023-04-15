@@ -64,6 +64,6 @@ func (c *Component) Run(ctx context.Context) error {
 		c.srv.GracefulStop()
 	}()
 
-	slog.Debug("gRPC component listening on port %d", c.port)
+	slog.Debug("gRPC component listening", slog.Int("port", c.port))
 	return c.srv.Serve(lis)
 }

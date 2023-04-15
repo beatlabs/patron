@@ -174,7 +174,8 @@ func (c *Component) Run(ctx context.Context) error {
 	for count > 0 {
 		sub, err := c.subscribe()
 		if err != nil {
-			slog.Warn("failed to subscribe to queue: %v, waiting for %v to reconnect", err, c.retryCfg.delay)
+			slog.Warn("failed to subscribe to queue, reconnecting", slog.Any("error", err),
+				slog.Duration("retry", c.retryCfg.delay))
 			time.Sleep(c.retryCfg.delay)
 			count--
 			continue
@@ -186,7 +187,7 @@ func (c *Component) Run(ctx context.Context) error {
 			closeSubscription(sub)
 			return nil
 		}
-		slog.Warn("process loop failure: %v, waiting for %v to reconnect", err, c.retryCfg.delay)
+		slog.Warn("process loop failure, reconnecting", slog.Any("error", err), slog.Duration("retry", c.retryCfg.delay))
 		time.Sleep(c.retryCfg.delay)
 		count--
 		closeSubscription(sub)
@@ -197,7 +198,7 @@ func (c *Component) Run(ctx context.Context) error {
 func closeSubscription(sub subscription) {
 	err := sub.close()
 	if err != nil {
-		slog.Error("failed to close amqp channel/connection: %v", err)
+		slog.Error("failed to close amqp channel/connection", slog.Any("error", err))
 	}
 	slog.Debug("amqp subscription closed")
 }
@@ -219,7 +220,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 			if !ok {
 				return errors.New("subscription channel closed")
 			}
-			slog.Debug("processing message %d", delivery.DeliveryTag)
+			slog.Debug("processing message", slog.Int64("tag", int64(delivery.DeliveryTag)))
 			observeReceivedMessageStats(c.queueCfg.queue, delivery.Timestamp)
 			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
@@ -228,7 +229,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 		case <-tickerStats.C:
 			err := c.stats(sub)
 			if err != nil {
-				slog.Error("failed to report sqsAPI stats: %v", err)
+				slog.Error("failed to report sqsAPI stats: %v", slog.Any("error", err))
 			}
 		}
 	}
@@ -275,7 +276,7 @@ func (c *Component) subscribe() (subscription, error) {
 	sub.channel = ch
 
 	tag := uuid.New().String()
-	slog.Debug("consuming messages for tag %s", tag)
+	slog.Debug("consuming messages", slog.String("tag", tag))
 
 	deliveries, err := ch.Consume(c.queueCfg.queue, tag, false, false, false, false, nil)
 	if err != nil {

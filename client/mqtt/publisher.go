@@ -51,21 +51,21 @@ func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfi
 		ConnectRetryDelay: 5 * time.Second,
 		ConnectTimeout:    1 * time.Second,
 		OnConnectionUp: func(_ *autopaho.ConnectionManager, conAck *paho.Connack) {
-			slog.Info("connection is up with reason code: %d\n", conAck.ReasonCode)
+			slog.Info("connection is up", slog.Int64("reason", int64(conAck.ReasonCode)))
 		},
 		OnConnectError: func(err error) {
-			slog.Error("failed to connect: %v\n", err)
+			slog.Error("failed to connect", slog.Any("error", err))
 		},
 		ClientConfig: paho.ClientConfig{
 			ClientID: clientID,
 			OnServerDisconnect: func(disconnect *paho.Disconnect) {
-				slog.Warn("server disconnect received with reason code: %d\n", disconnect.ReasonCode)
+				slog.Warn("server disconnect received", slog.Int64("reason", int64(disconnect.ReasonCode)))
 			},
 			OnClientError: func(err error) {
-				slog.Error("client error occurred: %v\n", err)
+				slog.Error("client failure", slog.Any("error", err))
 			},
 			PublishHook: func(publish *paho.Publish) {
-				slog.Debug("message published to topic: %s\n", publish.Topic)
+				slog.Debug("message published", slog.String("topic", publish.Topic))
 			},
 		},
 	}, nil

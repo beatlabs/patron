@@ -92,7 +92,7 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 	defer func() {
 		err := trace.Close()
 		if err != nil {
-			slog.Error("failed to close trace %v", err)
+			slog.Error("failed to close trace", slog.Any("error", err))
 		}
 	}()
 	ctx, cnl := context.WithCancel(ctx)
@@ -128,7 +128,7 @@ func (s *Service) waitTermination(chErr <-chan error) error {
 	for {
 		select {
 		case sig := <-s.termSig:
-			slog.Info("signal %s received", sig.String())
+			slog.Info("signal received", slog.Any("type", sig))
 
 			switch sig {
 			case syscall.SIGHUP:
@@ -152,6 +152,7 @@ type config struct {
 	logger *slog.Logger
 }
 
+// TODO: cleanup?
 // func getLogLevel() slog.Level {
 // 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
 // 	if !ok {
@@ -215,6 +216,7 @@ func setupJaegerTracing(name, version string) error {
 		}
 	}
 
-	slog.Debug("setting up default tracing %s, %s with param %f", agent, tp, prmVal)
+	slog.Debug("setting up default tracing %s, %s with param %f", slog.String("agent", agent), slog.String("param", tp),
+		slog.Float64("val", prmVal))
 	return trace.Setup(name, version, agent, tp, prmVal, buckets)
 }

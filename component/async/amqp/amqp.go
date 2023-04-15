@@ -193,7 +193,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 				slog.Info("canceling consuming messages requested")
 				return
 			case d := <-deliveries:
-				slog.Debug("processing message %d", d.DeliveryTag)
+				slog.Debug("processing message", slog.Any("tag", d.DeliveryTag))
 				corID := getCorrelationID(d.Headers)
 
 				sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queue),
@@ -262,7 +262,7 @@ func (c *consumer) consume() (<-chan amqp.Delivery, error) {
 	c.ch = ch
 
 	c.tag = uuid.New().String()
-	slog.Debug("consuming messages for tag %s", c.tag)
+	slog.Debug("consuming messages", slog.String("tag", c.tag))
 
 	err = ch.ExchangeDeclare(c.exchange.name, c.exchange.kind, true, false, false, false, nil)
 	if err != nil {

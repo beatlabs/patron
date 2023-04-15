@@ -115,7 +115,7 @@ func (c *consumer) Consume(ctx context.Context) (<-chan async.Message, <-chan er
 		return nil, nil, fmt.Errorf("failed to create consumer: %w", err)
 	}
 	c.cg = cg
-	slog.Debug("consuming messages from topics '%s' using group '%s'", strings.Join(c.topics, ","), c.group)
+	slog.Debug("consuming messages", slog.String("topics", strings.Join(c.topics, ",")), slog.String("group", c.group))
 
 	chMsg := make(chan async.Message, c.config.Buffer)
 	chErr := make(chan error, c.config.Buffer)

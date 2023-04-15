@@ -80,16 +80,16 @@ func (c *Component) Run(ctx context.Context) error {
 
 func (c *Component) listenAndServe(srv *http.Server, ch chan<- error) {
 	if c.certFile != "" && c.keyFile != "" {
-		slog.Debug("HTTPS component listening on port %d", c.httpPort)
+		slog.Debug("HTTPS component listening", slog.Int("port", c.httpPort))
 		ch <- srv.ListenAndServeTLS(c.certFile, c.keyFile)
 	}
 
-	slog.Debug("HTTP component listening on port %d", c.httpPort)
+	slog.Debug("HTTP component listening", slog.Int("port", c.httpPort))
 	ch <- srv.ListenAndServe()
 }
 
 func (c *Component) createHTTPServer() *http.Server {
-	slog.Debug("adding %d routes", len(c.routes))
+	slog.Debug("adding routes", slog.Int("routes", len(c.routes)))
 	router := httprouter.New()
 	for _, route := range c.routes {
 		if len(route.middlewares) > 0 {
@@ -99,7 +99,7 @@ func (c *Component) createHTTPServer() *http.Server {
 			router.HandlerFunc(route.method, route.path, route.handler)
 		}
 
-		slog.Debug("added route %s %s", route.method, route.path)
+		slog.Debug("added route", slog.String("method", route.method), slog.String("path", route.path))
 	}
 	// Add first the recovery middleware to ensure that no panic occur.
 	routerAfterMiddleware := middleware.Chain(router, middleware.NewRecovery())
@@ -119,56 +119,56 @@ func (c *Component) createHTTPServer() *http.Server {
 func port() (int, error) {
 	port, ok := os.LookupEnv("PATRON_HTTP_DEFAULT_PORT")
 	if !ok {
-		slog.Debug("using default port %d", defaultPort)
+		slog.Debug("using default port", slog.Int("port", defaultPort))
 		return defaultPort, nil
 	}
 	portVal, err := strconv.ParseInt(port, 10, 32)
 	if err != nil {
 		return 0, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
 	}
-	slog.Debug("using port %d", portVal)
+	slog.Debug("using port", slog.Int("port", int(portVal)))
 	return int(portVal), nil
 }
 
 func readTimeout() (time.Duration, error) {
 	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_READ_TIMEOUT")
 	if !ok {
-		slog.Debug("using default read timeout %s", defaultReadTimeout)
+		slog.Debug("using default read timeout", slog.Duration("timeout", defaultReadTimeout))
 		return defaultReadTimeout, nil
 	}
 	timeout, err := time.ParseDuration(httpTimeout)
 	if err != nil {
 		return 0, fmt.Errorf("env var for HTTP read timeout is not valid: %w", err)
 	}
-	slog.Debug("using read timeout %s", timeout)
+	slog.Debug("using read timeout", slog.Duration("timeout", timeout))
 	return timeout, nil
 }
 
 func writeTimeout() (time.Duration, error) {
 	httpTimeout, ok := os.LookupEnv("PATRON_HTTP_WRITE_TIMEOUT")
 	if !ok {
-		slog.Debug("using default write timeout %s", defaultWriteTimeout)
+		slog.Debug("using default write timeout", slog.Duration("timeout", defaultWriteTimeout))
 		return defaultWriteTimeout, nil
 	}
 	timeout, err := time.ParseDuration(httpTimeout)
 	if err != nil {
 		return 0, fmt.Errorf("env var for HTTP write timeout is not valid: %w", err)
 	}
-	slog.Debug("using write timeout %s", timeout)
+	slog.Debug("using write timeout", slog.Duration("timeout", timeout))
 	return timeout, nil
 }
 
 func deflateLevel() (int, error) {
 	deflateLevel, ok := os.LookupEnv("PATRON_COMPRESSION_DEFLATE_LEVEL")
 	if !ok {
-		slog.Debug("using default deflate level %d", defaultDeflateLevel)
+		slog.Debug("using default deflate level", slog.Int("level", defaultDeflateLevel))
 		return defaultDeflateLevel, nil
 	}
 	deflateLevelInt, err := strconv.Atoi(deflateLevel)
 	if err != nil {
 		return 0, fmt.Errorf("env var for HTTP deflate level is not valid: %w", err)
 	}
-	slog.Debug("using deflate level %d", deflateLevelInt)
+	slog.Debug("using deflate level", slog.Int("level", deflateLevelInt))
 	return deflateLevelInt, nil
 }
 

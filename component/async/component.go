@@ -12,8 +12,6 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-const propSetMSG = "property '%s' set for '%s'"
-
 var consumerErrors *prometheus.CounterVec
 
 func init() {
@@ -86,7 +84,7 @@ func (cb *Builder) WithFailureStrategy(fs FailStrategy) *Builder {
 	if fs > AckStrategy || fs < NackExitStrategy {
 		cb.errors = append(cb.errors, errors.New("invalid strategy provided"))
 	} else {
-		slog.Debug(propSetMSG, "failure strategy", cb.name)
+		slog.Debug("builder with", slog.Any("failureStrategy", fs))
 		cb.failStrategy = fs
 	}
 	return cb
@@ -95,7 +93,7 @@ func (cb *Builder) WithFailureStrategy(fs FailStrategy) *Builder {
 // WithRetries specifies the retry events number for the component
 // default value is '0'.
 func (cb *Builder) WithRetries(retries uint) *Builder {
-	slog.Debug(propSetMSG, "retries", cb.name)
+	slog.Debug("builder with", slog.Any("retries", retries))
 	cb.retries = retries
 	return cb
 }
@@ -104,7 +102,7 @@ func (cb *Builder) WithRetries(retries uint) *Builder {
 // default value is '1'
 // do NOT enable concurrency value for in-order consumers, such as Kafka or FIFO SQS.
 func (cb *Builder) WithConcurrency(concurrency uint) *Builder {
-	slog.Debug(propSetMSG, "concurrency", cb.name)
+	slog.Debug("builder with", slog.Any("concurrency", concurrency))
 	cb.concurrency = concurrency
 	return cb
 }
@@ -116,7 +114,7 @@ func (cb *Builder) WithRetryWait(retryWait time.Duration) *Builder {
 	if retryWait < 0 {
 		cb.errors = append(cb.errors, errors.New("invalid retry wait provided"))
 	} else {
-		slog.Debug(propSetMSG, "retryWait", cb.name)
+		slog.Debug("builder with", slog.Duration("retryWait", retryWait))
 		cb.retryWait = retryWait
 	}
 	return cb

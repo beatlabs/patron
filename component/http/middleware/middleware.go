@@ -396,7 +396,7 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
 			selectedEncoding, err := parseAcceptEncoding(hdr)
 			if err != nil {
 				slog.Debug("encoding %q is not supported in compression middleware, "+
-					"and client doesn't accept anything else", hdr)
+					"and client doesn't accept anything else", slog.String("header", hdr))
 				http.Error(w, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
 				return
 			}
@@ -406,11 +406,11 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
 			defer func(c io.Closer) {
 				err := c.Close()
 				if err != nil {
-					msgErr := fmt.Sprintf("error in deferred call to Close() method on %v compression middleware : %v", hdr, err.Error())
+					msgErr := "error in deferred call to Close() method on compression middleware"
 					if isErrConnectionReset(err) {
-						slog.Info(msgErr)
+						slog.Info(msgErr, slog.String("header", hdr), slog.Any("error", err))
 					} else {
-						slog.Error(msgErr)
+						slog.Error(msgErr, slog.String("header", hdr), slog.Any("error", err))
 					}
 				}
 			}(dw)

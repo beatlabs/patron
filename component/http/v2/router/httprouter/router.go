@@ -67,7 +67,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	for _, route := range stdRoutes {
 		handler := middleware.Chain(route.Handler(), stdMiddlewares...)
 		mux.Handler(route.Method(), route.Path(), handler)
-		slog.Debug("added route %s", route)
+		slog.Debug("added route", slog.Any("route", route))
 	}
 
 	// parse a list of HTTP numeric status codes that must be logged
@@ -106,7 +106,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 		// chain all middlewares to the handler
 		handler := middleware.Chain(route.Handler(), middlewares...)
 		mux.Handler(route.Method(), route.Path(), handler)
-		slog.Debug("added route %s with %d middlewares", route, len(middlewares))
+		slog.Debug("added route with middlewares", slog.Any("route", route), slog.Int("middlewares", len(middlewares)))
 	}
 
 	return mux, nil

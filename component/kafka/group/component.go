@@ -195,11 +195,11 @@ func (c *Component) processing(ctx context.Context) error {
 		}
 
 		if client != nil {
-			slog.Debug("consuming messages from topics '%#v' using group '%s'", c.topics, c.group)
+			slog.Debug("consuming messages", slog.Any("topics", c.topics), slog.String("group", c.group))
 			for {
 				// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
 				if ctx.Err() != nil {
-					slog.Info("kafka component %s terminating: context cancelled or deadline exceeded", c.name)
+					slog.Info("kafka component terminating: context cancelled or deadline exceeded", slog.String("name", c.name))
 					return componentError
 				}
 
@@ -209,7 +209,7 @@ func (c *Component) processing(ctx context.Context) error {
 				err := client.Consume(ctx, c.topics, handler)
 				componentError = err
 				if err != nil {
-					slog.Error("error from kafka consumer: %v", err)
+					slog.Error("failure from kafka consumer", slog.Any("error", err))
 					break
 				}
 
@@ -328,7 +328,8 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		select {
 		case msg, ok := <-claim.Messages():
 			if ok {
-				slog.Debug("message claimed: value = %s, timestamp = %v, topic = %s", string(msg.Value), msg.Timestamp, msg.Topic)
+				slog.Debug("message claimed", slog.String("value", string(msg.Value)),
+					slog.Time("timestamp", msg.Timestamp), slog.String("topic", msg.Topic))
 				topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
 				messageStatusCountInc(messageReceived, c.group, msg.Topic)
 				err := c.insertMessage(session, msg)
@@ -348,7 +349,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			}
 		case <-c.ctx.Done():
 			if !errors.Is(c.ctx.Err(), context.Canceled) {
-				slog.Info("closing consumer: %v", c.ctx.Err())
+				slog.Info("closing consumer", slog.Any("error", c.ctx.Err()))
 			}
 			return nil
 		}

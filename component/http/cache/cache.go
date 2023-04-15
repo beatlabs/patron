@@ -243,7 +243,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
 			*/
 			value, ok := parseValue(keyValue)
 			if !ok || value < 0 {
-				slog.Debug("invalid value for Header '%s', defaulting to '0' ", keyValue)
+				slog.Debug("invalid value for header, defaulting to '0' ", slog.Any("value", keyValue))
 				value = 0
 			}
 			value, adjusted := min(value, minAge)

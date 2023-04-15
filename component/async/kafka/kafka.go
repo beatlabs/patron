@@ -152,7 +152,7 @@ func (m *message) Raw() interface{} {
 
 // ClaimMessage transforms a sarama.ConsumerMessage to an async.Message.
 func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.DecodeRawFunc, sess sarama.ConsumerGroupSession) (async.Message, error) {
-	slog.Debug("data received from topic %s", msg.Topic)
+	slog.Debug("data received", slog.String("topic", msg.Topic))
 
 	corID := getCorrelationID(msg.Headers)
 
@@ -163,7 +163,7 @@ func ClaimMessage(ctx context.Context, msg *sarama.ConsumerMessage, d encoding.D
 
 	dec, err := determineDecoder(d, msg, sp)
 	if err != nil {
-		return nil, fmt.Errorf("could not determine decoder  %w", err)
+		return nil, fmt.Errorf("could not determine decoder %w", err)
 	}
 
 	return &message{

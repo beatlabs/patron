@@ -104,7 +104,7 @@ func (d durationClient) offsetBinarySearch(ctx context.Context, topic string, si
 			// the offset might not be accessible anymore.
 			// In this case, we simply log a warning and restrict the interval to the right.
 			if errors.Is(err, &outOfRangeOffsetError{}) {
-				slog.Warn("offset %d on partition %d is out of range: %v", mid, partitionID, err)
+				slog.Warn("out of range", slog.Int64("offset", mid), slog.Int("partition", int(partitionID)), slog.Any("error", err))
 				left = mid + 1
 				continue
 			}

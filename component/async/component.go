@@ -181,7 +181,7 @@ func (c *Component) processing(ctx context.Context) error {
 	defer func() {
 		err := cns.Close()
 		if err != nil {
-			slog.Warn("failed to close consumer: %v", err)
+			slog.Warn("failed to close consumer", slog.Any("error", err))
 		}
 	}()
 
@@ -200,7 +200,7 @@ func (c *Component) processing(ctx context.Context) error {
 			}
 		case <-ctx.Done():
 			if !errors.Is(ctx.Err(), context.Canceled) {
-				slog.Warn("closing consumer: %v", ctx.Err())
+				slog.Warn("closing consumer", slog.Any("error", ctx.Err()))
 			}
 			return cns.Close()
 		case err := <-chErr:

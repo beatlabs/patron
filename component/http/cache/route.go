@@ -33,7 +33,7 @@ func NewRouteCache(ttlCache cache.TTLCache, age Age) (*RouteCache, []error) {
 	}
 
 	if hasNoAgeConfig(age.Min.Milliseconds(), age.Max.Milliseconds()) {
-		slog.Warn("route cache disabled because of empty Age property %v", age)
+		slog.Warn("route cache disabled because of empty Age property", slog.Any("age", age))
 	}
 
 	return &RouteCache{

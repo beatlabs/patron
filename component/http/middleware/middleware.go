@@ -575,12 +575,12 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
 	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
 	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		slog.Error("failed to extract HTTP span: %v", err)
+		slog.Error("failed to extract HTTP span", slog.Any("error", err))
 	}
 
 	strippedPath, err := stripQueryString(path)
 	if err != nil {
-		slog.Warn("unable to strip query string %q: %v", path, err)
+		slog.Warn("unable to strip query string", slog.String("path", path), slog.Any("error", err))
 		strippedPath = path
 	}
 

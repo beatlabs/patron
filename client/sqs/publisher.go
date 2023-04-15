@@ -18,6 +18,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -62,7 +63,7 @@ func (p Publisher) Publish(ctx context.Context, msg *sqs.SendMessageInput) (mess
 	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, *msg.QueueUrl), publisherComponent, ext.SpanKindProducer)
 
 	if err := injectHeaders(ctx, span, msg); err != nil {
-		log.FromContext(ctx).Error("failed to inject trace headers: %v", err)
+		log.FromContext(ctx).Error("failed to inject trace headers", slog.Any("error", err))
 	}
 
 	start := time.Now()

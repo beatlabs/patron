@@ -106,7 +106,7 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 		}(cp)
 	}
 
-	log.FromContext(ctx).Info("service %s started", s.name)
+	log.FromContext(ctx).Info("service started", slog.String("name", s.name))
 	ee := make([]error, 0, len(components))
 	ee = append(ee, s.waitTermination(chErr))
 	cnl()

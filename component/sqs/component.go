@@ -200,7 +200,7 @@ func (c *Component) Run(ctx context.Context) error {
 		case <-tickerStats.C:
 			err := c.report(ctx, c.api, c.queue.url)
 			if err != nil {
-				log.FromContext(ctx).Error("failed to report sqsAPI stats: %v", err)
+				log.FromContext(ctx).Error("failed to report sqsAPI stats", slog.Any("error", err))
 			}
 		}
 	}

@@ -113,7 +113,7 @@ func (d durationClient) offsetBinarySearch(ctx context.Context, topic string, si
 
 		t, err := timeExtractor(msg)
 		if err != nil {
-			log.FromContext(ctx).Warn("error while executing comparator: %v", err)
+			log.FromContext(ctx).Warn("error while executing comparator", slog.Any("error", err))
 			// In case of a failure, we compress the range so that the next calculated mid is different
 			left++
 			continue

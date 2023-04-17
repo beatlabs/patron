@@ -191,7 +191,7 @@ func (c *Component) processing(ctx context.Context) error {
 		client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 		componentError = err
 		if err != nil {
-			slog.Error("error creating consumer group client for kafka component: %v", err)
+			slog.Error("error creating consumer group client for kafka component", slog.Any("error", err))
 		}
 
 		if client != nil {
@@ -220,7 +220,7 @@ func (c *Component) processing(ctx context.Context) error {
 
 			err = client.Close()
 			if err != nil {
-				slog.Error("error closing kafka consumer: %v", err)
+				slog.Error("error closing kafka consumer", slog.Any("error", err))
 			}
 		}
 
@@ -236,7 +236,8 @@ func (c *Component) processing(ctx context.Context) error {
 				componentError = handler.err
 			}
 
-			slog.Error("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, componentError)
+			slog.Error("failed run", slog.Int("current", i), slog.Int("retries", int(c.retries)),
+				slog.Duration("wait", c.retryWait), slog.Any("error", componentError))
 			time.Sleep(c.retryWait)
 
 			if i < retries {
@@ -414,7 +415,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
 		}
-		slog.Error("could not process message(s) so skipping with error: %v", err)
+		slog.Error("could not process message(s) so skipping with error", slog.Any("error", err))
 	default:
 		slog.Error("unknown failure strategy executed")
 		return fmt.Errorf("unknown failure strategy: %v", c.failStrategy)

@@ -116,7 +116,7 @@ func NewRecovery() Func {
 						err = errors.New("unknown panic")
 					}
 					_ = err
-					slog.Error("recovering from an error: %v: %s", err, string(debug.Stack()))
+					slog.Error("recovering from a failure", slog.Any("error", err), slog.String("stack", string(debug.Stack())))
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				}
 			}()
@@ -179,7 +179,8 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) (F
 			finishSpan(sp, lw.Status(), &lw.responsePayload)
 			logRequestResponse(corID, lw, r)
 			if log.Enabled(slog.LevelError) && statusCodeLogger.shouldLog(lw.status) {
-				log.FromContext(r.Context()).Error("%s %d error: %v", path, lw.status, lw.responsePayload.String())
+				log.FromContext(r.Context()).Error("failed route execution", slog.String("path", path),
+					slog.Int("status", lw.status), slog.String("payload", lw.responsePayload.String()))
 			}
 		})
 	}, nil
@@ -535,7 +536,7 @@ func NewCaching(rc *cache.RouteCache) (Func, error) {
 			}
 			err := cache.Handler(w, r, rc, next)
 			if err != nil {
-				slog.Error("error encountered in the caching middleware: %v", err)
+				slog.Error("error encountered in the caching middleware", slog.Any("error", err))
 				return
 			}
 		})

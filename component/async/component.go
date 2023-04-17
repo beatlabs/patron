@@ -161,7 +161,8 @@ func (c *Component) Run(ctx context.Context) error {
 		}
 		consumerErrorsInc(c.name)
 		if c.retries > 0 {
-			slog.Error("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, err)
+			slog.Error("failed run, retrying", slog.Int("current", i), slog.Int("retries", c.retries),
+				slog.Duration("wait", c.retryWait), slog.Any("error", err))
 			time.Sleep(c.retryWait)
 		}
 	}
@@ -239,7 +240,7 @@ func (c *Component) worker() {
 var errInvalidFS = errors.New("invalid failure strategy")
 
 func (c *Component) executeFailureStrategy(msg Message, err error) error {
-	log.FromContext(msg.Context()).Error("failed to process message, failure strategy executed: %v", err)
+	log.FromContext(msg.Context()).Error("failed to process message, failure strategy executed", slog.Any("error", err))
 	switch c.failStrategy {
 	case NackExitStrategy:
 		nackErr := msg.Nack()

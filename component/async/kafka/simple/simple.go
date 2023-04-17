@@ -426,6 +426,6 @@ func closePartitionConsumer(cns sarama.PartitionConsumer) {
 	}
 	err := cns.Close()
 	if err != nil {
-		slog.Error("failed to close partition consumer: %v", err)
+		slog.Error("failed to close partition consumer", slog.Any("error", err))
 	}
 }

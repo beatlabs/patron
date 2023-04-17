@@ -155,7 +155,7 @@ func closeConsumer(cns sarama.ConsumerGroup) {
 	}
 	err := cns.Close()
 	if err != nil {
-		slog.Error("failed to close consumer group: %v", err)
+		slog.Error("failed to close consumer group", slog.Any("error", err))
 	}
 }
 

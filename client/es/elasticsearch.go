@@ -20,6 +20,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -105,7 +106,7 @@ type transportClient struct {
 func (c *transportClient) Perform(req *http.Request) (*http.Response, error) {
 	sp, err := c.startSpan(req)
 	if err != nil {
-		log.FromContext(req.Context()).Error("failed to start span: %v", err)
+		log.FromContext(req.Context()).Error("failed to start span", slog.Any("error", err))
 	}
 	start := time.Now()
 	rsp, err := c.client.Perform(req)

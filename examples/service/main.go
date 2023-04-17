@@ -17,17 +17,17 @@ const (
 func init() {
 	err := os.Setenv("PATRON_LOG_LEVEL", "debug")
 	if err != nil {
-		slog.Error("failed to set log level env var: %v", err)
+		slog.Error("failed to set log level env var", slog.Any("error", err))
 		os.Exit(1)
 	}
 	err = os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
 	if err != nil {
-		slog.Error("failed to set sampler env vars: %v", err)
+		slog.Error("failed to set sampler env vars", slog.Any("error", err))
 		os.Exit(1)
 	}
 	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", examples.HTTPPort)
 	if err != nil {
-		slog.Error("failed to set default patron port env vars: %v", err)
+		slog.Error("failed to set default patron port env vars", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
@@ -37,7 +37,7 @@ func main() {
 
 	service, err := patron.New(name, version, patron.WithTextLogger())
 	if err != nil {
-		slog.Error("failed to set up service: %v", err)
+		slog.Error("failed to set up service", slog.Any("error", err))
 		os.Exit(1)
 	}
 
@@ -90,7 +90,7 @@ func main() {
 
 	err = service.Run(ctx, components...)
 	if err != nil {
-		slog.Error("failed to create and run service %v", err)
+		slog.Error("failed to create and run service", slog.Any("error", err))
 		os.Exit(1)
 	}
 }

@@ -215,7 +215,7 @@ func handleError(logger *slog.Logger, w http.ResponseWriter, enc encoding.Encode
 		}
 		w.WriteHeader(errAs.code)
 		if _, err := w.Write(p); err != nil {
-			logger.Error("failed to write Response: %v", err)
+			logger.Error("failed to write Response", slog.Any("error", err))
 		}
 		return
 	}

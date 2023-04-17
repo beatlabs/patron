@@ -215,7 +215,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 		if ctx.Err() != nil {
 			return
 		}
-		logger.Debug("consume: polling SQS sqsAPI %s for %d messages", c.queue.name, c.cfg.maxMessages)
+		logger.Debug("consume: polling SQS sqsAPI", slog.String("name", c.queue.name), slog.Int("max", int(c.cfg.maxMessages)))
 		output, err := c.api.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 			QueueUrl:            &c.queue.url,
 			MaxNumberOfMessages: c.cfg.maxMessages,
@@ -229,7 +229,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			},
 		})
 		if err != nil {
-			logger.Error("failed to receive messages: %v, sleeping for %v", err, c.retry.wait)
+			logger.Error("failed to receive messages, sleeping", slog.Any("error", err), slog.Duration("wait", c.retry.wait))
 			time.Sleep(c.retry.wait)
 			retries--
 			if retries > 0 {

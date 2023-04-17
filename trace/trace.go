@@ -79,7 +79,7 @@ func ConsumerSpan(ctx context.Context, opName, cmp, corID string, hdr map[string
 ) (opentracing.Span, context.Context) {
 	spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.TextMapCarrier(hdr))
 	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		slog.Error("failed to extract consumer span: %v", err)
+		slog.Error("failed to extract consumer span", slog.Any("error", err))
 	}
 	sp := opentracing.StartSpan(opName, consumerOption{ctx: spCtx})
 	ext.Component.Set(sp, cmp)

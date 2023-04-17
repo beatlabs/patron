@@ -121,7 +121,7 @@ func getResponse(ctx context.Context, cfg *control, path, key string, now int64,
 		return response
 	}
 	if rsp.Err != nil {
-		slog.Error("error during cache interaction: %v", rsp.Err)
+		slog.Error("failure during cache interaction", slog.Any("error", rsp.Err))
 		monitor.err(path)
 		return exec(now, key)
 	}
@@ -198,12 +198,12 @@ func save(ctx context.Context, path, key string, rsp *response, cache cache.TTLC
 		// encode to a byte array on our side to avoid cache specific encoding / marshaling requirements
 		bytes, err := rsp.encode()
 		if err != nil {
-			slog.Error("could not encode response for request key %s: %v", key, err)
+			slog.Error("could not encode response", slog.String("key", key), slog.Any("error", err))
 			monitor.err(path)
 			return
 		}
 		if err := cache.SetTTL(ctx, key, bytes, maxAge); err != nil {
-			slog.Error("could not cache response for request key %s: %v", key, err)
+			slog.Error("could not cache response", slog.String("key", key), slog.Any("error", err))
 			monitor.err(path)
 			return
 		}

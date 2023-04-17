@@ -8,22 +8,44 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+func toAttr(in []interface{}) []slog.Attr {
+	out := make([]slog.Attr, 0, len(in))
+
+	for _, attr := range in {
+		out = append(out, attr.(slog.Attr))
+	}
+
+	return out
+}
+
+func toInterface(in []slog.Attr) []interface{} {
+	out := make([]interface{}, 0, len(in))
+
+	for _, attr := range in {
+		out = append(out, attr)
+	}
+
+	return out
+}
+
 func TestLogFields(t *testing.T) {
 	defaultFields := defaultLogFields("test", "1.0")
 	fields := []slog.Attr{slog.String("key", "value")}
-	fields1 := defaultLogFields("name1", "version1")
+	fields1 := toAttr(defaultLogFields("name1", "version1"))
 	type args struct {
 		fields []slog.Attr
 	}
 	tests := map[string]struct {
-		args args
-		want config
+		args        args
+		want        config
+		expectedErr string
 	}{
-		"success":      {args: args{fields: fields}, want: config{fields: append(defaultFields, fields...)}},
+		"empty fields": {args: args{fields: nil}, expectedErr: "fields are empty"},
+		"success":      {args: args{fields: fields}, want: config{fields: append(defaultFields, toInterface(fields)...)}},
 		"no overwrite": {args: args{fields: fields1}, want: config{fields: defaultFields}},
 	}
 	for name, tt := range tests {
-		temp := tt
+		tt := tt
 		t.Run(name, func(t *testing.T) {
 			svc := &Service{
 				config: config{
@@ -31,10 +53,14 @@ func TestLogFields(t *testing.T) {
 				},
 			}
 
-			err := WithLogFields(temp.args.fields)(svc)
-			assert.NoError(t, err)
+			err := WithLogFields(tt.args.fields...)(svc)
 
-			assert.Equal(t, temp.want, svc.config)
+			if tt.expectedErr == "" {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, svc.config)
+			} else {
+				assert.EqualError(t, err, tt.expectedErr)
+			}
 		})
 	}
 }

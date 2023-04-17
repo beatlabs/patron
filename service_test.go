@@ -12,7 +12,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	httpBuilderAllErrors := "provided WithSIGHUP handler was nil\n"
+	httpBuilderAllErrors := "fields are empty\nprovided WithSIGHUP handler was nil\n"
 
 	tests := map[string]struct {
 		name              string
@@ -50,7 +50,7 @@ func TestNew(t *testing.T) {
 	for name, tt := range tests {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
-			gotService, gotErr := New(tt.name, "1.0", WithLogFields(temp.fields), WithTextLogger(),
+			gotService, gotErr := New(tt.name, "1.0", WithLogFields(temp.fields...), WithTextLogger(),
 				WithSIGHUP(temp.sighupHandler))
 
 			if temp.wantErr != "" {

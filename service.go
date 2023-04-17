@@ -78,7 +78,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		return nil, patronErrors.Aggregate(optionErrors...)
 	}
 
-	setupLogging(s.config.fields, s.config.logger)
+	setupLogging(s.config.logger, s.config.fields)
 	s.setupOSSignal()
 
 	return s, nil
@@ -148,7 +148,7 @@ func (s *Service) waitTermination(chErr <-chan error) error {
 
 // config for setting up the builder.
 type config struct {
-	fields []slog.Attr
+	fields []interface{}
 	logger *slog.Logger
 }
 
@@ -161,22 +161,23 @@ type config struct {
 // 	return slog.Level(lvl)
 // }
 
-func defaultLogFields(name, version string) []slog.Attr {
+func defaultLogFields(name, version string) []interface{} {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = host
 	}
 
-	return []slog.Attr{
+	return []interface{}{
 		slog.String(srv, name),
 		slog.String(ver, version),
 		slog.String(host, hostname),
 	}
 }
 
-func setupLogging(fields []slog.Attr, logger *slog.Logger) {
-	if fields != nil {
-		slog.SetDefault(logger.With(fields))
+func setupLogging(logger *slog.Logger, fields []interface{}) {
+	if len(fields) != 0 {
+		slog.SetDefault(logger.With(fields...))
+		return
 	}
 	slog.SetDefault(logger)
 }
@@ -216,7 +217,6 @@ func setupJaegerTracing(name, version string) error {
 		}
 	}
 
-	slog.Debug("setting up default tracing %s, %s with param %f", slog.String("agent", agent), slog.String("param", tp),
-		slog.Float64("val", prmVal))
+	slog.Debug("setting up default tracing", slog.String("agent", agent), slog.String("param", tp), slog.Float64("val", prmVal))
 	return trace.Setup(name, version, agent, tp, prmVal, buckets)
 }

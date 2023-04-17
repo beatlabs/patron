@@ -24,15 +24,19 @@ func WithSIGHUP(handler func()) OptionFunc {
 }
 
 // WithLogFields options to pass in additional log fields.
-func WithLogFields(fields []slog.Attr) OptionFunc {
+func WithLogFields(fields ...slog.Attr) OptionFunc {
 	return func(svc *Service) error {
+		if len(fields) == 0 {
+			return errors.New("fields are empty")
+		}
+
 		for _, field := range fields {
 			if field.Key == srv || field.Key == ver || field.Key == host {
 				// don't override
 				continue
 			}
 
-			svc.config.fields = append(svc.config.fields, slog.Any(field.Key, field.Value))
+			svc.config.fields = append(svc.config.fields, field)
 		}
 
 		return nil

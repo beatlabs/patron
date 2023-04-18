@@ -12,7 +12,11 @@ func toAttr(in []interface{}) []slog.Attr {
 	out := make([]slog.Attr, 0, len(in))
 
 	for _, attr := range in {
-		out = append(out, attr.(slog.Attr))
+		a, ok := attr.(slog.Attr)
+		if !ok {
+			panic("type assertion error")
+		}
+		out = append(out, a)
 	}
 
 	return out

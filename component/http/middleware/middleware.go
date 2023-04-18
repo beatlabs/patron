@@ -286,7 +286,7 @@ func NewRateLimiting(limiter *rate.Limiter) (Func, error) {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !limiter.Allow() {
-				slog.Debug("Limiting requests...")
+				slog.Debug("limiting requests...")
 				http.Error(w, "Requests greater than limit", http.StatusTooManyRequests)
 				return
 			}
@@ -396,7 +396,7 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
 			hdr := r.Header.Get(encoding.AcceptEncodingHeader)
 			selectedEncoding, err := parseAcceptEncoding(hdr)
 			if err != nil {
-				slog.Debug("encoding %q is not supported in compression middleware, "+
+				slog.Debug("encoding is not supported in compression middleware, "+
 					"and client doesn't accept anything else", slog.String("header", hdr))
 				http.Error(w, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
 				return

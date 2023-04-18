@@ -263,7 +263,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
 			*/
 			value, ok := parseValue(keyValue)
 			if !ok || value < 0 {
-				slog.Debug("invalid value for Header '%s', defaulting to '0' ", keyValue)
+				slog.Debug("invalid value for header, defaulting to '0' ", slog.Any("value", keyValue))
 				value = 0
 			}
 			value, adjusted := max(value, maxFresh)
@@ -297,7 +297,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
 		case controlEmpty:
 			// nothing to do here
 		default:
-			slog.Warn("unrecognised cache Header: '%s'", header)
+			slog.Warn("unrecognised cache header", slog.String("header", header))
 		}
 	}
 	if len(wrn) > 0 {

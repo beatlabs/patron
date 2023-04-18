@@ -51,10 +51,10 @@ func WithLogger(logger *slog.Logger) OptionFunc {
 	}
 }
 
-// WithTextLogger to use Go's standard logger.
-func WithTextLogger() OptionFunc {
+// WithJSONLogger to use Go's slog package.
+func WithJSONLogger() OptionFunc {
 	return func(svc *Service) error {
-		svc.config.logger = slog.New(slog.NewTextHandler(os.Stderr)).With(svc.config.fields)
+		svc.config.logger = slog.New(slog.NewJSONHandler(os.Stderr))
 		return nil
 	}
 }

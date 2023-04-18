@@ -50,7 +50,7 @@ func TestNew(t *testing.T) {
 	for name, tt := range tests {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
-			gotService, gotErr := New(tt.name, "1.0", WithLogFields(temp.fields...), WithTextLogger(),
+			gotService, gotErr := New(tt.name, "1.0", WithLogFields(temp.fields...), WithJSONLogger(),
 				WithSIGHUP(temp.sighupHandler))
 
 			if temp.wantErr != "" {
@@ -82,7 +82,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 				os.Clearenv()
 			}()
 			t.Setenv("PATRON_HTTP_DEFAULT_PORT", "50099")
-			svc, err := New("test", "", WithTextLogger())
+			svc, err := New("test", "", WithJSONLogger())
 			assert.NoError(t, err)
 			err = svc.Run(context.Background(), tt.cp)
 			if temp.wantErr {
@@ -126,7 +126,7 @@ func TestServer_SetupTracing(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			svc, err := New("test", "", WithTextLogger())
+			svc, err := New("test", "", WithJSONLogger())
 			assert.NoError(t, err)
 
 			err = svc.Run(context.Background(), tt.cp)
@@ -160,7 +160,7 @@ func TestNewServer_FailingConditions(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			svc, err := New("test", "", WithTextLogger())
+			svc, err := New("test", "", WithJSONLogger())
 
 			if tt.expectedConstructorError != "" {
 				require.EqualError(t, err, tt.expectedConstructorError)

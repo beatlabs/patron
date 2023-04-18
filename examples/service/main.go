@@ -35,7 +35,7 @@ func init() {
 func main() {
 	ctx := context.Background()
 
-	service, err := patron.New(name, version, patron.WithTextLogger())
+	service, err := patron.New(name, version)
 	if err != nil {
 		slog.Error("failed to set up service", slog.Any("error", err))
 		os.Exit(1)

@@ -126,7 +126,7 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 		require.Fail(t, "no messages were expected")
 	case err = <-chErr:
 		require.EqualError(t, err, "kafka: error while consuming groupTopic2/0: "+
-			"could not determine decoder  failed to determine content type from message headers [] : "+
+			"could not determine decoder failed to determine content type from message headers [] : "+
 			"content type header is missing")
 	}
 }

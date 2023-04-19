@@ -36,7 +36,7 @@ type Service struct {
 	version       string
 	termSig       chan os.Signal
 	sighupHandler func()
-	config        config
+	logConfig     logConfig
 }
 
 func New(name, version string, options ...OptionFunc) (*Service, error) {
@@ -54,9 +54,9 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		sighupHandler: func() {
 			slog.Debug("sighup received: nothing setup")
 		},
-		config: config{
-			fields: defaultLogFields(name, version),
-			logger: slog.Default(),
+		logConfig: logConfig{
+			attrs: defaultLogAttrs(name, version),
+			json:  false,
 		},
 	}
 
@@ -78,7 +78,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		return nil, patronErrors.Aggregate(optionErrors...)
 	}
 
-	setupLogging(s.config.logger, s.config.fields)
+	setupLogging(s.logConfig)
 	s.setupOSSignal()
 
 	return s, nil
@@ -146,40 +146,53 @@ func (s *Service) waitTermination(chErr <-chan error) error {
 	}
 }
 
-// config for setting up the builder.
-type config struct {
-	fields []interface{}
-	logger *slog.Logger
+type logConfig struct {
+	attrs []slog.Attr
+	json  bool
 }
 
-// TODO: cleanup?
-// func getLogLevel() slog.Level {
-// 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
-// 	if !ok {
-// 		lvl = string(slog.LevelInfo)
-// 	}
-// 	return slog.Level(lvl)
-// }
+func getLogLevel() slog.Level {
+	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
+	if !ok {
+		return slog.LevelInfo
+	}
 
-func defaultLogFields(name, version string) []interface{} {
+	lv := slog.LevelVar{}
+	if err := lv.UnmarshalText([]byte(lvl)); err != nil {
+		return slog.LevelInfo
+	}
+
+	return lv.Level()
+}
+
+func defaultLogAttrs(name, version string) []slog.Attr {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = host
 	}
 
-	return []interface{}{
+	return []slog.Attr{
 		slog.String(srv, name),
 		slog.String(ver, version),
 		slog.String(host, hostname),
 	}
 }
 
-func setupLogging(logger *slog.Logger, fields []interface{}) {
-	if len(fields) != 0 {
-		slog.SetDefault(logger.With(fields...))
-		return
+func setupLogging(lc logConfig) {
+	ho := slog.HandlerOptions{
+		AddSource: true,
+		Level:     getLogLevel(),
 	}
-	slog.SetDefault(logger)
+
+	var hnd slog.Handler
+
+	if lc.json {
+		hnd = ho.NewJSONHandler(os.Stderr)
+	} else {
+		hnd = ho.NewTextHandler(os.Stderr)
+	}
+
+	slog.New(hnd.WithAttrs(lc.attrs))
 }
 
 func setupJaegerTracing(name, version string) error {

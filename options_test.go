@@ -8,52 +8,28 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-func toAttr(in []interface{}) []slog.Attr {
-	out := make([]slog.Attr, 0, len(in))
-
-	for _, attr := range in {
-		a, ok := attr.(slog.Attr)
-		if !ok {
-			panic("type assertion error")
-		}
-		out = append(out, a)
-	}
-
-	return out
-}
-
-func toInterface(in []slog.Attr) []interface{} {
-	out := make([]interface{}, 0, len(in))
-
-	for _, attr := range in {
-		out = append(out, attr)
-	}
-
-	return out
-}
-
 func TestLogFields(t *testing.T) {
-	defaultFields := defaultLogFields("test", "1.0")
-	fields := []slog.Attr{slog.String("key", "value")}
-	fields1 := toAttr(defaultLogFields("name1", "version1"))
+	defaultAttrs := defaultLogAttrs("test", "1.0")
+	attrs := []slog.Attr{slog.String("key", "value")}
+	attrs1 := defaultLogAttrs("name1", "version1")
 	type args struct {
 		fields []slog.Attr
 	}
 	tests := map[string]struct {
 		args        args
-		want        config
+		want        logConfig
 		expectedErr string
 	}{
-		"empty fields": {args: args{fields: nil}, expectedErr: "fields are empty"},
-		"success":      {args: args{fields: fields}, want: config{fields: append(defaultFields, toInterface(fields)...)}},
-		"no overwrite": {args: args{fields: fields1}, want: config{fields: defaultFields}},
+		"empty attributes": {args: args{fields: nil}, expectedErr: "attributes are empty"},
+		"success":          {args: args{fields: attrs}, want: logConfig{attrs: append(defaultAttrs, attrs...)}},
+		"no overwrite":     {args: args{fields: attrs1}, want: logConfig{attrs: defaultAttrs}},
 	}
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			svc := &Service{
-				config: config{
-					fields: defaultFields,
+				logConfig: logConfig{
+					attrs: defaultAttrs,
 				},
 			}
 
@@ -61,19 +37,12 @@ func TestLogFields(t *testing.T) {
 
 			if tt.expectedErr == "" {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, svc.config)
+				assert.Equal(t, tt.want, svc.logConfig)
 			} else {
 				assert.EqualError(t, err, tt.expectedErr)
 			}
 		})
 	}
-}
-
-func TestLogger(t *testing.T) {
-	svc := &Service{}
-
-	err := WithLogger(slog.Default())(svc)
-	assert.NoError(t, err)
 }
 
 func TestSIGHUP(t *testing.T) {

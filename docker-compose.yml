@@ -34,7 +34,7 @@ services:
     volumes:
       - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
   mysql:
-    image: mysql:5.7
+    image: mysql:8
     restart: always
     environment:
       MYSQL_DATABASE: 'patrondb'
@@ -60,8 +60,8 @@ services:
     image: localstack/localstack:0.14
     network_mode: bridge
     ports:
-      - "127.0.0.1:4510-4559:4510-4559"  # external service port range
-      - "127.0.0.1:4566:4566"            # LocalStack Edge Proxy
+      - "127.0.0.1:4510-4559:4510-4559" # external service port range
+      - "127.0.0.1:4566:4566" # LocalStack Edge Proxy
     environment:
       - SERVICES=sns,sqs
       - DEBUG=1

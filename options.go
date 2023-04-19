@@ -2,7 +2,6 @@ package patron
 
 import (
 	"errors"
-	"os"
 
 	"golang.org/x/exp/slog"
 )
@@ -24,29 +23,21 @@ func WithSIGHUP(handler func()) OptionFunc {
 }
 
 // WithLogFields options to pass in additional log fields.
-func WithLogFields(fields ...slog.Attr) OptionFunc {
+func WithLogFields(attrs ...slog.Attr) OptionFunc {
 	return func(svc *Service) error {
-		if len(fields) == 0 {
-			return errors.New("fields are empty")
+		if len(attrs) == 0 {
+			return errors.New("attributes are empty")
 		}
 
-		for _, field := range fields {
-			if field.Key == srv || field.Key == ver || field.Key == host {
+		for _, attr := range attrs {
+			if attr.Key == srv || attr.Key == ver || attr.Key == host {
 				// don't override
 				continue
 			}
 
-			svc.config.fields = append(svc.config.fields, field)
+			svc.logConfig.attrs = append(svc.logConfig.attrs, attr)
 		}
 
-		return nil
-	}
-}
-
-// WithLogger to pass in custom logger.
-func WithLogger(logger *slog.Logger) OptionFunc {
-	return func(svc *Service) error {
-		svc.config.logger = logger
 		return nil
 	}
 }
@@ -54,7 +45,7 @@ func WithLogger(logger *slog.Logger) OptionFunc {
 // WithJSONLogger to use Go's slog package.
 func WithJSONLogger() OptionFunc {
 	return func(svc *Service) error {
-		svc.config.logger = slog.New(slog.NewJSONHandler(os.Stderr))
+		svc.logConfig.json = true
 		return nil
 	}
 }

@@ -8,15 +8,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/beatlabs/patron/correlation"
 	patronerrors "github.com/beatlabs/patron/errors"
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
+	patrontrace "github.com/beatlabs/patron/trace"
+	patrontracev2 "github.com/beatlabs/patron/trace/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/streadway/amqp"
-	"golang.org/x/exp/slog"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -84,11 +82,11 @@ func New(url string, oo ...OptionFunc) (*Publisher, error) {
 
 // Publish a message to an exchange.
 func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error {
-	sp := injectTraceHeaders(ctx, exchange, &msg)
+	sp := injectTrace(ctx, exchange, &msg)
+	defer sp.End()
 
 	start := time.Now()
 	err := tc.channel.Publish(exchange, key, mandatory, immediate, msg)
-
 	observePublish(ctx, sp, start, exchange, err)
 	if err != nil {
 		return fmt.Errorf("failed to publish message: %w", err)
@@ -97,21 +95,31 @@ func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandator
 	return nil
 }
 
-func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishing) opentracing.Span {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, exchange),
-		publisherComponent, ext.SpanKindProducer, opentracing.Tag{Key: "exchange", Value: exchange})
+func injectTrace(ctx context.Context, exchange string, msg *amqp.Publishing) trace.Span {
+	_, sp := patrontracev2.StartProducerSpan(ctx, patrontracev2.ComponentOpName(publisherComponent, exchange),
+		attribute.String("exchange", exchange))
 
-	if msg.Headers == nil {
-		msg.Headers = amqp.Table{}
-	}
+	// if msg.Headers == nil {
+	// 	msg.Headers = amqp.Table{}
+	// }
 
-	c := amqpHeadersCarrier(msg.Headers)
+	// c := amqpHeadersCarrier(msg.Headers)
 
-	if err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, c); err != nil {
-		log.FromContext(ctx).Error("failed to inject tracing headers", slog.Any("error", err))
-	}
-	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
+	// if err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, c); err != nil {
+	// 	log.FromContext(ctx).Error("failed to inject tracing headers", slog.Any("error", err))
+	// }
+	// msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
+
 	return sp
+}
+
+func observePublish(ctx context.Context, span trace.Span, start time.Time, exchange string, err error) {
+	patrontracev2.SpanComplete(span, err)
+
+	durationHistogram := patrontrace.Histogram{
+		Observer: publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err == nil)),
+	}
+	durationHistogram.Observe(ctx, time.Since(start).Seconds())
 }
 
 // Close the channel and connection.
@@ -124,13 +132,4 @@ type amqpHeadersCarrier map[string]interface{}
 // Set implements Set() of opentracing.TextMapWriter.
 func (c amqpHeadersCarrier) Set(key, val string) {
 	c[key] = val
-}
-
-func observePublish(ctx context.Context, span opentracing.Span, start time.Time, exchange string, err error) {
-	trace.SpanComplete(span, err)
-
-	durationHistogram := trace.Histogram{
-		Observer: publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err == nil)),
-	}
-	durationHistogram.Observe(ctx, time.Since(start).Seconds())
 }

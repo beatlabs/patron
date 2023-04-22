@@ -13,7 +13,7 @@ import (
 
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
+	patrontrace "github.com/beatlabs/patron/trace"
 	"github.com/uber/jaeger-client-go"
 	"golang.org/x/exp/slog"
 )
@@ -90,7 +90,7 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 	}
 
 	defer func() {
-		err := trace.Close()
+		err := patrontrace.Close()
 		if err != nil {
 			slog.Error("failed to close trace", slog.Any("error", err))
 		}
@@ -231,5 +231,5 @@ func setupJaegerTracing(name, version string) error {
 	}
 
 	slog.Debug("setting up default tracing", slog.String("agent", agent), slog.String("param", tp), slog.Float64("val", prmVal))
-	return trace.Setup(name, version, agent, tp, prmVal, buckets)
+	return patrontrace.Setup(name, version, agent, tp, prmVal, buckets)
 }

@@ -43,7 +43,7 @@ func Test_injectTraceHeaders(t *testing.T) {
 	opentracing.SetGlobalTracer(mtr)
 	t.Cleanup(func() { mtr.Reset() })
 	msg := amqp.Publishing{}
-	sp := injectTraceHeaders(context.Background(), "123", &msg)
+	sp := injectTrace(context.Background(), "123", &msg)
 	assert.NotNil(t, sp)
 	assert.NotEmpty(t, msg.Headers)
 }

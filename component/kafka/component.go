@@ -1,5 +1,4 @@
-// Package group provides kafka consumer group component implementation.
-package group
+package kafka
 
 import (
 	"context"
@@ -10,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/correlation"
 	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
@@ -36,7 +34,7 @@ const (
 	defaultRetryWait       = 10 * time.Second
 	defaultBatchSize       = 1
 	defaultBatchTimeout    = 100 * time.Millisecond
-	defaultFailureStrategy = kafka.ExitStrategy
+	defaultFailureStrategy = ExitStrategy
 )
 
 var (
@@ -101,7 +99,7 @@ func messageStatusCountInc(status, group, topic string) {
 // The default failure strategy is the ExitStrategy.
 // The default batch size is 1 and the batch timeout is 100ms.
 // The default number of retries is 0 and the retry wait is 0.
-func New(name, group string, brokers, topics []string, proc kafka.BatchProcessorFunc, saramaCfg *sarama.Config, oo ...OptionFunc) (*Component, error) {
+func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, saramaCfg *sarama.Config, oo ...OptionFunc) (*Component, error) {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
@@ -162,8 +160,8 @@ type Component struct {
 	topics                    []string
 	brokers                   []string
 	saramaConfig              *sarama.Config
-	proc                      kafka.BatchProcessorFunc
-	failStrategy              kafka.FailStrategy
+	proc                      BatchProcessorFunc
+	failStrategy              FailStrategy
 	batchSize                 uint
 	batchTimeout              time.Duration
 	batchMessageDeduplication bool
@@ -270,10 +268,10 @@ type consumerHandler struct {
 	batchMessageDeduplication bool
 
 	// callback
-	proc kafka.BatchProcessorFunc
+	proc BatchProcessorFunc
 
 	// failures strategy
-	failStrategy kafka.FailStrategy
+	failStrategy FailStrategy
 
 	// committing after every batch
 	commitSync bool
@@ -290,8 +288,8 @@ type consumerHandler struct {
 	sessionCallback   func(sarama.ConsumerGroupSession) error
 }
 
-func newConsumerHandler(ctx context.Context, name, group string, processorFunc kafka.BatchProcessorFunc,
-	fs kafka.FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync, batchMessageDeduplication bool,
+func newConsumerHandler(ctx context.Context, name, group string, processorFunc BatchProcessorFunc,
+	fs FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync, batchMessageDeduplication bool,
 	sessionCallback func(sarama.ConsumerGroupSession) error,
 ) *consumerHandler {
 	return &consumerHandler{
@@ -362,17 +360,17 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 		return nil
 	}
 
-	messages := make([]kafka.Message, 0, len(c.msgBuf))
+	messages := make([]Message, 0, len(c.msgBuf))
 	for _, msg := range c.msgBuf {
 		messageStatusCountInc(messageProcessed, c.group, msg.Topic)
 		ctx, sp := c.getContextWithCorrelation(msg)
-		messages = append(messages, kafka.NewMessage(ctx, sp, msg))
+		messages = append(messages, NewMessage(ctx, sp, msg))
 	}
 
 	if c.batchMessageDeduplication {
 		messages = deduplicateMessages(messages)
 	}
-	btc := kafka.NewBatch(messages)
+	btc := NewBatch(messages)
 	err := c.proc(btc)
 	if err != nil {
 		if errors.Is(c.ctx.Err(), context.Canceled) {
@@ -399,9 +397,9 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err error) error {
+func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) error {
 	switch c.failStrategy {
-	case kafka.ExitStrategy:
+	case ExitStrategy:
 		for _, m := range messages {
 			trace.SpanError(m.Span())
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
@@ -409,7 +407,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []kafka.Message, err e
 		slog.Error("could not process message(s)")
 		c.err = err
 		return err
-	case kafka.SkipStrategy:
+	case SkipStrategy:
 		for _, m := range messages {
 			trace.SpanError(m.Span())
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
@@ -468,13 +466,13 @@ func mapHeader(hh []*sarama.RecordHeader) map[string]string {
 // This function assumes that messages are ordered from old to new, and relies on Kafka ordering guarantees within
 // partitions. This is the default behaviour from Kafka unless the Producer altered the partition hashing behaviour in
 // a nondeterministic way.
-func deduplicateMessages(messages []kafka.Message) []kafka.Message {
-	m := map[string]kafka.Message{}
+func deduplicateMessages(messages []Message) []Message {
+	m := map[string]Message{}
 	for _, message := range messages {
 		m[string(message.Message().Key)] = message
 	}
 
-	deduplicated := make([]kafka.Message, 0, len(m))
+	deduplicated := make([]Message, 0, len(m))
 	for _, message := range m {
 		deduplicated = append(deduplicated, message)
 	}

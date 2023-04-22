@@ -1,4 +1,4 @@
-package group
+package kafka
 
 import (
 	"errors"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/component/kafka"
 	"golang.org/x/exp/slog"
 )
 
@@ -14,13 +13,13 @@ import (
 type OptionFunc func(*Component) error
 
 // WithFailureStrategy sets the strategy to follow for the component when it encounters an error.
-// The kafka.ExitStrategy will fail the component, if there are retries > 0 then the component will reconnect and retry
+// The ExitStrategy will fail the component, if there are retries > 0 then the component will reconnect and retry
 // the failed message.
-// The kafka.SkipStrategy will skip the message on failure. If a client wants to retry a message before failing then
-// this needs to be handled in the kafka.BatchProcessorFunc.
-func WithFailureStrategy(fs kafka.FailStrategy) OptionFunc {
+// The SkipStrategy will skip the message on failure. If a client wants to retry a message before failing then
+// this needs to be handled in the BatchProcessorFunc.
+func WithFailureStrategy(fs FailStrategy) OptionFunc {
 	return func(c *Component) error {
-		if fs > kafka.SkipStrategy || fs < kafka.ExitStrategy {
+		if fs > SkipStrategy || fs < ExitStrategy {
 			return errors.New("invalid failure strategy provided")
 		}
 		c.failStrategy = fs

@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package group
+package kafka
 
 import (
 	"context"
@@ -14,7 +14,6 @@ import (
 
 	"github.com/Shopify/sarama"
 	kafkaclient "github.com/beatlabs/patron/client/kafka"
-	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/correlation"
 	testkafka "github.com/beatlabs/patron/test/kafka"
 	"github.com/opentracing/opentracing-go"
@@ -64,7 +63,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 	actualSuccessfulMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(batch kafka.Batch) error {
+	processorFunc := func(batch Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)
@@ -128,7 +127,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]int, 0)
 	actualNumOfRuns := int32(0)
-	processorFunc := func(batch kafka.Batch) error {
+	processorFunc := func(batch Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)
@@ -184,7 +183,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	actualMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(batch kafka.Batch) error {
+	processorFunc := func(batch Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)
@@ -240,7 +239,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 	// Test parameters
-	processorFunc := func(batch kafka.Batch) error {
+	processorFunc := func(batch Batch) error {
 		return nil
 	}
 	invalidTopicName := "invalid-topic-name"
@@ -251,7 +250,7 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	// Test parameters
-	processorFunc := func(batch kafka.Batch) error {
+	processorFunc := func(batch Batch) error {
 		return nil
 	}
 	_, err := New(successTopic2, successTopic2+"-group", []string{"127.0.0.1:9999"},
@@ -260,14 +259,14 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	require.Contains(t, err.Error(), "failed to create client:")
 }
 
-func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc kafka.BatchProcessorFunc) *Component {
-	saramaCfg, err := kafka.DefaultConsumerSaramaConfig(name, true)
+func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc BatchProcessorFunc) *Component {
+	saramaCfg, err := DefaultConsumerSaramaConfig(name, true)
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	saramaCfg.Version = sarama.V2_6_0_0
 	require.NoError(t, err)
 
 	cmp, err := New(name, name+"-group", []string{broker}, []string{name}, processorFunc,
-		saramaCfg, WithFailureStrategy(kafka.ExitStrategy), WithBatchSize(batchSize), WithBatchTimeout(100*time.Millisecond),
+		saramaCfg, WithFailureStrategy(ExitStrategy), WithBatchSize(batchSize), WithBatchTimeout(100*time.Millisecond),
 		WithRetries(retries), WithRetryWait(200*time.Millisecond), WithCommitSync(), WithCheckTopic())
 	require.NoError(t, err)
 

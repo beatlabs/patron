@@ -1,4 +1,4 @@
-package group
+package kafka
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
@@ -34,8 +33,8 @@ func TestNew(t *testing.T) {
 		group        string
 		brokers      []string
 		topics       []string
-		p            kafka.BatchProcessorFunc
-		fs           kafka.FailStrategy
+		p            BatchProcessorFunc
+		fs           FailStrategy
 		retries      uint
 		retryWait    time.Duration
 		batchSize    uint
@@ -49,37 +48,37 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name:    "success",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, retryWait: 2, batchTimeout: time.Second, fs: kafka.ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, retryWait: 2, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
 			wantErr: false,
 		},
 		{
 			name:    "failed, no sarama config",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, retryWait: 2, batchTimeout: time.Second, fs: kafka.ExitStrategy, saramaCfg: nil},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, retryWait: 2, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: nil},
 			wantErr: true,
 		},
 		{
 			name:    "failed, missing name",
-			args:    args{name: "", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: kafka.ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "failed, missing group",
-			args:    args{name: "name", group: "", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: kafka.ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "failed, no brokers",
-			args:    args{name: "name", group: "grp", brokers: []string{}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: kafka.ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "failed, no topics",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{""}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: kafka.ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{""}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
 			wantErr: true,
 		},
 		{
 			name:    "failed, missing processor func",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, batchSize: 1, batchTimeout: time.Second, p: nil, fs: kafka.ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, batchSize: 1, batchTimeout: time.Second, p: nil, fs: ExitStrategy, saramaCfg: saramaCfg},
 			wantErr: true,
 		},
 		{
@@ -145,7 +144,7 @@ type mockProcessor struct {
 
 var errProcess = errors.New("PROC ERROR")
 
-func (mp *mockProcessor) Process(batch kafka.Batch) error {
+func (mp *mockProcessor) Process(batch Batch) error {
 	mp.mux.Lock()
 	mp.execs += len(batch.Messages())
 	mp.mux.Unlock()
@@ -217,7 +216,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		name                      string
 		msgs                      []*sarama.ConsumerMessage
 		proc                      *mockProcessor
-		failStrategy              kafka.FailStrategy
+		failStrategy              FailStrategy
 		batchSize                 uint
 		batchMessageDeduplication bool
 		expectError               bool
@@ -229,7 +228,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			proc: &mockProcessor{
 				errReturn: false,
 			},
-			failStrategy: kafka.ExitStrategy,
+			failStrategy: ExitStrategy,
 			batchSize:    1,
 			expectError:  false,
 		},
@@ -252,7 +251,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			proc: &mockProcessor{
 				errReturn: false,
 			},
-			failStrategy: kafka.ExitStrategy,
+			failStrategy: ExitStrategy,
 			batchSize:    10,
 			expectError:  false,
 		},
@@ -262,7 +261,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			proc: &mockProcessor{
 				errReturn: true,
 			},
-			failStrategy: kafka.ExitStrategy,
+			failStrategy: ExitStrategy,
 			batchSize:    1,
 			expectError:  true,
 		},
@@ -272,7 +271,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			proc: &mockProcessor{
 				errReturn: true,
 			},
-			failStrategy: kafka.SkipStrategy,
+			failStrategy: SkipStrategy,
 			batchSize:    1,
 			expectError:  false,
 		},
@@ -295,7 +294,7 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			proc: &mockProcessor{
 				errReturn: false,
 			},
-			failStrategy:              kafka.SkipStrategy,
+			failStrategy:              SkipStrategy,
 			batchSize:                 10,
 			batchMessageDeduplication: true,
 			expectError:               false,
@@ -385,13 +384,13 @@ func Test_getCorrelationID(t *testing.T) {
 }
 
 func Test_deduplicateMessages(t *testing.T) {
-	message := func(key, val string) kafka.Message {
-		return kafka.NewMessage(
+	message := func(key, val string) Message {
+		return NewMessage(
 			context.Background(),
 			opentracing.SpanFromContext(context.Background()),
 			&sarama.ConsumerMessage{Key: []byte(key), Value: []byte(val)})
 	}
-	find := func(collection []kafka.Message, key string) kafka.Message {
+	find := func(collection []Message, key string) Message {
 		for _, m := range collection {
 			if string(m.Message().Key) == key {
 				return m
@@ -401,7 +400,7 @@ func Test_deduplicateMessages(t *testing.T) {
 	}
 
 	// Given
-	original := []kafka.Message{
+	original := []Message{
 		message("k1", "v1.1"),
 		message("k1", "v1.2"),
 		message("k2", "v2.1"),

@@ -1,28 +1,27 @@
-package group
+package kafka
 
 import (
 	"testing"
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beatlabs/patron/component/kafka"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFailureStrategy(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		strategy kafka.FailStrategy
+		strategy FailStrategy
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
 		"success-exit": {
-			args: args{strategy: kafka.ExitStrategy},
+			args: args{strategy: ExitStrategy},
 		},
 		"success-skip": {
-			args: args{strategy: kafka.SkipStrategy},
+			args: args{strategy: SkipStrategy},
 		},
 		"invalid strategy": {
 			args:        args{strategy: -1},

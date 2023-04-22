@@ -6,12 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/stretchr/testify/require"
-
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron/correlation"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_messageWrapper(t *testing.T) {

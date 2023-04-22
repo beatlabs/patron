@@ -6,7 +6,6 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/kafka"
-	"github.com/beatlabs/patron/component/kafka/group"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
 )
@@ -26,7 +25,7 @@ func createKafkaConsumer() (patron.Component, error) {
 		return nil
 	}
 
-	return group.New(name, examples.KafkaGroup, []string{examples.KafkaBroker}, []string{examples.KafkaTopic}, process, cfg,
-		group.WithFailureStrategy(kafka.SkipStrategy), group.WithBatchSize(1), group.WithBatchTimeout(1*time.Second),
-		group.WithRetries(10), group.WithRetryWait(3*time.Second), group.WithCommitSync())
+	return kafka.New(name, examples.KafkaGroup, []string{examples.KafkaBroker}, []string{examples.KafkaTopic}, process, cfg,
+		kafka.WithFailureStrategy(kafka.SkipStrategy), kafka.WithBatchSize(1), kafka.WithBatchTimeout(1*time.Second),
+		kafka.WithRetries(10), kafka.WithRetryWait(3*time.Second), kafka.WithCommitSync())
 }

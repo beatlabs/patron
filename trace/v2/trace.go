@@ -10,20 +10,27 @@ import (
 )
 
 const (
-	// HostsTag is used to tag the component's hosts.
-	HostsTag = "hosts"
-	// VersionTag is used to tag the component's version.
-	VersionTag = "version"
+	hostsTag   = "hosts"
+	versionTag = "version"
 	// TraceID is a label name for a request trace ID.
 	TraceID = "traceID"
 )
 
-// Version will be used to tag all traced components.
-// It can be used to distinguish between dev, stage, and prod environments.
-var Version = "dev"
+var (
+	version    string
+	tracerName string
+	hostname   string
+)
+
+// Setup tracing.
+func Setup(name, ver, host string) {
+	tracerName = name
+	version = ver
+	hostname = host
+}
 
 func Tracer() trace.Tracer {
-	return otel.Tracer("") // TODO: introduce name.
+	return otel.Tracer(tracerName)
 }
 
 // SpanComplete finishes a span with or without an error indicator.
@@ -37,8 +44,11 @@ func ComponentOpName(cmp, target string) string {
 	return cmp + " " + target
 }
 
-func StartProducerSpan(ctx context.Context, name string, attrs ...attribute.KeyValue) (context.Context, trace.Span) {
-	ctx, sp := otel.Tracer("").Start(ctx, name, trace.WithSpanKind(trace.SpanKindProducer))
+// ProducerSpan returns a new span for a producer.
+func ProducerSpan(ctx context.Context, name string, attrs ...attribute.KeyValue) (context.Context, trace.Span) {
+	ctx, sp := otel.Tracer(tracerName).Start(ctx, name, trace.WithSpanKind(trace.SpanKindProducer))
+	attrs = append(attrs, attribute.String(hostsTag, hostname))
+	attrs = append(attrs, attribute.String(versionTag, version))
 	sp.SetAttributes(attrs...)
 	return ctx, sp
 }

@@ -96,7 +96,7 @@ func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandator
 }
 
 func injectTrace(ctx context.Context, exchange string, msg *amqp.Publishing) trace.Span {
-	_, sp := patrontracev2.StartProducerSpan(ctx, patrontracev2.ComponentOpName(publisherComponent, exchange),
+	_, sp := patrontracev2.ProducerSpan(ctx, patrontracev2.ComponentOpName(publisherComponent, exchange),
 		attribute.String("exchange", exchange))
 
 	// if msg.Headers == nil {

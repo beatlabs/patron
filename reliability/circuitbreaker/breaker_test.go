@@ -53,9 +53,9 @@ func TestCircuitBreaker_isHalfOpen(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		"closed":    {fields: fields{status: close, nextRetry: tsFuture}, want: false},
-		"open":      {fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
-		"half open": {fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: true},
+		"closed":    {fields: fields{status: closed, nextRetry: tsFuture}, want: false},
+		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
+		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: true},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -66,7 +66,7 @@ func TestCircuitBreaker_isHalfOpen(t *testing.T) {
 				status:    tt.fields.status,
 				nextRetry: tt.fields.nextRetry,
 			}
-			assert.Equal(t, tt.want, cb.isHalfOpen())
+			assert.Equal(t, tt.want, cb.isHalfOpened())
 		})
 	}
 }
@@ -82,9 +82,9 @@ func TestCircuitBreaker_isOpen(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		"closed":    {fields: fields{status: close, nextRetry: tsFuture}, want: false},
-		"half open": {fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
-		"open":      {fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: true},
+		"closed":    {fields: fields{status: closed, nextRetry: tsFuture}, want: false},
+		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
+		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: true},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -95,7 +95,7 @@ func TestCircuitBreaker_isOpen(t *testing.T) {
 				status:    tt.fields.status,
 				nextRetry: tt.fields.nextRetry,
 			}
-			assert.Equal(t, tt.want, cb.isOpen())
+			assert.Equal(t, tt.want, cb.isOpened())
 		})
 	}
 }
@@ -111,9 +111,9 @@ func TestCircuitBreaker_isClose(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		"closed":    {fields: fields{status: close, nextRetry: tsFuture}, want: true},
-		"half open": {fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
-		"open":      {fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
+		"closed":    {fields: fields{status: closed, nextRetry: tsFuture}, want: true},
+		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
+		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -124,7 +124,7 @@ func TestCircuitBreaker_isClose(t *testing.T) {
 				status:    tt.fields.status,
 				nextRetry: tt.fields.nextRetry,
 			}
-			assert.Equal(t, tt.want, cb.isClose())
+			assert.Equal(t, tt.want, cb.isClosed())
 		})
 	}
 }
@@ -141,7 +141,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
-	assert.True(t, cb.isClose())
+	assert.True(t, cb.isClosed())
 	assert.Equal(t, tsFuture, cb.nextRetry)
 	// will transition to open
 	_, err = cb.Execute(testFailureAction)
@@ -149,7 +149,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
-	assert.True(t, cb.isOpen())
+	assert.True(t, cb.isOpened())
 	assert.True(t, cb.nextRetry < tsFuture)
 	// open, returns err immediately
 	_, err = cb.Execute(testSuccessAction)
@@ -157,7 +157,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
-	assert.True(t, cb.isOpen())
+	assert.True(t, cb.isOpened())
 	assert.True(t, cb.nextRetry < tsFuture)
 	// should be half open now and will stay in there
 	time.Sleep(waitRetryTimeout)
@@ -166,7 +166,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, uint(1), cb.failures)
 	assert.Equal(t, uint(1), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
-	assert.True(t, cb.isHalfOpen())
+	assert.True(t, cb.isHalfOpened())
 	assert.True(t, cb.nextRetry < tsFuture)
 	// should be half open now and will transition to open
 	_, err = cb.Execute(testFailureAction)
@@ -174,7 +174,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
-	assert.True(t, cb.isOpen())
+	assert.True(t, cb.isOpened())
 	assert.True(t, cb.nextRetry < tsFuture)
 	// should be half open now and will transition to close
 	time.Sleep(waitRetryTimeout)
@@ -183,14 +183,14 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(1), cb.executions)
 	assert.Equal(t, uint(1), cb.retries)
-	assert.True(t, cb.isHalfOpen())
+	assert.True(t, cb.isHalfOpened())
 	assert.True(t, cb.nextRetry < tsFuture)
 	_, err = cb.Execute(testSuccessAction)
 	assert.NoError(t, err)
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
-	assert.True(t, cb.isClose())
+	assert.True(t, cb.isClosed())
 	assert.Equal(t, tsFuture, cb.nextRetry)
 }
 

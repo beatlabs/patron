@@ -18,9 +18,8 @@ import (
 // is in the SMS sandbox, you can use all of the features of Amazon SNS. However,
 // you can send SMS messages only to verified destination phone numbers. For more
 // information, including how to move out of the sandbox to send messages without
-// restrictions, see SMS sandbox
-// (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html) in the Amazon
-// SNS Developer Guide.
+// restrictions, see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
+// in the Amazon SNS Developer Guide.
 func (c *Client) VerifySMSSandboxPhoneNumber(ctx context.Context, params *VerifySMSSandboxPhoneNumberInput, optFns ...func(*Options)) (*VerifySMSSandboxPhoneNumberOutput, error) {
 	if params == nil {
 		params = &VerifySMSSandboxPhoneNumberInput{}
@@ -109,6 +108,9 @@ func (c *Client) addOperationVerifySMSSandboxPhoneNumberMiddlewares(stack *middl
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opVerifySMSSandboxPhoneNumber(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

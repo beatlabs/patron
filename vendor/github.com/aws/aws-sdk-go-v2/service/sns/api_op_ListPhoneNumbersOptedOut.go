@@ -46,8 +46,8 @@ type ListPhoneNumbersOptedOutInput struct {
 // The response from the ListPhoneNumbersOptedOut action.
 type ListPhoneNumbersOptedOutOutput struct {
 
-	// A NextToken string is returned when you call the ListPhoneNumbersOptedOut action
-	// if additional records are available after the first page of results.
+	// A NextToken string is returned when you call the ListPhoneNumbersOptedOut
+	// action if additional records are available after the first page of results.
 	NextToken *string
 
 	// A list of phone numbers that are opted out of receiving SMS messages. The list
@@ -106,6 +106,9 @@ func (c *Client) addOperationListPhoneNumbersOptedOutMiddlewares(stack *middlewa
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opListPhoneNumbersOptedOut(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

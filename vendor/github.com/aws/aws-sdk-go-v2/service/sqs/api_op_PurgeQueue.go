@@ -11,12 +11,12 @@ import (
 )
 
 // Deletes the messages in a queue specified by the QueueURL parameter. When you
-// use the PurgeQueue action, you can't retrieve any messages deleted from a queue.
-// The message deletion process takes up to 60 seconds. We recommend waiting for 60
-// seconds regardless of your queue's size. Messages sent to the queue before you
-// call PurgeQueue might be received but are deleted within the next minute.
-// Messages sent to the queue after you call PurgeQueue might be deleted while the
-// queue is being purged.
+// use the PurgeQueue action, you can't retrieve any messages deleted from a
+// queue. The message deletion process takes up to 60 seconds. We recommend waiting
+// for 60 seconds regardless of your queue's size. Messages sent to the queue
+// before you call PurgeQueue might be received but are deleted within the next
+// minute. Messages sent to the queue after you call PurgeQueue might be deleted
+// while the queue is being purged.
 func (c *Client) PurgeQueue(ctx context.Context, params *PurgeQueueInput, optFns ...func(*Options)) (*PurgeQueueOutput, error) {
 	if params == nil {
 		params = &PurgeQueueInput{}
@@ -99,6 +99,9 @@ func (c *Client) addOperationPurgeQueueMiddlewares(stack *middleware.Stack, opti
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opPurgeQueue(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

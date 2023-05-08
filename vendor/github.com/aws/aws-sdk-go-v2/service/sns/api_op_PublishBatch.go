@@ -12,12 +12,12 @@ import (
 )
 
 // Publishes up to ten messages to the specified topic. This is a batch version of
-// Publish. For FIFO topics, multiple messages within a single batch are published
+// Publish . For FIFO topics, multiple messages within a single batch are published
 // in the order they are sent, and messages are deduplicated within the batch and
 // across batches for 5 minutes. The result of publishing each message is reported
 // individually in the response. Because the batch request can result in a
 // combination of successful and unsuccessful actions, you should check for batch
-// errors even when the call returns an HTTP status code of 200. The maximum
+// errors even when the call returns an HTTP status code of 200 . The maximum
 // allowed individual message size and the maximum total payload size (the sum of
 // the individual lengths of all of the batched messages) are both 256 KB (262,144
 // bytes). Some actions take lists of parameters. These lists are specified using
@@ -121,6 +121,9 @@ func (c *Client) addOperationPublishBatchMiddlewares(stack *middleware.Stack, op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opPublishBatch(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -11,8 +11,8 @@ import (
 )
 
 // Removes a statement from a topic's access control policy. To remove the ability
-// to change topic permissions, you must deny permissions to the AddPermission,
-// RemovePermission, and SetTopicAttributes actions in your IAM policy.
+// to change topic permissions, you must deny permissions to the AddPermission ,
+// RemovePermission , and SetTopicAttributes actions in your IAM policy.
 func (c *Client) RemovePermission(ctx context.Context, params *RemovePermissionInput, optFns ...func(*Options)) (*RemovePermissionOutput, error) {
 	if params == nil {
 		params = &RemovePermissionInput{}
@@ -100,6 +100,9 @@ func (c *Client) addOperationRemovePermissionMiddlewares(stack *middleware.Stack
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opRemovePermission(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

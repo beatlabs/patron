@@ -888,8 +888,8 @@ github.com/rcrowley/go-metrics
 # github.com/streadway/amqp v1.0.0
 ## explicit; go 1.10
 github.com/streadway/amqp
-# github.com/stretchr/testify v1.8.2
-## explicit; go 1.13
+# github.com/stretchr/testify v1.8.3
+## explicit; go 1.20
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/uber/jaeger-client-go v2.30.0+incompatible

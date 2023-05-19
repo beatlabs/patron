@@ -14,8 +14,7 @@ import (
 
 // Lists the calling Amazon Web Services account's dedicated origination numbers
 // and their metadata. For more information about origination numbers, see
-// Origination numbers
-// (https://docs.aws.amazon.com/sns/latest/dg/channels-sms-originating-identities-origination-numbers.html)
+// Origination numbers (https://docs.aws.amazon.com/sns/latest/dg/channels-sms-originating-identities-origination-numbers.html)
 // in the Amazon SNS Developer Guide.
 func (c *Client) ListOriginationNumbers(ctx context.Context, params *ListOriginationNumbersInput, optFns ...func(*Options)) (*ListOriginationNumbersOutput, error) {
 	if params == nil {
@@ -104,6 +103,9 @@ func (c *Client) addOperationListOriginationNumbersMiddlewares(stack *middleware
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opListOriginationNumbers(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

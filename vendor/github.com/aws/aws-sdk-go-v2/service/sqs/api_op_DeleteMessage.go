@@ -10,8 +10,8 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Deletes the specified message from the specified queue. To select the message to
-// delete, use the ReceiptHandle of the message (not the MessageId which you
+// Deletes the specified message from the specified queue. To select the message
+// to delete, use the ReceiptHandle of the message (not the MessageId which you
 // receive when you send the message). Amazon SQS can delete a message from a queue
 // even if a visibility timeout setting causes the message to be locked by another
 // consumer. Amazon SQS automatically deletes messages left in a queue longer than
@@ -114,6 +114,9 @@ func (c *Client) addOperationDeleteMessageMiddlewares(stack *middleware.Stack, o
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDeleteMessage(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -11,12 +11,10 @@ import (
 )
 
 // Remove cost allocation tags from the specified Amazon SQS queue. For an
-// overview, see Tagging Your Amazon SQS Queues
-// (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-queue-tags.html)
+// overview, see Tagging Your Amazon SQS Queues (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-queue-tags.html)
 // in the Amazon SQS Developer Guide. Cross-account permissions don't apply to this
 // action. For more information, see Grant cross-account permissions to a role and
-// a user name
-// (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-customer-managed-policy-examples.html#grant-cross-account-permissions-to-role-and-user-name)
+// a user name (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-customer-managed-policy-examples.html#grant-cross-account-permissions-to-role-and-user-name)
 // in the Amazon SQS Developer Guide.
 func (c *Client) UntagQueue(ctx context.Context, params *UntagQueueInput, optFns ...func(*Options)) (*UntagQueueOutput, error) {
 	if params == nil {
@@ -104,6 +102,9 @@ func (c *Client) addOperationUntagQueueMiddlewares(stack *middleware.Stack, opti
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opUntagQueue(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

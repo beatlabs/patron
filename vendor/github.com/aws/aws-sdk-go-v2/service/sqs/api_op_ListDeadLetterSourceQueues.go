@@ -15,13 +15,12 @@ import (
 // configured with a dead-letter queue. The ListDeadLetterSourceQueues methods
 // supports pagination. Set parameter MaxResults in the request to specify the
 // maximum number of results to be returned in the response. If you do not set
-// MaxResults, the response includes a maximum of 1,000 results. If you set
+// MaxResults , the response includes a maximum of 1,000 results. If you set
 // MaxResults and there are additional results to display, the response includes a
-// value for NextToken. Use NextToken as a parameter in your next request to
+// value for NextToken . Use NextToken as a parameter in your next request to
 // ListDeadLetterSourceQueues to receive the next page of results. For more
 // information about using dead-letter queues, see Using Amazon SQS Dead-Letter
-// Queues
-// (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
+// Queues (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
 // in the Amazon SQS Developer Guide.
 func (c *Client) ListDeadLetterSourceQueues(ctx context.Context, params *ListDeadLetterSourceQueuesInput, optFns ...func(*Options)) (*ListDeadLetterSourceQueuesOutput, error) {
 	if params == nil {
@@ -124,6 +123,9 @@ func (c *Client) addOperationListDeadLetterSourceQueuesMiddlewares(stack *middle
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opListDeadLetterSourceQueues(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

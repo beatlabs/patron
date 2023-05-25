@@ -6,6 +6,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -35,7 +36,10 @@ func Tracer() trace.Tracer {
 
 // SpanComplete finishes a span with or without an error indicator.
 func SpanComplete(sp trace.Span, err error) {
-	sp.RecordError(err)
+	if err != nil {
+		sp.RecordError(err)
+		sp.SetStatus(codes.Error, err.Error())
+	}
 	sp.End()
 }
 

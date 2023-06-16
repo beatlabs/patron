@@ -20,7 +20,6 @@ func (oe OpenError) Error() string {
 type status int
 
 const (
-	// nolint:predeclared,revive
 	closed status = iota
 	opened
 )

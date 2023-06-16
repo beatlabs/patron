@@ -20,15 +20,15 @@ func (oe OpenError) Error() string {
 type status int
 
 const (
-	close status = iota // nolint:predeclared
-	open
+	closed status = iota
+	opened
 )
 
 var (
 	tsFuture       = int64(math.MaxInt64)
 	errOpen        = new(OpenError)
 	breakerCounter *prometheus.CounterVec
-	statusMap      = map[status]string{close: "close", open: "open"}
+	statusMap      = map[status]string{closed: "closed", opened: "opened"}
 )
 
 func init() {
@@ -89,7 +89,7 @@ func New(name string, s Setting) (*CircuitBreaker, error) {
 	return &CircuitBreaker{
 		name:       name,
 		set:        s,
-		status:     close,
+		status:     closed,
 		executions: 0,
 		failures:   0,
 		retries:    0,
@@ -100,7 +100,7 @@ func New(name string, s Setting) (*CircuitBreaker, error) {
 func (cb *CircuitBreaker) isHalfOpen() bool {
 	cb.RLock()
 	defer cb.RUnlock()
-	if cb.status == open && cb.nextRetry <= time.Now().UnixNano() {
+	if cb.status == opened && cb.nextRetry <= time.Now().UnixNano() {
 		return true
 	}
 	return false
@@ -109,7 +109,7 @@ func (cb *CircuitBreaker) isHalfOpen() bool {
 func (cb *CircuitBreaker) isOpen() bool {
 	cb.RLock()
 	defer cb.RUnlock()
-	if cb.status == open && cb.nextRetry > time.Now().UnixNano() {
+	if cb.status == opened && cb.nextRetry > time.Now().UnixNano() {
 		return true
 	}
 	return false
@@ -118,7 +118,7 @@ func (cb *CircuitBreaker) isOpen() bool {
 func (cb *CircuitBreaker) isClose() bool {
 	cb.RLock()
 	defer cb.RUnlock()
-	return cb.status == close
+	return cb.status == closed
 }
 
 // Execute the provided action.
@@ -147,7 +147,7 @@ func (cb *CircuitBreaker) incFailure() {
 
 	cb.failures++
 
-	if cb.status == close && cb.failures >= cb.set.FailureThreshold {
+	if cb.status == closed && cb.failures >= cb.set.FailureThreshold {
 		cb.transitionToOpen()
 		return
 	}
@@ -179,7 +179,7 @@ func (cb *CircuitBreaker) incSuccess() {
 }
 
 func (cb *CircuitBreaker) transitionToOpen() {
-	cb.status = open
+	cb.status = opened
 	cb.failures = 0
 	cb.executions = 0
 	cb.retries = 0
@@ -188,7 +188,7 @@ func (cb *CircuitBreaker) transitionToOpen() {
 }
 
 func (cb *CircuitBreaker) transitionToClose() {
-	cb.status = close
+	cb.status = closed
 	cb.failures = 0
 	cb.executions = 0
 	cb.retries = 0

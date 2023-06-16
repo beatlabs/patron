@@ -296,14 +296,14 @@ type stubSQSAPI struct {
 	queueURL                  string
 }
 
-func (s stubSQSAPI) DeleteMessage(ctx context.Context, params *sqs.DeleteMessageInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error) {
+func (s stubSQSAPI) DeleteMessage(_ context.Context, _ *sqs.DeleteMessageInput, _ ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error) {
 	if s.deleteMessageWithContextErr != nil {
 		return nil, s.deleteMessageWithContextErr
 	}
 	return &sqs.DeleteMessageOutput{}, nil
 }
 
-func (s stubSQSAPI) DeleteMessageBatch(ctx context.Context, params *sqs.DeleteMessageBatchInput, optFns ...func(*sqs.Options)) (*sqs.DeleteMessageBatchOutput, error) {
+func (s stubSQSAPI) DeleteMessageBatch(_ context.Context, _ *sqs.DeleteMessageBatchInput, _ ...func(*sqs.Options)) (*sqs.DeleteMessageBatchOutput, error) {
 	if s.deleteMessageBatchWithContextErr != nil {
 		return nil, s.deleteMessageBatchWithContextErr
 	}
@@ -322,7 +322,7 @@ func (s stubSQSAPI) DeleteMessageBatch(ctx context.Context, params *sqs.DeleteMe
 	}, nil
 }
 
-func (s stubSQSAPI) GetQueueAttributes(ctx context.Context, params *sqs.GetQueueAttributesInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error) {
+func (s stubSQSAPI) GetQueueAttributes(_ context.Context, _ *sqs.GetQueueAttributesInput, _ ...func(*sqs.Options)) (*sqs.GetQueueAttributesOutput, error) {
 	if s.getQueueAttributesWithContextErr != nil {
 		return nil, s.getQueueAttributesWithContextErr
 	}
@@ -336,14 +336,14 @@ func (s stubSQSAPI) GetQueueAttributes(ctx context.Context, params *sqs.GetQueue
 }
 
 // nolint
-func (s stubSQSAPI) GetQueueUrl(ctx context.Context, params *sqs.GetQueueUrlInput, optFns ...func(*sqs.Options)) (*sqs.GetQueueUrlOutput, error) {
+func (s stubSQSAPI) GetQueueUrl(_ context.Context, _ *sqs.GetQueueUrlInput, _ ...func(*sqs.Options)) (*sqs.GetQueueUrlOutput, error) {
 	if s.getQueueUrlWithContextErr != nil {
 		return nil, s.getQueueUrlWithContextErr
 	}
 	return &sqs.GetQueueUrlOutput{QueueUrl: aws.String(s.queueURL)}, nil
 }
 
-func (s stubSQSAPI) ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error) {
+func (s stubSQSAPI) ReceiveMessage(_ context.Context, _ *sqs.ReceiveMessageInput, _ ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error) {
 	if s.receiveMessageWithContextErr != nil {
 		return nil, s.receiveMessageWithContextErr
 	}

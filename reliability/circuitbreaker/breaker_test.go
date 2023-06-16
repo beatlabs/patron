@@ -53,9 +53,9 @@ func TestCircuitBreaker_isHalfOpen(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		"closed":    {fields: fields{status: close, nextRetry: tsFuture}, want: false},
-		"open":      {fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
-		"half open": {fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: true},
+		"closed":    {fields: fields{status: closed, nextRetry: tsFuture}, want: false},
+		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
+		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: true},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -82,9 +82,9 @@ func TestCircuitBreaker_isOpen(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		"closed":    {fields: fields{status: close, nextRetry: tsFuture}, want: false},
-		"half open": {fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
-		"open":      {fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: true},
+		"closed":    {fields: fields{status: closed, nextRetry: tsFuture}, want: false},
+		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
+		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: true},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -111,9 +111,9 @@ func TestCircuitBreaker_isClose(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		"closed":    {fields: fields{status: close, nextRetry: tsFuture}, want: true},
-		"half open": {fields: fields{status: open, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
-		"open":      {fields: fields{status: open, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
+		"closed":    {fields: fields{status: closed, nextRetry: tsFuture}, want: true},
+		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
+		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
 	}
 	for name, tt := range tests {
 		tt := tt

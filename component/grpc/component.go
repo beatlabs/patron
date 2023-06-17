@@ -8,6 +8,8 @@ import (
 
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -39,9 +41,13 @@ func New(port int, options ...OptionFunction) (*Component, error) {
 		grpc.StreamInterceptor(observableStreamInterceptor))
 	srv := grpc.NewServer(c.serverOptions...)
 
+	hs := health.NewServer()
+	grpc_health_v1.RegisterHealthServer(srv, hs)
+
 	if c.enableReflection {
 		reflection.Register(srv)
 	}
+
 	c.srv = srv
 
 	return c, nil

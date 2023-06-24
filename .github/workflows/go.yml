@@ -10,11 +10,13 @@ jobs:
     name: Lint and fmt check
     runs-on: ubuntu-20.04
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v4
-
       - name: Check out source code
         uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go.mod'
 
       - name: Linting and fmt check
         run: make lint

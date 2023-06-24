@@ -5,14 +5,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	v2 "github.com/beatlabs/patron/component/http/v2"
+	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	route, err := v2.NewRoute(http.MethodGet, "/api/", func(writer http.ResponseWriter, request *http.Request) {
+	route, err := patronhttp.NewRoute(http.MethodGet, "/api/", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(200)
 	})
 	require.NoError(t, err)
@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestVerifyRouter(t *testing.T) {
-	route, err := v2.NewRoute(http.MethodGet, "/api/", func(writer http.ResponseWriter, request *http.Request) {
+	route, err := patronhttp.NewRoute(http.MethodGet, "/api/", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(200)
 	})
 	require.NoError(t, err)

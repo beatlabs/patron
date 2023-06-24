@@ -3,12 +3,12 @@ package httprouter
 import (
 	"errors"
 
+	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/middleware"
-	v2 "github.com/beatlabs/patron/component/http/v2"
 )
 
 // WithRoutes option for providing routes to the router.
-func WithRoutes(routes ...*v2.Route) OptionFunc {
+func WithRoutes(routes ...*patronhttp.Route) OptionFunc {
 	return func(cfg *Config) error {
 		if len(routes) == 0 {
 			return errors.New("routes are empty")
@@ -19,7 +19,7 @@ func WithRoutes(routes ...*v2.Route) OptionFunc {
 }
 
 // WithAliveCheck option for the router.
-func WithAliveCheck(acf v2.LivenessCheckFunc) OptionFunc {
+func WithAliveCheck(acf patronhttp.LivenessCheckFunc) OptionFunc {
 	return func(cfg *Config) error {
 		if acf == nil {
 			return errors.New("alive check function is nil")
@@ -30,7 +30,7 @@ func WithAliveCheck(acf v2.LivenessCheckFunc) OptionFunc {
 }
 
 // WithReadyCheck option for the router.
-func WithReadyCheck(rcf v2.ReadyCheckFunc) OptionFunc {
+func WithReadyCheck(rcf patronhttp.ReadyCheckFunc) OptionFunc {
 	return func(cfg *Config) error {
 		if rcf == nil {
 			return errors.New("ready check function is nil")

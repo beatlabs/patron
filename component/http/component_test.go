@@ -2,180 +2,139 @@ package http
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"net"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/beatlabs/patron/component/http/middleware"
-	errs "github.com/beatlabs/patron/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBuilderWithoutOptions(t *testing.T) {
-	got, err := NewBuilder().Create()
-	assert.NotNil(t, got)
-	assert.NoError(t, err)
+type stubHandler struct{}
+
+func (s stubHandler) ServeHTTP(rw http.ResponseWriter, _ *http.Request) {
+	rw.WriteHeader(200)
 }
 
-func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
-	rb := NewRoutesBuilder().
-		Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet().WithTrace())
-	s, err := NewBuilder().WithRoutesBuilder(rb).WithPort(50013).Create()
-	assert.NoError(t, err)
-	done := make(chan bool)
-	ctx, cnl := context.WithCancel(context.Background())
-	go func() {
-		assert.NoError(t, s.Run(ctx))
-		done <- true
-	}()
-	time.Sleep(100 * time.Millisecond)
-	assert.Len(t, s.routes, 15)
-	cnl()
-	assert.True(t, <-done)
-}
-
-func TestComponent_ListenAndServeTLS_DefaultRoutes_Shutdown(t *testing.T) {
-	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet())
-	s, err := NewBuilder().WithRoutesBuilder(rb).WithSSL("testdata/server.pem", "testdata/server.key").WithPort(50016).Create()
-	assert.NoError(t, err)
-	done := make(chan bool)
-	ctx, cnl := context.WithCancel(context.Background())
-	go func() {
-		assert.NoError(t, s.Run(ctx))
-		done <- true
-	}()
-	time.Sleep(100 * time.Millisecond)
-	assert.Len(t, s.routes, 15)
-	cnl()
-	assert.True(t, <-done)
-}
-
-func TestComponent_ListenAndServeTLS_FailsInvalidCerts(t *testing.T) {
-	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet())
-	s, err := NewBuilder().WithRoutesBuilder(rb).WithSSL("testdata/server.pem", "testdata/server.pem").Create()
-	assert.NoError(t, err)
-	assert.Error(t, s.Run(context.Background()))
-}
-
-func Test_createHTTPServer(t *testing.T) {
-	cmp := Component{
-		httpPort:         10000,
-		httpReadTimeout:  5 * time.Second,
-		httpWriteTimeout: 10 * time.Second,
+func TestNew(t *testing.T) {
+	hnd := &stubHandler{}
+	type args struct {
+		handler      http.Handler
+		oo           []OptionFunc
+		port         string
+		readTimeout  string
+		writeTimeout string
 	}
-	s := cmp.createHTTPServer()
-	assert.NotNil(t, s)
-	assert.Equal(t, ":10000", s.Addr)
-	assert.Equal(t, 5*time.Second, s.ReadTimeout)
-	assert.Equal(t, 10*time.Second, s.WriteTimeout)
-}
-
-func TestBuilder_WithShutdownGracePeriod(t *testing.T) {
-	t.Parallel()
-	testCases := map[string]struct {
-		gp     time.Duration
-		expErr string
-	}{
-		"success":     {gp: 10 * time.Second},
-		"wrong value": {gp: -10 * time.Second, expErr: "negative or zero shutdown grace period provided\n"},
-	}
-
-	for name, tt := range testCases {
-		tt := tt
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			cc, err := NewBuilder().WithShutdownGracePeriod(tt.gp).Create()
-			if tt.expErr != "" {
-				assert.EqualError(t, err, tt.expErr)
-				assert.Nil(t, cc)
-			} else {
-				assert.NoError(t, err)
-				require.NotNil(t, cc)
-				assert.Equal(t, tt.gp, cc.shutdownGracePeriod)
-			}
-		})
-	}
-}
-
-func Test_createHTTPServerUsingBuilder(t *testing.T) {
-	var httpBuilderNoErrors []error
-	httpBuilderAllErrors := []error{
-		errors.New("nil AliveCheckFunc was provided"),
-		errors.New("nil ReadyCheckFunc provided"),
-		errors.New("invalid HTTP Port provided"),
-		errors.New("negative or zero read timeout provided"),
-		errors.New("negative or zero write timeout provided"),
-		errors.New("provided deflate level value not in the [-2, 9] range"),
-		errors.New("route builder is nil"),
-		errors.New("empty list of middlewares provided"),
-		errors.New("invalid cert or key provided"),
-		errors.New("negative or zero shutdown grace period provided"),
-	}
-
-	rb := NewRoutesBuilder().Append(NewRawRouteBuilder("/", func(http.ResponseWriter, *http.Request) {}).MethodGet())
-
 	tests := map[string]struct {
-		acf      AliveCheckFunc
-		rcf      ReadyCheckFunc
-		p        int
-		rt       time.Duration
-		wt       time.Duration
-		gp       time.Duration
-		dl       int
-		rb       *RoutesBuilder
-		mm       []middleware.Func
-		c        string
-		k        string
-		wantErrs []error
+		args        args
+		expected    *Component
+		expectedErr string
 	}{
 		"success": {
-			acf: DefaultAliveCheck,
-			rcf: DefaultReadyCheck,
-			p:   defaultPort,
-			rt:  defaultReadTimeout,
-			wt:  defaultIdleTimeout,
-			dl:  defaultDeflateLevel,
-			gp:  defaultShutdownGracePeriod,
-			rb:  rb,
-			mm: []middleware.Func{
-				middleware.NewRecovery(),
+			args: args{handler: hnd},
+			expected: &Component{
+				port:                defaultPort,
+				readTimeout:         defaultReadTimeout,
+				writeTimeout:        defaultWriteTimeout,
+				shutdownGracePeriod: defaultShutdownGracePeriod,
+				handlerTimeout:      defaultHandlerTimeout,
+				handler:             hnd,
 			},
-			c:        "cert.file",
-			k:        "key.file",
-			wantErrs: httpBuilderNoErrors,
 		},
-		"error in all builder steps": {
-			acf:      nil,
-			rcf:      nil,
-			p:        -1,
-			rt:       -10 * time.Second,
-			wt:       -20 * time.Second,
-			gp:       -15 * time.Second,
-			dl:       -8,
-			rb:       nil,
-			mm:       []middleware.Func{},
-			c:        "",
-			k:        "",
-			wantErrs: httpBuilderAllErrors,
+		"success, env vars": {
+			args: args{
+				handler:      hnd,
+				port:         "8080",
+				readTimeout:  "10s",
+				writeTimeout: "11s",
+			},
+			expected: &Component{
+				port:                8080,
+				readTimeout:         10 * time.Second,
+				writeTimeout:        11 * time.Second,
+				shutdownGracePeriod: defaultShutdownGracePeriod,
+				handlerTimeout:      defaultHandlerTimeout,
+				handler:             hnd,
+			},
+		},
+		"failure, port env vars": {
+			args: args{
+				handler: hnd,
+				port:    "aaa",
+			},
+			expectedErr: `env var for HTTP default port is not valid: strconv.ParseInt: parsing "aaa": invalid syntax`,
+		},
+		"failure, read timeout env vars": {
+			args: args{
+				handler:     hnd,
+				readTimeout: "aaa",
+			},
+			expectedErr: `env var for HTTP read timeout is not valid: time: invalid duration "aaa"`,
+		},
+		"failure, write timeout env vars": {
+			args: args{
+				handler:      hnd,
+				writeTimeout: "aaa",
+			},
+			expectedErr: `env var for HTTP write timeout is not valid: time: invalid duration "aaa"`,
+		},
+		"missing handler": {
+			args:        args{handler: nil},
+			expectedErr: "handler is nil",
+		},
+		"option error": {
+			args:        args{handler: &stubHandler{}, oo: []OptionFunc{WithPort(500000)}},
+			expectedErr: "invalid HTTP Port provided",
 		},
 	}
-
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			gotHTTPComponent, err := NewBuilder().WithAliveCheckFunc(tt.acf).WithReadyCheckFunc(tt.rcf).
-				WithPort(tt.p).WithReadTimeout(tt.rt).WithWriteTimeout(tt.wt).WithDeflateLevel(tt.dl).WithRoutesBuilder(tt.rb).
-				WithMiddlewares(tt.mm...).WithSSL(tt.c, tt.k).WithShutdownGracePeriod(tt.gp).Create()
+			if tt.args.port != "" {
+				t.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.args.port)
+			}
 
-			if len(tt.wantErrs) > 0 {
-				assert.EqualError(t, err, errs.Aggregate(tt.wantErrs...).Error())
-				assert.Nil(t, gotHTTPComponent)
+			if tt.args.readTimeout != "" {
+				t.Setenv("PATRON_HTTP_READ_TIMEOUT", tt.args.readTimeout)
+			}
+
+			if tt.args.writeTimeout != "" {
+				t.Setenv("PATRON_HTTP_WRITE_TIMEOUT", tt.args.writeTimeout)
+			}
+
+			got, err := New(tt.args.handler, tt.args.oo...)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
+				assert.Nil(t, got)
 			} else {
-				assert.NotNil(t, gotHTTPComponent)
-				assert.IsType(t, &Component{}, gotHTTPComponent)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, got)
 			}
 		})
 	}
+}
+
+func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
+	listener, err := net.Listen("tcp", ":0") //nolint:gosec
+	require.NoError(t, err)
+	port, ok := listener.Addr().(*net.TCPAddr)
+	assert.True(t, ok)
+	require.NoError(t, listener.Close())
+
+	cmp, err := New(&stubHandler{}, WithPort(port.Port))
+	assert.NoError(t, err)
+	done := make(chan bool)
+	ctx, cnl := context.WithCancel(context.Background())
+	go func() {
+		assert.NoError(t, cmp.Run(ctx))
+		done <- true
+	}()
+	time.Sleep(10 * time.Millisecond)
+	rsp, err := http.Get(fmt.Sprintf("http://localhost:%d/", port.Port))
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rsp.StatusCode)
+	cnl()
+	assert.True(t, <-done)
 }

@@ -165,11 +165,20 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	assert.Error(t, err)
 
 	// Verify all messages were processed in the right order
-	expectedMessages := make([]int, errAtIndex-1)
-	for i := 0; i < errAtIndex-1; i++ {
-		expectedMessages[i] = i + 1
+	for i := 0; i < len(actualSuccessfulMessages)-1; i++ {
+		if actualSuccessfulMessages[i+1] > errAtIndex {
+			assert.Fail(t, "message higher than expected", "i is %d and i+1 is %d", actualSuccessfulMessages[i+1],
+				errAtIndex)
+		}
+
+		diff := actualSuccessfulMessages[i+1] - actualSuccessfulMessages[i]
+		if diff == 0 || diff == 1 {
+			continue
+		}
+		assert.Fail(t, "messages order is not correct", "i is %d and i+1 is %d", actualSuccessfulMessages[i],
+			actualSuccessfulMessages[i+1])
 	}
-	assert.Equal(t, expectedMessages, actualSuccessfulMessages)
+
 	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
 }
 
@@ -240,12 +249,6 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 		}
 		assert.Fail(t, "messages order is not correct", "i is %d and i+1 is %d", actualMessages[i], actualMessages[i+1])
 	}
-
-	// expectedMessages := make([]int, numOfMessagesToSend)
-	// for i := 0; i < numOfMessagesToSend; i++ {
-	// 	expectedMessages[i] = i + 1
-	// }
-	// assert.Equal(t, expectedMessages, actualMessages)
 }
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {

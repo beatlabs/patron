@@ -2,14 +2,18 @@ version: '2.1'
 
 services:
   rabbitmq:
-    image: rabbitmq:3-management
-    hostname: "rabbitmq"
-    expose:
-      - "15672"
-      - "5672"
+    image: docker.io/bitnami/rabbitmq:3.9
     ports:
-      - "15672:15672"
-      - "5672:5672"
+      - '4369:4369'
+      - '5551:5551'
+      - '5552:5552'
+      - '5672:5672'
+      - '25672:25672'
+      - '15672:15672'
+    environment:
+      - RABBITMQ_SECURE_PASSWORD=yes
+    volumes:
+      - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
   zookeeper:
     image: 'bitnami/zookeeper:latest'
     ports:
@@ -44,3 +48,6 @@ services:
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+volumes:
+  rabbitmq_data:
+    driver: local

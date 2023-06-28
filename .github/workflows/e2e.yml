@@ -6,7 +6,7 @@ on:
   pull_request:
 jobs:
   build:
-    name: CI
+    name: E2E
     runs-on: ubuntu-latest
     steps:
       - name: Check out source code

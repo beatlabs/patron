@@ -31,7 +31,7 @@ const (
 
 	KafkaTopic  = "patron-topic"
 	KafkaGroup  = "patron-group"
-	KafkaBroker = "localhost:9092"
+	KafkaBroker = "localhost:9093"
 )
 
 func CreateSQSAPI() (*sqs.Client, error) {

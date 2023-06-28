@@ -11,31 +11,25 @@ services:
       - "15672:15672"
       - "5672:5672"
   zookeeper:
-    image: confluentinc/cp-zookeeper:6.0.0
-    hostname: "zookeeper"
-    expose:
-      - "2181"
+    image: 'bitnami/zookeeper:latest'
     ports:
-      - "2181:2181"
+      - '2181:2181'
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      - ALLOW_ANONYMOUS_LOGIN=yes
   kafka:
-    image: confluentinc/cp-kafka:6.0.0
-    hostname: "kafka"
-    expose:
-      - "9092"
-      - "29092"
+    image: 'bitnami/kafka:2'
     ports:
-      - "9092:9092"
-      - "29092:29092"
+      - '9092:9092'
+      - '9093:9093'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
     depends_on:
       - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
   localstack:
     image: localstack/localstack:0.12.0
     hostname: localstack

@@ -20,6 +20,7 @@ jobs:
       - name: Starting dependencies
         run:  |
           docker-compose up -d
+          sleep 10
         working-directory: ./examples/
 
       - name: Starting service

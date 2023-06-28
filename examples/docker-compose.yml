@@ -31,16 +31,16 @@ services:
     depends_on:
       - zookeeper
   localstack:
-    image: localstack/localstack:0.12.0
-    hostname: localstack
+    image: localstack/localstack:2.1
     ports:
-      - "4566:4566"
+      - "127.0.0.1:4566:4566" # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559" # external services port range
     environment:
-      - LOCALSTACK_SERVICES=sqs,sns
-      - LOCALSTACK_DEBUG=1
-      - LOCALSTACK_DATA_DIR=/tmp/localstack/data
+      - DEBUG=${DEBUG-}
+      - DOCKER_HOST=unix:///var/run/docker.sock
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=eu-west-1
     volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock'
+      - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"

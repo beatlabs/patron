@@ -4,21 +4,21 @@ import (
 	"net/http"
 	"testing"
 
+	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/middleware"
-	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRoutes(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		routes []*v2.Route
+		routes []*patronhttp.Route
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{routes: []*v2.Route{{}, {}}}},
+		"success": {args: args{routes: []*patronhttp.Route{{}, {}}}},
 		"fail":    {args: args{routes: nil}, expectedErr: "routes are empty"},
 	}
 	for name, tt := range tests {
@@ -39,13 +39,13 @@ func TestRoutes(t *testing.T) {
 func TestAliveCheck(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		acf v2.LivenessCheckFunc
+		acf patronhttp.LivenessCheckFunc
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{acf: func() v2.AliveStatus { return v2.Alive }}},
+		"success": {args: args{acf: func() patronhttp.AliveStatus { return patronhttp.Alive }}},
 		"fail":    {args: args{acf: nil}, expectedErr: "alive check function is nil"},
 	}
 	for name, tt := range tests {
@@ -66,13 +66,13 @@ func TestAliveCheck(t *testing.T) {
 func TestReadyCheck(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		rcf v2.ReadyCheckFunc
+		rcf patronhttp.ReadyCheckFunc
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{rcf: func() v2.ReadyStatus { return v2.Ready }}},
+		"success": {args: args{rcf: func() patronhttp.ReadyStatus { return patronhttp.Ready }}},
 		"fail":    {args: args{rcf: nil}, expectedErr: "ready check function is nil"},
 	}
 	for name, tt := range tests {

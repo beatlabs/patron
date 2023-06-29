@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"os"
 
-	v2 "github.com/beatlabs/patron/component/http/v2"
+	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/julienschmidt/httprouter"
 )
 
 // NewFileServerRoute returns a route that acts as a file server.
-func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*v2.Route, error) {
+func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*patronhttp.Route, error) {
 	if path == "" {
 		return nil, errors.New("path is empty")
 	}
@@ -67,5 +67,5 @@ func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*v2
 		http.ServeFile(w, r, path)
 	}
 
-	return v2.NewRoute(http.MethodGet, path, handler)
+	return patronhttp.NewRoute(http.MethodGet, path, handler)
 }

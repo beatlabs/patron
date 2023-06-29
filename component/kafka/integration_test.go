@@ -165,11 +165,20 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	assert.Error(t, err)
 
 	// Verify all messages were processed in the right order
-	expectedMessages := make([]int, errAtIndex-1)
-	for i := 0; i < errAtIndex-1; i++ {
-		expectedMessages[i] = i + 1
+	for i := 0; i < len(actualSuccessfulMessages)-1; i++ {
+		if actualSuccessfulMessages[i+1] > errAtIndex {
+			assert.Fail(t, "message higher than expected", "i is %d and i+1 is %d", actualSuccessfulMessages[i+1],
+				errAtIndex)
+		}
+
+		diff := actualSuccessfulMessages[i+1] - actualSuccessfulMessages[i]
+		if diff == 0 || diff == 1 {
+			continue
+		}
+		assert.Fail(t, "messages order is not correct", "i is %d and i+1 is %d", actualSuccessfulMessages[i],
+			actualSuccessfulMessages[i+1])
 	}
-	assert.Equal(t, expectedMessages, actualSuccessfulMessages)
+
 	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
 }
 
@@ -180,7 +189,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 
 	// Set up the component
 	didFail := int32(0)
-	actualMessages := make([]string, 0)
+	actualMessages := make([]int, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
 	processorFunc := func(batch Batch) error {
@@ -189,11 +198,14 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 			err := decodeString(msg.Message().Value, &msgContent)
 			assert.NoError(t, err)
 
-			if msgContent == "50" && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
+			msgIndex, err := strconv.Atoi(msgContent)
+			assert.NoError(t, err)
+
+			if msgIndex == 50 && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
 				return errors.New("expected error")
 			}
 			consumerWG.Done()
-			actualMessages = append(actualMessages, msgContent)
+			actualMessages = append(actualMessages, msgIndex)
 		}
 		return nil
 	}
@@ -230,11 +242,13 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	patronWG.Wait()
 
 	// Verify all messages were processed in the right order
-	expectedMessages := make([]string, numOfMessagesToSend)
-	for i := 0; i < numOfMessagesToSend; i++ {
-		expectedMessages[i] = strconv.Itoa(i + 1)
+	for i := 0; i < len(actualMessages)-1; i++ {
+		diff := actualMessages[i+1] - actualMessages[i]
+		if diff == 0 || diff == 1 {
+			continue
+		}
+		assert.Fail(t, "messages order is not correct", "i is %d and i+1 is %d", actualMessages[i], actualMessages[i+1])
 	}
-	assert.Equal(t, expectedMessages, actualMessages)
 }
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {

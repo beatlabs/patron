@@ -57,16 +57,12 @@ services:
     volumes:
       - 'redis_data:/bitnami/redis/data'
   localstack:
-    image: localstack/localstack:0.14
-    network_mode: bridge
+    image: localstack/localstack:2.1
     ports:
-      - "127.0.0.1:4510-4559:4510-4559" # external service port range
-      - "127.0.0.1:4566:4566" # LocalStack Edge Proxy
+      - "127.0.0.1:4566:4566" # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559" # external services port range
     environment:
-      - SERVICES=sns,sqs
-      - DEBUG=1
-      - DATA_DIR=${DATA_DIR-}
-      - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
+      - DEBUG=${DEBUG-}
       - DOCKER_HOST=unix:///var/run/docker.sock
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test

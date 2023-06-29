@@ -17,7 +17,7 @@ const (
 	GRPCPort   = "50002"
 	GRPCTarget = "localhost:50002"
 
-	AMQPURL          = "amqp://guest:guest@localhost:5672/"
+	AMQPURL          = "amqp://user:bitnami@localhost:5672/"
 	AMQPQueue        = "patron"
 	AMQPExchangeName = "patron"
 	AMQPExchangeType = amqp.ExchangeFanout
@@ -31,7 +31,7 @@ const (
 
 	KafkaTopic  = "patron-topic"
 	KafkaGroup  = "patron-group"
-	KafkaBroker = "localhost:9092"
+	KafkaBroker = "localhost:9093"
 )
 
 func CreateSQSAPI() (*sqs.Client, error) {

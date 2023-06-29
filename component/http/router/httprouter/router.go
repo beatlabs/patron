@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/middleware"
-	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/exp/slog"
 )
@@ -17,11 +17,11 @@ type OptionFunc func(*Config) error
 
 // Config definition.
 type Config struct {
-	aliveCheckFunc           v2.LivenessCheckFunc
-	readyCheckFunc           v2.ReadyCheckFunc
+	aliveCheckFunc           patronhttp.LivenessCheckFunc
+	readyCheckFunc           patronhttp.ReadyCheckFunc
 	deflateLevel             int
 	middlewares              []middleware.Func
-	routes                   []*v2.Route
+	routes                   []*patronhttp.Route
 	enableProfilingExpVar    bool
 	appNameVersionMiddleware middleware.Func
 }
@@ -29,8 +29,8 @@ type Config struct {
 // New creates an http router with functional options.
 func New(oo ...OptionFunc) (*httprouter.Router, error) {
 	cfg := &Config{
-		aliveCheckFunc: func() v2.AliveStatus { return v2.Alive },
-		readyCheckFunc: func() v2.ReadyStatus { return v2.Ready },
+		aliveCheckFunc: func() patronhttp.AliveStatus { return patronhttp.Alive },
+		readyCheckFunc: func() patronhttp.ReadyStatus { return patronhttp.Ready },
 		deflateLevel:   defaultDeflateLevel,
 	}
 
@@ -41,19 +41,19 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 		}
 	}
 
-	var stdRoutes []*v2.Route
+	var stdRoutes []*patronhttp.Route
 
 	mux := httprouter.New()
-	stdRoutes = append(stdRoutes, v2.MetricRoute())
-	stdRoutes = append(stdRoutes, v2.ProfilingRoutes(cfg.enableProfilingExpVar)...)
+	stdRoutes = append(stdRoutes, patronhttp.MetricRoute())
+	stdRoutes = append(stdRoutes, patronhttp.ProfilingRoutes(cfg.enableProfilingExpVar)...)
 
-	route, err := v2.LivenessCheckRoute(cfg.aliveCheckFunc)
+	route, err := patronhttp.LivenessCheckRoute(cfg.aliveCheckFunc)
 	if err != nil {
 		return nil, err
 	}
 	stdRoutes = append(stdRoutes, route)
 
-	route, err = v2.ReadyCheckRoute(cfg.readyCheckFunc)
+	route, err = patronhttp.ReadyCheckRoute(cfg.readyCheckFunc)
 	if err != nil {
 		return nil, err
 	}

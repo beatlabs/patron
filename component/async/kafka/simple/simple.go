@@ -16,7 +16,7 @@ import (
 )
 
 // unixNanoToTimestampDivider divides unix nano seconds to valid timestamp for kafka messages.
-const unixNanoToTimestampDivider = 1000_000
+const unixNanoToTimestampDivider = 1000000
 
 // TimeExtractor defines a function extracting a time from a Kafka message.
 type TimeExtractor func(*sarama.ConsumerMessage) (time.Time, error)

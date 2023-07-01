@@ -54,7 +54,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, cnl := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cnl := context.WithTimeout(context.Background(), 50000*time.Second)
 	defer cnl()
 
 	for _, process := range prs {

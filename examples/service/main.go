@@ -61,32 +61,32 @@ func main() {
 
 	components = append(components, cmp)
 
-	// // Setup Kafka
-	// cmp, err = createKafkaConsumer()
-	// if err != nil {
-	// 	slog.Error(err.Error())
-	// 	os.Exit(1)
-	// }
+	// Setup Kafka
+	cmp, err = createKafkaConsumer()
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
 
-	// components = append(components, cmp)
+	components = append(components, cmp)
 
-	// // Setup SQS
-	// cmp, err = createSQSConsumer()
-	// if err != nil {
-	// 	slog.Error(err.Error())
-	// 	os.Exit(1)
-	// }
+	// Setup SQS
+	cmp, err = createSQSConsumer()
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
 
-	// components = append(components, cmp)
+	components = append(components, cmp)
 
-	// // Setup AMQP
-	// cmp, err = createAMQPConsumer()
-	// if err != nil {
-	// 	slog.Error(err.Error())
-	// 	os.Exit(1)
-	// }
+	// Setup AMQP
+	cmp, err = createAMQPConsumer()
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
 
-	// components = append(components, cmp)
+	components = append(components, cmp)
 
 	err = service.Run(ctx, components...)
 	if err != nil {

@@ -2,12 +2,14 @@ version: "3.8"
 services:
   zookeeper:
     image: 'bitnami/zookeeper:latest'
+    restart: always
     ports:
       - '2181:2181'
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
   kafka:
     image: 'bitnami/kafka:2'
+    restart: always
     ports:
       - '9092:9092'
       - '9093:9093'
@@ -22,6 +24,7 @@ services:
       - zookeeper
   rabbitmq:
     image: docker.io/bitnami/rabbitmq:3.9
+    restart: always
     ports:
       - '4369:4369'
       - '5551:5551'
@@ -34,7 +37,7 @@ services:
     volumes:
       - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
   mysql:
-    image: mysql:8
+    image: bitnami/mysql:8.0
     restart: always
     environment:
       MYSQL_DATABASE: 'patrondb'
@@ -50,6 +53,7 @@ services:
       - mysql-db:/var/lib/mysql
   redis:
     image: docker.io/bitnami/redis:6.2
+    restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
@@ -58,6 +62,7 @@ services:
       - 'redis_data:/bitnami/redis/data'
   localstack:
     image: localstack/localstack:2.1
+    restart: always
     ports:
       - "127.0.0.1:4566:4566" # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559" # external services port range
@@ -98,5 +103,6 @@ volumes:
   rabbitmq_data:
     driver: local
   mysql-db:
+    driver: local
   redis_data:
     driver: local

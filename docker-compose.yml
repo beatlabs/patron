@@ -23,7 +23,7 @@ services:
     depends_on:
       - zookeeper
   rabbitmq:
-    image: docker.io/bitnami/rabbitmq:3.9
+    image: bitnami/rabbitmq:3.9
     restart: always
     healthcheck:
       test: rabbitmq-diagnostics -q alarms
@@ -57,7 +57,7 @@ services:
     volumes:
       - mysql-db:/var/lib/mysql
   redis:
-    image: docker.io/bitnami/redis:6.2
+    image: bitnami/redis:6.2
     restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes

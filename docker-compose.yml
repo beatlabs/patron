@@ -25,6 +25,11 @@ services:
   rabbitmq:
     image: docker.io/bitnami/rabbitmq:3.9
     restart: always
+    healthcheck:
+      test: rabbitmq-diagnostics -q alarms
+      interval: 10s
+      timeout: 1s
+      retries: 6
     ports:
       - '4369:4369'
       - '5551:5551'

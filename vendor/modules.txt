@@ -885,7 +885,7 @@ github.com/prometheus/procfs/internal/util
 github.com/rcrowley/go-metrics
 # github.com/rogpeppe/go-internal v1.9.0
 ## explicit; go 1.17
-# github.com/streadway/amqp v1.0.0
+# github.com/streadway/amqp v1.1.0
 ## explicit; go 1.10
 github.com/streadway/amqp
 # github.com/stretchr/testify v1.8.4

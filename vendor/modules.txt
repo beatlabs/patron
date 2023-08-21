@@ -122,7 +122,7 @@ github.com/eapache/queue
 github.com/eclipse/paho.golang/autopaho
 github.com/eclipse/paho.golang/packets
 github.com/eclipse/paho.golang/paho
-# github.com/elastic/elastic-transport-go/v8 v8.2.0
+# github.com/elastic/elastic-transport-go/v8 v8.3.0
 ## explicit; go 1.13
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version

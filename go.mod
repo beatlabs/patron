@@ -16,7 +16,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/google/uuid v1.3.0
-	github.com/hashicorp/golang-lru v0.6.0
+	github.com/hashicorp/golang-lru v1.0.2
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0

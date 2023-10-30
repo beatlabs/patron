@@ -1,3 +1,20 @@
+# v1.23.0 (2023-10-26)
+
+* **Feature**: Message Archiving and Replay is now supported in Amazon SNS for FIFO topics.
+
+# v1.22.2 (2023-10-12)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.1 (2023-10-06)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.22.0 (2023-09-18)
+
+* **Announcement**: [BREAKFIX] Change in MaxResults datatype from value to pointer type in cognito-sync service.
+* **Feature**: Adds several endpoint ruleset changes across all models: smaller rulesets, removed non-unique regional endpoints, fixes FIPS and DualStack endpoints, and make region not required in SDK::Endpoint. Additional breakfix to cognito-sync field.
+
 # v1.21.5 (2023-08-21)
 
 * **Dependency Update**: Updated to the latest SDK module versions

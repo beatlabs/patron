@@ -22,6 +22,7 @@ func createAMQPConsumer() (patron.Component, error) {
 			err := msg.ACK()
 			if err != nil {
 				log.FromContext(msg.Context()).Info("amqp message received but ack failed", "msgID", msg.ID(), "error", err)
+				continue
 			}
 			log.FromContext(msg.Context()).Info("amqp message received and acked", "msgID", msg.ID())
 		}

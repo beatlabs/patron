@@ -21,7 +21,7 @@ func createHttpRouter() (patron.Component, error) {
 			return
 		}
 
-		log.FromContext(req.Context()).Info("HTTP request received: %s", string(body))
+		log.FromContext(req.Context()).Info("HTTP request received", "body", string(body))
 		rw.WriteHeader(http.StatusOK)
 	}
 

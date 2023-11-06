@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strconv"
@@ -15,7 +16,6 @@ import (
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/uber/jaeger-client-go"
-	"golang.org/x/exp/slog"
 )
 
 const (
@@ -179,7 +179,7 @@ func defaultLogAttrs(name, version string) []slog.Attr {
 }
 
 func setupLogging(lc logConfig) {
-	opts := &slog.HandlerOptions{
+	ho := &slog.HandlerOptions{
 		AddSource: true,
 		Level:     getLogLevel(),
 	}
@@ -187,9 +187,9 @@ func setupLogging(lc logConfig) {
 	var hnd slog.Handler
 
 	if lc.json {
-		hnd = slog.NewJSONHandler(os.Stderr, opts)
+		hnd = slog.NewJSONHandler(os.Stderr, ho)
 	} else {
-		hnd = slog.NewTextHandler(os.Stderr, opts)
+		hnd = slog.NewTextHandler(os.Stderr, ho)
 	}
 
 	slog.New(hnd.WithAttrs(lc.attrs))

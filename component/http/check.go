@@ -1,10 +1,10 @@
 package http
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/beatlabs/patron/log"
-	"golang.org/x/exp/slog"
 )
 
 // AliveStatus type representing the liveness of the service via HTTP component.

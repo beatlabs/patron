@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/IBM/sarama"
@@ -12,7 +13,6 @@ import (
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/internal/validation"
 	opentracing "github.com/opentracing/opentracing-go"
-	"golang.org/x/exp/slog"
 )
 
 // Factory definition of a consumer factory.

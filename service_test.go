@@ -3,12 +3,12 @@ package patron
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slog"
 )
 
 func TestNew(t *testing.T) {

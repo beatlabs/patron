@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-	"golang.org/x/exp/slog"
 )
 
 // RouteCache is the builder needed to build a cache for the corresponding route.

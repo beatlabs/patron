@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/beatlabs/patron/component/async"
 	"github.com/beatlabs/patron/component/async/kafka"
 	"github.com/beatlabs/patron/internal/validation"
-	"golang.org/x/exp/slog"
 )
 
 // unixNanoToTimestampDivider divides unix nano seconds to valid timestamp for kafka messages.

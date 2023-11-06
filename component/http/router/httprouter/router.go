@@ -2,12 +2,12 @@ package httprouter
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/middleware"
 	"github.com/julienschmidt/httprouter"
-	"golang.org/x/exp/slog"
 )
 
 const defaultDeflateLevel = 6

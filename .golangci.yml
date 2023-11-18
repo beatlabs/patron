@@ -29,7 +29,6 @@ output:
 linters:
   disable-all: true
   enable:
-    - golint
     - gofmt
     - gosec
     - unparam

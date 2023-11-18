@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes a component template
 package deletecomponenttemplate
@@ -67,7 +67,7 @@ func NewDeleteComponentTemplateFunc(tp elastictransport.Interface) NewDeleteComp
 	return func(name string) *DeleteComponentTemplate {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -168,13 +168,16 @@ func (r DeleteComponentTemplate) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -211,25 +214,29 @@ func (r *DeleteComponentTemplate) Header(key, value string) *DeleteComponentTemp
 // Name Comma-separated list or wildcard expression of component template names used
 // to limit the request.
 // API Name: name
-func (r *DeleteComponentTemplate) Name(v string) *DeleteComponentTemplate {
+func (r *DeleteComponentTemplate) _name(name string) *DeleteComponentTemplate {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *DeleteComponentTemplate) MasterTimeout(v string) *DeleteComponentTemplate {
-	r.values.Set("master_timeout", v)
+func (r *DeleteComponentTemplate) MasterTimeout(duration string) *DeleteComponentTemplate {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *DeleteComponentTemplate) Timeout(v string) *DeleteComponentTemplate {
-	r.values.Set("timeout", v)
+func (r *DeleteComponentTemplate) Timeout(duration string) *DeleteComponentTemplate {
+	r.values.Set("timeout", duration)
 
 	return r
 }

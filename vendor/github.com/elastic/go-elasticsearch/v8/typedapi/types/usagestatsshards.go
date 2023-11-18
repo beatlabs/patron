@@ -16,18 +16,73 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // UsageStatsShards type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/field_usage_stats/IndicesFieldUsageStatsResponse.ts#L42-L47
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/field_usage_stats/IndicesFieldUsageStatsResponse.ts#L42-L47
 type UsageStatsShards struct {
 	Routing                 ShardRouting       `json:"routing"`
 	Stats                   IndicesShardsStats `json:"stats"`
 	TrackingId              string             `json:"tracking_id"`
 	TrackingStartedAtMillis int64              `json:"tracking_started_at_millis"`
+}
+
+func (s *UsageStatsShards) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "routing":
+			if err := dec.Decode(&s.Routing); err != nil {
+				return err
+			}
+
+		case "stats":
+			if err := dec.Decode(&s.Stats); err != nil {
+				return err
+			}
+
+		case "tracking_id":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.TrackingId = o
+
+		case "tracking_started_at_millis":
+			if err := dec.Decode(&s.TrackingStartedAtMillis); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewUsageStatsShards returns a UsageStatsShards.

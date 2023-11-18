@@ -16,18 +16,24 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/categorizationstatus"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/memorystatus"
 )
 
 // ModelSizeStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/Model.ts#L56-L78
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/_types/Model.ts#L59-L81
 type ModelSizeStats struct {
 	AssignmentMemoryBasis         *string                                   `json:"assignment_memory_basis,omitempty"`
 	BucketAllocationFailuresCount int64                                     `json:"bucket_allocation_failures_count"`
@@ -50,6 +56,261 @@ type ModelSizeStats struct {
 	TotalCategoryCount            int                                       `json:"total_category_count"`
 	TotalOverFieldCount           int64                                     `json:"total_over_field_count"`
 	TotalPartitionFieldCount      int64                                     `json:"total_partition_field_count"`
+}
+
+func (s *ModelSizeStats) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "assignment_memory_basis":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.AssignmentMemoryBasis = &o
+
+		case "bucket_allocation_failures_count":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.BucketAllocationFailuresCount = value
+			case float64:
+				f := int64(v)
+				s.BucketAllocationFailuresCount = f
+			}
+
+		case "categorization_status":
+			if err := dec.Decode(&s.CategorizationStatus); err != nil {
+				return err
+			}
+
+		case "categorized_doc_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.CategorizedDocCount = value
+			case float64:
+				f := int(v)
+				s.CategorizedDocCount = f
+			}
+
+		case "dead_category_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.DeadCategoryCount = value
+			case float64:
+				f := int(v)
+				s.DeadCategoryCount = f
+			}
+
+		case "failed_category_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.FailedCategoryCount = value
+			case float64:
+				f := int(v)
+				s.FailedCategoryCount = f
+			}
+
+		case "frequent_category_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.FrequentCategoryCount = value
+			case float64:
+				f := int(v)
+				s.FrequentCategoryCount = f
+			}
+
+		case "job_id":
+			if err := dec.Decode(&s.JobId); err != nil {
+				return err
+			}
+
+		case "log_time":
+			if err := dec.Decode(&s.LogTime); err != nil {
+				return err
+			}
+
+		case "memory_status":
+			if err := dec.Decode(&s.MemoryStatus); err != nil {
+				return err
+			}
+
+		case "model_bytes":
+			if err := dec.Decode(&s.ModelBytes); err != nil {
+				return err
+			}
+
+		case "model_bytes_exceeded":
+			if err := dec.Decode(&s.ModelBytesExceeded); err != nil {
+				return err
+			}
+
+		case "model_bytes_memory_limit":
+			if err := dec.Decode(&s.ModelBytesMemoryLimit); err != nil {
+				return err
+			}
+
+		case "peak_model_bytes":
+			if err := dec.Decode(&s.PeakModelBytes); err != nil {
+				return err
+			}
+
+		case "rare_category_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.RareCategoryCount = value
+			case float64:
+				f := int(v)
+				s.RareCategoryCount = f
+			}
+
+		case "result_type":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.ResultType = o
+
+		case "timestamp":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Timestamp = &value
+			case float64:
+				f := int64(v)
+				s.Timestamp = &f
+			}
+
+		case "total_by_field_count":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.TotalByFieldCount = value
+			case float64:
+				f := int64(v)
+				s.TotalByFieldCount = f
+			}
+
+		case "total_category_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.TotalCategoryCount = value
+			case float64:
+				f := int(v)
+				s.TotalCategoryCount = f
+			}
+
+		case "total_over_field_count":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.TotalOverFieldCount = value
+			case float64:
+				f := int64(v)
+				s.TotalOverFieldCount = f
+			}
+
+		case "total_partition_field_count":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.TotalPartitionFieldCount = value
+			case float64:
+				f := int64(v)
+				s.TotalPartitionFieldCount = f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewModelSizeStats returns a ModelSizeStats.

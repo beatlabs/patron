@@ -16,28 +16,121 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // PathHierarchyTokenizer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/tokenizers.ts#L88-L95
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/tokenizers.ts#L89-L96
 type PathHierarchyTokenizer struct {
-	BufferSize  int     `json:"buffer_size"`
-	Delimiter   string  `json:"delimiter"`
-	Replacement string  `json:"replacement"`
-	Reverse     bool    `json:"reverse"`
-	Skip        int     `json:"skip"`
-	Type        string  `json:"type,omitempty"`
-	Version     *string `json:"version,omitempty"`
+	BufferSize  Stringifiedinteger `json:"buffer_size"`
+	Delimiter   string             `json:"delimiter"`
+	Replacement string             `json:"replacement"`
+	Reverse     Stringifiedboolean `json:"reverse"`
+	Skip        Stringifiedinteger `json:"skip"`
+	Type        string             `json:"type,omitempty"`
+	Version     *string            `json:"version,omitempty"`
+}
+
+func (s *PathHierarchyTokenizer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "buffer_size":
+			if err := dec.Decode(&s.BufferSize); err != nil {
+				return err
+			}
+
+		case "delimiter":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Delimiter = o
+
+		case "replacement":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Replacement = o
+
+		case "reverse":
+			if err := dec.Decode(&s.Reverse); err != nil {
+				return err
+			}
+
+		case "skip":
+			if err := dec.Decode(&s.Skip); err != nil {
+				return err
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s PathHierarchyTokenizer) MarshalJSON() ([]byte, error) {
+	type innerPathHierarchyTokenizer PathHierarchyTokenizer
+	tmp := innerPathHierarchyTokenizer{
+		BufferSize:  s.BufferSize,
+		Delimiter:   s.Delimiter,
+		Replacement: s.Replacement,
+		Reverse:     s.Reverse,
+		Skip:        s.Skip,
+		Type:        s.Type,
+		Version:     s.Version,
+	}
+
+	tmp.Type = "path_hierarchy"
+
+	return json.Marshal(tmp)
 }
 
 // NewPathHierarchyTokenizer returns a PathHierarchyTokenizer.
 func NewPathHierarchyTokenizer() *PathHierarchyTokenizer {
 	r := &PathHierarchyTokenizer{}
-
-	r.Type = "path_hierarchy"
 
 	return r
 }

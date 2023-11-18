@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Verifies the logout response sent from the SAML IdP
 package samlcompletelogout
@@ -33,7 +33,6 @@ import (
 	"strings"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 // ErrBuildPath is returned in case of missing parameters within the build of the request.
@@ -48,8 +47,9 @@ type SamlCompleteLogout struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -76,6 +76,8 @@ func New(tp elastictransport.Interface) *SamlCompleteLogout {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -105,9 +107,19 @@ func (r *SamlCompleteLogout) HttpRequest(ctx context.Context) (*http.Request, er
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -115,6 +127,7 @@ func (r *SamlCompleteLogout) HttpRequest(ctx context.Context) (*http.Request, er
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -178,39 +191,49 @@ func (r SamlCompleteLogout) Perform(ctx context.Context) (*http.Response, error)
 	return res, nil
 }
 
-// Do runs the request through the transport, handle the response and returns a samlcompletelogout.Response
-func (r SamlCompleteLogout) Do(ctx context.Context) (*Response, error) {
-
-	response := NewResponse()
-
-	res, err := r.Perform(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode < 299 {
-		err = json.NewDecoder(res.Body).Decode(response)
-		if err != nil {
-			return nil, err
-		}
-
-		return response, nil
-
-	}
-
-	errorResponse := types.NewElasticsearchError()
-	err = json.NewDecoder(res.Body).Decode(errorResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, errorResponse
-}
-
 // Header set a key, value pair in the SamlCompleteLogout headers map.
 func (r *SamlCompleteLogout) Header(key, value string) *SamlCompleteLogout {
 	r.headers.Set(key, value)
+
+	return r
+}
+
+// Content If the SAML IdP sends the logout response with the HTTP-Post binding, this
+// field must be set to the value of the SAMLResponse form parameter from the
+// logout response.
+// API name: content
+func (r *SamlCompleteLogout) Content(content string) *SamlCompleteLogout {
+
+	r.req.Content = &content
+
+	return r
+}
+
+// Ids A json array with all the valid SAML Request Ids that the caller of the API
+// has for the current user.
+// API name: ids
+func (r *SamlCompleteLogout) Ids(ids ...string) *SamlCompleteLogout {
+	r.req.Ids = ids
+
+	return r
+}
+
+// QueryString If the SAML IdP sends the logout response with the HTTP-Redirect binding,
+// this field must be set to the query string of the redirect URI.
+// API name: query_string
+func (r *SamlCompleteLogout) QueryString(querystring string) *SamlCompleteLogout {
+
+	r.req.QueryString = &querystring
+
+	return r
+}
+
+// Realm The name of the SAML realm in Elasticsearch for which the configuration is
+// used to verify the logout response.
+// API name: realm
+func (r *SamlCompleteLogout) Realm(realm string) *SamlCompleteLogout {
+
+	r.req.Realm = realm
 
 	return r
 }

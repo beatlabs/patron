@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Searches a vector tile for geospatial values. Returns results as a binary
 // Mapbox vector tile.
@@ -31,12 +31,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gridaggregationtype"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gridtype"
 )
@@ -65,8 +63,9 @@ type SearchMvt struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -86,15 +85,15 @@ func NewSearchMvtFunc(tp elastictransport.Interface) NewSearchMvt {
 	return func(index, field, zoom, x, y string) *SearchMvt {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
-		n.Field(field)
+		n._field(field)
 
-		n.Zoom(zoom)
+		n._zoom(zoom)
 
-		n.X(x)
+		n._x(x)
 
-		n.Y(y)
+		n._y(y)
 
 		return n
 	}
@@ -110,6 +109,8 @@ func New(tp elastictransport.Interface) *SearchMvt {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -139,9 +140,19 @@ func (r *SearchMvt) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -149,6 +160,7 @@ func (r *SearchMvt) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -241,13 +253,16 @@ func (r SearchMvt) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -262,45 +277,71 @@ func (r *SearchMvt) Header(key, value string) *SearchMvt {
 
 // Index Comma-separated list of data streams, indices, or aliases to search
 // API Name: index
-func (r *SearchMvt) Index(v string) *SearchMvt {
+func (r *SearchMvt) _index(index string) *SearchMvt {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
 // Field Field containing geospatial data to return
 // API Name: field
-func (r *SearchMvt) Field(v string) *SearchMvt {
+func (r *SearchMvt) _field(field string) *SearchMvt {
 	r.paramSet |= fieldMask
-	r.field = v
+	r.field = field
 
 	return r
 }
 
 // Zoom Zoom level for the vector tile to search
 // API Name: zoom
-func (r *SearchMvt) Zoom(v string) *SearchMvt {
+func (r *SearchMvt) _zoom(zoom string) *SearchMvt {
 	r.paramSet |= zoomMask
-	r.zoom = v
+	r.zoom = zoom
 
 	return r
 }
 
 // X X coordinate for the vector tile to search
 // API Name: x
-func (r *SearchMvt) X(v string) *SearchMvt {
+func (r *SearchMvt) _x(x string) *SearchMvt {
 	r.paramSet |= xMask
-	r.x = v
+	r.x = x
 
 	return r
 }
 
 // Y Y coordinate for the vector tile to search
 // API Name: y
-func (r *SearchMvt) Y(v string) *SearchMvt {
+func (r *SearchMvt) _y(y string) *SearchMvt {
 	r.paramSet |= yMask
-	r.y = v
+	r.y = y
+
+	return r
+}
+
+// Aggs Sub-aggregations for the geotile_grid.
+//
+// Supports the following aggregation types:
+// - avg
+// - cardinality
+// - max
+// - min
+// - sum
+// API name: aggs
+func (r *SearchMvt) Aggs(aggs map[string]types.Aggregations) *SearchMvt {
+
+	r.req.Aggs = aggs
+
+	return r
+}
+
+// Buffer Size, in pixels, of a clipping buffer outside the tile. This allows renderers
+// to avoid outline artifacts from geometries that extend past the extent of the
+// tile.
+// API name: buffer
+func (r *SearchMvt) Buffer(buffer int) *SearchMvt {
+	r.req.Buffer = &buffer
 
 	return r
 }
@@ -311,8 +352,8 @@ func (r *SearchMvt) Y(v string) *SearchMvt {
 // the <zoom>/<x>/<y> tile with wrap_longitude set to false. The resulting
 // bounding box may be larger than the vector tile.
 // API name: exact_bounds
-func (r *SearchMvt) ExactBounds(b bool) *SearchMvt {
-	r.values.Set("exact_bounds", strconv.FormatBool(b))
+func (r *SearchMvt) ExactBounds(exactbounds bool) *SearchMvt {
+	r.req.ExactBounds = &exactbounds
 
 	return r
 }
@@ -320,16 +361,26 @@ func (r *SearchMvt) ExactBounds(b bool) *SearchMvt {
 // Extent Size, in pixels, of a side of the tile. Vector tiles are square with equal
 // sides.
 // API name: extent
-func (r *SearchMvt) Extent(i int) *SearchMvt {
-	r.values.Set("extent", strconv.Itoa(i))
+func (r *SearchMvt) Extent(extent int) *SearchMvt {
+	r.req.Extent = &extent
 
 	return r
 }
 
-// GridAgg Aggregation used to create a grid for `field`.
+// Fields Fields to return in the `hits` layer. Supports wildcards (`*`).
+// This parameter does not support fields with array values. Fields with array
+// values may return inconsistent results.
+// API name: fields
+func (r *SearchMvt) Fields(fields ...string) *SearchMvt {
+	r.req.Fields = fields
+
+	return r
+}
+
+// GridAgg Aggregation used to create a grid for the `field`.
 // API name: grid_agg
-func (r *SearchMvt) GridAgg(enum gridaggregationtype.GridAggregationType) *SearchMvt {
-	r.values.Set("grid_agg", enum.String())
+func (r *SearchMvt) GridAgg(gridagg gridaggregationtype.GridAggregationType) *SearchMvt {
+	r.req.GridAgg = &gridagg
 
 	return r
 }
@@ -340,8 +391,8 @@ func (r *SearchMvt) GridAgg(enum gridaggregationtype.GridAggregationType) *Searc
 // results
 // don’t include the aggs layer.
 // API name: grid_precision
-func (r *SearchMvt) GridPrecision(i int) *SearchMvt {
-	r.values.Set("grid_precision", strconv.Itoa(i))
+func (r *SearchMvt) GridPrecision(gridprecision int) *SearchMvt {
+	r.req.GridPrecision = &gridprecision
 
 	return r
 }
@@ -354,8 +405,26 @@ func (r *SearchMvt) GridPrecision(i int) *SearchMvt {
 // centroid
 // of the cell.
 // API name: grid_type
-func (r *SearchMvt) GridType(enum gridtype.GridType) *SearchMvt {
-	r.values.Set("grid_type", enum.String())
+func (r *SearchMvt) GridType(gridtype gridtype.GridType) *SearchMvt {
+	r.req.GridType = &gridtype
+
+	return r
+}
+
+// Query Query DSL used to filter documents for the search.
+// API name: query
+func (r *SearchMvt) Query(query *types.Query) *SearchMvt {
+
+	r.req.Query = query
+
+	return r
+}
+
+// RuntimeMappings Defines one or more runtime fields in the search request. These fields take
+// precedence over mapped fields with the same name.
+// API name: runtime_mappings
+func (r *SearchMvt) RuntimeMappings(runtimefields types.RuntimeFields) *SearchMvt {
+	r.req.RuntimeMappings = runtimefields
 
 	return r
 }
@@ -363,8 +432,30 @@ func (r *SearchMvt) GridType(enum gridtype.GridType) *SearchMvt {
 // Size Maximum number of features to return in the hits layer. Accepts 0-10000.
 // If 0, results don’t include the hits layer.
 // API name: size
-func (r *SearchMvt) Size(i int) *SearchMvt {
-	r.values.Set("size", strconv.Itoa(i))
+func (r *SearchMvt) Size(size int) *SearchMvt {
+	r.req.Size = &size
+
+	return r
+}
+
+// Sort Sorts features in the hits layer. By default, the API calculates a bounding
+// box for each feature. It sorts features based on this box’s diagonal length,
+// from longest to shortest.
+// API name: sort
+func (r *SearchMvt) Sort(sorts ...types.SortCombinations) *SearchMvt {
+	r.req.Sort = sorts
+
+	return r
+}
+
+// TrackTotalHits Number of hits matching the query to count accurately. If `true`, the exact
+// number
+// of hits is returned at the cost of some performance. If `false`, the response
+// does
+// not include the total number of hits matching the query.
+// API name: track_total_hits
+func (r *SearchMvt) TrackTotalHits(trackhits types.TrackHits) *SearchMvt {
+	r.req.TrackTotalHits = trackhits
 
 	return r
 }
@@ -373,8 +464,8 @@ func (r *SearchMvt) Size(i int) *SearchMvt {
 // representing
 // suggested label positions for the original features.
 // API name: with_labels
-func (r *SearchMvt) WithLabels(b bool) *SearchMvt {
-	r.values.Set("with_labels", strconv.FormatBool(b))
+func (r *SearchMvt) WithLabels(withlabels bool) *SearchMvt {
+	r.req.WithLabels = &withlabels
 
 	return r
 }

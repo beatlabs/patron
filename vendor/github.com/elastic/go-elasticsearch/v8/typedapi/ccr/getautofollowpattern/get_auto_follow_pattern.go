@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Gets configured auto-follow patterns. Returns the specified auto-follow
 // pattern collection.
@@ -177,13 +177,16 @@ func (r GetAutoFollowPattern) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -220,9 +223,9 @@ func (r *GetAutoFollowPattern) Header(key, value string) *GetAutoFollowPattern {
 // Name Specifies the auto-follow pattern collection that you want to retrieve. If
 // you do not specify a name, the API returns information for all collections.
 // API Name: name
-func (r *GetAutoFollowPattern) Name(v string) *GetAutoFollowPattern {
+func (r *GetAutoFollowPattern) Name(name string) *GetAutoFollowPattern {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Adds or updates application privileges.
 package putprivileges
@@ -34,7 +34,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 )
 
@@ -50,8 +49,9 @@ type PutPrivileges struct {
 
 	buf *gobytes.Buffer
 
-	req map[string]map[string]types.PrivilegesActions
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -92,7 +92,7 @@ func (r *PutPrivileges) Raw(raw io.Reader) *PutPrivileges {
 }
 
 // Request allows to set the request property with the appropriate payload.
-func (r *PutPrivileges) Request(req map[string]map[string]types.PrivilegesActions) *PutPrivileges {
+func (r *PutPrivileges) Request(req *Request) *PutPrivileges {
 	r.req = req
 
 	return r
@@ -107,9 +107,19 @@ func (r *PutPrivileges) HttpRequest(ctx context.Context) (*http.Request, error) 
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -117,6 +127,7 @@ func (r *PutPrivileges) HttpRequest(ctx context.Context) (*http.Request, error) 
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -127,7 +138,7 @@ func (r *PutPrivileges) HttpRequest(ctx context.Context) (*http.Request, error) 
 		path.WriteString("_security")
 		path.WriteString("/")
 		path.WriteString("privilege")
-		path.WriteString("/")
+
 		method = http.MethodPut
 	}
 
@@ -196,13 +207,16 @@ func (r PutPrivileges) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -219,8 +233,8 @@ func (r *PutPrivileges) Header(key, value string) *PutPrivileges {
 // operation visible to search, if `wait_for` then wait for a refresh to make
 // this operation visible to search, if `false` then do nothing with refreshes.
 // API name: refresh
-func (r *PutPrivileges) Refresh(enum refresh.Refresh) *PutPrivileges {
-	r.values.Set("refresh", enum.String())
+func (r *PutPrivileges) Refresh(refresh refresh.Refresh) *PutPrivileges {
+	r.values.Set("refresh", refresh.String())
 
 	return r
 }

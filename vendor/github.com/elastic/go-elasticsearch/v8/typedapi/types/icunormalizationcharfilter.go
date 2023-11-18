@@ -16,18 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icunormalizationmode"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icunormalizationtype"
 )
 
 // IcuNormalizationCharFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/icu-plugin.ts#L40-L44
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/icu-plugin.ts#L40-L44
 type IcuNormalizationCharFilter struct {
 	Mode    *icunormalizationmode.IcuNormalizationMode `json:"mode,omitempty"`
 	Name    *icunormalizationtype.IcuNormalizationType `json:"name,omitempty"`
@@ -35,11 +40,64 @@ type IcuNormalizationCharFilter struct {
 	Version *string                                    `json:"version,omitempty"`
 }
 
+func (s *IcuNormalizationCharFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "mode":
+			if err := dec.Decode(&s.Mode); err != nil {
+				return err
+			}
+
+		case "name":
+			if err := dec.Decode(&s.Name); err != nil {
+				return err
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s IcuNormalizationCharFilter) MarshalJSON() ([]byte, error) {
+	type innerIcuNormalizationCharFilter IcuNormalizationCharFilter
+	tmp := innerIcuNormalizationCharFilter{
+		Mode:    s.Mode,
+		Name:    s.Name,
+		Type:    s.Type,
+		Version: s.Version,
+	}
+
+	tmp.Type = "icu_normalizer"
+
+	return json.Marshal(tmp)
+}
+
 // NewIcuNormalizationCharFilter returns a IcuNormalizationCharFilter.
 func NewIcuNormalizationCharFilter() *IcuNormalizationCharFilter {
 	r := &IcuNormalizationCharFilter{}
-
-	r.Type = "icu_normalizer"
 
 	return r
 }

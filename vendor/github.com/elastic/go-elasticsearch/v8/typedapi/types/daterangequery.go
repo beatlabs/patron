@@ -16,29 +16,141 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/rangerelation"
 )
 
 // DateRangeQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/term.ts#L72-L81
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/term.ts#L116-L143
 type DateRangeQuery struct {
-	Boost      *float32                     `json:"boost,omitempty"`
-	Format     *string                      `json:"format,omitempty"`
-	From       string                       `json:"from,omitempty"`
-	Gt         *string                      `json:"gt,omitempty"`
-	Gte        *string                      `json:"gte,omitempty"`
-	Lt         *string                      `json:"lt,omitempty"`
-	Lte        *string                      `json:"lte,omitempty"`
-	QueryName_ *string                      `json:"_name,omitempty"`
-	Relation   *rangerelation.RangeRelation `json:"relation,omitempty"`
-	TimeZone   *string                      `json:"time_zone,omitempty"`
-	To         string                       `json:"to,omitempty"`
+	// Boost Floating point number used to decrease or increase the relevance scores of
+	// the query.
+	// Boost values are relative to the default value of 1.0.
+	// A boost value between 0 and 1.0 decreases the relevance score.
+	// A value greater than 1.0 increases the relevance score.
+	Boost *float32 `json:"boost,omitempty"`
+	// Format Date format used to convert `date` values in the query.
+	Format *string `json:"format,omitempty"`
+	From   string  `json:"from,omitempty"`
+	// Gt Greater than.
+	Gt *string `json:"gt,omitempty"`
+	// Gte Greater than or equal to.
+	Gte *string `json:"gte,omitempty"`
+	// Lt Less than.
+	Lt *string `json:"lt,omitempty"`
+	// Lte Less than or equal to.
+	Lte        *string `json:"lte,omitempty"`
+	QueryName_ *string `json:"_name,omitempty"`
+	// Relation Indicates how the range query matches values for `range` fields.
+	Relation *rangerelation.RangeRelation `json:"relation,omitempty"`
+	// TimeZone Coordinated Universal Time (UTC) offset or IANA time zone used to convert
+	// `date` values in the query to UTC.
+	TimeZone *string `json:"time_zone,omitempty"`
+	To       string  `json:"to,omitempty"`
+}
+
+func (s *DateRangeQuery) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "boost":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 32)
+				if err != nil {
+					return err
+				}
+				f := float32(value)
+				s.Boost = &f
+			case float64:
+				f := float32(v)
+				s.Boost = &f
+			}
+
+		case "format":
+			if err := dec.Decode(&s.Format); err != nil {
+				return err
+			}
+
+		case "from":
+			if err := dec.Decode(&s.From); err != nil {
+				return err
+			}
+
+		case "gt":
+			if err := dec.Decode(&s.Gt); err != nil {
+				return err
+			}
+
+		case "gte":
+			if err := dec.Decode(&s.Gte); err != nil {
+				return err
+			}
+
+		case "lt":
+			if err := dec.Decode(&s.Lt); err != nil {
+				return err
+			}
+
+		case "lte":
+			if err := dec.Decode(&s.Lte); err != nil {
+				return err
+			}
+
+		case "_name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.QueryName_ = &o
+
+		case "relation":
+			if err := dec.Decode(&s.Relation); err != nil {
+				return err
+			}
+
+		case "time_zone":
+			if err := dec.Decode(&s.TimeZone); err != nil {
+				return err
+			}
+
+		case "to":
+			if err := dec.Decode(&s.To); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewDateRangeQuery returns a DateRangeQuery.

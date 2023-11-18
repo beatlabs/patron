@@ -16,23 +16,58 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/filtertype"
 )
 
 // FilterRef type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/Filter.ts#L31-L41
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/_types/Filter.ts#L31-L41
 type FilterRef struct {
 	// FilterId The identifier for the filter.
 	FilterId string `json:"filter_id"`
 	// FilterType If set to `include`, the rule applies for values in the filter. If set to
 	// `exclude`, the rule applies for values not in the filter.
 	FilterType *filtertype.FilterType `json:"filter_type,omitempty"`
+}
+
+func (s *FilterRef) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "filter_id":
+			if err := dec.Decode(&s.FilterId); err != nil {
+				return err
+			}
+
+		case "filter_type":
+			if err := dec.Decode(&s.FilterType); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewFilterRef returns a FilterRef.

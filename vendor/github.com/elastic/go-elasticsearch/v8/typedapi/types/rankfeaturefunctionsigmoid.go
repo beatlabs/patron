@@ -16,16 +16,78 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // RankFeatureFunctionSigmoid type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/specialized.ts#L149-L152
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/specialized.ts#L282-L291
 type RankFeatureFunctionSigmoid struct {
+	// Exponent Configurable Exponent.
 	Exponent float32 `json:"exponent"`
-	Pivot    float32 `json:"pivot"`
+	// Pivot Configurable pivot value so that the result will be less than 0.5.
+	Pivot float32 `json:"pivot"`
+}
+
+func (s *RankFeatureFunctionSigmoid) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "exponent":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 32)
+				if err != nil {
+					return err
+				}
+				f := float32(value)
+				s.Exponent = f
+			case float64:
+				f := float32(v)
+				s.Exponent = f
+			}
+
+		case "pivot":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 32)
+				if err != nil {
+					return err
+				}
+				f := float32(value)
+				s.Pivot = f
+			case float64:
+				f := float32(v)
+				s.Pivot = f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewRankFeatureFunctionSigmoid returns a RankFeatureFunctionSigmoid.

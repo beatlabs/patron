@@ -16,17 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/noridecompoundmode"
 )
 
 // NoriAnalyzer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/analyzers.ts#L66-L72
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/analyzers.ts#L66-L72
 type NoriAnalyzer struct {
 	DecompoundMode *noridecompoundmode.NoriDecompoundMode `json:"decompound_mode,omitempty"`
 	Stoptags       []string                               `json:"stoptags,omitempty"`
@@ -35,11 +41,77 @@ type NoriAnalyzer struct {
 	Version        *string                                `json:"version,omitempty"`
 }
 
+func (s *NoriAnalyzer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "decompound_mode":
+			if err := dec.Decode(&s.DecompoundMode); err != nil {
+				return err
+			}
+
+		case "stoptags":
+			if err := dec.Decode(&s.Stoptags); err != nil {
+				return err
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "user_dictionary":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.UserDictionary = &o
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s NoriAnalyzer) MarshalJSON() ([]byte, error) {
+	type innerNoriAnalyzer NoriAnalyzer
+	tmp := innerNoriAnalyzer{
+		DecompoundMode: s.DecompoundMode,
+		Stoptags:       s.Stoptags,
+		Type:           s.Type,
+		UserDictionary: s.UserDictionary,
+		Version:        s.Version,
+	}
+
+	tmp.Type = "nori"
+
+	return json.Marshal(tmp)
+}
+
 // NewNoriAnalyzer returns a NoriAnalyzer.
 func NewNoriAnalyzer() *NoriAnalyzer {
 	r := &NoriAnalyzer{}
-
-	r.Type = "nori"
 
 	return r
 }

@@ -16,18 +16,84 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // DecayPlacementGeoLocationDistance type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/compound.ts#L77-L82
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/compound.ts#L153-L172
 type DecayPlacementGeoLocationDistance struct {
-	Decay  *Float64    `json:"decay,omitempty"`
-	Offset *string     `json:"offset,omitempty"`
+	// Decay Defines how documents are scored at the distance given at scale.
+	Decay *Float64 `json:"decay,omitempty"`
+	// Offset If defined, the decay function will only compute the decay function for
+	// documents with a distance greater than the defined `offset`.
+	Offset *string `json:"offset,omitempty"`
+	// Origin The point of origin used for calculating distance. Must be given as a number
+	// for numeric field, date for date fields and geo point for geo fields.
 	Origin GeoLocation `json:"origin,omitempty"`
-	Scale  *string     `json:"scale,omitempty"`
+	// Scale Defines the distance from origin + offset at which the computed score will
+	// equal `decay` parameter.
+	Scale *string `json:"scale,omitempty"`
+}
+
+func (s *DecayPlacementGeoLocationDistance) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "decay":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.Decay = &f
+			case float64:
+				f := Float64(v)
+				s.Decay = &f
+			}
+
+		case "offset":
+			if err := dec.Decode(&s.Offset); err != nil {
+				return err
+			}
+
+		case "origin":
+			if err := dec.Decode(&s.Origin); err != nil {
+				return err
+			}
+
+		case "scale":
+			if err := dec.Decode(&s.Scale); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewDecayPlacementGeoLocationDistance returns a DecayPlacementGeoLocationDistance.

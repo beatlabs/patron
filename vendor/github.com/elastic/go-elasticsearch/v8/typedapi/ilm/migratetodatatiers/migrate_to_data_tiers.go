@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Migrates the indices and ILM policies away from custom node attribute
 // allocation routing to data tiers routing
@@ -50,8 +50,9 @@ type MigrateToDataTiers struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -79,6 +80,8 @@ func New(tp elastictransport.Interface) *MigrateToDataTiers {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -108,9 +111,19 @@ func (r *MigrateToDataTiers) HttpRequest(ctx context.Context) (*http.Request, er
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -118,6 +131,7 @@ func (r *MigrateToDataTiers) HttpRequest(ctx context.Context) (*http.Request, er
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -197,13 +211,16 @@ func (r MigrateToDataTiers) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -221,8 +238,24 @@ func (r *MigrateToDataTiers) Header(key, value string) *MigrateToDataTiers {
 // This provides a way to retrieve the indices and ILM policies that need to be
 // migrated.
 // API name: dry_run
-func (r *MigrateToDataTiers) DryRun(b bool) *MigrateToDataTiers {
-	r.values.Set("dry_run", strconv.FormatBool(b))
+func (r *MigrateToDataTiers) DryRun(dryrun bool) *MigrateToDataTiers {
+	r.values.Set("dry_run", strconv.FormatBool(dryrun))
+
+	return r
+}
+
+// API name: legacy_template_to_delete
+func (r *MigrateToDataTiers) LegacyTemplateToDelete(legacytemplatetodelete string) *MigrateToDataTiers {
+
+	r.req.LegacyTemplateToDelete = &legacytemplatetodelete
+
+	return r
+}
+
+// API name: node_attribute
+func (r *MigrateToDataTiers) NodeAttribute(nodeattribute string) *MigrateToDataTiers {
+
+	r.req.NodeAttribute = &nodeattribute
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves stored watches.
 package querywatches
@@ -48,8 +48,9 @@ type QueryWatches struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -76,6 +77,8 @@ func New(tp elastictransport.Interface) *QueryWatches {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -105,9 +108,19 @@ func (r *QueryWatches) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -115,6 +128,7 @@ func (r *QueryWatches) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -196,7 +210,6 @@ func (r QueryWatches) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
@@ -205,12 +218,57 @@ func (r QueryWatches) Do(ctx context.Context) (*Response, error) {
 		return nil, err
 	}
 
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
+	}
+
 	return nil, errorResponse
 }
 
 // Header set a key, value pair in the QueryWatches headers map.
 func (r *QueryWatches) Header(key, value string) *QueryWatches {
 	r.headers.Set(key, value)
+
+	return r
+}
+
+// From The offset from the first result to fetch. Needs to be non-negative.
+// API name: from
+func (r *QueryWatches) From(from int) *QueryWatches {
+	r.req.From = &from
+
+	return r
+}
+
+// Query Optional, query filter watches to be returned.
+// API name: query
+func (r *QueryWatches) Query(query *types.Query) *QueryWatches {
+
+	r.req.Query = query
+
+	return r
+}
+
+// SearchAfter Optional search After to do pagination using last hit’s sort values.
+// API name: search_after
+func (r *QueryWatches) SearchAfter(sortresults ...types.FieldValue) *QueryWatches {
+	r.req.SearchAfter = sortresults
+
+	return r
+}
+
+// Size The number of hits to return. Needs to be non-negative.
+// API name: size
+func (r *QueryWatches) Size(size int) *QueryWatches {
+	r.req.Size = &size
+
+	return r
+}
+
+// Sort Optional sort definition.
+// API name: sort
+func (r *QueryWatches) Sort(sorts ...types.SortCombinations) *QueryWatches {
+	r.req.Sort = sorts
 
 	return r
 }

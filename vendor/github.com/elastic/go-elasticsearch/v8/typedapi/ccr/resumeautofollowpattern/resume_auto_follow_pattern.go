@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Resumes an auto-follow pattern that has been paused
 package resumeautofollowpattern
@@ -67,7 +67,7 @@ func NewResumeAutoFollowPatternFunc(tp elastictransport.Interface) NewResumeAuto
 	return func(name string) *ResumeAutoFollowPattern {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -172,13 +172,16 @@ func (r ResumeAutoFollowPattern) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -215,9 +218,9 @@ func (r *ResumeAutoFollowPattern) Header(key, value string) *ResumeAutoFollowPat
 // Name The name of the auto follow pattern to resume discovering new indices to
 // follow.
 // API Name: name
-func (r *ResumeAutoFollowPattern) Name(v string) *ResumeAutoFollowPattern {
+func (r *ResumeAutoFollowPattern) _name(name string) *ResumeAutoFollowPattern {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }

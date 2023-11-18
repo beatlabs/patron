@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Provides explanations for shard allocations in the cluster.
 package allocationexplain
@@ -49,8 +49,9 @@ type AllocationExplain struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -77,6 +78,8 @@ func New(tp elastictransport.Interface) *AllocationExplain {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -106,9 +109,19 @@ func (r *AllocationExplain) HttpRequest(ctx context.Context) (*http.Request, err
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -116,6 +129,7 @@ func (r *AllocationExplain) HttpRequest(ctx context.Context) (*http.Request, err
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -197,13 +211,16 @@ func (r AllocationExplain) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -218,16 +235,50 @@ func (r *AllocationExplain) Header(key, value string) *AllocationExplain {
 
 // IncludeDiskInfo If true, returns information about disk usage and shard sizes.
 // API name: include_disk_info
-func (r *AllocationExplain) IncludeDiskInfo(b bool) *AllocationExplain {
-	r.values.Set("include_disk_info", strconv.FormatBool(b))
+func (r *AllocationExplain) IncludeDiskInfo(includediskinfo bool) *AllocationExplain {
+	r.values.Set("include_disk_info", strconv.FormatBool(includediskinfo))
 
 	return r
 }
 
 // IncludeYesDecisions If true, returns YES decisions in explanation.
 // API name: include_yes_decisions
-func (r *AllocationExplain) IncludeYesDecisions(b bool) *AllocationExplain {
-	r.values.Set("include_yes_decisions", strconv.FormatBool(b))
+func (r *AllocationExplain) IncludeYesDecisions(includeyesdecisions bool) *AllocationExplain {
+	r.values.Set("include_yes_decisions", strconv.FormatBool(includeyesdecisions))
+
+	return r
+}
+
+// CurrentNode Specifies the node ID or the name of the node to only explain a shard that is
+// currently located on the specified node.
+// API name: current_node
+func (r *AllocationExplain) CurrentNode(currentnode string) *AllocationExplain {
+
+	r.req.CurrentNode = &currentnode
+
+	return r
+}
+
+// Index Specifies the name of the index that you would like an explanation for.
+// API name: index
+func (r *AllocationExplain) Index(indexname string) *AllocationExplain {
+	r.req.Index = &indexname
+
+	return r
+}
+
+// Primary If true, returns explanation for the primary shard for the given shard ID.
+// API name: primary
+func (r *AllocationExplain) Primary(primary bool) *AllocationExplain {
+	r.req.Primary = &primary
+
+	return r
+}
+
+// Shard Specifies the ID of the shard that you would like an explanation for.
+// API name: shard
+func (r *AllocationExplain) Shard(shard int) *AllocationExplain {
+	r.req.Shard = &shard
 
 	return r
 }

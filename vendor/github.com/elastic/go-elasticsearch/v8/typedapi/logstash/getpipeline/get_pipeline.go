@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves Logstash Pipelines used by Central Management
 package getpipeline
@@ -67,7 +67,7 @@ func NewGetPipelineFunc(tp elastictransport.Interface) NewGetPipeline {
 	return func(id string) *GetPipeline {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -99,6 +99,13 @@ func (r *GetPipeline) HttpRequest(ctx context.Context) (*http.Request, error) {
 	r.path.Scheme = "http"
 
 	switch {
+	case r.paramSet == 0:
+		path.WriteString("/")
+		path.WriteString("_logstash")
+		path.WriteString("/")
+		path.WriteString("pipeline")
+
+		method = http.MethodGet
 	case r.paramSet == idMask:
 		path.WriteString("/")
 		path.WriteString("_logstash")
@@ -170,13 +177,16 @@ func (r GetPipeline) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -210,11 +220,11 @@ func (r *GetPipeline) Header(key, value string) *GetPipeline {
 	return r
 }
 
-// Id A comma-separated list of Pipeline IDs
+// Id Comma-separated list of pipeline identifiers.
 // API Name: id
-func (r *GetPipeline) Id(v string) *GetPipeline {
+func (r *GetPipeline) _id(id string) *GetPipeline {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }

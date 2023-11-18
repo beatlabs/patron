@@ -16,23 +16,64 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geoshaperelation"
 )
 
 // GeoShapeFieldQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/geo.ts#L78-L82
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/geo.ts#L100-L111
 type GeoShapeFieldQuery struct {
-	IndexedShape *FieldLookup                       `json:"indexed_shape,omitempty"`
-	Relation     *geoshaperelation.GeoShapeRelation `json:"relation,omitempty"`
-	Shape        json.RawMessage                    `json:"shape,omitempty"`
+	// IndexedShape Query using an indexed shape retrieved from the the specified document and
+	// path.
+	IndexedShape *FieldLookup `json:"indexed_shape,omitempty"`
+	// Relation Spatial relation operator used to search a geo field.
+	Relation *geoshaperelation.GeoShapeRelation `json:"relation,omitempty"`
+	Shape    json.RawMessage                    `json:"shape,omitempty"`
+}
+
+func (s *GeoShapeFieldQuery) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "indexed_shape":
+			if err := dec.Decode(&s.IndexedShape); err != nil {
+				return err
+			}
+
+		case "relation":
+			if err := dec.Decode(&s.Relation); err != nil {
+				return err
+			}
+
+		case "shape":
+			if err := dec.Decode(&s.Shape); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewGeoShapeFieldQuery returns a GeoShapeFieldQuery.

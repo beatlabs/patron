@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Gets stats for anomaly detection job model snapshot upgrades that are in
 // progress.
@@ -72,9 +72,9 @@ func NewGetModelSnapshotUpgradeStatsFunc(tp elastictransport.Interface) NewGetMo
 	return func(jobid, snapshotid string) *GetModelSnapshotUpgradeStats {
 		n := New(tp)
 
-		n.JobId(jobid)
+		n._jobid(jobid)
 
-		n.SnapshotId(snapshotid)
+		n._snapshotid(snapshotid)
 
 		return n
 	}
@@ -187,13 +187,16 @@ func (r GetModelSnapshotUpgradeStats) Do(ctx context.Context) (*Response, error)
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -229,9 +232,9 @@ func (r *GetModelSnapshotUpgradeStats) Header(key, value string) *GetModelSnapsh
 
 // JobId Identifier for the anomaly detection job.
 // API Name: jobid
-func (r *GetModelSnapshotUpgradeStats) JobId(v string) *GetModelSnapshotUpgradeStats {
+func (r *GetModelSnapshotUpgradeStats) _jobid(jobid string) *GetModelSnapshotUpgradeStats {
 	r.paramSet |= jobidMask
-	r.jobid = v
+	r.jobid = jobid
 
 	return r
 }
@@ -242,9 +245,9 @@ func (r *GetModelSnapshotUpgradeStats) JobId(v string) *GetModelSnapshotUpgradeS
 // get all snapshots by using `_all`,
 // by specifying `*` as the snapshot ID, or by omitting the snapshot ID.
 // API Name: snapshotid
-func (r *GetModelSnapshotUpgradeStats) SnapshotId(v string) *GetModelSnapshotUpgradeStats {
+func (r *GetModelSnapshotUpgradeStats) _snapshotid(snapshotid string) *GetModelSnapshotUpgradeStats {
 	r.paramSet |= snapshotidMask
-	r.snapshotid = v
+	r.snapshotid = snapshotid
 
 	return r
 }
@@ -261,8 +264,8 @@ func (r *GetModelSnapshotUpgradeStats) SnapshotId(v string) *GetModelSnapshotUpg
 // returns a 404 status code when there are
 // no matches or only partial matches.
 // API name: allow_no_match
-func (r *GetModelSnapshotUpgradeStats) AllowNoMatch(b bool) *GetModelSnapshotUpgradeStats {
-	r.values.Set("allow_no_match", strconv.FormatBool(b))
+func (r *GetModelSnapshotUpgradeStats) AllowNoMatch(allownomatch bool) *GetModelSnapshotUpgradeStats {
+	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
 
 	return r
 }

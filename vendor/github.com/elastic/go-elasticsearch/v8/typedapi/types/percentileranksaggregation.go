@@ -16,22 +16,117 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // PercentileRanksAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/metric.ts#L105-L110
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/metric.ts#L174-L193
 type PercentileRanksAggregation struct {
-	Field   *string    `json:"field,omitempty"`
-	Format  *string    `json:"format,omitempty"`
-	Hdr     *HdrMethod `json:"hdr,omitempty"`
-	Keyed   *bool      `json:"keyed,omitempty"`
-	Missing Missing    `json:"missing,omitempty"`
-	Script  Script     `json:"script,omitempty"`
-	Tdigest *TDigest   `json:"tdigest,omitempty"`
-	Values  []Float64  `json:"values,omitempty"`
+	// Field The field on which to run the aggregation.
+	Field  *string `json:"field,omitempty"`
+	Format *string `json:"format,omitempty"`
+	// Hdr Uses the alternative High Dynamic Range Histogram algorithm to calculate
+	// percentile ranks.
+	Hdr *HdrMethod `json:"hdr,omitempty"`
+	// Keyed By default, the aggregation associates a unique string key with each bucket
+	// and returns the ranges as a hash rather than an array.
+	// Set to `false` to disable this behavior.
+	Keyed *bool `json:"keyed,omitempty"`
+	// Missing The value to apply to documents that do not have a value.
+	// By default, documents without a value are ignored.
+	Missing Missing `json:"missing,omitempty"`
+	Script  Script  `json:"script,omitempty"`
+	// Tdigest Sets parameters for the default TDigest algorithm used to calculate
+	// percentile ranks.
+	Tdigest *TDigest `json:"tdigest,omitempty"`
+	// Values An array of values for which to calculate the percentile ranks.
+	Values []Float64 `json:"values,omitempty"`
+}
+
+func (s *PercentileRanksAggregation) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "field":
+			if err := dec.Decode(&s.Field); err != nil {
+				return err
+			}
+
+		case "format":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Format = &o
+
+		case "hdr":
+			if err := dec.Decode(&s.Hdr); err != nil {
+				return err
+			}
+
+		case "keyed":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Keyed = &value
+			case bool:
+				s.Keyed = &v
+			}
+
+		case "missing":
+			if err := dec.Decode(&s.Missing); err != nil {
+				return err
+			}
+
+		case "script":
+			if err := dec.Decode(&s.Script); err != nil {
+				return err
+			}
+
+		case "tdigest":
+			if err := dec.Decode(&s.Tdigest); err != nil {
+				return err
+			}
+
+		case "values":
+			if err := dec.Decode(&s.Values); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewPercentileRanksAggregation returns a PercentileRanksAggregation.

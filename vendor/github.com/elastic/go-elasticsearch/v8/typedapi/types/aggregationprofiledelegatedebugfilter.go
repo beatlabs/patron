@@ -16,18 +16,102 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // AggregationProfileDelegateDebugFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/search/_types/profile.ts#L70-L75
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/search/_types/profile.ts#L70-L75
 type AggregationProfileDelegateDebugFilter struct {
 	Query                         *string `json:"query,omitempty"`
 	ResultsFromMetadata           *int    `json:"results_from_metadata,omitempty"`
 	SegmentsCountedInConstantTime *int    `json:"segments_counted_in_constant_time,omitempty"`
 	SpecializedFor                *string `json:"specialized_for,omitempty"`
+}
+
+func (s *AggregationProfileDelegateDebugFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "query":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Query = &o
+
+		case "results_from_metadata":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.ResultsFromMetadata = &value
+			case float64:
+				f := int(v)
+				s.ResultsFromMetadata = &f
+			}
+
+		case "segments_counted_in_constant_time":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.SegmentsCountedInConstantTime = &value
+			case float64:
+				f := int(v)
+				s.SegmentsCountedInConstantTime = &f
+			}
+
+		case "specialized_for":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.SpecializedFor = &o
+
+		}
+	}
+	return nil
 }
 
 // NewAggregationProfileDelegateDebugFilter returns a AggregationProfileDelegateDebugFilter.

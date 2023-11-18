@@ -16,15 +16,20 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package openjob
 
 // Response holds the response body struct for the package openjob
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/open_job/MlOpenJobResponse.ts#L22-L27
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/open_job/MlOpenJobResponse.ts#L22-L31
 
 type Response struct {
+
+	// Node The ID of the node that the job was started on. In serverless this will be
+	// the "serverless".
+	// If the job is allowed to open lazily and has not yet been assigned to a node,
+	// this value is an empty string.
 	Node   string `json:"node"`
 	Opened bool   `json:"opened"`
 }

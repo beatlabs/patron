@@ -16,19 +16,112 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // Process type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/Stats.ts#L381-L387
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/nodes/_types/Stats.ts#L953-L975
 type Process struct {
-	Cpu                 *Cpu         `json:"cpu,omitempty"`
-	MaxFileDescriptors  *int         `json:"max_file_descriptors,omitempty"`
-	Mem                 *MemoryStats `json:"mem,omitempty"`
-	OpenFileDescriptors *int         `json:"open_file_descriptors,omitempty"`
-	Timestamp           *int64       `json:"timestamp,omitempty"`
+	// Cpu Contains CPU statistics for the node.
+	Cpu *Cpu `json:"cpu,omitempty"`
+	// MaxFileDescriptors Maximum number of file descriptors allowed on the system, or `-1` if not
+	// supported.
+	MaxFileDescriptors *int `json:"max_file_descriptors,omitempty"`
+	// Mem Contains virtual memory statistics for the node.
+	Mem *MemoryStats `json:"mem,omitempty"`
+	// OpenFileDescriptors Number of opened file descriptors associated with the current or `-1` if not
+	// supported.
+	OpenFileDescriptors *int `json:"open_file_descriptors,omitempty"`
+	// Timestamp Last time the statistics were refreshed.
+	// Recorded in milliseconds since the Unix Epoch.
+	Timestamp *int64 `json:"timestamp,omitempty"`
+}
+
+func (s *Process) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "cpu":
+			if err := dec.Decode(&s.Cpu); err != nil {
+				return err
+			}
+
+		case "max_file_descriptors":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxFileDescriptors = &value
+			case float64:
+				f := int(v)
+				s.MaxFileDescriptors = &f
+			}
+
+		case "mem":
+			if err := dec.Decode(&s.Mem); err != nil {
+				return err
+			}
+
+		case "open_file_descriptors":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.OpenFileDescriptors = &value
+			case float64:
+				f := int(v)
+				s.OpenFileDescriptors = &f
+			}
+
+		case "timestamp":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Timestamp = &value
+			case float64:
+				f := int64(v)
+				s.Timestamp = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewProcess returns a Process.

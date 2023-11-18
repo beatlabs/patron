@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package puttrainedmodel
 
@@ -30,7 +30,7 @@ import (
 
 // Request holds the request body struct for the package puttrainedmodel
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/put_trained_model/MlPutTrainedModelRequest.ts#L28-L94
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/put_trained_model/MlPutTrainedModelRequest.ts#L28-L106
 type Request struct {
 
 	// CompressedDefinition The compressed (GZipped and Base64 encoded) inference definition of the
@@ -44,8 +44,9 @@ type Request struct {
 	Description *string `json:"description,omitempty"`
 	// InferenceConfig The default configuration for inference. This can be either a regression
 	// or classification configuration. It must match the underlying
-	// definition.trained_model's target_type.
-	InferenceConfig types.InferenceConfigCreateContainer `json:"inference_config"`
+	// definition.trained_model's target_type. For pre-packaged models such as
+	// ELSER the config is not required.
+	InferenceConfig *types.InferenceConfigCreateContainer `json:"inference_config,omitempty"`
 	// Input The input field names for the model definition.
 	Input *types.Input `json:"input,omitempty"`
 	// Metadata An object map that contains metadata about the model.
@@ -56,6 +57,17 @@ type Request struct {
 	ModelSizeBytes *int64 `json:"model_size_bytes,omitempty"`
 	// ModelType The model type.
 	ModelType *trainedmodeltype.TrainedModelType `json:"model_type,omitempty"`
+	// PlatformArchitecture The platform architecture (if applicable) of the trained mode. If the model
+	// only works on one platform, because it is heavily optimized for a particular
+	// processor architecture and OS combination, then this field specifies which.
+	// The format of the string must match the platform identifiers used by
+	// Elasticsearch,
+	// so one of, `linux-x86_64`, `linux-aarch64`, `darwin-x86_64`,
+	// `darwin-aarch64`,
+	// or `windows-x86_64`. For portable models (those that work independent of
+	// processor
+	// architecture or OS features), leave this field unset.
+	PlatformArchitecture *string `json:"platform_architecture,omitempty"`
 	// Tags An array of tags to organize the model.
 	Tags []string `json:"tags,omitempty"`
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves configuration information for transforms.
 package gettransform
@@ -172,13 +172,16 @@ func (r GetTransform) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -217,9 +220,9 @@ func (r *GetTransform) Header(key, value string) *GetTransform {
 // `_all`, by specifying `*` as the `<transform_id>`, or by omitting the
 // `<transform_id>`.
 // API Name: transformid
-func (r *GetTransform) TransformId(v string) *GetTransform {
+func (r *GetTransform) TransformId(transformid string) *GetTransform {
 	r.paramSet |= transformidMask
-	r.transformid = v
+	r.transformid = transformid
 
 	return r
 }
@@ -233,24 +236,24 @@ func (r *GetTransform) TransformId(v string) *GetTransform {
 // If this parameter is false, the request returns a 404 status code when
 // there are no matches or only partial matches.
 // API name: allow_no_match
-func (r *GetTransform) AllowNoMatch(b bool) *GetTransform {
-	r.values.Set("allow_no_match", strconv.FormatBool(b))
+func (r *GetTransform) AllowNoMatch(allownomatch bool) *GetTransform {
+	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
 
 	return r
 }
 
 // From Skips the specified number of transforms.
 // API name: from
-func (r *GetTransform) From(i int) *GetTransform {
-	r.values.Set("from", strconv.Itoa(i))
+func (r *GetTransform) From(from int) *GetTransform {
+	r.values.Set("from", strconv.Itoa(from))
 
 	return r
 }
 
 // Size Specifies the maximum number of transforms to obtain.
 // API name: size
-func (r *GetTransform) Size(i int) *GetTransform {
-	r.values.Set("size", strconv.Itoa(i))
+func (r *GetTransform) Size(size int) *GetTransform {
+	r.values.Set("size", strconv.Itoa(size))
 
 	return r
 }
@@ -259,8 +262,8 @@ func (r *GetTransform) Size(i int) *GetTransform {
 // transform. This allows the configuration to be in an acceptable format to
 // be retrieved and then added to another cluster.
 // API name: exclude_generated
-func (r *GetTransform) ExcludeGenerated(b bool) *GetTransform {
-	r.values.Set("exclude_generated", strconv.FormatBool(b))
+func (r *GetTransform) ExcludeGenerated(excludegenerated bool) *GetTransform {
+	r.values.Set("exclude_generated", strconv.FormatBool(excludegenerated))
 
 	return r
 }

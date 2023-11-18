@@ -16,21 +16,137 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // ClusterJvmVersion type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/stats/types.ts#L168-L176
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/cluster/stats/types.ts#L305-L335
 type ClusterJvmVersion struct {
-	BundledJdk      bool   `json:"bundled_jdk"`
-	Count           int    `json:"count"`
-	UsingBundledJdk bool   `json:"using_bundled_jdk"`
-	Version         string `json:"version"`
-	VmName          string `json:"vm_name"`
-	VmVendor        string `json:"vm_vendor"`
-	VmVersion       string `json:"vm_version"`
+	// BundledJdk Always `true`. All distributions come with a bundled Java Development Kit
+	// (JDK).
+	BundledJdk bool `json:"bundled_jdk"`
+	// Count Total number of selected nodes using JVM.
+	Count int `json:"count"`
+	// UsingBundledJdk If `true`, a bundled JDK is in use by JVM.
+	UsingBundledJdk bool `json:"using_bundled_jdk"`
+	// Version Version of JVM used by one or more selected nodes.
+	Version string `json:"version"`
+	// VmName Name of the JVM.
+	VmName string `json:"vm_name"`
+	// VmVendor Vendor of the JVM.
+	VmVendor string `json:"vm_vendor"`
+	// VmVersion Full version number of JVM.
+	// The full version number includes a plus sign (+) followed by the build
+	// number.
+	VmVersion string `json:"vm_version"`
+}
+
+func (s *ClusterJvmVersion) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "bundled_jdk":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.BundledJdk = value
+			case bool:
+				s.BundledJdk = v
+			}
+
+		case "count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Count = value
+			case float64:
+				f := int(v)
+				s.Count = f
+			}
+
+		case "using_bundled_jdk":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.UsingBundledJdk = value
+			case bool:
+				s.UsingBundledJdk = v
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		case "vm_name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.VmName = o
+
+		case "vm_vendor":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.VmVendor = o
+
+		case "vm_version":
+			if err := dec.Decode(&s.VmVersion); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewClusterJvmVersion returns a ClusterJvmVersion.

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about why a specific matches (or doesn't match) a query.
 package explain
@@ -35,7 +35,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/operator"
 )
 
@@ -57,8 +56,9 @@ type Explain struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -75,9 +75,9 @@ func NewExplainFunc(tp elastictransport.Interface) NewExplain {
 	return func(index, id string) *Explain {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -92,6 +92,8 @@ func New(tp elastictransport.Interface) *Explain {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -121,9 +123,19 @@ func (r *Explain) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -131,6 +143,7 @@ func (r *Explain) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -214,13 +227,16 @@ func (r Explain) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -233,120 +249,131 @@ func (r *Explain) Header(key, value string) *Explain {
 	return r
 }
 
-// Id The document ID
+// Id Defines the document ID.
 // API Name: id
-func (r *Explain) Id(v string) *Explain {
+func (r *Explain) _id(id string) *Explain {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
-// Index The name of the index
+// Index Index names used to limit the request.
+// Only a single index name can be provided to this parameter.
 // API Name: index
-func (r *Explain) Index(v string) *Explain {
+func (r *Explain) _index(index string) *Explain {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// Analyzer The analyzer for the query string query
+// Analyzer Analyzer to use for the query string.
+// This parameter can only be used when the `q` query string parameter is
+// specified.
 // API name: analyzer
-func (r *Explain) Analyzer(v string) *Explain {
-	r.values.Set("analyzer", v)
+func (r *Explain) Analyzer(analyzer string) *Explain {
+	r.values.Set("analyzer", analyzer)
 
 	return r
 }
 
-// AnalyzeWildcard Specify whether wildcards and prefix queries in the query string query should
-// be analyzed (default: false)
+// AnalyzeWildcard If `true`, wildcard and prefix queries are analyzed.
 // API name: analyze_wildcard
-func (r *Explain) AnalyzeWildcard(b bool) *Explain {
-	r.values.Set("analyze_wildcard", strconv.FormatBool(b))
+func (r *Explain) AnalyzeWildcard(analyzewildcard bool) *Explain {
+	r.values.Set("analyze_wildcard", strconv.FormatBool(analyzewildcard))
 
 	return r
 }
 
-// DefaultOperator The default operator for query string query (AND or OR)
+// DefaultOperator The default operator for query string query: `AND` or `OR`.
 // API name: default_operator
-func (r *Explain) DefaultOperator(enum operator.Operator) *Explain {
-	r.values.Set("default_operator", enum.String())
+func (r *Explain) DefaultOperator(defaultoperator operator.Operator) *Explain {
+	r.values.Set("default_operator", defaultoperator.String())
 
 	return r
 }
 
-// Df The default field for query string query (default: _all)
+// Df Field to use as default where no field prefix is given in the query string.
 // API name: df
-func (r *Explain) Df(v string) *Explain {
-	r.values.Set("df", v)
+func (r *Explain) Df(df string) *Explain {
+	r.values.Set("df", df)
 
 	return r
 }
 
-// Lenient Specify whether format-based query failures (such as providing text to a
-// numeric field) should be ignored
+// Lenient If `true`, format-based query failures (such as providing text to a numeric
+// field) in the query string will be ignored.
 // API name: lenient
-func (r *Explain) Lenient(b bool) *Explain {
-	r.values.Set("lenient", strconv.FormatBool(b))
+func (r *Explain) Lenient(lenient bool) *Explain {
+	r.values.Set("lenient", strconv.FormatBool(lenient))
 
 	return r
 }
 
-// Preference Specify the node or shard the operation should be performed on (default:
-// random)
+// Preference Specifies the node or shard the operation should be performed on.
+// Random by default.
 // API name: preference
-func (r *Explain) Preference(v string) *Explain {
-	r.values.Set("preference", v)
+func (r *Explain) Preference(preference string) *Explain {
+	r.values.Set("preference", preference)
 
 	return r
 }
 
-// Routing Specific routing value
+// Routing Custom value used to route operations to a specific shard.
 // API name: routing
-func (r *Explain) Routing(v string) *Explain {
-	r.values.Set("routing", v)
+func (r *Explain) Routing(routing string) *Explain {
+	r.values.Set("routing", routing)
 
 	return r
 }
 
-// Source_ True or false to return the _source field or not, or a list of fields to
-// return
+// Source_ True or false to return the `_source` field or not, or a list of fields to
+// return.
 // API name: _source
-func (r *Explain) Source_(v string) *Explain {
-	r.values.Set("_source", v)
+func (r *Explain) Source_(sourceconfigparam string) *Explain {
+	r.values.Set("_source", sourceconfigparam)
 
 	return r
 }
 
-// SourceExcludes_ A list of fields to exclude from the returned _source field
+// SourceExcludes_ A comma-separated list of source fields to exclude from the response.
 // API name: _source_excludes
-func (r *Explain) SourceExcludes_(v string) *Explain {
-	r.values.Set("_source_excludes", v)
+func (r *Explain) SourceExcludes_(fields ...string) *Explain {
+	r.values.Set("_source_excludes", strings.Join(fields, ","))
 
 	return r
 }
 
-// SourceIncludes_ A list of fields to extract and return from the _source field
+// SourceIncludes_ A comma-separated list of source fields to include in the response.
 // API name: _source_includes
-func (r *Explain) SourceIncludes_(v string) *Explain {
-	r.values.Set("_source_includes", v)
+func (r *Explain) SourceIncludes_(fields ...string) *Explain {
+	r.values.Set("_source_includes", strings.Join(fields, ","))
 
 	return r
 }
 
-// StoredFields A comma-separated list of stored fields to return in the response
+// StoredFields A comma-separated list of stored fields to return in the response.
 // API name: stored_fields
-func (r *Explain) StoredFields(v string) *Explain {
-	r.values.Set("stored_fields", v)
+func (r *Explain) StoredFields(fields ...string) *Explain {
+	r.values.Set("stored_fields", strings.Join(fields, ","))
 
 	return r
 }
 
-// Q Query in the Lucene query string syntax
+// Q Query in the Lucene query string syntax.
 // API name: q
-func (r *Explain) Q(v string) *Explain {
-	r.values.Set("q", v)
+func (r *Explain) Q(q string) *Explain {
+	r.values.Set("q", q)
+
+	return r
+}
+
+// Query Defines the search definition using the Query DSL.
+// API name: query
+func (r *Explain) Query(query *types.Query) *Explain {
+
+	r.req.Query = query
 
 	return r
 }

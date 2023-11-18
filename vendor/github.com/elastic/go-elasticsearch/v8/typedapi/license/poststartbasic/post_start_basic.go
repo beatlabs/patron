@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Starts an indefinite basic license.
 package poststartbasic
@@ -160,13 +160,16 @@ func (r PostStartBasic) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -202,8 +205,8 @@ func (r *PostStartBasic) Header(key, value string) *PostStartBasic {
 
 // Acknowledge whether the user has acknowledged acknowledge messages (default: false)
 // API name: acknowledge
-func (r *PostStartBasic) Acknowledge(b bool) *PostStartBasic {
-	r.values.Set("acknowledge", strconv.FormatBool(b))
+func (r *PostStartBasic) Acknowledge(acknowledge bool) *PostStartBasic {
+	r.values.Set("acknowledge", strconv.FormatBool(acknowledge))
 
 	return r
 }

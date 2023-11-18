@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Removes role mappings.
 package deleterolemapping
@@ -35,7 +35,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 )
 
@@ -69,7 +68,7 @@ func NewDeleteRoleMappingFunc(tp elastictransport.Interface) NewDeleteRoleMappin
 	return func(name string) *DeleteRoleMapping {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -172,13 +171,16 @@ func (r DeleteRoleMapping) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -214,9 +216,9 @@ func (r *DeleteRoleMapping) Header(key, value string) *DeleteRoleMapping {
 
 // Name Role-mapping name
 // API Name: name
-func (r *DeleteRoleMapping) Name(v string) *DeleteRoleMapping {
+func (r *DeleteRoleMapping) _name(name string) *DeleteRoleMapping {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
@@ -225,8 +227,8 @@ func (r *DeleteRoleMapping) Name(v string) *DeleteRoleMapping {
 // operation visible to search, if `wait_for` then wait for a refresh to make
 // this operation visible to search, if `false` then do nothing with refreshes.
 // API name: refresh
-func (r *DeleteRoleMapping) Refresh(enum refresh.Refresh) *DeleteRoleMapping {
-	r.values.Set("refresh", enum.String())
+func (r *DeleteRoleMapping) Refresh(refresh refresh.Refresh) *DeleteRoleMapping {
+	r.values.Set("refresh", refresh.String())
 
 	return r
 }

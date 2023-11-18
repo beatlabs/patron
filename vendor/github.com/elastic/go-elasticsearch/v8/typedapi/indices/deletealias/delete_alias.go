@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes an alias.
 package deletealias
@@ -70,9 +70,9 @@ func NewDeleteAliasFunc(tp elastictransport.Interface) NewDeleteAlias {
 	return func(index, name string) *DeleteAlias {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -187,13 +187,16 @@ func (r DeleteAlias) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -227,38 +230,42 @@ func (r *DeleteAlias) Header(key, value string) *DeleteAlias {
 	return r
 }
 
-// Index A comma-separated list of index names (supports wildcards); use `_all` for
-// all indices
+// Index Comma-separated list of data streams or indices used to limit the request.
+// Supports wildcards (`*`).
 // API Name: index
-func (r *DeleteAlias) Index(v string) *DeleteAlias {
+func (r *DeleteAlias) _index(index string) *DeleteAlias {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// Name A comma-separated list of aliases to delete (supports wildcards); use `_all`
-// to delete all aliases for the specified indices.
+// Name Comma-separated list of aliases to remove.
+// Supports wildcards (`*`). To remove all aliases, use `*` or `_all`.
 // API Name: name
-func (r *DeleteAlias) Name(v string) *DeleteAlias {
+func (r *DeleteAlias) _name(name string) *DeleteAlias {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *DeleteAlias) MasterTimeout(v string) *DeleteAlias {
-	r.values.Set("master_timeout", v)
+func (r *DeleteAlias) MasterTimeout(duration string) *DeleteAlias {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit timestamp for the document
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *DeleteAlias) Timeout(v string) *DeleteAlias {
-	r.values.Set("timeout", v)
+func (r *DeleteAlias) Timeout(duration string) *DeleteAlias {
+	r.values.Set("timeout", duration)
 
 	return r
 }

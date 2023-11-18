@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Provides a snapshot of how many shards are allocated to each data node and
 // how much disk space they are using.
@@ -36,7 +36,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/bytes"
 )
 
@@ -179,13 +178,16 @@ func (r Allocation) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -219,19 +221,20 @@ func (r *Allocation) Header(key, value string) *Allocation {
 	return r
 }
 
-// NodeId A comma-separated list of node IDs or names to limit the returned information
+// NodeId Comma-separated list of node identifiers or names used to limit the returned
+// information.
 // API Name: nodeid
-func (r *Allocation) NodeId(v string) *Allocation {
+func (r *Allocation) NodeId(nodeid string) *Allocation {
 	r.paramSet |= nodeidMask
-	r.nodeid = v
+	r.nodeid = nodeid
 
 	return r
 }
 
-// Bytes The unit in which to display byte values
+// Bytes The unit used to display byte values.
 // API name: bytes
-func (r *Allocation) Bytes(enum bytes.Bytes) *Allocation {
-	r.values.Set("bytes", enum.String())
+func (r *Allocation) Bytes(bytes bytes.Bytes) *Allocation {
+	r.values.Set("bytes", bytes.String())
 
 	return r
 }

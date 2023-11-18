@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates or updates a script.
 package putscript
@@ -54,8 +54,9 @@ type PutScript struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -72,7 +73,7 @@ func NewPutScriptFunc(tp elastictransport.Interface) NewPutScript {
 	return func(id string) *PutScript {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -87,6 +88,8 @@ func New(tp elastictransport.Interface) *PutScript {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -116,9 +119,19 @@ func (r *PutScript) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -126,6 +139,7 @@ func (r *PutScript) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -217,13 +231,16 @@ func (r PutScript) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -236,36 +253,52 @@ func (r *PutScript) Header(key, value string) *PutScript {
 	return r
 }
 
-// Id Script ID
+// Id Identifier for the stored script or search template.
+// Must be unique within the cluster.
 // API Name: id
-func (r *PutScript) Id(v string) *PutScript {
+func (r *PutScript) _id(id string) *PutScript {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
-// Context Script context
+// Context Context in which the script or search template should run.
+// To prevent errors, the API immediately compiles the script or template in
+// this context.
 // API Name: context
-func (r *PutScript) Context(v string) *PutScript {
+func (r *PutScript) Context(context string) *PutScript {
 	r.paramSet |= contextMask
-	r.context = v
+	r.context = context
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *PutScript) MasterTimeout(v string) *PutScript {
-	r.values.Set("master_timeout", v)
+func (r *PutScript) MasterTimeout(duration string) *PutScript {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *PutScript) Timeout(v string) *PutScript {
-	r.values.Set("timeout", v)
+func (r *PutScript) Timeout(duration string) *PutScript {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
+// Script Contains the script or search template, its parameters, and its language.
+// API name: script
+func (r *PutScript) Script(script *types.StoredScript) *PutScript {
+
+	r.req.Script = *script
 
 	return r
 }

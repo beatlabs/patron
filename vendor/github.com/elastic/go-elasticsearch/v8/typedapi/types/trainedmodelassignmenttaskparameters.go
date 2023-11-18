@@ -16,20 +16,28 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/trainingpriority"
 )
 
 // TrainedModelAssignmentTaskParameters type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/TrainedModel.ts#L305-L333
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/_types/TrainedModel.ts#L315-L348
 type TrainedModelAssignmentTaskParameters struct {
 	// CacheSize The size of the trained model cache.
 	CacheSize ByteSize `json:"cache_size"`
+	// DeploymentId The unique identifier for the trained model deployment.
+	DeploymentId string `json:"deployment_id"`
 	// ModelBytes The size of the trained model in bytes.
 	ModelBytes int `json:"model_bytes"`
 	// ModelId The unique identifier for the trained model.
@@ -41,6 +49,110 @@ type TrainedModelAssignmentTaskParameters struct {
 	QueueCapacity int `json:"queue_capacity"`
 	// ThreadsPerAllocation Number of threads per allocation.
 	ThreadsPerAllocation int `json:"threads_per_allocation"`
+}
+
+func (s *TrainedModelAssignmentTaskParameters) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "cache_size":
+			if err := dec.Decode(&s.CacheSize); err != nil {
+				return err
+			}
+
+		case "deployment_id":
+			if err := dec.Decode(&s.DeploymentId); err != nil {
+				return err
+			}
+
+		case "model_bytes":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.ModelBytes = value
+			case float64:
+				f := int(v)
+				s.ModelBytes = f
+			}
+
+		case "model_id":
+			if err := dec.Decode(&s.ModelId); err != nil {
+				return err
+			}
+
+		case "number_of_allocations":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.NumberOfAllocations = value
+			case float64:
+				f := int(v)
+				s.NumberOfAllocations = f
+			}
+
+		case "priority":
+			if err := dec.Decode(&s.Priority); err != nil {
+				return err
+			}
+
+		case "queue_capacity":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.QueueCapacity = value
+			case float64:
+				f := int(v)
+				s.QueueCapacity = f
+			}
+
+		case "threads_per_allocation":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.ThreadsPerAllocation = value
+			case float64:
+				f := int(v)
+				s.ThreadsPerAllocation = f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewTrainedModelAssignmentTaskParameters returns a TrainedModelAssignmentTaskParameters.

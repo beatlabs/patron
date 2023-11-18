@@ -16,16 +16,64 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // TotalUserProfiles type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/security/suggest_user_profiles/Response.ts#L24-L27
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/security/suggest_user_profiles/Response.ts#L24-L27
 type TotalUserProfiles struct {
 	Relation string `json:"relation"`
 	Value    int64  `json:"value"`
+}
+
+func (s *TotalUserProfiles) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "relation":
+			if err := dec.Decode(&s.Relation); err != nil {
+				return err
+			}
+
+		case "value":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Value = value
+			case float64:
+				f := int64(v)
+				s.Value = f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewTotalUserProfiles returns a TotalUserProfiles.

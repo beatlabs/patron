@@ -16,23 +16,83 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 )
 
 // ComponentTemplateSummary type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/_types/ComponentTemplate.ts#L38-L45
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/cluster/_types/ComponentTemplate.ts#L42-L54
 type ComponentTemplateSummary struct {
-	Aliases  map[string]AliasDefinition `json:"aliases,omitempty"`
-	Mappings *TypeMapping               `json:"mappings,omitempty"`
-	Meta_    map[string]json.RawMessage `json:"_meta,omitempty"`
-	Settings map[string]IndexSettings   `json:"settings,omitempty"`
-	Version  *int64                     `json:"version,omitempty"`
+	Aliases   map[string]AliasDefinition       `json:"aliases,omitempty"`
+	Lifecycle *DataStreamLifecycleWithRollover `json:"lifecycle,omitempty"`
+	Mappings  *TypeMapping                     `json:"mappings,omitempty"`
+	Meta_     Metadata                         `json:"_meta,omitempty"`
+	Settings  map[string]IndexSettings         `json:"settings,omitempty"`
+	Version   *int64                           `json:"version,omitempty"`
+}
+
+func (s *ComponentTemplateSummary) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "aliases":
+			if s.Aliases == nil {
+				s.Aliases = make(map[string]AliasDefinition, 0)
+			}
+			if err := dec.Decode(&s.Aliases); err != nil {
+				return err
+			}
+
+		case "lifecycle":
+			if err := dec.Decode(&s.Lifecycle); err != nil {
+				return err
+			}
+
+		case "mappings":
+			if err := dec.Decode(&s.Mappings); err != nil {
+				return err
+			}
+
+		case "_meta":
+			if err := dec.Decode(&s.Meta_); err != nil {
+				return err
+			}
+
+		case "settings":
+			if s.Settings == nil {
+				s.Settings = make(map[string]IndexSettings, 0)
+			}
+			if err := dec.Decode(&s.Settings); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewComponentTemplateSummary returns a ComponentTemplateSummary.

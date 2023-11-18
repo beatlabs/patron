@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes an async EQL search by ID. If the search is still running, the search
 // request will be cancelled. Otherwise, the saved search results are deleted.
@@ -68,7 +68,7 @@ func NewDeleteFunc(tp elastictransport.Interface) NewDelete {
 	return func(id string) *Delete {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -172,13 +172,16 @@ func (r Delete) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -213,10 +216,13 @@ func (r *Delete) Header(key, value string) *Delete {
 }
 
 // Id Identifier for the search to delete.
+// A search ID is provided in the EQL search API's response for an async search.
+// A search ID is also provided if the request’s `keep_on_completion` parameter
+// is `true`.
 // API Name: id
-func (r *Delete) Id(v string) *Delete {
+func (r *Delete) _id(id string) *Delete {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }

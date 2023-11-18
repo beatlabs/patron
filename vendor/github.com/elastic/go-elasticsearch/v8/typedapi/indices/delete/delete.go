@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes an index.
 package delete
@@ -36,6 +36,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -68,7 +69,7 @@ func NewDeleteFunc(tp elastictransport.Interface) NewDelete {
 	return func(index string) *Delete {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -167,13 +168,16 @@ func (r Delete) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -207,54 +211,70 @@ func (r *Delete) Header(key, value string) *Delete {
 	return r
 }
 
-// Index A comma-separated list of indices to delete; use `_all` or `*` string to
-// delete all indices
+// Index Comma-separated list of indices to delete.
+// You cannot specify index aliases.
+// By default, this parameter does not support wildcards (`*`) or `_all`.
+// To use wildcards or `_all`, set the `action.destructive_requires_name`
+// cluster setting to `false`.
 // API Name: index
-func (r *Delete) Index(v string) *Delete {
+func (r *Delete) _index(index string) *Delete {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// AllowNoIndices Ignore if a wildcard expression resolves to no concrete indices (default:
-// false)
+// AllowNoIndices If `false`, the request returns an error if any wildcard expression, index
+// alias, or `_all` value targets only missing or closed indices.
+// This behavior applies even if the request targets other open indices.
 // API name: allow_no_indices
-func (r *Delete) AllowNoIndices(b bool) *Delete {
-	r.values.Set("allow_no_indices", strconv.FormatBool(b))
+func (r *Delete) AllowNoIndices(allownoindices bool) *Delete {
+	r.values.Set("allow_no_indices", strconv.FormatBool(allownoindices))
 
 	return r
 }
 
-// ExpandWildcards Whether wildcard expressions should get expanded to open, closed, or hidden
-// indices
+// ExpandWildcards Type of index that wildcard patterns can match.
+// If the request can target data streams, this argument determines whether
+// wildcard expressions match hidden data streams.
+// Supports comma-separated values, such as `open,hidden`.
+// Valid values are: `all`, `open`, `closed`, `hidden`, `none`.
 // API name: expand_wildcards
-func (r *Delete) ExpandWildcards(v string) *Delete {
-	r.values.Set("expand_wildcards", v)
+func (r *Delete) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *Delete {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
-// IgnoreUnavailable Ignore unavailable indexes (default: false)
+// IgnoreUnavailable If `false`, the request returns an error if it targets a missing or closed
+// index.
 // API name: ignore_unavailable
-func (r *Delete) IgnoreUnavailable(b bool) *Delete {
-	r.values.Set("ignore_unavailable", strconv.FormatBool(b))
+func (r *Delete) IgnoreUnavailable(ignoreunavailable bool) *Delete {
+	r.values.Set("ignore_unavailable", strconv.FormatBool(ignoreunavailable))
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *Delete) MasterTimeout(v string) *Delete {
-	r.values.Set("master_timeout", v)
+func (r *Delete) MasterTimeout(duration string) *Delete {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *Delete) Timeout(v string) *Delete {
-	r.values.Set("timeout", v)
+func (r *Delete) Timeout(duration string) *Delete {
+	r.values.Set("timeout", duration)
 
 	return r
 }

@@ -16,14 +16,20 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package getsource
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Response holds the response body struct for the package getsource
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/get_source/SourceResponse.ts#L20-L22
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/get_source/SourceResponse.ts#L20-L22
 
-type Response json.RawMessage
+type Response = json.RawMessage
+
+func NewResponse() *Response {
+	return new(Response)
+}

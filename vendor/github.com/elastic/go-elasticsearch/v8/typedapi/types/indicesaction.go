@@ -16,16 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 // IndicesAction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/update_aliases/types.ts#L23-L28
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/update_aliases/types.ts#L23-L39
 type IndicesAction struct {
-	Add         *AddAction         `json:"add,omitempty"`
-	Remove      *RemoveAction      `json:"remove,omitempty"`
+	// Add Adds a data stream or index to an alias.
+	// If the alias doesn’t exist, the `add` action creates it.
+	Add *AddAction `json:"add,omitempty"`
+	// Remove Removes a data stream or index from an alias.
+	Remove *RemoveAction `json:"remove,omitempty"`
+	// RemoveIndex Deletes an index.
+	// You cannot use this action on aliases or data streams.
 	RemoveIndex *RemoveIndexAction `json:"remove_index,omitempty"`
 }
 

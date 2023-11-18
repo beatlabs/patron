@@ -16,19 +16,82 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // OperatingSystem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/Stats.ts#L373-L379
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/nodes/_types/Stats.ts#L945-L951
 type OperatingSystem struct {
 	Cgroup    *Cgroup              `json:"cgroup,omitempty"`
 	Cpu       *Cpu                 `json:"cpu,omitempty"`
 	Mem       *ExtendedMemoryStats `json:"mem,omitempty"`
 	Swap      *MemoryStats         `json:"swap,omitempty"`
 	Timestamp *int64               `json:"timestamp,omitempty"`
+}
+
+func (s *OperatingSystem) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "cgroup":
+			if err := dec.Decode(&s.Cgroup); err != nil {
+				return err
+			}
+
+		case "cpu":
+			if err := dec.Decode(&s.Cpu); err != nil {
+				return err
+			}
+
+		case "mem":
+			if err := dec.Decode(&s.Mem); err != nil {
+				return err
+			}
+
+		case "swap":
+			if err := dec.Decode(&s.Swap); err != nil {
+				return err
+			}
+
+		case "timestamp":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Timestamp = &value
+			case float64:
+				f := int64(v)
+				s.Timestamp = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewOperatingSystem returns a OperatingSystem.

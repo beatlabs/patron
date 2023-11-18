@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves information about the installed X-Pack features.
 package info
@@ -158,13 +158,16 @@ func (r Info) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -201,16 +204,20 @@ func (r *Info) Header(key, value string) *Info {
 // Categories A comma-separated list of the information categories to include in the
 // response. For example, `build,license,features`.
 // API name: categories
-func (r *Info) Categories(v string) *Info {
-	r.values.Set("categories", v)
+func (r *Info) Categories(categories ...string) *Info {
+	tmp := []string{}
+	for _, item := range categories {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("categories", strings.Join(tmp, ","))
 
 	return r
 }
 
 // AcceptEnterprise If this param is used it must be set to true
 // API name: accept_enterprise
-func (r *Info) AcceptEnterprise(b bool) *Info {
-	r.values.Set("accept_enterprise", strconv.FormatBool(b))
+func (r *Info) AcceptEnterprise(acceptenterprise bool) *Info {
+	r.values.Set("accept_enterprise", strconv.FormatBool(acceptenterprise))
 
 	return r
 }
@@ -218,8 +225,8 @@ func (r *Info) AcceptEnterprise(b bool) *Info {
 // Human Defines whether additional human-readable information is included in the
 // response. In particular, it adds descriptions and a tag line.
 // API name: human
-func (r *Info) Human(b bool) *Info {
-	r.values.Set("human", strconv.FormatBool(b))
+func (r *Info) Human(human bool) *Info {
+	r.values.Set("human", strconv.FormatBool(human))
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Changes the number of requests per second for a particular Update By Query
 // operation.
@@ -68,7 +68,7 @@ func NewUpdateByQueryRethrottleFunc(tp elastictransport.Interface) NewUpdateByQu
 	return func(taskid string) *UpdateByQueryRethrottle {
 		n := New(tp)
 
-		n.TaskId(taskid)
+		n._taskid(taskid)
 
 		return n
 	}
@@ -172,13 +172,16 @@ func (r UpdateByQueryRethrottle) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -212,20 +215,19 @@ func (r *UpdateByQueryRethrottle) Header(key, value string) *UpdateByQueryRethro
 	return r
 }
 
-// TaskId The task id to rethrottle
+// TaskId The ID for the task.
 // API Name: taskid
-func (r *UpdateByQueryRethrottle) TaskId(v string) *UpdateByQueryRethrottle {
+func (r *UpdateByQueryRethrottle) _taskid(taskid string) *UpdateByQueryRethrottle {
 	r.paramSet |= taskidMask
-	r.taskid = v
+	r.taskid = taskid
 
 	return r
 }
 
-// RequestsPerSecond The throttle to set on this request in floating sub-requests per second. -1
-// means set no throttle.
+// RequestsPerSecond The throttle for this request in sub-requests per second.
 // API name: requests_per_second
-func (r *UpdateByQueryRethrottle) RequestsPerSecond(v string) *UpdateByQueryRethrottle {
-	r.values.Set("requests_per_second", v)
+func (r *UpdateByQueryRethrottle) RequestsPerSecond(requestspersecond string) *UpdateByQueryRethrottle {
+	r.values.Set("requests_per_second", requestspersecond)
 
 	return r
 }

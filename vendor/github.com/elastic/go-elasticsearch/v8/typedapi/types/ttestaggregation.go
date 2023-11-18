@@ -16,25 +16,84 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/ttesttype"
 )
 
 // TTestAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/metric.ts#L153-L157
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/metric.ts#L294-L308
 type TTestAggregation struct {
-	A    *TestPopulation            `json:"a,omitempty"`
-	B    *TestPopulation            `json:"b,omitempty"`
-	Meta map[string]json.RawMessage `json:"meta,omitempty"`
-	Name *string                    `json:"name,omitempty"`
-	Type *ttesttype.TTestType       `json:"type,omitempty"`
+	// A Test population A.
+	A *TestPopulation `json:"a,omitempty"`
+	// B Test population B.
+	B    *TestPopulation `json:"b,omitempty"`
+	Meta Metadata        `json:"meta,omitempty"`
+	Name *string         `json:"name,omitempty"`
+	// Type The type of test.
+	Type *ttesttype.TTestType `json:"type,omitempty"`
+}
+
+func (s *TTestAggregation) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "a":
+			if err := dec.Decode(&s.A); err != nil {
+				return err
+			}
+
+		case "b":
+			if err := dec.Decode(&s.B); err != nil {
+				return err
+			}
+
+		case "meta":
+			if err := dec.Decode(&s.Meta); err != nil {
+				return err
+			}
+
+		case "name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewTTestAggregation returns a TTestAggregation.

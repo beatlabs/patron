@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes an existing snapshot lifecycle policy.
 package deletelifecycle
@@ -67,7 +67,7 @@ func NewDeleteLifecycleFunc(tp elastictransport.Interface) NewDeleteLifecycle {
 	return func(policyid string) *DeleteLifecycle {
 		n := New(tp)
 
-		n.PolicyId(policyid)
+		n._policyid(policyid)
 
 		return n
 	}
@@ -170,13 +170,16 @@ func (r DeleteLifecycle) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -212,9 +215,9 @@ func (r *DeleteLifecycle) Header(key, value string) *DeleteLifecycle {
 
 // PolicyId The id of the snapshot lifecycle policy to remove
 // API Name: policyid
-func (r *DeleteLifecycle) PolicyId(v string) *DeleteLifecycle {
+func (r *DeleteLifecycle) _policyid(policyid string) *DeleteLifecycle {
 	r.paramSet |= policyidMask
-	r.policyid = v
+	r.policyid = policyid
 
 	return r
 }

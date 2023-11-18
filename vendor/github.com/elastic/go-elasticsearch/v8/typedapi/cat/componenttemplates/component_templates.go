@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about existing component_templates templates.
 package componenttemplates
@@ -73,7 +73,7 @@ func NewComponentTemplatesFunc(tp elastictransport.Interface) NewComponentTempla
 
 // Returns information about existing component_templates templates.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/master/cat-compoentn-templates.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/master/cat-component-templates.html
 func New(tp elastictransport.Interface) *ComponentTemplates {
 	r := &ComponentTemplates{
 		transport: tp,
@@ -175,13 +175,16 @@ func (r ComponentTemplates) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -215,11 +218,12 @@ func (r *ComponentTemplates) Header(key, value string) *ComponentTemplates {
 	return r
 }
 
-// Name A pattern that returned component template names must match
+// Name The name of the component template. Accepts wildcard expressions. If omitted,
+// all component templates are returned.
 // API Name: name
-func (r *ComponentTemplates) Name(v string) *ComponentTemplates {
+func (r *ComponentTemplates) Name(name string) *ComponentTemplates {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }

@@ -16,25 +16,99 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/sortmode"
 )
 
 // MatrixStatsAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/matrix.ts#L31-L33
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/matrix.ts#L38-L44
 type MatrixStatsAggregation struct {
-	Fields  []string                   `json:"fields,omitempty"`
-	Meta    map[string]json.RawMessage `json:"meta,omitempty"`
-	Missing map[string]Float64         `json:"missing,omitempty"`
-	Mode    *sortmode.SortMode         `json:"mode,omitempty"`
-	Name    *string                    `json:"name,omitempty"`
+	// Fields An array of fields for computing the statistics.
+	Fields []string `json:"fields,omitempty"`
+	Meta   Metadata `json:"meta,omitempty"`
+	// Missing The value to apply to documents that do not have a value.
+	// By default, documents without a value are ignored.
+	Missing map[string]Float64 `json:"missing,omitempty"`
+	// Mode Array value the aggregation will use for array or multi-valued fields.
+	Mode *sortmode.SortMode `json:"mode,omitempty"`
+	Name *string            `json:"name,omitempty"`
+}
+
+func (s *MatrixStatsAggregation) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "fields":
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			if !bytes.HasPrefix(rawMsg, []byte("[")) {
+				o := new(string)
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
+					return err
+				}
+
+				s.Fields = append(s.Fields, *o)
+			} else {
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Fields); err != nil {
+					return err
+				}
+			}
+
+		case "meta":
+			if err := dec.Decode(&s.Meta); err != nil {
+				return err
+			}
+
+		case "missing":
+			if s.Missing == nil {
+				s.Missing = make(map[string]Float64, 0)
+			}
+			if err := dec.Decode(&s.Missing); err != nil {
+				return err
+			}
+
+		case "mode":
+			if err := dec.Decode(&s.Mode); err != nil {
+				return err
+			}
+
+		case "name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
+
+		}
+	}
+	return nil
 }
 
 // NewMatrixStatsAggregation returns a MatrixStatsAggregation.

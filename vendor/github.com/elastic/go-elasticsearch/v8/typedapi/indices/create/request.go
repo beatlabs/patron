@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package create
 
@@ -29,14 +29,17 @@ import (
 
 // Request holds the request body struct for the package create
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/create/IndicesCreateRequest.ts#L28-L56
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/create/IndicesCreateRequest.ts#L28-L81
 type Request struct {
+
+	// Aliases Aliases for the index.
 	Aliases map[string]types.Alias `json:"aliases,omitempty"`
 	// Mappings Mapping for fields in the index. If specified, this mapping can include:
 	// - Field names
 	// - Field data types
 	// - Mapping parameters
-	Mappings *types.TypeMapping   `json:"mappings,omitempty"`
+	Mappings *types.TypeMapping `json:"mappings,omitempty"`
+	// Settings Configuration options for the index.
 	Settings *types.IndexSettings `json:"settings,omitempty"`
 }
 

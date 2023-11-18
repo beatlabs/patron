@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Start a trained model deployment.
 package starttrainedmodeldeployment
@@ -36,7 +36,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/deploymentallocationstate"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/trainingpriority"
 )
@@ -71,7 +70,7 @@ func NewStartTrainedModelDeploymentFunc(tp elastictransport.Interface) NewStartT
 	return func(modelid string) *StartTrainedModelDeployment {
 		n := New(tp)
 
-		n.ModelId(modelid)
+		n._modelid(modelid)
 
 		return n
 	}
@@ -184,13 +183,16 @@ func (r StartTrainedModelDeployment) Do(ctx context.Context) (*Response, error) 
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -227,9 +229,9 @@ func (r *StartTrainedModelDeployment) Header(key, value string) *StartTrainedMod
 // ModelId The unique identifier of the trained model. Currently, only PyTorch models
 // are supported.
 // API Name: modelid
-func (r *StartTrainedModelDeployment) ModelId(v string) *StartTrainedModelDeployment {
+func (r *StartTrainedModelDeployment) _modelid(modelid string) *StartTrainedModelDeployment {
 	r.paramSet |= modelidMask
-	r.modelid = v
+	r.modelid = modelid
 
 	return r
 }
@@ -240,8 +242,8 @@ func (r *StartTrainedModelDeployment) ModelId(v string) *StartTrainedModelDeploy
 // cache,
 // `0b` can be provided.
 // API name: cache_size
-func (r *StartTrainedModelDeployment) CacheSize(v string) *StartTrainedModelDeployment {
-	r.values.Set("cache_size", v)
+func (r *StartTrainedModelDeployment) CacheSize(bytesize string) *StartTrainedModelDeployment {
+	r.values.Set("cache_size", bytesize)
 
 	return r
 }
@@ -254,16 +256,16 @@ func (r *StartTrainedModelDeployment) CacheSize(v string) *StartTrainedModelDepl
 // it will automatically be changed to a value less than the number of hardware
 // threads.
 // API name: number_of_allocations
-func (r *StartTrainedModelDeployment) NumberOfAllocations(i int) *StartTrainedModelDeployment {
-	r.values.Set("number_of_allocations", strconv.Itoa(i))
+func (r *StartTrainedModelDeployment) NumberOfAllocations(numberofallocations int) *StartTrainedModelDeployment {
+	r.values.Set("number_of_allocations", strconv.Itoa(numberofallocations))
 
 	return r
 }
 
 // Priority The deployment priority.
 // API name: priority
-func (r *StartTrainedModelDeployment) Priority(enum trainingpriority.TrainingPriority) *StartTrainedModelDeployment {
-	r.values.Set("priority", enum.String())
+func (r *StartTrainedModelDeployment) Priority(priority trainingpriority.TrainingPriority) *StartTrainedModelDeployment {
+	r.values.Set("priority", priority.String())
 
 	return r
 }
@@ -272,8 +274,8 @@ func (r *StartTrainedModelDeployment) Priority(enum trainingpriority.TrainingPri
 // After the number of requests exceeds
 // this value, new requests are rejected with a 429 error.
 // API name: queue_capacity
-func (r *StartTrainedModelDeployment) QueueCapacity(i int) *StartTrainedModelDeployment {
-	r.values.Set("queue_capacity", strconv.Itoa(i))
+func (r *StartTrainedModelDeployment) QueueCapacity(queuecapacity int) *StartTrainedModelDeployment {
+	r.values.Set("queue_capacity", strconv.Itoa(queuecapacity))
 
 	return r
 }
@@ -289,24 +291,24 @@ func (r *StartTrainedModelDeployment) QueueCapacity(i int) *StartTrainedModelDep
 // it will automatically be changed to a value less than the number of hardware
 // threads.
 // API name: threads_per_allocation
-func (r *StartTrainedModelDeployment) ThreadsPerAllocation(i int) *StartTrainedModelDeployment {
-	r.values.Set("threads_per_allocation", strconv.Itoa(i))
+func (r *StartTrainedModelDeployment) ThreadsPerAllocation(threadsperallocation int) *StartTrainedModelDeployment {
+	r.values.Set("threads_per_allocation", strconv.Itoa(threadsperallocation))
 
 	return r
 }
 
 // Timeout Specifies the amount of time to wait for the model to deploy.
 // API name: timeout
-func (r *StartTrainedModelDeployment) Timeout(v string) *StartTrainedModelDeployment {
-	r.values.Set("timeout", v)
+func (r *StartTrainedModelDeployment) Timeout(duration string) *StartTrainedModelDeployment {
+	r.values.Set("timeout", duration)
 
 	return r
 }
 
 // WaitFor Specifies the allocation status to wait for before returning.
 // API name: wait_for
-func (r *StartTrainedModelDeployment) WaitFor(enum deploymentallocationstate.DeploymentAllocationState) *StartTrainedModelDeployment {
-	r.values.Set("wait_for", enum.String())
+func (r *StartTrainedModelDeployment) WaitFor(waitfor deploymentallocationstate.DeploymentAllocationState) *StartTrainedModelDeployment {
+	r.values.Set("wait_for", waitfor.String())
 
 	return r
 }

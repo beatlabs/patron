@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves information about different cluster, node, and index level settings
 // that use deprecated features that will be removed or changed in the next
@@ -179,13 +179,16 @@ func (r Deprecations) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -222,9 +225,9 @@ func (r *Deprecations) Header(key, value string) *Deprecations {
 // Index Comma-separate list of data streams or indices to check. Wildcard (*)
 // expressions are supported.
 // API Name: index
-func (r *Deprecations) Index(v string) *Deprecations {
+func (r *Deprecations) Index(index string) *Deprecations {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }

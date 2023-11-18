@@ -16,23 +16,72 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"strconv"
 )
 
 // Suggester type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/search/_types/suggester.ts#L101-L104
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/search/_types/suggester.ts#L101-L104
 type Suggester struct {
 	Suggesters map[string]FieldSuggester `json:"-"`
 	// Text Global suggest text, to avoid repetition when the same text is used in
 	// several suggesters
 	Text *string `json:"text,omitempty"`
+}
+
+func (s *Suggester) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "text":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Text = &o
+
+		default:
+
+			if key, ok := t.(string); ok {
+				if s.Suggesters == nil {
+					s.Suggesters = make(map[string]FieldSuggester, 0)
+				}
+				raw := NewFieldSuggester()
+				if err := dec.Decode(&raw); err != nil {
+					return err
+				}
+				s.Suggesters[key] = *raw
+			}
+
+		}
+	}
+	return nil
 }
 
 // MarhsalJSON overrides marshalling for types with additional properties
@@ -54,6 +103,7 @@ func (s Suggester) MarshalJSON() ([]byte, error) {
 	for key, value := range s.Suggesters {
 		tmp[fmt.Sprintf("%s", key)] = value
 	}
+	delete(tmp, "Suggesters")
 
 	data, err = json.Marshal(tmp)
 	if err != nil {

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.7.0: DO NOT EDIT
+// Code generated from specification version 8.11.0: DO NOT EDIT
 
 package esapi
 
@@ -42,7 +42,7 @@ func newIndicesSimulateIndexTemplateFunc(t Transport) IndicesSimulateIndexTempla
 
 // IndicesSimulateIndexTemplate simulate matching the given index name against the index templates in the system
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-templates.html.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-simulate-index.html.
 type IndicesSimulateIndexTemplate func(name string, o ...func(*IndicesSimulateIndexTemplateRequest)) (*Response, error)
 
 // IndicesSimulateIndexTemplateRequest configures the Indices Simulate Index Template API request.
@@ -51,9 +51,10 @@ type IndicesSimulateIndexTemplateRequest struct {
 
 	Name string
 
-	Cause         string
-	Create        *bool
-	MasterTimeout time.Duration
+	Cause           string
+	Create          *bool
+	IncludeDefaults *bool
+	MasterTimeout   time.Duration
 
 	Pretty     bool
 	Human      bool
@@ -92,6 +93,10 @@ func (r IndicesSimulateIndexTemplateRequest) Do(ctx context.Context, transport T
 
 	if r.Create != nil {
 		params["create"] = strconv.FormatBool(*r.Create)
+	}
+
+	if r.IncludeDefaults != nil {
+		params["include_defaults"] = strconv.FormatBool(*r.IncludeDefaults)
 	}
 
 	if r.MasterTimeout != 0 {
@@ -186,6 +191,13 @@ func (f IndicesSimulateIndexTemplate) WithCause(v string) func(*IndicesSimulateI
 func (f IndicesSimulateIndexTemplate) WithCreate(v bool) func(*IndicesSimulateIndexTemplateRequest) {
 	return func(r *IndicesSimulateIndexTemplateRequest) {
 		r.Create = &v
+	}
+}
+
+// WithIncludeDefaults - return all relevant default configurations for this index template simulation (default: false).
+func (f IndicesSimulateIndexTemplate) WithIncludeDefaults(v bool) func(*IndicesSimulateIndexTemplateRequest) {
+	return func(r *IndicesSimulateIndexTemplateRequest) {
+		r.IncludeDefaults = &v
 	}
 }
 

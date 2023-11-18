@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves filters.
 package getfilters
@@ -176,13 +176,16 @@ func (r GetFilters) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -218,25 +221,25 @@ func (r *GetFilters) Header(key, value string) *GetFilters {
 
 // FilterId A string that uniquely identifies a filter.
 // API Name: filterid
-func (r *GetFilters) FilterId(v string) *GetFilters {
+func (r *GetFilters) FilterId(filterid string) *GetFilters {
 	r.paramSet |= filteridMask
-	r.filterid = v
+	r.filterid = filterid
 
 	return r
 }
 
 // From Skips the specified number of filters.
 // API name: from
-func (r *GetFilters) From(i int) *GetFilters {
-	r.values.Set("from", strconv.Itoa(i))
+func (r *GetFilters) From(from int) *GetFilters {
+	r.values.Set("from", strconv.Itoa(from))
 
 	return r
 }
 
 // Size Specifies the maximum number of filters to obtain.
 // API name: size
-func (r *GetFilters) Size(i int) *GetFilters {
-	r.values.Set("size", strconv.Itoa(i))
+func (r *GetFilters) Size(size int) *GetFilters {
+	r.values.Set("size", strconv.Itoa(size))
 
 	return r
 }

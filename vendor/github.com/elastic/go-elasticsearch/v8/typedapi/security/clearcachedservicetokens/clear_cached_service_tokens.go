@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Evicts tokens from the service account token caches.
 package clearcachedservicetokens
@@ -73,11 +73,11 @@ func NewClearCachedServiceTokensFunc(tp elastictransport.Interface) NewClearCach
 	return func(namespace, service, name string) *ClearCachedServiceTokens {
 		n := New(tp)
 
-		n.Namespace(namespace)
+		n._namespace(namespace)
 
-		n.Service(service)
+		n._service(service)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -192,13 +192,16 @@ func (r ClearCachedServiceTokens) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -234,27 +237,27 @@ func (r *ClearCachedServiceTokens) Header(key, value string) *ClearCachedService
 
 // Namespace An identifier for the namespace
 // API Name: namespace
-func (r *ClearCachedServiceTokens) Namespace(v string) *ClearCachedServiceTokens {
+func (r *ClearCachedServiceTokens) _namespace(namespace string) *ClearCachedServiceTokens {
 	r.paramSet |= namespaceMask
-	r.namespace = v
+	r.namespace = namespace
 
 	return r
 }
 
 // Service An identifier for the service name
 // API Name: service
-func (r *ClearCachedServiceTokens) Service(v string) *ClearCachedServiceTokens {
+func (r *ClearCachedServiceTokens) _service(service string) *ClearCachedServiceTokens {
 	r.paramSet |= serviceMask
-	r.service = v
+	r.service = service
 
 	return r
 }
 
 // Name A comma-separated list of service token names
 // API Name: name
-func (r *ClearCachedServiceTokens) Name(v string) *ClearCachedServiceTokens {
+func (r *ClearCachedServiceTokens) _name(name string) *ClearCachedServiceTokens {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }

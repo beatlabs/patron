@@ -16,23 +16,87 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 )
 
 // UserProfile type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/security/_types/UserProfile.ts#L42-L48
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/security/_types/UserProfile.ts#L42-L48
 type UserProfile struct {
 	Data    map[string]json.RawMessage `json:"data"`
 	Enabled *bool                      `json:"enabled,omitempty"`
 	Labels  map[string]json.RawMessage `json:"labels"`
 	Uid     string                     `json:"uid"`
 	User    UserProfileUser            `json:"user"`
+}
+
+func (s *UserProfile) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "data":
+			if s.Data == nil {
+				s.Data = make(map[string]json.RawMessage, 0)
+			}
+			if err := dec.Decode(&s.Data); err != nil {
+				return err
+			}
+
+		case "enabled":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Enabled = &value
+			case bool:
+				s.Enabled = &v
+			}
+
+		case "labels":
+			if s.Labels == nil {
+				s.Labels = make(map[string]json.RawMessage, 0)
+			}
+			if err := dec.Decode(&s.Labels); err != nil {
+				return err
+			}
+
+		case "uid":
+			if err := dec.Decode(&s.Uid); err != nil {
+				return err
+			}
+
+		case "user":
+			if err := dec.Decode(&s.User); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewUserProfile returns a UserProfile.

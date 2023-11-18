@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Cancels a task, if it can be cancelled through an API.
 package cancel
@@ -176,13 +176,16 @@ func (r Cancel) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -216,39 +219,44 @@ func (r *Cancel) Header(key, value string) *Cancel {
 	return r
 }
 
-// TaskId Cancel the task with specified task id (node_id:task_number)
+// TaskId ID of the task.
 // API Name: taskid
-func (r *Cancel) TaskId(v string) *Cancel {
+func (r *Cancel) TaskId(taskid string) *Cancel {
 	r.paramSet |= taskidMask
-	r.taskid = v
+	r.taskid = taskid
 
 	return r
 }
 
-// Actions A comma-separated list of actions that should be cancelled. Leave empty to
-// cancel all.
+// Actions Comma-separated list or wildcard expression of actions used to limit the
+// request.
 // API name: actions
-func (r *Cancel) Actions(v string) *Cancel {
-	r.values.Set("actions", v)
+func (r *Cancel) Actions(actions ...string) *Cancel {
+	tmp := []string{}
+	for _, item := range actions {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("actions", strings.Join(tmp, ","))
 
 	return r
 }
 
-// Nodes A comma-separated list of node IDs or names to limit the returned
-// information; use `_local` to return information from the node you're
-// connecting to, leave empty to get information from all nodes
+// Nodes Comma-separated list of node IDs or names used to limit the request.
 // API name: nodes
-func (r *Cancel) Nodes(v string) *Cancel {
-	r.values.Set("nodes", v)
+func (r *Cancel) Nodes(nodes ...string) *Cancel {
+	tmp := []string{}
+	for _, item := range nodes {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("nodes", strings.Join(tmp, ","))
 
 	return r
 }
 
-// ParentTaskId Cancel tasks with specified parent task id (node_id:task_number). Set to -1
-// to cancel all.
+// ParentTaskId Parent task ID used to limit the tasks.
 // API name: parent_task_id
-func (r *Cancel) ParentTaskId(v string) *Cancel {
-	r.values.Set("parent_task_id", v)
+func (r *Cancel) ParentTaskId(parenttaskid string) *Cancel {
+	r.values.Set("parent_task_id", parenttaskid)
 
 	return r
 }
@@ -256,8 +264,8 @@ func (r *Cancel) ParentTaskId(v string) *Cancel {
 // WaitForCompletion Should the request block until the cancellation of the task and its
 // descendant tasks is completed. Defaults to false
 // API name: wait_for_completion
-func (r *Cancel) WaitForCompletion(b bool) *Cancel {
-	r.values.Set("wait_for_completion", strconv.FormatBool(b))
+func (r *Cancel) WaitForCompletion(waitforcompletion bool) *Cancel {
+	r.values.Set("wait_for_completion", strconv.FormatBool(waitforcompletion))
 
 	return r
 }

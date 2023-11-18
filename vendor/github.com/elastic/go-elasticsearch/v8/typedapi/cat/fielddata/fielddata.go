@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Shows how much heap memory is currently being used by fielddata on every data
 // node in the cluster.
@@ -36,7 +36,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/bytes"
 )
 
@@ -179,13 +178,16 @@ func (r Fielddata) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -219,19 +221,20 @@ func (r *Fielddata) Header(key, value string) *Fielddata {
 	return r
 }
 
-// Fields A comma-separated list of fields to return the fielddata size
+// Fields Comma-separated list of fields used to limit returned information.
+// To retrieve all fields, omit this parameter.
 // API Name: fields
-func (r *Fielddata) Fields(v string) *Fielddata {
+func (r *Fielddata) Fields(fields string) *Fielddata {
 	r.paramSet |= fieldsMask
-	r.fields = v
+	r.fields = fields
 
 	return r
 }
 
-// Bytes The unit in which to display byte values
+// Bytes The unit used to display byte values.
 // API name: bytes
-func (r *Fielddata) Bytes(enum bytes.Bytes) *Fielddata {
-	r.values.Set("bytes", enum.String())
+func (r *Fielddata) Bytes(bytes bytes.Bytes) *Fielddata {
+	r.values.Set("bytes", bytes.String())
 
 	return r
 }

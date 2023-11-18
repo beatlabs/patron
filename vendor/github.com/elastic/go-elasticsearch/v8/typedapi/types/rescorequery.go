@@ -16,22 +16,96 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/scoremode"
 )
 
 // RescoreQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/search/_types/rescoring.ts#L28-L34
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/search/_types/rescoring.ts#L28-L50
 type RescoreQuery struct {
-	Query              Query                `json:"rescore_query"`
-	QueryWeight        *Float64             `json:"query_weight,omitempty"`
-	RescoreQueryWeight *Float64             `json:"rescore_query_weight,omitempty"`
-	ScoreMode          *scoremode.ScoreMode `json:"score_mode,omitempty"`
+	// Query The query to use for rescoring.
+	// This query is only run on the Top-K results returned by the `query` and
+	// `post_filter` phases.
+	Query Query `json:"rescore_query"`
+	// QueryWeight Relative importance of the original query versus the rescore query.
+	QueryWeight *Float64 `json:"query_weight,omitempty"`
+	// RescoreQueryWeight Relative importance of the rescore query versus the original query.
+	RescoreQueryWeight *Float64 `json:"rescore_query_weight,omitempty"`
+	// ScoreMode Determines how scores are combined.
+	ScoreMode *scoremode.ScoreMode `json:"score_mode,omitempty"`
+}
+
+func (s *RescoreQuery) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "rescore_query":
+			if err := dec.Decode(&s.Query); err != nil {
+				return err
+			}
+
+		case "query_weight":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.QueryWeight = &f
+			case float64:
+				f := Float64(v)
+				s.QueryWeight = &f
+			}
+
+		case "rescore_query_weight":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.RescoreQueryWeight = &f
+			case float64:
+				f := Float64(v)
+				s.RescoreQueryWeight = &f
+			}
+
+		case "score_mode":
+			if err := dec.Decode(&s.ScoreMode); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewRescoreQuery returns a RescoreQuery.

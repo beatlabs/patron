@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package deletebyquery
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package deletebyquery
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/delete_by_query/DeleteByQueryResponse.ts#L26-L45
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/delete_by_query/DeleteByQueryResponse.ts#L26-L45
 
 type Response struct {
 	Batches              *int64                           `json:"batches,omitempty"`
@@ -38,9 +38,9 @@ type Response struct {
 	SliceId              *int                             `json:"slice_id,omitempty"`
 	Task                 types.TaskId                     `json:"task,omitempty"`
 	Throttled            types.Duration                   `json:"throttled,omitempty"`
-	ThrottledMillis      int64                            `json:"throttled_millis"`
+	ThrottledMillis      *int64                           `json:"throttled_millis,omitempty"`
 	ThrottledUntil       types.Duration                   `json:"throttled_until,omitempty"`
-	ThrottledUntilMillis int64                            `json:"throttled_until_millis"`
+	ThrottledUntilMillis *int64                           `json:"throttled_until_millis,omitempty"`
 	TimedOut             *bool                            `json:"timed_out,omitempty"`
 	Took                 *int64                           `json:"took,omitempty"`
 	Total                *int64                           `json:"total,omitempty"`

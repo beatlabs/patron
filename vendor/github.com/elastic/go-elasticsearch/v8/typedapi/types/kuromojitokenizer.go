@@ -16,17 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/kuromojitokenizationmode"
 )
 
 // KuromojiTokenizer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/kuromoji-plugin.ts#L58-L67
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/kuromoji-plugin.ts#L58-L67
 type KuromojiTokenizer struct {
 	DiscardCompoundToken *bool                                             `json:"discard_compound_token,omitempty"`
 	DiscardPunctuation   *bool                                             `json:"discard_punctuation,omitempty"`
@@ -39,11 +45,137 @@ type KuromojiTokenizer struct {
 	Version              *string                                           `json:"version,omitempty"`
 }
 
+func (s *KuromojiTokenizer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "discard_compound_token":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.DiscardCompoundToken = &value
+			case bool:
+				s.DiscardCompoundToken = &v
+			}
+
+		case "discard_punctuation":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.DiscardPunctuation = &value
+			case bool:
+				s.DiscardPunctuation = &v
+			}
+
+		case "mode":
+			if err := dec.Decode(&s.Mode); err != nil {
+				return err
+			}
+
+		case "nbest_cost":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.NbestCost = &value
+			case float64:
+				f := int(v)
+				s.NbestCost = &f
+			}
+
+		case "nbest_examples":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.NbestExamples = &o
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "user_dictionary":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.UserDictionary = &o
+
+		case "user_dictionary_rules":
+			if err := dec.Decode(&s.UserDictionaryRules); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s KuromojiTokenizer) MarshalJSON() ([]byte, error) {
+	type innerKuromojiTokenizer KuromojiTokenizer
+	tmp := innerKuromojiTokenizer{
+		DiscardCompoundToken: s.DiscardCompoundToken,
+		DiscardPunctuation:   s.DiscardPunctuation,
+		Mode:                 s.Mode,
+		NbestCost:            s.NbestCost,
+		NbestExamples:        s.NbestExamples,
+		Type:                 s.Type,
+		UserDictionary:       s.UserDictionary,
+		UserDictionaryRules:  s.UserDictionaryRules,
+		Version:              s.Version,
+	}
+
+	tmp.Type = "kuromoji_tokenizer"
+
+	return json.Marshal(tmp)
+}
+
 // NewKuromojiTokenizer returns a KuromojiTokenizer.
 func NewKuromojiTokenizer() *KuromojiTokenizer {
 	r := &KuromojiTokenizer{}
-
-	r.Type = "kuromoji_tokenizer"
 
 	return r
 }

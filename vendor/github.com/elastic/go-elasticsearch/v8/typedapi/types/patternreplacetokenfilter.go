@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // PatternReplaceTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/token_filters.ts#L283-L289
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/token_filters.ts#L284-L290
 type PatternReplaceTokenFilter struct {
 	All         *bool   `json:"all,omitempty"`
 	Flags       *string `json:"flags,omitempty"`
@@ -32,11 +40,106 @@ type PatternReplaceTokenFilter struct {
 	Version     *string `json:"version,omitempty"`
 }
 
+func (s *PatternReplaceTokenFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "all":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.All = &value
+			case bool:
+				s.All = &v
+			}
+
+		case "flags":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Flags = &o
+
+		case "pattern":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Pattern = o
+
+		case "replacement":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Replacement = &o
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s PatternReplaceTokenFilter) MarshalJSON() ([]byte, error) {
+	type innerPatternReplaceTokenFilter PatternReplaceTokenFilter
+	tmp := innerPatternReplaceTokenFilter{
+		All:         s.All,
+		Flags:       s.Flags,
+		Pattern:     s.Pattern,
+		Replacement: s.Replacement,
+		Type:        s.Type,
+		Version:     s.Version,
+	}
+
+	tmp.Type = "pattern_replace"
+
+	return json.Marshal(tmp)
+}
+
 // NewPatternReplaceTokenFilter returns a PatternReplaceTokenFilter.
 func NewPatternReplaceTokenFilter() *PatternReplaceTokenFilter {
 	r := &PatternReplaceTokenFilter{}
-
-	r.Type = "pattern_replace"
 
 	return r
 }

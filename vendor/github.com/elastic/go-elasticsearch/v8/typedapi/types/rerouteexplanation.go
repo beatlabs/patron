@@ -16,17 +16,67 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // RerouteExplanation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/reroute/types.ts#L92-L96
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/cluster/reroute/types.ts#L92-L96
 type RerouteExplanation struct {
 	Command    string            `json:"command"`
 	Decisions  []RerouteDecision `json:"decisions"`
 	Parameters RerouteParameters `json:"parameters"`
+}
+
+func (s *RerouteExplanation) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "command":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Command = o
+
+		case "decisions":
+			if err := dec.Decode(&s.Decisions); err != nil {
+				return err
+			}
+
+		case "parameters":
+			if err := dec.Decode(&s.Parameters); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewRerouteExplanation returns a RerouteExplanation.

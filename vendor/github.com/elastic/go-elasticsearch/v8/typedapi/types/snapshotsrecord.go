@@ -16,51 +16,61 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
-
-	"encoding/json"
+	"strconv"
 )
 
 // SnapshotsRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cat/snapshots/types.ts#L24-L90
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/cat/snapshots/types.ts#L24-L96
 type SnapshotsRecord struct {
-	// Duration duration
+	// Duration The time it took the snapshot process to complete, in time units.
 	Duration Duration `json:"duration,omitempty"`
-	// EndEpoch end time in seconds since 1970-01-01 00:00:00
+	// EndEpoch The Unix epoch time (seconds since 1970-01-01 00:00:00) at which the snapshot
+	// process ended.
 	EndEpoch StringifiedEpochTimeUnitSeconds `json:"end_epoch,omitempty"`
-	// EndTime end time in HH:MM:SS
+	// EndTime The time (HH:MM:SS) at which the snapshot process ended.
 	EndTime *string `json:"end_time,omitempty"`
-	// FailedShards number of failed shards
+	// FailedShards The number of failed shards in the snapshot.
 	FailedShards *string `json:"failed_shards,omitempty"`
-	// Id unique snapshot
+	// Id The unique identifier for the snapshot.
 	Id *string `json:"id,omitempty"`
-	// Indices number of indices
+	// Indices The number of indices in the snapshot.
 	Indices *string `json:"indices,omitempty"`
-	// Reason reason for failures
+	// Reason The reason for any snapshot failures.
 	Reason *string `json:"reason,omitempty"`
-	// Repository repository name
+	// Repository The repository name.
 	Repository *string `json:"repository,omitempty"`
-	// StartEpoch start time in seconds since 1970-01-01 00:00:00
+	// StartEpoch The Unix epoch time (seconds since 1970-01-01 00:00:00) at which the snapshot
+	// process started.
 	StartEpoch StringifiedEpochTimeUnitSeconds `json:"start_epoch,omitempty"`
-	// StartTime start time in HH:MM:SS
+	// StartTime The time (HH:MM:SS) at which the snapshot process started.
 	StartTime ScheduleTimeOfDay `json:"start_time,omitempty"`
-	// Status snapshot name
+	// Status The state of the snapshot process.
+	// Returned values include:
+	// `FAILED`: The snapshot process failed.
+	// `INCOMPATIBLE`: The snapshot process is incompatible with the current cluster
+	// version.
+	// `IN_PROGRESS`: The snapshot process started but has not completed.
+	// `PARTIAL`: The snapshot process completed with a partial success.
+	// `SUCCESS`: The snapshot process completed with a full success.
 	Status *string `json:"status,omitempty"`
-	// SuccessfulShards number of successful shards
+	// SuccessfulShards The number of successful shards in the snapshot.
 	SuccessfulShards *string `json:"successful_shards,omitempty"`
-	// TotalShards number of total shards
+	// TotalShards The total number of shards in the snapshot.
 	TotalShards *string `json:"total_shards,omitempty"`
 }
 
 func (s *SnapshotsRecord) UnmarshalJSON(data []byte) error {
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -90,29 +100,64 @@ func (s *SnapshotsRecord) UnmarshalJSON(data []byte) error {
 			}
 
 		case "failed_shards", "fs":
-			if err := dec.Decode(&s.FailedShards); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.FailedShards = &o
 
 		case "id", "snapshot":
-			if err := dec.Decode(&s.Id); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Id = &o
 
 		case "indices", "i":
-			if err := dec.Decode(&s.Indices); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Indices = &o
 
 		case "reason", "r":
-			if err := dec.Decode(&s.Reason); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Reason = &o
 
 		case "repository", "re", "repo":
-			if err := dec.Decode(&s.Repository); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Repository = &o
 
 		case "start_epoch", "ste", "startEpoch":
 			if err := dec.Decode(&s.StartEpoch); err != nil {
@@ -120,6 +165,7 @@ func (s *SnapshotsRecord) UnmarshalJSON(data []byte) error {
 			}
 
 		case "start_time", "sti", "startTime":
+
 			rawMsg := json.RawMessage{}
 			dec.Decode(&rawMsg)
 			source := bytes.NewReader(rawMsg)
@@ -139,19 +185,40 @@ func (s *SnapshotsRecord) UnmarshalJSON(data []byte) error {
 			}
 
 		case "status", "s":
-			if err := dec.Decode(&s.Status); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Status = &o
 
 		case "successful_shards", "ss":
-			if err := dec.Decode(&s.SuccessfulShards); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.SuccessfulShards = &o
 
 		case "total_shards", "ts":
-			if err := dec.Decode(&s.TotalShards); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.TotalShards = &o
 
 		}
 	}

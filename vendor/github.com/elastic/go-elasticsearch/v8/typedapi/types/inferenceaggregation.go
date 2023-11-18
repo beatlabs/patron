@@ -16,35 +16,42 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gappolicy"
-
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
+	"strconv"
 
-	"encoding/json"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gappolicy"
 )
 
 // InferenceAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/pipeline.ts#L171-L174
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/pipeline.ts#L205-L214
 type InferenceAggregation struct {
 	// BucketsPath Path to the buckets that contain one set of values to correlate.
-	BucketsPath     BucketsPath                `json:"buckets_path,omitempty"`
-	Format          *string                    `json:"format,omitempty"`
-	GapPolicy       *gappolicy.GapPolicy       `json:"gap_policy,omitempty"`
-	InferenceConfig *InferenceConfigContainer  `json:"inference_config,omitempty"`
-	Meta            map[string]json.RawMessage `json:"meta,omitempty"`
-	ModelId         string                     `json:"model_id"`
-	Name            *string                    `json:"name,omitempty"`
+	BucketsPath BucketsPath `json:"buckets_path,omitempty"`
+	// Format `DecimalFormat` pattern for the output value.
+	// If specified, the formatted value is returned in the aggregation’s
+	// `value_as_string` property.
+	Format *string `json:"format,omitempty"`
+	// GapPolicy Policy to apply when gaps are found in the data.
+	GapPolicy *gappolicy.GapPolicy `json:"gap_policy,omitempty"`
+	// InferenceConfig Contains the inference type and its options.
+	InferenceConfig *InferenceConfigContainer `json:"inference_config,omitempty"`
+	Meta            Metadata                  `json:"meta,omitempty"`
+	// ModelId The ID or alias for the trained model.
+	ModelId string  `json:"model_id"`
+	Name    *string `json:"name,omitempty"`
 }
 
 func (s *InferenceAggregation) UnmarshalJSON(data []byte) error {
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -64,9 +71,16 @@ func (s *InferenceAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "format":
-			if err := dec.Decode(&s.Format); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Format = &o
 
 		case "gap_policy":
 			if err := dec.Decode(&s.GapPolicy); err != nil {
@@ -89,9 +103,16 @@ func (s *InferenceAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "name":
-			if err := dec.Decode(&s.Name); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
 
 		}
 	}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Allows to simulate a pipeline with example documents.
 package simulate
@@ -53,8 +53,9 @@ type Simulate struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -83,6 +84,8 @@ func New(tp elastictransport.Interface) *Simulate {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -112,9 +115,19 @@ func (r *Simulate) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -122,6 +135,7 @@ func (r *Simulate) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -215,13 +229,16 @@ func (r Simulate) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -234,19 +251,43 @@ func (r *Simulate) Header(key, value string) *Simulate {
 	return r
 }
 
-// Id Pipeline ID
+// Id Pipeline to test.
+// If you don’t specify a `pipeline` in the request body, this parameter is
+// required.
 // API Name: id
-func (r *Simulate) Id(v string) *Simulate {
+func (r *Simulate) Id(id string) *Simulate {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
-// Verbose Verbose mode. Display data output for each processor in executed pipeline
+// Verbose If `true`, the response includes output data for each processor in the
+// executed pipeline.
 // API name: verbose
-func (r *Simulate) Verbose(b bool) *Simulate {
-	r.values.Set("verbose", strconv.FormatBool(b))
+func (r *Simulate) Verbose(verbose bool) *Simulate {
+	r.values.Set("verbose", strconv.FormatBool(verbose))
+
+	return r
+}
+
+// Docs Sample documents to test in the pipeline.
+// API name: docs
+func (r *Simulate) Docs(docs ...types.Document) *Simulate {
+	r.req.Docs = docs
+
+	return r
+}
+
+// Pipeline Pipeline to test.
+// If you don’t specify the `pipeline` request path parameter, this parameter is
+// required.
+// If you specify both this and the request path parameter, the API only uses
+// the request path parameter.
+// API name: pipeline
+func (r *Simulate) Pipeline(pipeline *types.IngestPipeline) *Simulate {
+
+	r.req.Pipeline = pipeline
 
 	return r
 }

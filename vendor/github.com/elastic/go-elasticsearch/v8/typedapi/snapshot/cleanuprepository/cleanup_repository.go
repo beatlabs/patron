@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Removes stale data from repository.
 package cleanuprepository
@@ -67,7 +67,7 @@ func NewCleanupRepositoryFunc(tp elastictransport.Interface) NewCleanupRepositor
 	return func(repository string) *CleanupRepository {
 		n := New(tp)
 
-		n.Repository(repository)
+		n._repository(repository)
 
 		return n
 	}
@@ -170,13 +170,16 @@ func (r CleanupRepository) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -212,25 +215,25 @@ func (r *CleanupRepository) Header(key, value string) *CleanupRepository {
 
 // Repository Snapshot repository to clean up.
 // API Name: repository
-func (r *CleanupRepository) Repository(v string) *CleanupRepository {
+func (r *CleanupRepository) _repository(repository string) *CleanupRepository {
 	r.paramSet |= repositoryMask
-	r.repository = v
+	r.repository = repository
 
 	return r
 }
 
 // MasterTimeout Period to wait for a connection to the master node.
 // API name: master_timeout
-func (r *CleanupRepository) MasterTimeout(v string) *CleanupRepository {
-	r.values.Set("master_timeout", v)
+func (r *CleanupRepository) MasterTimeout(duration string) *CleanupRepository {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
 // Timeout Period to wait for a response.
 // API name: timeout
-func (r *CleanupRepository) Timeout(v string) *CleanupRepository {
-	r.values.Set("timeout", v)
+func (r *CleanupRepository) Timeout(duration string) *CleanupRepository {
+	r.values.Set("timeout", duration)
 
 	return r
 }

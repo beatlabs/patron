@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes an existing data frame analytics job.
 package deletedataframeanalytics
@@ -68,7 +68,7 @@ func NewDeleteDataFrameAnalyticsFunc(tp elastictransport.Interface) NewDeleteDat
 	return func(id string) *DeleteDataFrameAnalytics {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -173,13 +173,16 @@ func (r DeleteDataFrameAnalytics) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -215,9 +218,9 @@ func (r *DeleteDataFrameAnalytics) Header(key, value string) *DeleteDataFrameAna
 
 // Id Identifier for the data frame analytics job.
 // API Name: id
-func (r *DeleteDataFrameAnalytics) Id(v string) *DeleteDataFrameAnalytics {
+func (r *DeleteDataFrameAnalytics) _id(id string) *DeleteDataFrameAnalytics {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
@@ -225,16 +228,16 @@ func (r *DeleteDataFrameAnalytics) Id(v string) *DeleteDataFrameAnalytics {
 // Force If `true`, it deletes a job that is not stopped; this method is quicker than
 // stopping and deleting the job.
 // API name: force
-func (r *DeleteDataFrameAnalytics) Force(b bool) *DeleteDataFrameAnalytics {
-	r.values.Set("force", strconv.FormatBool(b))
+func (r *DeleteDataFrameAnalytics) Force(force bool) *DeleteDataFrameAnalytics {
+	r.values.Set("force", strconv.FormatBool(force))
 
 	return r
 }
 
 // Timeout The time to wait for the job to be deleted.
 // API name: timeout
-func (r *DeleteDataFrameAnalytics) Timeout(v string) *DeleteDataFrameAnalytics {
-	r.values.Set("timeout", v)
+func (r *DeleteDataFrameAnalytics) Timeout(duration string) *DeleteDataFrameAnalytics {
+	r.values.Set("timeout", duration)
 
 	return r
 }

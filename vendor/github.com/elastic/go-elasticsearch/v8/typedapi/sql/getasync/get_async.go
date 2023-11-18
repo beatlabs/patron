@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns the current status and available results for an async SQL search or
 // stored synchronous SQL search
@@ -68,7 +68,7 @@ func NewGetAsyncFunc(tp elastictransport.Interface) NewGetAsync {
 	return func(id string) *GetAsync {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -172,13 +172,16 @@ func (r GetAsync) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -212,11 +215,11 @@ func (r *GetAsync) Header(key, value string) *GetAsync {
 	return r
 }
 
-// Id The async search ID
+// Id Identifier for the search.
 // API Name: id
-func (r *GetAsync) Id(v string) *GetAsync {
+func (r *GetAsync) _id(id string) *GetAsync {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
@@ -224,8 +227,8 @@ func (r *GetAsync) Id(v string) *GetAsync {
 // Delimiter Separator for CSV results. The API only supports this parameter for CSV
 // responses.
 // API name: delimiter
-func (r *GetAsync) Delimiter(v string) *GetAsync {
-	r.values.Set("delimiter", v)
+func (r *GetAsync) Delimiter(delimiter string) *GetAsync {
+	r.values.Set("delimiter", delimiter)
 
 	return r
 }
@@ -234,8 +237,8 @@ func (r *GetAsync) Delimiter(v string) *GetAsync {
 // the
 // Accept HTTP header. If you specify both, the API uses this parameter.
 // API name: format
-func (r *GetAsync) Format(v string) *GetAsync {
-	r.values.Set("format", v)
+func (r *GetAsync) Format(format string) *GetAsync {
+	r.values.Set("format", format)
 
 	return r
 }
@@ -243,8 +246,8 @@ func (r *GetAsync) Format(v string) *GetAsync {
 // KeepAlive Retention period for the search and its results. Defaults
 // to the `keep_alive` period for the original SQL search.
 // API name: keep_alive
-func (r *GetAsync) KeepAlive(v string) *GetAsync {
-	r.values.Set("keep_alive", v)
+func (r *GetAsync) KeepAlive(duration string) *GetAsync {
+	r.values.Set("keep_alive", duration)
 
 	return r
 }
@@ -252,8 +255,8 @@ func (r *GetAsync) KeepAlive(v string) *GetAsync {
 // WaitForCompletionTimeout Period to wait for complete results. Defaults to no timeout,
 // meaning the request waits for complete search results.
 // API name: wait_for_completion_timeout
-func (r *GetAsync) WaitForCompletionTimeout(v string) *GetAsync {
-	r.values.Set("wait_for_completion_timeout", v)
+func (r *GetAsync) WaitForCompletionTimeout(duration string) *GetAsync {
+	r.values.Set("wait_for_completion_timeout", duration)
 
 	return r
 }

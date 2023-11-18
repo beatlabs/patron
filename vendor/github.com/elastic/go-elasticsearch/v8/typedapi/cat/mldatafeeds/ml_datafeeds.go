@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Gets configuration and usage information about datafeeds.
 package mldatafeeds
@@ -36,7 +36,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catdatafeedcolumn"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/timeunit"
 )
 
@@ -182,13 +182,16 @@ func (r MlDatafeeds) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -224,9 +227,9 @@ func (r *MlDatafeeds) Header(key, value string) *MlDatafeeds {
 
 // DatafeedId A numerical character string that uniquely identifies the datafeed.
 // API Name: datafeedid
-func (r *MlDatafeeds) DatafeedId(v string) *MlDatafeeds {
+func (r *MlDatafeeds) DatafeedId(datafeedid string) *MlDatafeeds {
 	r.paramSet |= datafeedidMask
-	r.datafeedid = v
+	r.datafeedid = datafeedid
 
 	return r
 }
@@ -243,16 +246,20 @@ func (r *MlDatafeeds) DatafeedId(v string) *MlDatafeeds {
 // there are no matches or only
 // partial matches.
 // API name: allow_no_match
-func (r *MlDatafeeds) AllowNoMatch(b bool) *MlDatafeeds {
-	r.values.Set("allow_no_match", strconv.FormatBool(b))
+func (r *MlDatafeeds) AllowNoMatch(allownomatch bool) *MlDatafeeds {
+	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
 
 	return r
 }
 
 // H Comma-separated list of column names to display.
 // API name: h
-func (r *MlDatafeeds) H(v string) *MlDatafeeds {
-	r.values.Set("h", v)
+func (r *MlDatafeeds) H(catdatafeedcolumns ...catdatafeedcolumn.CatDatafeedColumn) *MlDatafeeds {
+	tmp := []string{}
+	for _, item := range catdatafeedcolumns {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
@@ -260,16 +267,20 @@ func (r *MlDatafeeds) H(v string) *MlDatafeeds {
 // S Comma-separated list of column names or column aliases used to sort the
 // response.
 // API name: s
-func (r *MlDatafeeds) S(v string) *MlDatafeeds {
-	r.values.Set("s", v)
+func (r *MlDatafeeds) S(catdatafeedcolumns ...catdatafeedcolumn.CatDatafeedColumn) *MlDatafeeds {
+	tmp := []string{}
+	for _, item := range catdatafeedcolumns {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
 // Time The unit used to display time values.
 // API name: time
-func (r *MlDatafeeds) Time(enum timeunit.TimeUnit) *MlDatafeeds {
-	r.values.Set("time", enum.String())
+func (r *MlDatafeeds) Time(time timeunit.TimeUnit) *MlDatafeeds {
+	r.values.Set("time", time.String())
 
 	return r
 }

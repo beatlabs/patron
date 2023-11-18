@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about a repository.
 package getrepository
@@ -172,13 +172,16 @@ func (r GetRepository) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -214,9 +217,9 @@ func (r *GetRepository) Header(key, value string) *GetRepository {
 
 // Repository A comma-separated list of repository names
 // API Name: repository
-func (r *GetRepository) Repository(v string) *GetRepository {
+func (r *GetRepository) Repository(repository string) *GetRepository {
 	r.paramSet |= repositoryMask
-	r.repository = v
+	r.repository = repository
 
 	return r
 }
@@ -224,16 +227,16 @@ func (r *GetRepository) Repository(v string) *GetRepository {
 // Local Return local information, do not retrieve the state from master node
 // (default: false)
 // API name: local
-func (r *GetRepository) Local(b bool) *GetRepository {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *GetRepository) Local(local bool) *GetRepository {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }
 
 // MasterTimeout Explicit operation timeout for connection to master node
 // API name: master_timeout
-func (r *GetRepository) MasterTimeout(v string) *GetRepository {
-	r.values.Set("master_timeout", v)
+func (r *GetRepository) MasterTimeout(duration string) *GetRepository {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

@@ -16,17 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tokenizationtruncate"
 )
 
 // NlpRobertaTokenizationConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/inference.ts#L145-L172
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/_types/inference.ts#L160-L187
 type NlpRobertaTokenizationConfig struct {
 	// AddPrefixSpace Should the tokenizer prefix input with a space character
 	AddPrefixSpace *bool `json:"add_prefix_space,omitempty"`
@@ -40,6 +46,91 @@ type NlpRobertaTokenizationConfig struct {
 	Truncate *tokenizationtruncate.TokenizationTruncate `json:"truncate,omitempty"`
 	// WithSpecialTokens Is tokenization completed with special tokens
 	WithSpecialTokens *bool `json:"with_special_tokens,omitempty"`
+}
+
+func (s *NlpRobertaTokenizationConfig) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "add_prefix_space":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.AddPrefixSpace = &value
+			case bool:
+				s.AddPrefixSpace = &v
+			}
+
+		case "max_sequence_length":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxSequenceLength = &value
+			case float64:
+				f := int(v)
+				s.MaxSequenceLength = &f
+			}
+
+		case "span":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Span = &value
+			case float64:
+				f := int(v)
+				s.Span = &f
+			}
+
+		case "truncate":
+			if err := dec.Decode(&s.Truncate); err != nil {
+				return err
+			}
+
+		case "with_special_tokens":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.WithSpecialTokens = &value
+			case bool:
+				s.WithSpecialTokens = &v
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewNlpRobertaTokenizationConfig returns a NlpRobertaTokenizationConfig.

@@ -16,27 +16,29 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package putuser
 
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 // Request holds the request body struct for the package putuser
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/security/put_user/SecurityPutUserRequest.ts#L23-L45
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/security/put_user/SecurityPutUserRequest.ts#L23-L44
 type Request struct {
-	Email        string                     `json:"email,omitempty"`
-	Enabled      *bool                      `json:"enabled,omitempty"`
-	FullName     string                     `json:"full_name,omitempty"`
-	Metadata     map[string]json.RawMessage `json:"metadata,omitempty"`
-	Password     *string                    `json:"password,omitempty"`
-	PasswordHash *string                    `json:"password_hash,omitempty"`
-	Roles        []string                   `json:"roles,omitempty"`
-	Username     *string                    `json:"username,omitempty"`
+	Email        string         `json:"email,omitempty"`
+	Enabled      *bool          `json:"enabled,omitempty"`
+	FullName     string         `json:"full_name,omitempty"`
+	Metadata     types.Metadata `json:"metadata,omitempty"`
+	Password     *string        `json:"password,omitempty"`
+	PasswordHash *string        `json:"password_hash,omitempty"`
+	Roles        []string       `json:"roles,omitempty"`
+	Username     *string        `json:"username,omitempty"`
 }
 
 // NewRequest returns a Request

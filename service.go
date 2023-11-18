@@ -179,7 +179,7 @@ func defaultLogAttrs(name, version string) []slog.Attr {
 }
 
 func setupLogging(lc logConfig) {
-	ho := slog.HandlerOptions{
+	opts := &slog.HandlerOptions{
 		AddSource: true,
 		Level:     getLogLevel(),
 	}
@@ -187,9 +187,9 @@ func setupLogging(lc logConfig) {
 	var hnd slog.Handler
 
 	if lc.json {
-		hnd = ho.NewJSONHandler(os.Stderr)
+		hnd = slog.NewJSONHandler(os.Stderr, opts)
 	} else {
-		hnd = ho.NewTextHandler(os.Stderr)
+		hnd = slog.NewTextHandler(os.Stderr, opts)
 	}
 
 	slog.New(hnd.WithAttrs(lc.attrs))

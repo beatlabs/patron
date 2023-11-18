@@ -4,19 +4,20 @@ package sqs
 
 import (
 	"context"
+	"fmt"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Deletes the messages in a queue specified by the QueueURL parameter. When you
-// use the PurgeQueue action, you can't retrieve any messages deleted from a
-// queue. The message deletion process takes up to 60 seconds. We recommend waiting
-// for 60 seconds regardless of your queue's size. Messages sent to the queue
-// before you call PurgeQueue might be received but are deleted within the next
-// minute. Messages sent to the queue after you call PurgeQueue might be deleted
-// while the queue is being purged.
+// Deletes available messages in a queue (including in-flight messages) specified
+// by the QueueURL parameter. When you use the PurgeQueue action, you can't
+// retrieve any messages deleted from a queue. The message deletion process takes
+// up to 60 seconds. We recommend waiting for 60 seconds regardless of your queue's
+// size. Messages sent to the queue before you call PurgeQueue might be received
+// but are deleted within the next minute. Messages sent to the queue after you
+// call PurgeQueue might be deleted while the queue is being purged.
 func (c *Client) PurgeQueue(ctx context.Context, params *PurgeQueueInput, optFns ...func(*Options)) (*PurgeQueueOutput, error) {
 	if params == nil {
 		params = &PurgeQueueInput{}
@@ -51,12 +52,22 @@ type PurgeQueueOutput struct {
 }
 
 func (c *Client) addOperationPurgeQueueMiddlewares(stack *middleware.Stack, options Options) (err error) {
-	err = stack.Serialize.Add(&awsAwsquery_serializeOpPurgeQueue{}, middleware.After)
+	if err := stack.Serialize.Add(&setOperationInputMiddleware{}, middleware.After); err != nil {
+		return err
+	}
+	err = stack.Serialize.Add(&awsAwsjson10_serializeOpPurgeQueue{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsquery_deserializeOpPurgeQueue{}, middleware.After)
+	err = stack.Deserialize.Add(&awsAwsjson10_deserializeOpPurgeQueue{}, middleware.After)
 	if err != nil {
+		return err
+	}
+	if err := addProtocolFinalizerMiddlewares(stack, options, "PurgeQueue"); err != nil {
+		return fmt.Errorf("add protocol finalizers: %v", err)
+	}
+
+	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
 		return err
 	}
 	if err = addSetLoggerMiddleware(stack, options); err != nil {
@@ -77,22 +88,22 @@ func (c *Client) addOperationPurgeQueueMiddlewares(stack *middleware.Stack, opti
 	if err = addRetryMiddlewares(stack, options); err != nil {
 		return err
 	}
-	if err = addHTTPSignerV4Middleware(stack, options); err != nil {
-		return err
-	}
 	if err = awsmiddleware.AddRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
 		return err
 	}
-	if err = addClientUserAgent(stack); err != nil {
+	if err = addClientUserAgent(stack, options); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
 	if err = addOpPurgeQueueValidationMiddleware(stack); err != nil {
@@ -113,6 +124,9 @@ func (c *Client) addOperationPurgeQueueMiddlewares(stack *middleware.Stack, opti
 	if err = addRequestResponseLogging(stack, options); err != nil {
 		return err
 	}
+	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -120,7 +134,6 @@ func newServiceMetadataMiddleware_opPurgeQueue(region string) *awsmiddleware.Reg
 	return &awsmiddleware.RegisterServiceMetadata{
 		Region:        region,
 		ServiceID:     ServiceID,
-		SigningName:   "sqs",
 		OperationName: "PurgeQueue",
 	}
 }

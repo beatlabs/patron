@@ -1,11 +1,3 @@
-# v1.14.4 (2023-11-15)
-
-* **Dependency Update**: Updated to the latest SDK module versions
-
-# v1.14.3 (2023-11-09)
-
-* **Dependency Update**: Updated to the latest SDK module versions
-
 # v1.14.2 (2023-11-02)
 
 * No change notes available for this release.

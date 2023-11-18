@@ -28,7 +28,7 @@ require (
 	github.com/uber/jaeger-lib v2.4.2-0.20210604143007-135cf5605a6d+incompatible
 	go.mongodb.org/mongo-driver v1.11.7
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
-	golang.org/x/time v0.3.0
+	golang.org/x/time v0.4.0
 	google.golang.org/grpc v1.56.3
 	google.golang.org/protobuf v1.30.0
 )

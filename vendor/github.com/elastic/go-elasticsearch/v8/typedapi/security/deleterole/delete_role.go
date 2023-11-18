@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Removes roles in the native realm.
 package deleterole
@@ -35,7 +35,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 )
 
@@ -69,7 +68,7 @@ func NewDeleteRoleFunc(tp elastictransport.Interface) NewDeleteRole {
 	return func(name string) *DeleteRole {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -172,13 +171,16 @@ func (r DeleteRole) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -214,9 +216,9 @@ func (r *DeleteRole) Header(key, value string) *DeleteRole {
 
 // Name Role name
 // API Name: name
-func (r *DeleteRole) Name(v string) *DeleteRole {
+func (r *DeleteRole) _name(name string) *DeleteRole {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
@@ -225,8 +227,8 @@ func (r *DeleteRole) Name(v string) *DeleteRole {
 // operation visible to search, if `wait_for` then wait for a refresh to make
 // this operation visible to search, if `false` then do nothing with refreshes.
 // API name: refresh
-func (r *DeleteRole) Refresh(enum refresh.Refresh) *DeleteRole {
-	r.values.Set("refresh", enum.String())
+func (r *DeleteRole) Refresh(refresh refresh.Refresh) *DeleteRole {
+	r.values.Set("refresh", refresh.String())
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about any matching indices, aliases, and data streams
 package resolveindex
@@ -35,6 +35,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -67,7 +68,7 @@ func NewResolveIndexFunc(tp elastictransport.Interface) NewResolveIndex {
 	return func(name string) *ResolveIndex {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -170,13 +171,16 @@ func (r ResolveIndex) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -210,20 +214,30 @@ func (r *ResolveIndex) Header(key, value string) *ResolveIndex {
 	return r
 }
 
-// Name A comma-separated list of names or wildcard expressions
+// Name Comma-separated name(s) or index pattern(s) of the indices, aliases, and data
+// streams to resolve.
+// Resources on remote clusters can be specified using the `<cluster>`:`<name>`
+// syntax.
 // API Name: name
-func (r *ResolveIndex) Name(v string) *ResolveIndex {
+func (r *ResolveIndex) _name(name string) *ResolveIndex {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
-// ExpandWildcards Whether wildcard expressions should get expanded to open or closed indices
-// (default: open)
+// ExpandWildcards Type of index that wildcard patterns can match.
+// If the request can target data streams, this argument determines whether
+// wildcard expressions match hidden data streams.
+// Supports comma-separated values, such as `open,hidden`.
+// Valid values are: `all`, `open`, `closed`, `hidden`, `none`.
 // API name: expand_wildcards
-func (r *ResolveIndex) ExpandWildcards(v string) *ResolveIndex {
-	r.values.Set("expand_wildcards", v)
+func (r *ResolveIndex) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *ResolveIndex {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }

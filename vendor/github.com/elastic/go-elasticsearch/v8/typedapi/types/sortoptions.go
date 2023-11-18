@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
@@ -27,13 +27,13 @@ import (
 
 // SortOptions type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/sort.ts#L82-L91
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/sort.ts#L82-L91
 type SortOptions struct {
 	Doc_         *ScoreSort           `json:"_doc,omitempty"`
 	GeoDistance_ *GeoDistanceSort     `json:"_geo_distance,omitempty"`
 	Score_       *ScoreSort           `json:"_score,omitempty"`
 	Script_      *ScriptSort          `json:"_script,omitempty"`
-	SortOptions  map[string]FieldSort `json:"-"`
+	SortOptions  map[string]FieldSort `json:"SortOptions,omitempty"`
 }
 
 // MarhsalJSON overrides marshalling for types with additional properties
@@ -55,6 +55,7 @@ func (s SortOptions) MarshalJSON() ([]byte, error) {
 	for key, value := range s.SortOptions {
 		tmp[fmt.Sprintf("%s", key)] = value
 	}
+	delete(tmp, "SortOptions")
 
 	data, err = json.Marshal(tmp)
 	if err != nil {

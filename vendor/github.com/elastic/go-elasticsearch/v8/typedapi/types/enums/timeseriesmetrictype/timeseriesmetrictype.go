@@ -16,14 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Package timeseriesmetrictype
 package timeseriesmetrictype
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/mapping/TimeSeriesMetricType.ts#L20-L25
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/mapping/TimeSeriesMetricType.ts#L20-L26
 type TimeSeriesMetricType struct {
 	Name string
 }
@@ -36,6 +36,8 @@ var (
 	Summary = TimeSeriesMetricType{"summary"}
 
 	Histogram = TimeSeriesMetricType{"histogram"}
+
+	Position = TimeSeriesMetricType{"position"}
 )
 
 func (t TimeSeriesMetricType) MarshalText() (text []byte, err error) {
@@ -43,7 +45,7 @@ func (t TimeSeriesMetricType) MarshalText() (text []byte, err error) {
 }
 
 func (t *TimeSeriesMetricType) UnmarshalText(text []byte) error {
-	switch strings.ToLower(string(text)) {
+	switch strings.ReplaceAll(strings.ToLower(string(text)), "\"", "") {
 
 	case "gauge":
 		*t = Gauge
@@ -53,6 +55,8 @@ func (t *TimeSeriesMetricType) UnmarshalText(text []byte) error {
 		*t = Summary
 	case "histogram":
 		*t = Histogram
+	case "position":
+		*t = Position
 	default:
 		*t = TimeSeriesMetricType{string(text)}
 	}

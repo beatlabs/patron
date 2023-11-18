@@ -16,18 +16,69 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+)
+
 // RunningStateSearchInterval type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/Datafeed.ts#L164-L169
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/_types/Datafeed.ts#L214-L231
 type RunningStateSearchInterval struct {
-	End     Duration `json:"end,omitempty"`
-	EndMs   int64    `json:"end_ms"`
-	Start   Duration `json:"start,omitempty"`
-	StartMs int64    `json:"start_ms"`
+	// End The end time.
+	End Duration `json:"end,omitempty"`
+	// EndMs The end time as an epoch in milliseconds.
+	EndMs int64 `json:"end_ms"`
+	// Start The start time.
+	Start Duration `json:"start,omitempty"`
+	// StartMs The start time as an epoch in milliseconds.
+	StartMs int64 `json:"start_ms"`
+}
+
+func (s *RunningStateSearchInterval) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "end":
+			if err := dec.Decode(&s.End); err != nil {
+				return err
+			}
+
+		case "end_ms":
+			if err := dec.Decode(&s.EndMs); err != nil {
+				return err
+			}
+
+		case "start":
+			if err := dec.Decode(&s.Start); err != nil {
+				return err
+			}
+
+		case "start_ms":
+			if err := dec.Decode(&s.StartMs); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewRunningStateSearchInterval returns a RunningStateSearchInterval.

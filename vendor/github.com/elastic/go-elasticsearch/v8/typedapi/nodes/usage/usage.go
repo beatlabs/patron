@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns low-level information about REST actions usage on nodes.
 package usage
@@ -201,13 +201,16 @@ func (r Usage) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -245,26 +248,29 @@ func (r *Usage) Header(key, value string) *Usage {
 // information; use `_local` to return information from the node you're
 // connecting to, leave empty to get information from all nodes
 // API Name: nodeid
-func (r *Usage) NodeId(v string) *Usage {
+func (r *Usage) NodeId(nodeid string) *Usage {
 	r.paramSet |= nodeidMask
-	r.nodeid = v
+	r.nodeid = nodeid
 
 	return r
 }
 
-// Metric Limit the information returned to the specified metrics
+// Metric Limits the information returned to the specific metrics.
+// A comma-separated list of the following options: `_all`, `rest_actions`.
 // API Name: metric
-func (r *Usage) Metric(v string) *Usage {
+func (r *Usage) Metric(metric string) *Usage {
 	r.paramSet |= metricMask
-	r.metric = v
+	r.metric = metric
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *Usage) Timeout(v string) *Usage {
-	r.values.Set("timeout", v)
+func (r *Usage) Timeout(duration string) *Usage {
+	r.values.Set("timeout", duration)
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about the status of a snapshot.
 package status
@@ -192,13 +192,16 @@ func (r Status) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -234,18 +237,18 @@ func (r *Status) Header(key, value string) *Status {
 
 // Repository A repository name
 // API Name: repository
-func (r *Status) Repository(v string) *Status {
+func (r *Status) Repository(repository string) *Status {
 	r.paramSet |= repositoryMask
-	r.repository = v
+	r.repository = repository
 
 	return r
 }
 
 // Snapshot A comma-separated list of snapshot names
 // API Name: snapshot
-func (r *Status) Snapshot(v string) *Status {
+func (r *Status) Snapshot(snapshot string) *Status {
 	r.paramSet |= snapshotMask
-	r.snapshot = v
+	r.snapshot = snapshot
 
 	return r
 }
@@ -253,16 +256,16 @@ func (r *Status) Snapshot(v string) *Status {
 // IgnoreUnavailable Whether to ignore unavailable snapshots, defaults to false which means a
 // SnapshotMissingException is thrown
 // API name: ignore_unavailable
-func (r *Status) IgnoreUnavailable(b bool) *Status {
-	r.values.Set("ignore_unavailable", strconv.FormatBool(b))
+func (r *Status) IgnoreUnavailable(ignoreunavailable bool) *Status {
+	r.values.Set("ignore_unavailable", strconv.FormatBool(ignoreunavailable))
 
 	return r
 }
 
 // MasterTimeout Explicit operation timeout for connection to master node
 // API name: master_timeout
-func (r *Status) MasterTimeout(v string) *Status {
-	r.values.Set("master_timeout", v)
+func (r *Status) MasterTimeout(duration string) *Status {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

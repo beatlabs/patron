@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes scheduled events from a calendar.
 package deletecalendarevent
@@ -70,9 +70,9 @@ func NewDeleteCalendarEventFunc(tp elastictransport.Interface) NewDeleteCalendar
 	return func(calendarid, eventid string) *DeleteCalendarEvent {
 		n := New(tp)
 
-		n.CalendarId(calendarid)
+		n._calendarid(calendarid)
 
-		n.EventId(eventid)
+		n._eventid(eventid)
 
 		return n
 	}
@@ -180,13 +180,16 @@ func (r DeleteCalendarEvent) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -220,20 +223,21 @@ func (r *DeleteCalendarEvent) Header(key, value string) *DeleteCalendarEvent {
 	return r
 }
 
-// CalendarId The ID of the calendar to modify
+// CalendarId A string that uniquely identifies a calendar.
 // API Name: calendarid
-func (r *DeleteCalendarEvent) CalendarId(v string) *DeleteCalendarEvent {
+func (r *DeleteCalendarEvent) _calendarid(calendarid string) *DeleteCalendarEvent {
 	r.paramSet |= calendaridMask
-	r.calendarid = v
+	r.calendarid = calendarid
 
 	return r
 }
 
-// EventId The ID of the event to remove from the calendar
+// EventId Identifier for the scheduled event.
+// You can obtain this identifier by using the get calendar events API.
 // API Name: eventid
-func (r *DeleteCalendarEvent) EventId(v string) *DeleteCalendarEvent {
+func (r *DeleteCalendarEvent) _eventid(eventid string) *DeleteCalendarEvent {
 	r.paramSet |= eventidMask
-	r.eventid = v
+	r.eventid = eventid
 
 	return r
 }

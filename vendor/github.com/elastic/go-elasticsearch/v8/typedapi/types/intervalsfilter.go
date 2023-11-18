@@ -16,23 +16,113 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+)
+
 // IntervalsFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/fulltext.ts#L74-L86
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/fulltext.ts#L112-L152
 type IntervalsFilter struct {
-	After          *Intervals `json:"after,omitempty"`
-	Before         *Intervals `json:"before,omitempty"`
-	ContainedBy    *Intervals `json:"contained_by,omitempty"`
-	Containing     *Intervals `json:"containing,omitempty"`
+	// After Query used to return intervals that follow an interval from the `filter`
+	// rule.
+	After *Intervals `json:"after,omitempty"`
+	// Before Query used to return intervals that occur before an interval from the
+	// `filter` rule.
+	Before *Intervals `json:"before,omitempty"`
+	// ContainedBy Query used to return intervals contained by an interval from the `filter`
+	// rule.
+	ContainedBy *Intervals `json:"contained_by,omitempty"`
+	// Containing Query used to return intervals that contain an interval from the `filter`
+	// rule.
+	Containing *Intervals `json:"containing,omitempty"`
+	// NotContainedBy Query used to return intervals that are **not** contained by an interval from
+	// the `filter` rule.
 	NotContainedBy *Intervals `json:"not_contained_by,omitempty"`
-	NotContaining  *Intervals `json:"not_containing,omitempty"`
+	// NotContaining Query used to return intervals that do **not** contain an interval from the
+	// `filter` rule.
+	NotContaining *Intervals `json:"not_containing,omitempty"`
+	// NotOverlapping Query used to return intervals that do **not** overlap with an interval from
+	// the `filter` rule.
 	NotOverlapping *Intervals `json:"not_overlapping,omitempty"`
-	Overlapping    *Intervals `json:"overlapping,omitempty"`
-	Script         Script     `json:"script,omitempty"`
+	// Overlapping Query used to return intervals that overlap with an interval from the
+	// `filter` rule.
+	Overlapping *Intervals `json:"overlapping,omitempty"`
+	// Script Script used to return matching documents.
+	// This script must return a boolean value: `true` or `false`.
+	Script Script `json:"script,omitempty"`
+}
+
+func (s *IntervalsFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "after":
+			if err := dec.Decode(&s.After); err != nil {
+				return err
+			}
+
+		case "before":
+			if err := dec.Decode(&s.Before); err != nil {
+				return err
+			}
+
+		case "contained_by":
+			if err := dec.Decode(&s.ContainedBy); err != nil {
+				return err
+			}
+
+		case "containing":
+			if err := dec.Decode(&s.Containing); err != nil {
+				return err
+			}
+
+		case "not_contained_by":
+			if err := dec.Decode(&s.NotContainedBy); err != nil {
+				return err
+			}
+
+		case "not_containing":
+			if err := dec.Decode(&s.NotContaining); err != nil {
+				return err
+			}
+
+		case "not_overlapping":
+			if err := dec.Decode(&s.NotOverlapping); err != nil {
+				return err
+			}
+
+		case "overlapping":
+			if err := dec.Decode(&s.Overlapping); err != nil {
+				return err
+			}
+
+		case "script":
+			if err := dec.Decode(&s.Script); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewIntervalsFilter returns a IntervalsFilter.

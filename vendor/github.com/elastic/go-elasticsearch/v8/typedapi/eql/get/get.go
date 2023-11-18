@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns async results from previously executed Event Query Language (EQL)
 // search
@@ -68,7 +68,7 @@ func NewGetFunc(tp elastictransport.Interface) NewGet {
 	return func(id string) *Get {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -77,7 +77,7 @@ func NewGetFunc(tp elastictransport.Interface) NewGet {
 // Returns async results from previously executed Event Query Language (EQL)
 // search
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/eql-search-api.html
+//  https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/get-async-eql-search-api.html
 func New(tp elastictransport.Interface) *Get {
 	r := &Get{
 		transport: tp,
@@ -172,13 +172,16 @@ func (r Get) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -214,9 +217,9 @@ func (r *Get) Header(key, value string) *Get {
 
 // Id Identifier for the search.
 // API Name: id
-func (r *Get) Id(v string) *Get {
+func (r *Get) _id(id string) *Get {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
@@ -224,17 +227,18 @@ func (r *Get) Id(v string) *Get {
 // KeepAlive Period for which the search and its results are stored on the cluster.
 // Defaults to the keep_alive value set by the search’s EQL search API request.
 // API name: keep_alive
-func (r *Get) KeepAlive(v string) *Get {
-	r.values.Set("keep_alive", v)
+func (r *Get) KeepAlive(duration string) *Get {
+	r.values.Set("keep_alive", duration)
 
 	return r
 }
 
-// WaitForCompletionTimeout Timeout duration to wait for the request to finish. Defaults to no timeout,
-// meaning the request waits for complete search results.
+// WaitForCompletionTimeout Timeout duration to wait for the request to finish.
+// Defaults to no timeout, meaning the request waits for complete search
+// results.
 // API name: wait_for_completion_timeout
-func (r *Get) WaitForCompletionTimeout(v string) *Get {
-	r.values.Set("wait_for_completion_timeout", v)
+func (r *Get) WaitForCompletionTimeout(duration string) *Get {
+	r.values.Set("wait_for_completion_timeout", duration)
 
 	return r
 }

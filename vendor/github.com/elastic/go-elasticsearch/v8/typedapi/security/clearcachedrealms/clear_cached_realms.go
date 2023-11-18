@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Evicts users from the user cache. Can completely clear the cache or evict
 // specific users.
@@ -68,7 +68,7 @@ func NewClearCachedRealmsFunc(tp elastictransport.Interface) NewClearCachedRealm
 	return func(realms string) *ClearCachedRealms {
 		n := New(tp)
 
-		n.Realms(realms)
+		n._realms(realms)
 
 		return n
 	}
@@ -174,13 +174,16 @@ func (r ClearCachedRealms) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -216,17 +219,21 @@ func (r *ClearCachedRealms) Header(key, value string) *ClearCachedRealms {
 
 // Realms Comma-separated list of realms to clear
 // API Name: realms
-func (r *ClearCachedRealms) Realms(v string) *ClearCachedRealms {
+func (r *ClearCachedRealms) _realms(realms string) *ClearCachedRealms {
 	r.paramSet |= realmsMask
-	r.realms = v
+	r.realms = realms
 
 	return r
 }
 
 // Usernames Comma-separated list of usernames to clear from the cache
 // API name: usernames
-func (r *ClearCachedRealms) Usernames(v string) *ClearCachedRealms {
-	r.values.Set("usernames", v)
+func (r *ClearCachedRealms) Usernames(usernames ...string) *ClearCachedRealms {
+	tmp := []string{}
+	for _, item := range usernames {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("usernames", strings.Join(tmp, ","))
 
 	return r
 }

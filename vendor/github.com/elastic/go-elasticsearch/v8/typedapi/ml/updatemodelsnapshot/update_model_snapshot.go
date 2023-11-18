@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Updates certain properties of a snapshot.
 package updatemodelsnapshot
@@ -54,8 +54,9 @@ type UpdateModelSnapshot struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -72,9 +73,9 @@ func NewUpdateModelSnapshotFunc(tp elastictransport.Interface) NewUpdateModelSna
 	return func(jobid, snapshotid string) *UpdateModelSnapshot {
 		n := New(tp)
 
-		n.JobId(jobid)
+		n._jobid(jobid)
 
-		n.SnapshotId(snapshotid)
+		n._snapshotid(snapshotid)
 
 		return n
 	}
@@ -89,6 +90,8 @@ func New(tp elastictransport.Interface) *UpdateModelSnapshot {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -118,9 +121,19 @@ func (r *UpdateModelSnapshot) HttpRequest(ctx context.Context) (*http.Request, e
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -128,6 +141,7 @@ func (r *UpdateModelSnapshot) HttpRequest(ctx context.Context) (*http.Request, e
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -217,13 +231,16 @@ func (r UpdateModelSnapshot) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -238,18 +255,37 @@ func (r *UpdateModelSnapshot) Header(key, value string) *UpdateModelSnapshot {
 
 // JobId Identifier for the anomaly detection job.
 // API Name: jobid
-func (r *UpdateModelSnapshot) JobId(v string) *UpdateModelSnapshot {
+func (r *UpdateModelSnapshot) _jobid(jobid string) *UpdateModelSnapshot {
 	r.paramSet |= jobidMask
-	r.jobid = v
+	r.jobid = jobid
 
 	return r
 }
 
 // SnapshotId Identifier for the model snapshot.
 // API Name: snapshotid
-func (r *UpdateModelSnapshot) SnapshotId(v string) *UpdateModelSnapshot {
+func (r *UpdateModelSnapshot) _snapshotid(snapshotid string) *UpdateModelSnapshot {
 	r.paramSet |= snapshotidMask
-	r.snapshotid = v
+	r.snapshotid = snapshotid
+
+	return r
+}
+
+// Description A description of the model snapshot.
+// API name: description
+func (r *UpdateModelSnapshot) Description(description string) *UpdateModelSnapshot {
+
+	r.req.Description = &description
+
+	return r
+}
+
+// Retain If `true`, this snapshot will not be deleted during automatic cleanup of
+// snapshots older than `model_snapshot_retention_days`. However, this
+// snapshot will be deleted when the job is deleted.
+// API name: retain
+func (r *UpdateModelSnapshot) Retain(retain bool) *UpdateModelSnapshot {
+	r.req.Retain = &retain
 
 	return r
 }

@@ -16,23 +16,83 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // SettingsSimilarityLmj type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/_types/IndexSettings.ts#L211-L214
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/_types/IndexSettings.ts#L211-L214
 type SettingsSimilarityLmj struct {
 	Lambda Float64 `json:"lambda"`
 	Type   string  `json:"type,omitempty"`
 }
 
+func (s *SettingsSimilarityLmj) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "lambda":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.Lambda = f
+			case float64:
+				f := Float64(v)
+				s.Lambda = f
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s SettingsSimilarityLmj) MarshalJSON() ([]byte, error) {
+	type innerSettingsSimilarityLmj SettingsSimilarityLmj
+	tmp := innerSettingsSimilarityLmj{
+		Lambda: s.Lambda,
+		Type:   s.Type,
+	}
+
+	tmp.Type = "LMJelinekMercer"
+
+	return json.Marshal(tmp)
+}
+
 // NewSettingsSimilarityLmj returns a SettingsSimilarityLmj.
 func NewSettingsSimilarityLmj() *SettingsSimilarityLmj {
 	r := &SettingsSimilarityLmj{}
-
-	r.Type = "LMJelinekMercer"
 
 	return r
 }

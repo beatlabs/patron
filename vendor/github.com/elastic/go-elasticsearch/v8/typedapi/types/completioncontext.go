@@ -16,30 +16,49 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
-
-	"encoding/json"
+	"strconv"
 )
 
 // CompletionContext type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/search/_types/suggester.ts#L155-L162
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/search/_types/suggester.ts#L232-L261
 type CompletionContext struct {
-	Boost      *Float64           `json:"boost,omitempty"`
-	Context    Context            `json:"context"`
+	// Boost The factor by which the score of the suggestion should be boosted.
+	// The score is computed by multiplying the boost with the suggestion weight.
+	Boost *Float64 `json:"boost,omitempty"`
+	// Context The value of the category to filter/boost on.
+	Context Context `json:"context"`
+	// Neighbours An array of precision values at which neighboring geohashes should be taken
+	// into account.
+	// Precision value can be a distance value (`5m`, `10km`, etc.) or a raw geohash
+	// precision (`1`..`12`).
+	// Defaults to generating neighbors for index time precision level.
 	Neighbours []GeoHashPrecision `json:"neighbours,omitempty"`
-	Precision  GeoHashPrecision   `json:"precision,omitempty"`
-	Prefix     *bool              `json:"prefix,omitempty"`
+	// Precision The precision of the geohash to encode the query geo point.
+	// Can be specified as a distance value (`5m`, `10km`, etc.), or as a raw
+	// geohash precision (`1`..`12`).
+	// Defaults to index time precision level.
+	Precision GeoHashPrecision `json:"precision,omitempty"`
+	// Prefix Whether the category value should be treated as a prefix or not.
+	Prefix *bool `json:"prefix,omitempty"`
 }
 
 func (s *CompletionContext) UnmarshalJSON(data []byte) error {
+
+	if !bytes.HasPrefix(data, []byte(`{`)) {
+		err := json.NewDecoder(bytes.NewReader(data)).Decode(&s.Context)
+		return err
+	}
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -54,11 +73,23 @@ func (s *CompletionContext) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "boost":
-			if err := dec.Decode(&s.Boost); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.Boost = &f
+			case float64:
+				f := Float64(v)
+				s.Boost = &f
 			}
 
 		case "context":
+
 			rawMsg := json.RawMessage{}
 			dec.Decode(&rawMsg)
 			source := bytes.NewReader(rawMsg)
@@ -88,8 +119,17 @@ func (s *CompletionContext) UnmarshalJSON(data []byte) error {
 			}
 
 		case "prefix":
-			if err := dec.Decode(&s.Prefix); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Prefix = &value
+			case bool:
+				s.Prefix = &v
 			}
 
 		}

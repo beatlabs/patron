@@ -16,17 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/trainedmodeltype"
 )
 
 // TrainedModelConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/TrainedModel.ts#L157-L189
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/_types/TrainedModel.ts#L165-L199
 type TrainedModelConfig struct {
 	CompressedDefinition *string `json:"compressed_definition,omitempty"`
 	// CreateTime The time when the trained model was created.
@@ -41,10 +47,13 @@ type TrainedModelConfig struct {
 	EstimatedHeapMemoryUsageBytes *int `json:"estimated_heap_memory_usage_bytes,omitempty"`
 	// EstimatedOperations The estimated number of operations to use the trained model.
 	EstimatedOperations *int `json:"estimated_operations,omitempty"`
+	// FullyDefined True if the full model definition is present.
+	FullyDefined *bool `json:"fully_defined,omitempty"`
 	// InferenceConfig The default configuration for inference. This can be either a regression,
 	// classification, or one of the many NLP focused configurations. It must match
-	// the underlying definition.trained_model's target_type.
-	InferenceConfig InferenceConfigCreateContainer `json:"inference_config"`
+	// the underlying definition.trained_model's target_type. For pre-packaged
+	// models such as ELSER the config is not required.
+	InferenceConfig *InferenceConfigCreateContainer `json:"inference_config,omitempty"`
 	// Input The input field names for the model definition.
 	Input TrainedModelConfigInput `json:"input"`
 	// LicenseLevel The license level of the trained model.
@@ -63,6 +72,178 @@ type TrainedModelConfig struct {
 	Tags []string `json:"tags"`
 	// Version The Elasticsearch version number in which the trained model was created.
 	Version *string `json:"version,omitempty"`
+}
+
+func (s *TrainedModelConfig) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "compressed_definition":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.CompressedDefinition = &o
+
+		case "create_time":
+			if err := dec.Decode(&s.CreateTime); err != nil {
+				return err
+			}
+
+		case "created_by":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.CreatedBy = &o
+
+		case "default_field_map":
+			if s.DefaultFieldMap == nil {
+				s.DefaultFieldMap = make(map[string]string, 0)
+			}
+			if err := dec.Decode(&s.DefaultFieldMap); err != nil {
+				return err
+			}
+
+		case "description":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Description = &o
+
+		case "estimated_heap_memory_usage_bytes":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.EstimatedHeapMemoryUsageBytes = &value
+			case float64:
+				f := int(v)
+				s.EstimatedHeapMemoryUsageBytes = &f
+			}
+
+		case "estimated_operations":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.EstimatedOperations = &value
+			case float64:
+				f := int(v)
+				s.EstimatedOperations = &f
+			}
+
+		case "fully_defined":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.FullyDefined = &value
+			case bool:
+				s.FullyDefined = &v
+			}
+
+		case "inference_config":
+			if err := dec.Decode(&s.InferenceConfig); err != nil {
+				return err
+			}
+
+		case "input":
+			if err := dec.Decode(&s.Input); err != nil {
+				return err
+			}
+
+		case "license_level":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.LicenseLevel = &o
+
+		case "location":
+			if err := dec.Decode(&s.Location); err != nil {
+				return err
+			}
+
+		case "metadata":
+			if err := dec.Decode(&s.Metadata); err != nil {
+				return err
+			}
+
+		case "model_id":
+			if err := dec.Decode(&s.ModelId); err != nil {
+				return err
+			}
+
+		case "model_size_bytes":
+			if err := dec.Decode(&s.ModelSizeBytes); err != nil {
+				return err
+			}
+
+		case "model_type":
+			if err := dec.Decode(&s.ModelType); err != nil {
+				return err
+			}
+
+		case "tags":
+			if err := dec.Decode(&s.Tags); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewTrainedModelConfig returns a TrainedModelConfig.

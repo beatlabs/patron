@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Upgrades a given job snapshot to the current major version.
 package upgradejobsnapshot
@@ -71,9 +71,9 @@ func NewUpgradeJobSnapshotFunc(tp elastictransport.Interface) NewUpgradeJobSnaps
 	return func(jobid, snapshotid string) *UpgradeJobSnapshot {
 		n := New(tp)
 
-		n.JobId(jobid)
+		n._jobid(jobid)
 
-		n.SnapshotId(snapshotid)
+		n._snapshotid(snapshotid)
 
 		return n
 	}
@@ -183,13 +183,16 @@ func (r UpgradeJobSnapshot) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -225,18 +228,18 @@ func (r *UpgradeJobSnapshot) Header(key, value string) *UpgradeJobSnapshot {
 
 // JobId Identifier for the anomaly detection job.
 // API Name: jobid
-func (r *UpgradeJobSnapshot) JobId(v string) *UpgradeJobSnapshot {
+func (r *UpgradeJobSnapshot) _jobid(jobid string) *UpgradeJobSnapshot {
 	r.paramSet |= jobidMask
-	r.jobid = v
+	r.jobid = jobid
 
 	return r
 }
 
 // SnapshotId A numerical character string that uniquely identifies the model snapshot.
 // API Name: snapshotid
-func (r *UpgradeJobSnapshot) SnapshotId(v string) *UpgradeJobSnapshot {
+func (r *UpgradeJobSnapshot) _snapshotid(snapshotid string) *UpgradeJobSnapshot {
 	r.paramSet |= snapshotidMask
-	r.snapshotid = v
+	r.snapshotid = snapshotid
 
 	return r
 }
@@ -244,16 +247,16 @@ func (r *UpgradeJobSnapshot) SnapshotId(v string) *UpgradeJobSnapshot {
 // WaitForCompletion When true, the API won’t respond until the upgrade is complete.
 // Otherwise, it responds as soon as the upgrade task is assigned to a node.
 // API name: wait_for_completion
-func (r *UpgradeJobSnapshot) WaitForCompletion(b bool) *UpgradeJobSnapshot {
-	r.values.Set("wait_for_completion", strconv.FormatBool(b))
+func (r *UpgradeJobSnapshot) WaitForCompletion(waitforcompletion bool) *UpgradeJobSnapshot {
+	r.values.Set("wait_for_completion", strconv.FormatBool(waitforcompletion))
 
 	return r
 }
 
 // Timeout Controls the time to wait for the request to complete.
 // API name: timeout
-func (r *UpgradeJobSnapshot) Timeout(v string) *UpgradeJobSnapshot {
-	r.values.Set("timeout", v)
+func (r *UpgradeJobSnapshot) Timeout(duration string) *UpgradeJobSnapshot {
+	r.values.Set("timeout", duration)
 
 	return r
 }

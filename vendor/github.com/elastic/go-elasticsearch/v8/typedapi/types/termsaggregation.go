@@ -16,48 +16,70 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/missingorder"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/sortorder"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/termsaggregationcollectmode"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/termsaggregationexecutionhint"
-
-	"bytes"
-	"errors"
-	"io"
-
-	"encoding/json"
 )
 
 // TermsAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/bucket.ts#L380-L397
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/bucket.ts#L910-L970
 type TermsAggregation struct {
-	CollectMode           *termsaggregationcollectmode.TermsAggregationCollectMode     `json:"collect_mode,omitempty"`
-	Exclude               []string                                                     `json:"exclude,omitempty"`
-	ExecutionHint         *termsaggregationexecutionhint.TermsAggregationExecutionHint `json:"execution_hint,omitempty"`
-	Field                 *string                                                      `json:"field,omitempty"`
-	Format                *string                                                      `json:"format,omitempty"`
-	Include               TermsInclude                                                 `json:"include,omitempty"`
-	Meta                  map[string]json.RawMessage                                   `json:"meta,omitempty"`
-	MinDocCount           *int                                                         `json:"min_doc_count,omitempty"`
-	Missing               Missing                                                      `json:"missing,omitempty"`
-	MissingBucket         *bool                                                        `json:"missing_bucket,omitempty"`
-	MissingOrder          *missingorder.MissingOrder                                   `json:"missing_order,omitempty"`
-	Name                  *string                                                      `json:"name,omitempty"`
-	Order                 AggregateOrder                                               `json:"order,omitempty"`
-	Script                Script                                                       `json:"script,omitempty"`
-	ShardSize             *int                                                         `json:"shard_size,omitempty"`
-	ShowTermDocCountError *bool                                                        `json:"show_term_doc_count_error,omitempty"`
-	Size                  *int                                                         `json:"size,omitempty"`
-	ValueType             *string                                                      `json:"value_type,omitempty"`
+	// CollectMode Determines how child aggregations should be calculated: breadth-first or
+	// depth-first.
+	CollectMode *termsaggregationcollectmode.TermsAggregationCollectMode `json:"collect_mode,omitempty"`
+	// Exclude Values to exclude.
+	// Accepts regular expressions and partitions.
+	Exclude []string `json:"exclude,omitempty"`
+	// ExecutionHint Determines whether the aggregation will use field values directly or global
+	// ordinals.
+	ExecutionHint *termsaggregationexecutionhint.TermsAggregationExecutionHint `json:"execution_hint,omitempty"`
+	// Field The field from which to return terms.
+	Field  *string `json:"field,omitempty"`
+	Format *string `json:"format,omitempty"`
+	// Include Values to include.
+	// Accepts regular expressions and partitions.
+	Include TermsInclude `json:"include,omitempty"`
+	Meta    Metadata     `json:"meta,omitempty"`
+	// MinDocCount Only return values that are found in more than `min_doc_count` hits.
+	MinDocCount *int `json:"min_doc_count,omitempty"`
+	// Missing The value to apply to documents that do not have a value.
+	// By default, documents without a value are ignored.
+	Missing       Missing                    `json:"missing,omitempty"`
+	MissingBucket *bool                      `json:"missing_bucket,omitempty"`
+	MissingOrder  *missingorder.MissingOrder `json:"missing_order,omitempty"`
+	Name          *string                    `json:"name,omitempty"`
+	// Order Specifies the sort order of the buckets.
+	// Defaults to sorting by descending document count.
+	Order  AggregateOrder `json:"order,omitempty"`
+	Script Script         `json:"script,omitempty"`
+	// ShardSize The number of candidate terms produced by each shard.
+	// By default, `shard_size` will be automatically estimated based on the number
+	// of shards and the `size` parameter.
+	ShardSize *int `json:"shard_size,omitempty"`
+	// ShowTermDocCountError Set to `true` to return the `doc_count_error_upper_bound`, which is an upper
+	// bound to the error on the `doc_count` returned by each shard.
+	ShowTermDocCountError *bool `json:"show_term_doc_count_error,omitempty"`
+	// Size The number of buckets returned out of the overall terms list.
+	Size *int `json:"size,omitempty"`
+	// ValueType Coerced unmapped fields into the specified type.
+	ValueType *string `json:"value_type,omitempty"`
 }
 
 func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -77,8 +99,19 @@ func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "exclude":
-			if err := dec.Decode(&s.Exclude); err != nil {
-				return err
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			if !bytes.HasPrefix(rawMsg, []byte("[")) {
+				o := new(string)
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
+					return err
+				}
+
+				s.Exclude = append(s.Exclude, *o)
+			} else {
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Exclude); err != nil {
+					return err
+				}
 			}
 
 		case "execution_hint":
@@ -92,9 +125,16 @@ func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "format":
-			if err := dec.Decode(&s.Format); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Format = &o
 
 		case "include":
 			if err := dec.Decode(&s.Include); err != nil {
@@ -107,8 +147,19 @@ func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "min_doc_count":
-			if err := dec.Decode(&s.MinDocCount); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MinDocCount = &value
+			case float64:
+				f := int(v)
+				s.MinDocCount = &f
 			}
 
 		case "missing":
@@ -117,8 +168,17 @@ func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "missing_bucket":
-			if err := dec.Decode(&s.MissingBucket); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.MissingBucket = &value
+			case bool:
+				s.MissingBucket = &v
 			}
 
 		case "missing_order":
@@ -127,9 +187,16 @@ func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "name":
-			if err := dec.Decode(&s.Name); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
 
 		case "order":
 
@@ -138,15 +205,17 @@ func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
 			source := bytes.NewReader(rawMsg)
 			localDec := json.NewDecoder(source)
 			switch rawMsg[0] {
-
 			case '{':
 				o := make(map[string]sortorder.SortOrder, 0)
-				localDec.Decode(&o)
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
 				s.Order = o
-
 			case '[':
 				o := make([]map[string]sortorder.SortOrder, 0)
-				localDec.Decode(&o)
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
 				s.Order = o
 			}
 
@@ -156,24 +225,62 @@ func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "shard_size":
-			if err := dec.Decode(&s.ShardSize); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.ShardSize = &value
+			case float64:
+				f := int(v)
+				s.ShardSize = &f
 			}
 
 		case "show_term_doc_count_error":
-			if err := dec.Decode(&s.ShowTermDocCountError); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.ShowTermDocCountError = &value
+			case bool:
+				s.ShowTermDocCountError = &v
 			}
 
 		case "size":
-			if err := dec.Decode(&s.Size); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Size = &value
+			case float64:
+				f := int(v)
+				s.Size = &f
 			}
 
 		case "value_type":
-			if err := dec.Decode(&s.ValueType); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.ValueType = &o
 
 		}
 	}

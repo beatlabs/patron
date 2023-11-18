@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package explainlifecycle
 
@@ -31,7 +31,7 @@ import (
 
 // Response holds the response body struct for the package explainlifecycle
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ilm/explain_lifecycle/ExplainLifecycleResponse.ts#L24-L28
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ilm/explain_lifecycle/ExplainLifecycleResponse.ts#L24-L28
 
 type Response struct {
 	Indices map[string]types.LifecycleExplain `json:"indices"`
@@ -60,6 +60,9 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "indices":
+			if s.Indices == nil {
+				s.Indices = make(map[string]types.LifecycleExplain, 0)
+			}
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
@@ -83,9 +86,11 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 					}
 					s.Indices[key] = oo
 				default:
-					if err := dec.Decode(&s.Indices); err != nil {
+					oo := new(types.LifecycleExplain)
+					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}
+					s.Indices[key] = oo
 				}
 			}
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates an index with optional settings and mappings.
 package create
@@ -52,8 +52,9 @@ type Create struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -69,7 +70,7 @@ func NewCreateFunc(tp elastictransport.Interface) NewCreate {
 	return func(index string) *Create {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -77,13 +78,15 @@ func NewCreateFunc(tp elastictransport.Interface) NewCreate {
 
 // Creates an index with optional settings and mappings.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-create-index.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/indices-create-index.html
 func New(tp elastictransport.Interface) *Create {
 	r := &Create{
 		transport: tp,
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -113,9 +116,19 @@ func (r *Create) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -123,6 +136,7 @@ func (r *Create) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -201,13 +215,16 @@ func (r Create) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -220,35 +237,72 @@ func (r *Create) Header(key, value string) *Create {
 	return r
 }
 
-// Index The name of the index
+// Index Name of the index you wish to create.
 // API Name: index
-func (r *Create) Index(v string) *Create {
+func (r *Create) _index(index string) *Create {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *Create) MasterTimeout(v string) *Create {
-	r.values.Set("master_timeout", v)
+func (r *Create) MasterTimeout(duration string) *Create {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *Create) Timeout(v string) *Create {
-	r.values.Set("timeout", v)
+func (r *Create) Timeout(duration string) *Create {
+	r.values.Set("timeout", duration)
 
 	return r
 }
 
-// WaitForActiveShards Set the number of active shards to wait for before the operation returns.
+// WaitForActiveShards The number of shard copies that must be active before proceeding with the
+// operation.
+// Set to `all` or any positive integer up to the total number of shards in the
+// index (`number_of_replicas+1`).
 // API name: wait_for_active_shards
-func (r *Create) WaitForActiveShards(v string) *Create {
-	r.values.Set("wait_for_active_shards", v)
+func (r *Create) WaitForActiveShards(waitforactiveshards string) *Create {
+	r.values.Set("wait_for_active_shards", waitforactiveshards)
+
+	return r
+}
+
+// Aliases Aliases for the index.
+// API name: aliases
+func (r *Create) Aliases(aliases map[string]types.Alias) *Create {
+
+	r.req.Aliases = aliases
+
+	return r
+}
+
+// Mappings Mapping for fields in the index. If specified, this mapping can include:
+// - Field names
+// - Field data types
+// - Mapping parameters
+// API name: mappings
+func (r *Create) Mappings(mappings *types.TypeMapping) *Create {
+
+	r.req.Mappings = mappings
+
+	return r
+}
+
+// Settings Configuration options for the index.
+// API name: settings
+func (r *Create) Settings(settings *types.IndexSettings) *Create {
+
+	r.req.Settings = settings
 
 	return r
 }

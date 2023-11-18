@@ -16,26 +16,121 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 )
 
 // DateRangeAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/bucket.ts#L131-L138
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/bucket.ts#L268-L294
 type DateRangeAggregation struct {
-	Field    *string                    `json:"field,omitempty"`
-	Format   *string                    `json:"format,omitempty"`
-	Keyed    *bool                      `json:"keyed,omitempty"`
-	Meta     map[string]json.RawMessage `json:"meta,omitempty"`
-	Missing  Missing                    `json:"missing,omitempty"`
-	Name     *string                    `json:"name,omitempty"`
-	Ranges   []DateRangeExpression      `json:"ranges,omitempty"`
-	TimeZone *string                    `json:"time_zone,omitempty"`
+	// Field The date field whose values are use to build ranges.
+	Field *string `json:"field,omitempty"`
+	// Format The date format used to format `from` and `to` in the response.
+	Format *string `json:"format,omitempty"`
+	// Keyed Set to `true` to associate a unique string key with each bucket and returns
+	// the ranges as a hash rather than an array.
+	Keyed *bool    `json:"keyed,omitempty"`
+	Meta  Metadata `json:"meta,omitempty"`
+	// Missing The value to apply to documents that do not have a value.
+	// By default, documents without a value are ignored.
+	Missing Missing `json:"missing,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	// Ranges Array of date ranges.
+	Ranges []DateRangeExpression `json:"ranges,omitempty"`
+	// TimeZone Time zone used to convert dates from another time zone to UTC.
+	TimeZone *string `json:"time_zone,omitempty"`
+}
+
+func (s *DateRangeAggregation) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "field":
+			if err := dec.Decode(&s.Field); err != nil {
+				return err
+			}
+
+		case "format":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Format = &o
+
+		case "keyed":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Keyed = &value
+			case bool:
+				s.Keyed = &v
+			}
+
+		case "meta":
+			if err := dec.Decode(&s.Meta); err != nil {
+				return err
+			}
+
+		case "missing":
+			if err := dec.Decode(&s.Missing); err != nil {
+				return err
+			}
+
+		case "name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
+
+		case "ranges":
+			if err := dec.Decode(&s.Ranges); err != nil {
+				return err
+			}
+
+		case "time_zone":
+			if err := dec.Decode(&s.TimeZone); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewDateRangeAggregation returns a DateRangeAggregation.

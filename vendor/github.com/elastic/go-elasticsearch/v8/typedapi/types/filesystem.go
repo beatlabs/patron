@@ -16,18 +16,81 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // FileSystem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/Stats.ts#L286-L291
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/nodes/_types/Stats.ts#L698-L716
 type FileSystem struct {
-	Data      []DataPathStats  `json:"data,omitempty"`
-	IoStats   *IoStats         `json:"io_stats,omitempty"`
-	Timestamp *int64           `json:"timestamp,omitempty"`
-	Total     *FileSystemTotal `json:"total,omitempty"`
+	// Data List of all file stores.
+	Data []DataPathStats `json:"data,omitempty"`
+	// IoStats Contains I/O statistics for the node.
+	IoStats *IoStats `json:"io_stats,omitempty"`
+	// Timestamp Last time the file stores statistics were refreshed.
+	// Recorded in milliseconds since the Unix Epoch.
+	Timestamp *int64 `json:"timestamp,omitempty"`
+	// Total Contains statistics for all file stores of the node.
+	Total *FileSystemTotal `json:"total,omitempty"`
+}
+
+func (s *FileSystem) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "data":
+			if err := dec.Decode(&s.Data); err != nil {
+				return err
+			}
+
+		case "io_stats":
+			if err := dec.Decode(&s.IoStats); err != nil {
+				return err
+			}
+
+		case "timestamp":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Timestamp = &value
+			case float64:
+				f := int64(v)
+				s.Timestamp = &f
+			}
+
+		case "total":
+			if err := dec.Decode(&s.Total); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewFileSystem returns a FileSystem.

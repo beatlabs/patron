@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates a service account token for access without requiring basic
 // authentication.
@@ -36,7 +36,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 )
 
@@ -76,9 +75,9 @@ func NewCreateServiceTokenFunc(tp elastictransport.Interface) NewCreateServiceTo
 	return func(namespace, service string) *CreateServiceToken {
 		n := New(tp)
 
-		n.Namespace(namespace)
+		n._namespace(namespace)
 
-		n.Service(service)
+		n._service(service)
 
 		return n
 	}
@@ -209,13 +208,16 @@ func (r CreateServiceToken) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -251,27 +253,27 @@ func (r *CreateServiceToken) Header(key, value string) *CreateServiceToken {
 
 // Namespace An identifier for the namespace
 // API Name: namespace
-func (r *CreateServiceToken) Namespace(v string) *CreateServiceToken {
+func (r *CreateServiceToken) _namespace(namespace string) *CreateServiceToken {
 	r.paramSet |= namespaceMask
-	r.namespace = v
+	r.namespace = namespace
 
 	return r
 }
 
 // Service An identifier for the service name
 // API Name: service
-func (r *CreateServiceToken) Service(v string) *CreateServiceToken {
+func (r *CreateServiceToken) _service(service string) *CreateServiceToken {
 	r.paramSet |= serviceMask
-	r.service = v
+	r.service = service
 
 	return r
 }
 
 // Name An identifier for the token name
 // API Name: name
-func (r *CreateServiceToken) Name(v string) *CreateServiceToken {
+func (r *CreateServiceToken) Name(name string) *CreateServiceToken {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
@@ -280,8 +282,8 @@ func (r *CreateServiceToken) Name(v string) *CreateServiceToken {
 // search, if `wait_for` (the default) then wait for a refresh to make this
 // operation visible to search, if `false` then do nothing with refreshes.
 // API name: refresh
-func (r *CreateServiceToken) Refresh(enum refresh.Refresh) *CreateServiceToken {
-	r.values.Set("refresh", enum.String())
+func (r *CreateServiceToken) Refresh(refresh refresh.Refresh) *CreateServiceToken {
+	r.values.Set("refresh", refresh.String())
 
 	return r
 }

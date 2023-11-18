@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // MappingLimitSettingsTotalFields type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/_types/IndexSettings.ts#L417-L425
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/_types/IndexSettings.ts#L417-L425
 type MappingLimitSettingsTotalFields struct {
 	// Limit The maximum number of fields in an index. Field and object mappings, as well
 	// as field aliases count towards this limit.
@@ -31,6 +39,42 @@ type MappingLimitSettingsTotalFields struct {
 	// degradations and memory issues, especially in clusters with a high load or
 	// few resources.
 	Limit *int `json:"limit,omitempty"`
+}
+
+func (s *MappingLimitSettingsTotalFields) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "limit":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Limit = &value
+			case float64:
+				f := int(v)
+				s.Limit = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewMappingLimitSettingsTotalFields returns a MappingLimitSettingsTotalFields.

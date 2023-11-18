@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates or updates an alias.
 package putalias
@@ -54,8 +54,9 @@ type PutAlias struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -72,9 +73,9 @@ func NewPutAliasFunc(tp elastictransport.Interface) NewPutAlias {
 	return func(index, name string) *PutAlias {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -89,6 +90,8 @@ func New(tp elastictransport.Interface) *PutAlias {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -118,9 +121,19 @@ func (r *PutAlias) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -128,6 +141,7 @@ func (r *PutAlias) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -222,13 +236,16 @@ func (r PutAlias) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -241,37 +258,96 @@ func (r *PutAlias) Header(key, value string) *PutAlias {
 	return r
 }
 
-// Index A comma-separated list of index names the alias should point to (supports
-// wildcards); use `_all` to perform the operation on all indices.
+// Index Comma-separated list of data streams or indices to add.
+// Supports wildcards (`*`).
+// Wildcard patterns that match both data streams and indices return an error.
 // API Name: index
-func (r *PutAlias) Index(v string) *PutAlias {
+func (r *PutAlias) _index(index string) *PutAlias {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// Name The name of the alias to be created or updated
+// Name Alias to update.
+// If the alias doesn’t exist, the request creates it.
+// Index alias names support date math.
 // API Name: name
-func (r *PutAlias) Name(v string) *PutAlias {
+func (r *PutAlias) _name(name string) *PutAlias {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *PutAlias) MasterTimeout(v string) *PutAlias {
-	r.values.Set("master_timeout", v)
+func (r *PutAlias) MasterTimeout(duration string) *PutAlias {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit timestamp for the document
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *PutAlias) Timeout(v string) *PutAlias {
-	r.values.Set("timeout", v)
+func (r *PutAlias) Timeout(duration string) *PutAlias {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
+// Filter Query used to limit documents the alias can access.
+// API name: filter
+func (r *PutAlias) Filter(filter *types.Query) *PutAlias {
+
+	r.req.Filter = filter
+
+	return r
+}
+
+// IndexRouting Value used to route indexing operations to a specific shard.
+// If specified, this overwrites the `routing` value for indexing operations.
+// Data stream aliases don’t support this parameter.
+// API name: index_routing
+func (r *PutAlias) IndexRouting(routing string) *PutAlias {
+	r.req.IndexRouting = &routing
+
+	return r
+}
+
+// IsWriteIndex If `true`, sets the write index or data stream for the alias.
+// If an alias points to multiple indices or data streams and `is_write_index`
+// isn’t set, the alias rejects write requests.
+// If an index alias points to one index and `is_write_index` isn’t set, the
+// index automatically acts as the write index.
+// Data stream aliases don’t automatically set a write data stream, even if the
+// alias points to one data stream.
+// API name: is_write_index
+func (r *PutAlias) IsWriteIndex(iswriteindex bool) *PutAlias {
+	r.req.IsWriteIndex = &iswriteindex
+
+	return r
+}
+
+// Routing Value used to route indexing and search operations to a specific shard.
+// Data stream aliases don’t support this parameter.
+// API name: routing
+func (r *PutAlias) Routing(routing string) *PutAlias {
+	r.req.Routing = &routing
+
+	return r
+}
+
+// SearchRouting Value used to route search operations to a specific shard.
+// If specified, this overwrites the `routing` value for search operations.
+// Data stream aliases don’t support this parameter.
+// API name: search_routing
+func (r *PutAlias) SearchRouting(routing string) *PutAlias {
+	r.req.SearchRouting = &routing
 
 	return r
 }

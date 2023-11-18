@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.7.0: DO NOT EDIT
+// Code generated from specification version 8.11.0: DO NOT EDIT
 
 package esapi
 
@@ -41,16 +41,17 @@ func newIndicesGetIndexTemplateFunc(t Transport) IndicesGetIndexTemplate {
 
 // IndicesGetIndexTemplate returns an index template.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-templates.html.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-get-template.html.
 type IndicesGetIndexTemplate func(o ...func(*IndicesGetIndexTemplateRequest)) (*Response, error)
 
 // IndicesGetIndexTemplateRequest configures the Indices Get Index Template API request.
 type IndicesGetIndexTemplateRequest struct {
 	Name string
 
-	FlatSettings  *bool
-	Local         *bool
-	MasterTimeout time.Duration
+	FlatSettings    *bool
+	IncludeDefaults *bool
+	Local           *bool
+	MasterTimeout   time.Duration
 
 	Pretty     bool
 	Human      bool
@@ -85,6 +86,10 @@ func (r IndicesGetIndexTemplateRequest) Do(ctx context.Context, transport Transp
 
 	if r.FlatSettings != nil {
 		params["flat_settings"] = strconv.FormatBool(*r.FlatSettings)
+	}
+
+	if r.IncludeDefaults != nil {
+		params["include_defaults"] = strconv.FormatBool(*r.IncludeDefaults)
 	}
 
 	if r.Local != nil {
@@ -172,6 +177,13 @@ func (f IndicesGetIndexTemplate) WithName(v string) func(*IndicesGetIndexTemplat
 func (f IndicesGetIndexTemplate) WithFlatSettings(v bool) func(*IndicesGetIndexTemplateRequest) {
 	return func(r *IndicesGetIndexTemplateRequest) {
 		r.FlatSettings = &v
+	}
+}
+
+// WithIncludeDefaults - return all relevant default configurations for the index template (default: false).
+func (f IndicesGetIndexTemplate) WithIncludeDefaults(v bool) func(*IndicesGetIndexTemplateRequest) {
+	return func(r *IndicesGetIndexTemplateRequest) {
+		r.IncludeDefaults = &v
 	}
 }
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package datastreamsstats
 
@@ -26,15 +26,23 @@ import (
 
 // Response holds the response body struct for the package datastreamsstats
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/data_streams_stats/IndicesDataStreamsStatsResponse.ts#L25-L34
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/data_streams_stats/IndicesDataStreamsStatsResponse.ts#L25-L43
 
 type Response struct {
-	BackingIndices      int                          `json:"backing_indices"`
-	DataStreamCount     int                          `json:"data_stream_count"`
-	DataStreams         []types.DataStreamsStatsItem `json:"data_streams"`
-	Shards_             types.ShardStatistics        `json:"_shards"`
-	TotalStoreSizeBytes int                          `json:"total_store_size_bytes"`
-	TotalStoreSizes     types.ByteSize               `json:"total_store_sizes,omitempty"`
+
+	// BackingIndices Total number of backing indices for the selected data streams.
+	BackingIndices int `json:"backing_indices"`
+	// DataStreamCount Total number of selected data streams.
+	DataStreamCount int `json:"data_stream_count"`
+	// DataStreams Contains statistics for the selected data streams.
+	DataStreams []types.DataStreamsStatsItem `json:"data_streams"`
+	// Shards_ Contains information about shards that attempted to execute the request.
+	Shards_ types.ShardStatistics `json:"_shards"`
+	// TotalStoreSizeBytes Total size, in bytes, of all shards for the selected data streams.
+	TotalStoreSizeBytes int `json:"total_store_size_bytes"`
+	// TotalStoreSizes Total size of all shards for the selected data streams.
+	// This property is included only if the `human` query parameter is `true`
+	TotalStoreSizes types.ByteSize `json:"total_store_sizes,omitempty"`
 }
 
 // NewResponse returns a Response

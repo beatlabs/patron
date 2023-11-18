@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // DataTiers type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/xpack/usage/types.ts#L333-L340
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/xpack/usage/types.ts#L339-L349
 type DataTiers struct {
 	Available   bool                     `json:"available"`
 	DataCold    DataTierPhaseStatistics  `json:"data_cold"`
@@ -31,6 +39,79 @@ type DataTiers struct {
 	DataHot     DataTierPhaseStatistics  `json:"data_hot"`
 	DataWarm    DataTierPhaseStatistics  `json:"data_warm"`
 	Enabled     bool                     `json:"enabled"`
+}
+
+func (s *DataTiers) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "available":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Available = value
+			case bool:
+				s.Available = v
+			}
+
+		case "data_cold":
+			if err := dec.Decode(&s.DataCold); err != nil {
+				return err
+			}
+
+		case "data_content":
+			if err := dec.Decode(&s.DataContent); err != nil {
+				return err
+			}
+
+		case "data_frozen":
+			if err := dec.Decode(&s.DataFrozen); err != nil {
+				return err
+			}
+
+		case "data_hot":
+			if err := dec.Decode(&s.DataHot); err != nil {
+				return err
+			}
+
+		case "data_warm":
+			if err := dec.Decode(&s.DataWarm); err != nil {
+				return err
+			}
+
+		case "enabled":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Enabled = value
+			case bool:
+				s.Enabled = v
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewDataTiers returns a DataTiers.

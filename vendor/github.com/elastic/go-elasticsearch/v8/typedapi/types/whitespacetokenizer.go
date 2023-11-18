@@ -16,24 +16,90 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // WhitespaceTokenizer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/tokenizers.ts#L114-L117
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/tokenizers.ts#L115-L118
 type WhitespaceTokenizer struct {
 	MaxTokenLength *int    `json:"max_token_length,omitempty"`
 	Type           string  `json:"type,omitempty"`
 	Version        *string `json:"version,omitempty"`
 }
 
+func (s *WhitespaceTokenizer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "max_token_length":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxTokenLength = &value
+			case float64:
+				f := int(v)
+				s.MaxTokenLength = &f
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s WhitespaceTokenizer) MarshalJSON() ([]byte, error) {
+	type innerWhitespaceTokenizer WhitespaceTokenizer
+	tmp := innerWhitespaceTokenizer{
+		MaxTokenLength: s.MaxTokenLength,
+		Type:           s.Type,
+		Version:        s.Version,
+	}
+
+	tmp.Type = "whitespace"
+
+	return json.Marshal(tmp)
+}
+
 // NewWhitespaceTokenizer returns a WhitespaceTokenizer.
 func NewWhitespaceTokenizer() *WhitespaceTokenizer {
 	r := &WhitespaceTokenizer{}
-
-	r.Type = "whitespace"
 
 	return r
 }

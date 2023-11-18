@@ -16,22 +16,120 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // IntervalsQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/fulltext.ts#L116-L125
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/fulltext.ts#L235-L263
 type IntervalsQuery struct {
-	AllOf      *IntervalsAllOf    `json:"all_of,omitempty"`
-	AnyOf      *IntervalsAnyOf    `json:"any_of,omitempty"`
-	Boost      *float32           `json:"boost,omitempty"`
-	Fuzzy      *IntervalsFuzzy    `json:"fuzzy,omitempty"`
-	Match      *IntervalsMatch    `json:"match,omitempty"`
-	Prefix     *IntervalsPrefix   `json:"prefix,omitempty"`
-	QueryName_ *string            `json:"_name,omitempty"`
-	Wildcard   *IntervalsWildcard `json:"wildcard,omitempty"`
+	// AllOf Returns matches that span a combination of other rules.
+	AllOf *IntervalsAllOf `json:"all_of,omitempty"`
+	// AnyOf Returns intervals produced by any of its sub-rules.
+	AnyOf *IntervalsAnyOf `json:"any_of,omitempty"`
+	// Boost Floating point number used to decrease or increase the relevance scores of
+	// the query.
+	// Boost values are relative to the default value of 1.0.
+	// A boost value between 0 and 1.0 decreases the relevance score.
+	// A value greater than 1.0 increases the relevance score.
+	Boost *float32 `json:"boost,omitempty"`
+	// Fuzzy Matches terms that are similar to the provided term, within an edit distance
+	// defined by `fuzziness`.
+	Fuzzy *IntervalsFuzzy `json:"fuzzy,omitempty"`
+	// Match Matches analyzed text.
+	Match *IntervalsMatch `json:"match,omitempty"`
+	// Prefix Matches terms that start with a specified set of characters.
+	Prefix     *IntervalsPrefix `json:"prefix,omitempty"`
+	QueryName_ *string          `json:"_name,omitempty"`
+	// Wildcard Matches terms using a wildcard pattern.
+	Wildcard *IntervalsWildcard `json:"wildcard,omitempty"`
+}
+
+func (s *IntervalsQuery) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "all_of":
+			if err := dec.Decode(&s.AllOf); err != nil {
+				return err
+			}
+
+		case "any_of":
+			if err := dec.Decode(&s.AnyOf); err != nil {
+				return err
+			}
+
+		case "boost":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 32)
+				if err != nil {
+					return err
+				}
+				f := float32(value)
+				s.Boost = &f
+			case float64:
+				f := float32(v)
+				s.Boost = &f
+			}
+
+		case "fuzzy":
+			if err := dec.Decode(&s.Fuzzy); err != nil {
+				return err
+			}
+
+		case "match":
+			if err := dec.Decode(&s.Match); err != nil {
+				return err
+			}
+
+		case "prefix":
+			if err := dec.Decode(&s.Prefix); err != nil {
+				return err
+			}
+
+		case "_name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.QueryName_ = &o
+
+		case "wildcard":
+			if err := dec.Decode(&s.Wildcard); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewIntervalsQuery returns a IntervalsQuery.

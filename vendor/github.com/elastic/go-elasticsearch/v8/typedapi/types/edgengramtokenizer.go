@@ -16,17 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tokenchar"
 )
 
 // EdgeNGramTokenizer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/tokenizers.ts#L30-L36
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/tokenizers.ts#L31-L37
 type EdgeNGramTokenizer struct {
 	CustomTokenChars *string               `json:"custom_token_chars,omitempty"`
 	MaxGram          int                   `json:"max_gram"`
@@ -36,11 +42,105 @@ type EdgeNGramTokenizer struct {
 	Version          *string               `json:"version,omitempty"`
 }
 
+func (s *EdgeNGramTokenizer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "custom_token_chars":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.CustomTokenChars = &o
+
+		case "max_gram":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxGram = value
+			case float64:
+				f := int(v)
+				s.MaxGram = f
+			}
+
+		case "min_gram":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MinGram = value
+			case float64:
+				f := int(v)
+				s.MinGram = f
+			}
+
+		case "token_chars":
+			if err := dec.Decode(&s.TokenChars); err != nil {
+				return err
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s EdgeNGramTokenizer) MarshalJSON() ([]byte, error) {
+	type innerEdgeNGramTokenizer EdgeNGramTokenizer
+	tmp := innerEdgeNGramTokenizer{
+		CustomTokenChars: s.CustomTokenChars,
+		MaxGram:          s.MaxGram,
+		MinGram:          s.MinGram,
+		TokenChars:       s.TokenChars,
+		Type:             s.Type,
+		Version:          s.Version,
+	}
+
+	tmp.Type = "edge_ngram"
+
+	return json.Marshal(tmp)
+}
+
 // NewEdgeNGramTokenizer returns a EdgeNGramTokenizer.
 func NewEdgeNGramTokenizer() *EdgeNGramTokenizer {
 	r := &EdgeNGramTokenizer{}
-
-	r.Type = "edge_ngram"
 
 	return r
 }

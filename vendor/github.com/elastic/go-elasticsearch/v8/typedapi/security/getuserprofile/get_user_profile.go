@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves user profiles for the given unique ID(s).
 package getuserprofile
@@ -67,7 +67,7 @@ func NewGetUserProfileFunc(tp elastictransport.Interface) NewGetUserProfile {
 	return func(uid string) *GetUserProfile {
 		n := New(tp)
 
-		n.Uid(uid)
+		n._uid(uid)
 
 		return n
 	}
@@ -170,13 +170,16 @@ func (r GetUserProfile) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -212,9 +215,9 @@ func (r *GetUserProfile) Header(key, value string) *GetUserProfile {
 
 // Uid A unique identifier for the user profile.
 // API Name: uid
-func (r *GetUserProfile) Uid(v ...string) *GetUserProfile {
+func (r *GetUserProfile) _uid(uids ...string) *GetUserProfile {
 	r.paramSet |= uidMask
-	r.uid = strings.Join(v, ",")
+	r.uid = strings.Join(uids, ",")
 
 	return r
 }
@@ -224,8 +227,12 @@ func (r *GetUserProfile) Uid(v ...string) *GetUserProfile {
 // use `data=<key>` to retrieve content nested under the specified `<key>`.
 // By default returns no `data` content.
 // API name: data
-func (r *GetUserProfile) Data(v string) *GetUserProfile {
-	r.values.Set("data", v)
+func (r *GetUserProfile) Data(data ...string) *GetUserProfile {
+	tmp := []string{}
+	for _, item := range data {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("data", strings.Join(tmp, ","))
 
 	return r
 }

@@ -16,11 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dfraftereffect"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dfrbasicmodel"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/normalization"
@@ -28,7 +30,7 @@ import (
 
 // SettingsSimilarityDfr type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/_types/IndexSettings.ts#L192-L197
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/_types/IndexSettings.ts#L192-L197
 type SettingsSimilarityDfr struct {
 	AfterEffect   dfraftereffect.DFRAfterEffect `json:"after_effect"`
 	BasicModel    dfrbasicmodel.DFRBasicModel   `json:"basic_model"`
@@ -36,11 +38,24 @@ type SettingsSimilarityDfr struct {
 	Type          string                        `json:"type,omitempty"`
 }
 
+// MarshalJSON override marshalling to include literal value
+func (s SettingsSimilarityDfr) MarshalJSON() ([]byte, error) {
+	type innerSettingsSimilarityDfr SettingsSimilarityDfr
+	tmp := innerSettingsSimilarityDfr{
+		AfterEffect:   s.AfterEffect,
+		BasicModel:    s.BasicModel,
+		Normalization: s.Normalization,
+		Type:          s.Type,
+	}
+
+	tmp.Type = "DFR"
+
+	return json.Marshal(tmp)
+}
+
 // NewSettingsSimilarityDfr returns a SettingsSimilarityDfr.
 func NewSettingsSimilarityDfr() *SettingsSimilarityDfr {
 	r := &SettingsSimilarityDfr{}
-
-	r.Type = "DFR"
 
 	return r
 }

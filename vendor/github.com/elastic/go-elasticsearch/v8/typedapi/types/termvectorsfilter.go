@@ -16,21 +16,171 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // TermVectorsFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/termvectors/types.ts#L49-L57
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/termvectors/types.ts#L49-L86
 type TermVectorsFilter struct {
-	MaxDocFreq    *int `json:"max_doc_freq,omitempty"`
-	MaxNumTerms   *int `json:"max_num_terms,omitempty"`
-	MaxTermFreq   *int `json:"max_term_freq,omitempty"`
+	// MaxDocFreq Ignore words which occur in more than this many docs.
+	// Defaults to unbounded.
+	MaxDocFreq *int `json:"max_doc_freq,omitempty"`
+	// MaxNumTerms Maximum number of terms that must be returned per field.
+	MaxNumTerms *int `json:"max_num_terms,omitempty"`
+	// MaxTermFreq Ignore words with more than this frequency in the source doc.
+	// Defaults to unbounded.
+	MaxTermFreq *int `json:"max_term_freq,omitempty"`
+	// MaxWordLength The maximum word length above which words will be ignored.
+	// Defaults to unbounded.
 	MaxWordLength *int `json:"max_word_length,omitempty"`
-	MinDocFreq    *int `json:"min_doc_freq,omitempty"`
-	MinTermFreq   *int `json:"min_term_freq,omitempty"`
+	// MinDocFreq Ignore terms which do not occur in at least this many docs.
+	MinDocFreq *int `json:"min_doc_freq,omitempty"`
+	// MinTermFreq Ignore words with less than this frequency in the source doc.
+	MinTermFreq *int `json:"min_term_freq,omitempty"`
+	// MinWordLength The minimum word length below which words will be ignored.
 	MinWordLength *int `json:"min_word_length,omitempty"`
+}
+
+func (s *TermVectorsFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "max_doc_freq":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxDocFreq = &value
+			case float64:
+				f := int(v)
+				s.MaxDocFreq = &f
+			}
+
+		case "max_num_terms":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxNumTerms = &value
+			case float64:
+				f := int(v)
+				s.MaxNumTerms = &f
+			}
+
+		case "max_term_freq":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxTermFreq = &value
+			case float64:
+				f := int(v)
+				s.MaxTermFreq = &f
+			}
+
+		case "max_word_length":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxWordLength = &value
+			case float64:
+				f := int(v)
+				s.MaxWordLength = &f
+			}
+
+		case "min_doc_freq":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MinDocFreq = &value
+			case float64:
+				f := int(v)
+				s.MinDocFreq = &f
+			}
+
+		case "min_term_freq":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MinTermFreq = &value
+			case float64:
+				f := int(v)
+				s.MinTermFreq = &f
+			}
+
+		case "min_word_length":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MinWordLength = &value
+			case float64:
+				f := int(v)
+				s.MinWordLength = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewTermVectorsFilter returns a TermVectorsFilter.

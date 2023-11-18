@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // KeywordMarkerTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/token_filters.ts#L230-L236
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/token_filters.ts#L231-L237
 type KeywordMarkerTokenFilter struct {
 	IgnoreCase      *bool    `json:"ignore_case,omitempty"`
 	Keywords        []string `json:"keywords,omitempty"`
@@ -32,11 +40,99 @@ type KeywordMarkerTokenFilter struct {
 	Version         *string  `json:"version,omitempty"`
 }
 
+func (s *KeywordMarkerTokenFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "ignore_case":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.IgnoreCase = &value
+			case bool:
+				s.IgnoreCase = &v
+			}
+
+		case "keywords":
+			if err := dec.Decode(&s.Keywords); err != nil {
+				return err
+			}
+
+		case "keywords_path":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.KeywordsPath = &o
+
+		case "keywords_pattern":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.KeywordsPattern = &o
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s KeywordMarkerTokenFilter) MarshalJSON() ([]byte, error) {
+	type innerKeywordMarkerTokenFilter KeywordMarkerTokenFilter
+	tmp := innerKeywordMarkerTokenFilter{
+		IgnoreCase:      s.IgnoreCase,
+		Keywords:        s.Keywords,
+		KeywordsPath:    s.KeywordsPath,
+		KeywordsPattern: s.KeywordsPattern,
+		Type:            s.Type,
+		Version:         s.Version,
+	}
+
+	tmp.Type = "keyword_marker"
+
+	return json.Marshal(tmp)
+}
+
 // NewKeywordMarkerTokenFilter returns a KeywordMarkerTokenFilter.
 func NewKeywordMarkerTokenFilter() *KeywordMarkerTokenFilter {
 	r := &KeywordMarkerTokenFilter{}
-
-	r.Type = "keyword_marker"
 
 	return r
 }

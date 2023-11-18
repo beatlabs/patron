@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package cancel
 
@@ -31,7 +31,7 @@ import (
 
 // Response holds the response body struct for the package cancel
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/tasks/cancel/CancelTasksResponse.ts#L22-L24
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/tasks/cancel/CancelTasksResponse.ts#L22-L24
 
 type Response struct {
 	NodeFailures []types.ErrorCause `json:"node_failures,omitempty"`
@@ -73,6 +73,9 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 			}
 
 		case "nodes":
+			if s.Nodes == nil {
+				s.Nodes = make(map[string]types.NodeTasks, 0)
+			}
 			if err := dec.Decode(&s.Nodes); err != nil {
 				return err
 			}
@@ -83,8 +86,24 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 			}
 
 		case "tasks":
-			if err := dec.Decode(&s.Tasks); err != nil {
-				return err
+
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			source := bytes.NewReader(rawMsg)
+			localDec := json.NewDecoder(source)
+			switch rawMsg[0] {
+			case '{':
+				o := make(map[string]types.ParentTaskInfo, 0)
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.Tasks = o
+			case '[':
+				o := []types.TaskInfo{}
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.Tasks = o
 			}
 
 		}

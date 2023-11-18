@@ -16,23 +16,73 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/followerindexstatus"
 )
 
 // FollowerIndex type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ccr/follow_info/types.ts#L22-L28
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ccr/follow_info/types.ts#L22-L28
 type FollowerIndex struct {
 	FollowerIndex string                                  `json:"follower_index"`
 	LeaderIndex   string                                  `json:"leader_index"`
 	Parameters    *FollowerIndexParameters                `json:"parameters,omitempty"`
 	RemoteCluster string                                  `json:"remote_cluster"`
 	Status        followerindexstatus.FollowerIndexStatus `json:"status"`
+}
+
+func (s *FollowerIndex) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "follower_index":
+			if err := dec.Decode(&s.FollowerIndex); err != nil {
+				return err
+			}
+
+		case "leader_index":
+			if err := dec.Decode(&s.LeaderIndex); err != nil {
+				return err
+			}
+
+		case "parameters":
+			if err := dec.Decode(&s.Parameters); err != nil {
+				return err
+			}
+
+		case "remote_cluster":
+			if err := dec.Decode(&s.RemoteCluster); err != nil {
+				return err
+			}
+
+		case "status":
+			if err := dec.Decode(&s.Status); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewFollowerIndex returns a FollowerIndex.

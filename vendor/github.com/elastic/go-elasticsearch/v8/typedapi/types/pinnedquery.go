@@ -16,19 +16,101 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // PinnedQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/specialized.ts#L122-L130
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/specialized.ts#L232-L251
 type PinnedQuery struct {
-	Boost      *float32    `json:"boost,omitempty"`
-	Docs       []PinnedDoc `json:"docs,omitempty"`
-	Ids        []string    `json:"ids,omitempty"`
-	Organic    *Query      `json:"organic,omitempty"`
-	QueryName_ *string     `json:"_name,omitempty"`
+	// Boost Floating point number used to decrease or increase the relevance scores of
+	// the query.
+	// Boost values are relative to the default value of 1.0.
+	// A boost value between 0 and 1.0 decreases the relevance score.
+	// A value greater than 1.0 increases the relevance score.
+	Boost *float32 `json:"boost,omitempty"`
+	// Docs Documents listed in the order they are to appear in results.
+	// Required if `ids` is not specified.
+	Docs []PinnedDoc `json:"docs,omitempty"`
+	// Ids Document IDs listed in the order they are to appear in results.
+	// Required if `docs` is not specified.
+	Ids []string `json:"ids,omitempty"`
+	// Organic Any choice of query used to rank documents which will be ranked below the
+	// "pinned" documents.
+	Organic    *Query  `json:"organic,omitempty"`
+	QueryName_ *string `json:"_name,omitempty"`
+}
+
+func (s *PinnedQuery) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "boost":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 32)
+				if err != nil {
+					return err
+				}
+				f := float32(value)
+				s.Boost = &f
+			case float64:
+				f := float32(v)
+				s.Boost = &f
+			}
+
+		case "docs":
+			if err := dec.Decode(&s.Docs); err != nil {
+				return err
+			}
+
+		case "ids":
+			if err := dec.Decode(&s.Ids); err != nil {
+				return err
+			}
+
+		case "organic":
+			if err := dec.Decode(&s.Organic); err != nil {
+				return err
+			}
+
+		case "_name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.QueryName_ = &o
+
+		}
+	}
+	return nil
 }
 
 // NewPinnedQuery returns a PinnedQuery.

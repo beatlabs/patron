@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates a data stream
 package createdatastream
@@ -67,7 +67,7 @@ func NewCreateDataStreamFunc(tp elastictransport.Interface) NewCreateDataStream 
 	return func(name string) *CreateDataStream {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -168,13 +168,16 @@ func (r CreateDataStream) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -208,11 +211,18 @@ func (r *CreateDataStream) Header(key, value string) *CreateDataStream {
 	return r
 }
 
-// Name The name of the data stream
+// Name Name of the data stream, which must meet the following criteria:
+// Lowercase only;
+// Cannot include `\`, `/`, `*`, `?`, `"`, `<`, `>`, `|`, `,`, `#`, `:`, or a
+// space character;
+// Cannot start with `-`, `_`, `+`, or `.ds-`;
+// Cannot be `.` or `..`;
+// Cannot be longer than 255 bytes. Multi-byte characters count towards this
+// limit faster.
 // API Name: name
-func (r *CreateDataStream) Name(v string) *CreateDataStream {
+func (r *CreateDataStream) _name(name string) *CreateDataStream {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }

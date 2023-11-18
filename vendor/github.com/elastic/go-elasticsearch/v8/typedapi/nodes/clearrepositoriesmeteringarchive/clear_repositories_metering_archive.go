@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Removes the archived repositories metering information present in the
 // cluster.
@@ -71,9 +71,9 @@ func NewClearRepositoriesMeteringArchiveFunc(tp elastictransport.Interface) NewC
 	return func(nodeid, maxarchiveversion string) *ClearRepositoriesMeteringArchive {
 		n := New(tp)
 
-		n.NodeId(nodeid)
+		n._nodeid(nodeid)
 
-		n.MaxArchiveVersion(maxarchiveversion)
+		n._maxarchiveversion(maxarchiveversion)
 
 		return n
 	}
@@ -180,13 +180,16 @@ func (r ClearRepositoriesMeteringArchive) Do(ctx context.Context) (*Response, er
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -224,9 +227,9 @@ func (r *ClearRepositoriesMeteringArchive) Header(key, value string) *ClearRepos
 // All the nodes selective options are explained
 // [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster.html#cluster-nodes).
 // API Name: nodeid
-func (r *ClearRepositoriesMeteringArchive) NodeId(v string) *ClearRepositoriesMeteringArchive {
+func (r *ClearRepositoriesMeteringArchive) _nodeid(nodeid string) *ClearRepositoriesMeteringArchive {
 	r.paramSet |= nodeidMask
-	r.nodeid = v
+	r.nodeid = nodeid
 
 	return r
 }
@@ -235,9 +238,9 @@ func (r *ClearRepositoriesMeteringArchive) NodeId(v string) *ClearRepositoriesMe
 // [archive_version](https://www.elastic.co/guide/en/elasticsearch/reference/current/get-repositories-metering-api.html#get-repositories-metering-api-response-body)
 // to be cleared from the archive.
 // API Name: maxarchiveversion
-func (r *ClearRepositoriesMeteringArchive) MaxArchiveVersion(v string) *ClearRepositoriesMeteringArchive {
+func (r *ClearRepositoriesMeteringArchive) _maxarchiveversion(maxarchiveversion string) *ClearRepositoriesMeteringArchive {
 	r.paramSet |= maxarchiveversionMask
-	r.maxarchiveversion = v
+	r.maxarchiveversion = maxarchiveversion
 
 	return r
 }

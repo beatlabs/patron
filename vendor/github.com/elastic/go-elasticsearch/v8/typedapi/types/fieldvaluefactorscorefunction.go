@@ -16,22 +16,96 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/fieldvaluefactormodifier"
 )
 
 // FieldValueFactorScoreFunction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/compound.ts#L70-L75
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/compound.ts#L132-L151
 type FieldValueFactorScoreFunction struct {
-	Factor   *Float64                                           `json:"factor,omitempty"`
-	Field    string                                             `json:"field"`
-	Missing  *Float64                                           `json:"missing,omitempty"`
+	// Factor Optional factor to multiply the field value with.
+	Factor *Float64 `json:"factor,omitempty"`
+	// Field Field to be extracted from the document.
+	Field string `json:"field"`
+	// Missing Value used if the document doesn’t have that field.
+	// The modifier and factor are still applied to it as though it were read from
+	// the document.
+	Missing *Float64 `json:"missing,omitempty"`
+	// Modifier Modifier to apply to the field value.
 	Modifier *fieldvaluefactormodifier.FieldValueFactorModifier `json:"modifier,omitempty"`
+}
+
+func (s *FieldValueFactorScoreFunction) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "factor":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.Factor = &f
+			case float64:
+				f := Float64(v)
+				s.Factor = &f
+			}
+
+		case "field":
+			if err := dec.Decode(&s.Field); err != nil {
+				return err
+			}
+
+		case "missing":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.Missing = &f
+			case float64:
+				f := Float64(v)
+				s.Missing = &f
+			}
+
+		case "modifier":
+			if err := dec.Decode(&s.Modifier); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewFieldValueFactorScoreFunction returns a FieldValueFactorScoreFunction.

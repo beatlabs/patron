@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns a pipeline.
 package getpipeline
@@ -176,13 +176,16 @@ func (r GetPipeline) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -216,27 +219,31 @@ func (r *GetPipeline) Header(key, value string) *GetPipeline {
 	return r
 }
 
-// Id Comma separated list of pipeline ids. Wildcards supported
+// Id Comma-separated list of pipeline IDs to retrieve.
+// Wildcard (`*`) expressions are supported.
+// To get all ingest pipelines, omit this parameter or use `*`.
 // API Name: id
-func (r *GetPipeline) Id(v string) *GetPipeline {
+func (r *GetPipeline) Id(id string) *GetPipeline {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
-// MasterTimeout Explicit operation timeout for connection to master node
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *GetPipeline) MasterTimeout(v string) *GetPipeline {
-	r.values.Set("master_timeout", v)
+func (r *GetPipeline) MasterTimeout(duration string) *GetPipeline {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
 // Summary Return pipelines without their definitions (default: false)
 // API name: summary
-func (r *GetPipeline) Summary(b bool) *GetPipeline {
-	r.values.Set("summary", strconv.FormatBool(b))
+func (r *GetPipeline) Summary(summary bool) *GetPipeline {
+	r.values.Set("summary", strconv.FormatBool(summary))
 
 	return r
 }

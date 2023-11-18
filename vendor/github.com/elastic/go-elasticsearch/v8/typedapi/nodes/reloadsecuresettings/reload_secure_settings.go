@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Reloads secure settings.
 package reloadsecuresettings
@@ -52,8 +52,9 @@ type ReloadSecureSettings struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -82,6 +83,8 @@ func New(tp elastictransport.Interface) *ReloadSecureSettings {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -111,9 +114,19 @@ func (r *ReloadSecureSettings) HttpRequest(ctx context.Context) (*http.Request, 
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -121,6 +134,7 @@ func (r *ReloadSecureSettings) HttpRequest(ctx context.Context) (*http.Request, 
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -210,13 +224,16 @@ func (r ReloadSecureSettings) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -229,20 +246,29 @@ func (r *ReloadSecureSettings) Header(key, value string) *ReloadSecureSettings {
 	return r
 }
 
-// NodeId A comma-separated list of node IDs to span the reload/reinit call. Should
-// stay empty because reloading usually involves all cluster nodes.
+// NodeId The names of particular nodes in the cluster to target.
 // API Name: nodeid
-func (r *ReloadSecureSettings) NodeId(v string) *ReloadSecureSettings {
+func (r *ReloadSecureSettings) NodeId(nodeid string) *ReloadSecureSettings {
 	r.paramSet |= nodeidMask
-	r.nodeid = v
+	r.nodeid = nodeid
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *ReloadSecureSettings) Timeout(v string) *ReloadSecureSettings {
-	r.values.Set("timeout", v)
+func (r *ReloadSecureSettings) Timeout(duration string) *ReloadSecureSettings {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
+// SecureSettingsPassword The password for the Elasticsearch keystore.
+// API name: secure_settings_password
+func (r *ReloadSecureSettings) SecureSettingsPassword(password string) *ReloadSecureSettings {
+	r.req.SecureSettingsPassword = &password
 
 	return r
 }

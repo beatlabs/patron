@@ -16,18 +16,27 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 // DataframeOutlierDetectionSummary type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/evaluate_data_frame/types.ts#L24-L29
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/evaluate_data_frame/types.ts#L24-L42
 type DataframeOutlierDetectionSummary struct {
-	AucRoc          *DataframeEvaluationSummaryAucRoc   `json:"auc_roc,omitempty"`
+	// AucRoc The AUC ROC (area under the curve of the receiver operating characteristic)
+	// score and optionally the curve.
+	AucRoc *DataframeEvaluationSummaryAucRoc `json:"auc_roc,omitempty"`
+	// ConfusionMatrix Set the different thresholds of the outlier score at where the metrics (`tp`
+	// - true positive, `fp` - false positive, `tn` - true negative, `fn` - false
+	// negative) are calculated.
 	ConfusionMatrix map[string]ConfusionMatrixThreshold `json:"confusion_matrix,omitempty"`
-	Precision       map[string]Float64                  `json:"precision,omitempty"`
-	Recall          map[string]Float64                  `json:"recall,omitempty"`
+	// Precision Set the different thresholds of the outlier score at where the metric is
+	// calculated.
+	Precision map[string]Float64 `json:"precision,omitempty"`
+	// Recall Set the different thresholds of the outlier score at where the metric is
+	// calculated.
+	Recall map[string]Float64 `json:"recall,omitempty"`
 }
 
 // NewDataframeOutlierDetectionSummary returns a DataframeOutlierDetectionSummary.

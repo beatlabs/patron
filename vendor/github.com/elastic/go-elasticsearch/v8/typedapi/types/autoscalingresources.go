@@ -16,16 +16,76 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // AutoscalingResources type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/autoscaling/get_autoscaling_capacity/GetAutoscalingCapacityResponse.ts#L43-L46
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/autoscaling/get_autoscaling_capacity/GetAutoscalingCapacityResponse.ts#L43-L46
 type AutoscalingResources struct {
 	Memory  int `json:"memory"`
 	Storage int `json:"storage"`
+}
+
+func (s *AutoscalingResources) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "memory":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Memory = value
+			case float64:
+				f := int(v)
+				s.Memory = f
+			}
+
+		case "storage":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Storage = value
+			case float64:
+				f := int(v)
+				s.Storage = f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewAutoscalingResources returns a AutoscalingResources.

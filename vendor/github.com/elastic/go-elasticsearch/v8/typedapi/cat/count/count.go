@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Provides quick access to the document count of the entire cluster, or
 // individual indices.
@@ -177,13 +177,16 @@ func (r Count) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -217,11 +220,14 @@ func (r *Count) Header(key, value string) *Count {
 	return r
 }
 
-// Index A comma-separated list of index names to limit the returned information
+// Index Comma-separated list of data streams, indices, and aliases used to limit the
+// request.
+// Supports wildcards (`*`). To target all data streams and indices, omit this
+// parameter or use `*` or `_all`.
 // API Name: index
-func (r *Count) Index(v string) *Count {
+func (r *Count) Index(index string) *Count {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }

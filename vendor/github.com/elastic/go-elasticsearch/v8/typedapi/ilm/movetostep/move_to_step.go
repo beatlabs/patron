@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Manually moves an index into the specified step and executes that step.
 package movetostep
@@ -52,8 +52,9 @@ type MoveToStep struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -69,7 +70,7 @@ func NewMoveToStepFunc(tp elastictransport.Interface) NewMoveToStep {
 	return func(index string) *MoveToStep {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -84,6 +85,8 @@ func New(tp elastictransport.Interface) *MoveToStep {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -113,9 +116,19 @@ func (r *MoveToStep) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -123,6 +136,7 @@ func (r *MoveToStep) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -205,13 +219,16 @@ func (r MoveToStep) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -226,9 +243,25 @@ func (r *MoveToStep) Header(key, value string) *MoveToStep {
 
 // Index The name of the index whose lifecycle step is to change
 // API Name: index
-func (r *MoveToStep) Index(v string) *MoveToStep {
+func (r *MoveToStep) _index(index string) *MoveToStep {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
+
+	return r
+}
+
+// API name: current_step
+func (r *MoveToStep) CurrentStep(currentstep *types.StepKey) *MoveToStep {
+
+	r.req.CurrentStep = currentstep
+
+	return r
+}
+
+// API name: next_step
+func (r *MoveToStep) NextStep(nextstep *types.StepKey) *MoveToStep {
+
+	r.req.NextStep = nextstep
 
 	return r
 }

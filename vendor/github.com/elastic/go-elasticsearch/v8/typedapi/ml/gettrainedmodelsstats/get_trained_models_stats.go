@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves usage information for trained inference models.
 package gettrainedmodelsstats
@@ -180,13 +180,16 @@ func (r GetTrainedModelsStats) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -223,9 +226,9 @@ func (r *GetTrainedModelsStats) Header(key, value string) *GetTrainedModelsStats
 // ModelId The unique identifier of the trained model or a model alias. It can be a
 // comma-separated list or a wildcard expression.
 // API Name: modelid
-func (r *GetTrainedModelsStats) ModelId(v string) *GetTrainedModelsStats {
+func (r *GetTrainedModelsStats) ModelId(modelid string) *GetTrainedModelsStats {
 	r.paramSet |= modelidMask
-	r.modelid = v
+	r.modelid = modelid
 
 	return r
 }
@@ -239,24 +242,24 @@ func (r *GetTrainedModelsStats) ModelId(v string) *GetTrainedModelsStats {
 // If true, it returns an empty array when there are no matches and the
 // subset of results when there are partial matches.
 // API name: allow_no_match
-func (r *GetTrainedModelsStats) AllowNoMatch(b bool) *GetTrainedModelsStats {
-	r.values.Set("allow_no_match", strconv.FormatBool(b))
+func (r *GetTrainedModelsStats) AllowNoMatch(allownomatch bool) *GetTrainedModelsStats {
+	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
 
 	return r
 }
 
 // From Skips the specified number of models.
 // API name: from
-func (r *GetTrainedModelsStats) From(i int) *GetTrainedModelsStats {
-	r.values.Set("from", strconv.Itoa(i))
+func (r *GetTrainedModelsStats) From(from int) *GetTrainedModelsStats {
+	r.values.Set("from", strconv.Itoa(from))
 
 	return r
 }
 
 // Size Specifies the maximum number of models to obtain.
 // API name: size
-func (r *GetTrainedModelsStats) Size(i int) *GetTrainedModelsStats {
-	r.values.Set("size", strconv.Itoa(i))
+func (r *GetTrainedModelsStats) Size(size int) *GetTrainedModelsStats {
+	r.values.Set("size", strconv.Itoa(size))
 
 	return r
 }

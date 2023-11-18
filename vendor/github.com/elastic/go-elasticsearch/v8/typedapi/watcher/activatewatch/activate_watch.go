@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Activates a currently inactive watch.
 package activatewatch
@@ -67,7 +67,7 @@ func NewActivateWatchFunc(tp elastictransport.Interface) NewActivateWatch {
 	return func(watchid string) *ActivateWatch {
 		n := New(tp)
 
-		n.WatchId(watchid)
+		n._watchid(watchid)
 
 		return n
 	}
@@ -172,13 +172,16 @@ func (r ActivateWatch) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -214,9 +217,9 @@ func (r *ActivateWatch) Header(key, value string) *ActivateWatch {
 
 // WatchId Watch ID
 // API Name: watchid
-func (r *ActivateWatch) WatchId(v string) *ActivateWatch {
+func (r *ActivateWatch) _watchid(watchid string) *ActivateWatch {
 	r.paramSet |= watchidMask
-	r.watchid = v
+	r.watchid = watchid
 
 	return r
 }

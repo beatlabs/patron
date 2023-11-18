@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Clear the cache of searchable snapshots.
 package clearcache
@@ -36,6 +36,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -180,13 +181,16 @@ func (r ClearCache) Do(ctx context.Context) (Response, error) {
 		}
 
 		return *response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -222,9 +226,9 @@ func (r *ClearCache) Header(key, value string) *ClearCache {
 
 // Index A comma-separated list of index names
 // API Name: index
-func (r *ClearCache) Index(v string) *ClearCache {
+func (r *ClearCache) Index(index string) *ClearCache {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
@@ -232,8 +236,12 @@ func (r *ClearCache) Index(v string) *ClearCache {
 // ExpandWildcards Whether to expand wildcard expression to concrete indices that are open,
 // closed or both.
 // API name: expand_wildcards
-func (r *ClearCache) ExpandWildcards(v string) *ClearCache {
-	r.values.Set("expand_wildcards", v)
+func (r *ClearCache) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *ClearCache {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
@@ -241,8 +249,8 @@ func (r *ClearCache) ExpandWildcards(v string) *ClearCache {
 // AllowNoIndices Whether to ignore if a wildcard indices expression resolves into no concrete
 // indices. (This includes `_all` string or when no indices have been specified)
 // API name: allow_no_indices
-func (r *ClearCache) AllowNoIndices(b bool) *ClearCache {
-	r.values.Set("allow_no_indices", strconv.FormatBool(b))
+func (r *ClearCache) AllowNoIndices(allownoindices bool) *ClearCache {
+	r.values.Set("allow_no_indices", strconv.FormatBool(allownoindices))
 
 	return r
 }
@@ -250,22 +258,22 @@ func (r *ClearCache) AllowNoIndices(b bool) *ClearCache {
 // IgnoreUnavailable Whether specified concrete indices should be ignored when unavailable
 // (missing or closed)
 // API name: ignore_unavailable
-func (r *ClearCache) IgnoreUnavailable(b bool) *ClearCache {
-	r.values.Set("ignore_unavailable", strconv.FormatBool(b))
+func (r *ClearCache) IgnoreUnavailable(ignoreunavailable bool) *ClearCache {
+	r.values.Set("ignore_unavailable", strconv.FormatBool(ignoreunavailable))
 
 	return r
 }
 
 // API name: pretty
-func (r *ClearCache) Pretty(b bool) *ClearCache {
-	r.values.Set("pretty", strconv.FormatBool(b))
+func (r *ClearCache) Pretty(pretty bool) *ClearCache {
+	r.values.Set("pretty", strconv.FormatBool(pretty))
 
 	return r
 }
 
 // API name: human
-func (r *ClearCache) Human(b bool) *ClearCache {
-	r.values.Set("human", strconv.FormatBool(b))
+func (r *ClearCache) Human(human bool) *ClearCache {
+	r.values.Set("human", strconv.FormatBool(human))
 
 	return r
 }

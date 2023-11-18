@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Reverts to a specific snapshot.
 package revertmodelsnapshot
@@ -30,7 +30,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
@@ -55,8 +54,9 @@ type RevertModelSnapshot struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -73,9 +73,9 @@ func NewRevertModelSnapshotFunc(tp elastictransport.Interface) NewRevertModelSna
 	return func(jobid, snapshotid string) *RevertModelSnapshot {
 		n := New(tp)
 
-		n.JobId(jobid)
+		n._jobid(jobid)
 
-		n.SnapshotId(snapshotid)
+		n._snapshotid(snapshotid)
 
 		return n
 	}
@@ -90,6 +90,8 @@ func New(tp elastictransport.Interface) *RevertModelSnapshot {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -119,9 +121,19 @@ func (r *RevertModelSnapshot) HttpRequest(ctx context.Context) (*http.Request, e
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -129,6 +141,7 @@ func (r *RevertModelSnapshot) HttpRequest(ctx context.Context) (*http.Request, e
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -218,13 +231,16 @@ func (r RevertModelSnapshot) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -239,9 +255,9 @@ func (r *RevertModelSnapshot) Header(key, value string) *RevertModelSnapshot {
 
 // JobId Identifier for the anomaly detection job.
 // API Name: jobid
-func (r *RevertModelSnapshot) JobId(v string) *RevertModelSnapshot {
+func (r *RevertModelSnapshot) _jobid(jobid string) *RevertModelSnapshot {
 	r.paramSet |= jobidMask
-	r.jobid = v
+	r.jobid = jobid
 
 	return r
 }
@@ -250,22 +266,18 @@ func (r *RevertModelSnapshot) JobId(v string) *RevertModelSnapshot {
 // snapshot means the anomaly detection job starts learning a new model from
 // scratch when it is started.
 // API Name: snapshotid
-func (r *RevertModelSnapshot) SnapshotId(v string) *RevertModelSnapshot {
+func (r *RevertModelSnapshot) _snapshotid(snapshotid string) *RevertModelSnapshot {
 	r.paramSet |= snapshotidMask
-	r.snapshotid = v
+	r.snapshotid = snapshotid
 
 	return r
 }
 
-// DeleteInterveningResults If true, deletes the results in the time period between the latest
-// results and the time of the reverted snapshot. It also resets the model
-// to accept records for this time period. If you choose not to delete
-// intervening results when reverting a snapshot, the job will not accept
-// input data that is older than the current time. If you want to resend
-// data, then delete the intervening results.
+// DeleteInterveningResults Refer to the description for the `delete_intervening_results` query
+// parameter.
 // API name: delete_intervening_results
-func (r *RevertModelSnapshot) DeleteInterveningResults(b bool) *RevertModelSnapshot {
-	r.values.Set("delete_intervening_results", strconv.FormatBool(b))
+func (r *RevertModelSnapshot) DeleteInterveningResults(deleteinterveningresults bool) *RevertModelSnapshot {
+	r.req.DeleteInterveningResults = &deleteinterveningresults
 
 	return r
 }

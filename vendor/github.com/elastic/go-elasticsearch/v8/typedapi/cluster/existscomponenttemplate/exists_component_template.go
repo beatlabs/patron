@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about whether a particular component template exist
 package existscomponenttemplate
@@ -24,7 +24,6 @@ package existscomponenttemplate
 import (
 	gobytes "bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -35,7 +34,6 @@ import (
 	"strings"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 const (
@@ -68,7 +66,7 @@ func NewExistsComponentTemplateFunc(tp elastictransport.Interface) NewExistsComp
 	return func(name string) *ExistsComponentTemplate {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -152,33 +150,8 @@ func (r ExistsComponentTemplate) Perform(ctx context.Context) (*http.Response, e
 }
 
 // Do runs the request through the transport, handle the response and returns a existscomponenttemplate.Response
-func (r ExistsComponentTemplate) Do(ctx context.Context) (*Response, error) {
-
-	response := NewResponse()
-
-	res, err := r.Perform(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode < 299 {
-		err = json.NewDecoder(res.Body).Decode(response)
-		if err != nil {
-			return nil, err
-		}
-
-		return response, nil
-
-	}
-
-	errorResponse := types.NewElasticsearchError()
-	err = json.NewDecoder(res.Body).Decode(errorResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, errorResponse
+func (r ExistsComponentTemplate) Do(ctx context.Context) (bool, error) {
+	return r.IsSuccess(ctx)
 }
 
 // IsSuccess allows to run a query with a context and retrieve the result as a boolean.
@@ -212,9 +185,9 @@ func (r *ExistsComponentTemplate) Header(key, value string) *ExistsComponentTemp
 // Name Comma-separated list of component template names used to limit the request.
 // Wildcard (*) expressions are supported.
 // API Name: name
-func (r *ExistsComponentTemplate) Name(v string) *ExistsComponentTemplate {
+func (r *ExistsComponentTemplate) _name(name string) *ExistsComponentTemplate {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
@@ -223,8 +196,8 @@ func (r *ExistsComponentTemplate) Name(v string) *ExistsComponentTemplate {
 // received before the timeout expires, the request fails and returns an
 // error.
 // API name: master_timeout
-func (r *ExistsComponentTemplate) MasterTimeout(v string) *ExistsComponentTemplate {
-	r.values.Set("master_timeout", v)
+func (r *ExistsComponentTemplate) MasterTimeout(duration string) *ExistsComponentTemplate {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
@@ -232,8 +205,8 @@ func (r *ExistsComponentTemplate) MasterTimeout(v string) *ExistsComponentTempla
 // Local If true, the request retrieves information from the local node only.
 // Defaults to false, which means information is retrieved from the master node.
 // API name: local
-func (r *ExistsComponentTemplate) Local(b bool) *ExistsComponentTemplate {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *ExistsComponentTemplate) Local(local bool) *ExistsComponentTemplate {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }

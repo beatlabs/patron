@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // SettingsSimilarityBm25 type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/_types/IndexSettings.ts#L180-L185
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/_types/IndexSettings.ts#L180-L185
 type SettingsSimilarityBm25 struct {
 	B                Float64 `json:"b"`
 	DiscountOverlaps bool    `json:"discount_overlaps"`
@@ -30,11 +38,95 @@ type SettingsSimilarityBm25 struct {
 	Type             string  `json:"type,omitempty"`
 }
 
+func (s *SettingsSimilarityBm25) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "b":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.B = f
+			case float64:
+				f := Float64(v)
+				s.B = f
+			}
+
+		case "discount_overlaps":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.DiscountOverlaps = value
+			case bool:
+				s.DiscountOverlaps = v
+			}
+
+		case "k1":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.K1 = f
+			case float64:
+				f := Float64(v)
+				s.K1 = f
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s SettingsSimilarityBm25) MarshalJSON() ([]byte, error) {
+	type innerSettingsSimilarityBm25 SettingsSimilarityBm25
+	tmp := innerSettingsSimilarityBm25{
+		B:                s.B,
+		DiscountOverlaps: s.DiscountOverlaps,
+		K1:               s.K1,
+		Type:             s.Type,
+	}
+
+	tmp.Type = "BM25"
+
+	return json.Marshal(tmp)
+}
+
 // NewSettingsSimilarityBm25 returns a SettingsSimilarityBm25.
 func NewSettingsSimilarityBm25() *SettingsSimilarityBm25 {
 	r := &SettingsSimilarityBm25{}
-
-	r.Type = "BM25"
 
 	return r
 }

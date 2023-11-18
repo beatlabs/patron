@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves information about all follower indices, including parameters and
 // status for each follower index
@@ -68,7 +68,7 @@ func NewFollowInfoFunc(tp elastictransport.Interface) NewFollowInfo {
 	return func(index string) *FollowInfo {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -172,13 +172,16 @@ func (r FollowInfo) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -215,9 +218,9 @@ func (r *FollowInfo) Header(key, value string) *FollowInfo {
 // Index A comma-separated list of index patterns; use `_all` to perform the operation
 // on all indices
 // API Name: index
-func (r *FollowInfo) Index(v string) *FollowInfo {
+func (r *FollowInfo) _index(index string) *FollowInfo {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }

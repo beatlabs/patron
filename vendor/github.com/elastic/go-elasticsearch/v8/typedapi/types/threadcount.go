@@ -16,20 +16,144 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // ThreadCount type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/Stats.ts#L404-L411
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/nodes/_types/Stats.ts#L1004-L1029
 type ThreadCount struct {
-	Active    *int64 `json:"active,omitempty"`
+	// Active Number of active threads in the thread pool.
+	Active *int64 `json:"active,omitempty"`
+	// Completed Number of tasks completed by the thread pool executor.
 	Completed *int64 `json:"completed,omitempty"`
-	Largest   *int64 `json:"largest,omitempty"`
-	Queue     *int64 `json:"queue,omitempty"`
-	Rejected  *int64 `json:"rejected,omitempty"`
-	Threads   *int64 `json:"threads,omitempty"`
+	// Largest Highest number of active threads in the thread pool.
+	Largest *int64 `json:"largest,omitempty"`
+	// Queue Number of tasks in queue for the thread pool.
+	Queue *int64 `json:"queue,omitempty"`
+	// Rejected Number of tasks rejected by the thread pool executor.
+	Rejected *int64 `json:"rejected,omitempty"`
+	// Threads Number of threads in the thread pool.
+	Threads *int64 `json:"threads,omitempty"`
+}
+
+func (s *ThreadCount) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "active":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Active = &value
+			case float64:
+				f := int64(v)
+				s.Active = &f
+			}
+
+		case "completed":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Completed = &value
+			case float64:
+				f := int64(v)
+				s.Completed = &f
+			}
+
+		case "largest":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Largest = &value
+			case float64:
+				f := int64(v)
+				s.Largest = &f
+			}
+
+		case "queue":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Queue = &value
+			case float64:
+				f := int64(v)
+				s.Queue = &f
+			}
+
+		case "rejected":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Rejected = &value
+			case float64:
+				f := int64(v)
+				s.Rejected = &f
+			}
+
+		case "threads":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Threads = &value
+			case float64:
+				f := int64(v)
+				s.Threads = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewThreadCount returns a ThreadCount.

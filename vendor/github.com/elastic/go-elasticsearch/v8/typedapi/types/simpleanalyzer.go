@@ -16,23 +16,71 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+)
+
 // SimpleAnalyzer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/analyzers.ts#L83-L86
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/analyzers.ts#L83-L86
 type SimpleAnalyzer struct {
 	Type    string  `json:"type,omitempty"`
 	Version *string `json:"version,omitempty"`
 }
 
+func (s *SimpleAnalyzer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s SimpleAnalyzer) MarshalJSON() ([]byte, error) {
+	type innerSimpleAnalyzer SimpleAnalyzer
+	tmp := innerSimpleAnalyzer{
+		Type:    s.Type,
+		Version: s.Version,
+	}
+
+	tmp.Type = "simple"
+
+	return json.Marshal(tmp)
+}
+
 // NewSimpleAnalyzer returns a SimpleAnalyzer.
 func NewSimpleAnalyzer() *SimpleAnalyzer {
 	r := &SimpleAnalyzer{}
-
-	r.Type = "simple"
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Shows information about currently configured aliases to indices including
 // filter and routing infos.
@@ -36,6 +36,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -177,13 +178,16 @@ func (r Aliases) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -217,11 +221,12 @@ func (r *Aliases) Header(key, value string) *Aliases {
 	return r
 }
 
-// Name A comma-separated list of alias names to return
+// Name A comma-separated list of aliases to retrieve. Supports wildcards (`*`).  To
+// retrieve all aliases, omit this parameter or use `*` or `_all`.
 // API Name: name
-func (r *Aliases) Name(v string) *Aliases {
+func (r *Aliases) Name(name string) *Aliases {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
@@ -229,8 +234,12 @@ func (r *Aliases) Name(v string) *Aliases {
 // ExpandWildcards Whether to expand wildcard expression to concrete indices that are open,
 // closed or both.
 // API name: expand_wildcards
-func (r *Aliases) ExpandWildcards(v string) *Aliases {
-	r.values.Set("expand_wildcards", v)
+func (r *Aliases) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *Aliases {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }

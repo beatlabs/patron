@@ -129,7 +129,7 @@ github.com/eclipse/paho.golang/paho
 ## explicit; go 1.13
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version
-# github.com/elastic/go-elasticsearch/v8 v8.7.0
+# github.com/elastic/go-elasticsearch/v8 v8.11.0
 ## explicit; go 1.13
 github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi
@@ -189,6 +189,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/cluster/existscomponenttemplate
 github.com/elastic/go-elasticsearch/v8/typedapi/cluster/getcomponenttemplate
 github.com/elastic/go-elasticsearch/v8/typedapi/cluster/getsettings
 github.com/elastic/go-elasticsearch/v8/typedapi/cluster/health
+github.com/elastic/go-elasticsearch/v8/typedapi/cluster/info
 github.com/elastic/go-elasticsearch/v8/typedapi/cluster/pendingtasks
 github.com/elastic/go-elasticsearch/v8/typedapi/cluster/postvotingconfigexclusions
 github.com/elastic/go-elasticsearch/v8/typedapi/cluster/putcomponenttemplate
@@ -197,6 +198,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/cluster/remoteinfo
 github.com/elastic/go-elasticsearch/v8/typedapi/cluster/reroute
 github.com/elastic/go-elasticsearch/v8/typedapi/cluster/state
 github.com/elastic/go-elasticsearch/v8/typedapi/cluster/stats
+github.com/elastic/go-elasticsearch/v8/typedapi/core/bulk
 github.com/elastic/go-elasticsearch/v8/typedapi/core/clearscroll
 github.com/elastic/go-elasticsearch/v8/typedapi/core/closepointintime
 github.com/elastic/go-elasticsearch/v8/typedapi/core/count
@@ -214,10 +216,13 @@ github.com/elastic/go-elasticsearch/v8/typedapi/core/getscript
 github.com/elastic/go-elasticsearch/v8/typedapi/core/getscriptcontext
 github.com/elastic/go-elasticsearch/v8/typedapi/core/getscriptlanguages
 github.com/elastic/go-elasticsearch/v8/typedapi/core/getsource
+github.com/elastic/go-elasticsearch/v8/typedapi/core/healthreport
 github.com/elastic/go-elasticsearch/v8/typedapi/core/index
 github.com/elastic/go-elasticsearch/v8/typedapi/core/info
 github.com/elastic/go-elasticsearch/v8/typedapi/core/knnsearch
 github.com/elastic/go-elasticsearch/v8/typedapi/core/mget
+github.com/elastic/go-elasticsearch/v8/typedapi/core/msearch
+github.com/elastic/go-elasticsearch/v8/typedapi/core/msearchtemplate
 github.com/elastic/go-elasticsearch/v8/typedapi/core/mtermvectors
 github.com/elastic/go-elasticsearch/v8/typedapi/core/openpointintime
 github.com/elastic/go-elasticsearch/v8/typedapi/core/ping
@@ -252,6 +257,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/eql/search
 github.com/elastic/go-elasticsearch/v8/typedapi/features/getfeatures
 github.com/elastic/go-elasticsearch/v8/typedapi/features/resetfeatures
 github.com/elastic/go-elasticsearch/v8/typedapi/fleet/globalcheckpoints
+github.com/elastic/go-elasticsearch/v8/typedapi/fleet/msearch
 github.com/elastic/go-elasticsearch/v8/typedapi/fleet/search
 github.com/elastic/go-elasticsearch/v8/typedapi/graph/explore
 github.com/elastic/go-elasticsearch/v8/typedapi/ilm/deletelifecycle
@@ -275,6 +281,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/indices/createdatastream
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/datastreamsstats
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/delete
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/deletealias
+github.com/elastic/go-elasticsearch/v8/typedapi/indices/deletedatalifecycle
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/deletedatastream
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/deleteindextemplate
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/deletetemplate
@@ -284,11 +291,13 @@ github.com/elastic/go-elasticsearch/v8/typedapi/indices/exists
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/existsalias
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/existsindextemplate
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/existstemplate
+github.com/elastic/go-elasticsearch/v8/typedapi/indices/explaindatalifecycle
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/fieldusagestats
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/flush
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/forcemerge
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/get
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/getalias
+github.com/elastic/go-elasticsearch/v8/typedapi/indices/getdatalifecycle
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/getdatastream
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/getfieldmapping
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/getindextemplate
@@ -300,6 +309,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/indices/modifydatastream
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/open
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/promotedatastream
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/putalias
+github.com/elastic/go-elasticsearch/v8/typedapi/indices/putdatalifecycle
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/putindextemplate
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/putmapping
 github.com/elastic/go-elasticsearch/v8/typedapi/indices/putsettings
@@ -380,6 +390,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/ml/infertrainedmodel
 github.com/elastic/go-elasticsearch/v8/typedapi/ml/info
 github.com/elastic/go-elasticsearch/v8/typedapi/ml/openjob
 github.com/elastic/go-elasticsearch/v8/typedapi/ml/postcalendarevents
+github.com/elastic/go-elasticsearch/v8/typedapi/ml/postdata
 github.com/elastic/go-elasticsearch/v8/typedapi/ml/previewdatafeed
 github.com/elastic/go-elasticsearch/v8/typedapi/ml/previewdataframeanalytics
 github.com/elastic/go-elasticsearch/v8/typedapi/ml/putcalendar
@@ -409,6 +420,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/ml/updatemodelsnapshot
 github.com/elastic/go-elasticsearch/v8/typedapi/ml/upgradejobsnapshot
 github.com/elastic/go-elasticsearch/v8/typedapi/ml/validate
 github.com/elastic/go-elasticsearch/v8/typedapi/ml/validatedetector
+github.com/elastic/go-elasticsearch/v8/typedapi/monitoring/bulk
 github.com/elastic/go-elasticsearch/v8/typedapi/nodes/clearrepositoriesmeteringarchive
 github.com/elastic/go-elasticsearch/v8/typedapi/nodes/getrepositoriesmeteringinfo
 github.com/elastic/go-elasticsearch/v8/typedapi/nodes/hotthreads
@@ -416,6 +428,10 @@ github.com/elastic/go-elasticsearch/v8/typedapi/nodes/info
 github.com/elastic/go-elasticsearch/v8/typedapi/nodes/reloadsecuresettings
 github.com/elastic/go-elasticsearch/v8/typedapi/nodes/stats
 github.com/elastic/go-elasticsearch/v8/typedapi/nodes/usage
+github.com/elastic/go-elasticsearch/v8/typedapi/queryruleset/delete
+github.com/elastic/go-elasticsearch/v8/typedapi/queryruleset/get
+github.com/elastic/go-elasticsearch/v8/typedapi/queryruleset/list
+github.com/elastic/go-elasticsearch/v8/typedapi/queryruleset/put
 github.com/elastic/go-elasticsearch/v8/typedapi/rollup/deletejob
 github.com/elastic/go-elasticsearch/v8/typedapi/rollup/getjobs
 github.com/elastic/go-elasticsearch/v8/typedapi/rollup/getrollupcaps
@@ -428,6 +444,14 @@ github.com/elastic/go-elasticsearch/v8/typedapi/searchablesnapshots/cachestats
 github.com/elastic/go-elasticsearch/v8/typedapi/searchablesnapshots/clearcache
 github.com/elastic/go-elasticsearch/v8/typedapi/searchablesnapshots/mount
 github.com/elastic/go-elasticsearch/v8/typedapi/searchablesnapshots/stats
+github.com/elastic/go-elasticsearch/v8/typedapi/searchapplication/delete
+github.com/elastic/go-elasticsearch/v8/typedapi/searchapplication/deletebehavioralanalytics
+github.com/elastic/go-elasticsearch/v8/typedapi/searchapplication/get
+github.com/elastic/go-elasticsearch/v8/typedapi/searchapplication/getbehavioralanalytics
+github.com/elastic/go-elasticsearch/v8/typedapi/searchapplication/list
+github.com/elastic/go-elasticsearch/v8/typedapi/searchapplication/put
+github.com/elastic/go-elasticsearch/v8/typedapi/searchapplication/putbehavioralanalytics
+github.com/elastic/go-elasticsearch/v8/typedapi/searchapplication/search
 github.com/elastic/go-elasticsearch/v8/typedapi/security/activateuserprofile
 github.com/elastic/go-elasticsearch/v8/typedapi/security/authenticate
 github.com/elastic/go-elasticsearch/v8/typedapi/security/bulkupdateapikeys
@@ -438,6 +462,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/security/clearcachedrealms
 github.com/elastic/go-elasticsearch/v8/typedapi/security/clearcachedroles
 github.com/elastic/go-elasticsearch/v8/typedapi/security/clearcachedservicetokens
 github.com/elastic/go-elasticsearch/v8/typedapi/security/createapikey
+github.com/elastic/go-elasticsearch/v8/typedapi/security/createcrossclusterapikey
 github.com/elastic/go-elasticsearch/v8/typedapi/security/createservicetoken
 github.com/elastic/go-elasticsearch/v8/typedapi/security/deleteprivileges
 github.com/elastic/go-elasticsearch/v8/typedapi/security/deleterole
@@ -513,15 +538,24 @@ github.com/elastic/go-elasticsearch/v8/typedapi/sql/getasyncstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/sql/query
 github.com/elastic/go-elasticsearch/v8/typedapi/sql/translate
 github.com/elastic/go-elasticsearch/v8/typedapi/ssl/certificates
+github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/deletesynonym
+github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/deletesynonymrule
+github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/getsynonym
+github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/getsynonymrule
+github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/getsynonymssets
+github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/putsynonym
+github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/putsynonymrule
 github.com/elastic/go-elasticsearch/v8/typedapi/tasks/cancel
 github.com/elastic/go-elasticsearch/v8/typedapi/tasks/get
 github.com/elastic/go-elasticsearch/v8/typedapi/tasks/list
+github.com/elastic/go-elasticsearch/v8/typedapi/textstructure/findstructure
 github.com/elastic/go-elasticsearch/v8/typedapi/transform/deletetransform
 github.com/elastic/go-elasticsearch/v8/typedapi/transform/gettransform
 github.com/elastic/go-elasticsearch/v8/typedapi/transform/gettransformstats
 github.com/elastic/go-elasticsearch/v8/typedapi/transform/previewtransform
 github.com/elastic/go-elasticsearch/v8/typedapi/transform/puttransform
 github.com/elastic/go-elasticsearch/v8/typedapi/transform/resettransform
+github.com/elastic/go-elasticsearch/v8/typedapi/transform/schedulenowtransform
 github.com/elastic/go-elasticsearch/v8/typedapi/transform/starttransform
 github.com/elastic/go-elasticsearch/v8/typedapi/transform/stoptransform
 github.com/elastic/go-elasticsearch/v8/typedapi/transform/updatetransform
@@ -547,7 +581,9 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/cattrainedmodelscolu
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/cattransformcolumn
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/childscoremode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/chunkingmode
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/clusterinfotarget
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/clusterprivilege
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/clustersearchstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/combinedfieldsoperator
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/combinedfieldszeroterms
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/conditionop
@@ -614,6 +650,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icucollationstrength
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icunormalizationmode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icunormalizationtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icutransformdirection
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/impactarea
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/include
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/indexcheckonstartup
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/indexingjobstate
@@ -622,6 +659,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/indexoptions
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/indexprivilege
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/indexroutingallocationoptions
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/indexroutingrebalanceoptions
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/indicatorhealthstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/inputtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/jobblockedreason
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/jobstate
@@ -647,6 +685,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/normalization
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/normalizemethod
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/numericfielddataformat
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/onscripterror
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/operationtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/operator
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/optype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/pagerdutycontexttype
@@ -657,6 +696,8 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/phoneticnametype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/phoneticruletype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/policytype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/quantifier
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/queryrulecriteriatype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/queryruletype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/rangerelation
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/ratemode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh
@@ -678,9 +719,9 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shapetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardroutingstate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardsstatsstage
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardstoreallocation
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardstorestatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shutdownstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shutdowntype
-github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/simplequerystringflag
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/snapshotsort
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/snapshotupgradestate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/snowballlanguage
@@ -721,12 +762,14 @@ github.com/elastic/go-elasticsearch/v8/typedapi/watcher/activatewatch
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/deactivatewatch
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/deletewatch
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/executewatch
+github.com/elastic/go-elasticsearch/v8/typedapi/watcher/getsettings
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/getwatch
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/putwatch
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/querywatches
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/start
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/stats
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/stop
+github.com/elastic/go-elasticsearch/v8/typedapi/watcher/updatesettings
 github.com/elastic/go-elasticsearch/v8/typedapi/xpack/info
 github.com/elastic/go-elasticsearch/v8/typedapi/xpack/usage
 # github.com/go-redis/redis/extra/rediscmd v0.2.0

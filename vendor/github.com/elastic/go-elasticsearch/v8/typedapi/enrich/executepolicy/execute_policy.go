@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates the enrich index for an existing enrich policy.
 package executepolicy
@@ -68,7 +68,7 @@ func NewExecutePolicyFunc(tp elastictransport.Interface) NewExecutePolicy {
 	return func(name string) *ExecutePolicy {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -76,7 +76,7 @@ func NewExecutePolicyFunc(tp elastictransport.Interface) NewExecutePolicy {
 
 // Creates the enrich index for an existing enrich policy.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/execute-enrich-policy-api.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/execute-enrich-policy-api.html
 func New(tp elastictransport.Interface) *ExecutePolicy {
 	r := &ExecutePolicy{
 		transport: tp,
@@ -173,13 +173,16 @@ func (r ExecutePolicy) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -213,19 +216,20 @@ func (r *ExecutePolicy) Header(key, value string) *ExecutePolicy {
 	return r
 }
 
-// Name The name of the enrich policy
+// Name Enrich policy to execute.
 // API Name: name
-func (r *ExecutePolicy) Name(v string) *ExecutePolicy {
+func (r *ExecutePolicy) _name(name string) *ExecutePolicy {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
-// WaitForCompletion Should the request should block until the execution is complete.
+// WaitForCompletion If `true`, the request blocks other enrich policy execution requests until
+// complete.
 // API name: wait_for_completion
-func (r *ExecutePolicy) WaitForCompletion(b bool) *ExecutePolicy {
-	r.values.Set("wait_for_completion", strconv.FormatBool(b))
+func (r *ExecutePolicy) WaitForCompletion(waitforcompletion bool) *ExecutePolicy {
+	r.values.Set("wait_for_completion", strconv.FormatBool(waitforcompletion))
 
 	return r
 }

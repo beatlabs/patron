@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Clears cluster voting config exclusions.
 package deletevotingconfigexclusions
@@ -24,7 +24,6 @@ package deletevotingconfigexclusions
 import (
 	gobytes "bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -35,7 +34,6 @@ import (
 	"strings"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 // ErrBuildPath is returned in case of missing parameters within the build of the request.
@@ -143,33 +141,8 @@ func (r DeleteVotingConfigExclusions) Perform(ctx context.Context) (*http.Respon
 }
 
 // Do runs the request through the transport, handle the response and returns a deletevotingconfigexclusions.Response
-func (r DeleteVotingConfigExclusions) Do(ctx context.Context) (*Response, error) {
-
-	response := NewResponse()
-
-	res, err := r.Perform(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode < 299 {
-		err = json.NewDecoder(res.Body).Decode(response)
-		if err != nil {
-			return nil, err
-		}
-
-		return response, nil
-
-	}
-
-	errorResponse := types.NewElasticsearchError()
-	err = json.NewDecoder(res.Body).Decode(errorResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, errorResponse
+func (r DeleteVotingConfigExclusions) Do(ctx context.Context) (bool, error) {
+	return r.IsSuccess(ctx)
 }
 
 // IsSuccess allows to run a query with a context and retrieve the result as a boolean.
@@ -207,8 +180,8 @@ func (r *DeleteVotingConfigExclusions) Header(key, value string) *DeleteVotingCo
 // voting configuration exclusions list is cleared even if some excluded
 // nodes are still in the cluster.
 // API name: wait_for_removal
-func (r *DeleteVotingConfigExclusions) WaitForRemoval(b bool) *DeleteVotingConfigExclusions {
-	r.values.Set("wait_for_removal", strconv.FormatBool(b))
+func (r *DeleteVotingConfigExclusions) WaitForRemoval(waitforremoval bool) *DeleteVotingConfigExclusions {
+	r.values.Set("wait_for_removal", strconv.FormatBool(waitforremoval))
 
 	return r
 }

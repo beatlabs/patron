@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns an index template.
 package getindextemplate
@@ -172,13 +172,16 @@ func (r GetIndexTemplate) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -215,9 +218,9 @@ func (r *GetIndexTemplate) Header(key, value string) *GetIndexTemplate {
 // Name Comma-separated list of index template names used to limit the request.
 // Wildcard (*) expressions are supported.
 // API Name: name
-func (r *GetIndexTemplate) Name(v string) *GetIndexTemplate {
+func (r *GetIndexTemplate) Name(name string) *GetIndexTemplate {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
@@ -225,16 +228,16 @@ func (r *GetIndexTemplate) Name(v string) *GetIndexTemplate {
 // Local If true, the request retrieves information from the local node only. Defaults
 // to false, which means information is retrieved from the master node.
 // API name: local
-func (r *GetIndexTemplate) Local(b bool) *GetIndexTemplate {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *GetIndexTemplate) Local(local bool) *GetIndexTemplate {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }
 
 // FlatSettings If true, returns settings in flat format.
 // API name: flat_settings
-func (r *GetIndexTemplate) FlatSettings(b bool) *GetIndexTemplate {
-	r.values.Set("flat_settings", strconv.FormatBool(b))
+func (r *GetIndexTemplate) FlatSettings(flatsettings bool) *GetIndexTemplate {
+	r.values.Set("flat_settings", strconv.FormatBool(flatsettings))
 
 	return r
 }
@@ -242,8 +245,16 @@ func (r *GetIndexTemplate) FlatSettings(b bool) *GetIndexTemplate {
 // MasterTimeout Period to wait for a connection to the master node. If no response is
 // received before the timeout expires, the request fails and returns an error.
 // API name: master_timeout
-func (r *GetIndexTemplate) MasterTimeout(v string) *GetIndexTemplate {
-	r.values.Set("master_timeout", v)
+func (r *GetIndexTemplate) MasterTimeout(duration string) *GetIndexTemplate {
+	r.values.Set("master_timeout", duration)
+
+	return r
+}
+
+// IncludeDefaults If true, returns all relevant default configurations for the index template.
+// API name: include_defaults
+func (r *GetIndexTemplate) IncludeDefaults(includedefaults bool) *GetIndexTemplate {
+	r.values.Set("include_defaults", strconv.FormatBool(includedefaults))
 
 	return r
 }

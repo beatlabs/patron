@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about whether a document source exists in an index.
 package existssource
@@ -24,7 +24,6 @@ package existssource
 import (
 	gobytes "bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -35,8 +34,6 @@ import (
 	"strings"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/versiontype"
 )
 
@@ -73,9 +70,9 @@ func NewExistsSourceFunc(tp elastictransport.Interface) NewExistsSource {
 	return func(index, id string) *ExistsSource {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -162,33 +159,8 @@ func (r ExistsSource) Perform(ctx context.Context) (*http.Response, error) {
 }
 
 // Do runs the request through the transport, handle the response and returns a existssource.Response
-func (r ExistsSource) Do(ctx context.Context) (*Response, error) {
-
-	response := NewResponse()
-
-	res, err := r.Perform(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode < 299 {
-		err = json.NewDecoder(res.Body).Decode(response)
-		if err != nil {
-			return nil, err
-		}
-
-		return response, nil
-
-	}
-
-	errorResponse := types.NewElasticsearchError()
-	err = json.NewDecoder(res.Body).Decode(errorResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, errorResponse
+func (r ExistsSource) Do(ctx context.Context) (bool, error) {
+	return r.IsSuccess(ctx)
 }
 
 // IsSuccess allows to run a query with a context and retrieve the result as a boolean.
@@ -219,94 +191,98 @@ func (r *ExistsSource) Header(key, value string) *ExistsSource {
 	return r
 }
 
-// Id The document ID
+// Id Identifier of the document.
 // API Name: id
-func (r *ExistsSource) Id(v string) *ExistsSource {
+func (r *ExistsSource) _id(id string) *ExistsSource {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
-// Index The name of the index
+// Index Comma-separated list of data streams, indices, and aliases.
+// Supports wildcards (`*`).
 // API Name: index
-func (r *ExistsSource) Index(v string) *ExistsSource {
+func (r *ExistsSource) _index(index string) *ExistsSource {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// Preference Specify the node or shard the operation should be performed on (default:
-// random)
+// Preference Specifies the node or shard the operation should be performed on.
+// Random by default.
 // API name: preference
-func (r *ExistsSource) Preference(v string) *ExistsSource {
-	r.values.Set("preference", v)
+func (r *ExistsSource) Preference(preference string) *ExistsSource {
+	r.values.Set("preference", preference)
 
 	return r
 }
 
-// Realtime Specify whether to perform the operation in realtime or search mode
+// Realtime If true, the request is real-time as opposed to near-real-time.
 // API name: realtime
-func (r *ExistsSource) Realtime(b bool) *ExistsSource {
-	r.values.Set("realtime", strconv.FormatBool(b))
+func (r *ExistsSource) Realtime(realtime bool) *ExistsSource {
+	r.values.Set("realtime", strconv.FormatBool(realtime))
 
 	return r
 }
 
-// Refresh Refresh the shard containing the document before performing the operation
+// Refresh If `true`, Elasticsearch refreshes all shards involved in the delete by query
+// after the request completes.
 // API name: refresh
-func (r *ExistsSource) Refresh(b bool) *ExistsSource {
-	r.values.Set("refresh", strconv.FormatBool(b))
+func (r *ExistsSource) Refresh(refresh bool) *ExistsSource {
+	r.values.Set("refresh", strconv.FormatBool(refresh))
 
 	return r
 }
 
-// Routing Specific routing value
+// Routing Target the specified primary shard.
 // API name: routing
-func (r *ExistsSource) Routing(v string) *ExistsSource {
-	r.values.Set("routing", v)
+func (r *ExistsSource) Routing(routing string) *ExistsSource {
+	r.values.Set("routing", routing)
 
 	return r
 }
 
-// Source_ True or false to return the _source field or not, or a list of fields to
-// return
+// Source_ `true` or `false` to return the `_source` field or not, or a list of fields
+// to return.
 // API name: _source
-func (r *ExistsSource) Source_(v string) *ExistsSource {
-	r.values.Set("_source", v)
+func (r *ExistsSource) Source_(sourceconfigparam string) *ExistsSource {
+	r.values.Set("_source", sourceconfigparam)
 
 	return r
 }
 
-// SourceExcludes_ A list of fields to exclude from the returned _source field
+// SourceExcludes_ A comma-separated list of source fields to exclude in the response.
 // API name: _source_excludes
-func (r *ExistsSource) SourceExcludes_(v string) *ExistsSource {
-	r.values.Set("_source_excludes", v)
+func (r *ExistsSource) SourceExcludes_(fields ...string) *ExistsSource {
+	r.values.Set("_source_excludes", strings.Join(fields, ","))
 
 	return r
 }
 
-// SourceIncludes_ A list of fields to extract and return from the _source field
+// SourceIncludes_ A comma-separated list of source fields to include in the response.
 // API name: _source_includes
-func (r *ExistsSource) SourceIncludes_(v string) *ExistsSource {
-	r.values.Set("_source_includes", v)
+func (r *ExistsSource) SourceIncludes_(fields ...string) *ExistsSource {
+	r.values.Set("_source_includes", strings.Join(fields, ","))
 
 	return r
 }
 
-// Version Explicit version number for concurrency control
+// Version Explicit version number for concurrency control.
+// The specified version must match the current version of the document for the
+// request to succeed.
 // API name: version
-func (r *ExistsSource) Version(v string) *ExistsSource {
-	r.values.Set("version", v)
+func (r *ExistsSource) Version(versionnumber string) *ExistsSource {
+	r.values.Set("version", versionnumber)
 
 	return r
 }
 
-// VersionType Specific version type
+// VersionType Specific version type: `external`, `external_gte`.
 // API name: version_type
-func (r *ExistsSource) VersionType(enum versiontype.VersionType) *ExistsSource {
-	r.values.Set("version_type", enum.String())
+func (r *ExistsSource) VersionType(versiontype versiontype.VersionType) *ExistsSource {
+	r.values.Set("version_type", versiontype.String())
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about whether a particular index template exists.
 package existstemplate
@@ -24,7 +24,6 @@ package existstemplate
 import (
 	gobytes "bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -35,7 +34,6 @@ import (
 	"strings"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 const (
@@ -68,7 +66,7 @@ func NewExistsTemplateFunc(tp elastictransport.Interface) NewExistsTemplate {
 	return func(name string) *ExistsTemplate {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -152,33 +150,8 @@ func (r ExistsTemplate) Perform(ctx context.Context) (*http.Response, error) {
 }
 
 // Do runs the request through the transport, handle the response and returns a existstemplate.Response
-func (r ExistsTemplate) Do(ctx context.Context) (*Response, error) {
-
-	response := NewResponse()
-
-	res, err := r.Perform(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode < 299 {
-		err = json.NewDecoder(res.Body).Decode(response)
-		if err != nil {
-			return nil, err
-		}
-
-		return response, nil
-
-	}
-
-	errorResponse := types.NewElasticsearchError()
-	err = json.NewDecoder(res.Body).Decode(errorResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, errorResponse
+func (r ExistsTemplate) Do(ctx context.Context) (bool, error) {
+	return r.IsSuccess(ctx)
 }
 
 // IsSuccess allows to run a query with a context and retrieve the result as a boolean.
@@ -211,17 +184,17 @@ func (r *ExistsTemplate) Header(key, value string) *ExistsTemplate {
 
 // Name The comma separated names of the index templates
 // API Name: name
-func (r *ExistsTemplate) Name(v string) *ExistsTemplate {
+func (r *ExistsTemplate) _name(name string) *ExistsTemplate {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
 // FlatSettings Return settings in flat format (default: false)
 // API name: flat_settings
-func (r *ExistsTemplate) FlatSettings(b bool) *ExistsTemplate {
-	r.values.Set("flat_settings", strconv.FormatBool(b))
+func (r *ExistsTemplate) FlatSettings(flatsettings bool) *ExistsTemplate {
+	r.values.Set("flat_settings", strconv.FormatBool(flatsettings))
 
 	return r
 }
@@ -229,16 +202,16 @@ func (r *ExistsTemplate) FlatSettings(b bool) *ExistsTemplate {
 // Local Return local information, do not retrieve the state from master node
 // (default: false)
 // API name: local
-func (r *ExistsTemplate) Local(b bool) *ExistsTemplate {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *ExistsTemplate) Local(local bool) *ExistsTemplate {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }
 
 // MasterTimeout Explicit operation timeout for connection to master node
 // API name: master_timeout
-func (r *ExistsTemplate) MasterTimeout(v string) *ExistsTemplate {
-	r.values.Set("master_timeout", v)
+func (r *ExistsTemplate) MasterTimeout(duration string) *ExistsTemplate {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

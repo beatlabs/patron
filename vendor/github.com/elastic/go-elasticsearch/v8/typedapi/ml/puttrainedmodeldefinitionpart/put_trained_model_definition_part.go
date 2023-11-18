@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates part of a trained model definition
 package puttrainedmodeldefinitionpart
@@ -54,8 +54,9 @@ type PutTrainedModelDefinitionPart struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -72,9 +73,9 @@ func NewPutTrainedModelDefinitionPartFunc(tp elastictransport.Interface) NewPutT
 	return func(modelid, part string) *PutTrainedModelDefinitionPart {
 		n := New(tp)
 
-		n.ModelId(modelid)
+		n._modelid(modelid)
 
-		n.Part(part)
+		n._part(part)
 
 		return n
 	}
@@ -89,6 +90,8 @@ func New(tp elastictransport.Interface) *PutTrainedModelDefinitionPart {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -118,9 +121,19 @@ func (r *PutTrainedModelDefinitionPart) HttpRequest(ctx context.Context) (*http.
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -128,6 +141,7 @@ func (r *PutTrainedModelDefinitionPart) HttpRequest(ctx context.Context) (*http.
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -215,13 +229,16 @@ func (r PutTrainedModelDefinitionPart) Do(ctx context.Context) (*Response, error
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -236,9 +253,9 @@ func (r *PutTrainedModelDefinitionPart) Header(key, value string) *PutTrainedMod
 
 // ModelId The unique identifier of the trained model.
 // API Name: modelid
-func (r *PutTrainedModelDefinitionPart) ModelId(v string) *PutTrainedModelDefinitionPart {
+func (r *PutTrainedModelDefinitionPart) _modelid(modelid string) *PutTrainedModelDefinitionPart {
 	r.paramSet |= modelidMask
-	r.modelid = v
+	r.modelid = modelid
 
 	return r
 }
@@ -248,9 +265,35 @@ func (r *PutTrainedModelDefinitionPart) ModelId(v string) *PutTrainedModelDefini
 // order of their part number. The first part must be `0` and the final part
 // must be `total_parts - 1`.
 // API Name: part
-func (r *PutTrainedModelDefinitionPart) Part(v string) *PutTrainedModelDefinitionPart {
+func (r *PutTrainedModelDefinitionPart) _part(part string) *PutTrainedModelDefinitionPart {
 	r.paramSet |= partMask
-	r.part = v
+	r.part = part
+
+	return r
+}
+
+// Definition The definition part for the model. Must be a base64 encoded string.
+// API name: definition
+func (r *PutTrainedModelDefinitionPart) Definition(definition string) *PutTrainedModelDefinitionPart {
+
+	r.req.Definition = definition
+
+	return r
+}
+
+// TotalDefinitionLength The total uncompressed definition length in bytes. Not base64 encoded.
+// API name: total_definition_length
+func (r *PutTrainedModelDefinitionPart) TotalDefinitionLength(totaldefinitionlength int64) *PutTrainedModelDefinitionPart {
+
+	r.req.TotalDefinitionLength = totaldefinitionlength
+
+	return r
+}
+
+// TotalParts The total number of parts that will be uploaded. Must be greater than 0.
+// API name: total_parts
+func (r *PutTrainedModelDefinitionPart) TotalParts(totalparts int) *PutTrainedModelDefinitionPart {
+	r.req.TotalParts = totalparts
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Analyzes the disk usage of each field of an index or data stream
 package diskusage
@@ -36,6 +36,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -68,7 +69,7 @@ func NewDiskUsageFunc(tp elastictransport.Interface) NewDiskUsage {
 	return func(index string) *DiskUsage {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -76,7 +77,7 @@ func NewDiskUsageFunc(tp elastictransport.Interface) NewDiskUsage {
 
 // Analyzes the disk usage of each field of an index or data stream
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-disk-usage.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/indices-disk-usage.html
 func New(tp elastictransport.Interface) *DiskUsage {
 	r := &DiskUsage{
 		transport: tp,
@@ -169,13 +170,16 @@ func (r DiskUsage) Do(ctx context.Context) (Response, error) {
 		}
 
 		return *response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -210,61 +214,66 @@ func (r *DiskUsage) Header(key, value string) *DiskUsage {
 }
 
 // Index Comma-separated list of data streams, indices, and aliases used to limit the
-// request. It’s recommended to execute this API with a single index (or the
-// latest backing index of a data stream) as the API consumes resources
-// significantly.
+// request.
+// It’s recommended to execute this API with a single index (or the latest
+// backing index of a data stream) as the API consumes resources significantly.
 // API Name: index
-func (r *DiskUsage) Index(v string) *DiskUsage {
+func (r *DiskUsage) _index(index string) *DiskUsage {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
 // AllowNoIndices If false, the request returns an error if any wildcard expression, index
-// alias, or _all value targets only missing or closed indices. This behavior
-// applies even if the request targets other open indices. For example, a
-// request targeting foo*,bar* returns an error if an index starts with foo but
-// no index starts with bar.
+// alias, or `_all` value targets only missing or closed indices.
+// This behavior applies even if the request targets other open indices.
+// For example, a request targeting `foo*,bar*` returns an error if an index
+// starts with `foo` but no index starts with `bar`.
 // API name: allow_no_indices
-func (r *DiskUsage) AllowNoIndices(b bool) *DiskUsage {
-	r.values.Set("allow_no_indices", strconv.FormatBool(b))
+func (r *DiskUsage) AllowNoIndices(allownoindices bool) *DiskUsage {
+	r.values.Set("allow_no_indices", strconv.FormatBool(allownoindices))
 
 	return r
 }
 
-// ExpandWildcards Type of index that wildcard patterns can match. If the request can target
-// data streams, this argument determines whether wildcard expressions match
-// hidden data streams. Supports comma-separated values, such as open,hidden.
+// ExpandWildcards Type of index that wildcard patterns can match.
+// If the request can target data streams, this argument determines whether
+// wildcard expressions match hidden data streams.
+// Supports comma-separated values, such as `open,hidden`.
 // API name: expand_wildcards
-func (r *DiskUsage) ExpandWildcards(v string) *DiskUsage {
-	r.values.Set("expand_wildcards", v)
+func (r *DiskUsage) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *DiskUsage {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
-// Flush If true, the API performs a flush before analysis. If false, the response may
-// not include uncommitted data.
+// Flush If `true`, the API performs a flush before analysis.
+// If `false`, the response may not include uncommitted data.
 // API name: flush
-func (r *DiskUsage) Flush(b bool) *DiskUsage {
-	r.values.Set("flush", strconv.FormatBool(b))
+func (r *DiskUsage) Flush(flush bool) *DiskUsage {
+	r.values.Set("flush", strconv.FormatBool(flush))
 
 	return r
 }
 
-// IgnoreUnavailable If true, missing or closed indices are not included in the response.
+// IgnoreUnavailable If `true`, missing or closed indices are not included in the response.
 // API name: ignore_unavailable
-func (r *DiskUsage) IgnoreUnavailable(b bool) *DiskUsage {
-	r.values.Set("ignore_unavailable", strconv.FormatBool(b))
+func (r *DiskUsage) IgnoreUnavailable(ignoreunavailable bool) *DiskUsage {
+	r.values.Set("ignore_unavailable", strconv.FormatBool(ignoreunavailable))
 
 	return r
 }
 
-// RunExpensiveTasks Analyzing field disk usage is resource-intensive. To use the API, this
-// parameter must be set to true.
+// RunExpensiveTasks Analyzing field disk usage is resource-intensive.
+// To use the API, this parameter must be set to `true`.
 // API name: run_expensive_tasks
-func (r *DiskUsage) RunExpensiveTasks(b bool) *DiskUsage {
-	r.values.Set("run_expensive_tasks", strconv.FormatBool(b))
+func (r *DiskUsage) RunExpensiveTasks(runexpensivetasks bool) *DiskUsage {
+	r.values.Set("run_expensive_tasks", strconv.FormatBool(runexpensivetasks))
 
 	return r
 }

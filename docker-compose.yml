@@ -1,16 +1,16 @@
 version: "3.8"
 services:
   zookeeper:
-    image: 'bitnami/zookeeper:latest'
+    image: bitnami/zookeeper:latest
     ports:
-      - '2181:2181'
+      - "2181:2181"
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
   kafka:
-    image: 'bitnami/kafka:2'
+    image: bitnami/kafka:2
     ports:
-      - '9092:9092'
-      - '9093:9093'
+      - "9092:9092"
+      - "9093:9093"
     environment:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
@@ -23,29 +23,29 @@ services:
   rabbitmq:
     image: docker.io/bitnami/rabbitmq:latest
     ports:
-      - '4369:4369'
-      - '5551:5551'
-      - '5552:5552'
-      - '5672:5672'
-      - '25672:25672'
-      - '15672:15672'
+      - "4369:4369"
+      - "5551:5551"
+      - "5552:5552"
+      - "5672:5672"
+      - "25672:25672"
+      - "15672:15672"
     environment:
       - RABBITMQ_SECURE_PASSWORD=yes
     volumes:
-      - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
+      - "rabbitmq_data:/bitnami/rabbitmq/mnesia"
   mysql:
     image: mysql:8
     restart: always
     environment:
-      MYSQL_DATABASE: 'patrondb'
-      MYSQL_USER: 'patron'
-      MYSQL_PASSWORD: 'test123'
-      MYSQL_ROOT_PASSWORD: 'test123'
+      MYSQL_DATABASE: "patrondb"
+      MYSQL_USER: "patron"
+      MYSQL_PASSWORD: "test123"
+      MYSQL_ROOT_PASSWORD: "test123"
       TIMEZONE: UTC
     ports:
-      - '3306:3306'
+      - "3306:3306"
     expose:
-      - '3306'
+      - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
   redis:
@@ -53,9 +53,9 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
-      - '6379:6379'
+      - "6379:6379"
     volumes:
-      - 'redis_data:/bitnami/redis/data'
+      - "redis_data:/bitnami/redis/data"
   localstack:
     image: localstack/localstack:2.3.2
     ports:
@@ -83,14 +83,14 @@ services:
         protocol: tcp
         mode: host
     environment:
-      HIVEMQ_CONTROL_CENTER_USER: 'admin'
-      HIVEMQ_CONTROL_CENTER_PASSWORD: '123456'
-      HIVEMQ_CLUSTER_TRANSPORT_TYPE: 'TCP'
+      HIVEMQ_CONTROL_CENTER_USER: "admin"
+      HIVEMQ_CONTROL_CENTER_PASSWORD: "123456"
+      HIVEMQ_CLUSTER_TRANSPORT_TYPE: "TCP"
   mongo:
     image: mongo:5
     restart: always
     ports:
-      - '27017:27017'
+      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -100,4 +100,4 @@ volumes:
   mysql_data:
     driver: local
   redis_data:
-    driver: local
+    driver: local  

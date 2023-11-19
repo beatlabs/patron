@@ -2,7 +2,7 @@ version: '2.1'
 
 services:
   rabbitmq:
-    image: docker.io/bitnami/rabbitmq:latest
+    image: docker.io/bitnami/rabbitmq:3.9
     ports:
       - '4369:4369'
       - '5551:5551'

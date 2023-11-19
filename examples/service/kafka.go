@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/examples"

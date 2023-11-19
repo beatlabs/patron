@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/component/async/kafka"
 	kafkacmp "github.com/beatlabs/patron/component/kafka"
 	"github.com/stretchr/testify/assert"

@@ -25,6 +25,7 @@ jobs:
 
       - name: Starting service
         run:  |
+          docker ps -a
           go build . 
           nohup ./service &
         working-directory: ./examples/service

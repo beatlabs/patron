@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns a list of the built-in patterns.
 package processorgrok
@@ -67,7 +67,7 @@ func NewProcessorGrokFunc(tp elastictransport.Interface) NewProcessorGrok {
 
 // Returns a list of the built-in patterns.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/master/grok-processor.html#grok-processor-rest-get
+// https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/grok-processor.html
 func New(tp elastictransport.Interface) *ProcessorGrok {
 	r := &ProcessorGrok{
 		transport: tp,
@@ -161,13 +161,16 @@ func (r ProcessorGrok) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse

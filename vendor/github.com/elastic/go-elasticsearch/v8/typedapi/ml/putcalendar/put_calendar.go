@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Instantiates a calendar.
 package putcalendar
@@ -52,8 +52,9 @@ type PutCalendar struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -69,7 +70,7 @@ func NewPutCalendarFunc(tp elastictransport.Interface) NewPutCalendar {
 	return func(calendarid string) *PutCalendar {
 		n := New(tp)
 
-		n.CalendarId(calendarid)
+		n._calendarid(calendarid)
 
 		return n
 	}
@@ -84,6 +85,8 @@ func New(tp elastictransport.Interface) *PutCalendar {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -113,9 +116,19 @@ func (r *PutCalendar) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -123,6 +136,7 @@ func (r *PutCalendar) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -205,13 +219,16 @@ func (r PutCalendar) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -226,9 +243,26 @@ func (r *PutCalendar) Header(key, value string) *PutCalendar {
 
 // CalendarId A string that uniquely identifies a calendar.
 // API Name: calendarid
-func (r *PutCalendar) CalendarId(v string) *PutCalendar {
+func (r *PutCalendar) _calendarid(calendarid string) *PutCalendar {
 	r.paramSet |= calendaridMask
-	r.calendarid = v
+	r.calendarid = calendarid
+
+	return r
+}
+
+// Description A description of the calendar.
+// API name: description
+func (r *PutCalendar) Description(description string) *PutCalendar {
+
+	r.req.Description = &description
+
+	return r
+}
+
+// JobIds An array of anomaly detection job identifiers.
+// API name: job_ids
+func (r *PutCalendar) JobIds(jobids ...string) *PutCalendar {
+	r.req.JobIds = jobids
 
 	return r
 }

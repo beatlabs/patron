@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // Cpu type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/Stats.ts#L218-L227
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/nodes/_types/Stats.ts#L539-L548
 type Cpu struct {
 	LoadAverage   map[string]Float64 `json:"load_average,omitempty"`
 	Percent       *int               `json:"percent,omitempty"`
@@ -32,6 +40,80 @@ type Cpu struct {
 	TotalInMillis *int64             `json:"total_in_millis,omitempty"`
 	User          Duration           `json:"user,omitempty"`
 	UserInMillis  *int64             `json:"user_in_millis,omitempty"`
+}
+
+func (s *Cpu) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "load_average":
+			if s.LoadAverage == nil {
+				s.LoadAverage = make(map[string]Float64, 0)
+			}
+			if err := dec.Decode(&s.LoadAverage); err != nil {
+				return err
+			}
+
+		case "percent":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Percent = &value
+			case float64:
+				f := int(v)
+				s.Percent = &f
+			}
+
+		case "sys":
+			if err := dec.Decode(&s.Sys); err != nil {
+				return err
+			}
+
+		case "sys_in_millis":
+			if err := dec.Decode(&s.SysInMillis); err != nil {
+				return err
+			}
+
+		case "total":
+			if err := dec.Decode(&s.Total); err != nil {
+				return err
+			}
+
+		case "total_in_millis":
+			if err := dec.Decode(&s.TotalInMillis); err != nil {
+				return err
+			}
+
+		case "user":
+			if err := dec.Decode(&s.User); err != nil {
+				return err
+			}
+
+		case "user_in_millis":
+			if err := dec.Decode(&s.UserInMillis); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewCpu returns a Cpu.

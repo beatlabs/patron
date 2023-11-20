@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Evaluate a trained model.
 package infertrainedmodel
@@ -52,8 +52,9 @@ type InferTrainedModel struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -69,7 +70,7 @@ func NewInferTrainedModelFunc(tp elastictransport.Interface) NewInferTrainedMode
 	return func(modelid string) *InferTrainedModel {
 		n := New(tp)
 
-		n.ModelId(modelid)
+		n._modelid(modelid)
 
 		return n
 	}
@@ -84,6 +85,8 @@ func New(tp elastictransport.Interface) *InferTrainedModel {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -113,9 +116,19 @@ func (r *InferTrainedModel) HttpRequest(ctx context.Context) (*http.Request, err
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -123,6 +136,7 @@ func (r *InferTrainedModel) HttpRequest(ctx context.Context) (*http.Request, err
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -221,13 +235,16 @@ func (r InferTrainedModel) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -242,17 +259,38 @@ func (r *InferTrainedModel) Header(key, value string) *InferTrainedModel {
 
 // ModelId The unique identifier of the trained model.
 // API Name: modelid
-func (r *InferTrainedModel) ModelId(v string) *InferTrainedModel {
+func (r *InferTrainedModel) _modelid(modelid string) *InferTrainedModel {
 	r.paramSet |= modelidMask
-	r.modelid = v
+	r.modelid = modelid
 
 	return r
 }
 
 // Timeout Controls the amount of time to wait for inference results.
 // API name: timeout
-func (r *InferTrainedModel) Timeout(v string) *InferTrainedModel {
-	r.values.Set("timeout", v)
+func (r *InferTrainedModel) Timeout(duration string) *InferTrainedModel {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
+// Docs An array of objects to pass to the model for inference. The objects should
+// contain a fields matching your
+// configured trained model input. Typically, for NLP models, the field name is
+// `text_field`.
+// Currently, for NLP models, only a single value is allowed.
+// API name: docs
+func (r *InferTrainedModel) Docs(docs ...map[string]json.RawMessage) *InferTrainedModel {
+	r.req.Docs = docs
+
+	return r
+}
+
+// InferenceConfig The inference configuration updates to apply on the API call
+// API name: inference_config
+func (r *InferTrainedModel) InferenceConfig(inferenceconfig *types.InferenceConfigUpdateContainer) *InferTrainedModel {
+
+	r.req.InferenceConfig = inferenceconfig
 
 	return r
 }

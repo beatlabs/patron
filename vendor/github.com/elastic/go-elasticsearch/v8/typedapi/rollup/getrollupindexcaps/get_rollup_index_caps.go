@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns the rollup capabilities of all jobs inside of a rollup index (e.g.
 // the index where rollup data is stored).
@@ -68,7 +68,7 @@ func NewGetRollupIndexCapsFunc(tp elastictransport.Interface) NewGetRollupIndexC
 	return func(index string) *GetRollupIndexCaps {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -172,13 +172,16 @@ func (r GetRollupIndexCaps) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -212,11 +215,12 @@ func (r *GetRollupIndexCaps) Header(key, value string) *GetRollupIndexCaps {
 	return r
 }
 
-// Index The rollup index or index pattern to obtain rollup capabilities from.
+// Index Data stream or index to check for rollup capabilities.
+// Wildcard (`*`) expressions are supported.
 // API Name: index
-func (r *GetRollupIndexCaps) Index(v string) *GetRollupIndexCaps {
+func (r *GetRollupIndexCaps) _index(index string) *GetRollupIndexCaps {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Migrates an alias to a data stream
 package migratetodatastream
@@ -67,7 +67,7 @@ func NewMigrateToDataStreamFunc(tp elastictransport.Interface) NewMigrateToDataS
 	return func(name string) *MigrateToDataStream {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -170,13 +170,16 @@ func (r MigrateToDataStream) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -210,11 +213,11 @@ func (r *MigrateToDataStream) Header(key, value string) *MigrateToDataStream {
 	return r
 }
 
-// Name The name of the alias to migrate
+// Name Name of the index alias to convert to a data stream.
 // API Name: name
-func (r *MigrateToDataStream) Name(v string) *MigrateToDataStream {
+func (r *MigrateToDataStream) _name(name string) *MigrateToDataStream {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }

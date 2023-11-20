@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Pauses an auto-follow pattern
 package pauseautofollowpattern
@@ -67,7 +67,7 @@ func NewPauseAutoFollowPatternFunc(tp elastictransport.Interface) NewPauseAutoFo
 	return func(name string) *PauseAutoFollowPattern {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -172,13 +172,16 @@ func (r PauseAutoFollowPattern) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -215,9 +218,9 @@ func (r *PauseAutoFollowPattern) Header(key, value string) *PauseAutoFollowPatte
 // Name The name of the auto follow pattern that should pause discovering new indices
 // to follow.
 // API Name: name
-func (r *PauseAutoFollowPattern) Name(v string) *PauseAutoFollowPattern {
+func (r *PauseAutoFollowPattern) _name(name string) *PauseAutoFollowPattern {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }

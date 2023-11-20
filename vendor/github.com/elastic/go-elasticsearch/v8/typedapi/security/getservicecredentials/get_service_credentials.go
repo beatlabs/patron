@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves information of all service credentials for a service account.
 package getservicecredentials
@@ -70,9 +70,9 @@ func NewGetServiceCredentialsFunc(tp elastictransport.Interface) NewGetServiceCr
 	return func(namespace, service string) *GetServiceCredentials {
 		n := New(tp)
 
-		n.Namespace(namespace)
+		n._namespace(namespace)
 
-		n.Service(service)
+		n._service(service)
 
 		return n
 	}
@@ -180,13 +180,16 @@ func (r GetServiceCredentials) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -222,18 +225,18 @@ func (r *GetServiceCredentials) Header(key, value string) *GetServiceCredentials
 
 // Namespace Name of the namespace.
 // API Name: namespace
-func (r *GetServiceCredentials) Namespace(v string) *GetServiceCredentials {
+func (r *GetServiceCredentials) _namespace(namespace string) *GetServiceCredentials {
 	r.paramSet |= namespaceMask
-	r.namespace = v
+	r.namespace = namespace
 
 	return r
 }
 
 // Service Name of the service name.
 // API Name: service
-func (r *GetServiceCredentials) Service(v string) *GetServiceCredentials {
+func (r *GetServiceCredentials) _service(service string) *GetServiceCredentials {
 	r.paramSet |= serviceMask
-	r.service = v
+	r.service = service
 
 	return r
 }

@@ -16,17 +16,96 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // TransportHistogram type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/Stats.ts#L433-L437
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/nodes/_types/Stats.ts#L1092-L1106
 type TransportHistogram struct {
-	Count    *int64 `json:"count,omitempty"`
+	// Count The number of times a transport thread took a period of time within the
+	// bounds of this bucket to handle an inbound message.
+	Count *int64 `json:"count,omitempty"`
+	// GeMillis The inclusive lower bound of the bucket in milliseconds. May be omitted on
+	// the first bucket if this bucket has no lower bound.
 	GeMillis *int64 `json:"ge_millis,omitempty"`
+	// LtMillis The exclusive upper bound of the bucket in milliseconds.
+	// May be omitted on the last bucket if this bucket has no upper bound.
 	LtMillis *int64 `json:"lt_millis,omitempty"`
+}
+
+func (s *TransportHistogram) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "count":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Count = &value
+			case float64:
+				f := int64(v)
+				s.Count = &f
+			}
+
+		case "ge_millis":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.GeMillis = &value
+			case float64:
+				f := int64(v)
+				s.GeMillis = &f
+			}
+
+		case "lt_millis":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.LtMillis = &value
+			case float64:
+				f := int64(v)
+				s.LtMillis = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewTransportHistogram returns a TransportHistogram.

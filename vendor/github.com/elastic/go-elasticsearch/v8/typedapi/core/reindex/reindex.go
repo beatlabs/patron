@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Allows to copy documents from one index to another, optionally filtering the
 // source
@@ -39,6 +39,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/conflicts"
 )
 
 // ErrBuildPath is returned in case of missing parameters within the build of the request.
@@ -53,8 +54,9 @@ type Reindex struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -85,6 +87,8 @@ func New(tp elastictransport.Interface) *Reindex {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -114,9 +118,19 @@ func (r *Reindex) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -124,6 +138,7 @@ func (r *Reindex) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -201,13 +216,16 @@ func (r Reindex) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -220,71 +238,125 @@ func (r *Reindex) Header(key, value string) *Reindex {
 	return r
 }
 
-// Refresh Should the affected indexes be refreshed?
+// Refresh If `true`, the request refreshes affected shards to make this operation
+// visible to search.
 // API name: refresh
-func (r *Reindex) Refresh(b bool) *Reindex {
-	r.values.Set("refresh", strconv.FormatBool(b))
+func (r *Reindex) Refresh(refresh bool) *Reindex {
+	r.values.Set("refresh", strconv.FormatBool(refresh))
 
 	return r
 }
 
-// RequestsPerSecond The throttle to set on this request in sub-requests per second. -1 means no
-// throttle.
+// RequestsPerSecond The throttle for this request in sub-requests per second.
+// Defaults to no throttle.
 // API name: requests_per_second
-func (r *Reindex) RequestsPerSecond(v string) *Reindex {
-	r.values.Set("requests_per_second", v)
+func (r *Reindex) RequestsPerSecond(requestspersecond string) *Reindex {
+	r.values.Set("requests_per_second", requestspersecond)
 
 	return r
 }
 
-// Scroll Control how long to keep the search context alive
+// Scroll Specifies how long a consistent view of the index should be maintained for
+// scrolled search.
 // API name: scroll
-func (r *Reindex) Scroll(v string) *Reindex {
-	r.values.Set("scroll", v)
+func (r *Reindex) Scroll(duration string) *Reindex {
+	r.values.Set("scroll", duration)
 
 	return r
 }
 
-// Slices The number of slices this task should be divided into. Defaults to 1, meaning
-// the task isn't sliced into subtasks. Can be set to `auto`.
+// Slices The number of slices this task should be divided into.
+// Defaults to 1 slice, meaning the task isn’t sliced into subtasks.
 // API name: slices
-func (r *Reindex) Slices(v string) *Reindex {
-	r.values.Set("slices", v)
+func (r *Reindex) Slices(slices string) *Reindex {
+	r.values.Set("slices", slices)
 
 	return r
 }
 
-// Timeout Time each individual bulk request should wait for shards that are
-// unavailable.
+// Timeout Period each indexing waits for automatic index creation, dynamic mapping
+// updates, and waiting for active shards.
 // API name: timeout
-func (r *Reindex) Timeout(v string) *Reindex {
-	r.values.Set("timeout", v)
+func (r *Reindex) Timeout(duration string) *Reindex {
+	r.values.Set("timeout", duration)
 
 	return r
 }
 
-// WaitForActiveShards Sets the number of shard copies that must be active before proceeding with
-// the reindex operation. Defaults to 1, meaning the primary shard only. Set to
-// `all` for all shard copies, otherwise set to any non-negative value less than
-// or equal to the total number of copies for the shard (number of replicas + 1)
+// WaitForActiveShards The number of shard copies that must be active before proceeding with the
+// operation.
+// Set to `all` or any positive integer up to the total number of shards in the
+// index (`number_of_replicas+1`).
 // API name: wait_for_active_shards
-func (r *Reindex) WaitForActiveShards(v string) *Reindex {
-	r.values.Set("wait_for_active_shards", v)
+func (r *Reindex) WaitForActiveShards(waitforactiveshards string) *Reindex {
+	r.values.Set("wait_for_active_shards", waitforactiveshards)
 
 	return r
 }
 
-// WaitForCompletion Should the request should block until the reindex is complete.
+// WaitForCompletion If `true`, the request blocks until the operation is complete.
 // API name: wait_for_completion
-func (r *Reindex) WaitForCompletion(b bool) *Reindex {
-	r.values.Set("wait_for_completion", strconv.FormatBool(b))
+func (r *Reindex) WaitForCompletion(waitforcompletion bool) *Reindex {
+	r.values.Set("wait_for_completion", strconv.FormatBool(waitforcompletion))
 
 	return r
 }
 
+// RequireAlias If `true`, the destination must be an index alias.
 // API name: require_alias
-func (r *Reindex) RequireAlias(b bool) *Reindex {
-	r.values.Set("require_alias", strconv.FormatBool(b))
+func (r *Reindex) RequireAlias(requirealias bool) *Reindex {
+	r.values.Set("require_alias", strconv.FormatBool(requirealias))
+
+	return r
+}
+
+// Conflicts Set to proceed to continue reindexing even if there are conflicts.
+// API name: conflicts
+func (r *Reindex) Conflicts(conflicts conflicts.Conflicts) *Reindex {
+	r.req.Conflicts = &conflicts
+
+	return r
+}
+
+// Dest The destination you are copying to.
+// API name: dest
+func (r *Reindex) Dest(dest *types.ReindexDestination) *Reindex {
+
+	r.req.Dest = *dest
+
+	return r
+}
+
+// MaxDocs The maximum number of documents to reindex.
+// API name: max_docs
+func (r *Reindex) MaxDocs(maxdocs int64) *Reindex {
+
+	r.req.MaxDocs = &maxdocs
+
+	return r
+}
+
+// Script The script to run to update the document source or metadata when reindexing.
+// API name: script
+func (r *Reindex) Script(script types.Script) *Reindex {
+	r.req.Script = script
+
+	return r
+}
+
+// API name: size
+func (r *Reindex) Size(size int64) *Reindex {
+
+	r.req.Size = &size
+
+	return r
+}
+
+// Source The source you are copying from.
+// API name: source
+func (r *Reindex) Source(source *types.ReindexSource) *Reindex {
+
+	r.req.Source = *source
 
 	return r
 }

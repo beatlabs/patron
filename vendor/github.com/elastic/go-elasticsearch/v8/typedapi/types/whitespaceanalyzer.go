@@ -16,23 +16,71 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+)
+
 // WhitespaceAnalyzer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/analyzers.ts#L108-L111
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/analyzers.ts#L108-L111
 type WhitespaceAnalyzer struct {
 	Type    string  `json:"type,omitempty"`
 	Version *string `json:"version,omitempty"`
 }
 
+func (s *WhitespaceAnalyzer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s WhitespaceAnalyzer) MarshalJSON() ([]byte, error) {
+	type innerWhitespaceAnalyzer WhitespaceAnalyzer
+	tmp := innerWhitespaceAnalyzer{
+		Type:    s.Type,
+		Version: s.Version,
+	}
+
+	tmp.Type = "whitespace"
+
+	return json.Marshal(tmp)
+}
+
 // NewWhitespaceAnalyzer returns a WhitespaceAnalyzer.
 func NewWhitespaceAnalyzer() *WhitespaceAnalyzer {
 	r := &WhitespaceAnalyzer{}
-
-	r.Type = "whitespace"
 
 	return r
 }

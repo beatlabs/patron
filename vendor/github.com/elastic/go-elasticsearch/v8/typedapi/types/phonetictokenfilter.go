@@ -16,11 +16,17 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/phoneticencoder"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/phoneticlanguage"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/phoneticnametype"
@@ -29,7 +35,7 @@ import (
 
 // PhoneticTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/phonetic-plugin.ts#L64-L72
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/phonetic-plugin.ts#L64-L72
 type PhoneticTokenFilter struct {
 	Encoder     phoneticencoder.PhoneticEncoder     `json:"encoder"`
 	Languageset []phoneticlanguage.PhoneticLanguage `json:"languageset"`
@@ -41,11 +47,108 @@ type PhoneticTokenFilter struct {
 	Version     *string                             `json:"version,omitempty"`
 }
 
+func (s *PhoneticTokenFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "encoder":
+			if err := dec.Decode(&s.Encoder); err != nil {
+				return err
+			}
+
+		case "languageset":
+			if err := dec.Decode(&s.Languageset); err != nil {
+				return err
+			}
+
+		case "max_code_len":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxCodeLen = &value
+			case float64:
+				f := int(v)
+				s.MaxCodeLen = &f
+			}
+
+		case "name_type":
+			if err := dec.Decode(&s.NameType); err != nil {
+				return err
+			}
+
+		case "replace":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Replace = &value
+			case bool:
+				s.Replace = &v
+			}
+
+		case "rule_type":
+			if err := dec.Decode(&s.RuleType); err != nil {
+				return err
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s PhoneticTokenFilter) MarshalJSON() ([]byte, error) {
+	type innerPhoneticTokenFilter PhoneticTokenFilter
+	tmp := innerPhoneticTokenFilter{
+		Encoder:     s.Encoder,
+		Languageset: s.Languageset,
+		MaxCodeLen:  s.MaxCodeLen,
+		NameType:    s.NameType,
+		Replace:     s.Replace,
+		RuleType:    s.RuleType,
+		Type:        s.Type,
+		Version:     s.Version,
+	}
+
+	tmp.Type = "phonetic"
+
+	return json.Marshal(tmp)
+}
+
 // NewPhoneticTokenFilter returns a PhoneticTokenFilter.
 func NewPhoneticTokenFilter() *PhoneticTokenFilter {
 	r := &PhoneticTokenFilter{}
-
-	r.Type = "phonetic"
 
 	return r
 }

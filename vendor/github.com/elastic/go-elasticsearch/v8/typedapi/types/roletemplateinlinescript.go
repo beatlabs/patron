@@ -16,31 +16,38 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/scriptlanguage"
-
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 
-	"encoding/json"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/scriptlanguage"
 )
 
 // RoleTemplateInlineScript type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/security/_types/Privileges.ts#L152-L157
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/security/_types/Privileges.ts#L153-L158
 type RoleTemplateInlineScript struct {
 	Lang    *scriptlanguage.ScriptLanguage `json:"lang,omitempty"`
 	Options map[string]string              `json:"options,omitempty"`
-	Params  map[string]json.RawMessage     `json:"params,omitempty"`
-	Source  RoleTemplateInlineQuery        `json:"source"`
+	// Params Specifies any named parameters that are passed into the script as variables.
+	// Use parameters instead of hard-coded values to decrease compile time.
+	Params map[string]json.RawMessage `json:"params,omitempty"`
+	Source RoleTemplateInlineQuery    `json:"source"`
 }
 
 func (s *RoleTemplateInlineScript) UnmarshalJSON(data []byte) error {
+
+	if !bytes.HasPrefix(data, []byte(`{`)) {
+		err := json.NewDecoder(bytes.NewReader(data)).Decode(&s.Source)
+		return err
+	}
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -60,16 +67,23 @@ func (s *RoleTemplateInlineScript) UnmarshalJSON(data []byte) error {
 			}
 
 		case "options":
+			if s.Options == nil {
+				s.Options = make(map[string]string, 0)
+			}
 			if err := dec.Decode(&s.Options); err != nil {
 				return err
 			}
 
 		case "params":
+			if s.Params == nil {
+				s.Params = make(map[string]json.RawMessage, 0)
+			}
 			if err := dec.Decode(&s.Params); err != nil {
 				return err
 			}
 
 		case "source":
+
 			rawMsg := json.RawMessage{}
 			dec.Decode(&rawMsg)
 			source := bytes.NewReader(rawMsg)

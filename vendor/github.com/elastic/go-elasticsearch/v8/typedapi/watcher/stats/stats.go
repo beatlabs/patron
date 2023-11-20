@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves the current Watcher metrics.
 package stats
@@ -176,13 +176,16 @@ func (r Stats) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -218,17 +221,17 @@ func (r *Stats) Header(key, value string) *Stats {
 
 // Metric Defines which additional metrics are included in the response.
 // API Name: metric
-func (r *Stats) Metric(v ...string) *Stats {
+func (r *Stats) Metric(metrics ...string) *Stats {
 	r.paramSet |= metricMask
-	r.metric = strings.Join(v, ",")
+	r.metric = strings.Join(metrics, ",")
 
 	return r
 }
 
 // EmitStacktraces Defines whether stack traces are generated for each watch that is running.
 // API name: emit_stacktraces
-func (r *Stats) EmitStacktraces(b bool) *Stats {
-	r.values.Set("emit_stacktraces", strconv.FormatBool(b))
+func (r *Stats) EmitStacktraces(emitstacktraces bool) *Stats {
+	r.values.Set("emit_stacktraces", strconv.FormatBool(emitstacktraces))
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Allows to use the Mustache language to pre-render a search definition.
 package rendersearchtemplate
@@ -52,8 +52,9 @@ type RenderSearchTemplate struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -82,6 +83,8 @@ func New(tp elastictransport.Interface) *RenderSearchTemplate {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -111,9 +114,19 @@ func (r *RenderSearchTemplate) HttpRequest(ctx context.Context) (*http.Request, 
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -121,6 +134,7 @@ func (r *RenderSearchTemplate) HttpRequest(ctx context.Context) (*http.Request, 
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -210,13 +224,16 @@ func (r RenderSearchTemplate) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -229,11 +246,44 @@ func (r *RenderSearchTemplate) Header(key, value string) *RenderSearchTemplate {
 	return r
 }
 
-// Id The id of the stored search template
+// Id ID of the search template to render.
+// If no `source` is specified, this or the `id` request body parameter is
+// required.
 // API Name: id
-func (r *RenderSearchTemplate) Id(v string) *RenderSearchTemplate {
+func (r *RenderSearchTemplate) Id(id string) *RenderSearchTemplate {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
+
+	return r
+}
+
+// API name: file
+func (r *RenderSearchTemplate) File(file string) *RenderSearchTemplate {
+
+	r.req.File = &file
+
+	return r
+}
+
+// Params Key-value pairs used to replace Mustache variables in the template.
+// The key is the variable name.
+// The value is the variable value.
+// API name: params
+func (r *RenderSearchTemplate) Params(params map[string]json.RawMessage) *RenderSearchTemplate {
+
+	r.req.Params = params
+
+	return r
+}
+
+// Source An inline search template.
+// Supports the same parameters as the search API's request body.
+// These parameters also support Mustache variables.
+// If no `id` or `<templated-id>` is specified, this parameter is required.
+// API name: source
+func (r *RenderSearchTemplate) Source(source string) *RenderSearchTemplate {
+
+	r.req.Source = &source
 
 	return r
 }

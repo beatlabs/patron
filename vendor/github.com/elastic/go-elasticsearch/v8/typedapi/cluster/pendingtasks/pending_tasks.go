@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns a list of any cluster-level changes (e.g. create index, update
 // mapping,
@@ -164,13 +164,16 @@ func (r PendingTasks) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -204,19 +207,21 @@ func (r *PendingTasks) Header(key, value string) *PendingTasks {
 	return r
 }
 
-// Local Return local information, do not retrieve the state from master node
-// (default: false)
+// Local If `true`, the request retrieves information from the local node only.
+// If `false`, information is retrieved from the master node.
 // API name: local
-func (r *PendingTasks) Local(b bool) *PendingTasks {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *PendingTasks) Local(local bool) *PendingTasks {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *PendingTasks) MasterTimeout(v string) *PendingTasks {
-	r.values.Set("master_timeout", v)
+func (r *PendingTasks) MasterTimeout(duration string) *PendingTasks {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

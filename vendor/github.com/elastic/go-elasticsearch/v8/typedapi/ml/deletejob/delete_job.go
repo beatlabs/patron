@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes an existing anomaly detection job.
 package deletejob
@@ -68,7 +68,7 @@ func NewDeleteJobFunc(tp elastictransport.Interface) NewDeleteJob {
 	return func(jobid string) *DeleteJob {
 		n := New(tp)
 
-		n.JobId(jobid)
+		n._jobid(jobid)
 
 		return n
 	}
@@ -171,13 +171,16 @@ func (r DeleteJob) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -213,9 +216,9 @@ func (r *DeleteJob) Header(key, value string) *DeleteJob {
 
 // JobId Identifier for the anomaly detection job.
 // API Name: jobid
-func (r *DeleteJob) JobId(v string) *DeleteJob {
+func (r *DeleteJob) _jobid(jobid string) *DeleteJob {
 	r.paramSet |= jobidMask
-	r.jobid = v
+	r.jobid = jobid
 
 	return r
 }
@@ -223,8 +226,8 @@ func (r *DeleteJob) JobId(v string) *DeleteJob {
 // Force Use to forcefully delete an opened job; this method is quicker than
 // closing and deleting the job.
 // API name: force
-func (r *DeleteJob) Force(b bool) *DeleteJob {
-	r.values.Set("force", strconv.FormatBool(b))
+func (r *DeleteJob) Force(force bool) *DeleteJob {
+	r.values.Set("force", strconv.FormatBool(force))
 
 	return r
 }
@@ -234,8 +237,8 @@ func (r *DeleteJob) Force(b bool) *DeleteJob {
 // is
 // reset.
 // API name: delete_user_annotations
-func (r *DeleteJob) DeleteUserAnnotations(b bool) *DeleteJob {
-	r.values.Set("delete_user_annotations", strconv.FormatBool(b))
+func (r *DeleteJob) DeleteUserAnnotations(deleteuserannotations bool) *DeleteJob {
+	r.values.Set("delete_user_annotations", strconv.FormatBool(deleteuserannotations))
 
 	return r
 }
@@ -243,8 +246,8 @@ func (r *DeleteJob) DeleteUserAnnotations(b bool) *DeleteJob {
 // WaitForCompletion Specifies whether the request should return immediately or wait until the
 // job deletion completes.
 // API name: wait_for_completion
-func (r *DeleteJob) WaitForCompletion(b bool) *DeleteJob {
-	r.values.Set("wait_for_completion", strconv.FormatBool(b))
+func (r *DeleteJob) WaitForCompletion(waitforcompletion bool) *DeleteJob {
+	r.values.Set("wait_for_completion", strconv.FormatBool(waitforcompletion))
 
 	return r
 }

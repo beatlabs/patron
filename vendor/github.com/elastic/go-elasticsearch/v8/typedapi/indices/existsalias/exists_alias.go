@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about whether a particular alias exists.
 package existsalias
@@ -24,7 +24,6 @@ package existsalias
 import (
 	gobytes "bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -35,7 +34,7 @@ import (
 	"strings"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -71,7 +70,7 @@ func NewExistsAliasFunc(tp elastictransport.Interface) NewExistsAlias {
 	return func(name string) *ExistsAlias {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -166,33 +165,8 @@ func (r ExistsAlias) Perform(ctx context.Context) (*http.Response, error) {
 }
 
 // Do runs the request through the transport, handle the response and returns a existsalias.Response
-func (r ExistsAlias) Do(ctx context.Context) (*Response, error) {
-
-	response := NewResponse()
-
-	res, err := r.Perform(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode < 299 {
-		err = json.NewDecoder(res.Body).Decode(response)
-		if err != nil {
-			return nil, err
-		}
-
-		return response, nil
-
-	}
-
-	errorResponse := types.NewElasticsearchError()
-	err = json.NewDecoder(res.Body).Decode(errorResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, errorResponse
+func (r ExistsAlias) Do(ctx context.Context) (bool, error) {
+	return r.IsSuccess(ctx)
 }
 
 // IsSuccess allows to run a query with a context and retrieve the result as a boolean.
@@ -223,56 +197,66 @@ func (r *ExistsAlias) Header(key, value string) *ExistsAlias {
 	return r
 }
 
-// Name A comma-separated list of alias names to return
+// Name Comma-separated list of aliases to check. Supports wildcards (`*`).
 // API Name: name
-func (r *ExistsAlias) Name(v string) *ExistsAlias {
+func (r *ExistsAlias) _name(name string) *ExistsAlias {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
-// Index A comma-separated list of index names to filter aliases
+// Index Comma-separated list of data streams or indices used to limit the request.
+// Supports wildcards (`*`).
+// To target all data streams and indices, omit this parameter or use `*` or
+// `_all`.
 // API Name: index
-func (r *ExistsAlias) Index(v string) *ExistsAlias {
+func (r *ExistsAlias) Index(index string) *ExistsAlias {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// AllowNoIndices Whether to ignore if a wildcard indices expression resolves into no concrete
-// indices. (This includes `_all` string or when no indices have been specified)
+// AllowNoIndices If `false`, the request returns an error if any wildcard expression, index
+// alias, or `_all` value targets only missing or closed indices.
+// This behavior applies even if the request targets other open indices.
 // API name: allow_no_indices
-func (r *ExistsAlias) AllowNoIndices(b bool) *ExistsAlias {
-	r.values.Set("allow_no_indices", strconv.FormatBool(b))
+func (r *ExistsAlias) AllowNoIndices(allownoindices bool) *ExistsAlias {
+	r.values.Set("allow_no_indices", strconv.FormatBool(allownoindices))
 
 	return r
 }
 
-// ExpandWildcards Whether to expand wildcard expression to concrete indices that are open,
-// closed or both.
+// ExpandWildcards Type of index that wildcard patterns can match.
+// If the request can target data streams, this argument determines whether
+// wildcard expressions match hidden data streams.
+// Supports comma-separated values, such as `open,hidden`.
+// Valid values are: `all`, `open`, `closed`, `hidden`, `none`.
 // API name: expand_wildcards
-func (r *ExistsAlias) ExpandWildcards(v string) *ExistsAlias {
-	r.values.Set("expand_wildcards", v)
+func (r *ExistsAlias) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *ExistsAlias {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
-// IgnoreUnavailable Whether specified concrete indices should be ignored when unavailable
-// (missing or closed)
+// IgnoreUnavailable If `false`, requests that include a missing data stream or index in the
+// target indices or data streams return an error.
 // API name: ignore_unavailable
-func (r *ExistsAlias) IgnoreUnavailable(b bool) *ExistsAlias {
-	r.values.Set("ignore_unavailable", strconv.FormatBool(b))
+func (r *ExistsAlias) IgnoreUnavailable(ignoreunavailable bool) *ExistsAlias {
+	r.values.Set("ignore_unavailable", strconv.FormatBool(ignoreunavailable))
 
 	return r
 }
 
-// Local Return local information, do not retrieve the state from master node
-// (default: false)
+// Local If `true`, the request retrieves information from the local node only.
 // API name: local
-func (r *ExistsAlias) Local(b bool) *ExistsAlias {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *ExistsAlias) Local(local bool) *ExistsAlias {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }

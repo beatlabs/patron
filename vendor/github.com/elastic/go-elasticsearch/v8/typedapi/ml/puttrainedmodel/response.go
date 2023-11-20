@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package puttrainedmodel
 
@@ -27,7 +27,7 @@ import (
 
 // Response holds the response body struct for the package puttrainedmodel
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/put_trained_model/MlPutTrainedModelResponse.ts#L22-L24
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/put_trained_model/MlPutTrainedModelResponse.ts#L22-L24
 
 type Response struct {
 	CompressedDefinition *string `json:"compressed_definition,omitempty"`
@@ -43,10 +43,13 @@ type Response struct {
 	EstimatedHeapMemoryUsageBytes *int `json:"estimated_heap_memory_usage_bytes,omitempty"`
 	// EstimatedOperations The estimated number of operations to use the trained model.
 	EstimatedOperations *int `json:"estimated_operations,omitempty"`
+	// FullyDefined True if the full model definition is present.
+	FullyDefined *bool `json:"fully_defined,omitempty"`
 	// InferenceConfig The default configuration for inference. This can be either a regression,
 	// classification, or one of the many NLP focused configurations. It must match
-	// the underlying definition.trained_model's target_type.
-	InferenceConfig types.InferenceConfigCreateContainer `json:"inference_config"`
+	// the underlying definition.trained_model's target_type. For pre-packaged
+	// models such as ELSER the config is not required.
+	InferenceConfig *types.InferenceConfigCreateContainer `json:"inference_config,omitempty"`
 	// Input The input field names for the model definition.
 	Input types.TrainedModelConfigInput `json:"input"`
 	// LicenseLevel The license level of the trained model.

@@ -16,21 +16,59 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 )
 
 // ComponentTemplateNode type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/_types/ComponentTemplate.ts#L31-L36
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/cluster/_types/ComponentTemplate.ts#L35-L40
 type ComponentTemplateNode struct {
-	Meta_    map[string]json.RawMessage `json:"_meta,omitempty"`
-	Template ComponentTemplateSummary   `json:"template"`
-	Version  *int64                     `json:"version,omitempty"`
+	Meta_    Metadata                 `json:"_meta,omitempty"`
+	Template ComponentTemplateSummary `json:"template"`
+	Version  *int64                   `json:"version,omitempty"`
+}
+
+func (s *ComponentTemplateNode) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "_meta":
+			if err := dec.Decode(&s.Meta_); err != nil {
+				return err
+			}
+
+		case "template":
+			if err := dec.Decode(&s.Template); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewComponentTemplateNode returns a ComponentTemplateNode.

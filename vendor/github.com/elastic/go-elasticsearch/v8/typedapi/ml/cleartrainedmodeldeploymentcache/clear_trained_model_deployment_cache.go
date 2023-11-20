@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Clear the cached results from a trained model deployment
 package cleartrainedmodeldeploymentcache
@@ -67,7 +67,7 @@ func NewClearTrainedModelDeploymentCacheFunc(tp elastictransport.Interface) NewC
 	return func(modelid string) *ClearTrainedModelDeploymentCache {
 		n := New(tp)
 
-		n.ModelId(modelid)
+		n._modelid(modelid)
 
 		return n
 	}
@@ -182,13 +182,16 @@ func (r ClearTrainedModelDeploymentCache) Do(ctx context.Context) (*Response, er
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -224,9 +227,9 @@ func (r *ClearTrainedModelDeploymentCache) Header(key, value string) *ClearTrain
 
 // ModelId The unique identifier of the trained model.
 // API Name: modelid
-func (r *ClearTrainedModelDeploymentCache) ModelId(v string) *ClearTrainedModelDeploymentCache {
+func (r *ClearTrainedModelDeploymentCache) _modelid(modelid string) *ClearTrainedModelDeploymentCache {
 	r.paramSet |= modelidMask
-	r.modelid = v
+	r.modelid = modelid
 
 	return r
 }

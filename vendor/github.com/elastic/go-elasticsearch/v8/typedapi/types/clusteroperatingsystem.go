@@ -16,20 +16,111 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // ClusterOperatingSystem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/stats/types.ts#L235-L242
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/cluster/stats/types.ts#L415-L442
 type ClusterOperatingSystem struct {
-	AllocatedProcessors int                                  `json:"allocated_processors"`
-	Architectures       []ClusterOperatingSystemArchitecture `json:"architectures,omitempty"`
-	AvailableProcessors int                                  `json:"available_processors"`
-	Mem                 OperatingSystemMemoryInfo            `json:"mem"`
-	Names               []ClusterOperatingSystemName         `json:"names"`
-	PrettyNames         []ClusterOperatingSystemPrettyName   `json:"pretty_names"`
+	// AllocatedProcessors Number of processors used to calculate thread pool size across all selected
+	// nodes.
+	// This number can be set with the processors setting of a node and defaults to
+	// the number of processors reported by the operating system.
+	// In both cases, this number will never be larger than 32.
+	AllocatedProcessors int `json:"allocated_processors"`
+	// Architectures Contains statistics about processor architectures (for example, x86_64 or
+	// aarch64) used by selected nodes.
+	Architectures []ClusterOperatingSystemArchitecture `json:"architectures,omitempty"`
+	// AvailableProcessors Number of processors available to JVM across all selected nodes.
+	AvailableProcessors int `json:"available_processors"`
+	// Mem Contains statistics about memory used by selected nodes.
+	Mem OperatingSystemMemoryInfo `json:"mem"`
+	// Names Contains statistics about operating systems used by selected nodes.
+	Names []ClusterOperatingSystemName `json:"names"`
+	// PrettyNames Contains statistics about operating systems used by selected nodes.
+	PrettyNames []ClusterOperatingSystemPrettyName `json:"pretty_names"`
+}
+
+func (s *ClusterOperatingSystem) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "allocated_processors":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.AllocatedProcessors = value
+			case float64:
+				f := int(v)
+				s.AllocatedProcessors = f
+			}
+
+		case "architectures":
+			if err := dec.Decode(&s.Architectures); err != nil {
+				return err
+			}
+
+		case "available_processors":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.AvailableProcessors = value
+			case float64:
+				f := int(v)
+				s.AvailableProcessors = f
+			}
+
+		case "mem":
+			if err := dec.Decode(&s.Mem); err != nil {
+				return err
+			}
+
+		case "names":
+			if err := dec.Decode(&s.Names); err != nil {
+				return err
+			}
+
+		case "pretty_names":
+			if err := dec.Decode(&s.PrettyNames); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewClusterOperatingSystem returns a ClusterOperatingSystem.

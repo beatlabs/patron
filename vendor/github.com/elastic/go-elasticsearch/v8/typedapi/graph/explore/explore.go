@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Explore extracted and summarized information about the documents and terms in
 // an index.
@@ -53,8 +53,9 @@ type Explore struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -70,7 +71,7 @@ func NewExploreFunc(tp elastictransport.Interface) NewExplore {
 	return func(index string) *Explore {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -79,13 +80,15 @@ func NewExploreFunc(tp elastictransport.Interface) NewExplore {
 // Explore extracted and summarized information about the documents and terms in
 // an index.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/graph-explore-api.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/graph-explore-api.html
 func New(tp elastictransport.Interface) *Explore {
 	r := &Explore{
 		transport: tp,
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -115,9 +118,19 @@ func (r *Explore) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -125,6 +138,7 @@ func (r *Explore) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -207,13 +221,16 @@ func (r Explore) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -226,28 +243,68 @@ func (r *Explore) Header(key, value string) *Explore {
 	return r
 }
 
-// Index A comma-separated list of index names to search; use `_all` or empty string
-// to perform the operation on all indices
+// Index Name of the index.
 // API Name: index
-func (r *Explore) Index(v string) *Explore {
+func (r *Explore) _index(index string) *Explore {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// Routing Specific routing value
+// Routing Custom value used to route operations to a specific shard.
 // API name: routing
-func (r *Explore) Routing(v string) *Explore {
-	r.values.Set("routing", v)
+func (r *Explore) Routing(routing string) *Explore {
+	r.values.Set("routing", routing)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Specifies the period of time to wait for a response from each shard.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
+// Defaults to no timeout.
 // API name: timeout
-func (r *Explore) Timeout(v string) *Explore {
-	r.values.Set("timeout", v)
+func (r *Explore) Timeout(duration string) *Explore {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
+// Connections Specifies or more fields from which you want to extract terms that are
+// associated with the specified vertices.
+// API name: connections
+func (r *Explore) Connections(connections *types.Hop) *Explore {
+
+	r.req.Connections = connections
+
+	return r
+}
+
+// Controls Direct the Graph API how to build the graph.
+// API name: controls
+func (r *Explore) Controls(controls *types.ExploreControls) *Explore {
+
+	r.req.Controls = controls
+
+	return r
+}
+
+// Query A seed query that identifies the documents of interest. Can be any valid
+// Elasticsearch query.
+// API name: query
+func (r *Explore) Query(query *types.Query) *Explore {
+
+	r.req.Query = query
+
+	return r
+}
+
+// Vertices Specifies one or more fields that contain the terms you want to include in
+// the graph as vertices.
+// API name: vertices
+func (r *Explore) Vertices(vertices ...types.VertexDefinition) *Explore {
+	r.req.Vertices = vertices
 
 	return r
 }

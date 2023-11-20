@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates a SAML authentication request
 package samlprepareauthentication
@@ -48,8 +48,9 @@ type SamlPrepareAuthentication struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -76,6 +77,8 @@ func New(tp elastictransport.Interface) *SamlPrepareAuthentication {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -105,9 +108,19 @@ func (r *SamlPrepareAuthentication) HttpRequest(ctx context.Context) (*http.Requ
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -115,6 +128,7 @@ func (r *SamlPrepareAuthentication) HttpRequest(ctx context.Context) (*http.Requ
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -196,7 +210,6 @@ func (r SamlPrepareAuthentication) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
@@ -205,12 +218,51 @@ func (r SamlPrepareAuthentication) Do(ctx context.Context) (*Response, error) {
 		return nil, err
 	}
 
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
+	}
+
 	return nil, errorResponse
 }
 
 // Header set a key, value pair in the SamlPrepareAuthentication headers map.
 func (r *SamlPrepareAuthentication) Header(key, value string) *SamlPrepareAuthentication {
 	r.headers.Set(key, value)
+
+	return r
+}
+
+// Acs The Assertion Consumer Service URL that matches the one of the SAML realms in
+// Elasticsearch.
+// The realm is used to generate the authentication request. You must specify
+// either this parameter or the realm parameter.
+// API name: acs
+func (r *SamlPrepareAuthentication) Acs(acs string) *SamlPrepareAuthentication {
+
+	r.req.Acs = &acs
+
+	return r
+}
+
+// Realm The name of the SAML realm in Elasticsearch for which the configuration is
+// used to generate the authentication request.
+// You must specify either this parameter or the acs parameter.
+// API name: realm
+func (r *SamlPrepareAuthentication) Realm(realm string) *SamlPrepareAuthentication {
+
+	r.req.Realm = &realm
+
+	return r
+}
+
+// RelayState A string that will be included in the redirect URL that this API returns as
+// the RelayState query parameter.
+// If the Authentication Request is signed, this value is used as part of the
+// signature computation.
+// API name: relay_state
+func (r *SamlPrepareAuthentication) RelayState(relaystate string) *SamlPrepareAuthentication {
+
+	r.req.RelayState = &relaystate
 
 	return r
 }

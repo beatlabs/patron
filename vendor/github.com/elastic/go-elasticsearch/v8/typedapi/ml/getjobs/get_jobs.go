@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves configuration information for anomaly detection jobs.
 package getjobs
@@ -176,13 +176,16 @@ func (r GetJobs) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -220,9 +223,9 @@ func (r *GetJobs) Header(key, value string) *GetJobs {
 // group name, or a wildcard expression. If you do not specify one of these
 // options, the API returns information for all anomaly detection jobs.
 // API Name: jobid
-func (r *GetJobs) JobId(v string) *GetJobs {
+func (r *GetJobs) JobId(jobid string) *GetJobs {
 	r.paramSet |= jobidMask
-	r.jobid = v
+	r.jobid = jobid
 
 	return r
 }
@@ -238,8 +241,8 @@ func (r *GetJobs) JobId(v string) *GetJobs {
 // matches. If this parameter is `false`, the request returns a `404` status
 // code when there are no matches or only partial matches.
 // API name: allow_no_match
-func (r *GetJobs) AllowNoMatch(b bool) *GetJobs {
-	r.values.Set("allow_no_match", strconv.FormatBool(b))
+func (r *GetJobs) AllowNoMatch(allownomatch bool) *GetJobs {
+	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
 
 	return r
 }
@@ -248,8 +251,8 @@ func (r *GetJobs) AllowNoMatch(b bool) *GetJobs {
 // retrieval. This allows the configuration to be in an acceptable format to
 // be retrieved and then added to another cluster.
 // API name: exclude_generated
-func (r *GetJobs) ExcludeGenerated(b bool) *GetJobs {
-	r.values.Set("exclude_generated", strconv.FormatBool(b))
+func (r *GetJobs) ExcludeGenerated(excludegenerated bool) *GetJobs {
+	r.values.Set("exclude_generated", strconv.FormatBool(excludegenerated))
 
 	return r
 }

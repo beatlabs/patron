@@ -16,22 +16,92 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 )
 
 // GrantApiKey type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/security/grant_api_key/types.ts#L25-L32
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/security/grant_api_key/types.ts#L25-L46
 type GrantApiKey struct {
-	Expiration      *string                     `json:"expiration,omitempty"`
-	Metadata        map[string]json.RawMessage  `json:"metadata,omitempty"`
-	Name            string                      `json:"name"`
+	// Expiration Expiration time for the API key. By default, API keys never expire.
+	Expiration *string `json:"expiration,omitempty"`
+	// Metadata Arbitrary metadata that you want to associate with the API key.
+	// It supports nested data structure.
+	// Within the `metadata` object, keys beginning with `_` are reserved for system
+	// usage.
+	Metadata Metadata `json:"metadata,omitempty"`
+	Name     string   `json:"name"`
+	// RoleDescriptors The role descriptors for this API key.
+	// This parameter is optional.
+	// When it is not specified or is an empty array, the API key has a point in
+	// time snapshot of permissions of the specified user or access token.
+	// If you supply role descriptors, the resultant permissions are an intersection
+	// of API keys permissions and the permissions of the user or access token.
 	RoleDescriptors []map[string]RoleDescriptor `json:"role_descriptors,omitempty"`
+}
+
+func (s *GrantApiKey) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "expiration":
+			if err := dec.Decode(&s.Expiration); err != nil {
+				return err
+			}
+
+		case "metadata":
+			if err := dec.Decode(&s.Metadata); err != nil {
+				return err
+			}
+
+		case "name":
+			if err := dec.Decode(&s.Name); err != nil {
+				return err
+			}
+
+		case "role_descriptors":
+
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			source := bytes.NewReader(rawMsg)
+			localDec := json.NewDecoder(source)
+			switch rawMsg[0] {
+			case '{':
+				o := make(map[string]RoleDescriptor, 0)
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.RoleDescriptors = append(s.RoleDescriptors, o)
+			case '[':
+				o := make([]map[string]RoleDescriptor, 0)
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.RoleDescriptors = o
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewGrantApiKey returns a GrantApiKey.

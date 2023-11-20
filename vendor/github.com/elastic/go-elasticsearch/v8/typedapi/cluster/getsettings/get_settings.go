@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns cluster settings.
 package getsettings
@@ -160,13 +160,16 @@ func (r GetSettings) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -200,34 +203,38 @@ func (r *GetSettings) Header(key, value string) *GetSettings {
 	return r
 }
 
-// FlatSettings Return settings in flat format (default: false)
+// FlatSettings If `true`, returns settings in flat format.
 // API name: flat_settings
-func (r *GetSettings) FlatSettings(b bool) *GetSettings {
-	r.values.Set("flat_settings", strconv.FormatBool(b))
+func (r *GetSettings) FlatSettings(flatsettings bool) *GetSettings {
+	r.values.Set("flat_settings", strconv.FormatBool(flatsettings))
 
 	return r
 }
 
-// IncludeDefaults Whether to return all default clusters setting.
+// IncludeDefaults If `true`, returns default cluster settings from the local node.
 // API name: include_defaults
-func (r *GetSettings) IncludeDefaults(b bool) *GetSettings {
-	r.values.Set("include_defaults", strconv.FormatBool(b))
+func (r *GetSettings) IncludeDefaults(includedefaults bool) *GetSettings {
+	r.values.Set("include_defaults", strconv.FormatBool(includedefaults))
 
 	return r
 }
 
-// MasterTimeout Explicit operation timeout for connection to master node
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *GetSettings) MasterTimeout(v string) *GetSettings {
-	r.values.Set("master_timeout", v)
+func (r *GetSettings) MasterTimeout(duration string) *GetSettings {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *GetSettings) Timeout(v string) *GetSettings {
-	r.values.Set("timeout", v)
+func (r *GetSettings) Timeout(duration string) *GetSettings {
+	r.values.Set("timeout", duration)
 
 	return r
 }

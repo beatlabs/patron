@@ -16,22 +16,142 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // CompletionSuggester type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/search/_types/suggester.ts#L130-L136
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/search/_types/suggester.ts#L160-L178
 type CompletionSuggester struct {
-	Analyzer       *string                        `json:"analyzer,omitempty"`
-	Contexts       map[string][]CompletionContext `json:"contexts,omitempty"`
-	Field          string                         `json:"field"`
-	Fuzzy          *SuggestFuzziness              `json:"fuzzy,omitempty"`
-	Prefix         *string                        `json:"prefix,omitempty"`
-	Regex          *string                        `json:"regex,omitempty"`
-	Size           *int                           `json:"size,omitempty"`
-	SkipDuplicates *bool                          `json:"skip_duplicates,omitempty"`
+	// Analyzer The analyzer to analyze the suggest text with.
+	// Defaults to the search analyzer of the suggest field.
+	Analyzer *string `json:"analyzer,omitempty"`
+	// Contexts A value, geo point object, or a geo hash string to filter or boost the
+	// suggestion on.
+	Contexts map[string][]CompletionContext `json:"contexts,omitempty"`
+	// Field The field to fetch the candidate suggestions from.
+	// Needs to be set globally or per suggestion.
+	Field string `json:"field"`
+	// Fuzzy Enables fuzziness, meaning you can have a typo in your search and still get
+	// results back.
+	Fuzzy *SuggestFuzziness `json:"fuzzy,omitempty"`
+	// Regex A regex query that expresses a prefix as a regular expression.
+	Regex *RegexOptions `json:"regex,omitempty"`
+	// Size The maximum corrections to be returned per suggest text token.
+	Size *int `json:"size,omitempty"`
+	// SkipDuplicates Whether duplicate suggestions should be filtered out.
+	SkipDuplicates *bool `json:"skip_duplicates,omitempty"`
+}
+
+func (s *CompletionSuggester) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "analyzer":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Analyzer = &o
+
+		case "contexts":
+			if s.Contexts == nil {
+				s.Contexts = make(map[string][]CompletionContext, 0)
+			}
+			rawMsg := make(map[string]json.RawMessage, 0)
+			dec.Decode(&rawMsg)
+			for key, value := range rawMsg {
+				switch {
+				case bytes.HasPrefix(value, []byte("\"")), bytes.HasPrefix(value, []byte("{")):
+					o := NewCompletionContext()
+					err := json.NewDecoder(bytes.NewReader(value)).Decode(&o)
+					if err != nil {
+						return err
+					}
+					s.Contexts[key] = append(s.Contexts[key], *o)
+				default:
+					o := []CompletionContext{}
+					err := json.NewDecoder(bytes.NewReader(value)).Decode(&o)
+					if err != nil {
+						return err
+					}
+					s.Contexts[key] = o
+				}
+			}
+
+		case "field":
+			if err := dec.Decode(&s.Field); err != nil {
+				return err
+			}
+
+		case "fuzzy":
+			if err := dec.Decode(&s.Fuzzy); err != nil {
+				return err
+			}
+
+		case "regex":
+			if err := dec.Decode(&s.Regex); err != nil {
+				return err
+			}
+
+		case "size":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Size = &value
+			case float64:
+				f := int(v)
+				s.Size = &f
+			}
+
+		case "skip_duplicates":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.SkipDuplicates = &value
+			case bool:
+				s.SkipDuplicates = &v
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewCompletionSuggester returns a CompletionSuggester.

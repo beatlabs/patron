@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns an index template.
 package gettemplate
@@ -172,13 +172,16 @@ func (r GetTemplate) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -212,36 +215,40 @@ func (r *GetTemplate) Header(key, value string) *GetTemplate {
 	return r
 }
 
-// Name The comma separated names of the index templates
+// Name Comma-separated list of index template names used to limit the request.
+// Wildcard (`*`) expressions are supported.
+// To return all index templates, omit this parameter or use a value of `_all`
+// or `*`.
 // API Name: name
-func (r *GetTemplate) Name(v string) *GetTemplate {
+func (r *GetTemplate) Name(name string) *GetTemplate {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
-// FlatSettings Return settings in flat format (default: false)
+// FlatSettings If `true`, returns settings in flat format.
 // API name: flat_settings
-func (r *GetTemplate) FlatSettings(b bool) *GetTemplate {
-	r.values.Set("flat_settings", strconv.FormatBool(b))
+func (r *GetTemplate) FlatSettings(flatsettings bool) *GetTemplate {
+	r.values.Set("flat_settings", strconv.FormatBool(flatsettings))
 
 	return r
 }
 
-// Local Return local information, do not retrieve the state from master node
-// (default: false)
+// Local If `true`, the request retrieves information from the local node only.
 // API name: local
-func (r *GetTemplate) Local(b bool) *GetTemplate {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *GetTemplate) Local(local bool) *GetTemplate {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }
 
-// MasterTimeout Explicit operation timeout for connection to master node
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *GetTemplate) MasterTimeout(v string) *GetTemplate {
-	r.values.Set("master_timeout", v)
+func (r *GetTemplate) MasterTimeout(duration string) *GetTemplate {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

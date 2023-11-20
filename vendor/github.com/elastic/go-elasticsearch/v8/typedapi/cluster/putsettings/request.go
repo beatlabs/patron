@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package putsettings
 
@@ -27,7 +27,7 @@ import (
 
 // Request holds the request body struct for the package putsettings
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/put_settings/ClusterPutSettingsRequest.ts#L25-L43
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/cluster/put_settings/ClusterPutSettingsRequest.ts#L25-L43
 type Request struct {
 	Persistent map[string]json.RawMessage `json:"persistent,omitempty"`
 	Transient  map[string]json.RawMessage `json:"transient,omitempty"`

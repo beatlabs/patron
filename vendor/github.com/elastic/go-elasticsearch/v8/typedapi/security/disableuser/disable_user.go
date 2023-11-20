@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Disables users in the native realm.
 package disableuser
@@ -35,7 +35,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 )
 
@@ -69,7 +68,7 @@ func NewDisableUserFunc(tp elastictransport.Interface) NewDisableUser {
 	return func(username string) *DisableUser {
 		n := New(tp)
 
-		n.Username(username)
+		n._username(username)
 
 		return n
 	}
@@ -174,13 +173,16 @@ func (r DisableUser) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -216,9 +218,9 @@ func (r *DisableUser) Header(key, value string) *DisableUser {
 
 // Username The username of the user to disable
 // API Name: username
-func (r *DisableUser) Username(v string) *DisableUser {
+func (r *DisableUser) _username(username string) *DisableUser {
 	r.paramSet |= usernameMask
-	r.username = v
+	r.username = username
 
 	return r
 }
@@ -227,8 +229,8 @@ func (r *DisableUser) Username(v string) *DisableUser {
 // operation visible to search, if `wait_for` then wait for a refresh to make
 // this operation visible to search, if `false` then do nothing with refreshes.
 // API name: refresh
-func (r *DisableUser) Refresh(enum refresh.Refresh) *DisableUser {
-	r.values.Set("refresh", enum.String())
+func (r *DisableUser) Refresh(refresh refresh.Refresh) *DisableUser {
+	r.values.Set("refresh", refresh.String())
 
 	return r
 }

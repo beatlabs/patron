@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about ongoing index shard recoveries.
 package recovery
@@ -172,13 +172,16 @@ func (r Recovery) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -212,28 +215,31 @@ func (r *Recovery) Header(key, value string) *Recovery {
 	return r
 }
 
-// Index A comma-separated list of index names; use `_all` or empty string to perform
-// the operation on all indices
+// Index Comma-separated list of data streams, indices, and aliases used to limit the
+// request.
+// Supports wildcards (`*`).
+// To target all data streams and indices, omit this parameter or use `*` or
+// `_all`.
 // API Name: index
-func (r *Recovery) Index(v string) *Recovery {
+func (r *Recovery) Index(index string) *Recovery {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// ActiveOnly Display only those recoveries that are currently on-going
+// ActiveOnly If `true`, the response only includes ongoing shard recoveries.
 // API name: active_only
-func (r *Recovery) ActiveOnly(b bool) *Recovery {
-	r.values.Set("active_only", strconv.FormatBool(b))
+func (r *Recovery) ActiveOnly(activeonly bool) *Recovery {
+	r.values.Set("active_only", strconv.FormatBool(activeonly))
 
 	return r
 }
 
-// Detailed Whether to display detailed information about shard recovery
+// Detailed If `true`, the response includes detailed information about shard recoveries.
 // API name: detailed
-func (r *Recovery) Detailed(b bool) *Recovery {
-	r.values.Set("detailed", strconv.FormatBool(b))
+func (r *Recovery) Detailed(detailed bool) *Recovery {
+	r.values.Set("detailed", strconv.FormatBool(detailed))
 
 	return r
 }

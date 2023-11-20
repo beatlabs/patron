@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves licensing information for the cluster
 package get
@@ -158,13 +158,16 @@ func (r Get) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -203,8 +206,8 @@ func (r *Get) Header(key, value string) *Get {
 // license types. This behavior is maintained for backwards compatibility.
 // This parameter is deprecated and will always be set to true in 8.x.
 // API name: accept_enterprise
-func (r *Get) AcceptEnterprise(b bool) *Get {
-	r.values.Set("accept_enterprise", strconv.FormatBool(b))
+func (r *Get) AcceptEnterprise(acceptenterprise bool) *Get {
+	r.values.Set("accept_enterprise", strconv.FormatBool(acceptenterprise))
 
 	return r
 }
@@ -212,8 +215,8 @@ func (r *Get) AcceptEnterprise(b bool) *Get {
 // Local Specifies whether to retrieve local information. The default value is
 // `false`, which means the information is retrieved from the master node.
 // API name: local
-func (r *Get) Local(b bool) *Get {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *Get) Local(local bool) *Get {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }

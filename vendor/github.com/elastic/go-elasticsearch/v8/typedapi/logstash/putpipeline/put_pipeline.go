@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Adds and updates Logstash Pipelines used for Central Management
 package putpipeline
@@ -52,8 +52,9 @@ type PutPipeline struct {
 
 	buf *gobytes.Buffer
 
-	req *types.LogstashPipeline
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -69,7 +70,7 @@ func NewPutPipelineFunc(tp elastictransport.Interface) NewPutPipeline {
 	return func(id string) *PutPipeline {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -98,7 +99,7 @@ func (r *PutPipeline) Raw(raw io.Reader) *PutPipeline {
 }
 
 // Request allows to set the request property with the appropriate payload.
-func (r *PutPipeline) Request(req *types.LogstashPipeline) *PutPipeline {
+func (r *PutPipeline) Request(req *Request) *PutPipeline {
 	r.req = req
 
 	return r
@@ -113,9 +114,19 @@ func (r *PutPipeline) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -123,6 +134,7 @@ func (r *PutPipeline) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -187,36 +199,6 @@ func (r PutPipeline) Perform(ctx context.Context) (*http.Response, error) {
 	return res, nil
 }
 
-// Do runs the request through the transport, handle the response and returns a putpipeline.Response
-func (r PutPipeline) Do(ctx context.Context) (*Response, error) {
-
-	response := NewResponse()
-
-	res, err := r.Perform(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode < 299 {
-		err = json.NewDecoder(res.Body).Decode(response)
-		if err != nil {
-			return nil, err
-		}
-
-		return response, nil
-
-	}
-
-	errorResponse := types.NewElasticsearchError()
-	err = json.NewDecoder(res.Body).Decode(errorResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, errorResponse
-}
-
 // Header set a key, value pair in the PutPipeline headers map.
 func (r *PutPipeline) Header(key, value string) *PutPipeline {
 	r.headers.Set(key, value)
@@ -224,11 +206,69 @@ func (r *PutPipeline) Header(key, value string) *PutPipeline {
 	return r
 }
 
-// Id The ID of the Pipeline
+// Id Identifier for the pipeline.
 // API Name: id
-func (r *PutPipeline) Id(v string) *PutPipeline {
+func (r *PutPipeline) _id(id string) *PutPipeline {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
+
+	return r
+}
+
+// Description Description of the pipeline.
+// This description is not used by Elasticsearch or Logstash.
+// API name: description
+func (r *PutPipeline) Description(description string) *PutPipeline {
+
+	r.req.Description = description
+
+	return r
+}
+
+// LastModified Date the pipeline was last updated.
+// Must be in the `yyyy-MM-dd'T'HH:mm:ss.SSSZZ` strict_date_time format.
+// API name: last_modified
+func (r *PutPipeline) LastModified(datetime types.DateTime) *PutPipeline {
+	r.req.LastModified = datetime
+
+	return r
+}
+
+// Pipeline Configuration for the pipeline.
+// API name: pipeline
+func (r *PutPipeline) Pipeline(pipeline string) *PutPipeline {
+
+	r.req.Pipeline = pipeline
+
+	return r
+}
+
+// PipelineMetadata Optional metadata about the pipeline.
+// May have any contents.
+// This metadata is not generated or used by Elasticsearch or Logstash.
+// API name: pipeline_metadata
+func (r *PutPipeline) PipelineMetadata(pipelinemetadata *types.PipelineMetadata) *PutPipeline {
+
+	r.req.PipelineMetadata = *pipelinemetadata
+
+	return r
+}
+
+// PipelineSettings Settings for the pipeline.
+// Supports only flat keys in dot notation.
+// API name: pipeline_settings
+func (r *PutPipeline) PipelineSettings(pipelinesettings *types.PipelineSettings) *PutPipeline {
+
+	r.req.PipelineSettings = *pipelinesettings
+
+	return r
+}
+
+// Username User who last updated the pipeline.
+// API name: username
+func (r *PutPipeline) Username(username string) *PutPipeline {
+
+	r.req.Username = username
 
 	return r
 }

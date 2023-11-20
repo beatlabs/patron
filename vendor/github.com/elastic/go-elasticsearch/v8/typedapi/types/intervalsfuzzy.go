@@ -16,20 +16,122 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // IntervalsFuzzy type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/fulltext.ts#L88-L97
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/fulltext.ts#L154-L184
 type IntervalsFuzzy struct {
-	Analyzer       *string   `json:"analyzer,omitempty"`
-	Fuzziness      Fuzziness `json:"fuzziness,omitempty"`
-	PrefixLength   *int      `json:"prefix_length,omitempty"`
-	Term           string    `json:"term"`
-	Transpositions *bool     `json:"transpositions,omitempty"`
-	UseField       *string   `json:"use_field,omitempty"`
+	// Analyzer Analyzer used to normalize the term.
+	Analyzer *string `json:"analyzer,omitempty"`
+	// Fuzziness Maximum edit distance allowed for matching.
+	Fuzziness Fuzziness `json:"fuzziness,omitempty"`
+	// PrefixLength Number of beginning characters left unchanged when creating expansions.
+	PrefixLength *int `json:"prefix_length,omitempty"`
+	// Term The term to match.
+	Term string `json:"term"`
+	// Transpositions Indicates whether edits include transpositions of two adjacent characters
+	// (for example, `ab` to `ba`).
+	Transpositions *bool `json:"transpositions,omitempty"`
+	// UseField If specified, match intervals from this field rather than the top-level
+	// field.
+	// The `term` is normalized using the search analyzer from this field, unless
+	// `analyzer` is specified separately.
+	UseField *string `json:"use_field,omitempty"`
+}
+
+func (s *IntervalsFuzzy) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "analyzer":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Analyzer = &o
+
+		case "fuzziness":
+			if err := dec.Decode(&s.Fuzziness); err != nil {
+				return err
+			}
+
+		case "prefix_length":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.PrefixLength = &value
+			case float64:
+				f := int(v)
+				s.PrefixLength = &f
+			}
+
+		case "term":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Term = o
+
+		case "transpositions":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Transpositions = &value
+			case bool:
+				s.Transpositions = &v
+			}
+
+		case "use_field":
+			if err := dec.Decode(&s.UseField); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewIntervalsFuzzy returns a IntervalsFuzzy.

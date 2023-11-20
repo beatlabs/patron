@@ -16,24 +16,90 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // UaxEmailUrlTokenizer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/tokenizers.ts#L109-L112
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/tokenizers.ts#L110-L113
 type UaxEmailUrlTokenizer struct {
 	MaxTokenLength *int    `json:"max_token_length,omitempty"`
 	Type           string  `json:"type,omitempty"`
 	Version        *string `json:"version,omitempty"`
 }
 
+func (s *UaxEmailUrlTokenizer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "max_token_length":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxTokenLength = &value
+			case float64:
+				f := int(v)
+				s.MaxTokenLength = &f
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s UaxEmailUrlTokenizer) MarshalJSON() ([]byte, error) {
+	type innerUaxEmailUrlTokenizer UaxEmailUrlTokenizer
+	tmp := innerUaxEmailUrlTokenizer{
+		MaxTokenLength: s.MaxTokenLength,
+		Type:           s.Type,
+		Version:        s.Version,
+	}
+
+	tmp.Type = "uax_url_email"
+
+	return json.Marshal(tmp)
+}
+
 // NewUaxEmailUrlTokenizer returns a UaxEmailUrlTokenizer.
 func NewUaxEmailUrlTokenizer() *UaxEmailUrlTokenizer {
 	r := &UaxEmailUrlTokenizer{}
-
-	r.Type = "uax_url_email"
 
 	return r
 }

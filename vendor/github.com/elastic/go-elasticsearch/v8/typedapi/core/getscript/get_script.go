@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns a script.
 package getscript
@@ -67,7 +67,7 @@ func NewGetScriptFunc(tp elastictransport.Interface) NewGetScript {
 	return func(id string) *GetScript {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -168,13 +168,16 @@ func (r GetScript) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -208,19 +211,19 @@ func (r *GetScript) Header(key, value string) *GetScript {
 	return r
 }
 
-// Id Script ID
+// Id Identifier for the stored script or search template.
 // API Name: id
-func (r *GetScript) Id(v string) *GetScript {
+func (r *GetScript) _id(id string) *GetScript {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
 // MasterTimeout Specify timeout for connection to master
 // API name: master_timeout
-func (r *GetScript) MasterTimeout(v string) *GetScript {
-	r.values.Set("master_timeout", v)
+func (r *GetScript) MasterTimeout(duration string) *GetScript {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

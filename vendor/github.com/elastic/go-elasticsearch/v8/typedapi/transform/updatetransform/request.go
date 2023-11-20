@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package updatetransform
 
@@ -29,7 +29,7 @@ import (
 
 // Request holds the request body struct for the package updatetransform
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/transform/update_transform/UpdateTransformRequest.ts#L31-L105
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/transform/update_transform/UpdateTransformRequest.ts#L31-L105
 type Request struct {
 
 	// Description Free text description of the transform.
@@ -42,7 +42,7 @@ type Request struct {
 	// indexing. The minimum value is 1s and the maximum is 1h.
 	Frequency types.Duration `json:"frequency,omitempty"`
 	// Meta_ Defines optional transform metadata.
-	Meta_ map[string]json.RawMessage `json:"_meta,omitempty"`
+	Meta_ types.Metadata `json:"_meta,omitempty"`
 	// RetentionPolicy Defines a retention policy for the transform. Data that meets the defined
 	// criteria is deleted from the destination index.
 	RetentionPolicy types.RetentionPolicyContainer `json:"retention_policy,omitempty"`

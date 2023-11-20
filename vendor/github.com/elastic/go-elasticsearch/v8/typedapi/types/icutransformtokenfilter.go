@@ -16,17 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icutransformdirection"
 )
 
 // IcuTransformTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/icu-plugin.ts#L24-L28
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/icu-plugin.ts#L24-L28
 type IcuTransformTokenFilter struct {
 	Dir     *icutransformdirection.IcuTransformDirection `json:"dir,omitempty"`
 	Id      string                                       `json:"id"`
@@ -34,11 +40,71 @@ type IcuTransformTokenFilter struct {
 	Version *string                                      `json:"version,omitempty"`
 }
 
+func (s *IcuTransformTokenFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "dir":
+			if err := dec.Decode(&s.Dir); err != nil {
+				return err
+			}
+
+		case "id":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Id = o
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s IcuTransformTokenFilter) MarshalJSON() ([]byte, error) {
+	type innerIcuTransformTokenFilter IcuTransformTokenFilter
+	tmp := innerIcuTransformTokenFilter{
+		Dir:     s.Dir,
+		Id:      s.Id,
+		Type:    s.Type,
+		Version: s.Version,
+	}
+
+	tmp.Type = "icu_transform"
+
+	return json.Marshal(tmp)
+}
+
 // NewIcuTransformTokenFilter returns a IcuTransformTokenFilter.
 func NewIcuTransformTokenFilter() *IcuTransformTokenFilter {
 	r := &IcuTransformTokenFilter{}
-
-	r.Type = "icu_transform"
 
 	return r
 }

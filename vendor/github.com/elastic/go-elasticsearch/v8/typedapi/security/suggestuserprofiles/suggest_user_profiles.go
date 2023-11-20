@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Get suggestions for user profiles that match specified search criteria.
 package suggestuserprofiles
@@ -48,8 +48,9 @@ type SuggestUserProfiles struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -76,6 +77,8 @@ func New(tp elastictransport.Interface) *SuggestUserProfiles {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -105,9 +108,19 @@ func (r *SuggestUserProfiles) HttpRequest(ctx context.Context) (*http.Request, e
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -115,6 +128,7 @@ func (r *SuggestUserProfiles) HttpRequest(ctx context.Context) (*http.Request, e
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -196,13 +210,16 @@ func (r SuggestUserProfiles) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -220,8 +237,39 @@ func (r *SuggestUserProfiles) Header(key, value string) *SuggestUserProfiles {
 // use `data=<key>` to retrieve content nested under the specified `<key>`.
 // By default returns no `data` content.
 // API name: data
-func (r *SuggestUserProfiles) Data(v string) *SuggestUserProfiles {
-	r.values.Set("data", v)
+func (r *SuggestUserProfiles) Data(data ...string) *SuggestUserProfiles {
+	r.req.Data = data
+
+	return r
+}
+
+// Hint Extra search criteria to improve relevance of the suggestion result.
+// Profiles matching the spcified hint are ranked higher in the response.
+// Profiles not matching the hint don't exclude the profile from the response
+// as long as the profile matches the `name` field query.
+// API name: hint
+func (r *SuggestUserProfiles) Hint(hint *types.Hint) *SuggestUserProfiles {
+
+	r.req.Hint = hint
+
+	return r
+}
+
+// Name Query string used to match name-related fields in user profile documents.
+// Name-related fields are the user's `username`, `full_name`, and `email`.
+// API name: name
+func (r *SuggestUserProfiles) Name(name string) *SuggestUserProfiles {
+
+	r.req.Name = &name
+
+	return r
+}
+
+// Size Number of profiles to return.
+// API name: size
+func (r *SuggestUserProfiles) Size(size int64) *SuggestUserProfiles {
+
+	r.req.Size = &size
 
 	return r
 }

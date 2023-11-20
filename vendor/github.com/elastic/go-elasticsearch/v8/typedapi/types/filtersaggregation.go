@@ -16,24 +16,132 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 )
 
 // FiltersAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/bucket.ts#L169-L174
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/bucket.ts#L358-L378
 type FiltersAggregation struct {
-	Filters        *BucketsQuery              `json:"filters,omitempty"`
-	Keyed          *bool                      `json:"keyed,omitempty"`
-	Meta           map[string]json.RawMessage `json:"meta,omitempty"`
-	Name           *string                    `json:"name,omitempty"`
-	OtherBucket    *bool                      `json:"other_bucket,omitempty"`
-	OtherBucketKey *string                    `json:"other_bucket_key,omitempty"`
+	// Filters Collection of queries from which to build buckets.
+	Filters BucketsQuery `json:"filters,omitempty"`
+	// Keyed By default, the named filters aggregation returns the buckets as an object.
+	// Set to `false` to return the buckets as an array of objects.
+	Keyed *bool    `json:"keyed,omitempty"`
+	Meta  Metadata `json:"meta,omitempty"`
+	Name  *string  `json:"name,omitempty"`
+	// OtherBucket Set to `true` to add a bucket to the response which will contain all
+	// documents that do not match any of the given filters.
+	OtherBucket *bool `json:"other_bucket,omitempty"`
+	// OtherBucketKey The key with which the other bucket is returned.
+	OtherBucketKey *string `json:"other_bucket_key,omitempty"`
+}
+
+func (s *FiltersAggregation) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "filters":
+
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			source := bytes.NewReader(rawMsg)
+			localDec := json.NewDecoder(source)
+			switch rawMsg[0] {
+			case '{':
+				o := make(map[string]Query, 0)
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.Filters = o
+			case '[':
+				o := []Query{}
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.Filters = o
+			}
+
+		case "keyed":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Keyed = &value
+			case bool:
+				s.Keyed = &v
+			}
+
+		case "meta":
+			if err := dec.Decode(&s.Meta); err != nil {
+				return err
+			}
+
+		case "name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
+
+		case "other_bucket":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.OtherBucket = &value
+			case bool:
+				s.OtherBucket = &v
+			}
+
+		case "other_bucket_key":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.OtherBucketKey = &o
+
+		}
+	}
+	return nil
 }
 
 // NewFiltersAggregation returns a FiltersAggregation.

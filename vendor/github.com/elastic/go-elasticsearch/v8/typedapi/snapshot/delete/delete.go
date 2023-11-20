@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes one or more snapshots.
 package delete
@@ -70,9 +70,9 @@ func NewDeleteFunc(tp elastictransport.Interface) NewDelete {
 	return func(repository, snapshot string) *Delete {
 		n := New(tp)
 
-		n.Repository(repository)
+		n._repository(repository)
 
-		n.Snapshot(snapshot)
+		n._snapshot(snapshot)
 
 		return n
 	}
@@ -176,13 +176,16 @@ func (r Delete) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -218,26 +221,26 @@ func (r *Delete) Header(key, value string) *Delete {
 
 // Repository A repository name
 // API Name: repository
-func (r *Delete) Repository(v string) *Delete {
+func (r *Delete) _repository(repository string) *Delete {
 	r.paramSet |= repositoryMask
-	r.repository = v
+	r.repository = repository
 
 	return r
 }
 
 // Snapshot A comma-separated list of snapshot names
 // API Name: snapshot
-func (r *Delete) Snapshot(v string) *Delete {
+func (r *Delete) _snapshot(snapshot string) *Delete {
 	r.paramSet |= snapshotMask
-	r.snapshot = v
+	r.snapshot = snapshot
 
 	return r
 }
 
 // MasterTimeout Explicit operation timeout for connection to master node
 // API name: master_timeout
-func (r *Delete) MasterTimeout(v string) *Delete {
-	r.values.Set("master_timeout", v)
+func (r *Delete) MasterTimeout(duration string) *Delete {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

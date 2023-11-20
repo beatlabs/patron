@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Stops one or more data frame analytics jobs.
 package stopdataframeanalytics
@@ -68,7 +68,7 @@ func NewStopDataFrameAnalyticsFunc(tp elastictransport.Interface) NewStopDataFra
 	return func(id string) *StopDataFrameAnalytics {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -181,13 +181,16 @@ func (r StopDataFrameAnalytics) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -225,9 +228,9 @@ func (r *StopDataFrameAnalytics) Header(key, value string) *StopDataFrameAnalyti
 // lowercase alphanumeric characters (a-z and 0-9), hyphens, and
 // underscores. It must start and end with alphanumeric characters.
 // API Name: id
-func (r *StopDataFrameAnalytics) Id(v string) *StopDataFrameAnalytics {
+func (r *StopDataFrameAnalytics) _id(id string) *StopDataFrameAnalytics {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
@@ -244,16 +247,16 @@ func (r *StopDataFrameAnalytics) Id(v string) *StopDataFrameAnalytics {
 // partial matches. If this parameter is false, the request returns a 404
 // status code when there are no matches or only partial matches.
 // API name: allow_no_match
-func (r *StopDataFrameAnalytics) AllowNoMatch(b bool) *StopDataFrameAnalytics {
-	r.values.Set("allow_no_match", strconv.FormatBool(b))
+func (r *StopDataFrameAnalytics) AllowNoMatch(allownomatch bool) *StopDataFrameAnalytics {
+	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
 
 	return r
 }
 
 // Force If true, the data frame analytics job is stopped forcefully.
 // API name: force
-func (r *StopDataFrameAnalytics) Force(b bool) *StopDataFrameAnalytics {
-	r.values.Set("force", strconv.FormatBool(b))
+func (r *StopDataFrameAnalytics) Force(force bool) *StopDataFrameAnalytics {
+	r.values.Set("force", strconv.FormatBool(force))
 
 	return r
 }
@@ -261,8 +264,8 @@ func (r *StopDataFrameAnalytics) Force(b bool) *StopDataFrameAnalytics {
 // Timeout Controls the amount of time to wait until the data frame analytics job
 // stops. Defaults to 20 seconds.
 // API name: timeout
-func (r *StopDataFrameAnalytics) Timeout(v string) *StopDataFrameAnalytics {
-	r.values.Set("timeout", v)
+func (r *StopDataFrameAnalytics) Timeout(duration string) *StopDataFrameAnalytics {
+	r.values.Set("timeout", duration)
 
 	return r
 }

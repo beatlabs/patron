@@ -16,36 +16,46 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gappolicy"
-
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
+	"strconv"
 
-	"encoding/json"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gappolicy"
 )
 
 // MovingPercentilesAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/pipeline.ts#L256-L260
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/pipeline.ts#L307-L319
 type MovingPercentilesAggregation struct {
 	// BucketsPath Path to the buckets that contain one set of values to correlate.
-	BucketsPath BucketsPath                `json:"buckets_path,omitempty"`
-	Format      *string                    `json:"format,omitempty"`
-	GapPolicy   *gappolicy.GapPolicy       `json:"gap_policy,omitempty"`
-	Keyed       *bool                      `json:"keyed,omitempty"`
-	Meta        map[string]json.RawMessage `json:"meta,omitempty"`
-	Name        *string                    `json:"name,omitempty"`
-	Shift       *int                       `json:"shift,omitempty"`
-	Window      *int                       `json:"window,omitempty"`
+	BucketsPath BucketsPath `json:"buckets_path,omitempty"`
+	// Format `DecimalFormat` pattern for the output value.
+	// If specified, the formatted value is returned in the aggregation’s
+	// `value_as_string` property.
+	Format *string `json:"format,omitempty"`
+	// GapPolicy Policy to apply when gaps are found in the data.
+	GapPolicy *gappolicy.GapPolicy `json:"gap_policy,omitempty"`
+	Keyed     *bool                `json:"keyed,omitempty"`
+	Meta      Metadata             `json:"meta,omitempty"`
+	Name      *string              `json:"name,omitempty"`
+	// Shift By default, the window consists of the last n values excluding the current
+	// bucket.
+	// Increasing `shift` by 1, moves the starting window position by 1 to the
+	// right.
+	Shift *int `json:"shift,omitempty"`
+	// Window The size of window to "slide" across the histogram.
+	Window *int `json:"window,omitempty"`
 }
 
 func (s *MovingPercentilesAggregation) UnmarshalJSON(data []byte) error {
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -65,9 +75,16 @@ func (s *MovingPercentilesAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "format":
-			if err := dec.Decode(&s.Format); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Format = &o
 
 		case "gap_policy":
 			if err := dec.Decode(&s.GapPolicy); err != nil {
@@ -75,8 +92,17 @@ func (s *MovingPercentilesAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "keyed":
-			if err := dec.Decode(&s.Keyed); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Keyed = &value
+			case bool:
+				s.Keyed = &v
 			}
 
 		case "meta":
@@ -85,18 +111,47 @@ func (s *MovingPercentilesAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "name":
-			if err := dec.Decode(&s.Name); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
 
 		case "shift":
-			if err := dec.Decode(&s.Shift); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Shift = &value
+			case float64:
+				f := int(v)
+				s.Shift = &f
 			}
 
 		case "window":
-			if err := dec.Decode(&s.Window); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Window = &value
+			case float64:
+				f := int(v)
+				s.Window = &f
 			}
 
 		}

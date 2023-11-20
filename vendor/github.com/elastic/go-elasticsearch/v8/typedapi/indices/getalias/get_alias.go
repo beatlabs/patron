@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns an alias.
 package getalias
@@ -36,6 +36,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -194,13 +195,40 @@ func (r GetAlias) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
+	}
 
+	if res.StatusCode == 404 {
+		data, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		errorResponse := types.NewElasticsearchError()
+		err = json.NewDecoder(gobytes.NewReader(data)).Decode(&errorResponse)
+		if err != nil {
+			return nil, err
+		}
+
+		if errorResponse.Status == 0 {
+			err = json.NewDecoder(gobytes.NewReader(data)).Decode(&response)
+			if err != nil {
+				return nil, err
+			}
+
+			return response, nil
+		}
+
+		return nil, errorResponse
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -234,56 +262,68 @@ func (r *GetAlias) Header(key, value string) *GetAlias {
 	return r
 }
 
-// Name A comma-separated list of alias names to return
+// Name Comma-separated list of aliases to retrieve.
+// Supports wildcards (`*`).
+// To retrieve all aliases, omit this parameter or use `*` or `_all`.
 // API Name: name
-func (r *GetAlias) Name(v string) *GetAlias {
+func (r *GetAlias) Name(name string) *GetAlias {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
-// Index A comma-separated list of index names to filter aliases
+// Index Comma-separated list of data streams or indices used to limit the request.
+// Supports wildcards (`*`).
+// To target all data streams and indices, omit this parameter or use `*` or
+// `_all`.
 // API Name: index
-func (r *GetAlias) Index(v string) *GetAlias {
+func (r *GetAlias) Index(index string) *GetAlias {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// AllowNoIndices Whether to ignore if a wildcard indices expression resolves into no concrete
-// indices. (This includes `_all` string or when no indices have been specified)
+// AllowNoIndices If `false`, the request returns an error if any wildcard expression, index
+// alias, or `_all` value targets only missing or closed indices.
+// This behavior applies even if the request targets other open indices.
 // API name: allow_no_indices
-func (r *GetAlias) AllowNoIndices(b bool) *GetAlias {
-	r.values.Set("allow_no_indices", strconv.FormatBool(b))
+func (r *GetAlias) AllowNoIndices(allownoindices bool) *GetAlias {
+	r.values.Set("allow_no_indices", strconv.FormatBool(allownoindices))
 
 	return r
 }
 
-// ExpandWildcards Whether to expand wildcard expression to concrete indices that are open,
-// closed or both.
+// ExpandWildcards Type of index that wildcard patterns can match.
+// If the request can target data streams, this argument determines whether
+// wildcard expressions match hidden data streams.
+// Supports comma-separated values, such as `open,hidden`.
+// Valid values are: `all`, `open`, `closed`, `hidden`, `none`.
 // API name: expand_wildcards
-func (r *GetAlias) ExpandWildcards(v string) *GetAlias {
-	r.values.Set("expand_wildcards", v)
+func (r *GetAlias) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *GetAlias {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
-// IgnoreUnavailable Whether specified concrete indices should be ignored when unavailable
-// (missing or closed)
+// IgnoreUnavailable If `false`, the request returns an error if it targets a missing or closed
+// index.
 // API name: ignore_unavailable
-func (r *GetAlias) IgnoreUnavailable(b bool) *GetAlias {
-	r.values.Set("ignore_unavailable", strconv.FormatBool(b))
+func (r *GetAlias) IgnoreUnavailable(ignoreunavailable bool) *GetAlias {
+	r.values.Set("ignore_unavailable", strconv.FormatBool(ignoreunavailable))
 
 	return r
 }
 
-// Local Return local information, do not retrieve the state from master node
-// (default: false)
+// Local If `true`, the request retrieves information from the local node only.
 // API name: local
-func (r *GetAlias) Local(b bool) *GetAlias {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *GetAlias) Local(local bool) *GetAlias {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }

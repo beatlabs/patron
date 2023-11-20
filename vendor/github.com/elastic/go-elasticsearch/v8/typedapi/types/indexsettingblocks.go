@@ -16,19 +16,71 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+)
+
 // IndexSettingBlocks type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/_types/IndexSettings.ts#L245-L251
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/_types/IndexSettings.ts#L245-L251
 type IndexSettingBlocks struct {
-	Metadata            *bool  `json:"metadata,omitempty"`
-	Read                *bool  `json:"read,omitempty"`
-	ReadOnly            *bool  `json:"read_only,omitempty"`
-	ReadOnlyAllowDelete *bool  `json:"read_only_allow_delete,omitempty"`
-	Write               string `json:"write,omitempty"`
+	Metadata            Stringifiedboolean `json:"metadata,omitempty"`
+	Read                Stringifiedboolean `json:"read,omitempty"`
+	ReadOnly            Stringifiedboolean `json:"read_only,omitempty"`
+	ReadOnlyAllowDelete Stringifiedboolean `json:"read_only_allow_delete,omitempty"`
+	Write               Stringifiedboolean `json:"write,omitempty"`
+}
+
+func (s *IndexSettingBlocks) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "metadata":
+			if err := dec.Decode(&s.Metadata); err != nil {
+				return err
+			}
+
+		case "read":
+			if err := dec.Decode(&s.Read); err != nil {
+				return err
+			}
+
+		case "read_only":
+			if err := dec.Decode(&s.ReadOnly); err != nil {
+				return err
+			}
+
+		case "read_only_allow_delete":
+			if err := dec.Decode(&s.ReadOnlyAllowDelete); err != nil {
+				return err
+			}
+
+		case "write":
+			if err := dec.Decode(&s.Write); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewIndexSettingBlocks returns a IndexSettingBlocks.

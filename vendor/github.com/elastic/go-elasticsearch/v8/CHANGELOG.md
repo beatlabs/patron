@@ -1,3 +1,94 @@
+# 8.11.0
+
+## API
+
+**Experimental APIs**
+
+* `EsqlQuery`            [documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/esql-query-api.html)
+* `InferenceDeleteModel` [documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/delete-inference-api.html)
+* `InferenceGetModel`    [documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/get-inference-api.html)
+* `InferenceInference`   [documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/post-inference-api.html)
+* `InferencePutModel`    [documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/put-inference-api.html)
+
+## Typed API
+
+* Mandatory URL parameters are not exposed as functions anymore as they already exist in the constructor.
+
+# New Compatibility Policy
+
+Starting from version `8.12.0`, this library follow the Go language [policy](https://go.dev/doc/devel/release#policy). Each major Go release is supported until there are two newer major releases. For example, Go 1.5 was supported until the Go 1.7 release, and Go 1.6 was supported until the Go 1.8 release.
+
+If you have any questions or concerns, please do not hesitate to reach out to us.
+
+# 8.10.1
+
+## Typed API
+
+Update APIs to latest [elasticsearch-specification 8.10](https://github.com/elastic/elasticsearch-specification/commit/3b09f9d8e90178243f8a340a7bc324aab152c602)
+
+# 8.10.0
+
+## API
+**Experimental APIs for internal use**
+* `FleetDeleteSecret`
+* `FleetGetSecret`
+* `FleetPostSecret`
+
+**Exprimental APIs**
+
+`QueryRulesetList`
+
+**Stable APIs**
+
+`Security.GetSettings`
+`Security.UpdateSettings`
+
+## Typed API
+**Exprimental APIs**
+
+`QueryRuleset.List`
+
+**Technical Preview**
+* [QueryRuleSet](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-rules-apis.html)
+
+**Beta**
+* [Synonyms](https://www.elastic.co/guide/en/elasticsearch/reference/current/synonyms-apis.html)
+
+# 8.9.0
+
+## API
+**New API**
+
+* `Cluster.Info` [Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/cluster-info.html)
+
+**Experimental APIs**
+
+* `QueryRulesetGet` [Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/get-query-ruleset.html)
+* `QueryRulesetDelete` [Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/delete-query-ruleset.html)
+* `QueryRulesetPut` [Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/put-query-ruleset.html)
+* `SearchApplicationRenderQuery` [Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/master/search-application-render-query.html)
+* `Security.CreateCrossClusterAPIKey` [Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-cross-cluster-api-key.html)
+* `Security.UpdateCrossClusterAPIKey` [Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-update-cross-cluster-api-key.html)
+
+## Typed API
+
+* Propagated request fields towards the endpoint for ease of access, taking priority over same-name query string fields.
+* Added a stub for Do methods on endpoints that only support a boolean response such as `core.exists`. 
+* NDJSON endpoints support with custom serialization like `core.bulk`.
+* Link to endpoints documentation in API index to better display and ease of use.
+
+**fixes**
+
+* Fixed a deserialization issue for `Property` & `Analyzer` #696
+
+# 8.8.2
+
+## Typed API
+
+* Fixed deserialization for `Suggest` in search responses.
+* Fixed double-quoted strings in deserialization for unions normalized as string. #684
+* Fixed handling of `core.Get` response when the index did not exist. #678
+
 # 8.7.0
 
 ## API

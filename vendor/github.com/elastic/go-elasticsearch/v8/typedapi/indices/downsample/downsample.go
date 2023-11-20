@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Downsample an index
 package downsample
@@ -54,8 +54,9 @@ type Downsample struct {
 
 	buf *gobytes.Buffer
 
-	req *types.DownsampleConfig
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -72,9 +73,9 @@ func NewDownsampleFunc(tp elastictransport.Interface) NewDownsample {
 	return func(index, targetindex string) *Downsample {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
-		n.TargetIndex(targetindex)
+		n._targetindex(targetindex)
 
 		return n
 	}
@@ -82,7 +83,7 @@ func NewDownsampleFunc(tp elastictransport.Interface) NewDownsample {
 
 // Downsample an index
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/xpack-rollup.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/indices-downsample-data-stream.html
 func New(tp elastictransport.Interface) *Downsample {
 	r := &Downsample{
 		transport: tp,
@@ -103,7 +104,7 @@ func (r *Downsample) Raw(raw io.Reader) *Downsample {
 }
 
 // Request allows to set the request property with the appropriate payload.
-func (r *Downsample) Request(req *types.DownsampleConfig) *Downsample {
+func (r *Downsample) Request(req *Request) *Downsample {
 	r.req = req
 
 	return r
@@ -118,9 +119,19 @@ func (r *Downsample) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -128,6 +139,7 @@ func (r *Downsample) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -211,13 +223,16 @@ func (r Downsample) Do(ctx context.Context) (Response, error) {
 		}
 
 		return *response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -230,20 +245,28 @@ func (r *Downsample) Header(key, value string) *Downsample {
 	return r
 }
 
-// Index The index to downsample
+// Index Name of the time series index to downsample.
 // API Name: index
-func (r *Downsample) Index(v string) *Downsample {
+func (r *Downsample) _index(index string) *Downsample {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// TargetIndex The name of the target index to store downsampled data
+// TargetIndex Name of the index to create.
 // API Name: targetindex
-func (r *Downsample) TargetIndex(v string) *Downsample {
+func (r *Downsample) _targetindex(targetindex string) *Downsample {
 	r.paramSet |= targetindexMask
-	r.targetindex = v
+	r.targetindex = targetindex
+
+	return r
+}
+
+// FixedInterval The interval at which to aggregate the original time series index.
+// API name: fixed_interval
+func (r *Downsample) FixedInterval(durationlarge string) *Downsample {
+	r.req.FixedInterval = durationlarge
 
 	return r
 }

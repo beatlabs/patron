@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns settings for one or more indices.
 package getsettings
@@ -36,6 +36,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -194,13 +195,16 @@ func (r GetSettings) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -234,81 +238,93 @@ func (r *GetSettings) Header(key, value string) *GetSettings {
 	return r
 }
 
-// Index A comma-separated list of index names; use `_all` or empty string to perform
-// the operation on all indices
+// Index Comma-separated list of data streams, indices, and aliases used to limit
+// the request. Supports wildcards (`*`). To target all data streams and
+// indices, omit this parameter or use `*` or `_all`.
 // API Name: index
-func (r *GetSettings) Index(v string) *GetSettings {
+func (r *GetSettings) Index(index string) *GetSettings {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// Name The name of the settings that should be included
+// Name Comma-separated list or wildcard expression of settings to retrieve.
 // API Name: name
-func (r *GetSettings) Name(v string) *GetSettings {
+func (r *GetSettings) Name(name string) *GetSettings {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
-// AllowNoIndices Whether to ignore if a wildcard indices expression resolves into no concrete
-// indices. (This includes `_all` string or when no indices have been specified)
+// AllowNoIndices If `false`, the request returns an error if any wildcard expression, index
+// alias, or `_all` value targets only missing or closed indices. This
+// behavior applies even if the request targets other open indices. For
+// example, a request targeting `foo*,bar*` returns an error if an index
+// starts with foo but no index starts with `bar`.
 // API name: allow_no_indices
-func (r *GetSettings) AllowNoIndices(b bool) *GetSettings {
-	r.values.Set("allow_no_indices", strconv.FormatBool(b))
+func (r *GetSettings) AllowNoIndices(allownoindices bool) *GetSettings {
+	r.values.Set("allow_no_indices", strconv.FormatBool(allownoindices))
 
 	return r
 }
 
-// ExpandWildcards Whether to expand wildcard expression to concrete indices that are open,
-// closed or both.
+// ExpandWildcards Type of index that wildcard patterns can match.
+// If the request can target data streams, this argument determines whether
+// wildcard expressions match hidden data streams.
+// Supports comma-separated values, such as `open,hidden`.
 // API name: expand_wildcards
-func (r *GetSettings) ExpandWildcards(v string) *GetSettings {
-	r.values.Set("expand_wildcards", v)
+func (r *GetSettings) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *GetSettings {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
-// FlatSettings Return settings in flat format (default: false)
+// FlatSettings If `true`, returns settings in flat format.
 // API name: flat_settings
-func (r *GetSettings) FlatSettings(b bool) *GetSettings {
-	r.values.Set("flat_settings", strconv.FormatBool(b))
+func (r *GetSettings) FlatSettings(flatsettings bool) *GetSettings {
+	r.values.Set("flat_settings", strconv.FormatBool(flatsettings))
 
 	return r
 }
 
-// IgnoreUnavailable Whether specified concrete indices should be ignored when unavailable
-// (missing or closed)
+// IgnoreUnavailable If `false`, the request returns an error if it targets a missing or closed
+// index.
 // API name: ignore_unavailable
-func (r *GetSettings) IgnoreUnavailable(b bool) *GetSettings {
-	r.values.Set("ignore_unavailable", strconv.FormatBool(b))
+func (r *GetSettings) IgnoreUnavailable(ignoreunavailable bool) *GetSettings {
+	r.values.Set("ignore_unavailable", strconv.FormatBool(ignoreunavailable))
 
 	return r
 }
 
-// IncludeDefaults Whether to return all default setting for each of the indices.
+// IncludeDefaults If `true`, return all default settings in the response.
 // API name: include_defaults
-func (r *GetSettings) IncludeDefaults(b bool) *GetSettings {
-	r.values.Set("include_defaults", strconv.FormatBool(b))
+func (r *GetSettings) IncludeDefaults(includedefaults bool) *GetSettings {
+	r.values.Set("include_defaults", strconv.FormatBool(includedefaults))
 
 	return r
 }
 
-// Local Return local information, do not retrieve the state from master node
-// (default: false)
+// Local If `true`, the request retrieves information from the local node only. If
+// `false`, information is retrieved from the master node.
 // API name: local
-func (r *GetSettings) Local(b bool) *GetSettings {
-	r.values.Set("local", strconv.FormatBool(b))
+func (r *GetSettings) Local(local bool) *GetSettings {
+	r.values.Set("local", strconv.FormatBool(local))
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node. If no response is
+// received before the timeout expires, the request fails and returns an
+// error.
 // API name: master_timeout
-func (r *GetSettings) MasterTimeout(v string) *GetSettings {
-	r.values.Set("master_timeout", v)
+func (r *GetSettings) MasterTimeout(duration string) *GetSettings {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

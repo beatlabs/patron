@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Removes application privileges.
 package deleteprivileges
@@ -35,7 +35,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 )
 
@@ -72,9 +71,9 @@ func NewDeletePrivilegesFunc(tp elastictransport.Interface) NewDeletePrivileges 
 	return func(application, name string) *DeletePrivileges {
 		n := New(tp)
 
-		n.Application(application)
+		n._application(application)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -180,13 +179,16 @@ func (r DeletePrivileges) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -222,18 +224,18 @@ func (r *DeletePrivileges) Header(key, value string) *DeletePrivileges {
 
 // Application Application name
 // API Name: application
-func (r *DeletePrivileges) Application(v string) *DeletePrivileges {
+func (r *DeletePrivileges) _application(application string) *DeletePrivileges {
 	r.paramSet |= applicationMask
-	r.application = v
+	r.application = application
 
 	return r
 }
 
 // Name Privilege name
 // API Name: name
-func (r *DeletePrivileges) Name(v string) *DeletePrivileges {
+func (r *DeletePrivileges) _name(name string) *DeletePrivileges {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
@@ -242,8 +244,8 @@ func (r *DeletePrivileges) Name(v string) *DeletePrivileges {
 // operation visible to search, if `wait_for` then wait for a refresh to make
 // this operation visible to search, if `false` then do nothing with refreshes.
 // API name: refresh
-func (r *DeletePrivileges) Refresh(enum refresh.Refresh) *DeletePrivileges {
-	r.values.Set("refresh", enum.String())
+func (r *DeletePrivileges) Refresh(refresh refresh.Refresh) *DeletePrivileges {
+	r.values.Set("refresh", refresh.String())
 
 	return r
 }

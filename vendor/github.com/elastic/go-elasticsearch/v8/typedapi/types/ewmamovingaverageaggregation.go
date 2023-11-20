@@ -16,38 +16,43 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gappolicy"
-
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
+	"strconv"
 
-	"encoding/json"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gappolicy"
 )
 
 // EwmaMovingAverageAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/pipeline.ts#L212-L215
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/pipeline.ts#L252-L255
 type EwmaMovingAverageAggregation struct {
 	// BucketsPath Path to the buckets that contain one set of values to correlate.
-	BucketsPath BucketsPath                `json:"buckets_path,omitempty"`
-	Format      *string                    `json:"format,omitempty"`
-	GapPolicy   *gappolicy.GapPolicy       `json:"gap_policy,omitempty"`
-	Meta        map[string]json.RawMessage `json:"meta,omitempty"`
-	Minimize    *bool                      `json:"minimize,omitempty"`
-	Model       string                     `json:"model,omitempty"`
-	Name        *string                    `json:"name,omitempty"`
-	Predict     *int                       `json:"predict,omitempty"`
-	Settings    EwmaModelSettings          `json:"settings"`
-	Window      *int                       `json:"window,omitempty"`
+	BucketsPath BucketsPath `json:"buckets_path,omitempty"`
+	// Format `DecimalFormat` pattern for the output value.
+	// If specified, the formatted value is returned in the aggregation’s
+	// `value_as_string` property.
+	Format *string `json:"format,omitempty"`
+	// GapPolicy Policy to apply when gaps are found in the data.
+	GapPolicy *gappolicy.GapPolicy `json:"gap_policy,omitempty"`
+	Meta      Metadata             `json:"meta,omitempty"`
+	Minimize  *bool                `json:"minimize,omitempty"`
+	Model     string               `json:"model,omitempty"`
+	Name      *string              `json:"name,omitempty"`
+	Predict   *int                 `json:"predict,omitempty"`
+	Settings  EwmaModelSettings    `json:"settings"`
+	Window    *int                 `json:"window,omitempty"`
 }
 
 func (s *EwmaMovingAverageAggregation) UnmarshalJSON(data []byte) error {
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -67,9 +72,16 @@ func (s *EwmaMovingAverageAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "format":
-			if err := dec.Decode(&s.Format); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Format = &o
 
 		case "gap_policy":
 			if err := dec.Decode(&s.GapPolicy); err != nil {
@@ -82,8 +94,17 @@ func (s *EwmaMovingAverageAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "minimize":
-			if err := dec.Decode(&s.Minimize); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Minimize = &value
+			case bool:
+				s.Minimize = &v
 			}
 
 		case "model":
@@ -92,13 +113,31 @@ func (s *EwmaMovingAverageAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "name":
-			if err := dec.Decode(&s.Name); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
 
 		case "predict":
-			if err := dec.Decode(&s.Predict); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Predict = &value
+			case float64:
+				f := int(v)
+				s.Predict = &f
 			}
 
 		case "settings":
@@ -107,8 +146,19 @@ func (s *EwmaMovingAverageAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "window":
-			if err := dec.Decode(&s.Window); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Window = &value
+			case float64:
+				f := int(v)
+				s.Window = &f
 			}
 
 		}
@@ -116,11 +166,30 @@ func (s *EwmaMovingAverageAggregation) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MarshalJSON override marshalling to include literal value
+func (s EwmaMovingAverageAggregation) MarshalJSON() ([]byte, error) {
+	type innerEwmaMovingAverageAggregation EwmaMovingAverageAggregation
+	tmp := innerEwmaMovingAverageAggregation{
+		BucketsPath: s.BucketsPath,
+		Format:      s.Format,
+		GapPolicy:   s.GapPolicy,
+		Meta:        s.Meta,
+		Minimize:    s.Minimize,
+		Model:       s.Model,
+		Name:        s.Name,
+		Predict:     s.Predict,
+		Settings:    s.Settings,
+		Window:      s.Window,
+	}
+
+	tmp.Model = "ewma"
+
+	return json.Marshal(tmp)
+}
+
 // NewEwmaMovingAverageAggregation returns a EwmaMovingAverageAggregation.
 func NewEwmaMovingAverageAggregation() *EwmaMovingAverageAggregation {
 	r := &EwmaMovingAverageAggregation{}
-
-	r.Model = "ewma"
 
 	return r
 }

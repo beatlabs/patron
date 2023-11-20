@@ -16,18 +16,88 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // ConfusionMatrixItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/evaluate_data_frame/types.ts#L84-L89
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/evaluate_data_frame/types.ts#L125-L130
 type ConfusionMatrixItem struct {
 	ActualClass                 string                      `json:"actual_class"`
 	ActualClassDocCount         int                         `json:"actual_class_doc_count"`
 	OtherPredictedClassDocCount int                         `json:"other_predicted_class_doc_count"`
 	PredictedClasses            []ConfusionMatrixPrediction `json:"predicted_classes"`
+}
+
+func (s *ConfusionMatrixItem) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "actual_class":
+			if err := dec.Decode(&s.ActualClass); err != nil {
+				return err
+			}
+
+		case "actual_class_doc_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.ActualClassDocCount = value
+			case float64:
+				f := int(v)
+				s.ActualClassDocCount = f
+			}
+
+		case "other_predicted_class_doc_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.OtherPredictedClassDocCount = value
+			case float64:
+				f := int(v)
+				s.OtherPredictedClassDocCount = f
+			}
+
+		case "predicted_classes":
+			if err := dec.Decode(&s.PredictedClasses); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewConfusionMatrixItem returns a ConfusionMatrixItem.

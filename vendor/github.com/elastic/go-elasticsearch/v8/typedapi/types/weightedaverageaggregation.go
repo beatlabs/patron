@@ -16,26 +16,97 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/valuetype"
 )
 
 // WeightedAverageAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/metric.ts#L211-L216
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/metric.ts#L432-L446
 type WeightedAverageAggregation struct {
-	Format    *string                    `json:"format,omitempty"`
-	Meta      map[string]json.RawMessage `json:"meta,omitempty"`
-	Name      *string                    `json:"name,omitempty"`
-	Value     *WeightedAverageValue      `json:"value,omitempty"`
-	ValueType *valuetype.ValueType       `json:"value_type,omitempty"`
-	Weight    *WeightedAverageValue      `json:"weight,omitempty"`
+	// Format A numeric response formatter.
+	Format *string  `json:"format,omitempty"`
+	Meta   Metadata `json:"meta,omitempty"`
+	Name   *string  `json:"name,omitempty"`
+	// Value Configuration for the field that provides the values.
+	Value     *WeightedAverageValue `json:"value,omitempty"`
+	ValueType *valuetype.ValueType  `json:"value_type,omitempty"`
+	// Weight Configuration for the field or script that provides the weights.
+	Weight *WeightedAverageValue `json:"weight,omitempty"`
+}
+
+func (s *WeightedAverageAggregation) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "format":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Format = &o
+
+		case "meta":
+			if err := dec.Decode(&s.Meta); err != nil {
+				return err
+			}
+
+		case "name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
+
+		case "value":
+			if err := dec.Decode(&s.Value); err != nil {
+				return err
+			}
+
+		case "value_type":
+			if err := dec.Decode(&s.ValueType); err != nil {
+				return err
+			}
+
+		case "weight":
+			if err := dec.Decode(&s.Weight); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewWeightedAverageAggregation returns a WeightedAverageAggregation.

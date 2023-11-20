@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves usage information for datafeeds.
 package getdatafeedstats
@@ -180,13 +180,16 @@ func (r GetDatafeedStats) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -224,9 +227,9 @@ func (r *GetDatafeedStats) Header(key, value string) *GetDatafeedStats {
 // wildcard expression. If you do not specify one of these options, the API
 // returns information about all datafeeds.
 // API Name: datafeedid
-func (r *GetDatafeedStats) DatafeedId(v string) *GetDatafeedStats {
+func (r *GetDatafeedStats) DatafeedId(datafeedid string) *GetDatafeedStats {
 	r.paramSet |= datafeedidMask
-	r.datafeedid = v
+	r.datafeedid = datafeedid
 
 	return r
 }
@@ -242,8 +245,8 @@ func (r *GetDatafeedStats) DatafeedId(v string) *GetDatafeedStats {
 // partial matches. If this parameter is `false`, the request returns a
 // `404` status code when there are no matches or only partial matches.
 // API name: allow_no_match
-func (r *GetDatafeedStats) AllowNoMatch(b bool) *GetDatafeedStats {
-	r.values.Set("allow_no_match", strconv.FormatBool(b))
+func (r *GetDatafeedStats) AllowNoMatch(allownomatch bool) *GetDatafeedStats {
+	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
 
 	return r
 }

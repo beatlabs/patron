@@ -16,27 +16,27 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
-
-	"encoding/json"
 )
 
 // MultiBucketAggregateBaseGeoHashGridBucket type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/Aggregate.ts#L326-L328
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/Aggregate.ts#L327-L329
 type MultiBucketAggregateBaseGeoHashGridBucket struct {
-	Buckets BucketsGeoHashGridBucket   `json:"buckets"`
-	Meta    map[string]json.RawMessage `json:"meta,omitempty"`
+	Buckets BucketsGeoHashGridBucket `json:"buckets"`
+	Meta    Metadata                 `json:"meta,omitempty"`
 }
 
 func (s *MultiBucketAggregateBaseGeoHashGridBucket) UnmarshalJSON(data []byte) error {
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -57,15 +57,17 @@ func (s *MultiBucketAggregateBaseGeoHashGridBucket) UnmarshalJSON(data []byte) e
 			source := bytes.NewReader(rawMsg)
 			localDec := json.NewDecoder(source)
 			switch rawMsg[0] {
-
 			case '{':
 				o := make(map[string]GeoHashGridBucket, 0)
-				localDec.Decode(&o)
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
 				s.Buckets = o
-
 			case '[':
 				o := []GeoHashGridBucket{}
-				localDec.Decode(&o)
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
 				s.Buckets = o
 			}
 

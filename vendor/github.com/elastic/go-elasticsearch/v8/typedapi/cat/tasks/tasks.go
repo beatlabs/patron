@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about the tasks currently executing on one or more nodes
 // in the cluster.
@@ -162,13 +162,16 @@ func (r Tasks) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -202,33 +205,42 @@ func (r *Tasks) Header(key, value string) *Tasks {
 	return r
 }
 
-// Actions A comma-separated list of actions that should be returned. Leave empty to
-// return all.
+// Actions The task action names, which are used to limit the response.
 // API name: actions
-func (r *Tasks) Actions(v string) *Tasks {
-	r.values.Set("actions", v)
+func (r *Tasks) Actions(actions ...string) *Tasks {
+	tmp := []string{}
+	for _, item := range actions {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("actions", strings.Join(tmp, ","))
 
 	return r
 }
 
-// Detailed Return detailed task information (default: false)
+// Detailed If `true`, the response includes detailed information about shard recoveries.
 // API name: detailed
-func (r *Tasks) Detailed(b bool) *Tasks {
-	r.values.Set("detailed", strconv.FormatBool(b))
+func (r *Tasks) Detailed(detailed bool) *Tasks {
+	r.values.Set("detailed", strconv.FormatBool(detailed))
 
 	return r
 }
 
+// NodeId Unique node identifiers, which are used to limit the response.
 // API name: node_id
-func (r *Tasks) NodeId(v string) *Tasks {
-	r.values.Set("node_id", v)
+func (r *Tasks) NodeId(nodeids ...string) *Tasks {
+	tmp := []string{}
+	for _, item := range nodeids {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("node_id", strings.Join(tmp, ","))
 
 	return r
 }
 
-// API name: parent_task
-func (r *Tasks) ParentTask(v string) *Tasks {
-	r.values.Set("parent_task", v)
+// ParentTaskId The parent task identifier, which is used to limit the response.
+// API name: parent_task_id
+func (r *Tasks) ParentTaskId(parenttaskid string) *Tasks {
+	r.values.Set("parent_task_id", parenttaskid)
 
 	return r
 }

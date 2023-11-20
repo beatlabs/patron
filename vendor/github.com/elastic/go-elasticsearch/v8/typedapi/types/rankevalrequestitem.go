@@ -16,17 +16,20 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 )
 
 // RankEvalRequestItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/rank_eval/types.ts#L98-L109
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/rank_eval/types.ts#L98-L109
 type RankEvalRequestItem struct {
 	// Id The search request’s ID, used to group result details later.
 	Id string `json:"id"`
@@ -38,6 +41,54 @@ type RankEvalRequestItem struct {
 	Request *RankEvalQuery `json:"request,omitempty"`
 	// TemplateId The search template Id
 	TemplateId *string `json:"template_id,omitempty"`
+}
+
+func (s *RankEvalRequestItem) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "id":
+			if err := dec.Decode(&s.Id); err != nil {
+				return err
+			}
+
+		case "params":
+			if s.Params == nil {
+				s.Params = make(map[string]json.RawMessage, 0)
+			}
+			if err := dec.Decode(&s.Params); err != nil {
+				return err
+			}
+
+		case "ratings":
+			if err := dec.Decode(&s.Ratings); err != nil {
+				return err
+			}
+
+		case "request":
+			if err := dec.Decode(&s.Request); err != nil {
+				return err
+			}
+
+		case "template_id":
+			if err := dec.Decode(&s.TemplateId); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewRankEvalRequestItem returns a RankEvalRequestItem.

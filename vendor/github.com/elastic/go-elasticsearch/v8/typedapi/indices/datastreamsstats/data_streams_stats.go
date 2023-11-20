@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Provides statistics on operations happening in a data stream.
 package datastreamsstats
@@ -35,6 +35,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -175,13 +176,16 @@ func (r DataStreamsStats) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -215,19 +219,26 @@ func (r *DataStreamsStats) Header(key, value string) *DataStreamsStats {
 	return r
 }
 
-// Name A comma-separated list of data stream names; use `_all` or empty string to
-// perform the operation on all data streams
+// Name Comma-separated list of data streams used to limit the request.
+// Wildcard expressions (`*`) are supported.
+// To target all data streams in a cluster, omit this parameter or use `*`.
 // API Name: name
-func (r *DataStreamsStats) Name(v string) *DataStreamsStats {
+func (r *DataStreamsStats) Name(name string) *DataStreamsStats {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
 
+// ExpandWildcards Type of data stream that wildcard patterns can match.
+// Supports comma-separated values, such as `open,hidden`.
 // API name: expand_wildcards
-func (r *DataStreamsStats) ExpandWildcards(v string) *DataStreamsStats {
-	r.values.Set("expand_wildcards", v)
+func (r *DataStreamsStats) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *DataStreamsStats {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }

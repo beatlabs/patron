@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // InferenceResponseResult type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/inference.ts#L418-L465
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/_types/inference.ts#L459-L506
 type InferenceResponseResult struct {
 	// Entities If the model is trained for named entity recognition (NER) tasks, the
 	// response contains the recognized entities.
@@ -62,6 +70,116 @@ type InferenceResponseResult struct {
 	TopClasses []TopClassEntry `json:"top_classes,omitempty"`
 	// Warning If the request failed, the response contains the reason for the failure.
 	Warning *string `json:"warning,omitempty"`
+}
+
+func (s *InferenceResponseResult) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "entities":
+			if err := dec.Decode(&s.Entities); err != nil {
+				return err
+			}
+
+		case "feature_importance":
+			if err := dec.Decode(&s.FeatureImportance); err != nil {
+				return err
+			}
+
+		case "is_truncated":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.IsTruncated = &value
+			case bool:
+				s.IsTruncated = &v
+			}
+
+		case "predicted_value":
+			if err := dec.Decode(&s.PredictedValue); err != nil {
+				return err
+			}
+
+		case "predicted_value_sequence":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.PredictedValueSequence = &o
+
+		case "prediction_probability":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.PredictionProbability = &f
+			case float64:
+				f := Float64(v)
+				s.PredictionProbability = &f
+			}
+
+		case "prediction_score":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.PredictionScore = &f
+			case float64:
+				f := Float64(v)
+				s.PredictionScore = &f
+			}
+
+		case "top_classes":
+			if err := dec.Decode(&s.TopClasses); err != nil {
+				return err
+			}
+
+		case "warning":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Warning = &o
+
+		}
+	}
+	return nil
 }
 
 // NewInferenceResponseResult returns a InferenceResponseResult.

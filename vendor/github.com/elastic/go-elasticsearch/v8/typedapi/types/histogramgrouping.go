@@ -16,16 +16,83 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // HistogramGrouping type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/rollup/_types/Groupings.ts#L44-L47
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/rollup/_types/Groupings.ts#L84-L97
 type HistogramGrouping struct {
-	Fields   []string `json:"fields"`
-	Interval int64    `json:"interval"`
+	// Fields The set of fields that you wish to build histograms for.
+	// All fields specified must be some kind of numeric.
+	// Order does not matter.
+	Fields []string `json:"fields"`
+	// Interval The interval of histogram buckets to be generated when rolling up.
+	// For example, a value of `5` creates buckets that are five units wide (`0-5`,
+	// `5-10`, etc).
+	// Note that only one interval can be specified in the histogram group, meaning
+	// that all fields being grouped via the histogram must share the same interval.
+	Interval int64 `json:"interval"`
+}
+
+func (s *HistogramGrouping) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "fields":
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			if !bytes.HasPrefix(rawMsg, []byte("[")) {
+				o := new(string)
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
+					return err
+				}
+
+				s.Fields = append(s.Fields, *o)
+			} else {
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Fields); err != nil {
+					return err
+				}
+			}
+
+		case "interval":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Interval = value
+			case float64:
+				f := int64(v)
+				s.Interval = f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewHistogramGrouping returns a HistogramGrouping.

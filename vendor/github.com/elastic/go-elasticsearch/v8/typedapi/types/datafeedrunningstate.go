@@ -16,17 +16,85 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // DatafeedRunningState type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/_types/Datafeed.ts#L158-L162
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/_types/Datafeed.ts#L198-L212
 type DatafeedRunningState struct {
-	RealTimeConfigured bool                        `json:"real_time_configured"`
-	RealTimeRunning    bool                        `json:"real_time_running"`
-	SearchInterval     *RunningStateSearchInterval `json:"search_interval,omitempty"`
+	// RealTimeConfigured Indicates if the datafeed is "real-time"; meaning that the datafeed has no
+	// configured `end` time.
+	RealTimeConfigured bool `json:"real_time_configured"`
+	// RealTimeRunning Indicates whether the datafeed has finished running on the available past
+	// data.
+	// For datafeeds without a configured `end` time, this means that the datafeed
+	// is now running on "real-time" data.
+	RealTimeRunning bool `json:"real_time_running"`
+	// SearchInterval Provides the latest time interval the datafeed has searched.
+	SearchInterval *RunningStateSearchInterval `json:"search_interval,omitempty"`
+}
+
+func (s *DatafeedRunningState) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "real_time_configured":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.RealTimeConfigured = value
+			case bool:
+				s.RealTimeConfigured = v
+			}
+
+		case "real_time_running":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.RealTimeRunning = value
+			case bool:
+				s.RealTimeRunning = v
+			}
+
+		case "search_interval":
+			if err := dec.Decode(&s.SearchInterval); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewDatafeedRunningState returns a DatafeedRunningState.

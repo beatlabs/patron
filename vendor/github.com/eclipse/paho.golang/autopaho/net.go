@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +17,8 @@ import (
 
 	"github.com/eclipse/paho.golang/packets"
 	"github.com/eclipse/paho.golang/paho"
+
+	"golang.org/x/net/proxy"
 )
 
 // Network (establishing connection) functionality for AutoPaho
@@ -30,29 +33,43 @@ func establishBrokerConnection(ctx context.Context, cfg ClientConfig) (*paho.Cli
 		for _, u := range cfg.BrokerUrls {
 			connectionCtx, cancelConnCtx := context.WithTimeout(ctx, cfg.ConnectTimeout)
 
-			switch strings.ToLower(u.Scheme) {
-			case "mqtt", "tcp", "":
-				cfg.Conn, err = attemptTCPConnection(connectionCtx, u.Host)
-			case "ssl", "tls", "mqtts", "mqtt+ssl", "tcps":
-				cfg.Conn, err = attemptTLSConnection(connectionCtx, cfg.TlsCfg, u.Host)
-			case "ws":
-				cfg.Conn, err = attemptWebsocketConnection(connectionCtx, nil, cfg.WebSocketCfg, u)
-			case "wss":
-				cfg.Conn, err = attemptWebsocketConnection(connectionCtx, cfg.TlsCfg, cfg.WebSocketCfg, u)
-			default:
-				cfg.OnConnectError(fmt.Errorf("unsupported scheme (%s) user in url %s", u.Scheme, u.String()))
-				cancelConnCtx()
-				continue
+			if cfg.AttemptConnection != nil { // Use custom function if it is provided
+				cfg.Conn, err = cfg.AttemptConnection(ctx, cfg, u)
+			} else {
+				switch strings.ToLower(u.Scheme) {
+				case "mqtt", "tcp", "":
+					cfg.Conn, err = attemptTCPConnection(connectionCtx, u.Host)
+				case "ssl", "tls", "mqtts", "mqtt+ssl", "tcps":
+					cfg.Conn, err = attemptTLSConnection(connectionCtx, cfg.TlsCfg, u.Host)
+				case "ws":
+					cfg.Conn, err = attemptWebsocketConnection(connectionCtx, nil, cfg.WebSocketCfg, u)
+				case "wss":
+					cfg.Conn, err = attemptWebsocketConnection(connectionCtx, cfg.TlsCfg, cfg.WebSocketCfg, u)
+				default:
+					if cfg.OnConnectError != nil {
+						cfg.OnConnectError(fmt.Errorf("unsupported scheme (%s) user in url %s", u.Scheme, u.String()))
+					}
+					cancelConnCtx()
+					continue
+				}
 			}
 
+			var connack *paho.Connack
 			if err == nil {
 				cli := paho.NewClient(cfg.ClientConfig)
+				if cfg.PahoDebug != nil {
+					cli.SetDebugLogger(cfg.PahoDebug)
+				}
+
+				if cfg.PahoErrors != nil {
+					cli.SetErrorLogger(cfg.PahoErrors)
+				}
+
 				cp := cfg.buildConnectPacket()
-				var ca *paho.Connack
-				ca, err = cli.Connect(connectionCtx, cp) // will return an error if the connection is unsuccessful (checks the reason code)
-				if err == nil {                          // Successfully connected
+				connack, err = cli.Connect(connectionCtx, cp) // will return an error if the connection is unsuccessful (checks the reason code)
+				if err == nil {                               // Successfully connected
 					cancelConnCtx()
-					return cli, ca
+					return cli, connack
 				}
 			}
 			cancelConnCtx()
@@ -63,7 +80,11 @@ func establishBrokerConnection(ctx context.Context, cfg ClientConfig) (*paho.Cli
 			}
 
 			if cfg.OnConnectError != nil {
-				cfg.OnConnectError(fmt.Errorf("failed to connect to %s: %w", u.String(), err))
+				cerr := fmt.Errorf("failed to connect to %s: %w", u.String(), err)
+				if connack != nil {
+					cerr = NewConnackError(err, connack)
+				}
+				cfg.OnConnectError(cerr)
 			}
 		}
 
@@ -78,17 +99,41 @@ func establishBrokerConnection(ctx context.Context, cfg ClientConfig) (*paho.Cli
 
 // attemptTCPConnection - makes a single attempt at establishing a TCP connection with the broker
 func attemptTCPConnection(ctx context.Context, address string) (net.Conn, error) {
-	var d net.Dialer
-	return d.DialContext(ctx, "tcp", address)
+	allProxy := os.Getenv("all_proxy")
+	if len(allProxy) == 0 {
+		var d net.Dialer
+		return d.DialContext(ctx, "tcp", address)
+	}
+	proxyDialer := proxy.FromEnvironment()
+	return proxyDialer.Dial("tcp", address)
 }
 
 // attemptTLSConnection - makes a single attempt at establishing a TLS connection with the broker
 func attemptTLSConnection(ctx context.Context, tlsCfg *tls.Config, address string) (net.Conn, error) {
-	d := tls.Dialer{
-		Config: tlsCfg,
+	allProxy := os.Getenv("all_proxy")
+	if len(allProxy) == 0 {
+		d := tls.Dialer{
+			Config: tlsCfg,
+		}
+		conn, err := d.DialContext(ctx, "tcp", address)
+		return packets.NewThreadSafeConn(conn), err
 	}
-	conn, err := d.DialContext(ctx, "tcp", address)
-	return packets.NewThreadSafeConn(conn), err
+
+	proxyDialer := proxy.FromEnvironment()
+	conn, err := proxyDialer.Dial("tcp", address)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsConn := tls.Client(conn, tlsCfg)
+
+	err = tlsConn.Handshake()
+	if err != nil {
+		_ = conn.Close()
+		return nil, err
+	}
+
+	return packets.NewThreadSafeConn(tlsConn), err
 }
 
 // attemptWebsocketConnection - makes a single attempt at establishing a websocket connection with the broker
@@ -110,7 +155,6 @@ func attemptWebsocketConnection(ctx context.Context, tlsc *tls.Config, cfg *WebS
 		dialer = &d
 	}
 	ws, _, err := dialer.DialContext(ctx, brokerURL.String(), requestHeader)
-
 	if err != nil {
 		return nil, fmt.Errorf("websocket connection failed: %w", err)
 	}

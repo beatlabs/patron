@@ -3,10 +3,10 @@ package kafka
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/IBM/sarama"
-	"golang.org/x/exp/slog"
 )
 
 // OptionFunc definition for configuring the component in a functional way.

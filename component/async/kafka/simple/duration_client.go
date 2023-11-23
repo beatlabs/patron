@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/beatlabs/patron/log"
-	"golang.org/x/exp/slog"
 )
 
 type durationClient struct {

@@ -7,13 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/beatlabs/patron/log"
-	"golang.org/x/exp/slog"
 )
 
 // NewRequest creates a request, encodes the body, and sets the appropriate headers.

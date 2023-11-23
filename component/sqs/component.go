@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +18,6 @@ import (
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
-	"golang.org/x/exp/slog"
 )
 
 const (

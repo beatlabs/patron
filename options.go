@@ -2,8 +2,7 @@ package patron
 
 import (
 	"errors"
-
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 type OptionFunc func(svc *Service) error

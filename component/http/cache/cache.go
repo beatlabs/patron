@@ -5,13 +5,13 @@ import (
 	"context"
 	"fmt"
 	"hash/crc32"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-	"golang.org/x/exp/slog"
 )
 
 type validationContext int

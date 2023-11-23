@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/grpc"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/log"
-	"golang.org/x/exp/slog"
 )
 
 type greeterServer struct {

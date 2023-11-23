@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"os"
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/examples"
-	"golang.org/x/exp/slog"
 )
 
 const (

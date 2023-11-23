@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
@@ -15,7 +16,6 @@ import (
 	"github.com/uber/jaeger-client-go/rpcmetrics"
 	"github.com/uber/jaeger-lib/metrics"
 	"github.com/uber/jaeger-lib/metrics/prometheus"
-	"golang.org/x/exp/slog"
 )
 
 const (

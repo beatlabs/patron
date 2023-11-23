@@ -4,9 +4,9 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 
-	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"

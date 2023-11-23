@@ -5,13 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
 	"sync"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 const (

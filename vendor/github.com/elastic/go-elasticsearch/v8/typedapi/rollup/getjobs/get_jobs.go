@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves the configuration, stats, and status of rollup jobs.
 package getjobs
@@ -112,7 +112,7 @@ func (r *GetJobs) HttpRequest(ctx context.Context) (*http.Request, error) {
 		path.WriteString("_rollup")
 		path.WriteString("/")
 		path.WriteString("job")
-		path.WriteString("/")
+
 		method = http.MethodGet
 	}
 
@@ -175,13 +175,16 @@ func (r GetJobs) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -215,12 +218,12 @@ func (r *GetJobs) Header(key, value string) *GetJobs {
 	return r
 }
 
-// Id The ID of the job(s) to fetch. Accepts glob patterns, or left blank for all
-// jobs
+// Id Identifier for the rollup job.
+// If it is `_all` or omitted, the API returns all rollup jobs.
 // API Name: id
-func (r *GetJobs) Id(v string) *GetJobs {
+func (r *GetJobs) Id(id string) *GetJobs {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }

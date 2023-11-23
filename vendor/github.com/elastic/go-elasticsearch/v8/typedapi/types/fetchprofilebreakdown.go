@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // FetchProfileBreakdown type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/search/_types/profile.ts#L148-L157
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/search/_types/profile.ts#L148-L157
 type FetchProfileBreakdown struct {
 	LoadSource            *int `json:"load_source,omitempty"`
 	LoadSourceCount       *int `json:"load_source_count,omitempty"`
@@ -32,6 +40,154 @@ type FetchProfileBreakdown struct {
 	NextReaderCount       *int `json:"next_reader_count,omitempty"`
 	Process               *int `json:"process,omitempty"`
 	ProcessCount          *int `json:"process_count,omitempty"`
+}
+
+func (s *FetchProfileBreakdown) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "load_source":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.LoadSource = &value
+			case float64:
+				f := int(v)
+				s.LoadSource = &f
+			}
+
+		case "load_source_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.LoadSourceCount = &value
+			case float64:
+				f := int(v)
+				s.LoadSourceCount = &f
+			}
+
+		case "load_stored_fields":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.LoadStoredFields = &value
+			case float64:
+				f := int(v)
+				s.LoadStoredFields = &f
+			}
+
+		case "load_stored_fields_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.LoadStoredFieldsCount = &value
+			case float64:
+				f := int(v)
+				s.LoadStoredFieldsCount = &f
+			}
+
+		case "next_reader":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.NextReader = &value
+			case float64:
+				f := int(v)
+				s.NextReader = &f
+			}
+
+		case "next_reader_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.NextReaderCount = &value
+			case float64:
+				f := int(v)
+				s.NextReaderCount = &f
+			}
+
+		case "process":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.Process = &value
+			case float64:
+				f := int(v)
+				s.Process = &f
+			}
+
+		case "process_count":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.ProcessCount = &value
+			case float64:
+				f := int(v)
+				s.ProcessCount = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewFetchProfileBreakdown returns a FetchProfileBreakdown.

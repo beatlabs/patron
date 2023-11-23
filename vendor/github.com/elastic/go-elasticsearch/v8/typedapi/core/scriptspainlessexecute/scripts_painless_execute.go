@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Allows an arbitrary script to be executed and a result to be returned
 package scriptspainlessexecute
@@ -48,8 +48,9 @@ type ScriptsPainlessExecute struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -76,6 +77,8 @@ func New(tp elastictransport.Interface) *ScriptsPainlessExecute {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -105,9 +108,19 @@ func (r *ScriptsPainlessExecute) HttpRequest(ctx context.Context) (*http.Request
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -115,6 +128,7 @@ func (r *ScriptsPainlessExecute) HttpRequest(ctx context.Context) (*http.Request
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -196,7 +210,6 @@ func (r ScriptsPainlessExecute) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
@@ -205,12 +218,43 @@ func (r ScriptsPainlessExecute) Do(ctx context.Context) (*Response, error) {
 		return nil, err
 	}
 
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
+	}
+
 	return nil, errorResponse
 }
 
 // Header set a key, value pair in the ScriptsPainlessExecute headers map.
 func (r *ScriptsPainlessExecute) Header(key, value string) *ScriptsPainlessExecute {
 	r.headers.Set(key, value)
+
+	return r
+}
+
+// Context The context that the script should run in.
+// API name: context
+func (r *ScriptsPainlessExecute) Context(context string) *ScriptsPainlessExecute {
+
+	r.req.Context = &context
+
+	return r
+}
+
+// ContextSetup Additional parameters for the `context`.
+// API name: context_setup
+func (r *ScriptsPainlessExecute) ContextSetup(contextsetup *types.PainlessContextSetup) *ScriptsPainlessExecute {
+
+	r.req.ContextSetup = contextsetup
+
+	return r
+}
+
+// Script The Painless script to execute.
+// API name: script
+func (r *ScriptsPainlessExecute) Script(script *types.InlineScript) *ScriptsPainlessExecute {
+
+	r.req.Script = script
 
 	return r
 }

@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // FingerprintTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/token_filters.ts#L193-L197
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/token_filters.ts#L194-L198
 type FingerprintTokenFilter struct {
 	MaxOutputSize *int    `json:"max_output_size,omitempty"`
 	Separator     *string `json:"separator,omitempty"`
@@ -30,11 +38,82 @@ type FingerprintTokenFilter struct {
 	Version       *string `json:"version,omitempty"`
 }
 
+func (s *FingerprintTokenFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "max_output_size":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.MaxOutputSize = &value
+			case float64:
+				f := int(v)
+				s.MaxOutputSize = &f
+			}
+
+		case "separator":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Separator = &o
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s FingerprintTokenFilter) MarshalJSON() ([]byte, error) {
+	type innerFingerprintTokenFilter FingerprintTokenFilter
+	tmp := innerFingerprintTokenFilter{
+		MaxOutputSize: s.MaxOutputSize,
+		Separator:     s.Separator,
+		Type:          s.Type,
+		Version:       s.Version,
+	}
+
+	tmp.Type = "fingerprint"
+
+	return json.Marshal(tmp)
+}
+
 // NewFingerprintTokenFilter returns a FingerprintTokenFilter.
 func NewFingerprintTokenFilter() *FingerprintTokenFilter {
 	r := &FingerprintTokenFilter{}
-
-	r.Type = "fingerprint"
 
 	return r
 }

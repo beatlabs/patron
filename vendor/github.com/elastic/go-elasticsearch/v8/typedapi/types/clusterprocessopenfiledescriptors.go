@@ -16,17 +16,98 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // ClusterProcessOpenFileDescriptors type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/stats/types.ts#L263-L267
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/cluster/stats/types.ts#L485-L501
 type ClusterProcessOpenFileDescriptors struct {
+	// Avg Average number of concurrently open file descriptors.
+	// Returns `-1` if not supported.
 	Avg int64 `json:"avg"`
+	// Max Maximum number of concurrently open file descriptors allowed across all
+	// selected nodes.
+	// Returns `-1` if not supported.
 	Max int64 `json:"max"`
+	// Min Minimum number of concurrently open file descriptors across all selected
+	// nodes.
+	// Returns -1 if not supported.
 	Min int64 `json:"min"`
+}
+
+func (s *ClusterProcessOpenFileDescriptors) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "avg":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Avg = value
+			case float64:
+				f := int64(v)
+				s.Avg = f
+			}
+
+		case "max":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Max = value
+			case float64:
+				f := int64(v)
+				s.Max = f
+			}
+
+		case "min":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Min = value
+			case float64:
+				f := int64(v)
+				s.Min = f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewClusterProcessOpenFileDescriptors returns a ClusterProcessOpenFileDescriptors.

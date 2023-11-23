@@ -16,24 +16,28 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/executionstatus"
 )
 
 // WatchRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/watcher/execute_watch/types.ts#L27-L39
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/watcher/execute_watch/types.ts#L27-L39
 type WatchRecord struct {
 	Condition    WatcherCondition                `json:"condition"`
 	Input        WatcherInput                    `json:"input"`
 	Messages     []string                        `json:"messages"`
-	Metadata     map[string]json.RawMessage      `json:"metadata,omitempty"`
+	Metadata     Metadata                        `json:"metadata,omitempty"`
 	Node         string                          `json:"node"`
 	Result       ExecutionResult                 `json:"result"`
 	State        executionstatus.ExecutionStatus `json:"state"`
@@ -41,6 +45,88 @@ type WatchRecord struct {
 	TriggerEvent TriggerEventResult              `json:"trigger_event"`
 	User         string                          `json:"user"`
 	WatchId      string                          `json:"watch_id"`
+}
+
+func (s *WatchRecord) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "condition":
+			if err := dec.Decode(&s.Condition); err != nil {
+				return err
+			}
+
+		case "input":
+			if err := dec.Decode(&s.Input); err != nil {
+				return err
+			}
+
+		case "messages":
+			if err := dec.Decode(&s.Messages); err != nil {
+				return err
+			}
+
+		case "metadata":
+			if err := dec.Decode(&s.Metadata); err != nil {
+				return err
+			}
+
+		case "node":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Node = o
+
+		case "result":
+			if err := dec.Decode(&s.Result); err != nil {
+				return err
+			}
+
+		case "state":
+			if err := dec.Decode(&s.State); err != nil {
+				return err
+			}
+
+		case "status":
+			if err := dec.Decode(&s.Status); err != nil {
+				return err
+			}
+
+		case "trigger_event":
+			if err := dec.Decode(&s.TriggerEvent); err != nil {
+				return err
+			}
+
+		case "user":
+			if err := dec.Decode(&s.User); err != nil {
+				return err
+			}
+
+		case "watch_id":
+			if err := dec.Decode(&s.WatchId); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewWatchRecord returns a WatchRecord.

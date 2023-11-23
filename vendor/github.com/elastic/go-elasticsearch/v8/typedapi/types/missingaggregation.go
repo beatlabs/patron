@@ -16,22 +16,74 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 )
 
 // MissingAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/bucket.ts#L260-L263
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/bucket.ts#L574-L580
 type MissingAggregation struct {
-	Field   *string                    `json:"field,omitempty"`
-	Meta    map[string]json.RawMessage `json:"meta,omitempty"`
-	Missing Missing                    `json:"missing,omitempty"`
-	Name    *string                    `json:"name,omitempty"`
+	// Field The name of the field.
+	Field   *string  `json:"field,omitempty"`
+	Meta    Metadata `json:"meta,omitempty"`
+	Missing Missing  `json:"missing,omitempty"`
+	Name    *string  `json:"name,omitempty"`
+}
+
+func (s *MissingAggregation) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "field":
+			if err := dec.Decode(&s.Field); err != nil {
+				return err
+			}
+
+		case "meta":
+			if err := dec.Decode(&s.Meta); err != nil {
+				return err
+			}
+
+		case "missing":
+			if err := dec.Decode(&s.Missing); err != nil {
+				return err
+			}
+
+		case "name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Name = &o
+
+		}
+	}
+	return nil
 }
 
 // NewMissingAggregation returns a MissingAggregation.

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Clears all or specific caches for one or more indices.
 package clearcache
@@ -36,6 +36,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -176,13 +177,16 @@ func (r ClearCache) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -216,71 +220,83 @@ func (r *ClearCache) Header(key, value string) *ClearCache {
 	return r
 }
 
-// Index A comma-separated list of index name to limit the operation
+// Index Comma-separated list of data streams, indices, and aliases used to limit the
+// request.
+// Supports wildcards (`*`).
+// To target all data streams and indices, omit this parameter or use `*` or
+// `_all`.
 // API Name: index
-func (r *ClearCache) Index(v string) *ClearCache {
+func (r *ClearCache) Index(index string) *ClearCache {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// AllowNoIndices Whether to ignore if a wildcard indices expression resolves into no concrete
-// indices. (This includes `_all` string or when no indices have been specified)
+// AllowNoIndices If `false`, the request returns an error if any wildcard expression, index
+// alias, or `_all` value targets only missing or closed indices.
+// This behavior applies even if the request targets other open indices.
 // API name: allow_no_indices
-func (r *ClearCache) AllowNoIndices(b bool) *ClearCache {
-	r.values.Set("allow_no_indices", strconv.FormatBool(b))
+func (r *ClearCache) AllowNoIndices(allownoindices bool) *ClearCache {
+	r.values.Set("allow_no_indices", strconv.FormatBool(allownoindices))
 
 	return r
 }
 
-// ExpandWildcards Whether to expand wildcard expression to concrete indices that are open,
-// closed or both.
+// ExpandWildcards Type of index that wildcard patterns can match.
+// If the request can target data streams, this argument determines whether
+// wildcard expressions match hidden data streams.
+// Supports comma-separated values, such as `open,hidden`.
+// Valid values are: `all`, `open`, `closed`, `hidden`, `none`.
 // API name: expand_wildcards
-func (r *ClearCache) ExpandWildcards(v string) *ClearCache {
-	r.values.Set("expand_wildcards", v)
+func (r *ClearCache) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *ClearCache {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
-// Fielddata Clear field data
+// Fielddata If `true`, clears the fields cache.
+// Use the `fields` parameter to clear the cache of specific fields only.
 // API name: fielddata
-func (r *ClearCache) Fielddata(b bool) *ClearCache {
-	r.values.Set("fielddata", strconv.FormatBool(b))
+func (r *ClearCache) Fielddata(fielddata bool) *ClearCache {
+	r.values.Set("fielddata", strconv.FormatBool(fielddata))
 
 	return r
 }
 
-// Fields A comma-separated list of fields to clear when using the `fielddata`
-// parameter (default: all)
+// Fields Comma-separated list of field names used to limit the `fielddata` parameter.
 // API name: fields
-func (r *ClearCache) Fields(v string) *ClearCache {
-	r.values.Set("fields", v)
+func (r *ClearCache) Fields(fields ...string) *ClearCache {
+	r.values.Set("fields", strings.Join(fields, ","))
 
 	return r
 }
 
-// IgnoreUnavailable Whether specified concrete indices should be ignored when unavailable
-// (missing or closed)
+// IgnoreUnavailable If `false`, the request returns an error if it targets a missing or closed
+// index.
 // API name: ignore_unavailable
-func (r *ClearCache) IgnoreUnavailable(b bool) *ClearCache {
-	r.values.Set("ignore_unavailable", strconv.FormatBool(b))
+func (r *ClearCache) IgnoreUnavailable(ignoreunavailable bool) *ClearCache {
+	r.values.Set("ignore_unavailable", strconv.FormatBool(ignoreunavailable))
 
 	return r
 }
 
-// Query Clear query caches
+// Query If `true`, clears the query cache.
 // API name: query
-func (r *ClearCache) Query(b bool) *ClearCache {
-	r.values.Set("query", strconv.FormatBool(b))
+func (r *ClearCache) Query(query bool) *ClearCache {
+	r.values.Set("query", strconv.FormatBool(query))
 
 	return r
 }
 
-// Request Clear request cache
+// Request If `true`, clears the request cache.
 // API name: request
-func (r *ClearCache) Request(b bool) *ClearCache {
-	r.values.Set("request", strconv.FormatBool(b))
+func (r *ClearCache) Request(request bool) *ClearCache {
+	r.values.Set("request", strconv.FormatBool(request))
 
 	return r
 }

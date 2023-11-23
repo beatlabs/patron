@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about whether a particular index template exists.
 package existsindextemplate
@@ -24,7 +24,6 @@ package existsindextemplate
 import (
 	gobytes "bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -34,7 +33,6 @@ import (
 	"strings"
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 const (
@@ -67,7 +65,7 @@ func NewExistsIndexTemplateFunc(tp elastictransport.Interface) NewExistsIndexTem
 	return func(name string) *ExistsIndexTemplate {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -151,33 +149,8 @@ func (r ExistsIndexTemplate) Perform(ctx context.Context) (*http.Response, error
 }
 
 // Do runs the request through the transport, handle the response and returns a existsindextemplate.Response
-func (r ExistsIndexTemplate) Do(ctx context.Context) (*Response, error) {
-
-	response := NewResponse()
-
-	res, err := r.Perform(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode < 299 {
-		err = json.NewDecoder(res.Body).Decode(response)
-		if err != nil {
-			return nil, err
-		}
-
-		return response, nil
-
-	}
-
-	errorResponse := types.NewElasticsearchError()
-	err = json.NewDecoder(res.Body).Decode(errorResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, errorResponse
+func (r ExistsIndexTemplate) Do(ctx context.Context) (bool, error) {
+	return r.IsSuccess(ctx)
 }
 
 // IsSuccess allows to run a query with a context and retrieve the result as a boolean.
@@ -211,9 +184,9 @@ func (r *ExistsIndexTemplate) Header(key, value string) *ExistsIndexTemplate {
 // Name Comma-separated list of index template names used to limit the request.
 // Wildcard (*) expressions are supported.
 // API Name: name
-func (r *ExistsIndexTemplate) Name(v string) *ExistsIndexTemplate {
+func (r *ExistsIndexTemplate) _name(name string) *ExistsIndexTemplate {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
@@ -221,8 +194,8 @@ func (r *ExistsIndexTemplate) Name(v string) *ExistsIndexTemplate {
 // MasterTimeout Period to wait for a connection to the master node. If no response is
 // received before the timeout expires, the request fails and returns an error.
 // API name: master_timeout
-func (r *ExistsIndexTemplate) MasterTimeout(v string) *ExistsIndexTemplate {
-	r.values.Set("master_timeout", v)
+func (r *ExistsIndexTemplate) MasterTimeout(duration string) *ExistsIndexTemplate {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

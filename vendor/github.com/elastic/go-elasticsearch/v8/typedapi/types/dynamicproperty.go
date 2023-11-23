@@ -16,27 +16,27 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dynamicmapping"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/indexoptions"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/onscripterror"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/termvectoroption"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/timeseriesmetrictype"
-
-	"bytes"
-	"errors"
-	"io"
-
-	"encoding/json"
 )
 
 // DynamicProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/mapping/core.ts#L275-L306
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/mapping/core.ts#L285-L316
 type DynamicProperty struct {
 	Analyzer            *string                        `json:"analyzer,omitempty"`
 	Boost               *Float64                       `json:"boost,omitempty"`
@@ -74,6 +74,7 @@ type DynamicProperty struct {
 }
 
 func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -88,28 +89,75 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "analyzer":
-			if err := dec.Decode(&s.Analyzer); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Analyzer = &o
 
 		case "boost":
-			if err := dec.Decode(&s.Boost); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return err
+				}
+				f := Float64(value)
+				s.Boost = &f
+			case float64:
+				f := Float64(v)
+				s.Boost = &f
 			}
 
 		case "coerce":
-			if err := dec.Decode(&s.Coerce); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Coerce = &value
+			case bool:
+				s.Coerce = &v
 			}
 
 		case "copy_to":
-			if err := dec.Decode(&s.CopyTo); err != nil {
-				return err
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			if !bytes.HasPrefix(rawMsg, []byte("[")) {
+				o := new(string)
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
+					return err
+				}
+
+				s.CopyTo = append(s.CopyTo, *o)
+			} else {
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.CopyTo); err != nil {
+					return err
+				}
 			}
 
 		case "doc_values":
-			if err := dec.Decode(&s.DocValues); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.DocValues = &value
+			case bool:
+				s.DocValues = &v
 			}
 
 		case "dynamic":
@@ -118,16 +166,37 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 			}
 
 		case "eager_global_ordinals":
-			if err := dec.Decode(&s.EagerGlobalOrdinals); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.EagerGlobalOrdinals = &value
+			case bool:
+				s.EagerGlobalOrdinals = &v
 			}
 
 		case "enabled":
-			if err := dec.Decode(&s.Enabled); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Enabled = &value
+			case bool:
+				s.Enabled = &v
 			}
 
 		case "fields":
+			if s.Fields == nil {
+				s.Fields = make(map[string]Property, 0)
+			}
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
@@ -136,7 +205,9 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
 				buf.Seek(0, io.SeekStart)
-
+				if _, ok := kind["type"]; !ok {
+					kind["type"] = "object"
+				}
 				switch kind["type"] {
 				case "binary":
 					oo := NewBinaryProperty()
@@ -415,30 +486,68 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 					}
 					s.Fields[key] = oo
 				default:
-					if err := dec.Decode(&s.Fields); err != nil {
+					oo := new(Property)
+					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}
+					s.Fields[key] = oo
 				}
 			}
 
 		case "format":
-			if err := dec.Decode(&s.Format); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Format = &o
 
 		case "ignore_above":
-			if err := dec.Decode(&s.IgnoreAbove); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.IgnoreAbove = &value
+			case float64:
+				f := int(v)
+				s.IgnoreAbove = &f
 			}
 
 		case "ignore_malformed":
-			if err := dec.Decode(&s.IgnoreMalformed); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.IgnoreMalformed = &value
+			case bool:
+				s.IgnoreMalformed = &v
 			}
 
 		case "index":
-			if err := dec.Decode(&s.Index); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Index = &value
+			case bool:
+				s.Index = &v
 			}
 
 		case "index_options":
@@ -447,8 +556,17 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 			}
 
 		case "index_phrases":
-			if err := dec.Decode(&s.IndexPhrases); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.IndexPhrases = &value
+			case bool:
+				s.IndexPhrases = &v
 			}
 
 		case "index_prefixes":
@@ -457,18 +575,37 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 			}
 
 		case "locale":
-			if err := dec.Decode(&s.Locale); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Locale = &o
 
 		case "meta":
+			if s.Meta == nil {
+				s.Meta = make(map[string]string, 0)
+			}
 			if err := dec.Decode(&s.Meta); err != nil {
 				return err
 			}
 
 		case "norms":
-			if err := dec.Decode(&s.Norms); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Norms = &value
+			case bool:
+				s.Norms = &v
 			}
 
 		case "null_value":
@@ -482,16 +619,41 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 			}
 
 		case "position_increment_gap":
-			if err := dec.Decode(&s.PositionIncrementGap); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.PositionIncrementGap = &value
+			case float64:
+				f := int(v)
+				s.PositionIncrementGap = &f
 			}
 
 		case "precision_step":
-			if err := dec.Decode(&s.PrecisionStep); err != nil {
-				return err
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.PrecisionStep = &value
+			case float64:
+				f := int(v)
+				s.PrecisionStep = &f
 			}
 
 		case "properties":
+			if s.Properties == nil {
+				s.Properties = make(map[string]Property, 0)
+			}
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
@@ -500,7 +662,9 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
 				buf.Seek(0, io.SeekStart)
-
+				if _, ok := kind["type"]; !ok {
+					kind["type"] = "object"
+				}
 				switch kind["type"] {
 				case "binary":
 					oo := NewBinaryProperty()
@@ -779,9 +943,11 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 					}
 					s.Properties[key] = oo
 				default:
-					if err := dec.Decode(&s.Properties); err != nil {
+					oo := new(Property)
+					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}
+					s.Properties[key] = oo
 				}
 			}
 
@@ -791,23 +957,53 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 			}
 
 		case "search_analyzer":
-			if err := dec.Decode(&s.SearchAnalyzer); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.SearchAnalyzer = &o
 
 		case "search_quote_analyzer":
-			if err := dec.Decode(&s.SearchQuoteAnalyzer); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.SearchQuoteAnalyzer = &o
 
 		case "similarity":
-			if err := dec.Decode(&s.Similarity); err != nil {
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
 				return err
 			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Similarity = &o
 
 		case "store":
-			if err := dec.Decode(&s.Store); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Store = &value
+			case bool:
+				s.Store = &v
 			}
 
 		case "term_vector":
@@ -830,6 +1026,49 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MarshalJSON override marshalling to include literal value
+func (s DynamicProperty) MarshalJSON() ([]byte, error) {
+	type innerDynamicProperty DynamicProperty
+	tmp := innerDynamicProperty{
+		Analyzer:             s.Analyzer,
+		Boost:                s.Boost,
+		Coerce:               s.Coerce,
+		CopyTo:               s.CopyTo,
+		DocValues:            s.DocValues,
+		Dynamic:              s.Dynamic,
+		EagerGlobalOrdinals:  s.EagerGlobalOrdinals,
+		Enabled:              s.Enabled,
+		Fields:               s.Fields,
+		Format:               s.Format,
+		IgnoreAbove:          s.IgnoreAbove,
+		IgnoreMalformed:      s.IgnoreMalformed,
+		Index:                s.Index,
+		IndexOptions:         s.IndexOptions,
+		IndexPhrases:         s.IndexPhrases,
+		IndexPrefixes:        s.IndexPrefixes,
+		Locale:               s.Locale,
+		Meta:                 s.Meta,
+		Norms:                s.Norms,
+		NullValue:            s.NullValue,
+		OnScriptError:        s.OnScriptError,
+		PositionIncrementGap: s.PositionIncrementGap,
+		PrecisionStep:        s.PrecisionStep,
+		Properties:           s.Properties,
+		Script:               s.Script,
+		SearchAnalyzer:       s.SearchAnalyzer,
+		SearchQuoteAnalyzer:  s.SearchQuoteAnalyzer,
+		Similarity:           s.Similarity,
+		Store:                s.Store,
+		TermVector:           s.TermVector,
+		TimeSeriesMetric:     s.TimeSeriesMetric,
+		Type:                 s.Type,
+	}
+
+	tmp.Type = "{dynamic_property}"
+
+	return json.Marshal(tmp)
+}
+
 // NewDynamicProperty returns a DynamicProperty.
 func NewDynamicProperty() *DynamicProperty {
 	r := &DynamicProperty{
@@ -837,8 +1076,6 @@ func NewDynamicProperty() *DynamicProperty {
 		Meta:       make(map[string]string, 0),
 		Properties: make(map[string]Property, 0),
 	}
-
-	r.Type = "{dynamic_property}"
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package query
 
@@ -29,7 +29,7 @@ import (
 
 // Request holds the request body struct for the package query
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/sql/query/QuerySqlRequest.ts#L28-L115
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/sql/query/QuerySqlRequest.ts#L28-L122
 type Request struct {
 
 	// Catalog Default catalog (cluster) for queries. If unspecified, the queries execute on
@@ -37,15 +37,19 @@ type Request struct {
 	Catalog *string `json:"catalog,omitempty"`
 	// Columnar If true, the results in a columnar fashion: one row represents all the values
 	// of a certain column from the current page of results.
-	Columnar *bool   `json:"columnar,omitempty"`
-	Cursor   *string `json:"cursor,omitempty"`
+	Columnar *bool `json:"columnar,omitempty"`
+	// Cursor Cursor used to retrieve a set of paginated results.
+	// If you specify a cursor, the API only uses the `columnar` and `time_zone`
+	// request body parameters.
+	// It ignores other request body parameters.
+	Cursor *string `json:"cursor,omitempty"`
 	// FetchSize The maximum number of rows (or entries) to return in one response
 	FetchSize *int `json:"fetch_size,omitempty"`
 	// FieldMultiValueLeniency Throw an exception when encountering multiple values for a field (default) or
 	// be lenient and return the first value from the list (without any guarantees
 	// of what that will be - typically the first in natural ascending order).
 	FieldMultiValueLeniency *bool `json:"field_multi_value_leniency,omitempty"`
-	// Filter Optional Elasticsearch query DSL for additional filtering.
+	// Filter Elasticsearch query DSL for additional filtering.
 	Filter *types.Query `json:"filter,omitempty"`
 	// IndexUsingFrozen If true, the search can run on frozen indices. Defaults to false.
 	IndexUsingFrozen *bool `json:"index_using_frozen,omitempty"`
@@ -59,15 +63,14 @@ type Request struct {
 	PageTimeout types.Duration `json:"page_timeout,omitempty"`
 	// Params Values for parameters in the query.
 	Params map[string]json.RawMessage `json:"params,omitempty"`
-	// Query SQL query to execute
+	// Query SQL query to run.
 	Query *string `json:"query,omitempty"`
 	// RequestTimeout The timeout before the request fails.
 	RequestTimeout types.Duration `json:"request_timeout,omitempty"`
 	// RuntimeMappings Defines one or more runtime fields in the search request. These fields take
 	// precedence over mapped fields with the same name.
-	RuntimeMappings map[string]types.RuntimeField `json:"runtime_mappings,omitempty"`
-	// TimeZone Time-zone in ISO 8601 used for executing the query on the server. More
-	// information available here.
+	RuntimeMappings types.RuntimeFields `json:"runtime_mappings,omitempty"`
+	// TimeZone ISO-8601 time zone ID for the search.
 	TimeZone *string `json:"time_zone,omitempty"`
 	// WaitForCompletionTimeout Period to wait for complete results. Defaults to no timeout, meaning the
 	// request waits for complete search results. If the search doesn’t finish

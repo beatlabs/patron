@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes a pipeline.
 package deletepipeline
@@ -67,7 +67,7 @@ func NewDeletePipelineFunc(tp elastictransport.Interface) NewDeletePipeline {
 	return func(id string) *DeletePipeline {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -170,13 +170,16 @@ func (r DeletePipeline) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -210,27 +213,32 @@ func (r *DeletePipeline) Header(key, value string) *DeletePipeline {
 	return r
 }
 
-// Id Pipeline ID
+// Id Pipeline ID or wildcard expression of pipeline IDs used to limit the request.
+// To delete all ingest pipelines in a cluster, use a value of `*`.
 // API Name: id
-func (r *DeletePipeline) Id(v string) *DeletePipeline {
+func (r *DeletePipeline) _id(id string) *DeletePipeline {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
-// MasterTimeout Explicit operation timeout for connection to master node
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *DeletePipeline) MasterTimeout(v string) *DeletePipeline {
-	r.values.Set("master_timeout", v)
+func (r *DeletePipeline) MasterTimeout(duration string) *DeletePipeline {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *DeletePipeline) Timeout(v string) *DeletePipeline {
-	r.values.Set("timeout", v)
+func (r *DeletePipeline) Timeout(duration string) *DeletePipeline {
+	r.values.Set("timeout", duration)
 
 	return r
 }

@@ -16,21 +16,76 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 )
 
 // PhraseSuggestCollate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_global/search/_types/suggester.ts#L180-L184
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_global/search/_types/suggester.ts#L330-L343
 type PhraseSuggestCollate struct {
+	// Params Parameters to use if the query is templated.
 	Params map[string]json.RawMessage `json:"params,omitempty"`
-	Prune  *bool                      `json:"prune,omitempty"`
-	Query  PhraseSuggestCollateQuery  `json:"query"`
+	// Prune Returns all suggestions with an extra `collate_match` option indicating
+	// whether the generated phrase matched any document.
+	Prune *bool `json:"prune,omitempty"`
+	// Query A collate query that is run once for every suggestion.
+	Query PhraseSuggestCollateQuery `json:"query"`
+}
+
+func (s *PhraseSuggestCollate) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "params":
+			if s.Params == nil {
+				s.Params = make(map[string]json.RawMessage, 0)
+			}
+			if err := dec.Decode(&s.Params); err != nil {
+				return err
+			}
+
+		case "prune":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Prune = &value
+			case bool:
+				s.Prune = &v
+			}
+
+		case "query":
+			if err := dec.Decode(&s.Query); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewPhraseSuggestCollate returns a PhraseSuggestCollate.

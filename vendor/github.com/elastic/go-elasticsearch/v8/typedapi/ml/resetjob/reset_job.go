@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Resets an existing anomaly detection job.
 package resetjob
@@ -68,7 +68,7 @@ func NewResetJobFunc(tp elastictransport.Interface) NewResetJob {
 	return func(jobid string) *ResetJob {
 		n := New(tp)
 
-		n.JobId(jobid)
+		n._jobid(jobid)
 
 		return n
 	}
@@ -173,13 +173,16 @@ func (r ResetJob) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -215,9 +218,9 @@ func (r *ResetJob) Header(key, value string) *ResetJob {
 
 // JobId The ID of the job to reset.
 // API Name: jobid
-func (r *ResetJob) JobId(v string) *ResetJob {
+func (r *ResetJob) _jobid(jobid string) *ResetJob {
 	r.paramSet |= jobidMask
-	r.jobid = v
+	r.jobid = jobid
 
 	return r
 }
@@ -225,8 +228,8 @@ func (r *ResetJob) JobId(v string) *ResetJob {
 // WaitForCompletion Should this request wait until the operation has completed before
 // returning.
 // API name: wait_for_completion
-func (r *ResetJob) WaitForCompletion(b bool) *ResetJob {
-	r.values.Set("wait_for_completion", strconv.FormatBool(b))
+func (r *ResetJob) WaitForCompletion(waitforcompletion bool) *ResetJob {
+	r.values.Set("wait_for_completion", strconv.FormatBool(waitforcompletion))
 
 	return r
 }
@@ -236,8 +239,8 @@ func (r *ResetJob) WaitForCompletion(b bool) *ResetJob {
 // is
 // reset.
 // API name: delete_user_annotations
-func (r *ResetJob) DeleteUserAnnotations(b bool) *ResetJob {
-	r.values.Set("delete_user_annotations", strconv.FormatBool(b))
+func (r *ResetJob) DeleteUserAnnotations(deleteuserannotations bool) *ResetJob {
+	r.values.Set("delete_user_annotations", strconv.FormatBool(deleteuserannotations))
 
 	return r
 }

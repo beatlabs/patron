@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // RequestCounts type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/RepositoryMeteringInformation.ts#L76-L103
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/nodes/_types/RepositoryMeteringInformation.ts#L76-L103
 type RequestCounts struct {
 	// GetBlob Number of Get Blob requests (Azure)
 	GetBlob *int64 `json:"GetBlob,omitempty"`
@@ -51,6 +59,191 @@ type RequestCounts struct {
 	PutMultipartObject *int64 `json:"PutMultipartObject,omitempty"`
 	// PutObject Number of PutObject requests (S3)
 	PutObject *int64 `json:"PutObject,omitempty"`
+}
+
+func (s *RequestCounts) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "GetBlob":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.GetBlob = &value
+			case float64:
+				f := int64(v)
+				s.GetBlob = &f
+			}
+
+		case "GetBlobProperties":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.GetBlobProperties = &value
+			case float64:
+				f := int64(v)
+				s.GetBlobProperties = &f
+			}
+
+		case "GetObject":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.GetObject = &value
+			case float64:
+				f := int64(v)
+				s.GetObject = &f
+			}
+
+		case "InsertObject":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.InsertObject = &value
+			case float64:
+				f := int64(v)
+				s.InsertObject = &f
+			}
+
+		case "ListBlobs":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.ListBlobs = &value
+			case float64:
+				f := int64(v)
+				s.ListBlobs = &f
+			}
+
+		case "ListObjects":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.ListObjects = &value
+			case float64:
+				f := int64(v)
+				s.ListObjects = &f
+			}
+
+		case "PutBlob":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.PutBlob = &value
+			case float64:
+				f := int64(v)
+				s.PutBlob = &f
+			}
+
+		case "PutBlock":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.PutBlock = &value
+			case float64:
+				f := int64(v)
+				s.PutBlock = &f
+			}
+
+		case "PutBlockList":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.PutBlockList = &value
+			case float64:
+				f := int64(v)
+				s.PutBlockList = &f
+			}
+
+		case "PutMultipartObject":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.PutMultipartObject = &value
+			case float64:
+				f := int64(v)
+				s.PutMultipartObject = &f
+			}
+
+		case "PutObject":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.PutObject = &value
+			case float64:
+				f := int64(v)
+				s.PutObject = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewRequestCounts returns a RequestCounts.

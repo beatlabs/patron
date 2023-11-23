@@ -16,32 +16,30 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package authenticate
 
 import (
-	"encoding/json"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 // Response holds the response body struct for the package authenticate
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/security/authenticate/SecurityAuthenticateResponse.ts#L25-L40
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/security/authenticate/SecurityAuthenticateResponse.ts#L25-L43
 
 type Response struct {
-	ApiKey              *types.ApiKey              `json:"api_key,omitempty"`
-	AuthenticationRealm types.RealmInfo            `json:"authentication_realm"`
-	AuthenticationType  string                     `json:"authentication_type"`
-	Email               string                     `json:"email,omitempty"`
-	Enabled             bool                       `json:"enabled"`
-	FullName            string                     `json:"full_name,omitempty"`
-	LookupRealm         types.RealmInfo            `json:"lookup_realm"`
-	Metadata            map[string]json.RawMessage `json:"metadata"`
-	Roles               []string                   `json:"roles"`
-	Token               *types.AuthenticateToken   `json:"token,omitempty"`
-	Username            string                     `json:"username"`
+	ApiKey              *types.ApiKey            `json:"api_key,omitempty"`
+	AuthenticationRealm types.RealmInfo          `json:"authentication_realm"`
+	AuthenticationType  string                   `json:"authentication_type"`
+	Email               string                   `json:"email,omitempty"`
+	Enabled             bool                     `json:"enabled"`
+	FullName            string                   `json:"full_name,omitempty"`
+	LookupRealm         types.RealmInfo          `json:"lookup_realm"`
+	Metadata            types.Metadata           `json:"metadata"`
+	Roles               []string                 `json:"roles"`
+	Token               *types.AuthenticateToken `json:"token,omitempty"`
+	Username            string                   `json:"username"`
 }
 
 // NewResponse returns a Response

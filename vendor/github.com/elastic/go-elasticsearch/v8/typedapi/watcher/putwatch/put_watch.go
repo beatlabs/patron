@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates a new watch, or updates an existing one.
 package putwatch
@@ -53,8 +53,9 @@ type PutWatch struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -70,7 +71,7 @@ func NewPutWatchFunc(tp elastictransport.Interface) NewPutWatch {
 	return func(id string) *PutWatch {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -85,6 +86,8 @@ func New(tp elastictransport.Interface) *PutWatch {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -114,9 +117,19 @@ func (r *PutWatch) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -124,6 +137,7 @@ func (r *PutWatch) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -206,13 +220,16 @@ func (r PutWatch) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -227,17 +244,17 @@ func (r *PutWatch) Header(key, value string) *PutWatch {
 
 // Id Watch ID
 // API Name: id
-func (r *PutWatch) Id(v string) *PutWatch {
+func (r *PutWatch) _id(id string) *PutWatch {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
 // Active Specify whether the watch is in/active by default
 // API name: active
-func (r *PutWatch) Active(b bool) *PutWatch {
-	r.values.Set("active", strconv.FormatBool(b))
+func (r *PutWatch) Active(active bool) *PutWatch {
+	r.values.Set("active", strconv.FormatBool(active))
 
 	return r
 }
@@ -245,8 +262,8 @@ func (r *PutWatch) Active(b bool) *PutWatch {
 // IfPrimaryTerm only update the watch if the last operation that has changed the watch has
 // the specified primary term
 // API name: if_primary_term
-func (r *PutWatch) IfPrimaryTerm(v string) *PutWatch {
-	r.values.Set("if_primary_term", v)
+func (r *PutWatch) IfPrimaryTerm(ifprimaryterm string) *PutWatch {
+	r.values.Set("if_primary_term", ifprimaryterm)
 
 	return r
 }
@@ -254,16 +271,71 @@ func (r *PutWatch) IfPrimaryTerm(v string) *PutWatch {
 // IfSeqNo only update the watch if the last operation that has changed the watch has
 // the specified sequence number
 // API name: if_seq_no
-func (r *PutWatch) IfSeqNo(v string) *PutWatch {
-	r.values.Set("if_seq_no", v)
+func (r *PutWatch) IfSeqNo(sequencenumber string) *PutWatch {
+	r.values.Set("if_seq_no", sequencenumber)
 
 	return r
 }
 
 // Version Explicit version number for concurrency control
 // API name: version
-func (r *PutWatch) Version(v string) *PutWatch {
-	r.values.Set("version", v)
+func (r *PutWatch) Version(versionnumber string) *PutWatch {
+	r.values.Set("version", versionnumber)
+
+	return r
+}
+
+// API name: actions
+func (r *PutWatch) Actions(actions map[string]types.WatcherAction) *PutWatch {
+
+	r.req.Actions = actions
+
+	return r
+}
+
+// API name: condition
+func (r *PutWatch) Condition(condition *types.WatcherCondition) *PutWatch {
+
+	r.req.Condition = condition
+
+	return r
+}
+
+// API name: input
+func (r *PutWatch) Input(input *types.WatcherInput) *PutWatch {
+
+	r.req.Input = input
+
+	return r
+}
+
+// API name: metadata
+func (r *PutWatch) Metadata(metadata types.Metadata) *PutWatch {
+	r.req.Metadata = metadata
+
+	return r
+}
+
+// API name: throttle_period
+func (r *PutWatch) ThrottlePeriod(throttleperiod string) *PutWatch {
+
+	r.req.ThrottlePeriod = &throttleperiod
+
+	return r
+}
+
+// API name: transform
+func (r *PutWatch) Transform(transform *types.TransformContainer) *PutWatch {
+
+	r.req.Transform = transform
+
+	return r
+}
+
+// API name: trigger
+func (r *PutWatch) Trigger(trigger *types.TriggerContainer) *PutWatch {
+
+	r.req.Trigger = trigger
 
 	return r
 }

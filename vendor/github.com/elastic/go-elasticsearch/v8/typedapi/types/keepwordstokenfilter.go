@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // KeepWordsTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/token_filters.ts#L223-L228
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/token_filters.ts#L224-L229
 type KeepWordsTokenFilter struct {
 	KeepWords     []string `json:"keep_words,omitempty"`
 	KeepWordsCase *bool    `json:"keep_words_case,omitempty"`
@@ -31,11 +39,86 @@ type KeepWordsTokenFilter struct {
 	Version       *string  `json:"version,omitempty"`
 }
 
+func (s *KeepWordsTokenFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "keep_words":
+			if err := dec.Decode(&s.KeepWords); err != nil {
+				return err
+			}
+
+		case "keep_words_case":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.KeepWordsCase = &value
+			case bool:
+				s.KeepWordsCase = &v
+			}
+
+		case "keep_words_path":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.KeepWordsPath = &o
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s KeepWordsTokenFilter) MarshalJSON() ([]byte, error) {
+	type innerKeepWordsTokenFilter KeepWordsTokenFilter
+	tmp := innerKeepWordsTokenFilter{
+		KeepWords:     s.KeepWords,
+		KeepWordsCase: s.KeepWordsCase,
+		KeepWordsPath: s.KeepWordsPath,
+		Type:          s.Type,
+		Version:       s.Version,
+	}
+
+	tmp.Type = "keep"
+
+	return json.Marshal(tmp)
+}
+
 // NewKeepWordsTokenFilter returns a KeepWordsTokenFilter.
 func NewKeepWordsTokenFilter() *KeepWordsTokenFilter {
 	r := &KeepWordsTokenFilter{}
-
-	r.Type = "keep"
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Disables a user profile so it's not visible in user profile searches.
 package disableuserprofile
@@ -35,7 +35,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 )
 
@@ -69,7 +68,7 @@ func NewDisableUserProfileFunc(tp elastictransport.Interface) NewDisableUserProf
 	return func(uid string) *DisableUserProfile {
 		n := New(tp)
 
-		n.Uid(uid)
+		n._uid(uid)
 
 		return n
 	}
@@ -174,13 +173,16 @@ func (r DisableUserProfile) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -216,9 +218,9 @@ func (r *DisableUserProfile) Header(key, value string) *DisableUserProfile {
 
 // Uid Unique identifier for the user profile.
 // API Name: uid
-func (r *DisableUserProfile) Uid(v string) *DisableUserProfile {
+func (r *DisableUserProfile) _uid(uid string) *DisableUserProfile {
 	r.paramSet |= uidMask
-	r.uid = v
+	r.uid = uid
 
 	return r
 }
@@ -228,8 +230,8 @@ func (r *DisableUserProfile) Uid(v string) *DisableUserProfile {
 // operation
 // visible to search, if 'false' do nothing with refreshes.
 // API name: refresh
-func (r *DisableUserProfile) Refresh(enum refresh.Refresh) *DisableUserProfile {
-	r.values.Set("refresh", enum.String())
+func (r *DisableUserProfile) Refresh(refresh refresh.Refresh) *DisableUserProfile {
+	r.values.Set("refresh", refresh.String())
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Starts one or more transforms.
 package starttransform
@@ -67,7 +67,7 @@ func NewStartTransformFunc(tp elastictransport.Interface) NewStartTransform {
 	return func(transformid string) *StartTransform {
 		n := New(tp)
 
-		n.TransformId(transformid)
+		n._transformid(transformid)
 
 		return n
 	}
@@ -170,13 +170,16 @@ func (r StartTransform) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -212,9 +215,9 @@ func (r *StartTransform) Header(key, value string) *StartTransform {
 
 // TransformId Identifier for the transform.
 // API Name: transformid
-func (r *StartTransform) TransformId(v string) *StartTransform {
+func (r *StartTransform) _transformid(transformid string) *StartTransform {
 	r.paramSet |= transformidMask
-	r.transformid = v
+	r.transformid = transformid
 
 	return r
 }
@@ -222,8 +225,18 @@ func (r *StartTransform) TransformId(v string) *StartTransform {
 // Timeout Period to wait for a response. If no response is received before the timeout
 // expires, the request fails and returns an error.
 // API name: timeout
-func (r *StartTransform) Timeout(v string) *StartTransform {
-	r.values.Set("timeout", v)
+func (r *StartTransform) Timeout(duration string) *StartTransform {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
+// From Restricts the set of transformed entities to those changed after this time.
+// Relative times like now-30d are supported. Only applicable for continuous
+// transforms.
+// API name: from
+func (r *StartTransform) From(from string) *StartTransform {
+	r.values.Set("from", from)
 
 	return r
 }

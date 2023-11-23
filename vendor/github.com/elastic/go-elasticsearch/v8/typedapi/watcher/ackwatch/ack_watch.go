@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Acknowledges a watch, manually throttling the execution of the watch's
 // actions.
@@ -71,7 +71,7 @@ func NewAckWatchFunc(tp elastictransport.Interface) NewAckWatch {
 	return func(watchid string) *AckWatch {
 		n := New(tp)
 
-		n.WatchId(watchid)
+		n._watchid(watchid)
 
 		return n
 	}
@@ -192,13 +192,16 @@ func (r AckWatch) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -234,18 +237,18 @@ func (r *AckWatch) Header(key, value string) *AckWatch {
 
 // WatchId Watch ID
 // API Name: watchid
-func (r *AckWatch) WatchId(v string) *AckWatch {
+func (r *AckWatch) _watchid(watchid string) *AckWatch {
 	r.paramSet |= watchidMask
-	r.watchid = v
+	r.watchid = watchid
 
 	return r
 }
 
 // ActionId A comma-separated list of the action ids to be acked
 // API Name: actionid
-func (r *AckWatch) ActionId(v string) *AckWatch {
+func (r *AckWatch) ActionId(actionid string) *AckWatch {
 	r.paramSet |= actionidMask
-	r.actionid = v
+	r.actionid = actionid
 
 	return r
 }

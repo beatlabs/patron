@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Stops an existing, started rollup job.
 package stopjob
@@ -68,7 +68,7 @@ func NewStopJobFunc(tp elastictransport.Interface) NewStopJob {
 	return func(id string) *StopJob {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -173,13 +173,16 @@ func (r StopJob) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -213,29 +216,32 @@ func (r *StopJob) Header(key, value string) *StopJob {
 	return r
 }
 
-// Id The ID of the job to stop
+// Id Identifier for the rollup job.
 // API Name: id
-func (r *StopJob) Id(v string) *StopJob {
+func (r *StopJob) _id(id string) *StopJob {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
-// Timeout Block for (at maximum) the specified duration while waiting for the job to
-// stop.  Defaults to 30s.
+// Timeout If `wait_for_completion` is `true`, the API blocks for (at maximum) the
+// specified duration while waiting for the job to stop.
+// If more than `timeout` time has passed, the API throws a timeout exception.
 // API name: timeout
-func (r *StopJob) Timeout(v string) *StopJob {
-	r.values.Set("timeout", v)
+func (r *StopJob) Timeout(duration string) *StopJob {
+	r.values.Set("timeout", duration)
 
 	return r
 }
 
-// WaitForCompletion True if the API should block until the job has fully stopped, false if should
-// be executed async. Defaults to false.
+// WaitForCompletion If set to `true`, causes the API to block until the indexer state completely
+// stops.
+// If set to `false`, the API returns immediately and the indexer is stopped
+// asynchronously in the background.
 // API name: wait_for_completion
-func (r *StopJob) WaitForCompletion(b bool) *StopJob {
-	r.values.Set("wait_for_completion", strconv.FormatBool(b))
+func (r *StopJob) WaitForCompletion(waitforcompletion bool) *StopJob {
+	r.values.Set("wait_for_completion", strconv.FormatBool(waitforcompletion))
 
 	return r
 }

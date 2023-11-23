@@ -16,19 +16,28 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package startdatafeed
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // Response holds the response body struct for the package startdatafeed
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/ml/start_datafeed/MlStartDatafeedResponse.ts#L22-L34
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/ml/start_datafeed/MlStartDatafeedResponse.ts#L22-L34
 
 type Response struct {
 
-	// Node The ID of the node that the datafeed was started on. If the datafeed is
-	// allowed to open lazily and has not yet
-	// been assigned to a node, this value is an empty string.
+	// Node The ID of the node that the job was started on. In serverless this will be
+	// the "serverless".
+	// If the job is allowed to open lazily and has not yet been assigned to a node,
+	// this value is an empty string.
 	Node []string `json:"node"`
 	// Started For a successful response, this value is always `true`. On failure, an
 	// exception is returned instead.
@@ -39,4 +48,53 @@ type Response struct {
 func NewResponse() *Response {
 	r := &Response{}
 	return r
+}
+
+func (s *Response) UnmarshalJSON(data []byte) error {
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "node":
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			if !bytes.HasPrefix(rawMsg, []byte("[")) {
+				o := new(string)
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
+					return err
+				}
+
+				s.Node = append(s.Node, *o)
+			} else {
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Node); err != nil {
+					return err
+				}
+			}
+
+		case "started":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Started = value
+			case bool:
+				s.Started = v
+			}
+
+		}
+	}
+	return nil
 }

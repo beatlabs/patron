@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Clones indices from one snapshot into another snapshot in the same
 // repository.
@@ -57,8 +57,9 @@ type Clone struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -76,11 +77,11 @@ func NewCloneFunc(tp elastictransport.Interface) NewClone {
 	return func(repository, snapshot, targetsnapshot string) *Clone {
 		n := New(tp)
 
-		n.Repository(repository)
+		n._repository(repository)
 
-		n.Snapshot(snapshot)
+		n._snapshot(snapshot)
 
-		n.TargetSnapshot(targetsnapshot)
+		n._targetsnapshot(targetsnapshot)
 
 		return n
 	}
@@ -96,6 +97,8 @@ func New(tp elastictransport.Interface) *Clone {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -125,9 +128,19 @@ func (r *Clone) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -135,6 +148,7 @@ func (r *Clone) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -223,13 +237,16 @@ func (r Clone) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -244,42 +261,50 @@ func (r *Clone) Header(key, value string) *Clone {
 
 // Repository A repository name
 // API Name: repository
-func (r *Clone) Repository(v string) *Clone {
+func (r *Clone) _repository(repository string) *Clone {
 	r.paramSet |= repositoryMask
-	r.repository = v
+	r.repository = repository
 
 	return r
 }
 
 // Snapshot The name of the snapshot to clone from
 // API Name: snapshot
-func (r *Clone) Snapshot(v string) *Clone {
+func (r *Clone) _snapshot(snapshot string) *Clone {
 	r.paramSet |= snapshotMask
-	r.snapshot = v
+	r.snapshot = snapshot
 
 	return r
 }
 
 // TargetSnapshot The name of the cloned snapshot to create
 // API Name: targetsnapshot
-func (r *Clone) TargetSnapshot(v string) *Clone {
+func (r *Clone) _targetsnapshot(targetsnapshot string) *Clone {
 	r.paramSet |= targetsnapshotMask
-	r.targetsnapshot = v
+	r.targetsnapshot = targetsnapshot
 
 	return r
 }
 
 // MasterTimeout Explicit operation timeout for connection to master node
 // API name: master_timeout
-func (r *Clone) MasterTimeout(v string) *Clone {
-	r.values.Set("master_timeout", v)
+func (r *Clone) MasterTimeout(duration string) *Clone {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
 // API name: timeout
-func (r *Clone) Timeout(v string) *Clone {
-	r.values.Set("timeout", v)
+func (r *Clone) Timeout(duration string) *Clone {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
+// API name: indices
+func (r *Clone) Indices(indices string) *Clone {
+
+	r.req.Indices = indices
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Allows you to split an existing index into a new index with more primary
 // shards.
@@ -55,8 +55,9 @@ type Split struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -73,9 +74,9 @@ func NewSplitFunc(tp elastictransport.Interface) NewSplit {
 	return func(index, target string) *Split {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
-		n.Target(target)
+		n._target(target)
 
 		return n
 	}
@@ -84,13 +85,15 @@ func NewSplitFunc(tp elastictransport.Interface) NewSplit {
 // Allows you to split an existing index into a new index with more primary
 // shards.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-split-index.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/indices-split-index.html
 func New(tp elastictransport.Interface) *Split {
 	r := &Split{
 		transport: tp,
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -120,9 +123,19 @@ func (r *Split) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -130,6 +143,7 @@ func (r *Split) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -213,13 +227,16 @@ func (r Split) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -232,45 +249,69 @@ func (r *Split) Header(key, value string) *Split {
 	return r
 }
 
-// Index The name of the source index to split
+// Index Name of the source index to split.
 // API Name: index
-func (r *Split) Index(v string) *Split {
+func (r *Split) _index(index string) *Split {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// Target The name of the target index to split into
+// Target Name of the target index to create.
 // API Name: target
-func (r *Split) Target(v string) *Split {
+func (r *Split) _target(target string) *Split {
 	r.paramSet |= targetMask
-	r.target = v
+	r.target = target
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *Split) MasterTimeout(v string) *Split {
-	r.values.Set("master_timeout", v)
+func (r *Split) MasterTimeout(duration string) *Split {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *Split) Timeout(v string) *Split {
-	r.values.Set("timeout", v)
+func (r *Split) Timeout(duration string) *Split {
+	r.values.Set("timeout", duration)
 
 	return r
 }
 
-// WaitForActiveShards Set the number of active shards to wait for on the shrunken index before the
-// operation returns.
+// WaitForActiveShards The number of shard copies that must be active before proceeding with the
+// operation.
+// Set to `all` or any positive integer up to the total number of shards in the
+// index (`number_of_replicas+1`).
 // API name: wait_for_active_shards
-func (r *Split) WaitForActiveShards(v string) *Split {
-	r.values.Set("wait_for_active_shards", v)
+func (r *Split) WaitForActiveShards(waitforactiveshards string) *Split {
+	r.values.Set("wait_for_active_shards", waitforactiveshards)
+
+	return r
+}
+
+// Aliases Aliases for the resulting index.
+// API name: aliases
+func (r *Split) Aliases(aliases map[string]types.Alias) *Split {
+
+	r.req.Aliases = aliases
+
+	return r
+}
+
+// Settings Configuration options for the target index.
+// API name: settings
+func (r *Split) Settings(settings map[string]json.RawMessage) *Split {
+
+	r.req.Settings = settings
 
 	return r
 }

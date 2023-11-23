@@ -16,17 +16,70 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // DateRangeExpression type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/bucket.ts#L149-L153
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/bucket.ts#L305-L318
 type DateRangeExpression struct {
+	// From Start of the range (inclusive).
 	From FieldDateMath `json:"from,omitempty"`
-	Key  *string       `json:"key,omitempty"`
-	To   FieldDateMath `json:"to,omitempty"`
+	// Key Custom key to return the range with.
+	Key *string `json:"key,omitempty"`
+	// To End of the range (exclusive).
+	To FieldDateMath `json:"to,omitempty"`
+}
+
+func (s *DateRangeExpression) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "from":
+			if err := dec.Decode(&s.From); err != nil {
+				return err
+			}
+
+		case "key":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Key = &o
+
+		case "to":
+			if err := dec.Decode(&s.To); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewDateRangeExpression returns a DateRangeExpression.

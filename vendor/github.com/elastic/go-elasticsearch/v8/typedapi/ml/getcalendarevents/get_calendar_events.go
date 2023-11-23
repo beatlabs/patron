@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves information about the scheduled events in calendars.
 package getcalendarevents
@@ -68,7 +68,7 @@ func NewGetCalendarEventsFunc(tp elastictransport.Interface) NewGetCalendarEvent
 	return func(calendarid string) *GetCalendarEvents {
 		n := New(tp)
 
-		n.CalendarId(calendarid)
+		n._calendarid(calendarid)
 
 		return n
 	}
@@ -173,13 +173,16 @@ func (r GetCalendarEvents) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -218,25 +221,25 @@ func (r *GetCalendarEvents) Header(key, value string) *GetCalendarEvents {
 // expression. You can get information for all calendars by using `_all` or `*`
 // or by omitting the calendar identifier.
 // API Name: calendarid
-func (r *GetCalendarEvents) CalendarId(v string) *GetCalendarEvents {
+func (r *GetCalendarEvents) _calendarid(calendarid string) *GetCalendarEvents {
 	r.paramSet |= calendaridMask
-	r.calendarid = v
+	r.calendarid = calendarid
 
 	return r
 }
 
 // End Specifies to get events with timestamps earlier than this time.
 // API name: end
-func (r *GetCalendarEvents) End(v string) *GetCalendarEvents {
-	r.values.Set("end", v)
+func (r *GetCalendarEvents) End(datetime string) *GetCalendarEvents {
+	r.values.Set("end", datetime)
 
 	return r
 }
 
 // From Skips the specified number of events.
 // API name: from
-func (r *GetCalendarEvents) From(i int) *GetCalendarEvents {
-	r.values.Set("from", strconv.Itoa(i))
+func (r *GetCalendarEvents) From(from int) *GetCalendarEvents {
+	r.values.Set("from", strconv.Itoa(from))
 
 	return r
 }
@@ -244,24 +247,24 @@ func (r *GetCalendarEvents) From(i int) *GetCalendarEvents {
 // JobId Specifies to get events for a specific anomaly detection job identifier or
 // job group. It must be used with a calendar identifier of `_all` or `*`.
 // API name: job_id
-func (r *GetCalendarEvents) JobId(v string) *GetCalendarEvents {
-	r.values.Set("job_id", v)
+func (r *GetCalendarEvents) JobId(id string) *GetCalendarEvents {
+	r.values.Set("job_id", id)
 
 	return r
 }
 
 // Size Specifies the maximum number of events to obtain.
 // API name: size
-func (r *GetCalendarEvents) Size(i int) *GetCalendarEvents {
-	r.values.Set("size", strconv.Itoa(i))
+func (r *GetCalendarEvents) Size(size int) *GetCalendarEvents {
+	r.values.Set("size", strconv.Itoa(size))
 
 	return r
 }
 
 // Start Specifies to get events with timestamps after this time.
 // API name: start
-func (r *GetCalendarEvents) Start(v string) *GetCalendarEvents {
-	r.values.Set("start", v)
+func (r *GetCalendarEvents) Start(datetime string) *GetCalendarEvents {
+	r.values.Set("start", datetime)
 
 	return r
 }

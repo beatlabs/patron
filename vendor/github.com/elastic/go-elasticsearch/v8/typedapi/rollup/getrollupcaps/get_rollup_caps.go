@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns the capabilities of any rollup jobs that have been configured for a
 // specific index or index pattern.
@@ -114,7 +114,7 @@ func (r *GetRollupCaps) HttpRequest(ctx context.Context) (*http.Request, error) 
 		path.WriteString("_rollup")
 		path.WriteString("/")
 		path.WriteString("data")
-		path.WriteString("/")
+
 		method = http.MethodGet
 	}
 
@@ -177,13 +177,16 @@ func (r GetRollupCaps) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -217,12 +220,12 @@ func (r *GetRollupCaps) Header(key, value string) *GetRollupCaps {
 	return r
 }
 
-// Id The ID of the index to check rollup capabilities on, or left blank for all
-// jobs
+// Id Index, indices or index-pattern to return rollup capabilities for.
+// `_all` may be used to fetch rollup capabilities from all jobs.
 // API Name: id
-func (r *GetRollupCaps) Id(v string) *GetRollupCaps {
+func (r *GetRollupCaps) Id(id string) *GetRollupCaps {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }

@@ -16,24 +16,88 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // UniqueTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/token_filters.ts#L333-L336
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/token_filters.ts#L335-L338
 type UniqueTokenFilter struct {
 	OnlyOnSamePosition *bool   `json:"only_on_same_position,omitempty"`
 	Type               string  `json:"type,omitempty"`
 	Version            *string `json:"version,omitempty"`
 }
 
+func (s *UniqueTokenFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "only_on_same_position":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.OnlyOnSamePosition = &value
+			case bool:
+				s.OnlyOnSamePosition = &v
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s UniqueTokenFilter) MarshalJSON() ([]byte, error) {
+	type innerUniqueTokenFilter UniqueTokenFilter
+	tmp := innerUniqueTokenFilter{
+		OnlyOnSamePosition: s.OnlyOnSamePosition,
+		Type:               s.Type,
+		Version:            s.Version,
+	}
+
+	tmp.Type = "unique"
+
+	return json.Marshal(tmp)
+}
+
 // NewUniqueTokenFilter returns a UniqueTokenFilter.
 func NewUniqueTokenFilter() *UniqueTokenFilter {
 	r := &UniqueTokenFilter{}
-
-	r.Type = "unique"
 
 	return r
 }

@@ -16,25 +16,94 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"strconv"
 )
 
 // InferenceAggregate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/Aggregate.ts#L650-L661
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/Aggregate.ts#L659-L670
 type InferenceAggregate struct {
 	Data              map[string]json.RawMessage   `json:"-"`
 	FeatureImportance []InferenceFeatureImportance `json:"feature_importance,omitempty"`
-	Meta              map[string]json.RawMessage   `json:"meta,omitempty"`
+	Meta              Metadata                     `json:"meta,omitempty"`
 	TopClasses        []InferenceTopClassEntry     `json:"top_classes,omitempty"`
 	Value             FieldValue                   `json:"value,omitempty"`
 	Warning           *string                      `json:"warning,omitempty"`
+}
+
+func (s *InferenceAggregate) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "feature_importance":
+			if err := dec.Decode(&s.FeatureImportance); err != nil {
+				return err
+			}
+
+		case "meta":
+			if err := dec.Decode(&s.Meta); err != nil {
+				return err
+			}
+
+		case "top_classes":
+			if err := dec.Decode(&s.TopClasses); err != nil {
+				return err
+			}
+
+		case "value":
+			if err := dec.Decode(&s.Value); err != nil {
+				return err
+			}
+
+		case "warning":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Warning = &o
+
+		default:
+
+			if key, ok := t.(string); ok {
+				if s.Data == nil {
+					s.Data = make(map[string]json.RawMessage, 0)
+				}
+				raw := new(json.RawMessage)
+				if err := dec.Decode(&raw); err != nil {
+					return err
+				}
+				s.Data[key] = *raw
+			}
+
+		}
+	}
+	return nil
 }
 
 // MarhsalJSON overrides marshalling for types with additional properties
@@ -56,6 +125,7 @@ func (s InferenceAggregate) MarshalJSON() ([]byte, error) {
 	for key, value := range s.Data {
 		tmp[fmt.Sprintf("%s", key)] = value
 	}
+	delete(tmp, "Data")
 
 	data, err = json.Marshal(tmp)
 	if err != nil {

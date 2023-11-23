@@ -16,14 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Package shardstoreallocation
 package shardstoreallocation
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/indices/shard_stores/types.ts#L45-L49
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/indices/shard_stores/types.ts#L45-L49
 type ShardStoreAllocation struct {
 	Name string
 }
@@ -41,7 +41,7 @@ func (s ShardStoreAllocation) MarshalText() (text []byte, err error) {
 }
 
 func (s *ShardStoreAllocation) UnmarshalText(text []byte) error {
-	switch strings.ToLower(string(text)) {
+	switch strings.ReplaceAll(strings.ToLower(string(text)), "\"", "") {
 
 	case "primary":
 		*s = Primary

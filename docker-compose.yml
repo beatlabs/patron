@@ -21,7 +21,7 @@ services:
     depends_on:
       - zookeeper
   rabbitmq:
-    image: docker.io/bitnami/rabbitmq:3.9
+    image: docker.io/bitnami/rabbitmq:latest
     ports:
       - '4369:4369'
       - '5551:5551'
@@ -47,7 +47,7 @@ services:
     expose:
       - '3306'
     volumes:
-      - mysql-db:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
   redis:
     image: docker.io/bitnami/redis:6.2
     environment:
@@ -57,7 +57,7 @@ services:
     volumes:
       - 'redis_data:/bitnami/redis/data'
   localstack:
-    image: localstack/localstack:2.1
+    image: localstack/localstack:2.3.2
     ports:
       - "127.0.0.1:4566:4566" # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559" # external services port range
@@ -97,6 +97,7 @@ services:
 volumes:
   rabbitmq_data:
     driver: local
-  mysql-db:
+  mysql_data:
+    driver: local
   redis_data:
     driver: local

@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // CustomAnalyzer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/analyzers.ts#L28-L35
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/analyzers.ts#L28-L35
 type CustomAnalyzer struct {
 	CharFilter           []string `json:"char_filter,omitempty"`
 	Filter               []string `json:"filter,omitempty"`
@@ -32,11 +40,105 @@ type CustomAnalyzer struct {
 	Type                 string   `json:"type,omitempty"`
 }
 
+func (s *CustomAnalyzer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "char_filter":
+			if err := dec.Decode(&s.CharFilter); err != nil {
+				return err
+			}
+
+		case "filter":
+			if err := dec.Decode(&s.Filter); err != nil {
+				return err
+			}
+
+		case "position_increment_gap":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.PositionIncrementGap = &value
+			case float64:
+				f := int(v)
+				s.PositionIncrementGap = &f
+			}
+
+		case "position_offset_gap":
+
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return err
+				}
+				s.PositionOffsetGap = &value
+			case float64:
+				f := int(v)
+				s.PositionOffsetGap = &f
+			}
+
+		case "tokenizer":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Tokenizer = o
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s CustomAnalyzer) MarshalJSON() ([]byte, error) {
+	type innerCustomAnalyzer CustomAnalyzer
+	tmp := innerCustomAnalyzer{
+		CharFilter:           s.CharFilter,
+		Filter:               s.Filter,
+		PositionIncrementGap: s.PositionIncrementGap,
+		PositionOffsetGap:    s.PositionOffsetGap,
+		Tokenizer:            s.Tokenizer,
+		Type:                 s.Type,
+	}
+
+	tmp.Type = "custom"
+
+	return json.Marshal(tmp)
+}
+
 // NewCustomAnalyzer returns a CustomAnalyzer.
 func NewCustomAnalyzer() *CustomAnalyzer {
 	r := &CustomAnalyzer{}
-
-	r.Type = "custom"
 
 	return r
 }

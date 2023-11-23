@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates a new model alias (or reassigns an existing one) to refer to the
 // trained model
@@ -72,9 +72,9 @@ func NewPutTrainedModelAliasFunc(tp elastictransport.Interface) NewPutTrainedMod
 	return func(modelid, modelalias string) *PutTrainedModelAlias {
 		n := New(tp)
 
-		n.ModelAlias(modelalias)
+		n._modelalias(modelalias)
 
-		n.ModelId(modelid)
+		n._modelid(modelid)
 
 		return n
 	}
@@ -189,13 +189,16 @@ func (r PutTrainedModelAlias) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -231,18 +234,18 @@ func (r *PutTrainedModelAlias) Header(key, value string) *PutTrainedModelAlias {
 
 // ModelAlias The alias to create or update. This value cannot end in numbers.
 // API Name: modelalias
-func (r *PutTrainedModelAlias) ModelAlias(v string) *PutTrainedModelAlias {
+func (r *PutTrainedModelAlias) _modelalias(modelalias string) *PutTrainedModelAlias {
 	r.paramSet |= modelaliasMask
-	r.modelalias = v
+	r.modelalias = modelalias
 
 	return r
 }
 
 // ModelId The identifier for the trained model that the alias refers to.
 // API Name: modelid
-func (r *PutTrainedModelAlias) ModelId(v string) *PutTrainedModelAlias {
+func (r *PutTrainedModelAlias) _modelid(modelid string) *PutTrainedModelAlias {
 	r.paramSet |= modelidMask
-	r.modelid = v
+	r.modelid = modelid
 
 	return r
 }
@@ -251,8 +254,8 @@ func (r *PutTrainedModelAlias) ModelId(v string) *PutTrainedModelAlias {
 // model if it is already assigned to a different model. If the alias is
 // already assigned and this parameter is false, the API returns an error.
 // API name: reassign
-func (r *PutTrainedModelAlias) Reassign(b bool) *PutTrainedModelAlias {
-	r.values.Set("reassign", strconv.FormatBool(b))
+func (r *PutTrainedModelAlias) Reassign(reassign bool) *PutTrainedModelAlias {
+	r.values.Set("reassign", strconv.FormatBool(reassign))
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package usage
 
@@ -26,11 +26,14 @@ import (
 
 // Response holds the response body struct for the package usage
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/usage/NodesUsageResponse.ts#L30-L32
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/nodes/usage/NodesUsageResponse.ts#L30-L32
 
 type Response struct {
-	ClusterName string                     `json:"cluster_name"`
-	Nodes       map[string]types.NodeUsage `json:"nodes"`
+	ClusterName string `json:"cluster_name"`
+	// NodeStats Contains statistics about the number of nodes selected by the request’s node
+	// filters.
+	NodeStats *types.NodeStatistics      `json:"_nodes,omitempty"`
+	Nodes     map[string]types.NodeUsage `json:"nodes"`
 }
 
 // NewResponse returns a Response

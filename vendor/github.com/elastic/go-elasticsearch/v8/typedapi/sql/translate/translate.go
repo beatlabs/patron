@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Translates SQL into Elasticsearch queries
 package translate
@@ -48,8 +48,9 @@ type Translate struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 }
@@ -76,6 +77,8 @@ func New(tp elastictransport.Interface) *Translate {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -105,9 +108,19 @@ func (r *Translate) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -115,6 +128,7 @@ func (r *Translate) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -194,7 +208,6 @@ func (r Translate) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
@@ -203,12 +216,50 @@ func (r Translate) Do(ctx context.Context) (*Response, error) {
 		return nil, err
 	}
 
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
+	}
+
 	return nil, errorResponse
 }
 
 // Header set a key, value pair in the Translate headers map.
 func (r *Translate) Header(key, value string) *Translate {
 	r.headers.Set(key, value)
+
+	return r
+}
+
+// FetchSize The maximum number of rows (or entries) to return in one response.
+// API name: fetch_size
+func (r *Translate) FetchSize(fetchsize int) *Translate {
+	r.req.FetchSize = &fetchsize
+
+	return r
+}
+
+// Filter Elasticsearch query DSL for additional filtering.
+// API name: filter
+func (r *Translate) Filter(filter *types.Query) *Translate {
+
+	r.req.Filter = filter
+
+	return r
+}
+
+// Query SQL query to run.
+// API name: query
+func (r *Translate) Query(query string) *Translate {
+
+	r.req.Query = query
+
+	return r
+}
+
+// TimeZone ISO-8601 time zone ID for the search.
+// API name: time_zone
+func (r *Translate) TimeZone(timezone string) *Translate {
+	r.req.TimeZone = &timezone
 
 	return r
 }

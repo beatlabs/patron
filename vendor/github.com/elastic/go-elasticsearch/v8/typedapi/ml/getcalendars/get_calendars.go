@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves configuration information for calendars.
 package getcalendars
@@ -53,8 +53,9 @@ type GetCalendars struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -83,6 +84,8 @@ func New(tp elastictransport.Interface) *GetCalendars {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -112,9 +115,19 @@ func (r *GetCalendars) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -122,6 +135,7 @@ func (r *GetCalendars) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -211,13 +225,16 @@ func (r GetCalendars) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -235,9 +252,9 @@ func (r *GetCalendars) Header(key, value string) *GetCalendars {
 // expression. You can get information for all calendars by using `_all` or `*`
 // or by omitting the calendar identifier.
 // API Name: calendarid
-func (r *GetCalendars) CalendarId(v string) *GetCalendars {
+func (r *GetCalendars) CalendarId(calendarid string) *GetCalendars {
 	r.paramSet |= calendaridMask
-	r.calendarid = v
+	r.calendarid = calendarid
 
 	return r
 }
@@ -245,8 +262,8 @@ func (r *GetCalendars) CalendarId(v string) *GetCalendars {
 // From Skips the specified number of calendars. This parameter is supported only
 // when you omit the calendar identifier.
 // API name: from
-func (r *GetCalendars) From(i int) *GetCalendars {
-	r.values.Set("from", strconv.Itoa(i))
+func (r *GetCalendars) From(from int) *GetCalendars {
+	r.values.Set("from", strconv.Itoa(from))
 
 	return r
 }
@@ -254,8 +271,17 @@ func (r *GetCalendars) From(i int) *GetCalendars {
 // Size Specifies the maximum number of calendars to obtain. This parameter is
 // supported only when you omit the calendar identifier.
 // API name: size
-func (r *GetCalendars) Size(i int) *GetCalendars {
-	r.values.Set("size", strconv.Itoa(i))
+func (r *GetCalendars) Size(size int) *GetCalendars {
+	r.values.Set("size", strconv.Itoa(size))
+
+	return r
+}
+
+// Page This object is supported only when you omit the calendar identifier.
+// API name: page
+func (r *GetCalendars) Page(page *types.Page) *GetCalendars {
+
+	r.req.Page = page
 
 	return r
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes an existing enrich policy and its enrich index.
 package deletepolicy
@@ -67,7 +67,7 @@ func NewDeletePolicyFunc(tp elastictransport.Interface) NewDeletePolicy {
 	return func(name string) *DeletePolicy {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -170,13 +170,16 @@ func (r DeletePolicy) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -210,11 +213,11 @@ func (r *DeletePolicy) Header(key, value string) *DeletePolicy {
 	return r
 }
 
-// Name The name of the enrich policy
+// Name Enrich policy to delete.
 // API Name: name
-func (r *DeletePolicy) Name(v string) *DeletePolicy {
+func (r *DeletePolicy) _name(name string) *DeletePolicy {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }

@@ -97,8 +97,11 @@ func createSubscriber(t *testing.T, u *url.URL, router paho.Router) (*autopaho.C
 		ConnectTimeout:    1 * time.Second,
 		OnConnectionUp: func(cm *autopaho.ConnectionManager, _ *paho.Connack) {
 			_, err := cm.Subscribe(context.Background(), &paho.Subscribe{
-				Subscriptions: map[string]paho.SubscribeOptions{
-					testTopic: {QoS: 1},
+				Subscriptions: []paho.SubscribeOptions{
+					{
+						Topic: testTopic,
+						QoS:   1,
+					},
 				},
 			})
 			require.NoError(t, err)

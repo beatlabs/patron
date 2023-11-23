@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Halts all lifecycle management operations and stops the index lifecycle
 // management (ILM) plugin
@@ -161,13 +161,16 @@ func (r Stop) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -202,15 +205,15 @@ func (r *Stop) Header(key, value string) *Stop {
 }
 
 // API name: master_timeout
-func (r *Stop) MasterTimeout(v string) *Stop {
-	r.values.Set("master_timeout", v)
+func (r *Stop) MasterTimeout(duration string) *Stop {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
 // API name: timeout
-func (r *Stop) Timeout(v string) *Stop {
-	r.values.Set("timeout", v)
+func (r *Stop) Timeout(duration string) *Stop {
+	r.values.Set("timeout", duration)
 
 	return r
 }

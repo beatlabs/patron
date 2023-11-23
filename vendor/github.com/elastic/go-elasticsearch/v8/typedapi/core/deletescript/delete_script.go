@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes a script.
 package deletescript
@@ -67,7 +67,7 @@ func NewDeleteScriptFunc(tp elastictransport.Interface) NewDeleteScript {
 	return func(id string) *DeleteScript {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -168,13 +168,16 @@ func (r DeleteScript) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -208,27 +211,31 @@ func (r *DeleteScript) Header(key, value string) *DeleteScript {
 	return r
 }
 
-// Id Script ID
+// Id Identifier for the stored script or search template.
 // API Name: id
-func (r *DeleteScript) Id(v string) *DeleteScript {
+func (r *DeleteScript) _id(id string) *DeleteScript {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *DeleteScript) MasterTimeout(v string) *DeleteScript {
-	r.values.Set("master_timeout", v)
+func (r *DeleteScript) MasterTimeout(duration string) *DeleteScript {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *DeleteScript) Timeout(v string) *DeleteScript {
-	r.values.Set("timeout", v)
+func (r *DeleteScript) Timeout(duration string) *DeleteScript {
+	r.values.Set("timeout", duration)
 
 	return r
 }

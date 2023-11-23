@@ -16,26 +16,112 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geovalidationmethod"
-
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"strconv"
+
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geovalidationmethod"
 )
 
 // GeoPolygonQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/geo.ts#L63-L71
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/geo.ts#L85-L93
 type GeoPolygonQuery struct {
+	// Boost Floating point number used to decrease or increase the relevance scores of
+	// the query.
+	// Boost values are relative to the default value of 1.0.
+	// A boost value between 0 and 1.0 decreases the relevance score.
+	// A value greater than 1.0 increases the relevance score.
 	Boost            *float32                                 `json:"boost,omitempty"`
-	GeoPolygonQuery  map[string]GeoPolygonPoints              `json:"-"`
+	GeoPolygonQuery  map[string]GeoPolygonPoints              `json:"GeoPolygonQuery,omitempty"`
 	IgnoreUnmapped   *bool                                    `json:"ignore_unmapped,omitempty"`
 	QueryName_       *string                                  `json:"_name,omitempty"`
 	ValidationMethod *geovalidationmethod.GeoValidationMethod `json:"validation_method,omitempty"`
+}
+
+func (s *GeoPolygonQuery) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "boost":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseFloat(v, 32)
+				if err != nil {
+					return err
+				}
+				f := float32(value)
+				s.Boost = &f
+			case float64:
+				f := float32(v)
+				s.Boost = &f
+			}
+
+		case "GeoPolygonQuery":
+			if s.GeoPolygonQuery == nil {
+				s.GeoPolygonQuery = make(map[string]GeoPolygonPoints, 0)
+			}
+			if err := dec.Decode(&s.GeoPolygonQuery); err != nil {
+				return err
+			}
+
+		case "ignore_unmapped":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.IgnoreUnmapped = &value
+			case bool:
+				s.IgnoreUnmapped = &v
+			}
+
+		case "_name":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.QueryName_ = &o
+
+		case "validation_method":
+			if err := dec.Decode(&s.ValidationMethod); err != nil {
+				return err
+			}
+
+		default:
+
+		}
+	}
+	return nil
 }
 
 // MarhsalJSON overrides marshalling for types with additional properties
@@ -57,6 +143,7 @@ func (s GeoPolygonQuery) MarshalJSON() ([]byte, error) {
 	for key, value := range s.GeoPolygonQuery {
 		tmp[fmt.Sprintf("%s", key)] = value
 	}
+	delete(tmp, "GeoPolygonQuery")
 
 	data, err = json.Marshal(tmp)
 	if err != nil {

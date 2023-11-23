@@ -16,11 +16,17 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icucollationalternate"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icucollationcasefirst"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/icucollationdecomposition"
@@ -29,7 +35,7 @@ import (
 
 // IcuCollationTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/icu-plugin.ts#L51-L65
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/icu-plugin.ts#L51-L65
 type IcuCollationTokenFilter struct {
 	Alternate              *icucollationalternate.IcuCollationAlternate         `json:"alternate,omitempty"`
 	CaseFirst              *icucollationcasefirst.IcuCollationCaseFirst         `json:"caseFirst,omitempty"`
@@ -47,11 +53,186 @@ type IcuCollationTokenFilter struct {
 	Version                *string                                              `json:"version,omitempty"`
 }
 
+func (s *IcuCollationTokenFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "alternate":
+			if err := dec.Decode(&s.Alternate); err != nil {
+				return err
+			}
+
+		case "caseFirst":
+			if err := dec.Decode(&s.CaseFirst); err != nil {
+				return err
+			}
+
+		case "caseLevel":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.CaseLevel = &value
+			case bool:
+				s.CaseLevel = &v
+			}
+
+		case "country":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Country = &o
+
+		case "decomposition":
+			if err := dec.Decode(&s.Decomposition); err != nil {
+				return err
+			}
+
+		case "hiraganaQuaternaryMode":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.HiraganaQuaternaryMode = &value
+			case bool:
+				s.HiraganaQuaternaryMode = &v
+			}
+
+		case "language":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Language = &o
+
+		case "numeric":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Numeric = &value
+			case bool:
+				s.Numeric = &v
+			}
+
+		case "rules":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Rules = &o
+
+		case "strength":
+			if err := dec.Decode(&s.Strength); err != nil {
+				return err
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "variableTop":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.VariableTop = &o
+
+		case "variant":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Variant = &o
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s IcuCollationTokenFilter) MarshalJSON() ([]byte, error) {
+	type innerIcuCollationTokenFilter IcuCollationTokenFilter
+	tmp := innerIcuCollationTokenFilter{
+		Alternate:              s.Alternate,
+		CaseFirst:              s.CaseFirst,
+		CaseLevel:              s.CaseLevel,
+		Country:                s.Country,
+		Decomposition:          s.Decomposition,
+		HiraganaQuaternaryMode: s.HiraganaQuaternaryMode,
+		Language:               s.Language,
+		Numeric:                s.Numeric,
+		Rules:                  s.Rules,
+		Strength:               s.Strength,
+		Type:                   s.Type,
+		VariableTop:            s.VariableTop,
+		Variant:                s.Variant,
+		Version:                s.Version,
+	}
+
+	tmp.Type = "icu_collation"
+
+	return json.Marshal(tmp)
+}
+
 // NewIcuCollationTokenFilter returns a IcuCollationTokenFilter.
 func NewIcuCollationTokenFilter() *IcuCollationTokenFilter {
 	r := &IcuCollationTokenFilter{}
-
-	r.Type = "icu_collation"
 
 	return r
 }

@@ -16,17 +16,59 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+)
+
 // SnapshotResponseItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/snapshot/get/SnapshotGetResponse.ts#L42-L46
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/snapshot/get/SnapshotGetResponse.ts#L44-L48
 type SnapshotResponseItem struct {
 	Error      *ErrorCause    `json:"error,omitempty"`
 	Repository string         `json:"repository"`
 	Snapshots  []SnapshotInfo `json:"snapshots,omitempty"`
+}
+
+func (s *SnapshotResponseItem) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "error":
+			if err := dec.Decode(&s.Error); err != nil {
+				return err
+			}
+
+		case "repository":
+			if err := dec.Decode(&s.Repository); err != nil {
+				return err
+			}
+
+		case "snapshots":
+			if err := dec.Decode(&s.Snapshots); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewSnapshotResponseItem returns a SnapshotResponseItem.

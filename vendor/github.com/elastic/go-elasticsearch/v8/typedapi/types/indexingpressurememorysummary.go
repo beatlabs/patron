@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // IndexingPressureMemorySummary type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/cluster/stats/types.ts#L309-L318
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/cluster/stats/types.ts#L580-L589
 type IndexingPressureMemorySummary struct {
 	AllInBytes                            int64  `json:"all_in_bytes"`
 	CombinedCoordinatingAndPrimaryInBytes int64  `json:"combined_coordinating_and_primary_in_bytes"`
@@ -32,6 +40,146 @@ type IndexingPressureMemorySummary struct {
 	PrimaryRejections                     *int64 `json:"primary_rejections,omitempty"`
 	ReplicaInBytes                        int64  `json:"replica_in_bytes"`
 	ReplicaRejections                     *int64 `json:"replica_rejections,omitempty"`
+}
+
+func (s *IndexingPressureMemorySummary) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "all_in_bytes":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.AllInBytes = value
+			case float64:
+				f := int64(v)
+				s.AllInBytes = f
+			}
+
+		case "combined_coordinating_and_primary_in_bytes":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.CombinedCoordinatingAndPrimaryInBytes = value
+			case float64:
+				f := int64(v)
+				s.CombinedCoordinatingAndPrimaryInBytes = f
+			}
+
+		case "coordinating_in_bytes":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.CoordinatingInBytes = value
+			case float64:
+				f := int64(v)
+				s.CoordinatingInBytes = f
+			}
+
+		case "coordinating_rejections":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.CoordinatingRejections = &value
+			case float64:
+				f := int64(v)
+				s.CoordinatingRejections = &f
+			}
+
+		case "primary_in_bytes":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.PrimaryInBytes = value
+			case float64:
+				f := int64(v)
+				s.PrimaryInBytes = f
+			}
+
+		case "primary_rejections":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.PrimaryRejections = &value
+			case float64:
+				f := int64(v)
+				s.PrimaryRejections = &f
+			}
+
+		case "replica_in_bytes":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.ReplicaInBytes = value
+			case float64:
+				f := int64(v)
+				s.ReplicaInBytes = f
+			}
+
+		case "replica_rejections":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.ReplicaRejections = &value
+			case float64:
+				f := int64(v)
+				s.ReplicaRejections = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewIndexingPressureMemorySummary returns a IndexingPressureMemorySummary.

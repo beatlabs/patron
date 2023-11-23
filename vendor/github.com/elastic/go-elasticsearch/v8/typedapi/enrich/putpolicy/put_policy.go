@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Creates a new enrich policy.
 package putpolicy
@@ -52,8 +52,9 @@ type PutPolicy struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -69,7 +70,7 @@ func NewPutPolicyFunc(tp elastictransport.Interface) NewPutPolicy {
 	return func(name string) *PutPolicy {
 		n := New(tp)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -77,13 +78,15 @@ func NewPutPolicyFunc(tp elastictransport.Interface) NewPutPolicy {
 
 // Creates a new enrich policy.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/put-enrich-policy-api.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/put-enrich-policy-api.html
 func New(tp elastictransport.Interface) *PutPolicy {
 	r := &PutPolicy{
 		transport: tp,
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -113,9 +116,19 @@ func (r *PutPolicy) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -123,6 +136,7 @@ func (r *PutPolicy) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -205,13 +219,16 @@ func (r PutPolicy) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -224,11 +241,39 @@ func (r *PutPolicy) Header(key, value string) *PutPolicy {
 	return r
 }
 
-// Name The name of the enrich policy
+// Name Name of the enrich policy to create or update.
 // API Name: name
-func (r *PutPolicy) Name(v string) *PutPolicy {
+func (r *PutPolicy) _name(name string) *PutPolicy {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
+
+	return r
+}
+
+// GeoMatch Matches enrich data to incoming documents based on a `geo_shape` query.
+// API name: geo_match
+func (r *PutPolicy) GeoMatch(geomatch *types.EnrichPolicy) *PutPolicy {
+
+	r.req.GeoMatch = geomatch
+
+	return r
+}
+
+// Match Matches enrich data to incoming documents based on a `term` query.
+// API name: match
+func (r *PutPolicy) Match(match *types.EnrichPolicy) *PutPolicy {
+
+	r.req.Match = match
+
+	return r
+}
+
+// Range Matches a number, date, or IP address in incoming documents to a range in the
+// enrich index based on a `term` query.
+// API name: range
+func (r *PutPolicy) Range(range_ *types.EnrichPolicy) *PutPolicy {
+
+	r.req.Range = range_
 
 	return r
 }

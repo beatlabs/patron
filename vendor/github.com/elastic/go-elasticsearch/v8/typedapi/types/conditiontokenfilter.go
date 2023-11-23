@@ -16,13 +16,20 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+)
+
 // ConditionTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/analysis/token_filters.ts#L180-L184
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/analysis/token_filters.ts#L181-L185
 type ConditionTokenFilter struct {
 	Filter  []string `json:"filter"`
 	Script  Script   `json:"script"`
@@ -30,11 +37,64 @@ type ConditionTokenFilter struct {
 	Version *string  `json:"version,omitempty"`
 }
 
+func (s *ConditionTokenFilter) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "filter":
+			if err := dec.Decode(&s.Filter); err != nil {
+				return err
+			}
+
+		case "script":
+			if err := dec.Decode(&s.Script); err != nil {
+				return err
+			}
+
+		case "type":
+			if err := dec.Decode(&s.Type); err != nil {
+				return err
+			}
+
+		case "version":
+			if err := dec.Decode(&s.Version); err != nil {
+				return err
+			}
+
+		}
+	}
+	return nil
+}
+
+// MarshalJSON override marshalling to include literal value
+func (s ConditionTokenFilter) MarshalJSON() ([]byte, error) {
+	type innerConditionTokenFilter ConditionTokenFilter
+	tmp := innerConditionTokenFilter{
+		Filter:  s.Filter,
+		Script:  s.Script,
+		Type:    s.Type,
+		Version: s.Version,
+	}
+
+	tmp.Type = "condition"
+
+	return json.Marshal(tmp)
+}
+
 // NewConditionTokenFilter returns a ConditionTokenFilter.
 func NewConditionTokenFilter() *ConditionTokenFilter {
 	r := &ConditionTokenFilter{}
-
-	r.Type = "condition"
 
 	return r
 }

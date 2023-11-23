@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // The terms enum API  can be used to discover terms in the index that begin
 // with the provided string. It is designed for low-latency look-ups used in
@@ -54,8 +54,9 @@ type TermsEnum struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -71,7 +72,7 @@ func NewTermsEnumFunc(tp elastictransport.Interface) NewTermsEnum {
 	return func(index string) *TermsEnum {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -88,6 +89,8 @@ func New(tp elastictransport.Interface) *TermsEnum {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -117,9 +120,19 @@ func (r *TermsEnum) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -127,6 +140,7 @@ func (r *TermsEnum) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -207,13 +221,16 @@ func (r TermsEnum) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -229,9 +246,73 @@ func (r *TermsEnum) Header(key, value string) *TermsEnum {
 // Index Comma-separated list of data streams, indices, and index aliases to search.
 // Wildcard (*) expressions are supported.
 // API Name: index
-func (r *TermsEnum) Index(v string) *TermsEnum {
+func (r *TermsEnum) _index(index string) *TermsEnum {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
+
+	return r
+}
+
+// CaseInsensitive When true the provided search string is matched against index terms without
+// case sensitivity.
+// API name: case_insensitive
+func (r *TermsEnum) CaseInsensitive(caseinsensitive bool) *TermsEnum {
+	r.req.CaseInsensitive = &caseinsensitive
+
+	return r
+}
+
+// Field The string to match at the start of indexed terms. If not provided, all terms
+// in the field are considered.
+// API name: field
+func (r *TermsEnum) Field(field string) *TermsEnum {
+	r.req.Field = field
+
+	return r
+}
+
+// IndexFilter Allows to filter an index shard if the provided query rewrites to match_none.
+// API name: index_filter
+func (r *TermsEnum) IndexFilter(indexfilter *types.Query) *TermsEnum {
+
+	r.req.IndexFilter = indexfilter
+
+	return r
+}
+
+// API name: search_after
+func (r *TermsEnum) SearchAfter(searchafter string) *TermsEnum {
+
+	r.req.SearchAfter = &searchafter
+
+	return r
+}
+
+// Size How many matching terms to return.
+// API name: size
+func (r *TermsEnum) Size(size int) *TermsEnum {
+	r.req.Size = &size
+
+	return r
+}
+
+// String The string after which terms in the index should be returned. Allows for a
+// form of pagination if the last result from one request is passed as the
+// search_after parameter for a subsequent request.
+// API name: string
+func (r *TermsEnum) String(string string) *TermsEnum {
+
+	r.req.String = &string
+
+	return r
+}
+
+// Timeout The maximum length of time to spend collecting results. Defaults to "1s" (one
+// second). If the timeout is exceeded the complete flag set to false in the
+// response and the results may be partial or empty.
+// API name: timeout
+func (r *TermsEnum) Timeout(duration types.Duration) *TermsEnum {
+	r.req.Timeout = duration
 
 	return r
 }

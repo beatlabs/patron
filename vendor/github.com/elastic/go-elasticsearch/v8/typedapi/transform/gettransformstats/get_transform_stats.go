@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Retrieves usage information for transforms.
 package gettransformstats
@@ -68,7 +68,7 @@ func NewGetTransformStatsFunc(tp elastictransport.Interface) NewGetTransformStat
 	return func(transformid string) *GetTransformStats {
 		n := New(tp)
 
-		n.TransformId(transformid)
+		n._transformid(transformid)
 
 		return n
 	}
@@ -171,13 +171,16 @@ func (r GetTransformStats) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -216,9 +219,9 @@ func (r *GetTransformStats) Header(key, value string) *GetTransformStats {
 // `_all`, by specifying `*` as the `<transform_id>`, or by omitting the
 // `<transform_id>`.
 // API Name: transformid
-func (r *GetTransformStats) TransformId(v string) *GetTransformStats {
+func (r *GetTransformStats) _transformid(transformid string) *GetTransformStats {
 	r.paramSet |= transformidMask
-	r.transformid = v
+	r.transformid = transformid
 
 	return r
 }
@@ -232,32 +235,32 @@ func (r *GetTransformStats) TransformId(v string) *GetTransformStats {
 // If this parameter is false, the request returns a 404 status code when
 // there are no matches or only partial matches.
 // API name: allow_no_match
-func (r *GetTransformStats) AllowNoMatch(b bool) *GetTransformStats {
-	r.values.Set("allow_no_match", strconv.FormatBool(b))
+func (r *GetTransformStats) AllowNoMatch(allownomatch bool) *GetTransformStats {
+	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
 
 	return r
 }
 
 // From Skips the specified number of transforms.
 // API name: from
-func (r *GetTransformStats) From(v string) *GetTransformStats {
-	r.values.Set("from", v)
+func (r *GetTransformStats) From(from string) *GetTransformStats {
+	r.values.Set("from", from)
 
 	return r
 }
 
 // Size Specifies the maximum number of transforms to obtain.
 // API name: size
-func (r *GetTransformStats) Size(v string) *GetTransformStats {
-	r.values.Set("size", v)
+func (r *GetTransformStats) Size(size string) *GetTransformStats {
+	r.values.Set("size", size)
 
 	return r
 }
 
 // Timeout Controls the time to wait for the stats
 // API name: timeout
-func (r *GetTransformStats) Timeout(v string) *GetTransformStats {
-	r.values.Set("timeout", v)
+func (r *GetTransformStats) Timeout(duration string) *GetTransformStats {
+	r.values.Set("timeout", duration)
 
 	return r
 }

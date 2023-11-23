@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns information about a task.
 package get
@@ -68,7 +68,7 @@ func NewGetFunc(tp elastictransport.Interface) NewGet {
 	return func(taskid string) *Get {
 		n := New(tp)
 
-		n.TaskId(taskid)
+		n._taskid(taskid)
 
 		return n
 	}
@@ -169,13 +169,16 @@ func (r Get) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -209,27 +212,29 @@ func (r *Get) Header(key, value string) *Get {
 	return r
 }
 
-// TaskId Return the task with specified id (node_id:task_number)
+// TaskId ID of the task.
 // API Name: taskid
-func (r *Get) TaskId(v string) *Get {
+func (r *Get) _taskid(taskid string) *Get {
 	r.paramSet |= taskidMask
-	r.taskid = v
+	r.taskid = taskid
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *Get) Timeout(v string) *Get {
-	r.values.Set("timeout", v)
+func (r *Get) Timeout(duration string) *Get {
+	r.values.Set("timeout", duration)
 
 	return r
 }
 
-// WaitForCompletion Wait for the matching tasks to complete (default: false)
+// WaitForCompletion If `true`, the request blocks until the task has completed.
 // API name: wait_for_completion
-func (r *Get) WaitForCompletion(b bool) *Get {
-	r.values.Set("wait_for_completion", strconv.FormatBool(b))
+func (r *Get) WaitForCompletion(waitforcompletion bool) *Get {
+	r.values.Set("wait_for_completion", strconv.FormatBool(waitforcompletion))
 
 	return r
 }

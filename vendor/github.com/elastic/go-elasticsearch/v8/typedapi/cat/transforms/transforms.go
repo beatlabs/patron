@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Gets configuration and usage information about transforms.
 package transforms
@@ -36,7 +36,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/cattransformcolumn"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/timeunit"
 )
 
@@ -178,13 +178,16 @@ func (r Transforms) Do(ctx context.Context) (Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -218,37 +221,48 @@ func (r *Transforms) Header(key, value string) *Transforms {
 	return r
 }
 
-// TransformId The id of the transform for which to get stats. '_all' or '*' implies all
-// transforms
+// TransformId A transform identifier or a wildcard expression.
+// If you do not specify one of these options, the API returns information for
+// all transforms.
 // API Name: transformid
-func (r *Transforms) TransformId(v string) *Transforms {
+func (r *Transforms) TransformId(transformid string) *Transforms {
 	r.paramSet |= transformidMask
-	r.transformid = v
+	r.transformid = transformid
 
 	return r
 }
 
-// AllowNoMatch Whether to ignore if a wildcard expression matches no transforms. (This
-// includes `_all` string or when no transforms have been specified)
+// AllowNoMatch Specifies what to do when the request: contains wildcard expressions and
+// there are no transforms that match; contains the `_all` string or no
+// identifiers and there are no matches; contains wildcard expressions and there
+// are only partial matches.
+// If `true`, it returns an empty transforms array when there are no matches and
+// the subset of results when there are partial matches.
+// If `false`, the request returns a 404 status code when there are no matches
+// or only partial matches.
 // API name: allow_no_match
-func (r *Transforms) AllowNoMatch(b bool) *Transforms {
-	r.values.Set("allow_no_match", strconv.FormatBool(b))
+func (r *Transforms) AllowNoMatch(allownomatch bool) *Transforms {
+	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
 
 	return r
 }
 
-// From skips a number of transform configs, defaults to 0
+// From Skips the specified number of transforms.
 // API name: from
-func (r *Transforms) From(i int) *Transforms {
-	r.values.Set("from", strconv.Itoa(i))
+func (r *Transforms) From(from int) *Transforms {
+	r.values.Set("from", strconv.Itoa(from))
 
 	return r
 }
 
 // H Comma-separated list of column names to display.
 // API name: h
-func (r *Transforms) H(v string) *Transforms {
-	r.values.Set("h", v)
+func (r *Transforms) H(cattransformcolumns ...cattransformcolumn.CatTransformColumn) *Transforms {
+	tmp := []string{}
+	for _, item := range cattransformcolumns {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
@@ -256,24 +270,28 @@ func (r *Transforms) H(v string) *Transforms {
 // S Comma-separated list of column names or column aliases used to sort the
 // response.
 // API name: s
-func (r *Transforms) S(v string) *Transforms {
-	r.values.Set("s", v)
+func (r *Transforms) S(cattransformcolumns ...cattransformcolumn.CatTransformColumn) *Transforms {
+	tmp := []string{}
+	for _, item := range cattransformcolumns {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
-// Time Unit used to display time values.
+// Time The unit used to display time values.
 // API name: time
-func (r *Transforms) Time(enum timeunit.TimeUnit) *Transforms {
-	r.values.Set("time", enum.String())
+func (r *Transforms) Time(time timeunit.TimeUnit) *Transforms {
+	r.values.Set("time", time.String())
 
 	return r
 }
 
-// Size specifies a max number of transforms to get, defaults to 100
+// Size The maximum number of transforms to obtain.
 // API name: size
-func (r *Transforms) Size(i int) *Transforms {
-	r.values.Set("size", strconv.Itoa(i))
+func (r *Transforms) Size(size int) *Transforms {
+	r.values.Set("size", strconv.Itoa(size))
 
 	return r
 }

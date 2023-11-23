@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Returns the status of a previously submitted async or stored Event Query
 // Language (EQL) search
@@ -68,7 +68,7 @@ func NewGetStatusFunc(tp elastictransport.Interface) NewGetStatus {
 	return func(id string) *GetStatus {
 		n := New(tp)
 
-		n.Id(id)
+		n._id(id)
 
 		return n
 	}
@@ -77,7 +77,7 @@ func NewGetStatusFunc(tp elastictransport.Interface) NewGetStatus {
 // Returns the status of a previously submitted async or stored Event Query
 // Language (EQL) search
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/eql-search-api.html
+//  https://www.elastic.co/guide/en/elasticsearch/reference/{branch}/get-async-eql-status-api.html
 func New(tp elastictransport.Interface) *GetStatus {
 	r := &GetStatus{
 		transport: tp,
@@ -174,13 +174,16 @@ func (r GetStatus) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -216,9 +219,9 @@ func (r *GetStatus) Header(key, value string) *GetStatus {
 
 // Id Identifier for the search.
 // API Name: id
-func (r *GetStatus) Id(v string) *GetStatus {
+func (r *GetStatus) _id(id string) *GetStatus {
 	r.paramSet |= idMask
-	r.id = v
+	r.id = id
 
 	return r
 }

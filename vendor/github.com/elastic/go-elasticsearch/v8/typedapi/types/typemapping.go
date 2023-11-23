@@ -16,23 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dynamicmapping"
-
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
+	"strconv"
 
-	"encoding/json"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dynamicmapping"
 )
 
 // TypeMapping type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/mapping/TypeMapping.ts#L34-L55
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/mapping/TypeMapping.ts#L34-L56
 type TypeMapping struct {
 	AllField             *AllField                      `json:"all_field,omitempty"`
 	DataStreamTimestamp_ *DataStreamTimestamp           `json:"_data_stream_timestamp,omitempty"`
@@ -43,7 +43,7 @@ type TypeMapping struct {
 	Enabled              *bool                          `json:"enabled,omitempty"`
 	FieldNames_          *FieldNamesField               `json:"_field_names,omitempty"`
 	IndexField           *IndexField                    `json:"index_field,omitempty"`
-	Meta_                map[string]json.RawMessage     `json:"_meta,omitempty"`
+	Meta_                Metadata                       `json:"_meta,omitempty"`
 	NumericDetection     *bool                          `json:"numeric_detection,omitempty"`
 	Properties           map[string]Property            `json:"properties,omitempty"`
 	Routing_             *RoutingField                  `json:"_routing,omitempty"`
@@ -53,6 +53,7 @@ type TypeMapping struct {
 }
 
 func (s *TypeMapping) UnmarshalJSON(data []byte) error {
+
 	dec := json.NewDecoder(bytes.NewReader(data))
 
 	for {
@@ -77,8 +78,17 @@ func (s *TypeMapping) UnmarshalJSON(data []byte) error {
 			}
 
 		case "date_detection":
-			if err := dec.Decode(&s.DateDetection); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.DateDetection = &value
+			case bool:
+				s.DateDetection = &v
 			}
 
 		case "dynamic":
@@ -97,8 +107,17 @@ func (s *TypeMapping) UnmarshalJSON(data []byte) error {
 			}
 
 		case "enabled":
-			if err := dec.Decode(&s.Enabled); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.Enabled = &value
+			case bool:
+				s.Enabled = &v
 			}
 
 		case "_field_names":
@@ -117,11 +136,23 @@ func (s *TypeMapping) UnmarshalJSON(data []byte) error {
 			}
 
 		case "numeric_detection":
-			if err := dec.Decode(&s.NumericDetection); err != nil {
-				return err
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return err
+				}
+				s.NumericDetection = &value
+			case bool:
+				s.NumericDetection = &v
 			}
 
 		case "properties":
+			if s.Properties == nil {
+				s.Properties = make(map[string]Property, 0)
+			}
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
@@ -130,7 +161,9 @@ func (s *TypeMapping) UnmarshalJSON(data []byte) error {
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
 				buf.Seek(0, io.SeekStart)
-
+				if _, ok := kind["type"]; !ok {
+					kind["type"] = "object"
+				}
 				switch kind["type"] {
 				case "binary":
 					oo := NewBinaryProperty()
@@ -409,9 +442,11 @@ func (s *TypeMapping) UnmarshalJSON(data []byte) error {
 					}
 					s.Properties[key] = oo
 				default:
-					if err := dec.Decode(&s.Properties); err != nil {
+					oo := new(Property)
+					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}
+					s.Properties[key] = oo
 				}
 			}
 
@@ -421,6 +456,9 @@ func (s *TypeMapping) UnmarshalJSON(data []byte) error {
 			}
 
 		case "runtime":
+			if s.Runtime == nil {
+				s.Runtime = make(map[string]RuntimeField, 0)
+			}
 			if err := dec.Decode(&s.Runtime); err != nil {
 				return err
 			}

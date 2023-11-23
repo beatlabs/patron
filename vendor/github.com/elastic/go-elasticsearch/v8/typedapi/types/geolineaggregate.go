@@ -16,22 +16,73 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
 )
 
 // GeoLineAggregate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/aggregations/Aggregate.ts#L775-L782
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/aggregations/Aggregate.ts#L784-L791
 type GeoLineAggregate struct {
-	Geometry   GeoLine                    `json:"geometry"`
-	Meta       map[string]json.RawMessage `json:"meta,omitempty"`
-	Properties json.RawMessage            `json:"properties,omitempty"`
-	Type       string                     `json:"type"`
+	Geometry   GeoLine         `json:"geometry"`
+	Meta       Metadata        `json:"meta,omitempty"`
+	Properties json.RawMessage `json:"properties,omitempty"`
+	Type       string          `json:"type"`
+}
+
+func (s *GeoLineAggregate) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "geometry":
+			if err := dec.Decode(&s.Geometry); err != nil {
+				return err
+			}
+
+		case "meta":
+			if err := dec.Decode(&s.Meta); err != nil {
+				return err
+			}
+
+		case "properties":
+			if err := dec.Decode(&s.Properties); err != nil {
+				return err
+			}
+
+		case "type":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Type = o
+
+		}
+	}
+	return nil
 }
 
 // NewGeoLineAggregate returns a GeoLineAggregate.

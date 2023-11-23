@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Deletes a service account token.
 package deleteservicetoken
@@ -35,7 +35,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 )
 
@@ -75,11 +74,11 @@ func NewDeleteServiceTokenFunc(tp elastictransport.Interface) NewDeleteServiceTo
 	return func(namespace, service, name string) *DeleteServiceToken {
 		n := New(tp)
 
-		n.Namespace(namespace)
+		n._namespace(namespace)
 
-		n.Service(service)
+		n._service(service)
 
-		n.Name(name)
+		n._name(name)
 
 		return n
 	}
@@ -192,13 +191,16 @@ func (r DeleteServiceToken) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -234,27 +236,27 @@ func (r *DeleteServiceToken) Header(key, value string) *DeleteServiceToken {
 
 // Namespace An identifier for the namespace
 // API Name: namespace
-func (r *DeleteServiceToken) Namespace(v string) *DeleteServiceToken {
+func (r *DeleteServiceToken) _namespace(namespace string) *DeleteServiceToken {
 	r.paramSet |= namespaceMask
-	r.namespace = v
+	r.namespace = namespace
 
 	return r
 }
 
 // Service An identifier for the service name
 // API Name: service
-func (r *DeleteServiceToken) Service(v string) *DeleteServiceToken {
+func (r *DeleteServiceToken) _service(service string) *DeleteServiceToken {
 	r.paramSet |= serviceMask
-	r.service = v
+	r.service = service
 
 	return r
 }
 
 // Name An identifier for the token name
 // API Name: name
-func (r *DeleteServiceToken) Name(v string) *DeleteServiceToken {
+func (r *DeleteServiceToken) _name(name string) *DeleteServiceToken {
 	r.paramSet |= nameMask
-	r.name = v
+	r.name = name
 
 	return r
 }
@@ -263,8 +265,8 @@ func (r *DeleteServiceToken) Name(v string) *DeleteServiceToken {
 // search, if `wait_for` (the default) then wait for a refresh to make this
 // operation visible to search, if `false` then do nothing with refreshes.
 // API name: refresh
-func (r *DeleteServiceToken) Refresh(enum refresh.Refresh) *DeleteServiceToken {
-	r.values.Set("refresh", enum.String())
+func (r *DeleteServiceToken) Refresh(refresh refresh.Refresh) *DeleteServiceToken {
+	r.values.Set("refresh", refresh.String())
 
 	return r
 }

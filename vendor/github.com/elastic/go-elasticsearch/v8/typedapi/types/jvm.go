@@ -16,22 +16,129 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strconv"
+)
+
 // Jvm type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/nodes/_types/Stats.ts#L324-L333
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/nodes/_types/Stats.ts#L811-L845
 type Jvm struct {
-	BufferPools    map[string]NodeBufferPool `json:"buffer_pools,omitempty"`
-	Classes        *JvmClasses               `json:"classes,omitempty"`
-	Gc             *GarbageCollector         `json:"gc,omitempty"`
-	Mem            *JvmMemoryStats           `json:"mem,omitempty"`
-	Threads        *JvmThreads               `json:"threads,omitempty"`
-	Timestamp      *int64                    `json:"timestamp,omitempty"`
-	Uptime         *string                   `json:"uptime,omitempty"`
-	UptimeInMillis *int64                    `json:"uptime_in_millis,omitempty"`
+	// BufferPools Contains statistics about JVM buffer pools for the node.
+	BufferPools map[string]NodeBufferPool `json:"buffer_pools,omitempty"`
+	// Classes Contains statistics about classes loaded by JVM for the node.
+	Classes *JvmClasses `json:"classes,omitempty"`
+	// Gc Contains statistics about JVM garbage collectors for the node.
+	Gc *GarbageCollector `json:"gc,omitempty"`
+	// Mem Contains JVM memory usage statistics for the node.
+	Mem *JvmMemoryStats `json:"mem,omitempty"`
+	// Threads Contains statistics about JVM thread usage for the node.
+	Threads *JvmThreads `json:"threads,omitempty"`
+	// Timestamp Last time JVM statistics were refreshed.
+	Timestamp *int64 `json:"timestamp,omitempty"`
+	// Uptime Human-readable JVM uptime.
+	// Only returned if the `human` query parameter is `true`.
+	Uptime *string `json:"uptime,omitempty"`
+	// UptimeInMillis JVM uptime in milliseconds.
+	UptimeInMillis *int64 `json:"uptime_in_millis,omitempty"`
+}
+
+func (s *Jvm) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "buffer_pools":
+			if s.BufferPools == nil {
+				s.BufferPools = make(map[string]NodeBufferPool, 0)
+			}
+			if err := dec.Decode(&s.BufferPools); err != nil {
+				return err
+			}
+
+		case "classes":
+			if err := dec.Decode(&s.Classes); err != nil {
+				return err
+			}
+
+		case "gc":
+			if err := dec.Decode(&s.Gc); err != nil {
+				return err
+			}
+
+		case "mem":
+			if err := dec.Decode(&s.Mem); err != nil {
+				return err
+			}
+
+		case "threads":
+			if err := dec.Decode(&s.Threads); err != nil {
+				return err
+			}
+
+		case "timestamp":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.Timestamp = &value
+			case float64:
+				f := int64(v)
+				s.Timestamp = &f
+			}
+
+		case "uptime":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return err
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Uptime = &o
+
+		case "uptime_in_millis":
+			var tmp interface{}
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return err
+				}
+				s.UptimeInMillis = &value
+			case float64:
+				f := int64(v)
+				s.UptimeInMillis = &f
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewJvm returns a Jvm.

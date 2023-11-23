@@ -16,23 +16,25 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 package types
 
 import (
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/multivaluemode"
-
 	"encoding/json"
 	"fmt"
+
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/multivaluemode"
 )
 
 // GeoDecayFunction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4ab557491062aab5a916a1e274e28c266b0e0708/specification/_types/query_dsl/compound.ts#L96-L98
+// https://github.com/elastic/elasticsearch-specification/blob/ac9c431ec04149d9048f2b8f9731e3c2f7f38754/specification/_types/query_dsl/compound.ts#L190-L192
 type GeoDecayFunction struct {
-	GeoDecayFunction map[string]DecayPlacementGeoLocationDistance `json:"-"`
-	MultiValueMode   *multivaluemode.MultiValueMode               `json:"multi_value_mode,omitempty"`
+	GeoDecayFunction map[string]DecayPlacementGeoLocationDistance `json:"GeoDecayFunction,omitempty"`
+	// MultiValueMode Determines how the distance is calculated when a field used for computing the
+	// decay contains multiple values.
+	MultiValueMode *multivaluemode.MultiValueMode `json:"multi_value_mode,omitempty"`
 }
 
 // MarhsalJSON overrides marshalling for types with additional properties
@@ -54,6 +56,7 @@ func (s GeoDecayFunction) MarshalJSON() ([]byte, error) {
 	for key, value := range s.GeoDecayFunction {
 		tmp[fmt.Sprintf("%s", key)] = value
 	}
+	delete(tmp, "GeoDecayFunction")
 
 	data, err = json.Marshal(tmp)
 	if err != nil {

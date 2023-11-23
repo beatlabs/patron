@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4ab557491062aab5a916a1e274e28c266b0e0708
+// https://github.com/elastic/elasticsearch-specification/tree/ac9c431ec04149d9048f2b8f9731e3c2f7f38754
 
 // Updates the index mappings.
 package putmapping
@@ -35,6 +35,8 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dynamicmapping"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/expandwildcard"
 )
 
 const (
@@ -53,8 +55,9 @@ type PutMapping struct {
 
 	buf *gobytes.Buffer
 
-	req *Request
-	raw io.Reader
+	req      *Request
+	deferred []func(request *Request) error
+	raw      io.Reader
 
 	paramSet int
 
@@ -70,7 +73,7 @@ func NewPutMappingFunc(tp elastictransport.Interface) NewPutMapping {
 	return func(index string) *PutMapping {
 		n := New(tp)
 
-		n.Index(index)
+		n._index(index)
 
 		return n
 	}
@@ -85,6 +88,8 @@ func New(tp elastictransport.Interface) *PutMapping {
 		values:    make(url.Values),
 		headers:   make(http.Header),
 		buf:       gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	return r
@@ -114,9 +119,19 @@ func (r *PutMapping) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	var err error
 
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
 	if r.raw != nil {
 		r.buf.ReadFrom(r.raw)
 	} else if r.req != nil {
+
 		data, err := json.Marshal(r.req)
 
 		if err != nil {
@@ -124,6 +139,7 @@ func (r *PutMapping) HttpRequest(ctx context.Context) (*http.Request, error) {
 		}
 
 		r.buf.Write(data)
+
 	}
 
 	r.path.Scheme = "http"
@@ -204,13 +220,16 @@ func (r PutMapping) Do(ctx context.Context) (*Response, error) {
 		}
 
 		return response, nil
-
 	}
 
 	errorResponse := types.NewElasticsearchError()
 	err = json.NewDecoder(res.Body).Decode(errorResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	if errorResponse.Status == 0 {
+		errorResponse.Status = res.StatusCode
 	}
 
 	return nil, errorResponse
@@ -226,61 +245,173 @@ func (r *PutMapping) Header(key, value string) *PutMapping {
 // Index A comma-separated list of index names the mapping should be added to
 // (supports wildcards); use `_all` or omit to add the mapping on all indices.
 // API Name: index
-func (r *PutMapping) Index(v string) *PutMapping {
+func (r *PutMapping) _index(index string) *PutMapping {
 	r.paramSet |= indexMask
-	r.index = v
+	r.index = index
 
 	return r
 }
 
-// AllowNoIndices Whether to ignore if a wildcard indices expression resolves into no concrete
-// indices. (This includes `_all` string or when no indices have been specified)
+// AllowNoIndices If `false`, the request returns an error if any wildcard expression, index
+// alias, or `_all` value targets only missing or closed indices.
+// This behavior applies even if the request targets other open indices.
 // API name: allow_no_indices
-func (r *PutMapping) AllowNoIndices(b bool) *PutMapping {
-	r.values.Set("allow_no_indices", strconv.FormatBool(b))
+func (r *PutMapping) AllowNoIndices(allownoindices bool) *PutMapping {
+	r.values.Set("allow_no_indices", strconv.FormatBool(allownoindices))
 
 	return r
 }
 
-// ExpandWildcards Whether to expand wildcard expression to concrete indices that are open,
-// closed or both.
+// ExpandWildcards Type of index that wildcard patterns can match.
+// If the request can target data streams, this argument determines whether
+// wildcard expressions match hidden data streams.
+// Supports comma-separated values, such as `open,hidden`.
+// Valid values are: `all`, `open`, `closed`, `hidden`, `none`.
 // API name: expand_wildcards
-func (r *PutMapping) ExpandWildcards(v string) *PutMapping {
-	r.values.Set("expand_wildcards", v)
+func (r *PutMapping) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *PutMapping {
+	tmp := []string{}
+	for _, item := range expandwildcards {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
-// IgnoreUnavailable Whether specified concrete indices should be ignored when unavailable
-// (missing or closed)
+// IgnoreUnavailable If `false`, the request returns an error if it targets a missing or closed
+// index.
 // API name: ignore_unavailable
-func (r *PutMapping) IgnoreUnavailable(b bool) *PutMapping {
-	r.values.Set("ignore_unavailable", strconv.FormatBool(b))
+func (r *PutMapping) IgnoreUnavailable(ignoreunavailable bool) *PutMapping {
+	r.values.Set("ignore_unavailable", strconv.FormatBool(ignoreunavailable))
 
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: master_timeout
-func (r *PutMapping) MasterTimeout(v string) *PutMapping {
-	r.values.Set("master_timeout", v)
+func (r *PutMapping) MasterTimeout(duration string) *PutMapping {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
 
-// Timeout Explicit operation timeout
+// Timeout Period to wait for a response.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
 // API name: timeout
-func (r *PutMapping) Timeout(v string) *PutMapping {
-	r.values.Set("timeout", v)
+func (r *PutMapping) Timeout(duration string) *PutMapping {
+	r.values.Set("timeout", duration)
 
 	return r
 }
 
-// WriteIndexOnly When true, applies mappings only to the write index of an alias or data
-// stream
+// WriteIndexOnly If `true`, the mappings are applied only to the current write index for the
+// target.
 // API name: write_index_only
-func (r *PutMapping) WriteIndexOnly(b bool) *PutMapping {
-	r.values.Set("write_index_only", strconv.FormatBool(b))
+func (r *PutMapping) WriteIndexOnly(writeindexonly bool) *PutMapping {
+	r.values.Set("write_index_only", strconv.FormatBool(writeindexonly))
+
+	return r
+}
+
+// DateDetection Controls whether dynamic date detection is enabled.
+// API name: date_detection
+func (r *PutMapping) DateDetection(datedetection bool) *PutMapping {
+	r.req.DateDetection = &datedetection
+
+	return r
+}
+
+// Dynamic Controls whether new fields are added dynamically.
+// API name: dynamic
+func (r *PutMapping) Dynamic(dynamic dynamicmapping.DynamicMapping) *PutMapping {
+	r.req.Dynamic = &dynamic
+
+	return r
+}
+
+// DynamicDateFormats If date detection is enabled then new string fields are checked
+// against 'dynamic_date_formats' and if the value matches then
+// a new date field is added instead of string.
+// API name: dynamic_date_formats
+func (r *PutMapping) DynamicDateFormats(dynamicdateformats ...string) *PutMapping {
+	r.req.DynamicDateFormats = dynamicdateformats
+
+	return r
+}
+
+// DynamicTemplates Specify dynamic templates for the mapping.
+// API name: dynamic_templates
+func (r *PutMapping) DynamicTemplates(dynamictemplates []map[string]types.DynamicTemplate) *PutMapping {
+	r.req.DynamicTemplates = dynamictemplates
+
+	return r
+}
+
+// FieldNames_ Control whether field names are enabled for the index.
+// API name: _field_names
+func (r *PutMapping) FieldNames_(fieldnames_ *types.FieldNamesField) *PutMapping {
+
+	r.req.FieldNames_ = fieldnames_
+
+	return r
+}
+
+// Meta_ A mapping type can have custom meta data associated with it. These are
+// not used at all by Elasticsearch, but can be used to store
+// application-specific metadata.
+// API name: _meta
+func (r *PutMapping) Meta_(metadata types.Metadata) *PutMapping {
+	r.req.Meta_ = metadata
+
+	return r
+}
+
+// NumericDetection Automatically map strings into numeric data types for all fields.
+// API name: numeric_detection
+func (r *PutMapping) NumericDetection(numericdetection bool) *PutMapping {
+	r.req.NumericDetection = &numericdetection
+
+	return r
+}
+
+// Properties Mapping for a field. For new fields, this mapping can include:
+//
+// - Field name
+// - Field data type
+// - Mapping parameters
+// API name: properties
+func (r *PutMapping) Properties(properties map[string]types.Property) *PutMapping {
+
+	r.req.Properties = properties
+
+	return r
+}
+
+// Routing_ Enable making a routing value required on indexed documents.
+// API name: _routing
+func (r *PutMapping) Routing_(routing_ *types.RoutingField) *PutMapping {
+
+	r.req.Routing_ = routing_
+
+	return r
+}
+
+// Runtime Mapping of runtime fields for the index.
+// API name: runtime
+func (r *PutMapping) Runtime(runtimefields types.RuntimeFields) *PutMapping {
+	r.req.Runtime = runtimefields
+
+	return r
+}
+
+// Source_ Control whether the _source field is enabled on the index.
+// API name: _source
+func (r *PutMapping) Source_(source_ *types.SourceField) *PutMapping {
+
+	r.req.Source_ = source_
 
 	return r
 }

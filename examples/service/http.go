@@ -9,7 +9,6 @@ import (
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/router/httprouter"
 	"github.com/beatlabs/patron/log"
-	"golang.org/x/exp/slog"
 )
 
 func createHttpRouter() (patron.Component, error) {

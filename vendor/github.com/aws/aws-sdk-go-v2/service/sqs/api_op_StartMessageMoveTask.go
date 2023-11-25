@@ -4,6 +4,7 @@ package sqs
 
 import (
 	"context"
+	"fmt"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/smithy-go/middleware"
@@ -12,12 +13,16 @@ import (
 
 // Starts an asynchronous task to move messages from a specified source queue to a
 // specified destination queue.
-//   - This action is currently limited to supporting message redrive from
-//     dead-letter queues (DLQs) only. In this context, the source queue is the
-//     dead-letter queue (DLQ), while the destination queue can be the original source
-//     queue (from which the messages were driven to the dead-letter-queue), or a
-//     custom destination queue.
-//   - Currently, only standard queues are supported.
+//   - This action is currently limited to supporting message redrive from queues
+//     that are configured as dead-letter queues (DLQs) (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html)
+//     of other Amazon SQS queues only. Non-SQS queue sources of dead-letter queues,
+//     such as Lambda or Amazon SNS topics, are currently not supported.
+//   - In dead-letter queues redrive context, the StartMessageMoveTask the source
+//     queue is the DLQ, while the destination queue can be the original source queue
+//     (from which the messages were driven to the dead-letter-queue), or a custom
+//     destination queue.
+//   - Currently, only standard queues support redrive. FIFO queues don't support
+//     redrive.
 //   - Only one active message movement task is supported per queue at any given
 //     time.
 func (c *Client) StartMessageMoveTask(ctx context.Context, params *StartMessageMoveTaskInput, optFns ...func(*Options)) (*StartMessageMoveTaskOutput, error) {
@@ -38,7 +43,9 @@ func (c *Client) StartMessageMoveTask(ctx context.Context, params *StartMessageM
 type StartMessageMoveTaskInput struct {
 
 	// The ARN of the queue that contains the messages to be moved to another queue.
-	// Currently, only dead-letter queue (DLQ) ARNs are accepted.
+	// Currently, only ARNs of dead-letter queues (DLQs) whose sources are other Amazon
+	// SQS queues are accepted. DLQs whose sources are non-SQS queues, such as Lambda
+	// or Amazon SNS topics, are not currently supported.
 	//
 	// This member is required.
 	SourceArn *string
@@ -54,7 +61,7 @@ type StartMessageMoveTaskInput struct {
 	// for messages per second is 500. If this field is left blank, the system will
 	// optimize the rate based on the queue message backlog size, which may vary
 	// throughout the duration of the message movement task.
-	MaxNumberOfMessagesPerSecond int32
+	MaxNumberOfMessagesPerSecond *int32
 
 	noSmithyDocumentSerde
 }
@@ -73,12 +80,22 @@ type StartMessageMoveTaskOutput struct {
 }
 
 func (c *Client) addOperationStartMessageMoveTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
-	err = stack.Serialize.Add(&awsAwsquery_serializeOpStartMessageMoveTask{}, middleware.After)
+	if err := stack.Serialize.Add(&setOperationInputMiddleware{}, middleware.After); err != nil {
+		return err
+	}
+	err = stack.Serialize.Add(&awsAwsjson10_serializeOpStartMessageMoveTask{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsquery_deserializeOpStartMessageMoveTask{}, middleware.After)
+	err = stack.Deserialize.Add(&awsAwsjson10_deserializeOpStartMessageMoveTask{}, middleware.After)
 	if err != nil {
+		return err
+	}
+	if err := addProtocolFinalizerMiddlewares(stack, options, "StartMessageMoveTask"); err != nil {
+		return fmt.Errorf("add protocol finalizers: %v", err)
+	}
+
+	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
 		return err
 	}
 	if err = addSetLoggerMiddleware(stack, options); err != nil {
@@ -99,22 +116,22 @@ func (c *Client) addOperationStartMessageMoveTaskMiddlewares(stack *middleware.S
 	if err = addRetryMiddlewares(stack, options); err != nil {
 		return err
 	}
-	if err = addHTTPSignerV4Middleware(stack, options); err != nil {
-		return err
-	}
 	if err = awsmiddleware.AddRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
 		return err
 	}
-	if err = addClientUserAgent(stack); err != nil {
+	if err = addClientUserAgent(stack, options); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
 	if err = addOpStartMessageMoveTaskValidationMiddleware(stack); err != nil {
@@ -135,6 +152,9 @@ func (c *Client) addOperationStartMessageMoveTaskMiddlewares(stack *middleware.S
 	if err = addRequestResponseLogging(stack, options); err != nil {
 		return err
 	}
+	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -142,7 +162,6 @@ func newServiceMetadataMiddleware_opStartMessageMoveTask(region string) *awsmidd
 	return &awsmiddleware.RegisterServiceMetadata{
 		Region:        region,
 		ServiceID:     ServiceID,
-		SigningName:   "sqs",
 		OperationName: "StartMessageMoveTask",
 	}
 }

@@ -1,3 +1,19 @@
+# v1.20.1 (2023-11-20)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.20.0 (2023-11-17)
+
+* **Feature**: Adding support for `sso-oauth:CreateTokenWithIAM`.
+
+# v1.19.2 (2023-11-15)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.19.1 (2023-11-09)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.19.0 (2023-11-01)
 
 * **Feature**: Adds support for configured endpoints via environment variables and the AWS shared configuration file.

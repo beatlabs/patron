@@ -1,3 +1,72 @@
+# v1.28.2 (2023-11-20)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.28.1 (2023-11-15)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.28.0 (2023-11-09)
+
+* **Feature**: This release enables customers to call SQS using AWS JSON-1.0 protocol and bug fix.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.27.0 (2023-11-08)
+
+* **Feature**: This release enables customers to call SQS using AWS JSON-1.0 protocol.
+
+# v1.26.0 (2023-11-01)
+
+* **Feature**: Adds support for configured endpoints via environment variables and the AWS shared configuration file.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.25.0 (2023-10-31)
+
+* **Feature**: **BREAKING CHANGE**: Bump minimum go version to 1.19 per the revised [go version support policy](https://aws.amazon.com/blogs/developer/aws-sdk-for-go-aligns-with-go-release-policy-on-supported-runtimes/).
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.24.7 (2023-10-12)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.24.6 (2023-10-06)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.24.5 (2023-08-21)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.24.4 (2023-08-18)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.24.3 (2023-08-17)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.24.2 (2023-08-07)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.24.1 (2023-08-01)
+
+* No change notes available for this release.
+
+# v1.24.0 (2023-07-31)
+
+* **Feature**: Adds support for smithy-modeled endpoint resolution. A new rules-based endpoint resolution will be added to the SDK which will supercede and deprecate existing endpoint resolution. Specifically, EndpointResolver will be deprecated while BaseEndpoint and EndpointResolverV2 will take its place. For more information, please see the Endpoints section in our Developer Guide.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.23.4 (2023-07-28)
+
+* **Documentation**: Documentation changes related to SQS APIs.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.23.3 (2023-07-13)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.23.2 (2023-06-15)
 
 * No change notes available for this release.

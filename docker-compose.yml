@@ -30,6 +30,7 @@ services:
       - "25672:25672"
       - "15672:15672"
     environment:
+      - RABBITMQ_PASSWORD=bitnami
       - RABBITMQ_SECURE_PASSWORD=yes
     volumes:
       - "rabbitmq_data:/bitnami/rabbitmq/mnesia"

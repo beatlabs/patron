@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	endpoint      = "amqp://bitnami:bitnami@localhost:5672/"
+	endpoint      = "amqp://bitnami:bitnami@localhost:5672/" //nolint:gosec
 	rabbitMQQueue = "rmq-test-queue"
 )
 

@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	endpoint = "amqp://user:bitnami@localhost:5672/"
+	endpoint = "amqp://bitnami:bitnami@localhost:5672/"
 	queue    = "rmq-test-v2-pub-queue"
 )
 

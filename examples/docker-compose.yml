@@ -11,7 +11,10 @@ services:
       - '25672:25672'
       - '15672:15672'
     environment:
+      - RABBITMQ_USERNAME=bitnami
+      - RABBITMQ_PASSWORD=bitnami
       - RABBITMQ_SECURE_PASSWORD=yes
+      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=yes
     volumes:
       - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
   zookeeper:

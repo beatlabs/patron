@@ -17,7 +17,7 @@ const (
 	GRPCPort   = "50002"
 	GRPCTarget = "localhost:50002"
 
-	AMQPURL          = "amqp://user:bitnami@localhost:5672/"
+	AMQPURL          = "amqp://bitnami:bitnami@localhost:5672/"
 	AMQPQueue        = "patron"
 	AMQPExchangeName = "patron"
 	AMQPExchangeType = amqp.ExchangeFanout

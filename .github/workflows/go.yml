@@ -55,3 +55,14 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./coverage.lcov
+
+      - name: e2e - Starting service
+        run:  |
+          go build . 
+          nohup ./service &
+        working-directory: ./examples/service
+
+      - name: e2e - Starting client
+        run:  |
+          go run main.go
+        working-directory: ./examples/client

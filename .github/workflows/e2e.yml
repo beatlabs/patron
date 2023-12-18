@@ -5,6 +5,7 @@ on:
       - master
   pull_request:
 jobs:
+  if: false
   build:
     name: E2E
     runs-on: ubuntu-latest

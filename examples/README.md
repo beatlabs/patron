@@ -16,7 +16,7 @@ The client implements all Patron clients for the components used by the service.
 First we need to start the dependencies of the example by running:
 
 ```bash
-docker-compose -f examples/docker-compose.yml up -d
+make deps-start
 ```
 
 Next we run the service:

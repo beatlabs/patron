@@ -186,7 +186,6 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 }
 
 func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
-	return
 	require.NoError(t, testkafka.CreateTopics(broker, failAndRetryTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100

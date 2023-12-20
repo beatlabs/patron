@@ -256,7 +256,6 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 }
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
-	return
 	// Test parameters
 	processorFunc := func(batch Batch) error {
 		return nil
@@ -268,7 +267,6 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 }
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
-	return
 	// Test parameters
 	processorFunc := func(batch Batch) error {
 		return nil

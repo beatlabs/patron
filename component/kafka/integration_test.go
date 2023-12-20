@@ -34,7 +34,6 @@ const (
 )
 
 func TestKafkaComponent_Success(t *testing.T) {
-	return
 	require.NoError(t, testkafka.CreateTopics(broker, successTopic1))
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)

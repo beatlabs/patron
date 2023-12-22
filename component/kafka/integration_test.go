@@ -64,6 +64,8 @@ func TestKafkaComponent_Success(t *testing.T) {
 
 	mtr.Reset()
 
+	var mu sync.Mutex
+
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
@@ -73,7 +75,9 @@ func TestKafkaComponent_Success(t *testing.T) {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)
 			assert.NoError(t, err)
+			mu.Lock()
 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgContent)
+			mu.Unlock()
 			consumerWG.Done()
 		}
 		return nil

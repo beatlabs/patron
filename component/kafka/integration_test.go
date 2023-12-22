@@ -56,7 +56,11 @@ func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, err)
 	client, err := kafkaclient.New([]string{broker}, cfg).Create()
 	require.NoError(t, err)
-	require.NoError(t, client.SendBatch(ctx, messages))
+
+	for _, msg := range messages {
+		_, _, err := client.Send(ctx, msg)
+		require.NoError(t, err)
+	}
 
 	mtr.Reset()
 

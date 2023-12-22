@@ -1,5 +1,4 @@
-run:
-  concurrency: 4
+run:  
   timeout: 5m
   issues-exit-code: 1
   tests: true

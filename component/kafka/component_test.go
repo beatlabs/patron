@@ -17,8 +17,6 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	t.Parallel()
-
 	saramaCfg := sarama.NewConfig()
 	// consumer will commit every batch in a blocking operation
 	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
@@ -110,21 +108,9 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			got, err := New(
-				tt.args.name,
-				tt.args.group,
-				tt.args.brokers,
-				tt.args.topics,
-				tt.args.p,
-				tt.args.saramaCfg,
-				WithFailureStrategy(tt.args.fs),
-				WithRetries(tt.args.retries),
-				WithRetryWait(tt.args.retryWait),
-				WithBatchSize(tt.args.batchSize),
-				WithBatchTimeout(tt.args.batchTimeout),
-				WithCommitSync())
+			got, err := New(tt.args.name, tt.args.group, tt.args.brokers, tt.args.topics, tt.args.p, tt.args.saramaCfg,
+				WithFailureStrategy(tt.args.fs), WithRetries(tt.args.retries), WithRetryWait(tt.args.retryWait),
+				WithBatchSize(tt.args.batchSize), WithBatchTimeout(tt.args.batchTimeout), WithCommitSync())
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Nil(t, got)

@@ -97,6 +97,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 		patronWG.Done()
 	}()
 
+	time.Sleep(5 * time.Second)
 	// // Wait for both consumer and producer to finish processing all the messages.
 	// consumerWG.Wait()
 

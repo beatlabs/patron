@@ -110,6 +110,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 
 	// Shutdown Patron and wait for it to finish
 	patronCancel()
+	time.Sleep(5 * time.Second)
 	patronWG.Wait()
 
 	// assert.Len(t, mtr.FinishedSpans(), 100)

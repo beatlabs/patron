@@ -326,18 +326,18 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 	for {
 		select {
 		case msg, ok := <-claim.Messages():
-			if ok {
-				slog.Debug("message claimed", slog.String("value", string(msg.Value)),
-					slog.Time("timestamp", msg.Timestamp), slog.String("topic", msg.Topic))
-				topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-				messageStatusCountInc(messageReceived, c.group, msg.Topic)
-				err := c.insertMessage(session, msg)
-				if err != nil {
-					return err
-				}
-			} else {
+			if !ok {
 				slog.Debug("messages channel closed")
 				return nil
+			}
+
+			slog.Debug("message claimed", slog.String("value", string(msg.Value)),
+				slog.Time("timestamp", msg.Timestamp), slog.String("topic", msg.Topic))
+			topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
+			messageStatusCountInc(messageReceived, c.group, msg.Topic)
+			err := c.insertMessage(session, msg)
+			if err != nil {
+				return err
 			}
 		case <-c.ticker.C:
 			c.mu.Lock()

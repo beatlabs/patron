@@ -17,9 +17,9 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	testkafka "github.com/beatlabs/patron/test/kafka"
 
-	// "github.com/opentracing/opentracing-go"
+	// "github.com/opentracing/opentracing-go" .
 
-	// "github.com/opentracing/opentracing-go/mocktracer"
+	// "github.com/opentracing/opentracing-go/mocktracer" .
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

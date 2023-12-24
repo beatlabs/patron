@@ -85,16 +85,17 @@ func TestKafkaComponent_Success(t *testing.T) {
 	// 	return nil
 	// }
 	// component := newComponent(t, successTopic1, 3, 10, processorFunc)
+	component := newComponent(t, successTopic1, 3, 10, func(b Batch) error { return nil })
 
-	// // Run Patron with the kafka component
-	// patronContext, patronCancel := context.WithCancel(context.Background())
-	// var patronWG sync.WaitGroup
-	// patronWG.Add(1)
-	// go func() {
-	// 	err := component.Run(patronContext)
-	// 	require.NoError(t, err)
-	// 	patronWG.Done()
-	// }()
+	// Run Patron with the kafka component
+	patronContext, patronCancel := context.WithCancel(context.Background())
+	var patronWG sync.WaitGroup
+	patronWG.Add(1)
+	go func() {
+		err := component.Run(patronContext)
+		require.NoError(t, err)
+		patronWG.Done()
+	}()
 
 	// // Wait for both consumer and producer to finish processing all the messages.
 	// consumerWG.Wait()
@@ -106,9 +107,9 @@ func TestKafkaComponent_Success(t *testing.T) {
 	// }
 	// assert.Equal(t, expectedMessages, actualSuccessfulMessages)
 
-	// // Shutdown Patron and wait for it to finish
-	// patronCancel()
-	// patronWG.Wait()
+	// Shutdown Patron and wait for it to finish
+	patronCancel()
+	patronWG.Wait()
 
 	// assert.Len(t, mtr.FinishedSpans(), 100)
 

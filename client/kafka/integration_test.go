@@ -19,7 +19,7 @@ const (
 	clientTopic = "clientTopic"
 )
 
-var brokers = []string{"127.0.0.1:9093"}
+var brokers = []string{"127.0.0.1:9092"}
 
 func TestNewAsyncProducer_Success(t *testing.T) {
 	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)

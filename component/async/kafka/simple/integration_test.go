@@ -24,7 +24,7 @@ const (
 	simpleTopic5 = "simpleTopic5"
 	simpleTopic6 = "simpleTopic6"
 	simpleTopic7 = "simpleTopic7"
-	broker       = "127.0.0.1:9093"
+	broker       = "127.0.0.1:9092"
 )
 
 func TestSimpleConsume(t *testing.T) {

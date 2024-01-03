@@ -30,7 +30,7 @@ const (
 	successTopic1        = "successTopic1"
 	failAllRetriesTopic1 = "failAllRetriesTopic1"
 	failAndRetryTopic1   = "failAndRetryTopic1"
-	broker               = "127.0.0.1:9093"
+	broker               = "127.0.0.1:9092"
 )
 
 func TestGroupConsume(t *testing.T) {

@@ -51,6 +51,11 @@ type Interface interface {
 	Perform(*http.Request) (*http.Response, error)
 }
 
+// Instrumented allows to retrieve the current transport Instrumentation
+type Instrumented interface {
+	InstrumentationEnabled() Instrumentation
+}
+
 // Config represents the configuration of HTTP client.
 type Config struct {
 	UserAgent string
@@ -86,6 +91,8 @@ type Config struct {
 
 	EnableMetrics     bool
 	EnableDebugLogger bool
+
+	Instrumentation Instrumentation
 
 	DiscoverNodesInterval time.Duration
 
@@ -124,6 +131,8 @@ type Client struct {
 
 	compressRequestBody      bool
 	compressRequestBodyLevel int
+
+	instrumentation Instrumentation
 
 	metrics *metrics
 
@@ -225,6 +234,8 @@ func New(cfg Config) (*Client, error) {
 		logger:    cfg.Logger,
 		selector:  cfg.Selector,
 		poolFunc:  cfg.ConnectionPoolFunc,
+
+		instrumentation: cfg.Instrumentation,
 	}
 
 	if client.poolFunc != nil {
@@ -391,6 +402,10 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 			c.metrics.Unlock()
 		}
 
+		if res != nil && c.instrumentation != nil {
+			c.instrumentation.AfterResponse(req.Context(), res)
+		}
+
 		// Retry on configured response statuses
 		if res != nil && !c.disableRetry {
 			for _, code := range c.retryOnStatus {
@@ -443,6 +458,10 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 // URLs returns a list of transport URLs.
 func (c *Client) URLs() []*url.URL {
 	return c.pool.URLs()
+}
+
+func (c *Client) InstrumentationEnabled() Instrumentation {
+	return c.instrumentation
 }
 
 func (c *Client) setReqURL(u *url.URL, req *http.Request) *http.Request {

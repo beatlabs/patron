@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.11.0: DO NOT EDIT
+// Code generated from specification version 8.12.0: DO NOT EDIT
 
 package esapi
 
@@ -34,6 +34,11 @@ func newBulkFunc(t Transport) Bulk {
 		for _, f := range o {
 			f(&r)
 		}
+
+		if transport, ok := t.(Instrumented); ok {
+			r.instrument = transport.InstrumentationEnabled()
+		}
+
 		return r.Do(r.ctx, t)
 	}
 }
@@ -51,16 +56,17 @@ type BulkRequest struct {
 
 	Body io.Reader
 
-	Pipeline            string
-	Refresh             string
-	RequireAlias        *bool
-	Routing             string
-	Source              []string
-	SourceExcludes      []string
-	SourceIncludes      []string
-	Timeout             time.Duration
-	DocumentType        string
-	WaitForActiveShards string
+	ListExecutedPipelines *bool
+	Pipeline              string
+	Refresh               string
+	RequireAlias          *bool
+	Routing               string
+	Source                []string
+	SourceExcludes        []string
+	SourceIncludes        []string
+	Timeout               time.Duration
+	DocumentType          string
+	WaitForActiveShards   string
 
 	Pretty     bool
 	Human      bool
@@ -70,15 +76,26 @@ type BulkRequest struct {
 	Header http.Header
 
 	ctx context.Context
+
+	instrument Instrumentation
 }
 
 // Do executes the request and returns response or error.
-func (r BulkRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r BulkRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
 		params map[string]string
+		ctx    context.Context
 	)
+
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		ctx = instrument.Start(providedCtx, "bulk")
+		defer instrument.Close(ctx)
+	}
+	if ctx == nil {
+		ctx = providedCtx
+	}
 
 	method = "POST"
 
@@ -87,11 +104,18 @@ func (r BulkRequest) Do(ctx context.Context, transport Transport) (*Response, er
 	if r.Index != "" {
 		path.WriteString("/")
 		path.WriteString(r.Index)
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordPathPart(ctx, "index", r.Index)
+		}
 	}
 	path.WriteString("/")
 	path.WriteString("_bulk")
 
 	params = make(map[string]string)
+
+	if r.ListExecutedPipelines != nil {
+		params["list_executed_pipelines"] = strconv.FormatBool(*r.ListExecutedPipelines)
+	}
 
 	if r.Pipeline != "" {
 		params["pipeline"] = r.Pipeline
@@ -151,6 +175,9 @@ func (r BulkRequest) Do(ctx context.Context, transport Transport) (*Response, er
 
 	req, err := newRequest(method, path.String(), r.Body)
 	if err != nil {
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -182,8 +209,20 @@ func (r BulkRequest) Do(ctx context.Context, transport Transport) (*Response, er
 		req = req.WithContext(ctx)
 	}
 
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		instrument.BeforeRequest(req, "bulk")
+		if reader := instrument.RecordRequestBody(ctx, "bulk", r.Body); reader != nil {
+			req.Body = reader
+		}
+	}
 	res, err := transport.Perform(req)
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		instrument.AfterRequest(req, "elasticsearch", "bulk")
+	}
 	if err != nil {
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -207,6 +246,13 @@ func (f Bulk) WithContext(v context.Context) func(*BulkRequest) {
 func (f Bulk) WithIndex(v string) func(*BulkRequest) {
 	return func(r *BulkRequest) {
 		r.Index = v
+	}
+}
+
+// WithListExecutedPipelines - sets list_executed_pipelines for all incoming documents. defaults to unset (false).
+func (f Bulk) WithListExecutedPipelines(v bool) func(*BulkRequest) {
+	return func(r *BulkRequest) {
+		r.ListExecutedPipelines = &v
 	}
 }
 

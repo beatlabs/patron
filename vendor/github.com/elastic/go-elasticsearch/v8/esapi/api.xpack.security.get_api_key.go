@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.11.0: DO NOT EDIT
+// Code generated from specification version 8.12.0: DO NOT EDIT
 
 package esapi
 
@@ -32,6 +32,11 @@ func newSecurityGetAPIKeyFunc(t Transport) SecurityGetAPIKey {
 		for _, f := range o {
 			f(&r)
 		}
+
+		if transport, ok := t.(Instrumented); ok {
+			r.instrument = transport.InstrumentationEnabled()
+		}
+
 		return r.Do(r.ctx, t)
 	}
 }
@@ -45,6 +50,7 @@ type SecurityGetAPIKey func(o ...func(*SecurityGetAPIKeyRequest)) (*Response, er
 
 // SecurityGetAPIKeyRequest configures the Security GetAPI Key API request.
 type SecurityGetAPIKeyRequest struct {
+	ActiveOnly    *bool
 	ID            string
 	Name          string
 	Owner         *bool
@@ -60,15 +66,26 @@ type SecurityGetAPIKeyRequest struct {
 	Header http.Header
 
 	ctx context.Context
+
+	instrument Instrumentation
 }
 
 // Do executes the request and returns response or error.
-func (r SecurityGetAPIKeyRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r SecurityGetAPIKeyRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
 		params map[string]string
+		ctx    context.Context
 	)
+
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		ctx = instrument.Start(providedCtx, "security.get_api_key")
+		defer instrument.Close(ctx)
+	}
+	if ctx == nil {
+		ctx = providedCtx
+	}
 
 	method = "GET"
 
@@ -77,6 +94,10 @@ func (r SecurityGetAPIKeyRequest) Do(ctx context.Context, transport Transport) (
 	path.WriteString("/_security/api_key")
 
 	params = make(map[string]string)
+
+	if r.ActiveOnly != nil {
+		params["active_only"] = strconv.FormatBool(*r.ActiveOnly)
+	}
 
 	if r.ID != "" {
 		params["id"] = r.ID
@@ -120,6 +141,9 @@ func (r SecurityGetAPIKeyRequest) Do(ctx context.Context, transport Transport) (
 
 	req, err := newRequest(method, path.String(), nil)
 	if err != nil {
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -147,8 +171,17 @@ func (r SecurityGetAPIKeyRequest) Do(ctx context.Context, transport Transport) (
 		req = req.WithContext(ctx)
 	}
 
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		instrument.BeforeRequest(req, "security.get_api_key")
+	}
 	res, err := transport.Perform(req)
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		instrument.AfterRequest(req, "elasticsearch", "security.get_api_key")
+	}
 	if err != nil {
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -165,6 +198,13 @@ func (r SecurityGetAPIKeyRequest) Do(ctx context.Context, transport Transport) (
 func (f SecurityGetAPIKey) WithContext(v context.Context) func(*SecurityGetAPIKeyRequest) {
 	return func(r *SecurityGetAPIKeyRequest) {
 		r.ctx = v
+	}
+}
+
+// WithActiveOnly - flag to limit response to only active (not invalidated or expired) api keys.
+func (f SecurityGetAPIKey) WithActiveOnly(v bool) func(*SecurityGetAPIKeyRequest) {
+	return func(r *SecurityGetAPIKeyRequest) {
+		r.ActiveOnly = &v
 	}
 }
 

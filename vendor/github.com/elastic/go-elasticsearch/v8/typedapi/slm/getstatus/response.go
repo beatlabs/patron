@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package getstatus
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package getstatus
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/slm/get_status/GetSnapshotLifecycleManagementStatusResponse.ts#L22-L24
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/slm/get_status/GetSnapshotLifecycleManagementStatusResponse.ts#L22-L24
 type Response struct {
 	OperationMode lifecycleoperationmode.LifecycleOperationMode `json:"operation_mode"`
 }

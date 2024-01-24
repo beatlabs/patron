@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package schedulenowtransform
 
 // Response holds the response body struct for the package schedulenowtransform
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/transform/schedule_now_transform/ScheduleNowTransformResponse.ts#L21-L23
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/transform/schedule_now_transform/ScheduleNowTransformResponse.ts#L21-L23
 type Response struct {
 
 	// Acknowledged For a successful response, this value is always true. On failure, an

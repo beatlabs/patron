@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // IntervalsWildcard type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/_types/query_dsl/fulltext.ts#L265-L280
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/_types/query_dsl/fulltext.ts#L265-L280
 type IntervalsWildcard struct {
 	// Analyzer Analyzer used to analyze the `pattern`.
 	// Defaults to the top-level field's analyzer.

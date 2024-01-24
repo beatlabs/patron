@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package putcomponenttemplate
 
@@ -29,7 +29,7 @@ import (
 
 // Request holds the request body struct for the package putcomponenttemplate
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/cluster/put_component_template/ClusterPutComponentTemplateRequest.ts#L29-L99
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/cluster/put_component_template/ClusterPutComponentTemplateRequest.ts#L29-L99
 type Request struct {
 
 	// AllowAutoCreate This setting overrides the value of the `action.auto_create_index` cluster

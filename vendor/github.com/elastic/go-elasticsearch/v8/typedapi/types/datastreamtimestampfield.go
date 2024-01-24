@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package types
 
@@ -29,7 +29,7 @@ import (
 
 // DataStreamTimestampField type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/indices/_types/DataStream.ts#L98-L103
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/indices/_types/DataStream.ts#L107-L112
 type DataStreamTimestampField struct {
 	// Name Name of the timestamp field for the data stream, which must be `@timestamp`.
 	// The `@timestamp` field must be included in every document indexed to the data

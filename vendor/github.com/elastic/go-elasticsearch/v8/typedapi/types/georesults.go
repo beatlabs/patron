@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // GeoResults type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/ml/_types/Anomaly.ts#L145-L154
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/ml/_types/Anomaly.ts#L145-L154
 type GeoResults struct {
 	// ActualPoint The actual value for the bucket formatted as a `geo_point`.
 	ActualPoint string `json:"actual_point"`

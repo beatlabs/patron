@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.11.0: DO NOT EDIT
+// Code generated from specification version 8.12.0: DO NOT EDIT
 
 package esapi
 
@@ -31,6 +31,11 @@ func newILMGetLifecycleFunc(t Transport) ILMGetLifecycle {
 		for _, f := range o {
 			f(&r)
 		}
+
+		if transport, ok := t.(Instrumented); ok {
+			r.instrument = transport.InstrumentationEnabled()
+		}
+
 		return r.Do(r.ctx, t)
 	}
 }
@@ -54,15 +59,26 @@ type ILMGetLifecycleRequest struct {
 	Header http.Header
 
 	ctx context.Context
+
+	instrument Instrumentation
 }
 
 // Do executes the request and returns response or error.
-func (r ILMGetLifecycleRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r ILMGetLifecycleRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
 		params map[string]string
+		ctx    context.Context
 	)
+
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		ctx = instrument.Start(providedCtx, "ilm.get_lifecycle")
+		defer instrument.Close(ctx)
+	}
+	if ctx == nil {
+		ctx = providedCtx
+	}
 
 	method = "GET"
 
@@ -75,6 +91,9 @@ func (r ILMGetLifecycleRequest) Do(ctx context.Context, transport Transport) (*R
 	if r.Policy != "" {
 		path.WriteString("/")
 		path.WriteString(r.Policy)
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordPathPart(ctx, "policy", r.Policy)
+		}
 	}
 
 	params = make(map[string]string)
@@ -97,6 +116,9 @@ func (r ILMGetLifecycleRequest) Do(ctx context.Context, transport Transport) (*R
 
 	req, err := newRequest(method, path.String(), nil)
 	if err != nil {
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -124,8 +146,17 @@ func (r ILMGetLifecycleRequest) Do(ctx context.Context, transport Transport) (*R
 		req = req.WithContext(ctx)
 	}
 
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		instrument.BeforeRequest(req, "ilm.get_lifecycle")
+	}
 	res, err := transport.Perform(req)
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		instrument.AfterRequest(req, "elasticsearch", "ilm.get_lifecycle")
+	}
 	if err != nil {
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordError(ctx, err)
+		}
 		return nil, err
 	}
 

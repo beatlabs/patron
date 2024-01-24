@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.11.0: DO NOT EDIT
+// Code generated from specification version 8.12.0: DO NOT EDIT
 
 package esapi
 
@@ -33,6 +33,11 @@ func newTasksListFunc(t Transport) TasksList {
 		for _, f := range o {
 			f(&r)
 		}
+
+		if transport, ok := t.(Instrumented); ok {
+			r.instrument = transport.InstrumentationEnabled()
+		}
+
 		return r.Do(r.ctx, t)
 	}
 }
@@ -64,15 +69,26 @@ type TasksListRequest struct {
 	Header http.Header
 
 	ctx context.Context
+
+	instrument Instrumentation
 }
 
 // Do executes the request and returns response or error.
-func (r TasksListRequest) Do(ctx context.Context, transport Transport) (*Response, error) {
+func (r TasksListRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
 		params map[string]string
+		ctx    context.Context
 	)
+
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		ctx = instrument.Start(providedCtx, "tasks.list")
+		defer instrument.Close(ctx)
+	}
+	if ctx == nil {
+		ctx = providedCtx
+	}
 
 	method = "GET"
 
@@ -128,6 +144,9 @@ func (r TasksListRequest) Do(ctx context.Context, transport Transport) (*Respons
 
 	req, err := newRequest(method, path.String(), nil)
 	if err != nil {
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordError(ctx, err)
+		}
 		return nil, err
 	}
 
@@ -155,8 +174,17 @@ func (r TasksListRequest) Do(ctx context.Context, transport Transport) (*Respons
 		req = req.WithContext(ctx)
 	}
 
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		instrument.BeforeRequest(req, "tasks.list")
+	}
 	res, err := transport.Perform(req)
+	if instrument, ok := r.instrument.(Instrumentation); ok {
+		instrument.AfterRequest(req, "elasticsearch", "tasks.list")
+	}
 	if err != nil {
+		if instrument, ok := r.instrument.(Instrumentation); ok {
+			instrument.RecordError(ctx, err)
+		}
 		return nil, err
 	}
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package getbuiltinprivileges
 
@@ -29,7 +29,7 @@ import (
 
 // Response holds the response body struct for the package getbuiltinprivileges
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/security/get_builtin_privileges/SecurityGetBuiltinPrivilegesResponse.ts#L22-L24
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/security/get_builtin_privileges/SecurityGetBuiltinPrivilegesResponse.ts#L22-L24
 type Response struct {
 	Cluster []string `json:"cluster"`
 	Index   []string `json:"index"`

@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package previewdataframeanalytics
 
 // Response holds the response body struct for the package previewdataframeanalytics
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/ml/preview_data_frame_analytics/MlPreviewDataFrameAnalyticsResponse.ts#L23-L28
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/ml/preview_data_frame_analytics/MlPreviewDataFrameAnalyticsResponse.ts#L23-L28
 type Response struct {
 
 	// FeatureValues An array of objects that contain feature name and value pairs. The features

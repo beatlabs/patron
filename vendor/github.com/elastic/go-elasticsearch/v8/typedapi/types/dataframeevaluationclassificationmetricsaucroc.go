@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // DataframeEvaluationClassificationMetricsAucRoc type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/ml/_types/DataframeEvaluation.ts#L85-L90
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/ml/_types/DataframeEvaluation.ts#L85-L90
 type DataframeEvaluationClassificationMetricsAucRoc struct {
 	// ClassName Name of the only class that is treated as positive during AUC ROC
 	// calculation. Other classes are treated as negative ("one-vs-all" strategy).

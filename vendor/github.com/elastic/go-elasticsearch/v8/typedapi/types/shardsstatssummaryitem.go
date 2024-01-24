@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // ShardsStatsSummaryItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/snapshot/_types/SnapshotShardsStatus.ts#L37-L40
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/snapshot/_types/SnapshotShardsStatus.ts#L37-L40
 type ShardsStatsSummaryItem struct {
 	FileCount   int64 `json:"file_count"`
 	SizeInBytes int64 `json:"size_in_bytes"`

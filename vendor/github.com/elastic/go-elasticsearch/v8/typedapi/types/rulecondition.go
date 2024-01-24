@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5fea44e006349579bf3561a82e997002e5716117
+// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // RuleCondition type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5fea44e006349579bf3561a82e997002e5716117/specification/ml/_types/Rule.ts#L52-L65
+// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/ml/_types/Rule.ts#L52-L65
 type RuleCondition struct {
 	// AppliesTo Specifies the result property to which the condition applies. If your
 	// detector uses `lat_long`, `metric`, `rare`, or `freq_rare` functions, you can

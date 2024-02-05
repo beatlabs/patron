@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.16
 	github.com/aws/aws-sdk-go-v2/service/sns v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.29.7
-	github.com/eclipse/paho.golang v0.12.0
+	github.com/eclipse/paho.golang v0.20.0
 	github.com/elastic/elastic-transport-go/v8 v8.4.0
 	github.com/elastic/go-elasticsearch/v8 v8.12.0
 	github.com/go-redis/redis/extra/rediscmd v0.2.0

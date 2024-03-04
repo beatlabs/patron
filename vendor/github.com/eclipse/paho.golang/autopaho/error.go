@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ *
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v2.0
+ *  and Eclipse Distribution License v1.0 which accompany this distribution.
+ *
+ * The Eclipse Public License is available at
+ *    https://www.eclipse.org/legal/epl-2.0/
+ *  and the Eclipse Distribution License is available at
+ *    http://www.eclipse.org/org/documents/edl-v10.php.
+ *
+ *  SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+ */
+
 package autopaho
 
 import (
@@ -5,6 +20,7 @@ import (
 	"sync"
 
 	"github.com/eclipse/paho.golang/paho"
+	"github.com/eclipse/paho.golang/paho/log"
 )
 
 // errorHandler provides the onClientError callback function that will be called by the Paho library. The sole aim
@@ -14,7 +30,7 @@ import (
 // userOnClientError will not be called (but there is a small chance that userOnClientError will be called followed
 // by userOnServerDisconnect (if we encounter an error sending but there is a DISCONNECT in the queue).
 type errorHandler struct {
-	debug paho.Logger
+	debug log.Logger
 
 	mu      sync.Mutex
 	errChan chan error // receives connection errors
@@ -38,7 +54,7 @@ func (e *errorHandler) onClientError(err error) {
 }
 
 // onClientError called by the paho library when the server requests a disconnection (for example, as part of a
-// clean broker shutdown). We want to begin attempting to reconnect when this occurs (and pass a detectable error
+// clean server shutdown). We want to begin attempting to reconnect when this occurs (and pass a detectable error
 // to the user)
 func (e *errorHandler) onServerDisconnect(d *paho.Disconnect) {
 	e.handleError(&DisconnectError{err: fmt.Sprintf("server requested disconnect (reason: %d)", d.ReasonCode)})
@@ -55,11 +71,12 @@ func (e *errorHandler) handleError(err error) bool {
 	e.errChan = nil
 	e.mu.Unlock()
 	if errChan != nil {
-		e.debug.Printf("received error: %s", err)
+		e.debug.Printf("handleError received error: %s", err)
 		errChan <- err
+		e.debug.Printf("handleError passed error on: %s", err)
 		return true
 	}
-	e.debug.Printf("received extra error: %s", err)
+	e.debug.Printf("handleError received extra error: %s", err)
 	return false
 }
 

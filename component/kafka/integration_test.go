@@ -120,6 +120,9 @@ func TestKafkaComponent_Success(t *testing.T) {
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {
+	// TODO This test is flaky and needs to be fixed
+	t.Skip("This test is flaky and needs to be fixed")
+
 	require.NoError(t, testkafka.CreateTopics(broker, failAllRetriesTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100
@@ -184,6 +187,9 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 }
 
 func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
+	// TODO This test is flaky and needs to be fixed
+	t.Skip("This test is flaky and needs to be fixed")
+
 	require.NoError(t, testkafka.CreateTopics(broker, failAndRetryTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100

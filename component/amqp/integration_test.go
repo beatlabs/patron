@@ -23,8 +23,6 @@ const (
 )
 
 func TestRun(t *testing.T) {
-	// TODO: fix flaky test
-	t.Skip("skipping integration test")
 	require.NoError(t, createQueue())
 	t.Cleanup(func() { mtr.Reset() })
 

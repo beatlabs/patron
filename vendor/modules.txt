@@ -1,3 +1,7 @@
+# filippo.io/edwards25519 v1.1.0
+## explicit; go 1.20
+filippo.io/edwards25519
+filippo.io/edwards25519/field
 # github.com/HdrHistogram/hdrhistogram-go v1.0.1
 ## explicit; go 1.14
 # github.com/IBM/sarama v1.42.1
@@ -814,8 +818,8 @@ github.com/go-redis/redis/v8/internal/pool
 github.com/go-redis/redis/v8/internal/proto
 github.com/go-redis/redis/v8/internal/rand
 github.com/go-redis/redis/v8/internal/util
-# github.com/go-sql-driver/mysql v1.7.1
-## explicit; go 1.13
+# github.com/go-sql-driver/mysql v1.8.0
+## explicit; go 1.18
 github.com/go-sql-driver/mysql
 # github.com/golang/protobuf v1.5.3
 ## explicit; go 1.9

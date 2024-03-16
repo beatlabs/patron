@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
+// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
 
 package types
 
@@ -29,13 +29,11 @@ import (
 
 // FieldRule type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/security/_types/RoleMappingRule.ts#L33-L42
+// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/security/_types/RoleMappingRule.ts#L36-L44
 type FieldRule struct {
-	Dn       []string        `json:"dn,omitempty"`
-	Groups   []string        `json:"groups,omitempty"`
-	Metadata json.RawMessage `json:"metadata,omitempty"`
-	Realm    *SecurityRealm  `json:"realm,omitempty"`
-	Username *string         `json:"username,omitempty"`
+	Dn       []string `json:"dn,omitempty"`
+	Groups   []string `json:"groups,omitempty"`
+	Username []string `json:"username,omitempty"`
 }
 
 func (s *FieldRule) UnmarshalJSON(data []byte) error {
@@ -85,19 +83,20 @@ func (s *FieldRule) UnmarshalJSON(data []byte) error {
 				}
 			}
 
-		case "metadata":
-			if err := dec.Decode(&s.Metadata); err != nil {
-				return err
-			}
-
-		case "realm":
-			if err := dec.Decode(&s.Realm); err != nil {
-				return err
-			}
-
 		case "username":
-			if err := dec.Decode(&s.Username); err != nil {
-				return err
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			if !bytes.HasPrefix(rawMsg, []byte("[")) {
+				o := new(string)
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
+					return err
+				}
+
+				s.Username = append(s.Username, *o)
+			} else {
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Username); err != nil {
+					return err
+				}
 			}
 
 		}

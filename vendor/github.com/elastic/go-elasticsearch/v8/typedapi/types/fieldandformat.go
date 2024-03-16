@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
+// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // FieldAndFormat type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/_types/query_dsl/abstractions.ts#L489-L503
+// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/abstractions.ts#L497-L511
 type FieldAndFormat struct {
 	// Field Wildcard pattern. The request returns values for field names matching this
 	// pattern.
@@ -43,6 +43,10 @@ type FieldAndFormat struct {
 func (s *FieldAndFormat) UnmarshalJSON(data []byte) error {
 
 	if !bytes.HasPrefix(data, []byte(`{`)) {
+		if !bytes.HasPrefix(data, []byte(`"`)) {
+			data = append([]byte{'"'}, data...)
+			data = append(data, []byte{'"'}...)
+		}
 		err := json.NewDecoder(bytes.NewReader(data)).Decode(&s.Field)
 		return err
 	}

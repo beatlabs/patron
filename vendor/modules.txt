@@ -146,7 +146,7 @@ github.com/eclipse/paho.golang/paho/store/memory
 ## explicit; go 1.20
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version
-# github.com/elastic/go-elasticsearch/v8 v8.12.0
+# github.com/elastic/go-elasticsearch/v8 v8.12.1
 ## explicit; go 1.20
 github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi
@@ -696,6 +696,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/level
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/licensestatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/licensetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/lifecycleoperationmode
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/managedby
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/matchtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/memorystatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/metric
@@ -906,9 +907,6 @@ github.com/klauspost/compress/internal/cpuinfo
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
-# github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0
-## explicit; go 1.19
-github.com/matttproud/golang_protobuf_extensions/v2/pbutil
 # github.com/montanaflynn/stats v0.7.1
 ## explicit; go 1.13
 github.com/montanaflynn/stats
@@ -934,18 +932,18 @@ github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/prometheus/client_golang v1.18.0
-## explicit; go 1.19
+# github.com/prometheus/client_golang v1.19.0
+## explicit; go 1.20
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
 github.com/prometheus/client_golang/prometheus/promhttp
 github.com/prometheus/client_golang/prometheus/testutil
 github.com/prometheus/client_golang/prometheus/testutil/promlint
 github.com/prometheus/client_golang/prometheus/testutil/promlint/validations
-# github.com/prometheus/client_model v0.5.0
+# github.com/prometheus/client_model v0.6.0
 ## explicit; go 1.19
 github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.45.0
+# github.com/prometheus/common v0.48.0
 ## explicit; go 1.20
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
@@ -1169,6 +1167,7 @@ google.golang.org/grpc/tap
 google.golang.org/grpc/test/bufconn
 # google.golang.org/protobuf v1.33.0
 ## explicit; go 1.17
+google.golang.org/protobuf/encoding/protodelim
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire

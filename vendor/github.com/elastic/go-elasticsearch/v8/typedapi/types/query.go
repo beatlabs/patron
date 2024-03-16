@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/17ac39c7f9266bc303baa029f90194aecb1c3b7c
+// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
 
 package types
 
@@ -29,7 +29,7 @@ import (
 
 // Query type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/17ac39c7f9266bc303baa029f90194aecb1c3b7c/specification/_types/query_dsl/abstractions.ts#L98-L391
+// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/abstractions.ts#L99-L399
 type Query struct {
 	// Bool matches documents matching boolean combinations of other queries.
 	Bool *BoolQuery `json:"bool,omitempty"`
@@ -84,6 +84,10 @@ type Query struct {
 	Ids *IdsQuery `json:"ids,omitempty"`
 	// Intervals Returns documents based on the order and proximity of matching terms.
 	Intervals map[string]IntervalsQuery `json:"intervals,omitempty"`
+	// Knn Finds the k nearest vectors to a query vector, as measured by a similarity
+	// metric. knn query finds nearest vectors through approximate search on indexed
+	// dense_vectors.
+	Knn *KnnQuery `json:"knn,omitempty"`
 	// Match Returns documents that match a provided text, number, date or boolean value.
 	// The provided text is analyzed before matching.
 	Match map[string]MatchQuery `json:"match,omitempty"`
@@ -312,6 +316,11 @@ func (s *Query) UnmarshalJSON(data []byte) error {
 				s.Intervals = make(map[string]IntervalsQuery, 0)
 			}
 			if err := dec.Decode(&s.Intervals); err != nil {
+				return err
+			}
+
+		case "knn":
+			if err := dec.Decode(&s.Knn); err != nil {
 				return err
 			}
 

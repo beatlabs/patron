@@ -65,7 +65,10 @@ func TestSimpleConsume(t *testing.T) {
 
 	messages := make([]*sarama.ProducerMessage, 0, len(sent))
 	for _, val := range sent {
-		messages = append(messages, testkafka.CreateProducerMessage(simpleTopic1, val))
+		messages = append(messages, &sarama.ProducerMessage{
+			Topic: simpleTopic1,
+			Value: sarama.StringEncoder(val),
+		})
 	}
 
 	err := testkafka.SendMessages(broker, messages...)
@@ -117,7 +120,10 @@ func TestSimpleConsume_ClaimMessageError(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	err := testkafka.SendMessages(broker, testkafka.CreateProducerMessage(simpleTopic2, "123"))
+	err := testkafka.SendMessages(broker, &sarama.ProducerMessage{
+		Topic: simpleTopic2,
+		Value: sarama.StringEncoder("123"),
+	})
 	require.NoError(t, err)
 
 	select {
@@ -141,7 +147,10 @@ func TestSimpleConsume_WithDurationOffset(t *testing.T) {
 
 	messages := make([]*sarama.ProducerMessage, 0)
 	for _, val := range sent {
-		messages = append(messages, testkafka.CreateProducerMessage(simpleTopic3, val))
+		messages = append(messages, &sarama.ProducerMessage{
+			Topic: simpleTopic3,
+			Value: sarama.StringEncoder(val),
+		})
 	}
 
 	err := testkafka.SendMessages(broker, messages...)
@@ -206,7 +215,10 @@ func TestSimpleConsume_WithTimestampOffset(t *testing.T) {
 	messages := make([]*sarama.ProducerMessage, 0)
 	for i, tm := range times {
 		val := sent[i]
-		msg := testkafka.CreateProducerMessage(simpleTopic6, val)
+		msg := &sarama.ProducerMessage{
+			Topic: simpleTopic6,
+			Value: sarama.StringEncoder(val),
+		}
 		msg.Timestamp = tm
 		messages = append(messages, msg)
 	}
@@ -263,7 +275,10 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset(t *testing.T) {
 	messages := make([]*sarama.ProducerMessage, 0)
 	numberOfMessages := 10
 	for i := 0; i < numberOfMessages; i++ {
-		messages = append(messages, testkafka.CreateProducerMessage(simpleTopic4, "foo"))
+		messages = append(messages, &sarama.ProducerMessage{
+			Topic: simpleTopic4,
+			Value: sarama.StringEncoder("foo"),
+		})
 	}
 
 	err := testkafka.SendMessages(broker, messages...)
@@ -379,7 +394,10 @@ func TestSimpleConsume_WithNotificationOnceReachingLatestOffset_WithTimestampOff
 	messages := make([]*sarama.ProducerMessage, 0)
 	for i, tm := range times {
 		val := sent[i]
-		msg := testkafka.CreateProducerMessage(simpleTopic7, val)
+		msg := &sarama.ProducerMessage{
+			Topic: simpleTopic7,
+			Value: sarama.StringEncoder(val),
+		}
 		msg.Timestamp = tm
 		messages = append(messages, msg)
 	}

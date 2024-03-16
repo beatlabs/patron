@@ -72,7 +72,10 @@ func TestGroupConsume(t *testing.T) {
 
 	messages := make([]*sarama.ProducerMessage, 0, len(sent))
 	for _, val := range sent {
-		messages = append(messages, testkafka.CreateProducerMessage(groupTopic1, val))
+		messages = append(messages, &sarama.ProducerMessage{
+			Topic: groupTopic1,
+			Value: sarama.StringEncoder(val),
+		})
 	}
 
 	err := testkafka.SendMessages(broker, messages...)
@@ -118,7 +121,10 @@ func TestGroupConsume_ClaimMessageError(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	err = testkafka.SendMessages(broker, testkafka.CreateProducerMessage(groupTopic2, "321"))
+	err = testkafka.SendMessages(broker, &sarama.ProducerMessage{
+		Topic: groupTopic2,
+		Value: sarama.StringEncoder("321"),
+	})
 	require.NoError(t, err)
 
 	select {

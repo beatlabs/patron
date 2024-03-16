@@ -128,11 +128,3 @@ func AsyncConsumeMessages(consumer async.Consumer, expectedMessageCount int) ([]
 		}
 	}
 }
-
-// CreateProducerMessage for a topic.
-func CreateProducerMessage(topic, message string) *sarama.ProducerMessage {
-	return &sarama.ProducerMessage{
-		Topic: topic,
-		Value: sarama.StringEncoder(message),
-	}
-}

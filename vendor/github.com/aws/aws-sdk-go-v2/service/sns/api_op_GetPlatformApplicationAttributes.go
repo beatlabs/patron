@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
@@ -51,6 +50,10 @@ type GetPlatformApplicationAttributesOutput struct {
 	//   token-based authentication.
 	//   - ApplePlatformBundleID – The app identifier used to configure token-based
 	//   authentication.
+	//   - AuthenticationMethod – Returns the credential type used when sending push
+	//   notifications from application to APNS/APNS_Sandbox, or application to GCM.
+	//   - APNS – Returns the token or certificate.
+	//   - GCM – Returns the token or key.
 	//   - EventEndpointCreated – Topic ARN to which EndpointCreated event
 	//   notifications should be sent.
 	//   - EventEndpointDeleted – Topic ARN to which EndpointDeleted event
@@ -90,25 +93,25 @@ func (c *Client) addOperationGetPlatformApplicationAttributesMiddlewares(stack *
 	if err = addSetLoggerMiddleware(stack, options); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddClientRequestIDMiddleware(stack); err != nil {
+	if err = addClientRequestID(stack); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddComputeContentLengthMiddleware(stack); err != nil {
+	if err = addComputeContentLength(stack); err != nil {
 		return err
 	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
-	if err = v4.AddComputePayloadSHA256Middleware(stack); err != nil {
+	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetryMiddlewares(stack, options); err != nil {
+	if err = addRetry(stack, options); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddRawResponseToMetadata(stack); err != nil {
+	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
+	if err = addRecordResponseTiming(stack); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -129,7 +132,7 @@ func (c *Client) addOperationGetPlatformApplicationAttributesMiddlewares(stack *
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opGetPlatformApplicationAttributes(options.Region), middleware.Before); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
+	if err = addRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

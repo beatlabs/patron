@@ -1,9 +1,9 @@
 name: E2E
-on:
-  push:
-    branches:
-      - master
-  pull_request:
+# on:
+#   push:
+#     branches:
+#       - master
+#   pull_request:
 jobs:
   build:
     name: E2E

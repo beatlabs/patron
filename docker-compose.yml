@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   zookeeper:
     image: bitnami/zookeeper:latest
@@ -60,7 +59,7 @@ services:
     volumes:
       - "redis_data:/bitnami/redis/data"
   localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack:3
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
@@ -71,7 +70,7 @@ services:
       - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
   hivemq:
-    image: hivemq/hivemq4:latest
+    image: hivemq/hivemq4:4.26.0
     restart: always
     ports:
       - target: 1883

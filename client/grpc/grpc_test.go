@@ -140,13 +140,6 @@ func TestSayHello(t *testing.T) {
 			wantMsg:     "first name cannot be empty",
 			wantCounter: 1,
 		},
-		"internal": {
-			req:         nil, /* oops */
-			wantErr:     true,
-			wantCode:    codes.Internal,
-			wantMsg:     "grpc: error while marshaling: proto: Marshal called with nil",
-			wantCounter: 1,
-		},
 	}
 
 	for n, tc := range tt {

@@ -86,7 +86,7 @@ services:
       HIVEMQ_CONTROL_CENTER_PASSWORD: "123456"
       HIVEMQ_CLUSTER_TRANSPORT_TYPE: "TCP"
   mongo:
-    image: mongo:5
+    image: mongo:7
     restart: always
     ports:
       - "27017:27017"

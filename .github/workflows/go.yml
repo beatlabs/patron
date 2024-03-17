@@ -43,7 +43,9 @@ jobs:
         run: make deps-start
 
       - name: Running CI
-        run: make ci
+        run: |
+          sleep 10
+          make ci
 
       - name: Convert coverage file to lcov
         run: |

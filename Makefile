@@ -13,7 +13,7 @@ cover: fmtcheck
 	go tool cover -func=coverage.txt && \
 	rm coverage.txt
 
-ci: deps-start
+ci: 
 	go test ./... -race -cover -mod=vendor -coverprofile=coverage.txt -covermode=atomic -tags=integration && \
 	mv coverage.txt coverage.txt.tmp && \
 	cat coverage.txt.tmp | grep -v "/cmd/patron/" > coverage.txt

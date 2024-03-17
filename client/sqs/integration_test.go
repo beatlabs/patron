@@ -6,11 +6,13 @@ package sqs
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	testaws "github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -36,9 +38,9 @@ func Test_SQS_Publish_Message(t *testing.T) {
 
 	const queueName = "test-sqs-publish-v2"
 
-	api, err := testaws.CreateSQSAPI(region, endpoint)
+	api, err := createSQSAPI(region, endpoint)
 	require.NoError(t, err)
-	queue, err := testaws.CreateSQSQueue(api, queueName)
+	queue, err := createSQSQueue(api, queueName)
 	require.NoError(t, err)
 
 	pub, err := New(api)
@@ -76,4 +78,55 @@ func Test_SQS_Publish_Message(t *testing.T) {
 	}
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 	assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_sqs_publish_duration_seconds"))
+}
+
+func createSQSQueue(api SQSAPI, queueName string) (string, error) {
+	out, err := api.CreateQueue(context.Background(), &sqs.CreateQueueInput{
+		QueueName: aws.String(queueName),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return *out.QueueUrl, nil
+}
+
+type SQSAPI interface {
+	CreateQueue(ctx context.Context, params *sqs.CreateQueueInput, optFns ...func(*sqs.Options)) (*sqs.CreateQueueOutput, error)
+	ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error)
+}
+
+func createSQSAPI(region, endpoint string) (*sqs.Client, error) {
+	cfg, err := createConfig(sqs.ServiceID, region, endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	api := sqs.NewFromConfig(cfg)
+
+	return api, nil
+}
+
+func createConfig(awsServiceID, awsRegion, awsEndpoint string) (aws.Config, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == awsServiceID && region == awsRegion {
+			return aws.Endpoint{
+				URL:           awsEndpoint,
+				SigningRegion: awsRegion,
+			}, nil
+		}
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(awsRegion),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider("test", "test", ""))),
+	)
+	if err != nil {
+		return aws.Config{}, fmt.Errorf("failed to create AWS config: %w", err)
+	}
+
+	return cfg, nil
 }

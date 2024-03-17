@@ -36,6 +36,9 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v4
 
+      - name: Unit tests
+        run: make test
+
       - name: Start dependencies
         run: make deps-start
 

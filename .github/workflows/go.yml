@@ -44,7 +44,7 @@ jobs:
 
       - name: Running CI
         run: |
-          sleep 30
+          sleep 0
           make ci
 
       - name: Convert coverage file to lcov
@@ -57,6 +57,18 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./coverage.lcov
-      
+    
+      - name: e2e - Starting service
+        run:  |
+          go build . 
+          nohup ./service &
+        working-directory: ./examples/service
+
+      - name: Starting client
+        run:  |
+          go run main.go
+        working-directory: ./examples/client
+
       - name: Stop dependencies
         run: make deps-stop
+        

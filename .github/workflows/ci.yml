@@ -55,16 +55,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./coverage.lcov
     
-      - name: e2e - Starting service
+      - name: e2e
         run:  |
-          go build . 
+          go build -o ./service .
           nohup ./service &
-        working-directory: ./examples/service
-
-      - name: Starting client
-        run:  |
-          go run main.go
-        working-directory: ./examples/client
+          go run client/main.go
+        working-directory: ./examples
 
       - name: Stop dependencies
         run: make deps-stop

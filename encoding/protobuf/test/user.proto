@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package test;
 
-option go_package = "github.com/beatlabs/patron/test";
+option go_package = "github.com/beatlabs/patron/encoding/protobuf/test";
 
 message User {
   string Firstname = 1;

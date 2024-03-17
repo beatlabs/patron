@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/beatlabs/patron/test"
+	"github.com/beatlabs/patron/encoding/protobuf/test"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -29,7 +29,7 @@ const (
 	successTopic2        = "successTopic2"
 	failAllRetriesTopic2 = "failAllRetriesTopic2"
 	failAndRetryTopic2   = "failAndRetryTopic2"
-	broker               = "127.0.0.1:9093"
+	broker               = "127.0.0.1:9092"
 	groupSuffix          = "-group"
 )
 

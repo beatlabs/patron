@@ -8,7 +8,7 @@ on:
 jobs:
   lint:
     name: Lint and fmt check
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
 
       - name: Linting and fmt check
         run: make lint
@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         go-image-version: ["1.21"]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Set up Go ${{ matrix.go-image-version }}
         uses: actions/setup-go@v5
@@ -39,11 +39,10 @@ jobs:
       - name: Start dependencies
         run: make deps-start
 
-      - name: Wait dependencies
-        run: sleep 60
-
       - name: Running CI
-        run: make ci
+        run: |
+          sleep 30
+          make ci
 
       - name: Convert coverage file to lcov
         run: |
@@ -55,3 +54,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./coverage.lcov
+    
+      - name: e2e
+        run:  |
+          go build -o service ./service/
+          nohup ./service/service &
+          go run client/main.go
+        working-directory: ./examples
+
+      - name: Stop dependencies
+        run: make deps-stop

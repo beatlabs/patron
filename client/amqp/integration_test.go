@@ -7,7 +7,6 @@ import (
 	"context"
 	"testing"
 
-	testamqp "github.com/beatlabs/patron/test/amqp"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -27,7 +26,7 @@ func TestRun(t *testing.T) {
 	opentracing.SetGlobalTracer(mtr)
 	t.Cleanup(func() { mtr.Reset() })
 
-	require.NoError(t, testamqp.CreateQueue(endpoint, queue))
+	require.NoError(t, createQueue(endpoint, queue))
 
 	pub, err := New(endpoint)
 	require.NoError(t, err)
@@ -71,4 +70,28 @@ func TestRun(t *testing.T) {
 	assert.Equal(t, sent, got)
 	assert.NoError(t, channel.Close())
 	assert.NoError(t, conn.Close())
+}
+
+func createQueue(endpoint, queue string) error {
+	conn, err := amqp.Dial(endpoint)
+	if err != nil {
+		return err
+	}
+
+	channel, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+
+	_, err = channel.QueueDelete(queue, false, false, false)
+	if err != nil {
+		return err
+	}
+
+	_, err = channel.QueueDeclare(queue, true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

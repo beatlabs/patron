@@ -1,8 +1,7 @@
 services:
   kafka:
-    image: confluentinc/cp-kafka:7.6.0
+    image: confluentinc/cp-kafka:7.6.0    
     hostname: broker
-    container_name: broker
     ports:
       - "9092:9092"
       - "9101:9101"
@@ -25,6 +24,11 @@ services:
       # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid" 
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    healthcheck:
+      test: kafka-topics --bootstrap-server broker:9092 --list
+      interval: 10s
+      timeout: 1s
+      retries: 6
   rabbitmq:
     image: docker.io/bitnami/rabbitmq:3.12
     ports:
@@ -41,6 +45,11 @@ services:
       - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=yes
     volumes:
       - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
+    healthcheck:
+      test: rabbitmqctl status
+      interval: 1s
+      timeout: 1s
+      retries: 60
   mysql:
     image: mysql:8
     restart: always
@@ -56,6 +65,11 @@ services:
       - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 1s
+      timeout: 1s
+      retries: 60
   redis:
     image: docker.io/bitnami/redis:6.2
     environment:
@@ -64,6 +78,11 @@ services:
       - "6379:6379"
     volumes:
       - "redis_data:/bitnami/redis/data"
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 1s
+      retries: 60
   localstack:
     image: localstack/localstack:3
     ports:
@@ -75,6 +94,16 @@ services:
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: 
+        - CMD
+        - bash
+        - -c
+        - awslocal s3 ls
+          && awslocal sqs list-queues
+      interval: 5s
+      timeout: 1s
+      retries: 12    
   hivemq:
     image: hivemq/hivemq4:4.26.0
     restart: always
@@ -91,6 +120,11 @@ services:
       HIVEMQ_CONTROL_CENTER_USER: "admin"
       HIVEMQ_CONTROL_CENTER_PASSWORD: "123456"
       HIVEMQ_CLUSTER_TRANSPORT_TYPE: "TCP"
+    healthcheck:
+      test: curl --fail http://localhost:8080/health
+      interval: 1s
+      timeout: 1s
+      retries: 60
   mongo:
     image: mongo:7
     restart: always
@@ -99,6 +133,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 1s
+      retries: 20
 volumes:
   rabbitmq_data:
     driver: local

@@ -41,7 +41,6 @@ jobs:
 
       - name: Running CI
         run: |
-          sleep 30
           make ci
 
       - name: Convert coverage file to lcov

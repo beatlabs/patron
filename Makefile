@@ -37,7 +37,7 @@ examples:
 	$(MAKE) -C examples
 
 deps-start:
-	docker-compose up -d && sleep 10
+	docker-compose up -d --wait
 
 deps-stop:
 	docker-compose down

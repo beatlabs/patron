@@ -36,15 +36,12 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v4
 
-      - name: Unit tests
-        run: make test
-
       - name: Start dependencies
         run: make deps-start
 
       - name: Running CI
         run: |
-          sleep 0
+          sleep 30
           make ci
 
       - name: Convert coverage file to lcov
@@ -71,4 +68,3 @@ jobs:
 
       - name: Stop dependencies
         run: make deps-stop
-        

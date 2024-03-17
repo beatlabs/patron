@@ -58,7 +58,7 @@ jobs:
       - name: e2e
         run:  |
           go build -o service ./service/
-          nohup ./service &
+          nohup ./service/service &
           go run client/main.go
         working-directory: ./examples
 

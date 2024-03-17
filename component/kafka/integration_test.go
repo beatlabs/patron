@@ -6,6 +6,7 @@ package kafka
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -15,7 +16,6 @@ import (
 	"github.com/IBM/sarama"
 	kafkaclient "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/correlation"
-	testkafka "github.com/beatlabs/patron/test/kafka"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -34,7 +34,7 @@ const (
 )
 
 func TestKafkaComponent_Success(t *testing.T) {
-	require.NoError(t, testkafka.CreateTopics(broker, successTopic1))
+	require.NoError(t, createTopics(broker, successTopic1))
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
 	mtr.Reset()
@@ -120,7 +120,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {
-	require.NoError(t, testkafka.CreateTopics(broker, failAllRetriesTopic2))
+	require.NoError(t, createTopics(broker, failAllRetriesTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100
 	errAtIndex := 70
@@ -150,7 +150,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	batchSize := uint(1)
 	component := newComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
 
-	producer, err := testkafka.NewProducer(broker)
+	producer, err := newProducer(broker)
 	require.NoError(t, err)
 
 	msgs := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
@@ -184,7 +184,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 }
 
 func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
-	require.NoError(t, testkafka.CreateTopics(broker, failAndRetryTopic2))
+	require.NoError(t, createTopics(broker, failAndRetryTopic2))
 	// Test parameters
 	numOfMessagesToSend := 100
 
@@ -216,7 +216,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := testkafka.NewProducer(broker)
+		producer, err := newProducer(broker)
 		require.NoError(t, err)
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
@@ -296,4 +296,79 @@ func decodeString(data []byte, v interface{}) error {
 	}
 	*p = tmp
 	return nil
+}
+
+func createTopics(broker string, topics ...string) error {
+	brk := sarama.NewBroker(broker)
+
+	err := brk.Open(sarama.NewConfig())
+	if err != nil {
+		return err
+	}
+
+	// check if the connection was OK
+	connected, err := brk.Connected()
+	if err != nil {
+		return err
+	}
+	if !connected {
+		return errors.New("not connected")
+	}
+	deleteReq := &sarama.DeleteTopicsRequest{
+		Topics:  topics,
+		Timeout: time.Second * 15,
+	}
+
+	deleteResp, err := brk.DeleteTopics(deleteReq)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range deleteResp.TopicErrorCodes {
+		if v == sarama.ErrNoError || v == sarama.ErrUnknownTopicOrPartition {
+			continue
+		}
+		fmt.Println(k)
+		fmt.Println(v)
+	}
+
+	time.Sleep(100 * time.Millisecond)
+
+	topicDetail := &sarama.TopicDetail{}
+	topicDetail.NumPartitions = int32(1)
+	topicDetail.ReplicationFactor = int16(1)
+	topicDetail.ConfigEntries = make(map[string]*string)
+
+	topicDetails := make(map[string]*sarama.TopicDetail, len(topics))
+
+	for _, topic := range topics {
+		topicDetails[topic] = topicDetail
+	}
+
+	request := sarama.CreateTopicsRequest{
+		Timeout:      time.Second * 15,
+		TopicDetails: topicDetails,
+	}
+
+	response, err := brk.CreateTopics(&request)
+	if err != nil {
+		return err
+	}
+
+	for _, val := range response.TopicErrors {
+		if val.Err == sarama.ErrTopicAlreadyExists || val.Err == sarama.ErrNoError {
+			continue
+		}
+		return errors.New(val.Error())
+	}
+
+	return brk.Close()
+}
+
+func newProducer(broker string) (sarama.SyncProducer, error) {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.Return.Errors = true
+
+	return sarama.NewSyncProducer([]string{broker}, config)
 }

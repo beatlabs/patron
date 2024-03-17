@@ -5,11 +5,13 @@ package sns
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	testaws "github.com/beatlabs/patron/test/aws"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -29,9 +31,9 @@ func Test_SNS_Publish_Message_v2(t *testing.T) {
 	t.Cleanup(func() { mtr.Reset() })
 
 	const topic = "test_publish_message_v2"
-	api, err := testaws.CreateSNSAPI(region, endpoint)
+	api, err := createSNSAPI(region, endpoint)
 	require.NoError(t, err)
-	arn, err := testaws.CreateSNSTopic(api, topic)
+	arn, err := createSNSTopic(api, topic)
 	require.NoError(t, err)
 	pub, err := New(api)
 	require.NoError(t, err)
@@ -52,4 +54,54 @@ func Test_SNS_Publish_Message_v2(t *testing.T) {
 	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
 	// Metrics
 	assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_sns_publish_duration_seconds"))
+}
+
+func createSNSAPI(region, endpoint string) (*sns.Client, error) {
+	cfg, err := createConfig(sns.ServiceID, region, endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	api := sns.NewFromConfig(cfg)
+
+	return api, nil
+}
+
+func createSNSTopic(api SNSAPI, topic string) (string, error) {
+	out, err := api.CreateTopic(context.Background(), &sns.CreateTopicInput{
+		Name: aws.String(topic),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to create topic %s: %w", topic, err)
+	}
+
+	return *out.TopicArn, nil
+}
+
+type SNSAPI interface {
+	CreateTopic(ctx context.Context, params *sns.CreateTopicInput, optFns ...func(*sns.Options)) (*sns.CreateTopicOutput, error)
+}
+
+func createConfig(awsServiceID, awsRegion, awsEndpoint string) (aws.Config, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == awsServiceID && region == awsRegion {
+			return aws.Endpoint{
+				URL:           awsEndpoint,
+				SigningRegion: awsRegion,
+			}, nil
+		}
+		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
+		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+	})
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(awsRegion),
+		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider("test", "test", ""))),
+	)
+	if err != nil {
+		return aws.Config{}, fmt.Errorf("failed to create AWS config: %w", err)
+	}
+
+	return cfg, nil
 }

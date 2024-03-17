@@ -28,7 +28,7 @@ services:
       test: kafka-topics --bootstrap-server broker:9092 --list
       interval: 10s
       timeout: 1s
-      retries: 6
+      retries: 12
   rabbitmq:
     image: docker.io/bitnami/rabbitmq:3.12
     ports:
@@ -49,7 +49,7 @@ services:
       test: rabbitmqctl status
       interval: 1s
       timeout: 1s
-      retries: 60
+      retries: 120
   mysql:
     image: mysql:8
     restart: always
@@ -69,7 +69,7 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 1s
       timeout: 1s
-      retries: 60
+      retries: 120
   redis:
     image: docker.io/bitnami/redis:6.2
     environment:
@@ -82,7 +82,7 @@ services:
       test: redis-cli ping
       interval: 1s
       timeout: 1s
-      retries: 60
+      retries: 120
   localstack:
     image: localstack/localstack:3
     ports:
@@ -103,7 +103,7 @@ services:
           && awslocal sqs list-queues
       interval: 5s
       timeout: 1s
-      retries: 12    
+      retries: 24
   hivemq:
     image: hivemq/hivemq4:4.26.0
     restart: always
@@ -124,7 +124,7 @@ services:
       test: curl --fail http://localhost:8080/health
       interval: 1s
       timeout: 1s
-      retries: 60
+      retries: 120
   mongo:
     image: mongo:7
     restart: always

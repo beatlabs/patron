@@ -144,7 +144,7 @@ func TestEsQuery(t *testing.T) {
 
 	responseMsg := `[{"acknowledged": true, "shards_acknowledged": true, "index": "test"}]`
 	ctx, indexName := context.Background(), "test_index"
-	ts := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, err := w.Write([]byte(responseMsg))
 		assert.NoError(t, err)
 	}))

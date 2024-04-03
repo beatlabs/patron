@@ -160,7 +160,7 @@ func TestNewSessionCallback(t *testing.T) {
 		expectedErr string
 	}{
 		"success": {
-			args: args{sessionCallback: func(session sarama.ConsumerGroupSession) error {
+			args: args{sessionCallback: func(_ sarama.ConsumerGroupSession) error {
 				return nil
 			}},
 		},

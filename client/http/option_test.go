@@ -34,7 +34,7 @@ func TestCheckRedirect_Nil(t *testing.T) {
 }
 
 func TestCheckRedirect(t *testing.T) {
-	cr := func(req *http.Request, via []*http.Request) error {
+	cr := func(_ *http.Request, _ []*http.Request) error {
 		return nil
 	}
 

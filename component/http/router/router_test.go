@@ -1,4 +1,4 @@
-package httprouter
+package router
 
 import (
 	"net/http"
@@ -12,7 +12,7 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	route, err := patronhttp.NewRoute(http.MethodGet, "/api/", func(writer http.ResponseWriter, request *http.Request) {
+	route, err := patronhttp.NewRoute("GET /api/", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(200)
 	})
 	require.NoError(t, err)
@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestVerifyRouter(t *testing.T) {
-	route, err := patronhttp.NewRoute(http.MethodGet, "/api/", func(writer http.ResponseWriter, request *http.Request) {
+	route, err := patronhttp.NewRoute("GET /api/", func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(200)
 	})
 	require.NoError(t, err)

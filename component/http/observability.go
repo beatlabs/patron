@@ -11,13 +11,12 @@ import (
 
 const (
 	// MetricsPath of the component.
-	MetricsPath = "/metrics"
+	MetricsPath = "GET /metrics"
 )
 
 // MetricRoute creation.
 func MetricRoute() *Route {
 	return &Route{
-		method:  http.MethodGet,
 		path:    MetricsPath,
 		handler: promhttp.Handler().ServeHTTP,
 	}
@@ -27,23 +26,23 @@ func ProfilingRoutes(enableExpVar bool) []*Route {
 	var routes []*Route
 
 	routeFunc := func(path string, handler http.HandlerFunc) *Route {
-		route, _ := NewRoute(http.MethodGet, path, handler)
+		route, _ := NewRoute(path, handler)
 		return route
 	}
 
-	routes = append(routes, routeFunc("/debug/pprof/", pprof.Index))
-	routes = append(routes, routeFunc("/debug/pprof/cmdline/", pprof.Cmdline))
-	routes = append(routes, routeFunc("/debug/pprof/profile/", pprof.Profile))
-	routes = append(routes, routeFunc("/debug/pprof/symbol/", pprof.Symbol))
-	routes = append(routes, routeFunc("/debug/pprof/trace/", pprof.Trace))
-	routes = append(routes, routeFunc("/debug/pprof/allocs/", pprof.Handler("allocs").ServeHTTP))
-	routes = append(routes, routeFunc("/debug/pprof/heap/", pprof.Handler("heap").ServeHTTP))
-	routes = append(routes, routeFunc("/debug/pprof/goroutine/", pprof.Handler("goroutine").ServeHTTP))
-	routes = append(routes, routeFunc("/debug/pprof/block/", pprof.Handler("block").ServeHTTP))
-	routes = append(routes, routeFunc("/debug/pprof/threadcreate/", pprof.Handler("threadcreate").ServeHTTP))
-	routes = append(routes, routeFunc("/debug/pprof/mutex/", pprof.Handler("mutex").ServeHTTP))
+	routes = append(routes, routeFunc("GET /debug/pprof/", pprof.Index))
+	routes = append(routes, routeFunc("GET /debug/pprof/cmdline/", pprof.Cmdline))
+	routes = append(routes, routeFunc("GET /debug/pprof/profile/", pprof.Profile))
+	routes = append(routes, routeFunc("GET /debug/pprof/symbol/", pprof.Symbol))
+	routes = append(routes, routeFunc("GET /debug/pprof/trace/", pprof.Trace))
+	routes = append(routes, routeFunc("GET /debug/pprof/allocs/", pprof.Handler("allocs").ServeHTTP))
+	routes = append(routes, routeFunc("GET /debug/pprof/heap/", pprof.Handler("heap").ServeHTTP))
+	routes = append(routes, routeFunc("GET /debug/pprof/goroutine/", pprof.Handler("goroutine").ServeHTTP))
+	routes = append(routes, routeFunc("GET /debug/pprof/block/", pprof.Handler("block").ServeHTTP))
+	routes = append(routes, routeFunc("GET /debug/pprof/threadcreate/", pprof.Handler("threadcreate").ServeHTTP))
+	routes = append(routes, routeFunc("GET /debug/pprof/mutex/", pprof.Handler("mutex").ServeHTTP))
 	if enableExpVar {
-		routes = append(routes, routeFunc("/debug/vars/", expVars))
+		routes = append(routes, routeFunc("GET /debug/vars/", expVars))
 	}
 
 	return routes

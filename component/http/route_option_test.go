@@ -112,7 +112,7 @@ func TestAuth(t *testing.T) {
 func TestCache(t *testing.T) {
 	t.Parallel()
 	type fields struct {
-		httpMethod string
+		path string
 	}
 	type args struct {
 		cache     cache.TTLCache
@@ -124,17 +124,17 @@ func TestCache(t *testing.T) {
 		expectedErr string
 	}{
 		"success": {
-			fields:      fields{httpMethod: http.MethodGet},
+			fields:      fields{path: "GET /api"},
 			args:        args{cache: &redis.Cache{}, ageBounds: httpcache.Age{}},
 			expectedErr: "",
 		},
 		"fail with missing get": {
-			fields:      fields{httpMethod: http.MethodDelete},
+			fields:      fields{path: "POST /api"},
 			args:        args{cache: &redis.Cache{}, ageBounds: httpcache.Age{}},
 			expectedErr: "cannot apply cache to a route with any method other than GET",
 		},
 		"fail with args": {
-			fields:      fields{httpMethod: http.MethodGet},
+			fields:      fields{path: "GET /api"},
 			args:        args{cache: nil, ageBounds: httpcache.Age{}},
 			expectedErr: "route cache is nil\n",
 		},
@@ -143,7 +143,7 @@ func TestCache(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			route := &Route{method: tt.fields.httpMethod}
+			route := &Route{path: tt.fields.path}
 			err := WithCache(tt.args.cache, tt.args.ageBounds)(route)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

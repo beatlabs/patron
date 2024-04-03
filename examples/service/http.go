@@ -7,7 +7,7 @@ import (
 
 	"github.com/beatlabs/patron"
 	patronhttp "github.com/beatlabs/patron/component/http"
-	"github.com/beatlabs/patron/component/http/router/httprouter"
+	"github.com/beatlabs/patron/component/http/router"
 	"github.com/beatlabs/patron/log"
 )
 
@@ -26,13 +26,13 @@ func createHttpRouter() (patron.Component, error) {
 	}
 
 	var routes patronhttp.Routes
-	routes.Append(patronhttp.NewGetRoute("/", handler))
+	routes.Append(patronhttp.NewRoute("GET /", handler))
 	rr, err := routes.Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create routes: %w", err)
 	}
 
-	router, err := httprouter.New(httprouter.WithRoutes(rr...))
+	router, err := router.New(router.WithRoutes(rr...))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http router: %w", err)
 	}

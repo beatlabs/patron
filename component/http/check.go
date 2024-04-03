@@ -25,9 +25,9 @@ const (
 	NotReady ReadyStatus = 2
 
 	// AlivePath of the component.
-	AlivePath = "/alive"
+	AlivePath = "GET /alive"
 	// ReadyPath of the component.
-	ReadyPath = "/ready"
+	ReadyPath = "GET /ready"
 )
 
 // ReadyCheckFunc defines a function type for implementing a readiness check.
@@ -51,7 +51,7 @@ func LivenessCheckRoute(acf LivenessCheckFunc) (*Route, error) {
 		}
 	}
 
-	return NewRoute(http.MethodGet, AlivePath, f)
+	return NewRoute(AlivePath, f)
 }
 
 // ReadyCheckRoute returns a route for ready checks.
@@ -69,5 +69,5 @@ func ReadyCheckRoute(rcf ReadyCheckFunc) (*Route, error) {
 		}
 	}
 
-	return NewRoute(http.MethodGet, ReadyPath, f)
+	return NewRoute(ReadyPath, f)
 }

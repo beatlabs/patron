@@ -226,7 +226,7 @@ func initHTTPServerMetrics() {
 			Name:      "handled_total",
 			Help:      "Total number of HTTP responses served by the server.",
 		},
-		[]string{"method", "path", "status_code"},
+		[]string{"path", "status_code"},
 	)
 	prometheus.MustRegister(httpStatusTracingHandledMetric)
 	httpStatusTracingLatencyMetric = prometheus.NewHistogramVec(
@@ -236,18 +236,14 @@ func initHTTPServerMetrics() {
 			Name:      "handled_seconds",
 			Help:      "Latency of a completed HTTP response served by the server.",
 		},
-		[]string{"method", "path", "status_code"})
+		[]string{"path", "status_code"})
 	prometheus.MustRegister(httpStatusTracingLatencyMetric)
 }
 
 // NewRequestObserver creates a Func that captures status code and duration metrics about the responses returned;
 // metrics are exposed via Prometheus.
 // This middleware is enabled by default.
-func NewRequestObserver(method, path string) (Func, error) {
-	if method == "" {
-		return nil, errors.New("method cannot be empty")
-	}
-
+func NewRequestObserver(path string) (Func, error) {
 	if path == "" {
 		return nil, errors.New("path cannot be empty")
 	}
@@ -265,12 +261,12 @@ func NewRequestObserver(method, path string) (Func, error) {
 			status := strconv.Itoa(lw.Status())
 
 			httpStatusCounter := trace.Counter{
-				Counter: httpStatusTracingHandledMetric.WithLabelValues(method, path, status),
+				Counter: httpStatusTracingHandledMetric.WithLabelValues(path, status),
 			}
 			httpStatusCounter.Inc(r.Context())
 
 			httpLatencyMetricObserver := trace.Histogram{
-				Observer: httpStatusTracingLatencyMetric.WithLabelValues(method, path, status),
+				Observer: httpStatusTracingLatencyMetric.WithLabelValues(path, status),
 			}
 			httpLatencyMetricObserver.Observe(r.Context(), time.Since(now).Seconds())
 		})

@@ -1,13 +1,13 @@
-package httprouter
+package router
 
 import (
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/middleware"
-	"github.com/julienschmidt/httprouter"
 )
 
 const defaultDeflateLevel = 6
@@ -27,7 +27,7 @@ type Config struct {
 }
 
 // New creates an http router with functional options.
-func New(oo ...OptionFunc) (*httprouter.Router, error) {
+func New(oo ...OptionFunc) (*http.ServeMux, error) {
 	cfg := &Config{
 		aliveCheckFunc: func() patronhttp.AliveStatus { return patronhttp.Alive },
 		readyCheckFunc: func() patronhttp.ReadyStatus { return patronhttp.Ready },
@@ -43,7 +43,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 
 	var stdRoutes []*patronhttp.Route
 
-	mux := httprouter.New()
+	mux := http.NewServeMux()
 	stdRoutes = append(stdRoutes, patronhttp.MetricRoute())
 	stdRoutes = append(stdRoutes, patronhttp.ProfilingRoutes(cfg.enableProfilingExpVar)...)
 
@@ -66,7 +66,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 
 	for _, route := range stdRoutes {
 		handler := middleware.Chain(route.Handler(), stdMiddlewares...)
-		mux.Handler(route.Method(), route.Path(), handler)
+		mux.Handle(route.Path(), handler)
 		slog.Debug("added route", slog.Any("route", route))
 	}
 
@@ -88,7 +88,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 			return nil, err
 		}
 		middlewares = append(middlewares, loggingTracingMiddleware)
-		requestObserverMiddleware, err := middleware.NewRequestObserver(route.Method(), route.Path())
+		requestObserverMiddleware, err := middleware.NewRequestObserver(route.Path())
 		if err != nil {
 			return nil, err
 		}
@@ -105,7 +105,7 @@ func New(oo ...OptionFunc) (*httprouter.Router, error) {
 		middlewares = append(middlewares, route.Middlewares()...)
 		// chain all middlewares to the handler
 		handler := middleware.Chain(route.Handler(), middlewares...)
-		mux.Handler(route.Method(), route.Path(), handler)
+		mux.Handle(route.Path(), handler)
 		slog.Debug("added route with middlewares", slog.Any("route", route), slog.Int("middlewares", len(middlewares)))
 	}
 

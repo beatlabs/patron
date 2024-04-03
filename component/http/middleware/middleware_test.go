@@ -856,22 +856,20 @@ func TestNewCaching(t *testing.T) {
 
 func TestNewRequestObserver(t *testing.T) {
 	type args struct {
-		method string
-		path   string
+		path string
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"empty method should return error":                   {args: args{method: "", path: "path"}, expectedErr: "method cannot be empty"},
-		"empty path should return error":                     {args: args{method: "method", path: ""}, expectedErr: "path cannot be empty"},
-		"valid path and method should succeed without error": {args: args{method: http.MethodGet, path: "/api"}, expectedErr: ""},
+		"empty path should return error":                     {args: args{path: ""}, expectedErr: "path cannot be empty"},
+		"valid path and method should succeed without error": {args: args{path: "GET /api"}, expectedErr: ""},
 	}
 
 	for name, test := range tests {
 		tt := test
 		t.Run(name, func(t *testing.T) {
-			appNameVersionMiddleware, err := NewRequestObserver(tt.args.method, tt.args.path)
+			appNameVersionMiddleware, err := NewRequestObserver(tt.args.path)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, appNameVersionMiddleware)
@@ -896,7 +894,7 @@ func TestNewRequestObserver(t *testing.T) {
 
 func TestRequestObserver(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
-	middleware, err := NewRequestObserver(http.MethodGet, "/api")
+	middleware, err := NewRequestObserver("GET /api")
 	require.NoError(t, err)
 	assert.NotNil(t, middleware)
 

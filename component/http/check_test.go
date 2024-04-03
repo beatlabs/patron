@@ -25,8 +25,7 @@ func Test_aliveCheckRoute(t *testing.T) {
 			t.Parallel()
 			route, err := LivenessCheckRoute(tt.acf)
 			assert.NoError(t, err)
-			assert.Equal(t, http.MethodGet, route.method)
-			assert.Equal(t, "/alive", route.path)
+			assert.Equal(t, "GET /alive", route.path)
 
 			resp := httptest.NewRecorder()
 			req, err := http.NewRequest(http.MethodGet, "/alive", nil)
@@ -55,8 +54,7 @@ func Test_readyCheckRoute(t *testing.T) {
 			t.Parallel()
 			route, err := ReadyCheckRoute(tt.rcf)
 			assert.NoError(t, err)
-			assert.Equal(t, http.MethodGet, route.method)
-			assert.Equal(t, "/ready", route.path)
+			assert.Equal(t, "GET /ready", route.path)
 
 			resp := httptest.NewRecorder()
 			req, err := http.NewRequest(http.MethodGet, "/ready", nil)

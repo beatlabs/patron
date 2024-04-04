@@ -40,6 +40,14 @@ jobs:
         run: |
           sleep 30
           make ci
+      
+      - uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true # optional (default = false)
+          files: ./coverage.txt
+          name: codecov-umbrella # optional
+          token: ${{ secrets.CODECOVTOKEN }} # required
+          verbose: true # optional (default = false)
 
       # - name: Convert coverage file to lcov
       #   run: |

@@ -25,13 +25,13 @@ jobs:
     name: CI on Go
     runs-on: self-hosted
     steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-
-      - name: Check out source code
-        uses: actions/checkout@v4
 
       - name: Start dependencies
         run: make deps-start

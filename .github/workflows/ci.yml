@@ -22,16 +22,13 @@ jobs:
         run: make lint
 
   build:
-    name: CI on Go ${{ matrix.go-image-version}}
-    strategy:
-      matrix:
-        go-image-version: ["1.22"]
+    name: CI on Go
     runs-on: self-hosted
     steps:
-      - name: Set up Go ${{ matrix.go-image-version }}
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-image-version }}
+          go-version-file: "go.mod"
 
       - name: Check out source code
         uses: actions/checkout@v4

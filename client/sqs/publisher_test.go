@@ -210,7 +210,7 @@ func NewMockTracerInjector() MockTracerInjector {
 }
 
 func ExamplePublisher() {
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, _ ...interface{}) (aws.Endpoint, error) {
 		if service == sqs.ServiceID && region == "eu-west-1" {
 			return aws.Endpoint{
 				URL:           "http://localhost:4576",

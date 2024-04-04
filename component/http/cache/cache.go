@@ -250,7 +250,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
 			if adjusted {
 				wrn = append(wrn, fmt.Sprintf("max-age=%d", minAge))
 			}
-			cfg.validators = append(cfg.validators, func(age, maxAge int64) (bool, validationContext) {
+			cfg.validators = append(cfg.validators, func(age, _ int64) (bool, validationContext) {
 				return age <= value, maxAgeValidation
 			})
 		case controlMinFresh:
@@ -286,7 +286,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
 			no storage whatsoever
 			*/
 			wrn = append(wrn, fmt.Sprintf("max-age=%d", minAge))
-			cfg.validators = append(cfg.validators, func(age, maxAge int64) (bool, validationContext) {
+			cfg.validators = append(cfg.validators, func(age, _ int64) (bool, validationContext) {
 				return age <= minAge, maxAgeValidation
 			})
 		case controlOnlyIfCached:

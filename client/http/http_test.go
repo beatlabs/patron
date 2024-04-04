@@ -89,7 +89,7 @@ func TestTracedClient_Do_Redirect(t *testing.T) {
 		http.Redirect(w, r, "https://google.com", http.StatusSeeOther)
 	}))
 	defer ts.Close()
-	c, err := New(WithCheckRedirect(func(req *http.Request, via []*http.Request) error {
+	c, err := New(WithCheckRedirect(func(_ *http.Request, _ []*http.Request) error {
 		return errors.New("stop redirects")
 	}))
 	assert.NoError(t, err)
@@ -116,7 +116,7 @@ func TestNew(t *testing.T) {
 			WithTimeout(time.Second),
 			WithCircuitBreaker("test", circuitbreaker.Setting{}),
 			WithTransport(&http.Transport{}),
-			WithCheckRedirect(func(req *http.Request, via []*http.Request) error { return nil }),
+			WithCheckRedirect(func(_ *http.Request, _ []*http.Request) error { return nil }),
 		}}, wantErr: false},
 		{name: "failure, invalid timeout", args: args{oo: []OptionFunc{WithTimeout(0 * time.Second)}}, wantErr: true},
 		{name: "failure, invalid circuit breaker", args: args{[]OptionFunc{WithCircuitBreaker("", circuitbreaker.Setting{})}}, wantErr: true},
@@ -139,12 +139,12 @@ func TestNew(t *testing.T) {
 
 func TestDecompress(t *testing.T) {
 	const msg = "hello, client!"
-	ts1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprint(w, msg)
 	}))
 	defer ts1.Close()
 
-	ts2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		var b bytes.Buffer
 		cw := gzip.NewWriter(&b)
 		_, err := cw.Write([]byte(msg))
@@ -162,7 +162,7 @@ func TestDecompress(t *testing.T) {
 	}))
 	defer ts2.Close()
 
-	ts3 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts3 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		var b bytes.Buffer
 		cw, _ := flate.NewWriter(&b, 8)
 		_, err := cw.Write([]byte(msg))

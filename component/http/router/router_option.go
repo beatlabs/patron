@@ -1,4 +1,4 @@
-package httprouter
+package router
 
 import (
 	"errors"

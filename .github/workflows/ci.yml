@@ -22,19 +22,16 @@ jobs:
         run: make lint
 
   build:
-    name: CI on Go ${{ matrix.go-image-version}}
-    strategy:
-      matrix:
-        go-image-version: ["1.21"]
+    name: CI on Go
     runs-on: self-hosted
     steps:
-      - name: Set up Go ${{ matrix.go-image-version }}
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-image-version }}
-
       - name: Check out source code
         uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
 
       - name: Start dependencies
         run: make deps-start
@@ -43,17 +40,14 @@ jobs:
         run: |
           sleep 30
           make ci
-
-      - name: Convert coverage file to lcov
-        run: |
-          GO111MODULE=off go get -u github.com/jandelgado/gcov2lcov
-          $(go env GOPATH)/bin/gcov2lcov -infile=coverage.txt -outfile=coverage.lcov
-
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
+      
+      - name: Codecov
+        uses: codecov/codecov-action@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ./coverage.lcov
+          fail_ci_if_error: true # optional (default = false)
+          files: ./coverage.txt
+          name: codecov-umbrella # optional 
+          token: ${{ secrets.CODECOV_TOKEN }} # required
     
       - name: e2e
         run:  |

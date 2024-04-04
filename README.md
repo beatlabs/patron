@@ -1,4 +1,4 @@
-# patron ![CI](https://github.com/beatlabs/patron/workflows/CI/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/beatlabs/patron/badge.svg?branch=master)](https://coveralls.io/github/beatlabs/patron?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/beatlabs/patron)](https://goreportcard.com/report/github.com/beatlabs/patron) [![GoDoc](https://godoc.org/github.com/beatlabs/patron?status.svg)](https://godoc.org/github.com/beatlabs/patron) ![GitHub release](https://img.shields.io/github/release/beatlabs/patron.svg)[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbeatlabs%2Fpatron.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbeatlabs%2Fpatron?ref=badge_shield&issueType=license)
+# patron ![CI](https://github.com/beatlabs/patron/workflows/CI/badge.svg) [![codecov](https://codecov.io/gh/beatlabs/patron/graph/badge.svg?token=sxY15rXW1X)](https://codecov.io/gh/beatlabs/patron) [![Go Report Card](https://goreportcard.com/badge/github.com/beatlabs/patron)](https://goreportcard.com/report/github.com/beatlabs/patron) [![GoDoc](https://godoc.org/github.com/beatlabs/patron?status.svg)](https://godoc.org/github.com/beatlabs/patron) ![GitHub release](https://img.shields.io/github/release/beatlabs/patron.svg)[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbeatlabs%2Fpatron.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbeatlabs%2Fpatron?ref=badge_shield&issueType=license)
 
 Patron is a framework for creating microservices, originally created by Sotiris Mantzaris (<https://github.com/mantzas>). This fork is maintained by Beat Engineering (<https://thebeat.co>)
 
@@ -17,7 +17,11 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 - logging
 
 `Patron` provides the same defaults for making the usage as simple as possible.
-`Patron` needs Go 1.21 as a minimum.
+`Patron` needs Go 1.22 as a minimum.
+
+## Code coverage
+
+![Code coverage](https://codecov.io/gh/beatlabs/patron/graphs/icicle.svg?token=sxY15rXW1X)
 
 ## Table of Contents
 

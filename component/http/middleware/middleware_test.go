@@ -41,8 +41,8 @@ func tagMiddleware(tag string) Func {
 
 // Panic middleware to test recovery middleware.
 func panicMiddleware(v interface{}) Func {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(_ http.Handler) http.Handler {
+		return http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 			panic(v)
 		})
 	}
@@ -56,7 +56,7 @@ func getMockLimiter(allow bool) *rate.Limiter {
 }
 
 func TestMiddlewareChain(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(202)
 	})
 
@@ -94,7 +94,7 @@ func TestMiddlewareChain(t *testing.T) {
 }
 
 func TestMiddlewares(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(202)
 	})
 
@@ -174,10 +174,10 @@ func TestSpanLogError(t *testing.T) {
 	mtr := mocktracer.New()
 	opentracing.SetGlobalTracer(mtr)
 
-	successHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	successHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	errorHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	errorHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err := w.Write([]byte("foo"))
 		require.NoError(t, err)
@@ -336,7 +336,7 @@ func TestNewCompressionMiddleware(t *testing.T) {
 				return
 			}
 
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Add("Content-Length", "123")
 				w.WriteHeader(202)
 			})
@@ -431,7 +431,7 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("%d - %s", tt.status, tt.expectedEncoding), func(t *testing.T) {
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(tt.status)
 			})
 
@@ -454,7 +454,7 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	var ceh string // accept-encoding, content type
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(202) })
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(202) })
 	middleware, err := NewCompression(8, "/metrics")
 	require.NoError(t, err)
 	require.NotNil(t, middleware)
@@ -485,7 +485,7 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 }
 
 func TestNewCompressionMiddleware_Headers(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
 	middleware, err := NewCompression(8, "/metrics")
 	require.NoError(t, err)
 
@@ -805,7 +805,7 @@ func TestSetResponseWriterStatusOnResponseFailWrite(t *testing.T) {
 }
 
 func TestNewInjectObservability(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
 	middleware := NewInjectObservability()
 	assert.NotNil(t, middleware)
 
@@ -840,7 +840,7 @@ func TestNewCaching(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, cachingMiddleware)
 
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
+			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
 
 			// check if the route is actually ignored
 			req, err := http.NewRequest("GET", "/metrics", nil)
@@ -856,22 +856,20 @@ func TestNewCaching(t *testing.T) {
 
 func TestNewRequestObserver(t *testing.T) {
 	type args struct {
-		method string
-		path   string
+		path string
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
-		"empty method should return error":                   {args: args{method: "", path: "path"}, expectedErr: "method cannot be empty"},
-		"empty path should return error":                     {args: args{method: "method", path: ""}, expectedErr: "path cannot be empty"},
-		"valid path and method should succeed without error": {args: args{method: http.MethodGet, path: "/api"}, expectedErr: ""},
+		"empty path should return error":                     {args: args{path: ""}, expectedErr: "path cannot be empty"},
+		"valid path and method should succeed without error": {args: args{path: "GET /api"}, expectedErr: ""},
 	}
 
 	for name, test := range tests {
 		tt := test
 		t.Run(name, func(t *testing.T) {
-			appNameVersionMiddleware, err := NewRequestObserver(tt.args.method, tt.args.path)
+			appNameVersionMiddleware, err := NewRequestObserver(tt.args.path)
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, appNameVersionMiddleware)
@@ -880,7 +878,7 @@ func TestNewRequestObserver(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.NotNil(t, appNameVersionMiddleware)
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
+			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
 
 			// check if the route actually ignored
 			req, err := http.NewRequest("GET", "/api", nil)
@@ -895,8 +893,8 @@ func TestNewRequestObserver(t *testing.T) {
 }
 
 func TestRequestObserver(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
-	middleware, err := NewRequestObserver(http.MethodGet, "/api")
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
+	middleware, err := NewRequestObserver("GET /api")
 	require.NoError(t, err)
 	assert.NotNil(t, middleware)
 
@@ -936,7 +934,7 @@ func TestNewAppVersion(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.NotNil(t, appNameVersionMiddleware)
-			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(200) })
+			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
 
 			// check if the route actually ignored
 			req, err := http.NewRequest("GET", "/api", nil)

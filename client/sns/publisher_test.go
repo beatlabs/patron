@@ -104,7 +104,7 @@ func (s *stubSNSAPI) Publish(_ context.Context, _ *sns.PublishInput, _ ...func(*
 
 func ExamplePublisher() {
 	// Create the SNS API with the required config, credentials, etc.
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, _ ...interface{}) (aws.Endpoint, error) {
 		if service == sns.ServiceID && region == "eu-west-1" {
 			return aws.Endpoint{
 				URL:           "http://localhost:4575",

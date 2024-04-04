@@ -254,7 +254,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 	// Test parameters
-	processorFunc := func(batch Batch) error {
+	processorFunc := func(_ Batch) error {
 		return nil
 	}
 	invalidTopicName := "invalid-topic-name"
@@ -265,7 +265,7 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	// Test parameters
-	processorFunc := func(batch Batch) error {
+	processorFunc := func(_ Batch) error {
 		return nil
 	}
 	_, err := New(successTopic2, successTopic2+groupSuffix, []string{"127.0.0.1:9999"},

@@ -1,6 +1,6 @@
 module github.com/beatlabs/patron
 
-go 1.21
+go 1.22
 
 require (
 	github.com/IBM/sarama v1.43.0
@@ -17,7 +17,6 @@ require (
 	github.com/go-sql-driver/mysql v1.8.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru v1.0.2
-	github.com/julienschmidt/httprouter v1.3.0
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.19.0

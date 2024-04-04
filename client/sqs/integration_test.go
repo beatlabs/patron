@@ -108,7 +108,7 @@ func createSQSAPI(region, endpoint string) (*sqs.Client, error) {
 }
 
 func createConfig(awsServiceID, awsRegion, awsEndpoint string) (aws.Config, error) {
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, _ ...interface{}) (aws.Endpoint, error) {
 		if service == awsServiceID && region == awsRegion {
 			return aws.Endpoint{
 				URL:           awsEndpoint,

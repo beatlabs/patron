@@ -1,4 +1,4 @@
-package httprouter
+package router
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 	"os"
 
 	patronhttp "github.com/beatlabs/patron/component/http"
-	"github.com/julienschmidt/httprouter"
 )
 
 // NewFileServerRoute returns a route that acts as a file server.
@@ -39,16 +38,8 @@ func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*pa
 	}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		paramPath := ""
-		for _, param := range httprouter.ParamsFromContext(r.Context()) {
-			if param.Key == "path" {
-				paramPath = param.Value
-				break
-			}
-		}
-
 		// get the absolute path to prevent directory traversal
-		path := assetsDir + paramPath
+		path := assetsDir + r.PathValue("path")
 
 		// check whether a file exists at the given path
 		info, err := os.Stat(path)
@@ -67,5 +58,5 @@ func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*pa
 		http.ServeFile(w, r, path)
 	}
 
-	return patronhttp.NewRoute(http.MethodGet, path, handler)
+	return patronhttp.NewRoute(path, handler)
 }

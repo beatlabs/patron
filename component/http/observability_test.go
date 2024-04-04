@@ -12,8 +12,7 @@ import (
 
 func Test_metricRoute(t *testing.T) {
 	route := MetricRoute()
-	assert.Equal(t, http.MethodGet, route.method)
-	assert.Equal(t, "/metrics", route.path)
+	assert.Equal(t, "GET /metrics", route.path)
 
 	resp := httptest.NewRecorder()
 	req, err := http.NewRequest(http.MethodGet, "/metrics", nil)

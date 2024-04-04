@@ -982,7 +982,7 @@ func TestCache_WithHandlerErrorWithoutHeaders(t *testing.T) {
 				requestParams: newRequestAt(11),
 				routeConfig: routeConfig{
 					path: rc.path,
-					hnd: func(now int64, key string) *response {
+					hnd: func(_ int64, _ string) *response {
 						return &response{
 							Err: hndErr,
 						}
@@ -1010,7 +1010,7 @@ func TestCache_WithHandlerErr(t *testing.T) {
 	rc := routeConfig{
 		path: "/",
 		age:  Age{Min: 10 * time.Second, Max: 10 * time.Second},
-		hnd: func(now int64, key string) *response {
+		hnd: func(_ int64, _ string) *response {
 			return &response{
 				Err: hndErr,
 			}
@@ -1587,7 +1587,7 @@ func assertCache(t *testing.T, args [][]testArgs) {
 	// create a test request handler
 	// that returns the current time instant times '10' multiplied by the VALUE parameter in the request
 	exec := func(request requestParams) func(now int64, key string) *response {
-		return func(now int64, key string) *response {
+		return func(now int64, _ string) *response {
 			i, err := strconv.Atoi(strings.Split(request.query, "=")[1])
 			if err != nil {
 				return &response{

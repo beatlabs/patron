@@ -1,4 +1,4 @@
-package httprouter
+package router
 
 import (
 	"net/http"
@@ -20,7 +20,7 @@ func TestNewFileServerRoute(t *testing.T) {
 		expectedErr string
 	}{
 		"success": {args: args{
-			path:         "/frontend/*path",
+			path:         "GET /frontend/*path",
 			assetsDir:    "testdata/",
 			fallbackPath: "testdata/index.html",
 		}},
@@ -50,8 +50,7 @@ func TestNewFileServerRoute(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, got)
-				assert.Equal(t, "/frontend/*path", got.Path())
-				assert.Equal(t, http.MethodGet, got.Method())
+				assert.Equal(t, "GET /frontend/*path", got.Path())
 				assert.NotNil(t, got.Handler())
 				assert.Len(t, got.Middlewares(), 0)
 			}
@@ -60,7 +59,7 @@ func TestNewFileServerRoute(t *testing.T) {
 }
 
 func TestFileServerRouteHandler(t *testing.T) {
-	handler, err := NewFileServerRoute("/frontend/*path", "testdata/", "testdata/index.html")
+	handler, err := NewFileServerRoute("GET /frontend/*path", "testdata/", "testdata/index.html")
 	require.NoError(t, err)
 
 	type args struct {

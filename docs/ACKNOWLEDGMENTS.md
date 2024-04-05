@@ -2,7 +2,7 @@
 
 The framework makes primarily use of the following OSS projects:
 
-* [github.com/Shopify/sarama](https://github.com/Shopify/sarama)
+* [github.com/IBM/sarama](github.com/IBM/sarama)
 * [github.com/julienschmidt/httprouter](https://github.com/julienschmidt/httprouter)
 * [github.com/opentracing/opentracing-go](https://github.com/opentracing/opentracing-go)
 * [github.com/prometheus/client_golang](https://github.com/prometheus/client_golang)
@@ -18,4 +18,4 @@ The framework makes primarily use of the following OSS projects:
 * [github.com/eclipse/paho.golang](https://github.com/eclipse/paho.golang)
 * [google.golang.org/grpc](https://google.golang.org/grpc)
 * [google.golang.org/protobuf](https://google.golang.org/protobuf)
-* [github.com/eclipse/paho.golang](https://github.com/eclipse/paho.golang)
+* [go.mongodb.org/mongo-driver](go.mongodb.org/mongo-driver)

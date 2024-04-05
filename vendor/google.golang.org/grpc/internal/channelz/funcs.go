@@ -143,21 +143,20 @@ func RegisterChannel(parent *Channel, target string) *Channel {
 // Returns a unique channelz identifier assigned to this subChannel.
 //
 // If channelz is not turned ON, the channelz database is not mutated.
-func RegisterSubChannel(parent *Channel, ref string) *SubChannel {
+func RegisterSubChannel(pid int64, ref string) *SubChannel {
 	id := IDGen.genID()
-	sc := &SubChannel{
-		ID:      id,
-		RefName: ref,
-		parent:  parent,
-	}
-
 	if !IsOn() {
-		return sc
+		return &SubChannel{ID: id}
 	}
 
-	sc.sockets = make(map[int64]string)
-	sc.trace = &ChannelTrace{CreationTime: time.Now(), Events: make([]*traceEvent, 0, getMaxTraceEntry())}
-	db.addSubChannel(id, sc, parent.ID)
+	sc := &SubChannel{
+		RefName: ref,
+		ID:      id,
+		sockets: make(map[int64]string),
+		parent:  db.getChannel(pid),
+		trace:   &ChannelTrace{CreationTime: time.Now(), Events: make([]*traceEvent, 0, getMaxTraceEntry())},
+	}
+	db.addSubChannel(id, sc, pid)
 	return sc
 }
 

@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
+	"google.golang.org/grpc"
 )
 
 var meter metric.Meter
@@ -16,11 +17,11 @@ func Meter() metric.Meter {
 	return meter
 }
 
-func setupMeter(ctx context.Context, name string, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
+func setupMeter(ctx context.Context, name string, res *resource.Resource, conn *grpc.ClientConn) (*sdkmetric.MeterProvider, error) {
 	// Create a meter provider.
 	// You can pass this instance directly to your instrumented code if it
 	// accepts a MeterProvider instance.
-	meterProvider, err := newMeterProvider(ctx, res)
+	meterProvider, err := newMeterProvider(ctx, res, conn)
 	if err != nil {
 		return nil, err
 	}
@@ -37,9 +38,9 @@ func setupMeter(ctx context.Context, name string, res *resource.Resource) (*sdkm
 	return meterProvider, nil
 }
 
-func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
+func newMeterProvider(ctx context.Context, res *resource.Resource, conn *grpc.ClientConn) (*sdkmetric.MeterProvider, error) {
 	// TODO: setup options
-	metricExporter, err := otlpmetricgrpc.New(ctx)
+	metricExporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn))
 	if err != nil {
 		return nil, err
 	}

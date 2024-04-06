@@ -24,11 +24,7 @@ func setupTracing(ctx context.Context, name string, res *resource.Resource, conn
 		return nil, err
 	}
 
-	// Create a new tracer provider with a batch span processor and the given exporter.
-	tp, err := newTraceProvider(res, exp)
-	if err != nil {
-		return nil, err
-	}
+	tp := newTraceProvider(res, exp)
 
 	otel.SetTracerProvider(tp)
 
@@ -37,10 +33,10 @@ func setupTracing(ctx context.Context, name string, res *resource.Resource, conn
 	return tp, nil
 }
 
-func newTraceProvider(res *resource.Resource, exp sdktrace.SpanExporter) (*sdktrace.TracerProvider, error) {
+func newTraceProvider(res *resource.Resource, exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
 	return sdktrace.NewTracerProvider(
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithBatcher(exp),
 		sdktrace.WithResource(res),
-	), nil
+	)
 }

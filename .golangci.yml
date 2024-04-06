@@ -30,13 +30,16 @@ linters:
   disable-all: true
   enable:
     - gofmt
+    - gosimple
     - gosec
     - unparam
     - goconst
     - prealloc
     - stylecheck
     - unconvert
+    - unused
     - staticcheck
+    - ineffassign
     - gosec
     - tparallel
     - whitespace

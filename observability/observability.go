@@ -14,12 +14,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type provider struct {
+type Provider struct {
 	mp *metric.MeterProvider
 	tp *trace.TracerProvider
 }
 
-func (p *provider) Shutdown(ctx context.Context) error {
+func (p *Provider) Shutdown(ctx context.Context) error {
 	err := p.mp.ForceFlush(ctx)
 	if err != nil {
 		slog.Error("failed to flush metrics", slog.Any("error", err))
@@ -38,7 +38,7 @@ func (p *provider) Shutdown(ctx context.Context) error {
 }
 
 // Setup initializes OpenTelemetry's traces and metrics.
-func Setup(ctx context.Context, name, version, grpcTarget string, opts ...grpc.DialOption) (*provider, error) {
+func Setup(ctx context.Context, name, version, grpcTarget string, opts ...grpc.DialOption) (*Provider, error) {
 	res, err := createResource(name, version)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func Setup(ctx context.Context, name, version, grpcTarget string, opts ...grpc.D
 	if err != nil {
 		return nil, err
 	}
-	return &provider{
+	return &Provider{
 		mp: metricProvider,
 		tp: traceProvider,
 	}, nil
@@ -74,6 +74,7 @@ func createResource(name, version string) (*resource.Resource, error) {
 func createGRPCConnection(target string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	// Note the use of insecure transport here. TLS is recommended in production.
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	grpc.wi
 	// TODO: configure the connection
 	conn, err := grpc.NewClient(target, opts...)
 	if err != nil {

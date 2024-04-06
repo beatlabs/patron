@@ -4,7 +4,7 @@ package es
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -66,8 +66,8 @@ func (t *tracingInfo) startSpan(req *http.Request) (opentracing.Span, error) {
 
 	var bodyFmt string
 	if req.Body != nil {
-		if rawBody, err := ioutil.ReadAll(req.Body); err == nil {
-			req.Body = ioutil.NopCloser(bytes.NewReader(rawBody))
+		if rawBody, err := io.ReadAll(req.Body); err == nil {
+			req.Body = io.NopCloser(bytes.NewReader(rawBody))
 			bodyFmt = string(rawBody)
 		}
 	}

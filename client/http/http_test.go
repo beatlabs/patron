@@ -6,7 +6,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -97,6 +97,7 @@ func TestTracedClient_Do_Redirect(t *testing.T) {
 	assert.NoError(t, err)
 
 	res, err := c.Do(req)
+	defer assert.NoError(t, res.Body.Close())
 
 	assert.Errorf(t, err, "stop redirects")
 	assert.NotNil(t, res)
@@ -201,7 +202,7 @@ func TestDecompress(t *testing.T) {
 			rsp, err := c.Do(req)
 			assert.Nil(t, err)
 
-			b, err := ioutil.ReadAll(rsp.Body)
+			b, err := io.ReadAll(rsp.Body)
 			assert.Nil(t, err)
 			body := string(b)
 			assert.Equal(t, msg, body)

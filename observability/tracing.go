@@ -39,6 +39,7 @@ func setupTracing(ctx context.Context, name string, res *resource.Resource, conn
 
 func newTraceProvider(res *resource.Resource, exp sdktrace.SpanExporter) (*sdktrace.TracerProvider, error) {
 	return sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithBatcher(exp),
 		sdktrace.WithResource(res),
 	), nil

@@ -38,13 +38,13 @@ func (p *provider) Shutdown(ctx context.Context) error {
 }
 
 // Setup initializes OpenTelemetry's traces and metrics.
-func Setup(ctx context.Context, name, version string) (*provider, error) {
+func Setup(ctx context.Context, name, version, grpcTarget string) (*provider, error) {
 	res, err := createResource(name, version)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := createGRPCConnection()
+	conn, err := createGRPCConnection(grpcTarget)
 	if err != nil {
 		return nil, err
 	}
@@ -71,9 +71,9 @@ func createResource(name, version string) (*resource.Resource, error) {
 		))
 }
 
-func createGRPCConnection() (*grpc.ClientConn, error) {
+func createGRPCConnection(target string) (*grpc.ClientConn, error) {
 	// TODO: configure the connection
-	conn, err := grpc.NewClient("localhost:30080",
+	conn, err := grpc.NewClient(target,
 		// Note the use of insecure transport here. TLS is recommended in production.
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)

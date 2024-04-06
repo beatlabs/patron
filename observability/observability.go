@@ -74,7 +74,6 @@ func createResource(name, version string) (*resource.Resource, error) {
 func createGRPCConnection(target string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	// Note the use of insecure transport here. TLS is recommended in production.
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	grpc.wi
 	// TODO: configure the connection
 	conn, err := grpc.NewClient(target, opts...)
 	if err != nil {

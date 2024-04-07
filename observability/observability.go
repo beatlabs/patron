@@ -3,7 +3,6 @@ package observability
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -11,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Provider struct {
@@ -19,6 +17,7 @@ type Provider struct {
 	tp *trace.TracerProvider
 }
 
+// Shutdown flushes and shuts down the metrics and traces.
 func (p *Provider) Shutdown(ctx context.Context) error {
 	err := p.mp.ForceFlush(ctx)
 	if err != nil {
@@ -38,13 +37,8 @@ func (p *Provider) Shutdown(ctx context.Context) error {
 }
 
 // Setup initializes OpenTelemetry's traces and metrics.
-func Setup(ctx context.Context, name, version, grpcTarget string, opts ...grpc.DialOption) (*Provider, error) {
+func Setup(ctx context.Context, name, version string, conn *grpc.ClientConn) (*Provider, error) {
 	res, err := createResource(name, version)
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err := createGRPCConnection(grpcTarget, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,15 +63,4 @@ func createResource(name, version string) (*resource.Resource, error) {
 			semconv.ServiceName(name),
 			semconv.ServiceVersion(version),
 		))
-}
-
-func createGRPCConnection(target string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
-	// Note the use of insecure transport here. TLS is recommended in production.
-	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	// TODO: configure the connection
-	conn, err := grpc.NewClient(target, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
-	}
-	return conn, nil
 }

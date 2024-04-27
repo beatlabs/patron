@@ -10,9 +10,9 @@ import (
 func TestNew(t *testing.T) {
 	tests := []struct {
 		name    string
+		err     string
 		size    int
 		wantErr bool
-		err     string
 	}{
 		{name: "negative size", size: -1, wantErr: true, err: "must provide a positive size"},
 		{name: "zero size", size: 0, wantErr: true, err: "must provide a positive size"},

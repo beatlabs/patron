@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // RollupJobStatus type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/rollup/get_jobs/types.ts#L60-L64
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/rollup/get_jobs/types.ts#L60-L64
 type RollupJobStatus struct {
 	CurrentPosition map[string]json.RawMessage        `json:"current_position,omitempty"`
 	JobState        indexingjobstate.IndexingJobState `json:"job_state"`
@@ -59,12 +60,12 @@ func (s *RollupJobStatus) UnmarshalJSON(data []byte) error {
 				s.CurrentPosition = make(map[string]json.RawMessage, 0)
 			}
 			if err := dec.Decode(&s.CurrentPosition); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "CurrentPosition", err)
 			}
 
 		case "job_state":
 			if err := dec.Decode(&s.JobState); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "JobState", err)
 			}
 
 		case "upgraded_doc_id":
@@ -74,7 +75,7 @@ func (s *RollupJobStatus) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "UpgradedDocId", err)
 				}
 				s.UpgradedDocId = &value
 			case bool:

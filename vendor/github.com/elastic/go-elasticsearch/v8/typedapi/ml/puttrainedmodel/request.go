@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package puttrainedmodel
 
@@ -30,7 +30,7 @@ import (
 
 // Request holds the request body struct for the package puttrainedmodel
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/put_trained_model/MlPutTrainedModelRequest.ts#L28-L106
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/put_trained_model/MlPutTrainedModelRequest.ts#L29-L124
 type Request struct {
 
 	// CompressedDefinition The compressed (GZipped and Base64 encoded) inference definition of the
@@ -68,6 +68,8 @@ type Request struct {
 	// processor
 	// architecture or OS features), leave this field unset.
 	PlatformArchitecture *string `json:"platform_architecture,omitempty"`
+	// PrefixStrings Optional prefix strings applied at inference
+	PrefixStrings *types.TrainedModelPrefixStrings `json:"prefix_strings,omitempty"`
 	// Tags An array of tags to organize the model.
 	Tags []string `json:"tags,omitempty"`
 }

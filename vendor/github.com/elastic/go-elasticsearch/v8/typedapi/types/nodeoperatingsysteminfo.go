@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // NodeOperatingSystemInfo type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/nodes/info/types.ts#L367-L384
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/info/types.ts#L372-L389
 type NodeOperatingSystemInfo struct {
 	// AllocatedProcessors The number of processors actually used to calculate thread pool size. This
 	// number can be set with the node.processors setting of a node and defaults to
@@ -75,7 +76,7 @@ func (s *NodeOperatingSystemInfo) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AllocatedProcessors", err)
 				}
 				s.AllocatedProcessors = &value
 			case float64:
@@ -86,7 +87,7 @@ func (s *NodeOperatingSystemInfo) UnmarshalJSON(data []byte) error {
 		case "arch":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Arch", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -103,7 +104,7 @@ func (s *NodeOperatingSystemInfo) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AvailableProcessors", err)
 				}
 				s.AvailableProcessors = value
 			case float64:
@@ -113,37 +114,37 @@ func (s *NodeOperatingSystemInfo) UnmarshalJSON(data []byte) error {
 
 		case "cpu":
 			if err := dec.Decode(&s.Cpu); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Cpu", err)
 			}
 
 		case "mem":
 			if err := dec.Decode(&s.Mem); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Mem", err)
 			}
 
 		case "name":
 			if err := dec.Decode(&s.Name); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 
 		case "pretty_name":
 			if err := dec.Decode(&s.PrettyName); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "PrettyName", err)
 			}
 
 		case "refresh_interval_in_millis":
 			if err := dec.Decode(&s.RefreshIntervalInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RefreshIntervalInMillis", err)
 			}
 
 		case "swap":
 			if err := dec.Decode(&s.Swap); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Swap", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

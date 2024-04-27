@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // OperatingSystem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/nodes/_types/Stats.ts#L945-L951
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/Stats.ts#L945-L951
 type OperatingSystem struct {
 	Cgroup    *Cgroup              `json:"cgroup,omitempty"`
 	Cpu       *Cpu                 `json:"cpu,omitempty"`
@@ -56,22 +57,22 @@ func (s *OperatingSystem) UnmarshalJSON(data []byte) error {
 
 		case "cgroup":
 			if err := dec.Decode(&s.Cgroup); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Cgroup", err)
 			}
 
 		case "cpu":
 			if err := dec.Decode(&s.Cpu); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Cpu", err)
 			}
 
 		case "mem":
 			if err := dec.Decode(&s.Mem); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Mem", err)
 			}
 
 		case "swap":
 			if err := dec.Decode(&s.Swap); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Swap", err)
 			}
 
 		case "timestamp":
@@ -81,7 +82,7 @@ func (s *OperatingSystem) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Timestamp", err)
 				}
 				s.Timestamp = &value
 			case float64:

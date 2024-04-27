@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package putmodel
 
@@ -26,5 +26,12 @@ import (
 
 // Request holds the request body struct for the package putmodel
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/inference/put_model/PutModelRequest.ts#L25-L44
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/inference/put_model/PutModelRequest.ts#L25-L44
 type Request = types.ModelConfig
+
+// NewRequest returns a Request
+func NewRequest() *Request {
+	r := types.NewModelConfig()
+
+	return r
+}

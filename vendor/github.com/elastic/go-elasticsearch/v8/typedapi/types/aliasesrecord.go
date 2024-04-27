@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // AliasesRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/cat/aliases/types.ts#L22-L53
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cat/aliases/types.ts#L22-L53
 type AliasesRecord struct {
 	// Alias alias name
 	Alias *string `json:"alias,omitempty"`
@@ -64,7 +65,7 @@ func (s *AliasesRecord) UnmarshalJSON(data []byte) error {
 		case "alias", "a":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Alias", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -76,7 +77,7 @@ func (s *AliasesRecord) UnmarshalJSON(data []byte) error {
 		case "filter", "f", "fi":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Filter", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -87,13 +88,13 @@ func (s *AliasesRecord) UnmarshalJSON(data []byte) error {
 
 		case "index", "i", "idx":
 			if err := dec.Decode(&s.Index); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Index", err)
 			}
 
 		case "is_write_index", "w", "isWriteIndex":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IsWriteIndex", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -105,7 +106,7 @@ func (s *AliasesRecord) UnmarshalJSON(data []byte) error {
 		case "routing.index", "ri", "routingIndex":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RoutingIndex", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -117,7 +118,7 @@ func (s *AliasesRecord) UnmarshalJSON(data []byte) error {
 		case "routing.search", "rs", "routingSearch":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RoutingSearch", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

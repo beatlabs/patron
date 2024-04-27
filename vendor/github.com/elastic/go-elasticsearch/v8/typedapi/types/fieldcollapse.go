@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // FieldCollapse type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/search/_types/FieldCollapse.ts#L24-L38
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/search/_types/FieldCollapse.ts#L24-L38
 type FieldCollapse struct {
 	Collapse *FieldCollapse `json:"collapse,omitempty"`
 	// Field The field to collapse the result set on
@@ -59,12 +60,12 @@ func (s *FieldCollapse) UnmarshalJSON(data []byte) error {
 
 		case "collapse":
 			if err := dec.Decode(&s.Collapse); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Collapse", err)
 			}
 
 		case "field":
 			if err := dec.Decode(&s.Field); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Field", err)
 			}
 
 		case "inner_hits":
@@ -73,13 +74,13 @@ func (s *FieldCollapse) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := NewInnerHits()
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "InnerHits", err)
 				}
 
 				s.InnerHits = append(s.InnerHits, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.InnerHits); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "InnerHits", err)
 				}
 			}
 
@@ -91,7 +92,7 @@ func (s *FieldCollapse) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MaxConcurrentGroupSearches", err)
 				}
 				s.MaxConcurrentGroupSearches = &value
 			case float64:

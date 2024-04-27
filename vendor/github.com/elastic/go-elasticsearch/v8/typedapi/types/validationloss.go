@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ValidationLoss type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/DataframeAnalytics.ts#L570-L575
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/DataframeAnalytics.ts#L570-L575
 type ValidationLoss struct {
 	// FoldValues Validation loss values for every added decision tree during the forest
 	// growing procedure.
@@ -56,13 +57,13 @@ func (s *ValidationLoss) UnmarshalJSON(data []byte) error {
 
 		case "fold_values":
 			if err := dec.Decode(&s.FoldValues); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FoldValues", err)
 			}
 
 		case "loss_type":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "LossType", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

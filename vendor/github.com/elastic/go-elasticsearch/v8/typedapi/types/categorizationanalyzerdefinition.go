@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // CategorizationAnalyzerDefinition type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/Analysis.ts#L184-L197
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/Analysis.ts#L184-L197
 type CategorizationAnalyzerDefinition struct {
 	// CharFilter One or more character filters. In addition to the built-in character filters,
 	// other plugins can provide more character filters. If this property is not
@@ -132,7 +133,7 @@ func (s *CategorizationAnalyzerDefinition) UnmarshalJSON(data []byte) error {
 					source := bytes.NewReader(rawMsg)
 					o := new(interface{})
 					if err := json.NewDecoder(source).Decode(&o); err != nil {
-						return err
+						return fmt.Errorf("%s | %w", "CharFilter", err)
 					}
 					s.CharFilter = append(s.CharFilter, *o)
 				}
@@ -454,7 +455,7 @@ func (s *CategorizationAnalyzerDefinition) UnmarshalJSON(data []byte) error {
 					source := bytes.NewReader(rawMsg)
 					o := new(interface{})
 					if err := json.NewDecoder(source).Decode(&o); err != nil {
-						return err
+						return fmt.Errorf("%s | %w", "Filter", err)
 					}
 					s.Filter = append(s.Filter, *o)
 				}
@@ -566,7 +567,7 @@ func (s *CategorizationAnalyzerDefinition) UnmarshalJSON(data []byte) error {
 				}
 			default:
 				if err := localDec.Decode(&s.Tokenizer); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Tokenizer", err)
 				}
 			}
 

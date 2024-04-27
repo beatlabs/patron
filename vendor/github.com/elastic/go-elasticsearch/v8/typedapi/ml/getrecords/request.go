@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package getrecords
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package getrecords
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/get_records/MlGetAnomalyRecordsRequest.ts#L26-L127
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/get_records/MlGetAnomalyRecordsRequest.ts#L26-L127
 type Request struct {
 
 	// Desc Refer to the description for the `desc` query parameter.
@@ -90,7 +90,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Desc", err)
 				}
 				s.Desc = &value
 			case bool:
@@ -99,7 +99,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "end":
 			if err := dec.Decode(&s.End); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "End", err)
 			}
 
 		case "exclude_interim":
@@ -109,7 +109,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "ExcludeInterim", err)
 				}
 				s.ExcludeInterim = &value
 			case bool:
@@ -118,7 +118,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "page":
 			if err := dec.Decode(&s.Page); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Page", err)
 			}
 
 		case "record_score":
@@ -128,7 +128,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "RecordScore", err)
 				}
 				f := types.Float64(value)
 				s.RecordScore = &f
@@ -139,12 +139,12 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "sort":
 			if err := dec.Decode(&s.Sort); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Sort", err)
 			}
 
 		case "start":
 			if err := dec.Decode(&s.Start); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Start", err)
 			}
 
 		}

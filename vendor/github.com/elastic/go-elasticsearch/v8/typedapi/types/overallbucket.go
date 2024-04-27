@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // OverallBucket type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/Bucket.ts#L130-L145
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/Bucket.ts#L130-L145
 type OverallBucket struct {
 	// BucketSpan The length of the bucket in seconds. Matches the job with the longest
 	// bucket_span value.
@@ -67,7 +68,7 @@ func (s *OverallBucket) UnmarshalJSON(data []byte) error {
 
 		case "bucket_span":
 			if err := dec.Decode(&s.BucketSpan); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "BucketSpan", err)
 			}
 
 		case "is_interim":
@@ -77,7 +78,7 @@ func (s *OverallBucket) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IsInterim", err)
 				}
 				s.IsInterim = value
 			case bool:
@@ -86,7 +87,7 @@ func (s *OverallBucket) UnmarshalJSON(data []byte) error {
 
 		case "jobs":
 			if err := dec.Decode(&s.Jobs); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Jobs", err)
 			}
 
 		case "overall_score":
@@ -96,7 +97,7 @@ func (s *OverallBucket) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "OverallScore", err)
 				}
 				f := Float64(value)
 				s.OverallScore = f
@@ -108,7 +109,7 @@ func (s *OverallBucket) UnmarshalJSON(data []byte) error {
 		case "result_type":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ResultType", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -119,12 +120,12 @@ func (s *OverallBucket) UnmarshalJSON(data []byte) error {
 
 		case "timestamp":
 			if err := dec.Decode(&s.Timestamp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Timestamp", err)
 			}
 
 		case "timestamp_string":
 			if err := dec.Decode(&s.TimestampString); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TimestampString", err)
 			}
 
 		}

@@ -16,21 +16,18 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package putsynonymrule
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 )
 
 // Request holds the request body struct for the package putsynonymrule
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/synonyms/put_synonym_rule/SynonymRulePutRequest.ts#L23-L47
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/synonyms/put_synonym_rule/SynonymRulePutRequest.ts#L23-L47
 type Request struct {
 	Synonyms string `json:"synonyms"`
 }
@@ -51,28 +48,4 @@ func (r *Request) FromJSON(data string) (*Request, error) {
 	}
 
 	return &req, nil
-}
-
-func (s *Request) UnmarshalJSON(data []byte) error {
-	dec := json.NewDecoder(bytes.NewReader(data))
-
-	for {
-		t, err := dec.Token()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return err
-		}
-
-		switch t {
-
-		case "synonyms":
-			if err := dec.Decode(&s.Synonyms); err != nil {
-				return err
-			}
-
-		}
-	}
-	return nil
 }

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // GeoShapeQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/geo.ts#L121-L131
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/geo.ts#L121-L131
 type GeoShapeQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -39,7 +39,7 @@ type GeoShapeQuery struct {
 	// A boost value between 0 and 1.0 decreases the relevance score.
 	// A value greater than 1.0 increases the relevance score.
 	Boost         *float32                      `json:"boost,omitempty"`
-	GeoShapeQuery map[string]GeoShapeFieldQuery `json:"GeoShapeQuery,omitempty"`
+	GeoShapeQuery map[string]GeoShapeFieldQuery `json:"-"`
 	// IgnoreUnmapped Set to `true` to ignore an unmapped field and not match any documents for
 	// this query.
 	// Set to `false` to throw an exception if the field is not mapped.
@@ -69,21 +69,13 @@ func (s *GeoShapeQuery) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 32)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Boost", err)
 				}
 				f := float32(value)
 				s.Boost = &f
 			case float64:
 				f := float32(v)
 				s.Boost = &f
-			}
-
-		case "GeoShapeQuery":
-			if s.GeoShapeQuery == nil {
-				s.GeoShapeQuery = make(map[string]GeoShapeFieldQuery, 0)
-			}
-			if err := dec.Decode(&s.GeoShapeQuery); err != nil {
-				return err
 			}
 
 		case "ignore_unmapped":
@@ -93,7 +85,7 @@ func (s *GeoShapeQuery) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IgnoreUnmapped", err)
 				}
 				s.IgnoreUnmapped = &value
 			case bool:
@@ -103,7 +95,7 @@ func (s *GeoShapeQuery) UnmarshalJSON(data []byte) error {
 		case "_name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "QueryName_", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -113,6 +105,17 @@ func (s *GeoShapeQuery) UnmarshalJSON(data []byte) error {
 			s.QueryName_ = &o
 
 		default:
+
+			if key, ok := t.(string); ok {
+				if s.GeoShapeQuery == nil {
+					s.GeoShapeQuery = make(map[string]GeoShapeFieldQuery, 0)
+				}
+				raw := NewGeoShapeFieldQuery()
+				if err := dec.Decode(&raw); err != nil {
+					return fmt.Errorf("%s | %w", "GeoShapeQuery", err)
+				}
+				s.GeoShapeQuery[key] = *raw
+			}
 
 		}
 	}

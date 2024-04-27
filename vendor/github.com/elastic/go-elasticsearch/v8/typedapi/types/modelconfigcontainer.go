@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // ModelConfigContainer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/inference/_types/Services.ts#L41-L53
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/inference/_types/Services.ts#L41-L53
 type ModelConfigContainer struct {
 	// ModelId The model Id
 	ModelId string `json:"model_id"`
@@ -64,7 +65,7 @@ func (s *ModelConfigContainer) UnmarshalJSON(data []byte) error {
 		case "model_id":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ModelId", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -76,7 +77,7 @@ func (s *ModelConfigContainer) UnmarshalJSON(data []byte) error {
 		case "service":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Service", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -87,17 +88,17 @@ func (s *ModelConfigContainer) UnmarshalJSON(data []byte) error {
 
 		case "service_settings":
 			if err := dec.Decode(&s.ServiceSettings); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ServiceSettings", err)
 			}
 
 		case "task_settings":
 			if err := dec.Decode(&s.TaskSettings); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TaskSettings", err)
 			}
 
 		case "task_type":
 			if err := dec.Decode(&s.TaskType); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TaskType", err)
 			}
 
 		}

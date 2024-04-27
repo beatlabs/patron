@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package mount
 
@@ -30,7 +30,7 @@ import (
 
 // Request holds the request body struct for the package mount
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/searchable_snapshots/mount/SearchableSnapshotsMountRequest.ts#L26-L49
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/searchable_snapshots/mount/SearchableSnapshotsMountRequest.ts#L26-L49
 type Request struct {
 	IgnoreIndexSettings []string                   `json:"ignore_index_settings,omitempty"`
 	Index               string                     `json:"index"`
@@ -74,12 +74,12 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "ignore_index_settings":
 			if err := dec.Decode(&s.IgnoreIndexSettings); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IgnoreIndexSettings", err)
 			}
 
 		case "index":
 			if err := dec.Decode(&s.Index); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Index", err)
 			}
 
 		case "index_settings":
@@ -87,12 +87,12 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 				s.IndexSettings = make(map[string]json.RawMessage, 0)
 			}
 			if err := dec.Decode(&s.IndexSettings); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IndexSettings", err)
 			}
 
 		case "renamed_index":
 			if err := dec.Decode(&s.RenamedIndex); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RenamedIndex", err)
 			}
 
 		}

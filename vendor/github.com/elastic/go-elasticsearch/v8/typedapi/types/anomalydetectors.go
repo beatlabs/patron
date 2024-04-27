@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // AnomalyDetectors type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/info/types.ts#L44-L50
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/info/types.ts#L44-L50
 type AnomalyDetectors struct {
 	CategorizationAnalyzer               CategorizationAnalyzer `json:"categorization_analyzer"`
 	CategorizationExamplesLimit          int                    `json:"categorization_examples_limit"`
@@ -70,7 +71,7 @@ func (s *AnomalyDetectors) UnmarshalJSON(data []byte) error {
 
 			default:
 				if err := localDec.Decode(&s.CategorizationAnalyzer); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "CategorizationAnalyzer", err)
 				}
 			}
 
@@ -82,7 +83,7 @@ func (s *AnomalyDetectors) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "CategorizationExamplesLimit", err)
 				}
 				s.CategorizationExamplesLimit = value
 			case float64:
@@ -98,7 +99,7 @@ func (s *AnomalyDetectors) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DailyModelSnapshotRetentionAfterDays", err)
 				}
 				s.DailyModelSnapshotRetentionAfterDays = value
 			case float64:
@@ -109,7 +110,7 @@ func (s *AnomalyDetectors) UnmarshalJSON(data []byte) error {
 		case "model_memory_limit":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ModelMemoryLimit", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -126,7 +127,7 @@ func (s *AnomalyDetectors) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "ModelSnapshotRetentionDays", err)
 				}
 				s.ModelSnapshotRetentionDays = value
 			case float64:

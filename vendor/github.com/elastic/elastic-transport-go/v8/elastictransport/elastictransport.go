@@ -88,6 +88,8 @@ type Config struct {
 
 	CompressRequestBody      bool
 	CompressRequestBodyLevel int
+	// If PoolCompressor is true, a sync.Pool based gzip writer is used. Should be enabled with CompressRequestBody.
+	PoolCompressor bool
 
 	EnableMetrics     bool
 	EnableDebugLogger bool
@@ -131,6 +133,7 @@ type Client struct {
 
 	compressRequestBody      bool
 	compressRequestBodyLevel int
+	gzipCompressor           gzipCompressor
 
 	instrumentation Instrumentation
 
@@ -269,6 +272,12 @@ func New(cfg Config) (*Client, error) {
 		client.compressRequestBodyLevel = gzip.DefaultCompression
 	}
 
+	if cfg.PoolCompressor {
+		client.gzipCompressor = newPooledGzipCompressor(client.compressRequestBodyLevel)
+	} else {
+		client.gzipCompressor = newSimpleGzipCompressor(client.compressRequestBodyLevel)
+	}
+
 	return &client, nil
 }
 
@@ -292,22 +301,14 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 
 	if req.Body != nil && req.Body != http.NoBody {
 		if c.compressRequestBody {
-			var buf bytes.Buffer
-			zw, err := gzip.NewWriterLevel(&buf, c.compressRequestBodyLevel)
+			buf, err := c.gzipCompressor.compress(req.Body)
 			if err != nil {
-				fmt.Errorf("failed setting up up compress request body (level %d): %s",
-					c.compressRequestBodyLevel, err)
+				return nil, err
 			}
-			if _, err = io.Copy(zw, req.Body); err != nil {
-				return nil, fmt.Errorf("failed to compress request body: %s", err)
-			}
-			if err = zw.Close(); err != nil {
-				return nil, fmt.Errorf("failed to compress request body (during close): %s", err)
-			}
+			defer c.gzipCompressor.collectBuffer(buf)
 
 			req.GetBody = func() (io.ReadCloser, error) {
-				r := buf
-				return ioutil.NopCloser(&r), nil
+				return ioutil.NopCloser(buf), nil
 			}
 			req.Body, _ = req.GetBody()
 

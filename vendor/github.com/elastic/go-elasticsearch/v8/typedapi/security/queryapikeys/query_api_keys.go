@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 // Retrieves information for API keys using a subset of query DSL
 package queryapikeys
@@ -247,6 +247,8 @@ func (r QueryApiKeys) Do(providedCtx context.Context) (*Response, error) {
 
 	response := NewResponse()
 
+	r.TypedKeys(true)
+
 	res, err := r.Perform(ctx)
 	if err != nil {
 		if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
@@ -305,6 +307,31 @@ func (r *QueryApiKeys) WithLimitedBy(withlimitedby bool) *QueryApiKeys {
 	return r
 }
 
+// TypedKeys Determines whether aggregation names are prefixed by their respective types
+// in the response.
+// API name: typed_keys
+func (r *QueryApiKeys) TypedKeys(typedkeys bool) *QueryApiKeys {
+	r.values.Set("typed_keys", strconv.FormatBool(typedkeys))
+
+	return r
+}
+
+// Aggregations Any aggregations to run over the corpus of returned API keys.
+// Aggregations and queries work together. Aggregations are computed only on the
+// API keys that match the query.
+// This supports only a subset of aggregation types, namely: `terms`, `range`,
+// `date_range`, `missing`,
+// `cardinality`, `value_count`, `composite`, `filter`, and `filters`.
+// Additionally, aggregations only run over the same subset of fields that query
+// works with.
+// API name: aggregations
+func (r *QueryApiKeys) Aggregations(aggregations map[string]types.ApiKeyAggregationContainer) *QueryApiKeys {
+
+	r.req.Aggregations = aggregations
+
+	return r
+}
+
 // From Starting document offset.
 // By default, you cannot page through more than 10,000 hits using the from and
 // size parameters.
@@ -317,11 +344,16 @@ func (r *QueryApiKeys) From(from int) *QueryApiKeys {
 }
 
 // Query A query to filter which API keys to return.
+// If the query parameter is missing, it is equivalent to a `match_all` query.
 // The query supports a subset of query types, including `match_all`, `bool`,
-// `term`, `terms`, `ids`, `prefix`, `wildcard`, and `range`.
-// You can query all public information associated with an API key.
+// `term`, `terms`, `match`,
+// `ids`, `prefix`, `wildcard`, `exists`, `range`, and `simple_query_string`.
+// You can query the following public information associated with an API key:
+// `id`, `type`, `name`,
+// `creation`, `expiration`, `invalidated`, `invalidation`, `username`, `realm`,
+// and `metadata`.
 // API name: query
-func (r *QueryApiKeys) Query(query *types.Query) *QueryApiKeys {
+func (r *QueryApiKeys) Query(query *types.ApiKeyQueryContainer) *QueryApiKeys {
 
 	r.req.Query = query
 

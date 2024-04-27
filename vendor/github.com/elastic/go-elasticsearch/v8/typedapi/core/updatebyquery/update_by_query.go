@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
-// Performs an update on every document in the index without changing the
+// Updates documents that match the specified query. If no query is specified,
+//
+//	performs an update on every document in the index without changing the
+//
 // source,
 // for example to pick up a mapping change.
 package updatebyquery
@@ -87,7 +90,10 @@ func NewUpdateByQueryFunc(tp elastictransport.Interface) NewUpdateByQuery {
 	}
 }
 
-// Performs an update on every document in the index without changing the
+// Updates documents that match the specified query. If no query is specified,
+//
+//	performs an update on every document in the index without changing the
+//
 // source,
 // for example to pick up a mapping change.
 //

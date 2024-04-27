@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // DataframeAnalysisOutlierDetection type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/DataframeAnalytics.ts#L103-L132
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/DataframeAnalytics.ts#L103-L132
 type DataframeAnalysisOutlierDetection struct {
 	// ComputeFeatureInfluence Specifies whether the feature influence calculation is enabled.
 	ComputeFeatureInfluence *bool `json:"compute_feature_influence,omitempty"`
@@ -80,7 +81,7 @@ func (s *DataframeAnalysisOutlierDetection) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "ComputeFeatureInfluence", err)
 				}
 				s.ComputeFeatureInfluence = &value
 			case bool:
@@ -94,7 +95,7 @@ func (s *DataframeAnalysisOutlierDetection) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "FeatureInfluenceThreshold", err)
 				}
 				f := Float64(value)
 				s.FeatureInfluenceThreshold = &f
@@ -106,7 +107,7 @@ func (s *DataframeAnalysisOutlierDetection) UnmarshalJSON(data []byte) error {
 		case "method":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Method", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -123,7 +124,7 @@ func (s *DataframeAnalysisOutlierDetection) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NNeighbors", err)
 				}
 				s.NNeighbors = &value
 			case float64:
@@ -138,7 +139,7 @@ func (s *DataframeAnalysisOutlierDetection) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "OutlierFraction", err)
 				}
 				f := Float64(value)
 				s.OutlierFraction = &f
@@ -154,7 +155,7 @@ func (s *DataframeAnalysisOutlierDetection) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "StandardizationEnabled", err)
 				}
 				s.StandardizationEnabled = &value
 			case bool:

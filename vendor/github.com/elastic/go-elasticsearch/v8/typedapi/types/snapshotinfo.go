@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // SnapshotInfo type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/snapshot/_types/SnapshotInfo.ts#L41-L71
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/snapshot/_types/SnapshotInfo.ts#L41-L71
 type SnapshotInfo struct {
 	DataStreams        []string                `json:"data_streams"`
 	Duration           Duration                `json:"duration,omitempty"`
@@ -72,37 +73,37 @@ func (s *SnapshotInfo) UnmarshalJSON(data []byte) error {
 
 		case "data_streams":
 			if err := dec.Decode(&s.DataStreams); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "DataStreams", err)
 			}
 
 		case "duration":
 			if err := dec.Decode(&s.Duration); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Duration", err)
 			}
 
 		case "duration_in_millis":
 			if err := dec.Decode(&s.DurationInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "DurationInMillis", err)
 			}
 
 		case "end_time":
 			if err := dec.Decode(&s.EndTime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "EndTime", err)
 			}
 
 		case "end_time_in_millis":
 			if err := dec.Decode(&s.EndTimeInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "EndTimeInMillis", err)
 			}
 
 		case "failures":
 			if err := dec.Decode(&s.Failures); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Failures", err)
 			}
 
 		case "feature_states":
 			if err := dec.Decode(&s.FeatureStates); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FeatureStates", err)
 			}
 
 		case "include_global_state":
@@ -112,7 +113,7 @@ func (s *SnapshotInfo) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IncludeGlobalState", err)
 				}
 				s.IncludeGlobalState = &value
 			case bool:
@@ -124,23 +125,23 @@ func (s *SnapshotInfo) UnmarshalJSON(data []byte) error {
 				s.IndexDetails = make(map[string]IndexDetails, 0)
 			}
 			if err := dec.Decode(&s.IndexDetails); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IndexDetails", err)
 			}
 
 		case "indices":
 			if err := dec.Decode(&s.Indices); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Indices", err)
 			}
 
 		case "metadata":
 			if err := dec.Decode(&s.Metadata); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Metadata", err)
 			}
 
 		case "reason":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Reason", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -151,33 +152,33 @@ func (s *SnapshotInfo) UnmarshalJSON(data []byte) error {
 
 		case "repository":
 			if err := dec.Decode(&s.Repository); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Repository", err)
 			}
 
 		case "shards":
 			if err := dec.Decode(&s.Shards); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Shards", err)
 			}
 
 		case "snapshot":
 			if err := dec.Decode(&s.Snapshot); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Snapshot", err)
 			}
 
 		case "start_time":
 			if err := dec.Decode(&s.StartTime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "StartTime", err)
 			}
 
 		case "start_time_in_millis":
 			if err := dec.Decode(&s.StartTimeInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "StartTimeInMillis", err)
 			}
 
 		case "state":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "State", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -188,17 +189,17 @@ func (s *SnapshotInfo) UnmarshalJSON(data []byte) error {
 
 		case "uuid":
 			if err := dec.Decode(&s.Uuid); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Uuid", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		case "version_id":
 			if err := dec.Decode(&s.VersionId); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "VersionId", err)
 			}
 
 		}

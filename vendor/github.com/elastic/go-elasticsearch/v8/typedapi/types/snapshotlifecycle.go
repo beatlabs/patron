@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // SnapshotLifecycle type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/slm/_types/SnapshotLifecycle.ts#L38-L49
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/slm/_types/SnapshotLifecycle.ts#L38-L49
 type SnapshotLifecycle struct {
 	InProgress          *InProgress `json:"in_progress,omitempty"`
 	LastFailure         *Invocation `json:"last_failure,omitempty"`
@@ -60,52 +61,52 @@ func (s *SnapshotLifecycle) UnmarshalJSON(data []byte) error {
 
 		case "in_progress":
 			if err := dec.Decode(&s.InProgress); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "InProgress", err)
 			}
 
 		case "last_failure":
 			if err := dec.Decode(&s.LastFailure); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "LastFailure", err)
 			}
 
 		case "last_success":
 			if err := dec.Decode(&s.LastSuccess); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "LastSuccess", err)
 			}
 
 		case "modified_date":
 			if err := dec.Decode(&s.ModifiedDate); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ModifiedDate", err)
 			}
 
 		case "modified_date_millis":
 			if err := dec.Decode(&s.ModifiedDateMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ModifiedDateMillis", err)
 			}
 
 		case "next_execution":
 			if err := dec.Decode(&s.NextExecution); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "NextExecution", err)
 			}
 
 		case "next_execution_millis":
 			if err := dec.Decode(&s.NextExecutionMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "NextExecutionMillis", err)
 			}
 
 		case "policy":
 			if err := dec.Decode(&s.Policy); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Policy", err)
 			}
 
 		case "stats":
 			if err := dec.Decode(&s.Stats); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Stats", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package updatetransform
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package updatetransform
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/transform/update_transform/UpdateTransformResponse.ts#L33-L51
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/transform/update_transform/UpdateTransformResponse.ts#L33-L51
 type Response struct {
 	Authorization   *types.TransformAuthorization   `json:"authorization,omitempty"`
 	CreateTime      int64                           `json:"create_time"`

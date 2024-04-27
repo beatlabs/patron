@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // AggregationProfile type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/search/_types/profile.ts#L77-L84
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/search/_types/profile.ts#L77-L84
 type AggregationProfile struct {
 	Breakdown   AggregationBreakdown     `json:"breakdown"`
 	Children    []AggregationProfile     `json:"children,omitempty"`
@@ -57,23 +58,23 @@ func (s *AggregationProfile) UnmarshalJSON(data []byte) error {
 
 		case "breakdown":
 			if err := dec.Decode(&s.Breakdown); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Breakdown", err)
 			}
 
 		case "children":
 			if err := dec.Decode(&s.Children); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Children", err)
 			}
 
 		case "debug":
 			if err := dec.Decode(&s.Debug); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Debug", err)
 			}
 
 		case "description":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Description", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -84,13 +85,13 @@ func (s *AggregationProfile) UnmarshalJSON(data []byte) error {
 
 		case "time_in_nanos":
 			if err := dec.Decode(&s.TimeInNanos); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TimeInNanos", err)
 			}
 
 		case "type":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Type", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

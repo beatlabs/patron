@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // TrainedModelAssignment type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/TrainedModel.ts#L402-L417
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/TrainedModel.ts#L403-L418
 type TrainedModelAssignment struct {
 	// AssignmentState The overall assignment state.
 	AssignmentState        deploymentassignmentstate.DeploymentAssignmentState `json:"assignment_state"`
@@ -61,7 +62,7 @@ func (s *TrainedModelAssignment) UnmarshalJSON(data []byte) error {
 
 		case "assignment_state":
 			if err := dec.Decode(&s.AssignmentState); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "AssignmentState", err)
 			}
 
 		case "max_assigned_allocations":
@@ -72,7 +73,7 @@ func (s *TrainedModelAssignment) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MaxAssignedAllocations", err)
 				}
 				s.MaxAssignedAllocations = &value
 			case float64:
@@ -85,17 +86,17 @@ func (s *TrainedModelAssignment) UnmarshalJSON(data []byte) error {
 				s.RoutingTable = make(map[string]TrainedModelAssignmentRoutingTable, 0)
 			}
 			if err := dec.Decode(&s.RoutingTable); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RoutingTable", err)
 			}
 
 		case "start_time":
 			if err := dec.Decode(&s.StartTime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "StartTime", err)
 			}
 
 		case "task_parameters":
 			if err := dec.Decode(&s.TaskParameters); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TaskParameters", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/translogdurability"
@@ -31,7 +32,7 @@ import (
 
 // Translog type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/_types/IndexSettings.ts#L331-L353
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/_types/IndexSettings.ts#L339-L361
 type Translog struct {
 	// Durability Whether or not to `fsync` and commit the translog after every index, delete,
 	// update, or bulk request.
@@ -71,22 +72,22 @@ func (s *Translog) UnmarshalJSON(data []byte) error {
 
 		case "durability":
 			if err := dec.Decode(&s.Durability); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Durability", err)
 			}
 
 		case "flush_threshold_size":
 			if err := dec.Decode(&s.FlushThresholdSize); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FlushThresholdSize", err)
 			}
 
 		case "retention":
 			if err := dec.Decode(&s.Retention); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Retention", err)
 			}
 
 		case "sync_interval":
 			if err := dec.Decode(&s.SyncInterval); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "SyncInterval", err)
 			}
 
 		}

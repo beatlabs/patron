@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package migratetodatatiers
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // Response holds the response body struct for the package migratetodatatiers
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ilm/migrate_to_data_tiers/Response.ts#L22-L32
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ilm/migrate_to_data_tiers/Response.ts#L22-L32
 type Response struct {
 	DryRun                      bool     `json:"dry_run"`
 	MigratedComponentTemplates  []string `json:"migrated_component_templates"`
@@ -68,7 +69,7 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DryRun", err)
 				}
 				s.DryRun = value
 			case bool:
@@ -77,17 +78,17 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 
 		case "migrated_component_templates":
 			if err := dec.Decode(&s.MigratedComponentTemplates); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MigratedComponentTemplates", err)
 			}
 
 		case "migrated_composable_templates":
 			if err := dec.Decode(&s.MigratedComposableTemplates); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MigratedComposableTemplates", err)
 			}
 
 		case "migrated_ilm_policies":
 			if err := dec.Decode(&s.MigratedIlmPolicies); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MigratedIlmPolicies", err)
 			}
 
 		case "migrated_indices":
@@ -96,25 +97,25 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MigratedIndices", err)
 				}
 
 				s.MigratedIndices = append(s.MigratedIndices, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.MigratedIndices); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MigratedIndices", err)
 				}
 			}
 
 		case "migrated_legacy_templates":
 			if err := dec.Decode(&s.MigratedLegacyTemplates); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MigratedLegacyTemplates", err)
 			}
 
 		case "removed_legacy_template":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RemovedLegacyTemplate", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

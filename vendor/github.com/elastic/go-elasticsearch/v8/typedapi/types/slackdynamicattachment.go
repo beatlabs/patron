@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // SlackDynamicAttachment type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/watcher/_types/Actions.ts#L125-L128
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/watcher/_types/Actions.ts#L125-L128
 type SlackDynamicAttachment struct {
 	AttachmentTemplate SlackAttachment `json:"attachment_template"`
 	ListPath           string          `json:"list_path"`
@@ -53,13 +54,13 @@ func (s *SlackDynamicAttachment) UnmarshalJSON(data []byte) error {
 
 		case "attachment_template":
 			if err := dec.Decode(&s.AttachmentTemplate); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "AttachmentTemplate", err)
 			}
 
 		case "list_path":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ListPath", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

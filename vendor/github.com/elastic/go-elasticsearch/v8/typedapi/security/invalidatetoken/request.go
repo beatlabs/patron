@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package invalidatetoken
 
@@ -31,7 +31,7 @@ import (
 
 // Request holds the request body struct for the package invalidatetoken
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/security/invalidate_token/SecurityInvalidateTokenRequest.ts#L23-L35
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/invalidate_token/SecurityInvalidateTokenRequest.ts#L23-L35
 type Request struct {
 	RealmName    *string `json:"realm_name,omitempty"`
 	RefreshToken *string `json:"refresh_token,omitempty"`
@@ -73,13 +73,13 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "realm_name":
 			if err := dec.Decode(&s.RealmName); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RealmName", err)
 			}
 
 		case "refresh_token":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RefreshToken", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -91,7 +91,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 		case "token":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Token", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -102,7 +102,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "username":
 			if err := dec.Decode(&s.Username); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Username", err)
 			}
 
 		}

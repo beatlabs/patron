@@ -16,17 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package getrepository
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 // Response holds the response body struct for the package getrepository
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/snapshot/get_repository/SnapshotGetRepositoryResponse.ts#L23-L25
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/snapshot/get_repository/SnapshotGetRepositoryResponse.ts#L23-L25
 
 type Response map[string]types.Repository
 
@@ -34,4 +40,99 @@ type Response map[string]types.Repository
 func NewResponse() Response {
 	r := make(Response, 0)
 	return r
+}
+
+func (r Response) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+	o := make(map[string]interface{}, 0)
+	dec.Decode(&o)
+	dec = json.NewDecoder(bytes.NewReader(data))
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		key := fmt.Sprintf("%s", t)
+		if target, ok := o[key]; ok {
+			if t, ok := target.(map[string]interface{})["type"]; ok {
+
+				switch t {
+
+				case "azure":
+					oo := types.NewAzureRepository()
+					err := dec.Decode(&oo)
+					if err != nil {
+						if errors.Is(err, io.EOF) {
+							break
+						}
+						return err
+					}
+					r[key] = oo
+
+				case "gcs":
+					oo := types.NewGcsRepository()
+					err := dec.Decode(&oo)
+					if err != nil {
+						if errors.Is(err, io.EOF) {
+							break
+						}
+						return err
+					}
+					r[key] = oo
+
+				case "s3":
+					oo := types.NewS3Repository()
+					err := dec.Decode(&oo)
+					if err != nil {
+						if errors.Is(err, io.EOF) {
+							break
+						}
+						return err
+					}
+					r[key] = oo
+
+				case "fs":
+					oo := types.NewSharedFileSystemRepository()
+					err := dec.Decode(&oo)
+					if err != nil {
+						if errors.Is(err, io.EOF) {
+							break
+						}
+						return err
+					}
+					r[key] = oo
+
+				case "url":
+					oo := types.NewReadOnlyUrlRepository()
+					err := dec.Decode(&oo)
+					if err != nil {
+						if errors.Is(err, io.EOF) {
+							break
+						}
+						return err
+					}
+					r[key] = oo
+
+				case "source":
+					oo := types.NewSourceOnlyRepository()
+					err := dec.Decode(&oo)
+					if err != nil {
+						if errors.Is(err, io.EOF) {
+							break
+						}
+						return err
+					}
+					r[key] = oo
+
+				}
+			}
+		}
+
+	}
+	return nil
 }

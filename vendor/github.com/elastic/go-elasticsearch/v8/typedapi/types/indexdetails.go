@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // IndexDetails type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/snapshot/_types/SnapshotIndexDetails.ts#L23-L28
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/snapshot/_types/SnapshotIndexDetails.ts#L23-L28
 type IndexDetails struct {
 	MaxSegmentsPerShard int64    `json:"max_segments_per_shard"`
 	ShardCount          int      `json:"shard_count"`
@@ -60,7 +61,7 @@ func (s *IndexDetails) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MaxSegmentsPerShard", err)
 				}
 				s.MaxSegmentsPerShard = value
 			case float64:
@@ -76,7 +77,7 @@ func (s *IndexDetails) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "ShardCount", err)
 				}
 				s.ShardCount = value
 			case float64:
@@ -86,7 +87,7 @@ func (s *IndexDetails) UnmarshalJSON(data []byte) error {
 
 		case "size":
 			if err := dec.Decode(&s.Size); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Size", err)
 			}
 
 		case "size_in_bytes":
@@ -96,7 +97,7 @@ func (s *IndexDetails) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "SizeInBytes", err)
 				}
 				s.SizeInBytes = value
 			case float64:

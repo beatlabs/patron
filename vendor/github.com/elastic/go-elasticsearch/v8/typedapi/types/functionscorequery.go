@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -33,7 +34,7 @@ import (
 
 // FunctionScoreQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/compound.ts#L92-L118
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/compound.ts#L92-L118
 type FunctionScoreQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -79,7 +80,7 @@ func (s *FunctionScoreQuery) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 32)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Boost", err)
 				}
 				f := float32(value)
 				s.Boost = &f
@@ -90,12 +91,12 @@ func (s *FunctionScoreQuery) UnmarshalJSON(data []byte) error {
 
 		case "boost_mode":
 			if err := dec.Decode(&s.BoostMode); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "BoostMode", err)
 			}
 
 		case "functions":
 			if err := dec.Decode(&s.Functions); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Functions", err)
 			}
 
 		case "max_boost":
@@ -105,7 +106,7 @@ func (s *FunctionScoreQuery) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MaxBoost", err)
 				}
 				f := Float64(value)
 				s.MaxBoost = &f
@@ -121,7 +122,7 @@ func (s *FunctionScoreQuery) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MinScore", err)
 				}
 				f := Float64(value)
 				s.MinScore = &f
@@ -132,13 +133,13 @@ func (s *FunctionScoreQuery) UnmarshalJSON(data []byte) error {
 
 		case "query":
 			if err := dec.Decode(&s.Query); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Query", err)
 			}
 
 		case "_name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "QueryName_", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -149,7 +150,7 @@ func (s *FunctionScoreQuery) UnmarshalJSON(data []byte) error {
 
 		case "score_mode":
 			if err := dec.Decode(&s.ScoreMode); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ScoreMode", err)
 			}
 
 		}

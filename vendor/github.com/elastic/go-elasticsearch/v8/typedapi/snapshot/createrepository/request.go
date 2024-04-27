@@ -16,40 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package createrepository
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 // Request holds the request body struct for the package createrepository
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/snapshot/create_repository/SnapshotCreateRepositoryRequest.ts#L28-L48
-type Request struct {
-	Repository *types.Repository        `json:"repository,omitempty"`
-	Settings   types.RepositorySettings `json:"settings"`
-	Type       string                   `json:"type"`
-}
-
-// NewRequest returns a Request
-func NewRequest() *Request {
-	r := &Request{}
-	return r
-}
-
-// FromJSON allows to load an arbitrary json into the request structure
-func (r *Request) FromJSON(data string) (*Request, error) {
-	var req Request
-	err := json.Unmarshal([]byte(data), &req)
-
-	if err != nil {
-		return nil, fmt.Errorf("could not deserialise json into Createrepository request: %w", err)
-	}
-
-	return &req, nil
-}
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/snapshot/create_repository/SnapshotCreateRepositoryRequest.ts#L25-L42
+type Request = types.Repository

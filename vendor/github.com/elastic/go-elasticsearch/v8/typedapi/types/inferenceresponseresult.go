@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // InferenceResponseResult type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/inference.ts#L459-L506
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/inference.ts#L459-L506
 type InferenceResponseResult struct {
 	// Entities If the model is trained for named entity recognition (NER) tasks, the
 	// response contains the recognized entities.
@@ -89,12 +90,12 @@ func (s *InferenceResponseResult) UnmarshalJSON(data []byte) error {
 
 		case "entities":
 			if err := dec.Decode(&s.Entities); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Entities", err)
 			}
 
 		case "feature_importance":
 			if err := dec.Decode(&s.FeatureImportance); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FeatureImportance", err)
 			}
 
 		case "is_truncated":
@@ -104,7 +105,7 @@ func (s *InferenceResponseResult) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IsTruncated", err)
 				}
 				s.IsTruncated = &value
 			case bool:
@@ -113,13 +114,13 @@ func (s *InferenceResponseResult) UnmarshalJSON(data []byte) error {
 
 		case "predicted_value":
 			if err := dec.Decode(&s.PredictedValue); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "PredictedValue", err)
 			}
 
 		case "predicted_value_sequence":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "PredictedValueSequence", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -135,7 +136,7 @@ func (s *InferenceResponseResult) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "PredictionProbability", err)
 				}
 				f := Float64(value)
 				s.PredictionProbability = &f
@@ -151,7 +152,7 @@ func (s *InferenceResponseResult) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "PredictionScore", err)
 				}
 				f := Float64(value)
 				s.PredictionScore = &f
@@ -162,13 +163,13 @@ func (s *InferenceResponseResult) UnmarshalJSON(data []byte) error {
 
 		case "top_classes":
 			if err := dec.Decode(&s.TopClasses); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TopClasses", err)
 			}
 
 		case "warning":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Warning", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

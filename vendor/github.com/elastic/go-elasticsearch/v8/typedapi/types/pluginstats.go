@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // PluginStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/Stats.ts#L180-L190
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Stats.ts#L180-L190
 type PluginStats struct {
 	Classname            string   `json:"classname"`
 	Description          string   `json:"description"`
@@ -61,7 +62,7 @@ func (s *PluginStats) UnmarshalJSON(data []byte) error {
 		case "classname":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Classname", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -73,7 +74,7 @@ func (s *PluginStats) UnmarshalJSON(data []byte) error {
 		case "description":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Description", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -84,12 +85,12 @@ func (s *PluginStats) UnmarshalJSON(data []byte) error {
 
 		case "elasticsearch_version":
 			if err := dec.Decode(&s.ElasticsearchVersion); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ElasticsearchVersion", err)
 			}
 
 		case "extended_plugins":
 			if err := dec.Decode(&s.ExtendedPlugins); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ExtendedPlugins", err)
 			}
 
 		case "has_native_controller":
@@ -99,7 +100,7 @@ func (s *PluginStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "HasNativeController", err)
 				}
 				s.HasNativeController = value
 			case bool:
@@ -108,7 +109,7 @@ func (s *PluginStats) UnmarshalJSON(data []byte) error {
 
 		case "java_version":
 			if err := dec.Decode(&s.JavaVersion); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "JavaVersion", err)
 			}
 
 		case "licensed":
@@ -118,7 +119,7 @@ func (s *PluginStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Licensed", err)
 				}
 				s.Licensed = value
 			case bool:
@@ -127,12 +128,12 @@ func (s *PluginStats) UnmarshalJSON(data []byte) error {
 
 		case "name":
 			if err := dec.Decode(&s.Name); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

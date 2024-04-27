@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
 // NodeInfoSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/nodes/info/types.ts#L68-L84
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/info/types.ts#L69-L85
 type NodeInfoSettings struct {
 	Action       *NodeInfoAction           `json:"action,omitempty"`
 	Bootstrap    *NodeInfoBootstrap        `json:"bootstrap,omitempty"`
@@ -33,7 +33,7 @@ type NodeInfoSettings struct {
 	Ingest       *NodeInfoSettingsIngest   `json:"ingest,omitempty"`
 	Network      *NodeInfoSettingsNetwork  `json:"network,omitempty"`
 	Node         NodeInfoSettingsNode      `json:"node"`
-	Path         NodeInfoPath              `json:"path"`
+	Path         *NodeInfoPath             `json:"path,omitempty"`
 	Repositories *NodeInfoRepositories     `json:"repositories,omitempty"`
 	Script       *NodeInfoScript           `json:"script,omitempty"`
 	Search       *NodeInfoSearch           `json:"search,omitempty"`

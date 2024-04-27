@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // FieldSuggester type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/search/_types/suggester.ts#L106-L139
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/search/_types/suggester.ts#L106-L139
 type FieldSuggester struct {
 	// Completion Provides auto-complete/search-as-you-type functionality.
 	Completion *CompletionSuggester `json:"completion,omitempty"`
@@ -65,18 +66,18 @@ func (s *FieldSuggester) UnmarshalJSON(data []byte) error {
 
 		case "completion":
 			if err := dec.Decode(&s.Completion); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Completion", err)
 			}
 
 		case "phrase":
 			if err := dec.Decode(&s.Phrase); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Phrase", err)
 			}
 
 		case "prefix":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Prefix", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -88,7 +89,7 @@ func (s *FieldSuggester) UnmarshalJSON(data []byte) error {
 		case "regex":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Regex", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -99,13 +100,13 @@ func (s *FieldSuggester) UnmarshalJSON(data []byte) error {
 
 		case "term":
 			if err := dec.Decode(&s.Term); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Term", err)
 			}
 
 		case "text":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Text", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

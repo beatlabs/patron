@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // RemoteSource type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/reindex/types.ts#L99-L125
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/reindex/types.ts#L99-L125
 type RemoteSource struct {
 	// ConnectTimeout The remote connection timeout.
 	// Defaults to 30 seconds.
@@ -63,7 +64,7 @@ func (s *RemoteSource) UnmarshalJSON(data []byte) error {
 
 		case "connect_timeout":
 			if err := dec.Decode(&s.ConnectTimeout); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ConnectTimeout", err)
 			}
 
 		case "headers":
@@ -71,27 +72,27 @@ func (s *RemoteSource) UnmarshalJSON(data []byte) error {
 				s.Headers = make(map[string]string, 0)
 			}
 			if err := dec.Decode(&s.Headers); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Headers", err)
 			}
 
 		case "host":
 			if err := dec.Decode(&s.Host); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Host", err)
 			}
 
 		case "password":
 			if err := dec.Decode(&s.Password); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Password", err)
 			}
 
 		case "socket_timeout":
 			if err := dec.Decode(&s.SocketTimeout); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "SocketTimeout", err)
 			}
 
 		case "username":
 			if err := dec.Decode(&s.Username); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Username", err)
 			}
 
 		}

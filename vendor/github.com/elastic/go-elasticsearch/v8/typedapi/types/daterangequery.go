@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // DateRangeQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/term.ts#L116-L143
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/term.ts#L116-L143
 type DateRangeQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -82,7 +83,7 @@ func (s *DateRangeQuery) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 32)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Boost", err)
 				}
 				f := float32(value)
 				s.Boost = &f
@@ -93,38 +94,38 @@ func (s *DateRangeQuery) UnmarshalJSON(data []byte) error {
 
 		case "format":
 			if err := dec.Decode(&s.Format); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Format", err)
 			}
 
 		case "from":
 			if err := dec.Decode(&s.From); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "From", err)
 			}
 
 		case "gt":
 			if err := dec.Decode(&s.Gt); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Gt", err)
 			}
 
 		case "gte":
 			if err := dec.Decode(&s.Gte); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Gte", err)
 			}
 
 		case "lt":
 			if err := dec.Decode(&s.Lt); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Lt", err)
 			}
 
 		case "lte":
 			if err := dec.Decode(&s.Lte); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Lte", err)
 			}
 
 		case "_name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "QueryName_", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -135,17 +136,17 @@ func (s *DateRangeQuery) UnmarshalJSON(data []byte) error {
 
 		case "relation":
 			if err := dec.Decode(&s.Relation); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Relation", err)
 			}
 
 		case "time_zone":
 			if err := dec.Decode(&s.TimeZone); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TimeZone", err)
 			}
 
 		case "to":
 			if err := dec.Decode(&s.To); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "To", err)
 			}
 
 		}

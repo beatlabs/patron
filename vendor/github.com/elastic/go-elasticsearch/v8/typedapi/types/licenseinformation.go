@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -33,7 +34,7 @@ import (
 
 // LicenseInformation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/license/get/types.ts#L25-L38
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/license/get/types.ts#L25-L38
 type LicenseInformation struct {
 	ExpiryDate         DateTime                    `json:"expiry_date,omitempty"`
 	ExpiryDateInMillis *int64                      `json:"expiry_date_in_millis,omitempty"`
@@ -66,28 +67,28 @@ func (s *LicenseInformation) UnmarshalJSON(data []byte) error {
 
 		case "expiry_date":
 			if err := dec.Decode(&s.ExpiryDate); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ExpiryDate", err)
 			}
 
 		case "expiry_date_in_millis":
 			if err := dec.Decode(&s.ExpiryDateInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ExpiryDateInMillis", err)
 			}
 
 		case "issue_date":
 			if err := dec.Decode(&s.IssueDate); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IssueDate", err)
 			}
 
 		case "issue_date_in_millis":
 			if err := dec.Decode(&s.IssueDateInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IssueDateInMillis", err)
 			}
 
 		case "issued_to":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IssuedTo", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -99,7 +100,7 @@ func (s *LicenseInformation) UnmarshalJSON(data []byte) error {
 		case "issuer":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Issuer", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -110,32 +111,32 @@ func (s *LicenseInformation) UnmarshalJSON(data []byte) error {
 
 		case "max_nodes":
 			if err := dec.Decode(&s.MaxNodes); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MaxNodes", err)
 			}
 
 		case "max_resource_units":
 			if err := dec.Decode(&s.MaxResourceUnits); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MaxResourceUnits", err)
 			}
 
 		case "start_date_in_millis":
 			if err := dec.Decode(&s.StartDateInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "StartDateInMillis", err)
 			}
 
 		case "status":
 			if err := dec.Decode(&s.Status); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Status", err)
 			}
 
 		case "type":
 			if err := dec.Decode(&s.Type); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Type", err)
 			}
 
 		case "uid":
 			if err := dec.Decode(&s.Uid); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Uid", err)
 			}
 
 		}

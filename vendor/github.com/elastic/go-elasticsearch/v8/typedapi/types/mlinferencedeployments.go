@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // MlInferenceDeployments type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/xpack/usage/types.ts#L227-L232
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/xpack/usage/types.ts#L227-L232
 type MlInferenceDeployments struct {
 	Count           int                          `json:"count"`
 	InferenceCounts JobStatistics                `json:"inference_counts"`
@@ -61,7 +62,7 @@ func (s *MlInferenceDeployments) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Count", err)
 				}
 				s.Count = value
 			case float64:
@@ -71,17 +72,17 @@ func (s *MlInferenceDeployments) UnmarshalJSON(data []byte) error {
 
 		case "inference_counts":
 			if err := dec.Decode(&s.InferenceCounts); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "InferenceCounts", err)
 			}
 
 		case "model_sizes_bytes":
 			if err := dec.Decode(&s.ModelSizesBytes); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ModelSizesBytes", err)
 			}
 
 		case "time_ms":
 			if err := dec.Decode(&s.TimeMs); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TimeMs", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // IndexVersioning type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/_types/IndexSettings.ts#L261-L264
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/_types/IndexSettings.ts#L269-L272
 type IndexVersioning struct {
 	Created       *string `json:"created,omitempty"`
 	CreatedString *string `json:"created_string,omitempty"`
@@ -53,13 +54,13 @@ func (s *IndexVersioning) UnmarshalJSON(data []byte) error {
 
 		case "created":
 			if err := dec.Decode(&s.Created); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Created", err)
 			}
 
 		case "created_string":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "CreatedString", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

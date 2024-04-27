@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // AdaptiveSelection type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/nodes/_types/Stats.ts#L403-L432
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/Stats.ts#L403-L432
 type AdaptiveSelection struct {
 	// AvgQueueSize The exponentially weighted moving average queue size of search requests on
 	// the keyed node.
@@ -76,7 +77,7 @@ func (s *AdaptiveSelection) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AvgQueueSize", err)
 				}
 				s.AvgQueueSize = &value
 			case float64:
@@ -86,7 +87,7 @@ func (s *AdaptiveSelection) UnmarshalJSON(data []byte) error {
 
 		case "avg_response_time":
 			if err := dec.Decode(&s.AvgResponseTime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "AvgResponseTime", err)
 			}
 
 		case "avg_response_time_ns":
@@ -96,7 +97,7 @@ func (s *AdaptiveSelection) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AvgResponseTimeNs", err)
 				}
 				s.AvgResponseTimeNs = &value
 			case float64:
@@ -106,7 +107,7 @@ func (s *AdaptiveSelection) UnmarshalJSON(data []byte) error {
 
 		case "avg_service_time":
 			if err := dec.Decode(&s.AvgServiceTime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "AvgServiceTime", err)
 			}
 
 		case "avg_service_time_ns":
@@ -116,7 +117,7 @@ func (s *AdaptiveSelection) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AvgServiceTimeNs", err)
 				}
 				s.AvgServiceTimeNs = &value
 			case float64:
@@ -131,7 +132,7 @@ func (s *AdaptiveSelection) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "OutgoingSearches", err)
 				}
 				s.OutgoingSearches = &value
 			case float64:
@@ -142,7 +143,7 @@ func (s *AdaptiveSelection) UnmarshalJSON(data []byte) error {
 		case "rank":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Rank", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // AutoFollowStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ccr/stats/types.ts.ts#L33-L39
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ccr/stats/types.ts.ts#L33-L39
 type AutoFollowStats struct {
 	AutoFollowedClusters                     []AutoFollowedCluster `json:"auto_followed_clusters"`
 	NumberOfFailedFollowIndices              int64                 `json:"number_of_failed_follow_indices"`
@@ -56,7 +57,7 @@ func (s *AutoFollowStats) UnmarshalJSON(data []byte) error {
 
 		case "auto_followed_clusters":
 			if err := dec.Decode(&s.AutoFollowedClusters); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "AutoFollowedClusters", err)
 			}
 
 		case "number_of_failed_follow_indices":
@@ -66,7 +67,7 @@ func (s *AutoFollowStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NumberOfFailedFollowIndices", err)
 				}
 				s.NumberOfFailedFollowIndices = value
 			case float64:
@@ -81,7 +82,7 @@ func (s *AutoFollowStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NumberOfFailedRemoteClusterStateRequests", err)
 				}
 				s.NumberOfFailedRemoteClusterStateRequests = value
 			case float64:
@@ -96,7 +97,7 @@ func (s *AutoFollowStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NumberOfSuccessfulFollowIndices", err)
 				}
 				s.NumberOfSuccessfulFollowIndices = value
 			case float64:
@@ -106,7 +107,7 @@ func (s *AutoFollowStats) UnmarshalJSON(data []byte) error {
 
 		case "recent_auto_follow_errors":
 			if err := dec.Decode(&s.RecentAutoFollowErrors); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RecentAutoFollowErrors", err)
 			}
 
 		}

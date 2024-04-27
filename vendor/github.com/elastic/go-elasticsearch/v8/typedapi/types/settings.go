@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // Settings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/transform/_types/Transform.ts#L98-L144
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/transform/_types/Transform.ts#L98-L144
 type Settings struct {
 	// AlignCheckpoints Specifies whether the transform checkpoint ranges should be optimized for
 	// performance. Such optimization can align
@@ -89,7 +90,7 @@ func (s *Settings) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AlignCheckpoints", err)
 				}
 				s.AlignCheckpoints = &value
 			case bool:
@@ -103,7 +104,7 @@ func (s *Settings) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DatesAsEpochMillis", err)
 				}
 				s.DatesAsEpochMillis = &value
 			case bool:
@@ -117,7 +118,7 @@ func (s *Settings) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DeduceMappings", err)
 				}
 				s.DeduceMappings = &value
 			case bool:
@@ -131,7 +132,7 @@ func (s *Settings) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 32)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DocsPerSecond", err)
 				}
 				f := float32(value)
 				s.DocsPerSecond = &f
@@ -148,7 +149,7 @@ func (s *Settings) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MaxPageSearchSize", err)
 				}
 				s.MaxPageSearchSize = &value
 			case float64:
@@ -163,7 +164,7 @@ func (s *Settings) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Unattended", err)
 				}
 				s.Unattended = &value
 			case bool:

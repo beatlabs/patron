@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package gettoken
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package gettoken
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/security/get_token/GetUserAccessTokenRequest.ts#L25-L39
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/get_token/GetUserAccessTokenRequest.ts#L25-L39
 type Request struct {
 	GrantType      *accesstokengranttype.AccessTokenGrantType `json:"grant_type,omitempty"`
 	KerberosTicket *string                                    `json:"kerberos_ticket,omitempty"`
@@ -77,13 +77,13 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "grant_type":
 			if err := dec.Decode(&s.GrantType); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "GrantType", err)
 			}
 
 		case "kerberos_ticket":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "KerberosTicket", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -94,13 +94,13 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "password":
 			if err := dec.Decode(&s.Password); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Password", err)
 			}
 
 		case "refresh_token":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RefreshToken", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -112,7 +112,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 		case "scope":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Scope", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -123,7 +123,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "username":
 			if err := dec.Decode(&s.Username); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Username", err)
 			}
 
 		}

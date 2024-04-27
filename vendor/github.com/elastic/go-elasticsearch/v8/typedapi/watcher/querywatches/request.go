@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package querywatches
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package querywatches
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/watcher/query_watches/WatcherQueryWatchesRequest.ts#L25-L48
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/watcher/query_watches/WatcherQueryWatchesRequest.ts#L25-L48
 type Request struct {
 
 	// From The offset from the first result to fetch. Needs to be non-negative.
@@ -88,7 +88,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "From", err)
 				}
 				s.From = &value
 			case float64:
@@ -98,12 +98,12 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "query":
 			if err := dec.Decode(&s.Query); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Query", err)
 			}
 
 		case "search_after":
 			if err := dec.Decode(&s.SearchAfter); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "SearchAfter", err)
 			}
 
 		case "size":
@@ -114,7 +114,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Size", err)
 				}
 				s.Size = &value
 			case float64:
@@ -128,13 +128,13 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(types.SortCombinations)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Sort", err)
 				}
 
 				s.Sort = append(s.Sort, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Sort); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Sort", err)
 				}
 			}
 

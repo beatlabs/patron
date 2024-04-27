@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // PhraseSuggestCollate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/search/_types/suggester.ts#L330-L343
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/search/_types/suggester.ts#L330-L343
 type PhraseSuggestCollate struct {
 	// Params Parameters to use if the query is templated.
 	Params map[string]json.RawMessage `json:"params,omitempty"`
@@ -61,7 +62,7 @@ func (s *PhraseSuggestCollate) UnmarshalJSON(data []byte) error {
 				s.Params = make(map[string]json.RawMessage, 0)
 			}
 			if err := dec.Decode(&s.Params); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Params", err)
 			}
 
 		case "prune":
@@ -71,7 +72,7 @@ func (s *PhraseSuggestCollate) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Prune", err)
 				}
 				s.Prune = &value
 			case bool:
@@ -80,7 +81,7 @@ func (s *PhraseSuggestCollate) UnmarshalJSON(data []byte) error {
 
 		case "query":
 			if err := dec.Decode(&s.Query); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Query", err)
 			}
 
 		}

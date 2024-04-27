@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // GeoLineAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/aggregations/metric.ts#L121-L146
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/metric.ts#L121-L146
 type GeoLineAggregation struct {
 	// IncludeSort When `true`, returns an additional array of the sort values in the feature
 	// properties.
@@ -73,7 +74,7 @@ func (s *GeoLineAggregation) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IncludeSort", err)
 				}
 				s.IncludeSort = &value
 			case bool:
@@ -82,7 +83,7 @@ func (s *GeoLineAggregation) UnmarshalJSON(data []byte) error {
 
 		case "point":
 			if err := dec.Decode(&s.Point); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Point", err)
 			}
 
 		case "size":
@@ -93,7 +94,7 @@ func (s *GeoLineAggregation) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Size", err)
 				}
 				s.Size = &value
 			case float64:
@@ -103,12 +104,12 @@ func (s *GeoLineAggregation) UnmarshalJSON(data []byte) error {
 
 		case "sort":
 			if err := dec.Decode(&s.Sort); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Sort", err)
 			}
 
 		case "sort_order":
 			if err := dec.Decode(&s.SortOrder); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "SortOrder", err)
 			}
 
 		}

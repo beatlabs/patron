@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // CountRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/cat/count/types.ts#L23-L39
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cat/count/types.ts#L23-L39
 type CountRecord struct {
 	// Count the document count
 	Count *string `json:"count,omitempty"`
@@ -58,7 +59,7 @@ func (s *CountRecord) UnmarshalJSON(data []byte) error {
 		case "count", "dc", "docs.count", "docsCount":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Count", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -69,12 +70,12 @@ func (s *CountRecord) UnmarshalJSON(data []byte) error {
 
 		case "epoch", "t", "time":
 			if err := dec.Decode(&s.Epoch); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Epoch", err)
 			}
 
 		case "timestamp", "ts", "hms", "hhmmss":
 			if err := dec.Decode(&s.Timestamp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Timestamp", err)
 			}
 
 		}

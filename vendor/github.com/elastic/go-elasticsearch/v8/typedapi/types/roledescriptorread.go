@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // RoleDescriptorRead type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/security/_types/RoleDescriptor.ts#L57-L85
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/_types/RoleDescriptor.ts#L58-L86
 type RoleDescriptorRead struct {
 	// Applications A list of application privilege entries
 	Applications []ApplicationPrivileges `json:"applications,omitempty"`
@@ -46,8 +47,8 @@ type RoleDescriptorRead struct {
 	// reserved for system usage.
 	Metadata Metadata `json:"metadata,omitempty"`
 	// RunAs A list of users that the API keys can impersonate.
-	RunAs             []string                 `json:"run_as,omitempty"`
-	TransientMetadata *TransientMetadataConfig `json:"transient_metadata,omitempty"`
+	RunAs             []string                   `json:"run_as,omitempty"`
+	TransientMetadata map[string]json.RawMessage `json:"transient_metadata,omitempty"`
 }
 
 func (s *RoleDescriptorRead) UnmarshalJSON(data []byte) error {
@@ -67,12 +68,12 @@ func (s *RoleDescriptorRead) UnmarshalJSON(data []byte) error {
 
 		case "applications":
 			if err := dec.Decode(&s.Applications); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Applications", err)
 			}
 
 		case "cluster":
 			if err := dec.Decode(&s.Cluster); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Cluster", err)
 			}
 
 		case "global":
@@ -81,34 +82,37 @@ func (s *RoleDescriptorRead) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := NewGlobalPrivilege()
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Global", err)
 				}
 
 				s.Global = append(s.Global, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Global); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Global", err)
 				}
 			}
 
 		case "indices", "index":
 			if err := dec.Decode(&s.Indices); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Indices", err)
 			}
 
 		case "metadata":
 			if err := dec.Decode(&s.Metadata); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Metadata", err)
 			}
 
 		case "run_as":
 			if err := dec.Decode(&s.RunAs); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RunAs", err)
 			}
 
 		case "transient_metadata":
+			if s.TransientMetadata == nil {
+				s.TransientMetadata = make(map[string]json.RawMessage, 0)
+			}
 			if err := dec.Decode(&s.TransientMetadata); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TransientMetadata", err)
 			}
 
 		}
@@ -118,7 +122,9 @@ func (s *RoleDescriptorRead) UnmarshalJSON(data []byte) error {
 
 // NewRoleDescriptorRead returns a RoleDescriptorRead.
 func NewRoleDescriptorRead() *RoleDescriptorRead {
-	r := &RoleDescriptorRead{}
+	r := &RoleDescriptorRead{
+		TransientMetadata: make(map[string]json.RawMessage, 0),
+	}
 
 	return r
 }

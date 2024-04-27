@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // MultiTermLookup type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/aggregations/bucket.ts#L624-L634
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L622-L632
 type MultiTermLookup struct {
 	// Field A fields from which to retrieve terms.
 	Field string `json:"field"`
@@ -55,12 +56,12 @@ func (s *MultiTermLookup) UnmarshalJSON(data []byte) error {
 
 		case "field":
 			if err := dec.Decode(&s.Field); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Field", err)
 			}
 
 		case "missing":
 			if err := dec.Decode(&s.Missing); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Missing", err)
 			}
 
 		}

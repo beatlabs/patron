@@ -16,16 +16,17 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
 // InferenceResult type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/inference/_types/Results.ts#L46-L53
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/inference/_types/Results.ts#L59-L67
 type InferenceResult struct {
-	SparseEmbedding []SparseEmbeddingResult `json:"sparse_embedding,omitempty"`
-	TextEmbedding   []TextEmbeddingResult   `json:"text_embedding,omitempty"`
+	SparseEmbedding    []SparseEmbeddingResult   `json:"sparse_embedding,omitempty"`
+	TextEmbedding      []TextEmbeddingResult     `json:"text_embedding,omitempty"`
+	TextEmbeddingBytes []TextEmbeddingByteResult `json:"text_embedding_bytes,omitempty"`
 }
 
 // NewInferenceResult returns a InferenceResult.

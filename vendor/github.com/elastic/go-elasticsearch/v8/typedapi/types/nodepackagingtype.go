@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // NodePackagingType type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/cluster/stats/types.ts#L526-L539
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cluster/stats/types.ts#L526-L539
 type NodePackagingType struct {
 	// Count Number of selected nodes using the distribution flavor and file type.
 	Count int `json:"count"`
@@ -63,7 +64,7 @@ func (s *NodePackagingType) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Count", err)
 				}
 				s.Count = value
 			case float64:
@@ -74,7 +75,7 @@ func (s *NodePackagingType) UnmarshalJSON(data []byte) error {
 		case "flavor":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Flavor", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -86,7 +87,7 @@ func (s *NodePackagingType) UnmarshalJSON(data []byte) error {
 		case "type":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Type", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

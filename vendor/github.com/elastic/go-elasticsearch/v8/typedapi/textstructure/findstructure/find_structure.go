@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 // Finds the structure of a text file. The text file must contain data that is
 // suitable to be ingested into Elasticsearch.
@@ -85,6 +85,8 @@ func New(tp elastictransport.Interface) *FindStructure {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -330,6 +332,15 @@ func (r *FindStructure) ColumnNames(columnnames string) *FindStructure {
 // API name: delimiter
 func (r *FindStructure) Delimiter(delimiter string) *FindStructure {
 	r.values.Set("delimiter", delimiter)
+
+	return r
+}
+
+// EcsCompatibility The mode of compatibility with ECS compliant Grok patterns (disabled or v1,
+// default: disabled).
+// API name: ecs_compatibility
+func (r *FindStructure) EcsCompatibility(ecscompatibility string) *FindStructure {
+	r.values.Set("ecs_compatibility", ecscompatibility)
 
 	return r
 }

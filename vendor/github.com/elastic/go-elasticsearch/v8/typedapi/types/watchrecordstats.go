@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/executionphase"
@@ -31,7 +32,7 @@ import (
 
 // WatchRecordStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/watcher/stats/types.ts#L54-L60
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/watcher/stats/types.ts#L54-L60
 type WatchRecordStats struct {
 	ExecutedActions []string                      `json:"executed_actions,omitempty"`
 	ExecutionPhase  executionphase.ExecutionPhase `json:"execution_phase"`
@@ -58,32 +59,32 @@ func (s *WatchRecordStats) UnmarshalJSON(data []byte) error {
 
 		case "executed_actions":
 			if err := dec.Decode(&s.ExecutedActions); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ExecutedActions", err)
 			}
 
 		case "execution_phase":
 			if err := dec.Decode(&s.ExecutionPhase); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ExecutionPhase", err)
 			}
 
 		case "execution_time":
 			if err := dec.Decode(&s.ExecutionTime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ExecutionTime", err)
 			}
 
 		case "triggered_time":
 			if err := dec.Decode(&s.TriggeredTime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TriggeredTime", err)
 			}
 
 		case "watch_id":
 			if err := dec.Decode(&s.WatchId); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "WatchId", err)
 			}
 
 		case "watch_record_id":
 			if err := dec.Decode(&s.WatchRecordId); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "WatchRecordId", err)
 			}
 
 		}

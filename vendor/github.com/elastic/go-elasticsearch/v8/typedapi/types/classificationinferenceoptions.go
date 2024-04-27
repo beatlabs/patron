@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ClassificationInferenceOptions type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/inference.ts#L93-L108
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/inference.ts#L93-L108
 type ClassificationInferenceOptions struct {
 	// NumTopClasses Specifies the number of top class predictions to return. Defaults to 0.
 	NumTopClasses *int `json:"num_top_classes,omitempty"`
@@ -71,7 +72,7 @@ func (s *ClassificationInferenceOptions) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NumTopClasses", err)
 				}
 				s.NumTopClasses = &value
 			case float64:
@@ -87,7 +88,7 @@ func (s *ClassificationInferenceOptions) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NumTopFeatureImportanceValues", err)
 				}
 				s.NumTopFeatureImportanceValues = &value
 			case float64:
@@ -98,7 +99,7 @@ func (s *ClassificationInferenceOptions) UnmarshalJSON(data []byte) error {
 		case "prediction_field_type":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "PredictionFieldType", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -110,7 +111,7 @@ func (s *ClassificationInferenceOptions) UnmarshalJSON(data []byte) error {
 		case "results_field":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ResultsField", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -122,7 +123,7 @@ func (s *ClassificationInferenceOptions) UnmarshalJSON(data []byte) error {
 		case "top_classes_results_field":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TopClassesResultsField", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

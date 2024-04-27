@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package forecast
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package forecast
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/forecast/MlForecastJobRequest.ts#L24-L87
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/forecast/MlForecastJobRequest.ts#L24-L87
 type Request struct {
 
 	// Duration Refer to the description for the `duration` query parameter.
@@ -78,18 +78,18 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "duration":
 			if err := dec.Decode(&s.Duration); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Duration", err)
 			}
 
 		case "expires_in":
 			if err := dec.Decode(&s.ExpiresIn); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ExpiresIn", err)
 			}
 
 		case "max_model_memory":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MaxModelMemory", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

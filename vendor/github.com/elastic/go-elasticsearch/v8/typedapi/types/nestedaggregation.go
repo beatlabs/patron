@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // NestedAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/aggregations/bucket.ts#L636-L641
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L634-L639
 type NestedAggregation struct {
 	Meta Metadata `json:"meta,omitempty"`
 	Name *string  `json:"name,omitempty"`
@@ -55,13 +56,13 @@ func (s *NestedAggregation) UnmarshalJSON(data []byte) error {
 
 		case "meta":
 			if err := dec.Decode(&s.Meta); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Meta", err)
 			}
 
 		case "name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -72,7 +73,7 @@ func (s *NestedAggregation) UnmarshalJSON(data []byte) error {
 
 		case "path":
 			if err := dec.Decode(&s.Path); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Path", err)
 			}
 
 		}

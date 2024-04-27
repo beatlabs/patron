@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // SecurityRoleMapping type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/security/_types/RoleMapping.ts#L25-L31
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/_types/RoleMapping.ts#L25-L31
 type SecurityRoleMapping struct {
 	Enabled       bool            `json:"enabled"`
 	Metadata      Metadata        `json:"metadata"`
@@ -61,7 +62,7 @@ func (s *SecurityRoleMapping) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Enabled", err)
 				}
 				s.Enabled = value
 			case bool:
@@ -70,22 +71,22 @@ func (s *SecurityRoleMapping) UnmarshalJSON(data []byte) error {
 
 		case "metadata":
 			if err := dec.Decode(&s.Metadata); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Metadata", err)
 			}
 
 		case "role_templates":
 			if err := dec.Decode(&s.RoleTemplates); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RoleTemplates", err)
 			}
 
 		case "roles":
 			if err := dec.Decode(&s.Roles); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Roles", err)
 			}
 
 		case "rules":
 			if err := dec.Decode(&s.Rules); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Rules", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ElasticsearchVersionInfo type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/Base.ts#L54-L64
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Base.ts#L54-L64
 type ElasticsearchVersionInfo struct {
 	BuildDate                        DateTime `json:"build_date"`
 	BuildFlavor                      string   `json:"build_flavor"`
@@ -60,13 +61,13 @@ func (s *ElasticsearchVersionInfo) UnmarshalJSON(data []byte) error {
 
 		case "build_date":
 			if err := dec.Decode(&s.BuildDate); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "BuildDate", err)
 			}
 
 		case "build_flavor":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "BuildFlavor", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -78,7 +79,7 @@ func (s *ElasticsearchVersionInfo) UnmarshalJSON(data []byte) error {
 		case "build_hash":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "BuildHash", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -94,7 +95,7 @@ func (s *ElasticsearchVersionInfo) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "BuildSnapshot", err)
 				}
 				s.BuildSnapshot = value
 			case bool:
@@ -104,7 +105,7 @@ func (s *ElasticsearchVersionInfo) UnmarshalJSON(data []byte) error {
 		case "build_type":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "BuildType", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -116,7 +117,7 @@ func (s *ElasticsearchVersionInfo) UnmarshalJSON(data []byte) error {
 		case "number":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Int", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -127,17 +128,17 @@ func (s *ElasticsearchVersionInfo) UnmarshalJSON(data []byte) error {
 
 		case "lucene_version":
 			if err := dec.Decode(&s.LuceneVersion); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "LuceneVersion", err)
 			}
 
 		case "minimum_index_compatibility_version":
 			if err := dec.Decode(&s.MinimumIndexCompatibilityVersion); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MinimumIndexCompatibilityVersion", err)
 			}
 
 		case "minimum_wire_compatibility_version":
 			if err := dec.Decode(&s.MinimumWireCompatibilityVersion); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MinimumWireCompatibilityVersion", err)
 			}
 
 		}

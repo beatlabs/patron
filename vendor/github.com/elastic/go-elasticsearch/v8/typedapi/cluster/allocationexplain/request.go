@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package allocationexplain
 
@@ -31,7 +31,7 @@ import (
 
 // Request holds the request body struct for the package allocationexplain
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/cluster/allocation_explain/ClusterAllocationExplainRequest.ts#L24-L61
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cluster/allocation_explain/ClusterAllocationExplainRequest.ts#L24-L61
 type Request struct {
 
 	// CurrentNode Specifies the node ID or the name of the node to only explain a shard that is
@@ -80,7 +80,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 		case "current_node":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "CurrentNode", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -91,7 +91,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "index":
 			if err := dec.Decode(&s.Index); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Index", err)
 			}
 
 		case "primary":
@@ -101,7 +101,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Primary", err)
 				}
 				s.Primary = &value
 			case bool:
@@ -116,7 +116,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Shard", err)
 				}
 				s.Shard = &value
 			case float64:

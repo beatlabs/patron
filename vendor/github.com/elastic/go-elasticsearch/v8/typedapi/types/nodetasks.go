@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // NodeTasks type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/tasks/_types/TaskListResponseBase.ts#L49-L57
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/tasks/_types/TaskListResponseBase.ts#L49-L57
 type NodeTasks struct {
 	Attributes       map[string]string   `json:"attributes,omitempty"`
 	Host             *string             `json:"host,omitempty"`
@@ -60,27 +61,27 @@ func (s *NodeTasks) UnmarshalJSON(data []byte) error {
 				s.Attributes = make(map[string]string, 0)
 			}
 			if err := dec.Decode(&s.Attributes); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Attributes", err)
 			}
 
 		case "host":
 			if err := dec.Decode(&s.Host); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Host", err)
 			}
 
 		case "ip":
 			if err := dec.Decode(&s.Ip); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Ip", err)
 			}
 
 		case "name":
 			if err := dec.Decode(&s.Name); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 
 		case "roles":
 			if err := dec.Decode(&s.Roles); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Roles", err)
 			}
 
 		case "tasks":
@@ -88,12 +89,12 @@ func (s *NodeTasks) UnmarshalJSON(data []byte) error {
 				s.Tasks = make(map[string]TaskInfo, 0)
 			}
 			if err := dec.Decode(&s.Tasks); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Tasks", err)
 			}
 
 		case "transport_address":
 			if err := dec.Decode(&s.TransportAddress); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TransportAddress", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // ClusterDetails type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/Stats.ts#L45-L52
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Stats.ts#L45-L52
 type ClusterDetails struct {
 	Failures []ShardFailure                          `json:"failures,omitempty"`
 	Indices  string                                  `json:"indices"`
@@ -59,13 +60,13 @@ func (s *ClusterDetails) UnmarshalJSON(data []byte) error {
 
 		case "failures":
 			if err := dec.Decode(&s.Failures); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Failures", err)
 			}
 
 		case "indices":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Indices", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -76,12 +77,12 @@ func (s *ClusterDetails) UnmarshalJSON(data []byte) error {
 
 		case "_shards":
 			if err := dec.Decode(&s.Shards_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Shards_", err)
 			}
 
 		case "status":
 			if err := dec.Decode(&s.Status); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Status", err)
 			}
 
 		case "timed_out":
@@ -91,7 +92,7 @@ func (s *ClusterDetails) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "TimedOut", err)
 				}
 				s.TimedOut = value
 			case bool:
@@ -100,7 +101,7 @@ func (s *ClusterDetails) UnmarshalJSON(data []byte) error {
 
 		case "took":
 			if err := dec.Decode(&s.Took); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Took", err)
 			}
 
 		}

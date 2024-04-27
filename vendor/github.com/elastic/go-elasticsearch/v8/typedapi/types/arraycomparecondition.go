@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -33,9 +33,9 @@ import (
 
 // ArrayCompareCondition type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/watcher/_types/Conditions.ts#L32-L36
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/watcher/_types/Conditions.ts#L32-L36
 type ArrayCompareCondition struct {
-	ArrayCompareCondition map[conditionop.ConditionOp]ArrayCompareOpParams `json:"ArrayCompareCondition,omitempty"`
+	ArrayCompareCondition map[conditionop.ConditionOp]ArrayCompareOpParams `json:"-"`
 	Path                  string                                           `json:"path"`
 }
 
@@ -54,18 +54,10 @@ func (s *ArrayCompareCondition) UnmarshalJSON(data []byte) error {
 
 		switch t {
 
-		case "ArrayCompareCondition":
-			if s.ArrayCompareCondition == nil {
-				s.ArrayCompareCondition = make(map[conditionop.ConditionOp]ArrayCompareOpParams, 0)
-			}
-			if err := dec.Decode(&s.ArrayCompareCondition); err != nil {
-				return err
-			}
-
 		case "path":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Path", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -75,6 +67,22 @@ func (s *ArrayCompareCondition) UnmarshalJSON(data []byte) error {
 			s.Path = o
 
 		default:
+
+			if key, ok := t.(string); ok {
+				if s.ArrayCompareCondition == nil {
+					s.ArrayCompareCondition = make(map[conditionop.ConditionOp]ArrayCompareOpParams, 0)
+				}
+				raw := NewArrayCompareOpParams()
+				if err := dec.Decode(&raw); err != nil {
+					return fmt.Errorf("%s | %w", "ArrayCompareCondition", err)
+				}
+				enum := conditionop.ConditionOp{}
+				err := enum.UnmarshalText([]byte(key))
+				if err != nil {
+					return fmt.Errorf("cannot unmarshal enum conditionop.ConditionOp: %w", err)
+				}
+				s.ArrayCompareCondition[enum] = *raw
+			}
 
 		}
 	}

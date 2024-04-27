@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // CalendarEvent type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/CalendarEvent.ts#L23-L33
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/CalendarEvent.ts#L23-L33
 type CalendarEvent struct {
 	// CalendarId A string that uniquely identifies a calendar.
 	CalendarId *string `json:"calendar_id,omitempty"`
@@ -62,13 +63,13 @@ func (s *CalendarEvent) UnmarshalJSON(data []byte) error {
 
 		case "calendar_id":
 			if err := dec.Decode(&s.CalendarId); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "CalendarId", err)
 			}
 
 		case "description":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Description", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -79,17 +80,17 @@ func (s *CalendarEvent) UnmarshalJSON(data []byte) error {
 
 		case "end_time":
 			if err := dec.Decode(&s.EndTime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "EndTime", err)
 			}
 
 		case "event_id":
 			if err := dec.Decode(&s.EventId); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "EventId", err)
 			}
 
 		case "start_time":
 			if err := dec.Decode(&s.StartTime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "StartTime", err)
 			}
 
 		}

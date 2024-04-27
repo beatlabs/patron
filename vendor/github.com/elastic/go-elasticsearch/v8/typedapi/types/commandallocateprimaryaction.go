@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // CommandAllocatePrimaryAction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/cluster/reroute/types.ts#L78-L84
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cluster/reroute/types.ts#L78-L84
 type CommandAllocatePrimaryAction struct {
 	// AcceptDataLoss If a node which has a copy of the data rejoins the cluster later on, that
 	// data will be deleted. To ensure that these implications are well-understood,
@@ -63,7 +64,7 @@ func (s *CommandAllocatePrimaryAction) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AcceptDataLoss", err)
 				}
 				s.AcceptDataLoss = value
 			case bool:
@@ -72,13 +73,13 @@ func (s *CommandAllocatePrimaryAction) UnmarshalJSON(data []byte) error {
 
 		case "index":
 			if err := dec.Decode(&s.Index); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Index", err)
 			}
 
 		case "node":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Node", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -95,7 +96,7 @@ func (s *CommandAllocatePrimaryAction) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Shard", err)
 				}
 				s.Shard = value
 			case float64:

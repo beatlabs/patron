@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // IpPrefixAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/aggregations/bucket.ts#L1114-L1143
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L1113-L1142
 type IpPrefixAggregation struct {
 	// AppendPrefixLength Defines whether the prefix length is appended to IP address keys in the
 	// response.
@@ -75,7 +76,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AppendPrefixLength", err)
 				}
 				s.AppendPrefixLength = &value
 			case bool:
@@ -84,7 +85,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 
 		case "field":
 			if err := dec.Decode(&s.Field); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Field", err)
 			}
 
 		case "is_ipv6":
@@ -94,7 +95,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IsIpv6", err)
 				}
 				s.IsIpv6 = &value
 			case bool:
@@ -108,7 +109,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Keyed", err)
 				}
 				s.Keyed = &value
 			case bool:
@@ -117,7 +118,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 
 		case "meta":
 			if err := dec.Decode(&s.Meta); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Meta", err)
 			}
 
 		case "min_doc_count":
@@ -127,7 +128,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MinDocCount", err)
 				}
 				s.MinDocCount = &value
 			case float64:
@@ -138,7 +139,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 		case "name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -155,7 +156,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "PrefixLength", err)
 				}
 				s.PrefixLength = value
 			case float64:

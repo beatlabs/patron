@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,9 +33,9 @@ import (
 
 // DenseVectorProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/mapping/complex.ts#L51-L57
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/mapping/complex.ts#L52-L58
 type DenseVectorProperty struct {
-	Dims         int                            `json:"dims"`
+	Dims         *int                           `json:"dims,omitempty"`
 	Dynamic      *dynamicmapping.DynamicMapping `json:"dynamic,omitempty"`
 	Fields       map[string]Property            `json:"fields,omitempty"`
 	IgnoreAbove  *int                           `json:"ignore_above,omitempty"`
@@ -70,17 +71,17 @@ func (s *DenseVectorProperty) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Dims", err)
 				}
-				s.Dims = value
+				s.Dims = &value
 			case float64:
 				f := int(v)
-				s.Dims = f
+				s.Dims = &f
 			}
 
 		case "dynamic":
 			if err := dec.Decode(&s.Dynamic); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Dynamic", err)
 			}
 
 		case "fields":
@@ -111,7 +112,7 @@ func (s *DenseVectorProperty) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Fields[key] = oo
-				case "{dynamic_property}":
+				case "{dynamic_type}":
 					oo := NewDynamicProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
@@ -398,7 +399,7 @@ func (s *DenseVectorProperty) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IgnoreAbove", err)
 				}
 				s.IgnoreAbove = &value
 			case float64:
@@ -413,7 +414,7 @@ func (s *DenseVectorProperty) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Index", err)
 				}
 				s.Index = &value
 			case bool:
@@ -422,7 +423,7 @@ func (s *DenseVectorProperty) UnmarshalJSON(data []byte) error {
 
 		case "index_options":
 			if err := dec.Decode(&s.IndexOptions); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IndexOptions", err)
 			}
 
 		case "meta":
@@ -430,7 +431,7 @@ func (s *DenseVectorProperty) UnmarshalJSON(data []byte) error {
 				s.Meta = make(map[string]string, 0)
 			}
 			if err := dec.Decode(&s.Meta); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Meta", err)
 			}
 
 		case "properties":
@@ -461,7 +462,7 @@ func (s *DenseVectorProperty) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Properties[key] = oo
-				case "{dynamic_property}":
+				case "{dynamic_type}":
 					oo := NewDynamicProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
@@ -743,7 +744,7 @@ func (s *DenseVectorProperty) UnmarshalJSON(data []byte) error {
 		case "similarity":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Similarity", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -754,7 +755,7 @@ func (s *DenseVectorProperty) UnmarshalJSON(data []byte) error {
 
 		case "type":
 			if err := dec.Decode(&s.Type); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Type", err)
 			}
 
 		}

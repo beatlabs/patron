@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // RollupJobConfiguration type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/rollup/get_jobs/types.ts#L34-L43
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/rollup/get_jobs/types.ts#L34-L43
 type RollupJobConfiguration struct {
 	Cron         string        `json:"cron"`
 	Groups       Groupings     `json:"groups"`
@@ -60,7 +61,7 @@ func (s *RollupJobConfiguration) UnmarshalJSON(data []byte) error {
 		case "cron":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Cron", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -71,18 +72,18 @@ func (s *RollupJobConfiguration) UnmarshalJSON(data []byte) error {
 
 		case "groups":
 			if err := dec.Decode(&s.Groups); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Groups", err)
 			}
 
 		case "id":
 			if err := dec.Decode(&s.Id); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Id", err)
 			}
 
 		case "index_pattern":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IndexPattern", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -93,7 +94,7 @@ func (s *RollupJobConfiguration) UnmarshalJSON(data []byte) error {
 
 		case "metrics":
 			if err := dec.Decode(&s.Metrics); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Metrics", err)
 			}
 
 		case "page_size":
@@ -103,7 +104,7 @@ func (s *RollupJobConfiguration) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "PageSize", err)
 				}
 				s.PageSize = value
 			case float64:
@@ -113,12 +114,12 @@ func (s *RollupJobConfiguration) UnmarshalJSON(data []byte) error {
 
 		case "rollup_index":
 			if err := dec.Decode(&s.RollupIndex); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RollupIndex", err)
 			}
 
 		case "timeout":
 			if err := dec.Decode(&s.Timeout); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Timeout", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package putindextemplate
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package putindextemplate
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/put_index_template/IndicesPutIndexTemplateRequest.ts#L36-L95
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/put_index_template/IndicesPutIndexTemplateRequest.ts#L36-L95
 type Request struct {
 
 	// ComposedOf An ordered list of component template names.
@@ -101,12 +101,12 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "composed_of":
 			if err := dec.Decode(&s.ComposedOf); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ComposedOf", err)
 			}
 
 		case "data_stream":
 			if err := dec.Decode(&s.DataStream); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "DataStream", err)
 			}
 
 		case "index_patterns":
@@ -115,19 +115,19 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IndexPatterns", err)
 				}
 
 				s.IndexPatterns = append(s.IndexPatterns, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.IndexPatterns); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IndexPatterns", err)
 				}
 			}
 
 		case "_meta":
 			if err := dec.Decode(&s.Meta_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Meta_", err)
 			}
 
 		case "priority":
@@ -138,7 +138,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Priority", err)
 				}
 				s.Priority = &value
 			case float64:
@@ -148,12 +148,12 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "template":
 			if err := dec.Decode(&s.Template); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Template", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

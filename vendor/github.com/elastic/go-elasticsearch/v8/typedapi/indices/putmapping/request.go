@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package putmapping
 
@@ -34,7 +34,7 @@ import (
 
 // Request holds the request body struct for the package putmapping
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/put_mapping/IndicesPutMappingRequest.ts#L42-L149
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/put_mapping/IndicesPutMappingRequest.ts#L42-L149
 type Request struct {
 
 	// DateDetection Controls whether dynamic date detection is enabled.
@@ -110,7 +110,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DateDetection", err)
 				}
 				s.DateDetection = &value
 			case bool:
@@ -119,12 +119,12 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "dynamic":
 			if err := dec.Decode(&s.Dynamic); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Dynamic", err)
 			}
 
 		case "dynamic_date_formats":
 			if err := dec.Decode(&s.DynamicDateFormats); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "DynamicDateFormats", err)
 			}
 
 		case "dynamic_templates":
@@ -137,25 +137,25 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case '{':
 				o := make(map[string]types.DynamicTemplate, 0)
 				if err := localDec.Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DynamicTemplates", err)
 				}
 				s.DynamicTemplates = append(s.DynamicTemplates, o)
 			case '[':
 				o := make([]map[string]types.DynamicTemplate, 0)
 				if err := localDec.Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DynamicTemplates", err)
 				}
 				s.DynamicTemplates = o
 			}
 
 		case "_field_names":
 			if err := dec.Decode(&s.FieldNames_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FieldNames_", err)
 			}
 
 		case "_meta":
 			if err := dec.Decode(&s.Meta_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Meta_", err)
 			}
 
 		case "numeric_detection":
@@ -165,7 +165,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NumericDetection", err)
 				}
 				s.NumericDetection = &value
 			case bool:
@@ -200,7 +200,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Properties[key] = oo
-				case "{dynamic_property}":
+				case "{dynamic_type}":
 					oo := types.NewDynamicProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
@@ -481,17 +481,17 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "_routing":
 			if err := dec.Decode(&s.Routing_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Routing_", err)
 			}
 
 		case "runtime":
 			if err := dec.Decode(&s.Runtime); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Runtime", err)
 			}
 
 		case "_source":
 			if err := dec.Decode(&s.Source_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Source_", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package updatetransform
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package updatetransform
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/transform/update_transform/UpdateTransformRequest.ts#L31-L105
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/transform/update_transform/UpdateTransformRequest.ts#L31-L105
 type Request struct {
 
 	// Description Free text description of the transform.
@@ -93,7 +93,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 		case "description":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Description", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -104,37 +104,37 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "dest":
 			if err := dec.Decode(&s.Dest); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Dest", err)
 			}
 
 		case "frequency":
 			if err := dec.Decode(&s.Frequency); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Frequency", err)
 			}
 
 		case "_meta":
 			if err := dec.Decode(&s.Meta_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Meta_", err)
 			}
 
 		case "retention_policy":
 			if err := dec.Decode(&s.RetentionPolicy); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RetentionPolicy", err)
 			}
 
 		case "settings":
 			if err := dec.Decode(&s.Settings); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Settings", err)
 			}
 
 		case "source":
 			if err := dec.Decode(&s.Source); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Source", err)
 			}
 
 		case "sync":
 			if err := dec.Decode(&s.Sync); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Sync", err)
 			}
 
 		}

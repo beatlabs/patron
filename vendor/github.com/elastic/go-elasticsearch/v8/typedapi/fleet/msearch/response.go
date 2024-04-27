@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package msearch
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
@@ -31,7 +32,7 @@ import (
 
 // Response holds the response body struct for the package msearch
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/fleet/msearch/MultiSearchResponse.ts#L25-L29
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/fleet/msearch/MultiSearchResponse.ts#L25-L29
 type Response struct {
 	Docs []types.MsearchResponseItem `json:"docs"`
 }
@@ -59,7 +60,7 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 		case "docs":
 			messageArray := []json.RawMessage{}
 			if err := dec.Decode(&messageArray); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Docs", err)
 			}
 		docs:
 			for _, message := range messageArray {
@@ -70,7 +71,7 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 						if errors.Is(err, io.EOF) {
 							break
 						}
-						return err
+						return fmt.Errorf("%s | %w", "Docs", err)
 					}
 
 					switch t {
@@ -79,7 +80,7 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 						o := types.NewMultiSearchItem()
 						localDec := json.NewDecoder(bytes.NewReader(message))
 						if err := localDec.Decode(&o); err != nil {
-							return err
+							return fmt.Errorf("%s | %w", "Docs", err)
 						}
 						s.Docs = append(s.Docs, o)
 						continue docs
@@ -88,7 +89,7 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 						o := types.NewErrorResponseBase()
 						localDec := json.NewDecoder(bytes.NewReader(message))
 						if err := localDec.Decode(&o); err != nil {
-							return err
+							return fmt.Errorf("%s | %w", "Docs", err)
 						}
 						s.Docs = append(s.Docs, o)
 						continue docs

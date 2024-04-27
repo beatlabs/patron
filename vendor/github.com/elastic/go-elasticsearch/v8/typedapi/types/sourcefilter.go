@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // SourceFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/search/_types/SourceFilter.ts#L23-L31
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/search/_types/SourceFilter.ts#L23-L31
 type SourceFilter struct {
 	Excludes []string `json:"excludes,omitempty"`
 	Includes []string `json:"includes,omitempty"`
@@ -61,13 +62,13 @@ func (s *SourceFilter) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Excludes", err)
 				}
 
 				s.Excludes = append(s.Excludes, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Excludes); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Excludes", err)
 				}
 			}
 
@@ -77,13 +78,13 @@ func (s *SourceFilter) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Includes", err)
 				}
 
 				s.Includes = append(s.Includes, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Includes); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Includes", err)
 				}
 			}
 

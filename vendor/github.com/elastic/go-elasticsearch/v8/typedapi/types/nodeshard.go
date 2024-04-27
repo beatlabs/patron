@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // NodeShard type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/Node.ts#L60-L71
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Node.ts#L60-L71
 type NodeShard struct {
 	AllocationId          map[string]string                   `json:"allocation_id,omitempty"`
 	Index                 string                              `json:"index"`
@@ -66,17 +67,17 @@ func (s *NodeShard) UnmarshalJSON(data []byte) error {
 				s.AllocationId = make(map[string]string, 0)
 			}
 			if err := dec.Decode(&s.AllocationId); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "AllocationId", err)
 			}
 
 		case "index":
 			if err := dec.Decode(&s.Index); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Index", err)
 			}
 
 		case "node":
 			if err := dec.Decode(&s.Node); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Node", err)
 			}
 
 		case "primary":
@@ -86,7 +87,7 @@ func (s *NodeShard) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Primary", err)
 				}
 				s.Primary = value
 			case bool:
@@ -98,17 +99,17 @@ func (s *NodeShard) UnmarshalJSON(data []byte) error {
 				s.RecoverySource = make(map[string]string, 0)
 			}
 			if err := dec.Decode(&s.RecoverySource); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RecoverySource", err)
 			}
 
 		case "relocating_node":
 			if err := dec.Decode(&s.RelocatingNode); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RelocatingNode", err)
 			}
 
 		case "relocation_failure_info":
 			if err := dec.Decode(&s.RelocationFailureInfo); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RelocationFailureInfo", err)
 			}
 
 		case "shard":
@@ -119,7 +120,7 @@ func (s *NodeShard) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Shard", err)
 				}
 				s.Shard = value
 			case float64:
@@ -129,12 +130,12 @@ func (s *NodeShard) UnmarshalJSON(data []byte) error {
 
 		case "state":
 			if err := dec.Decode(&s.State); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "State", err)
 			}
 
 		case "unassigned_info":
 			if err := dec.Decode(&s.UnassignedInfo); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "UnassignedInfo", err)
 			}
 
 		}

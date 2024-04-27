@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // Term type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/termvectors/types.ts#L34-L40
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/termvectors/types.ts#L34-L40
 type Term struct {
 	DocFreq  *int               `json:"doc_freq,omitempty"`
 	Score    *Float64           `json:"score,omitempty"`
@@ -62,7 +63,7 @@ func (s *Term) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DocFreq", err)
 				}
 				s.DocFreq = &value
 			case float64:
@@ -77,7 +78,7 @@ func (s *Term) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Score", err)
 				}
 				f := Float64(value)
 				s.Score = &f
@@ -94,7 +95,7 @@ func (s *Term) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "TermFreq", err)
 				}
 				s.TermFreq = value
 			case float64:
@@ -104,7 +105,7 @@ func (s *Term) UnmarshalJSON(data []byte) error {
 
 		case "tokens":
 			if err := dec.Decode(&s.Tokens); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Tokens", err)
 			}
 
 		case "ttf":
@@ -115,7 +116,7 @@ func (s *Term) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Ttf", err)
 				}
 				s.Ttf = &value
 			case float64:

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // DataframeClassificationSummaryPrecision type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/evaluate_data_frame/types.ts#L101-L104
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/evaluate_data_frame/types.ts#L101-L104
 type DataframeClassificationSummaryPrecision struct {
 	AvgPrecision Float64                    `json:"avg_precision"`
 	Classes      []DataframeEvaluationClass `json:"classes"`
@@ -58,7 +59,7 @@ func (s *DataframeClassificationSummaryPrecision) UnmarshalJSON(data []byte) err
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AvgPrecision", err)
 				}
 				f := Float64(value)
 				s.AvgPrecision = f
@@ -69,7 +70,7 @@ func (s *DataframeClassificationSummaryPrecision) UnmarshalJSON(data []byte) err
 
 		case "classes":
 			if err := dec.Decode(&s.Classes); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Classes", err)
 			}
 
 		}

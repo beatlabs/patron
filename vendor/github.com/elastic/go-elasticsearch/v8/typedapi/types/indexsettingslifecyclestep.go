@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // IndexSettingsLifecycleStep type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/_types/IndexSettings.ts#L301-L307
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/_types/IndexSettings.ts#L309-L315
 type IndexSettingsLifecycleStep struct {
 	// WaitTimeThreshold Time to wait for the cluster to resolve allocation issues during an ILM
 	// shrink action. Must be greater than 1h (1 hour).
@@ -54,7 +55,7 @@ func (s *IndexSettingsLifecycleStep) UnmarshalJSON(data []byte) error {
 
 		case "wait_time_threshold":
 			if err := dec.Decode(&s.WaitTimeThreshold); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "WaitTimeThreshold", err)
 			}
 
 		}

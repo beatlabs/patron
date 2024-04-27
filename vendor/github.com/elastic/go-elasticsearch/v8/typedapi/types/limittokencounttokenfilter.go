@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // LimitTokenCountTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/analysis/token_filters.ts#L249-L253
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/token_filters.ts#L249-L253
 type LimitTokenCountTokenFilter struct {
 	ConsumeAllTokens *bool              `json:"consume_all_tokens,omitempty"`
 	MaxTokenCount    Stringifiedinteger `json:"max_token_count,omitempty"`
@@ -60,7 +61,7 @@ func (s *LimitTokenCountTokenFilter) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "ConsumeAllTokens", err)
 				}
 				s.ConsumeAllTokens = &value
 			case bool:
@@ -69,17 +70,17 @@ func (s *LimitTokenCountTokenFilter) UnmarshalJSON(data []byte) error {
 
 		case "max_token_count":
 			if err := dec.Decode(&s.MaxTokenCount); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MaxTokenCount", err)
 			}
 
 		case "type":
 			if err := dec.Decode(&s.Type); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Type", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ErrorResponseBase type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/Base.ts#L66-L75
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Base.ts#L76-L85
 type ErrorResponseBase struct {
 	Error  ErrorCause `json:"error"`
 	Status int        `json:"status"`
@@ -53,7 +54,7 @@ func (s *ErrorResponseBase) UnmarshalJSON(data []byte) error {
 
 		case "error":
 			if err := dec.Decode(&s.Error); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Error", err)
 			}
 
 		case "status":
@@ -64,7 +65,7 @@ func (s *ErrorResponseBase) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Status", err)
 				}
 				s.Status = value
 			case float64:

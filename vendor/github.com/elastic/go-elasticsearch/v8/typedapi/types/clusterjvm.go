@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ClusterJvm type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/cluster/stats/types.ts#L275-L292
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cluster/stats/types.ts#L275-L292
 type ClusterJvm struct {
 	// MaxUptimeInMillis Uptime duration, in milliseconds, since JVM last started.
 	MaxUptimeInMillis int64 `json:"max_uptime_in_millis"`
@@ -59,12 +60,12 @@ func (s *ClusterJvm) UnmarshalJSON(data []byte) error {
 
 		case "max_uptime_in_millis":
 			if err := dec.Decode(&s.MaxUptimeInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MaxUptimeInMillis", err)
 			}
 
 		case "mem":
 			if err := dec.Decode(&s.Mem); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Mem", err)
 			}
 
 		case "threads":
@@ -74,7 +75,7 @@ func (s *ClusterJvm) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Threads", err)
 				}
 				s.Threads = value
 			case float64:
@@ -84,7 +85,7 @@ func (s *ClusterJvm) UnmarshalJSON(data []byte) error {
 
 		case "versions":
 			if err := dec.Decode(&s.Versions); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Versions", err)
 			}
 
 		}

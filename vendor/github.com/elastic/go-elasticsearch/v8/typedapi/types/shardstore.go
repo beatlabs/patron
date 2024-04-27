@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -32,11 +32,11 @@ import (
 
 // ShardStore type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/shard_stores/types.ts#L30-L34
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/shard_stores/types.ts#L30-L34
 type ShardStore struct {
 	Allocation     shardstoreallocation.ShardStoreAllocation `json:"allocation"`
 	AllocationId   *string                                   `json:"allocation_id,omitempty"`
-	ShardStore     map[string]ShardStoreNode                 `json:"ShardStore,omitempty"`
+	ShardStore     map[string]ShardStoreNode                 `json:"-"`
 	StoreException *ShardStoreException                      `json:"store_exception,omitempty"`
 }
 
@@ -57,28 +57,31 @@ func (s *ShardStore) UnmarshalJSON(data []byte) error {
 
 		case "allocation":
 			if err := dec.Decode(&s.Allocation); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Allocation", err)
 			}
 
 		case "allocation_id":
 			if err := dec.Decode(&s.AllocationId); err != nil {
-				return err
-			}
-
-		case "ShardStore":
-			if s.ShardStore == nil {
-				s.ShardStore = make(map[string]ShardStoreNode, 0)
-			}
-			if err := dec.Decode(&s.ShardStore); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "AllocationId", err)
 			}
 
 		case "store_exception":
 			if err := dec.Decode(&s.StoreException); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "StoreException", err)
 			}
 
 		default:
+
+			if key, ok := t.(string); ok {
+				if s.ShardStore == nil {
+					s.ShardStore = make(map[string]ShardStoreNode, 0)
+				}
+				raw := NewShardStoreNode()
+				if err := dec.Decode(&raw); err != nil {
+					return fmt.Errorf("%s | %w", "ShardStore", err)
+				}
+				s.ShardStore[key] = *raw
+			}
 
 		}
 	}

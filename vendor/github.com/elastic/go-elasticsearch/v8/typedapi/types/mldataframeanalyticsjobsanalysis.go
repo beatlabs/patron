@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // MlDataFrameAnalyticsJobsAnalysis type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/xpack/usage/types.ts#L184-L188
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/xpack/usage/types.ts#L184-L188
 type MlDataFrameAnalyticsJobsAnalysis struct {
 	Classification   *int `json:"classification,omitempty"`
 	OutlierDetection *int `json:"outlier_detection,omitempty"`
@@ -60,7 +61,7 @@ func (s *MlDataFrameAnalyticsJobsAnalysis) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Classification", err)
 				}
 				s.Classification = &value
 			case float64:
@@ -76,7 +77,7 @@ func (s *MlDataFrameAnalyticsJobsAnalysis) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "OutlierDetection", err)
 				}
 				s.OutlierDetection = &value
 			case float64:
@@ -92,7 +93,7 @@ func (s *MlDataFrameAnalyticsJobsAnalysis) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Regression", err)
 				}
 				s.Regression = &value
 			case float64:

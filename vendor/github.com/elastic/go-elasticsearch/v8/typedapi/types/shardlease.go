@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ShardLease type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/stats/types.ts#L133-L138
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/stats/types.ts#L133-L138
 type ShardLease struct {
 	Id             string `json:"id"`
 	RetainingSeqNo int64  `json:"retaining_seq_no"`
@@ -55,18 +56,18 @@ func (s *ShardLease) UnmarshalJSON(data []byte) error {
 
 		case "id":
 			if err := dec.Decode(&s.Id); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Id", err)
 			}
 
 		case "retaining_seq_no":
 			if err := dec.Decode(&s.RetainingSeqNo); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RetainingSeqNo", err)
 			}
 
 		case "source":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Source", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -82,7 +83,7 @@ func (s *ShardLease) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Timestamp", err)
 				}
 				s.Timestamp = value
 			case float64:

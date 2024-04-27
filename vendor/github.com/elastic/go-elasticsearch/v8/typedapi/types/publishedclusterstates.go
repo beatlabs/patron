@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // PublishedClusterStates type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/nodes/_types/Stats.ts#L263-L276
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/Stats.ts#L263-L276
 type PublishedClusterStates struct {
 	// CompatibleDiffs Number of compatible differences between published cluster states.
 	CompatibleDiffs *int64 `json:"compatible_diffs,omitempty"`
@@ -62,7 +63,7 @@ func (s *PublishedClusterStates) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "CompatibleDiffs", err)
 				}
 				s.CompatibleDiffs = &value
 			case float64:
@@ -77,7 +78,7 @@ func (s *PublishedClusterStates) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "FullStates", err)
 				}
 				s.FullStates = &value
 			case float64:
@@ -92,7 +93,7 @@ func (s *PublishedClusterStates) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IncompatibleDiffs", err)
 				}
 				s.IncompatibleDiffs = &value
 			case float64:

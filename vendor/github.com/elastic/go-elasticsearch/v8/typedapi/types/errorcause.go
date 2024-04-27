@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ErrorCause type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/Errors.ts#L25-L48
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Errors.ts#L25-L48
 type ErrorCause struct {
 	CausedBy *ErrorCause                `json:"caused_by,omitempty"`
 	Metadata map[string]json.RawMessage `json:"-"`
@@ -69,13 +69,13 @@ func (s *ErrorCause) UnmarshalJSON(data []byte) error {
 
 		case "caused_by":
 			if err := dec.Decode(&s.CausedBy); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "CausedBy", err)
 			}
 
 		case "reason":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Reason", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -86,13 +86,13 @@ func (s *ErrorCause) UnmarshalJSON(data []byte) error {
 
 		case "root_cause":
 			if err := dec.Decode(&s.RootCause); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RootCause", err)
 			}
 
 		case "stack_trace":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "StackTrace", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -103,13 +103,13 @@ func (s *ErrorCause) UnmarshalJSON(data []byte) error {
 
 		case "suppressed":
 			if err := dec.Decode(&s.Suppressed); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Suppressed", err)
 			}
 
 		case "type":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Type", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -126,7 +126,7 @@ func (s *ErrorCause) UnmarshalJSON(data []byte) error {
 				}
 				raw := new(json.RawMessage)
 				if err := dec.Decode(&raw); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Metadata", err)
 				}
 				s.Metadata[key] = *raw
 			}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // NerInferenceOptions type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/inference.ts#L255-L264
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/inference.ts#L255-L264
 type NerInferenceOptions struct {
 	// ClassificationLabels The token classification labels. Must be IOB formatted tags
 	ClassificationLabels []string `json:"classification_labels,omitempty"`
@@ -59,13 +60,13 @@ func (s *NerInferenceOptions) UnmarshalJSON(data []byte) error {
 
 		case "classification_labels":
 			if err := dec.Decode(&s.ClassificationLabels); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ClassificationLabels", err)
 			}
 
 		case "results_field":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ResultsField", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -76,12 +77,12 @@ func (s *NerInferenceOptions) UnmarshalJSON(data []byte) error {
 
 		case "tokenization":
 			if err := dec.Decode(&s.Tokenization); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Tokenization", err)
 			}
 
 		case "vocabulary":
 			if err := dec.Decode(&s.Vocabulary); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Vocabulary", err)
 			}
 
 		}

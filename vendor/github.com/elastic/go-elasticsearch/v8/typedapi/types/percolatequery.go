@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // PercolateQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/specialized.ts#L193-L230
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/specialized.ts#L193-L230
 type PercolateQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -83,7 +84,7 @@ func (s *PercolateQuery) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 32)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Boost", err)
 				}
 				f := float32(value)
 				s.Boost = &f
@@ -94,33 +95,33 @@ func (s *PercolateQuery) UnmarshalJSON(data []byte) error {
 
 		case "document":
 			if err := dec.Decode(&s.Document); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Document", err)
 			}
 
 		case "documents":
 			if err := dec.Decode(&s.Documents); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Documents", err)
 			}
 
 		case "field":
 			if err := dec.Decode(&s.Field); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Field", err)
 			}
 
 		case "id":
 			if err := dec.Decode(&s.Id); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Id", err)
 			}
 
 		case "index":
 			if err := dec.Decode(&s.Index); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Index", err)
 			}
 
 		case "name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -132,7 +133,7 @@ func (s *PercolateQuery) UnmarshalJSON(data []byte) error {
 		case "preference":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Preference", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -144,7 +145,7 @@ func (s *PercolateQuery) UnmarshalJSON(data []byte) error {
 		case "_name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "QueryName_", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -155,12 +156,12 @@ func (s *PercolateQuery) UnmarshalJSON(data []byte) error {
 
 		case "routing":
 			if err := dec.Decode(&s.Routing); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Routing", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

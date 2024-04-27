@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ReindexSource type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/reindex/types.ts#L66-L97
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/reindex/types.ts#L66-L97
 type ReindexSource struct {
 	// Index The name of the data stream, index, or alias you are copying from.
 	// Accepts a comma-separated list to reindex from multiple sources.
@@ -74,29 +75,29 @@ func (s *ReindexSource) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Index", err)
 				}
 
 				s.Index = append(s.Index, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Index); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Index", err)
 				}
 			}
 
 		case "query":
 			if err := dec.Decode(&s.Query); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Query", err)
 			}
 
 		case "remote":
 			if err := dec.Decode(&s.Remote); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Remote", err)
 			}
 
 		case "runtime_mappings":
 			if err := dec.Decode(&s.RuntimeMappings); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RuntimeMappings", err)
 			}
 
 		case "size":
@@ -107,7 +108,7 @@ func (s *ReindexSource) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Size", err)
 				}
 				s.Size = &value
 			case float64:
@@ -117,7 +118,7 @@ func (s *ReindexSource) UnmarshalJSON(data []byte) error {
 
 		case "slice":
 			if err := dec.Decode(&s.Slice); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Slice", err)
 			}
 
 		case "sort":
@@ -126,13 +127,13 @@ func (s *ReindexSource) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(SortCombinations)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Sort", err)
 				}
 
 				s.Sort = append(s.Sort, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Sort); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Sort", err)
 				}
 			}
 
@@ -142,13 +143,13 @@ func (s *ReindexSource) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "SourceFields_", err)
 				}
 
 				s.SourceFields_ = append(s.SourceFields_, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.SourceFields_); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "SourceFields_", err)
 				}
 			}
 

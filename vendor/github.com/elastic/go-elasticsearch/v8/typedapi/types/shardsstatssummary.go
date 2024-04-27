@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // ShardsStatsSummary type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/snapshot/_types/SnapshotShardsStatus.ts#L29-L35
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/snapshot/_types/SnapshotShardsStatus.ts#L29-L35
 type ShardsStatsSummary struct {
 	Incremental       ShardsStatsSummaryItem `json:"incremental"`
 	StartTimeInMillis int64                  `json:"start_time_in_millis"`
@@ -55,27 +56,27 @@ func (s *ShardsStatsSummary) UnmarshalJSON(data []byte) error {
 
 		case "incremental":
 			if err := dec.Decode(&s.Incremental); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Incremental", err)
 			}
 
 		case "start_time_in_millis":
 			if err := dec.Decode(&s.StartTimeInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "StartTimeInMillis", err)
 			}
 
 		case "time":
 			if err := dec.Decode(&s.Time); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Time", err)
 			}
 
 		case "time_in_millis":
 			if err := dec.Decode(&s.TimeInMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TimeInMillis", err)
 			}
 
 		case "total":
 			if err := dec.Decode(&s.Total); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Total", err)
 			}
 
 		}

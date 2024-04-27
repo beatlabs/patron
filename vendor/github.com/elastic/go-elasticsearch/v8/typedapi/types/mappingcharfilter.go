@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // MappingCharFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/analysis/char_filters.ts#L47-L51
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/char_filters.ts#L48-L52
 type MappingCharFilter struct {
 	Mappings     []string `json:"mappings,omitempty"`
 	MappingsPath *string  `json:"mappings_path,omitempty"`
@@ -55,13 +56,13 @@ func (s *MappingCharFilter) UnmarshalJSON(data []byte) error {
 
 		case "mappings":
 			if err := dec.Decode(&s.Mappings); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Mappings", err)
 			}
 
 		case "mappings_path":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MappingsPath", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -72,12 +73,12 @@ func (s *MappingCharFilter) UnmarshalJSON(data []byte) error {
 
 		case "type":
 			if err := dec.Decode(&s.Type); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Type", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

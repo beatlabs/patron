@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // IndicatorNode type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/health_report/types.ts#L90-L93
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/health_report/types.ts#L90-L93
 type IndicatorNode struct {
 	Name   string `json:"name,omitempty"`
 	NodeId string `json:"node_id,omitempty"`
@@ -54,7 +55,7 @@ func (s *IndicatorNode) UnmarshalJSON(data []byte) error {
 		case "name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -66,7 +67,7 @@ func (s *IndicatorNode) UnmarshalJSON(data []byte) error {
 		case "node_id":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "NodeId", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

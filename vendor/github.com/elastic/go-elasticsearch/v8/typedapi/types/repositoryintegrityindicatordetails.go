@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // RepositoryIntegrityIndicatorDetails type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/health_report/types.ts#L139-L143
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/health_report/types.ts#L139-L143
 type RepositoryIntegrityIndicatorDetails struct {
 	Corrupted             []string `json:"corrupted,omitempty"`
 	CorruptedRepositories *int64   `json:"corrupted_repositories,omitempty"`
@@ -54,7 +55,7 @@ func (s *RepositoryIntegrityIndicatorDetails) UnmarshalJSON(data []byte) error {
 
 		case "corrupted":
 			if err := dec.Decode(&s.Corrupted); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Corrupted", err)
 			}
 
 		case "corrupted_repositories":
@@ -64,7 +65,7 @@ func (s *RepositoryIntegrityIndicatorDetails) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "CorruptedRepositories", err)
 				}
 				s.CorruptedRepositories = &value
 			case float64:
@@ -79,7 +80,7 @@ func (s *RepositoryIntegrityIndicatorDetails) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "TotalRepositories", err)
 				}
 				s.TotalRepositories = &value
 			case float64:

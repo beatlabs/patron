@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ZeroShotClassificationInferenceOptions type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/inference.ts#L201-L222
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/inference.ts#L201-L222
 type ZeroShotClassificationInferenceOptions struct {
 	// ClassificationLabels The zero shot classification labels indicating entailment, neutral, and
 	// contradiction
@@ -66,13 +67,13 @@ func (s *ZeroShotClassificationInferenceOptions) UnmarshalJSON(data []byte) erro
 
 		case "classification_labels":
 			if err := dec.Decode(&s.ClassificationLabels); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ClassificationLabels", err)
 			}
 
 		case "hypothesis_template":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "HypothesisTemplate", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -83,7 +84,7 @@ func (s *ZeroShotClassificationInferenceOptions) UnmarshalJSON(data []byte) erro
 
 		case "labels":
 			if err := dec.Decode(&s.Labels); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Labels", err)
 			}
 
 		case "multi_label":
@@ -93,7 +94,7 @@ func (s *ZeroShotClassificationInferenceOptions) UnmarshalJSON(data []byte) erro
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MultiLabel", err)
 				}
 				s.MultiLabel = &value
 			case bool:
@@ -103,7 +104,7 @@ func (s *ZeroShotClassificationInferenceOptions) UnmarshalJSON(data []byte) erro
 		case "results_field":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ResultsField", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -114,7 +115,7 @@ func (s *ZeroShotClassificationInferenceOptions) UnmarshalJSON(data []byte) erro
 
 		case "tokenization":
 			if err := dec.Decode(&s.Tokenization); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Tokenization", err)
 			}
 
 		}

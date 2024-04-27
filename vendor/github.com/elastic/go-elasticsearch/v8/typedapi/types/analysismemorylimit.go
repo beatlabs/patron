@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // AnalysisMemoryLimit type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/Analysis.ts#L174-L179
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/Analysis.ts#L174-L179
 type AnalysisMemoryLimit struct {
 	// ModelMemoryLimit Limits can be applied for the resources required to hold the mathematical
 	// models in memory. These limits are approximate and can be set per job. They
@@ -57,7 +58,7 @@ func (s *AnalysisMemoryLimit) UnmarshalJSON(data []byte) error {
 		case "model_memory_limit":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ModelMemoryLimit", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

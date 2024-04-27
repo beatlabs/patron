@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // SynonymRuleRead type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/synonyms/_types/SynonymRule.ts#L38-L47
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/synonyms/_types/SynonymRule.ts#L38-L47
 type SynonymRuleRead struct {
 	// Id Synonym Rule identifier
 	Id string `json:"id"`
@@ -55,12 +56,12 @@ func (s *SynonymRuleRead) UnmarshalJSON(data []byte) error {
 
 		case "id":
 			if err := dec.Decode(&s.Id); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Id", err)
 			}
 
 		case "synonyms":
 			if err := dec.Decode(&s.Synonyms); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Synonyms", err)
 			}
 
 		}

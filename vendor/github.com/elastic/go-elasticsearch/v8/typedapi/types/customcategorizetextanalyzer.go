@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // CustomCategorizeTextAnalyzer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/aggregations/bucket.ts#L1108-L1112
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L1107-L1111
 type CustomCategorizeTextAnalyzer struct {
 	CharFilter []string `json:"char_filter,omitempty"`
 	Filter     []string `json:"filter,omitempty"`
@@ -54,18 +55,18 @@ func (s *CustomCategorizeTextAnalyzer) UnmarshalJSON(data []byte) error {
 
 		case "char_filter":
 			if err := dec.Decode(&s.CharFilter); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "CharFilter", err)
 			}
 
 		case "filter":
 			if err := dec.Decode(&s.Filter); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Filter", err)
 			}
 
 		case "tokenizer":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Tokenizer", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

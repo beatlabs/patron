@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // TermVectorsToken type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/termvectors/types.ts#L42-L47
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/termvectors/types.ts#L42-L47
 type TermVectorsToken struct {
 	EndOffset   *int    `json:"end_offset,omitempty"`
 	Payload     *string `json:"payload,omitempty"`
@@ -61,7 +62,7 @@ func (s *TermVectorsToken) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "EndOffset", err)
 				}
 				s.EndOffset = &value
 			case float64:
@@ -72,7 +73,7 @@ func (s *TermVectorsToken) UnmarshalJSON(data []byte) error {
 		case "payload":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Payload", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -89,7 +90,7 @@ func (s *TermVectorsToken) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Position", err)
 				}
 				s.Position = value
 			case float64:
@@ -105,7 +106,7 @@ func (s *TermVectorsToken) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "StartOffset", err)
 				}
 				s.StartOffset = &value
 			case float64:

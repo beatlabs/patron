@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // HoltLinearModelSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/aggregations/pipeline.ts#L271-L274
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/pipeline.ts#L271-L274
 type HoltLinearModelSettings struct {
 	Alpha *float32 `json:"alpha,omitempty"`
 	Beta  *float32 `json:"beta,omitempty"`
@@ -58,7 +59,7 @@ func (s *HoltLinearModelSettings) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 32)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Alpha", err)
 				}
 				f := float32(value)
 				s.Alpha = &f
@@ -74,7 +75,7 @@ func (s *HoltLinearModelSettings) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 32)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Beta", err)
 				}
 				f := float32(value)
 				s.Beta = &f

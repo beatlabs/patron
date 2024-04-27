@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // DataStreamsStatsItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/data_streams_stats/IndicesDataStreamsStatsResponse.ts#L45-L65
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/data_streams_stats/IndicesDataStreamsStatsResponse.ts#L45-L65
 type DataStreamsStatsItem struct {
 	// BackingIndices Current number of backing indices for the data stream.
 	BackingIndices int `json:"backing_indices"`
@@ -48,7 +49,7 @@ type DataStreamsStatsItem struct {
 	// This parameter is only returned if the `human` query parameter is `true`.
 	StoreSize ByteSize `json:"store_size,omitempty"`
 	// StoreSizeBytes Total size, in bytes, of all shards for the data stream’s backing indices.
-	StoreSizeBytes int `json:"store_size_bytes"`
+	StoreSizeBytes int64 `json:"store_size_bytes"`
 }
 
 func (s *DataStreamsStatsItem) UnmarshalJSON(data []byte) error {
@@ -74,7 +75,7 @@ func (s *DataStreamsStatsItem) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "BackingIndices", err)
 				}
 				s.BackingIndices = value
 			case float64:
@@ -84,32 +85,31 @@ func (s *DataStreamsStatsItem) UnmarshalJSON(data []byte) error {
 
 		case "data_stream":
 			if err := dec.Decode(&s.DataStream); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "DataStream", err)
 			}
 
 		case "maximum_timestamp":
 			if err := dec.Decode(&s.MaximumTimestamp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MaximumTimestamp", err)
 			}
 
 		case "store_size":
 			if err := dec.Decode(&s.StoreSize); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "StoreSize", err)
 			}
 
 		case "store_size_bytes":
-
 			var tmp interface{}
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
-				value, err := strconv.Atoi(v)
+				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "StoreSizeBytes", err)
 				}
 				s.StoreSizeBytes = value
 			case float64:
-				f := int(v)
+				f := int64(v)
 				s.StoreSizeBytes = f
 			}
 

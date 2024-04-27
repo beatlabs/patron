@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/scriptlanguage"
@@ -31,7 +32,7 @@ import (
 
 // RoleTemplateInlineScript type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/security/_types/Privileges.ts#L153-L158
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/_types/Privileges.ts#L153-L158
 type RoleTemplateInlineScript struct {
 	Lang    *scriptlanguage.ScriptLanguage `json:"lang,omitempty"`
 	Options map[string]string              `json:"options,omitempty"`
@@ -63,7 +64,7 @@ func (s *RoleTemplateInlineScript) UnmarshalJSON(data []byte) error {
 
 		case "lang":
 			if err := dec.Decode(&s.Lang); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Lang", err)
 			}
 
 		case "options":
@@ -71,7 +72,7 @@ func (s *RoleTemplateInlineScript) UnmarshalJSON(data []byte) error {
 				s.Options = make(map[string]string, 0)
 			}
 			if err := dec.Decode(&s.Options); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Options", err)
 			}
 
 		case "params":
@@ -79,7 +80,7 @@ func (s *RoleTemplateInlineScript) UnmarshalJSON(data []byte) error {
 				s.Params = make(map[string]json.RawMessage, 0)
 			}
 			if err := dec.Decode(&s.Params); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Params", err)
 			}
 
 		case "source":
@@ -98,7 +99,7 @@ func (s *RoleTemplateInlineScript) UnmarshalJSON(data []byte) error {
 
 			default:
 				if err := localDec.Decode(&s.Source); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Source", err)
 				}
 			}
 

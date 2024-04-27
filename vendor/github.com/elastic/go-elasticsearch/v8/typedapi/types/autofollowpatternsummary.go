@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // AutoFollowPatternSummary type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ccr/get_auto_follow_pattern/types.ts#L28-L52
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ccr/get_auto_follow_pattern/types.ts#L28-L52
 type AutoFollowPatternSummary struct {
 	Active bool `json:"active"`
 	// FollowIndexPattern The name of follower index.
@@ -69,7 +70,7 @@ func (s *AutoFollowPatternSummary) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Active", err)
 				}
 				s.Active = value
 			case bool:
@@ -78,17 +79,17 @@ func (s *AutoFollowPatternSummary) UnmarshalJSON(data []byte) error {
 
 		case "follow_index_pattern":
 			if err := dec.Decode(&s.FollowIndexPattern); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FollowIndexPattern", err)
 			}
 
 		case "leader_index_exclusion_patterns":
 			if err := dec.Decode(&s.LeaderIndexExclusionPatterns); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "LeaderIndexExclusionPatterns", err)
 			}
 
 		case "leader_index_patterns":
 			if err := dec.Decode(&s.LeaderIndexPatterns); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "LeaderIndexPatterns", err)
 			}
 
 		case "max_outstanding_read_requests":
@@ -99,7 +100,7 @@ func (s *AutoFollowPatternSummary) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MaxOutstandingReadRequests", err)
 				}
 				s.MaxOutstandingReadRequests = value
 			case float64:
@@ -110,7 +111,7 @@ func (s *AutoFollowPatternSummary) UnmarshalJSON(data []byte) error {
 		case "remote_cluster":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RemoteCluster", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

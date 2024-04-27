@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // SnapshotRestore type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/snapshot/restore/SnapshotRestoreResponse.ts#L27-L31
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/snapshot/restore/SnapshotRestoreResponse.ts#L27-L31
 type SnapshotRestore struct {
 	Indices  []string        `json:"indices"`
 	Shards   ShardStatistics `json:"shards"`
@@ -54,18 +55,18 @@ func (s *SnapshotRestore) UnmarshalJSON(data []byte) error {
 
 		case "indices":
 			if err := dec.Decode(&s.Indices); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Indices", err)
 			}
 
 		case "shards":
 			if err := dec.Decode(&s.Shards); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Shards", err)
 			}
 
 		case "snapshot":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Snapshot", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

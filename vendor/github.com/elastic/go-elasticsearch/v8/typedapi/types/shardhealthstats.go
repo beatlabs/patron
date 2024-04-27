@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // ShardHealthStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/cluster/health/types.ts#L36-L43
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cluster/health/types.ts#L36-L43
 type ShardHealthStats struct {
 	ActiveShards       int                       `json:"active_shards"`
 	InitializingShards int                       `json:"initializing_shards"`
@@ -65,7 +66,7 @@ func (s *ShardHealthStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "ActiveShards", err)
 				}
 				s.ActiveShards = value
 			case float64:
@@ -81,7 +82,7 @@ func (s *ShardHealthStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "InitializingShards", err)
 				}
 				s.InitializingShards = value
 			case float64:
@@ -96,7 +97,7 @@ func (s *ShardHealthStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "PrimaryActive", err)
 				}
 				s.PrimaryActive = value
 			case bool:
@@ -111,7 +112,7 @@ func (s *ShardHealthStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "RelocatingShards", err)
 				}
 				s.RelocatingShards = value
 			case float64:
@@ -121,7 +122,7 @@ func (s *ShardHealthStats) UnmarshalJSON(data []byte) error {
 
 		case "status":
 			if err := dec.Decode(&s.Status); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Status", err)
 			}
 
 		case "unassigned_shards":
@@ -132,7 +133,7 @@ func (s *ShardHealthStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "UnassignedShards", err)
 				}
 				s.UnassignedShards = value
 			case float64:

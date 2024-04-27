@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // DataframeAnalyticsStatsHyperparameters type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/DataframeAnalytics.ts#L383-L402
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/DataframeAnalytics.ts#L383-L402
 type DataframeAnalyticsStatsHyperparameters struct {
 	// Hyperparameters An object containing the parameters of the classification analysis job.
 	Hyperparameters Hyperparameters `json:"hyperparameters"`
@@ -62,7 +63,7 @@ func (s *DataframeAnalyticsStatsHyperparameters) UnmarshalJSON(data []byte) erro
 
 		case "hyperparameters":
 			if err := dec.Decode(&s.Hyperparameters); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Hyperparameters", err)
 			}
 
 		case "iteration":
@@ -73,7 +74,7 @@ func (s *DataframeAnalyticsStatsHyperparameters) UnmarshalJSON(data []byte) erro
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Iteration", err)
 				}
 				s.Iteration = value
 			case float64:
@@ -83,17 +84,17 @@ func (s *DataframeAnalyticsStatsHyperparameters) UnmarshalJSON(data []byte) erro
 
 		case "timestamp":
 			if err := dec.Decode(&s.Timestamp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Timestamp", err)
 			}
 
 		case "timing_stats":
 			if err := dec.Decode(&s.TimingStats); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TimingStats", err)
 			}
 
 		case "validation_loss":
 			if err := dec.Decode(&s.ValidationLoss); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ValidationLoss", err)
 			}
 
 		}

@@ -16,26 +16,20 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
-// SettingsSimilarity type.
+// SettingsSimilarity holds the union for the following types:
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/_types/IndexSettings.ts#L169-L177
-type SettingsSimilarity struct {
-	Bm25          *SettingsSimilarityBm25          `json:"bm25,omitempty"`
-	Dfi           *SettingsSimilarityDfi           `json:"dfi,omitempty"`
-	Dfr           *SettingsSimilarityDfr           `json:"dfr,omitempty"`
-	Ib            *SettingsSimilarityIb            `json:"ib,omitempty"`
-	Lmd           *SettingsSimilarityLmd           `json:"lmd,omitempty"`
-	Lmj           *SettingsSimilarityLmj           `json:"lmj,omitempty"`
-	ScriptedTfidf *SettingsSimilarityScriptedTfidf `json:"scripted_tfidf,omitempty"`
-}
-
-// NewSettingsSimilarity returns a SettingsSimilarity.
-func NewSettingsSimilarity() *SettingsSimilarity {
-	r := &SettingsSimilarity{}
-
-	return r
-}
+//	SettingsSimilarityBm25
+//	SettingsSimilarityBoolean
+//	SettingsSimilarityDfi
+//	SettingsSimilarityDfr
+//	SettingsSimilarityIb
+//	SettingsSimilarityLmd
+//	SettingsSimilarityLmj
+//	SettingsSimilarityScripted
+//
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/_types/IndexSettings.ts#L169-L180
+type SettingsSimilarity interface{}

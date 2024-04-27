@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // NlpRobertaTokenizationConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/inference.ts#L160-L187
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/inference.ts#L160-L187
 type NlpRobertaTokenizationConfig struct {
 	// AddPrefixSpace Should the tokenizer prefix input with a space character
 	AddPrefixSpace *bool `json:"add_prefix_space,omitempty"`
@@ -70,7 +71,7 @@ func (s *NlpRobertaTokenizationConfig) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AddPrefixSpace", err)
 				}
 				s.AddPrefixSpace = &value
 			case bool:
@@ -85,7 +86,7 @@ func (s *NlpRobertaTokenizationConfig) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MaxSequenceLength", err)
 				}
 				s.MaxSequenceLength = &value
 			case float64:
@@ -101,7 +102,7 @@ func (s *NlpRobertaTokenizationConfig) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Span", err)
 				}
 				s.Span = &value
 			case float64:
@@ -111,7 +112,7 @@ func (s *NlpRobertaTokenizationConfig) UnmarshalJSON(data []byte) error {
 
 		case "truncate":
 			if err := dec.Decode(&s.Truncate); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Truncate", err)
 			}
 
 		case "with_special_tokens":
@@ -121,7 +122,7 @@ func (s *NlpRobertaTokenizationConfig) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "WithSpecialTokens", err)
 				}
 				s.WithSpecialTokens = &value
 			case bool:

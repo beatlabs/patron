@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // DataframeAnalyticsStatsDataCounts type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/DataframeAnalytics.ts#L364-L371
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/DataframeAnalytics.ts#L364-L371
 type DataframeAnalyticsStatsDataCounts struct {
 	// SkippedDocsCount The number of documents that are skipped during the analysis because they
 	// contained values that are not supported by the analysis. For example, outlier
@@ -68,7 +69,7 @@ func (s *DataframeAnalyticsStatsDataCounts) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "SkippedDocsCount", err)
 				}
 				s.SkippedDocsCount = value
 			case float64:
@@ -84,7 +85,7 @@ func (s *DataframeAnalyticsStatsDataCounts) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "TestDocsCount", err)
 				}
 				s.TestDocsCount = value
 			case float64:
@@ -100,7 +101,7 @@ func (s *DataframeAnalyticsStatsDataCounts) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "TrainingDocsCount", err)
 				}
 				s.TrainingDocsCount = value
 			case float64:

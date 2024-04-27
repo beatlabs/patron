@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // Explanation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/explain/types.ts#L22-L26
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/explain/types.ts#L22-L26
 type Explanation struct {
 	Description string              `json:"description"`
 	Details     []ExplanationDetail `json:"details"`
@@ -55,7 +56,7 @@ func (s *Explanation) UnmarshalJSON(data []byte) error {
 		case "description":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Description", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -66,7 +67,7 @@ func (s *Explanation) UnmarshalJSON(data []byte) error {
 
 		case "details":
 			if err := dec.Decode(&s.Details); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Details", err)
 			}
 
 		case "value":
@@ -76,7 +77,7 @@ func (s *Explanation) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 32)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Value", err)
 				}
 				f := float32(value)
 				s.Value = f

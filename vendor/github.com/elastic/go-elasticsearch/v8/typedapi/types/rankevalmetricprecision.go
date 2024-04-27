@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // RankEvalMetricPrecision type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/rank_eval/types.ts#L42-L52
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/rank_eval/types.ts#L42-L52
 type RankEvalMetricPrecision struct {
 	// IgnoreUnlabeled Controls how unlabeled documents in the search results are counted. If set to
 	// true, unlabeled documents are ignored and neither count as relevant or
@@ -66,7 +67,7 @@ func (s *RankEvalMetricPrecision) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IgnoreUnlabeled", err)
 				}
 				s.IgnoreUnlabeled = &value
 			case bool:
@@ -81,7 +82,7 @@ func (s *RankEvalMetricPrecision) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "K", err)
 				}
 				s.K = &value
 			case float64:
@@ -97,7 +98,7 @@ func (s *RankEvalMetricPrecision) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "RelevantRatingThreshold", err)
 				}
 				s.RelevantRatingThreshold = &value
 			case float64:

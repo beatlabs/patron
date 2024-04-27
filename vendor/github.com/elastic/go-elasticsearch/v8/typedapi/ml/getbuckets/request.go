@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package getbuckets
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package getbuckets
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/get_buckets/MlGetBucketsRequest.ts#L26-L133
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/get_buckets/MlGetBucketsRequest.ts#L26-L133
 type Request struct {
 
 	// AnomalyScore Refer to the description for the `anomaly_score` query parameter.
@@ -92,7 +92,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AnomalyScore", err)
 				}
 				f := types.Float64(value)
 				s.AnomalyScore = &f
@@ -108,7 +108,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Desc", err)
 				}
 				s.Desc = &value
 			case bool:
@@ -117,7 +117,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "end":
 			if err := dec.Decode(&s.End); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "End", err)
 			}
 
 		case "exclude_interim":
@@ -127,7 +127,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "ExcludeInterim", err)
 				}
 				s.ExcludeInterim = &value
 			case bool:
@@ -141,7 +141,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Expand", err)
 				}
 				s.Expand = &value
 			case bool:
@@ -150,17 +150,17 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "page":
 			if err := dec.Decode(&s.Page); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Page", err)
 			}
 
 		case "sort":
 			if err := dec.Decode(&s.Sort); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Sort", err)
 			}
 
 		case "start":
 			if err := dec.Decode(&s.Start); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Start", err)
 			}
 
 		}

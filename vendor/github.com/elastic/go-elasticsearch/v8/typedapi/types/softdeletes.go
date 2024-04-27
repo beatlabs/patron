@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // SoftDeletes type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/_types/IndexSettings.ts#L50-L63
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/_types/IndexSettings.ts#L50-L63
 type SoftDeletes struct {
 	// Enabled Indicates whether soft deletes are enabled on the index.
 	Enabled *bool `json:"enabled,omitempty"`
@@ -66,7 +67,7 @@ func (s *SoftDeletes) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Enabled", err)
 				}
 				s.Enabled = &value
 			case bool:
@@ -75,7 +76,7 @@ func (s *SoftDeletes) UnmarshalJSON(data []byte) error {
 
 		case "retention_lease":
 			if err := dec.Decode(&s.RetentionLease); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "RetentionLease", err)
 			}
 
 		}

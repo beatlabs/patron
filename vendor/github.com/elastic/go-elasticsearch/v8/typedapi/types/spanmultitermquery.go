@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // SpanMultiTermQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/span.ts#L58-L63
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/span.ts#L58-L63
 type SpanMultiTermQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -66,7 +67,7 @@ func (s *SpanMultiTermQuery) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 32)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Boost", err)
 				}
 				f := float32(value)
 				s.Boost = &f
@@ -77,13 +78,13 @@ func (s *SpanMultiTermQuery) UnmarshalJSON(data []byte) error {
 
 		case "match":
 			if err := dec.Decode(&s.Match); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Match", err)
 			}
 
 		case "_name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "QueryName_", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

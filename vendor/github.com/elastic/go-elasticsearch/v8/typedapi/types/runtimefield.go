@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // RuntimeField type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/mapping/RuntimeFields.ts#L26-L48
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/mapping/RuntimeFields.ts#L26-L48
 type RuntimeField struct {
 	// FetchFields For type `lookup`
 	FetchFields []RuntimeFieldFetchFields `json:"fetch_fields,omitempty"`
@@ -68,13 +69,13 @@ func (s *RuntimeField) UnmarshalJSON(data []byte) error {
 
 		case "fetch_fields":
 			if err := dec.Decode(&s.FetchFields); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FetchFields", err)
 			}
 
 		case "format":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Format", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -85,13 +86,13 @@ func (s *RuntimeField) UnmarshalJSON(data []byte) error {
 
 		case "input_field":
 			if err := dec.Decode(&s.InputField); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "InputField", err)
 			}
 
 		case "script":
 			message := json.RawMessage{}
 			if err := dec.Decode(&message); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Script", err)
 			}
 			keyDec := json.NewDecoder(bytes.NewReader(message))
 			for {
@@ -100,7 +101,7 @@ func (s *RuntimeField) UnmarshalJSON(data []byte) error {
 					if errors.Is(err, io.EOF) {
 						break
 					}
-					return err
+					return fmt.Errorf("%s | %w", "Script", err)
 				}
 
 				switch t {
@@ -109,7 +110,7 @@ func (s *RuntimeField) UnmarshalJSON(data []byte) error {
 					o := NewInlineScript()
 					localDec := json.NewDecoder(bytes.NewReader(message))
 					if err := localDec.Decode(&o); err != nil {
-						return err
+						return fmt.Errorf("%s | %w", "Script", err)
 					}
 					s.Script = o
 
@@ -117,7 +118,7 @@ func (s *RuntimeField) UnmarshalJSON(data []byte) error {
 					o := NewStoredScriptId()
 					localDec := json.NewDecoder(bytes.NewReader(message))
 					if err := localDec.Decode(&o); err != nil {
-						return err
+						return fmt.Errorf("%s | %w", "Script", err)
 					}
 					s.Script = o
 
@@ -126,17 +127,17 @@ func (s *RuntimeField) UnmarshalJSON(data []byte) error {
 
 		case "target_field":
 			if err := dec.Decode(&s.TargetField); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TargetField", err)
 			}
 
 		case "target_index":
 			if err := dec.Decode(&s.TargetIndex); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TargetIndex", err)
 			}
 
 		case "type":
 			if err := dec.Decode(&s.Type); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Type", err)
 			}
 
 		}

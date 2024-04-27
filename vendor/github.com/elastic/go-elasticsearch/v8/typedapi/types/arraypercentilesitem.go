@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ArrayPercentilesItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/aggregations/Aggregate.ts#L160-L164
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/Aggregate.ts#L160-L164
 type ArrayPercentilesItem struct {
 	Key           string  `json:"key"`
 	Value         Float64 `json:"value,omitempty"`
@@ -55,7 +56,7 @@ func (s *ArrayPercentilesItem) UnmarshalJSON(data []byte) error {
 		case "key":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Key", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -66,13 +67,13 @@ func (s *ArrayPercentilesItem) UnmarshalJSON(data []byte) error {
 
 		case "value":
 			if err := dec.Decode(&s.Value); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Value", err)
 			}
 
 		case "value_as_string":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ValueAsString", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

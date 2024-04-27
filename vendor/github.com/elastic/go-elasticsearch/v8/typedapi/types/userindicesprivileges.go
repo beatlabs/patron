@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // UserIndicesPrivileges type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/security/_types/Privileges.ts#L107-L129
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/_types/Privileges.ts#L107-L129
 type UserIndicesPrivileges struct {
 	// AllowRestrictedIndices Set to `true` if using wildcard or regular expressions for patterns that
 	// cover restricted indices. Implicitly, restricted indices have limited
@@ -77,7 +78,7 @@ func (s *UserIndicesPrivileges) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "AllowRestrictedIndices", err)
 				}
 				s.AllowRestrictedIndices = value
 			case bool:
@@ -86,7 +87,7 @@ func (s *UserIndicesPrivileges) UnmarshalJSON(data []byte) error {
 
 		case "field_security":
 			if err := dec.Decode(&s.FieldSecurity); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FieldSecurity", err)
 			}
 
 		case "names":
@@ -95,24 +96,24 @@ func (s *UserIndicesPrivileges) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Names", err)
 				}
 
 				s.Names = append(s.Names, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Names); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Names", err)
 				}
 			}
 
 		case "privileges":
 			if err := dec.Decode(&s.Privileges); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Privileges", err)
 			}
 
 		case "query":
 			if err := dec.Decode(&s.Query); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Query", err)
 			}
 
 		}

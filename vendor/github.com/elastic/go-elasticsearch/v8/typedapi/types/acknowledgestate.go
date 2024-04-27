@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/acknowledgementoptions"
@@ -31,7 +32,7 @@ import (
 
 // AcknowledgeState type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/watcher/_types/Action.ts#L115-L118
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/watcher/_types/Action.ts#L115-L118
 type AcknowledgeState struct {
 	State     acknowledgementoptions.AcknowledgementOptions `json:"state"`
 	Timestamp DateTime                                      `json:"timestamp"`
@@ -54,12 +55,12 @@ func (s *AcknowledgeState) UnmarshalJSON(data []byte) error {
 
 		case "state":
 			if err := dec.Decode(&s.State); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "State", err)
 			}
 
 		case "timestamp":
 			if err := dec.Decode(&s.Timestamp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Timestamp", err)
 			}
 
 		}

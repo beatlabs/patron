@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ServiceToken type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/security/create_service_token/types.ts#L22-L25
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/create_service_token/types.ts#L22-L25
 type ServiceToken struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
@@ -53,13 +54,13 @@ func (s *ServiceToken) UnmarshalJSON(data []byte) error {
 
 		case "name":
 			if err := dec.Decode(&s.Name); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 
 		case "value":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Value", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

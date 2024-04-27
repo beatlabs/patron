@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // IntervalsAllOf type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/fulltext.ts#L50-L70
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/fulltext.ts#L50-L70
 type IntervalsAllOf struct {
 	// Filter Rule used to filter returned intervals.
 	Filter *IntervalsFilter `json:"filter,omitempty"`
@@ -63,12 +64,12 @@ func (s *IntervalsAllOf) UnmarshalJSON(data []byte) error {
 
 		case "filter":
 			if err := dec.Decode(&s.Filter); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Filter", err)
 			}
 
 		case "intervals":
 			if err := dec.Decode(&s.Intervals); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Intervals", err)
 			}
 
 		case "max_gaps":
@@ -79,7 +80,7 @@ func (s *IntervalsAllOf) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "MaxGaps", err)
 				}
 				s.MaxGaps = &value
 			case float64:
@@ -94,7 +95,7 @@ func (s *IntervalsAllOf) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Ordered", err)
 				}
 				s.Ordered = &value
 			case bool:

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // DanglingIndex type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/dangling_indices/list_dangling_indices/ListDanglingIndicesResponse.ts#L29-L34
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/dangling_indices/list_dangling_indices/ListDanglingIndicesResponse.ts#L29-L34
 type DanglingIndex struct {
 	CreationDateMillis int64    `json:"creation_date_millis"`
 	IndexName          string   `json:"index_name"`
@@ -55,13 +56,13 @@ func (s *DanglingIndex) UnmarshalJSON(data []byte) error {
 
 		case "creation_date_millis":
 			if err := dec.Decode(&s.CreationDateMillis); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "CreationDateMillis", err)
 			}
 
 		case "index_name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IndexName", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -73,7 +74,7 @@ func (s *DanglingIndex) UnmarshalJSON(data []byte) error {
 		case "index_uuid":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IndexUuid", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -88,13 +89,13 @@ func (s *DanglingIndex) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NodeIds", err)
 				}
 
 				s.NodeIds = append(s.NodeIds, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.NodeIds); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NodeIds", err)
 				}
 			}
 

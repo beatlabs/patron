@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // JobTimingStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/Job.ts#L332-L341
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/Job.ts#L332-L341
 type JobTimingStats struct {
 	AverageBucketProcessingTimeMs                   Float64 `json:"average_bucket_processing_time_ms,omitempty"`
 	BucketCount                                     int64   `json:"bucket_count"`
@@ -59,7 +60,7 @@ func (s *JobTimingStats) UnmarshalJSON(data []byte) error {
 
 		case "average_bucket_processing_time_ms":
 			if err := dec.Decode(&s.AverageBucketProcessingTimeMs); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "AverageBucketProcessingTimeMs", err)
 			}
 
 		case "bucket_count":
@@ -69,7 +70,7 @@ func (s *JobTimingStats) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "BucketCount", err)
 				}
 				s.BucketCount = value
 			case float64:
@@ -79,32 +80,32 @@ func (s *JobTimingStats) UnmarshalJSON(data []byte) error {
 
 		case "exponential_average_bucket_processing_time_ms":
 			if err := dec.Decode(&s.ExponentialAverageBucketProcessingTimeMs); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ExponentialAverageBucketProcessingTimeMs", err)
 			}
 
 		case "exponential_average_bucket_processing_time_per_hour_ms":
 			if err := dec.Decode(&s.ExponentialAverageBucketProcessingTimePerHourMs); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ExponentialAverageBucketProcessingTimePerHourMs", err)
 			}
 
 		case "job_id":
 			if err := dec.Decode(&s.JobId); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "JobId", err)
 			}
 
 		case "maximum_bucket_processing_time_ms":
 			if err := dec.Decode(&s.MaximumBucketProcessingTimeMs); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MaximumBucketProcessingTimeMs", err)
 			}
 
 		case "minimum_bucket_processing_time_ms":
 			if err := dec.Decode(&s.MinimumBucketProcessingTimeMs); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "MinimumBucketProcessingTimeMs", err)
 			}
 
 		case "total_bucket_processing_time_ms":
 			if err := dec.Decode(&s.TotalBucketProcessingTimeMs); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TotalBucketProcessingTimeMs", err)
 			}
 
 		}

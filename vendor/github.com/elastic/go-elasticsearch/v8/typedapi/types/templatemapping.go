@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // TemplateMapping type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/_types/TemplateMapping.ts#L27-L34
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/_types/TemplateMapping.ts#L27-L34
 type TemplateMapping struct {
 	Aliases       map[string]Alias           `json:"aliases"`
 	IndexPatterns []string                   `json:"index_patterns"`
@@ -60,17 +61,17 @@ func (s *TemplateMapping) UnmarshalJSON(data []byte) error {
 				s.Aliases = make(map[string]Alias, 0)
 			}
 			if err := dec.Decode(&s.Aliases); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Aliases", err)
 			}
 
 		case "index_patterns":
 			if err := dec.Decode(&s.IndexPatterns); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "IndexPatterns", err)
 			}
 
 		case "mappings":
 			if err := dec.Decode(&s.Mappings); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Mappings", err)
 			}
 
 		case "order":
@@ -81,7 +82,7 @@ func (s *TemplateMapping) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Order", err)
 				}
 				s.Order = value
 			case float64:
@@ -94,12 +95,12 @@ func (s *TemplateMapping) UnmarshalJSON(data []byte) error {
 				s.Settings = make(map[string]json.RawMessage, 0)
 			}
 			if err := dec.Decode(&s.Settings); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Settings", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

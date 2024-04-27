@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // AnalysisLimits type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/_types/Analysis.ts#L161-L172
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/Analysis.ts#L161-L172
 type AnalysisLimits struct {
 	// CategorizationExamplesLimit The maximum number of examples stored per category in memory and in the
 	// results data store. If you increase this value, more examples are available,
@@ -79,7 +80,7 @@ func (s *AnalysisLimits) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "CategorizationExamplesLimit", err)
 				}
 				s.CategorizationExamplesLimit = &value
 			case float64:
@@ -90,7 +91,7 @@ func (s *AnalysisLimits) UnmarshalJSON(data []byte) error {
 		case "model_memory_limit":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ModelMemoryLimit", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

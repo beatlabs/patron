@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // TransformStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/transform/get_transform_stats/types.ts#L31-L42
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/transform/get_transform_stats/types.ts#L31-L42
 type TransformStats struct {
 	Checkpointing Checkpointing         `json:"checkpointing"`
 	Health        *TransformStatsHealth `json:"health,omitempty"`
@@ -58,28 +59,28 @@ func (s *TransformStats) UnmarshalJSON(data []byte) error {
 
 		case "checkpointing":
 			if err := dec.Decode(&s.Checkpointing); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Checkpointing", err)
 			}
 
 		case "health":
 			if err := dec.Decode(&s.Health); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Health", err)
 			}
 
 		case "id":
 			if err := dec.Decode(&s.Id); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Id", err)
 			}
 
 		case "node":
 			if err := dec.Decode(&s.Node); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Node", err)
 			}
 
 		case "reason":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Reason", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -91,7 +92,7 @@ func (s *TransformStats) UnmarshalJSON(data []byte) error {
 		case "state":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "State", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -102,7 +103,7 @@ func (s *TransformStats) UnmarshalJSON(data []byte) error {
 
 		case "stats":
 			if err := dec.Decode(&s.Stats); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Stats", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // IntervalsFuzzy type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/fulltext.ts#L154-L184
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/fulltext.ts#L154-L184
 type IntervalsFuzzy struct {
 	// Analyzer Analyzer used to normalize the term.
 	Analyzer *string `json:"analyzer,omitempty"`
@@ -68,7 +69,7 @@ func (s *IntervalsFuzzy) UnmarshalJSON(data []byte) error {
 		case "analyzer":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Analyzer", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -79,7 +80,7 @@ func (s *IntervalsFuzzy) UnmarshalJSON(data []byte) error {
 
 		case "fuzziness":
 			if err := dec.Decode(&s.Fuzziness); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Fuzziness", err)
 			}
 
 		case "prefix_length":
@@ -90,7 +91,7 @@ func (s *IntervalsFuzzy) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "PrefixLength", err)
 				}
 				s.PrefixLength = &value
 			case float64:
@@ -101,7 +102,7 @@ func (s *IntervalsFuzzy) UnmarshalJSON(data []byte) error {
 		case "term":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Term", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -117,7 +118,7 @@ func (s *IntervalsFuzzy) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Transpositions", err)
 				}
 				s.Transpositions = &value
 			case bool:
@@ -126,7 +127,7 @@ func (s *IntervalsFuzzy) UnmarshalJSON(data []byte) error {
 
 		case "use_field":
 			if err := dec.Decode(&s.UseField); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "UseField", err)
 			}
 
 		}

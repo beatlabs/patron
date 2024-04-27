@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package putpipeline
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package putpipeline
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ingest/put_pipeline/PutPipelineRequest.ts#L25-L77
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ingest/put_pipeline/PutPipelineRequest.ts#L25-L77
 type Request struct {
 
 	// Description Description of the ingest pipeline.
@@ -92,7 +92,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 		case "description":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Description", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -103,22 +103,22 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "_meta":
 			if err := dec.Decode(&s.Meta_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Meta_", err)
 			}
 
 		case "on_failure":
 			if err := dec.Decode(&s.OnFailure); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "OnFailure", err)
 			}
 
 		case "processors":
 			if err := dec.Decode(&s.Processors); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Processors", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

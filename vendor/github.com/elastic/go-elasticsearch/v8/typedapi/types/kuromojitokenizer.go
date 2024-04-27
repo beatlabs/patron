@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // KuromojiTokenizer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/analysis/kuromoji-plugin.ts#L58-L67
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/kuromoji-plugin.ts#L58-L67
 type KuromojiTokenizer struct {
 	DiscardCompoundToken *bool                                             `json:"discard_compound_token,omitempty"`
 	DiscardPunctuation   *bool                                             `json:"discard_punctuation,omitempty"`
@@ -67,7 +68,7 @@ func (s *KuromojiTokenizer) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DiscardCompoundToken", err)
 				}
 				s.DiscardCompoundToken = &value
 			case bool:
@@ -81,7 +82,7 @@ func (s *KuromojiTokenizer) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DiscardPunctuation", err)
 				}
 				s.DiscardPunctuation = &value
 			case bool:
@@ -90,7 +91,7 @@ func (s *KuromojiTokenizer) UnmarshalJSON(data []byte) error {
 
 		case "mode":
 			if err := dec.Decode(&s.Mode); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Mode", err)
 			}
 
 		case "nbest_cost":
@@ -101,7 +102,7 @@ func (s *KuromojiTokenizer) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NbestCost", err)
 				}
 				s.NbestCost = &value
 			case float64:
@@ -112,7 +113,7 @@ func (s *KuromojiTokenizer) UnmarshalJSON(data []byte) error {
 		case "nbest_examples":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "NbestExamples", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -123,13 +124,13 @@ func (s *KuromojiTokenizer) UnmarshalJSON(data []byte) error {
 
 		case "type":
 			if err := dec.Decode(&s.Type); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Type", err)
 			}
 
 		case "user_dictionary":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "UserDictionary", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -140,12 +141,12 @@ func (s *KuromojiTokenizer) UnmarshalJSON(data []byte) error {
 
 		case "user_dictionary_rules":
 			if err := dec.Decode(&s.UserDictionaryRules); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "UserDictionaryRules", err)
 			}
 
 		case "version":
 			if err := dec.Decode(&s.Version); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Version", err)
 			}
 
 		}

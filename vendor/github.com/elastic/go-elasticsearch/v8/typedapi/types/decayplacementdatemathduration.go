@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // DecayPlacementDateMathDuration type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/query_dsl/compound.ts#L153-L172
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/compound.ts#L153-L172
 type DecayPlacementDateMathDuration struct {
 	// Decay Defines how documents are scored at the distance given at scale.
 	Decay *Float64 `json:"decay,omitempty"`
@@ -67,7 +68,7 @@ func (s *DecayPlacementDateMathDuration) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Decay", err)
 				}
 				f := Float64(value)
 				s.Decay = &f
@@ -78,17 +79,17 @@ func (s *DecayPlacementDateMathDuration) UnmarshalJSON(data []byte) error {
 
 		case "offset":
 			if err := dec.Decode(&s.Offset); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Offset", err)
 			}
 
 		case "origin":
 			if err := dec.Decode(&s.Origin); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Origin", err)
 			}
 
 		case "scale":
 			if err := dec.Decode(&s.Scale); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Scale", err)
 			}
 
 		}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // SLMPolicy type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/slm/_types/SnapshotLifecycle.ts#L76-L82
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/slm/_types/SnapshotLifecycle.ts#L76-L82
 type SLMPolicy struct {
 	Config     *Configuration `json:"config,omitempty"`
 	Name       string         `json:"name"`
@@ -56,18 +57,18 @@ func (s *SLMPolicy) UnmarshalJSON(data []byte) error {
 
 		case "config":
 			if err := dec.Decode(&s.Config); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Config", err)
 			}
 
 		case "name":
 			if err := dec.Decode(&s.Name); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 
 		case "repository":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Repository", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -78,12 +79,12 @@ func (s *SLMPolicy) UnmarshalJSON(data []byte) error {
 
 		case "retention":
 			if err := dec.Decode(&s.Retention); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Retention", err)
 			}
 
 		case "schedule":
 			if err := dec.Decode(&s.Schedule); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Schedule", err)
 			}
 
 		}

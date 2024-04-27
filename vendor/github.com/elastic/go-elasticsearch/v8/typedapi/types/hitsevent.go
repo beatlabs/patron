@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // HitsEvent type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/eql/_types/EqlHits.ts#L41-L49
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/eql/_types/EqlHits.ts#L41-L49
 type HitsEvent struct {
 	Fields map[string][]json.RawMessage `json:"fields,omitempty"`
 	// Id_ Unique identifier for the event. This ID is only unique within the index.
@@ -60,22 +61,22 @@ func (s *HitsEvent) UnmarshalJSON(data []byte) error {
 				s.Fields = make(map[string][]json.RawMessage, 0)
 			}
 			if err := dec.Decode(&s.Fields); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Fields", err)
 			}
 
 		case "_id":
 			if err := dec.Decode(&s.Id_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Id_", err)
 			}
 
 		case "_index":
 			if err := dec.Decode(&s.Index_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Index_", err)
 			}
 
 		case "_source":
 			if err := dec.Decode(&s.Source_); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Source_", err)
 			}
 
 		}

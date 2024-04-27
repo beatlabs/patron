@@ -16,21 +16,18 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package clearscroll
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 )
 
 // Request holds the request body struct for the package clearscroll
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_global/clear_scroll/ClearScrollRequest.ts#L23-L45
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/clear_scroll/ClearScrollRequest.ts#L23-L45
 type Request struct {
 
 	// ScrollId Scroll IDs to clear.
@@ -54,39 +51,4 @@ func (r *Request) FromJSON(data string) (*Request, error) {
 	}
 
 	return &req, nil
-}
-
-func (s *Request) UnmarshalJSON(data []byte) error {
-	dec := json.NewDecoder(bytes.NewReader(data))
-
-	for {
-		t, err := dec.Token()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return err
-		}
-
-		switch t {
-
-		case "scroll_id":
-			rawMsg := json.RawMessage{}
-			dec.Decode(&rawMsg)
-			if !bytes.HasPrefix(rawMsg, []byte("[")) {
-				o := new(string)
-				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
-				}
-
-				s.ScrollId = append(s.ScrollId, *o)
-			} else {
-				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.ScrollId); err != nil {
-					return err
-				}
-			}
-
-		}
-	}
-	return nil
 }

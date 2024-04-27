@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 // Configure a model for use in the Inference API
 package putmodel
@@ -39,7 +39,7 @@ import (
 const (
 	tasktypeMask = iota + 1
 
-	modelidMask
+	inferenceidMask
 )
 
 // ErrBuildPath is returned in case of missing parameters within the build of the request.
@@ -60,8 +60,8 @@ type PutModel struct {
 
 	paramSet int
 
-	tasktype string
-	modelid  string
+	tasktype    string
+	inferenceid string
 
 	spanStarted bool
 
@@ -69,17 +69,15 @@ type PutModel struct {
 }
 
 // NewPutModel type alias for index.
-type NewPutModel func(tasktype, modelid string) *PutModel
+type NewPutModel func(inferenceid string) *PutModel
 
 // NewPutModelFunc returns a new instance of PutModel with the provided transport.
 // Used in the index of the library this allows to retrieve every apis in once place.
 func NewPutModelFunc(tp elastictransport.Interface) NewPutModel {
-	return func(tasktype, modelid string) *PutModel {
+	return func(inferenceid string) *PutModel {
 		n := New(tp)
 
-		n._tasktype(tasktype)
-
-		n._modelid(modelid)
+		n._inferenceid(inferenceid)
 
 		return n
 	}
@@ -95,6 +93,8 @@ func New(tp elastictransport.Interface) *PutModel {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
+
+		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -158,7 +158,18 @@ func (r *PutModel) HttpRequest(ctx context.Context) (*http.Request, error) {
 	r.path.Scheme = "http"
 
 	switch {
-	case r.paramSet == tasktypeMask|modelidMask:
+	case r.paramSet == inferenceidMask:
+		path.WriteString("/")
+		path.WriteString("_inference")
+		path.WriteString("/")
+
+		if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
+			instrument.RecordPathPart(ctx, "inferenceid", r.inferenceid)
+		}
+		path.WriteString(r.inferenceid)
+
+		method = http.MethodPut
+	case r.paramSet == tasktypeMask|inferenceidMask:
 		path.WriteString("/")
 		path.WriteString("_inference")
 		path.WriteString("/")
@@ -170,9 +181,9 @@ func (r *PutModel) HttpRequest(ctx context.Context) (*http.Request, error) {
 		path.WriteString("/")
 
 		if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-			instrument.RecordPathPart(ctx, "modelid", r.modelid)
+			instrument.RecordPathPart(ctx, "inferenceid", r.inferenceid)
 		}
-		path.WriteString(r.modelid)
+		path.WriteString(r.inferenceid)
 
 		method = http.MethodPut
 	}
@@ -191,6 +202,12 @@ func (r *PutModel) HttpRequest(ctx context.Context) (*http.Request, error) {
 	}
 
 	req.Header = r.headers.Clone()
+
+	if req.Header.Get("Content-Type") == "" {
+		if r.raw != nil {
+			req.Header.Set("Content-Type", "application/vnd.elasticsearch+json;compatible-with=8")
+		}
+	}
 
 	if req.Header.Get("Accept") == "" {
 		req.Header.Set("Accept", "application/vnd.elasticsearch+json;compatible-with=8")
@@ -306,20 +323,20 @@ func (r *PutModel) Header(key, value string) *PutModel {
 	return r
 }
 
-// TaskType The model task type
+// TaskType The task type
 // API Name: tasktype
-func (r *PutModel) _tasktype(tasktype string) *PutModel {
+func (r *PutModel) TaskType(tasktype string) *PutModel {
 	r.paramSet |= tasktypeMask
 	r.tasktype = tasktype
 
 	return r
 }
 
-// ModelId The unique identifier of the inference model.
-// API Name: modelid
-func (r *PutModel) _modelid(modelid string) *PutModel {
-	r.paramSet |= modelidMask
-	r.modelid = modelid
+// InferenceId The inference Id
+// API Name: inferenceid
+func (r *PutModel) _inferenceid(inferenceid string) *PutModel {
+	r.paramSet |= inferenceidMask
+	r.inferenceid = inferenceid
 
 	return r
 }

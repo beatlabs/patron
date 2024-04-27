@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // TermsAggregateBaseVoid type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/aggregations/Aggregate.ts#L377-L382
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/Aggregate.ts#L377-L382
 type TermsAggregateBaseVoid struct {
 	Buckets                 BucketsVoid `json:"buckets"`
 	DocCountErrorUpperBound *int64      `json:"doc_count_error_upper_bound,omitempty"`
@@ -63,13 +64,13 @@ func (s *TermsAggregateBaseVoid) UnmarshalJSON(data []byte) error {
 			case '{':
 				o := make(map[string]interface{}, 0)
 				if err := localDec.Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Buckets", err)
 				}
 				s.Buckets = o
 			case '[':
 				o := []interface{}{}
 				if err := localDec.Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Buckets", err)
 				}
 				s.Buckets = o
 			}
@@ -81,7 +82,7 @@ func (s *TermsAggregateBaseVoid) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "DocCountErrorUpperBound", err)
 				}
 				s.DocCountErrorUpperBound = &value
 			case float64:
@@ -91,7 +92,7 @@ func (s *TermsAggregateBaseVoid) UnmarshalJSON(data []byte) error {
 
 		case "meta":
 			if err := dec.Decode(&s.Meta); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Meta", err)
 			}
 
 		case "sum_other_doc_count":
@@ -101,7 +102,7 @@ func (s *TermsAggregateBaseVoid) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "SumOtherDocCount", err)
 				}
 				s.SumOtherDocCount = &value
 			case float64:

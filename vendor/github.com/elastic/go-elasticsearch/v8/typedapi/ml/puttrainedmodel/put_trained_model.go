@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 // Creates an inference trained model.
 package puttrainedmodel
@@ -316,11 +316,21 @@ func (r *PutTrainedModel) _modelid(modelid string) *PutTrainedModel {
 	return r
 }
 
-// DeferDefinitionDecompression If set to `true` and a `compressed_definition` is provided, the request
-// defers definition decompression and skips relevant validations.
+// DeferDefinitionDecompression If set to `true` and a `compressed_definition` is provided,
+// the request defers definition decompression and skips relevant
+// validations.
 // API name: defer_definition_decompression
 func (r *PutTrainedModel) DeferDefinitionDecompression(deferdefinitiondecompression bool) *PutTrainedModel {
 	r.values.Set("defer_definition_decompression", strconv.FormatBool(deferdefinitiondecompression))
+
+	return r
+}
+
+// WaitForCompletion Whether to wait for all child operations (e.g. model download)
+// to complete.
+// API name: wait_for_completion
+func (r *PutTrainedModel) WaitForCompletion(waitforcompletion bool) *PutTrainedModel {
+	r.values.Set("wait_for_completion", strconv.FormatBool(waitforcompletion))
 
 	return r
 }
@@ -433,6 +443,15 @@ func (r *PutTrainedModel) ModelType(modeltype trainedmodeltype.TrainedModelType)
 func (r *PutTrainedModel) PlatformArchitecture(platformarchitecture string) *PutTrainedModel {
 
 	r.req.PlatformArchitecture = &platformarchitecture
+
+	return r
+}
+
+// PrefixStrings Optional prefix strings applied at inference
+// API name: prefix_strings
+func (r *PutTrainedModel) PrefixStrings(prefixstrings *types.TrainedModelPrefixStrings) *PutTrainedModel {
+
+	r.req.PrefixStrings = prefixstrings
 
 	return r
 }

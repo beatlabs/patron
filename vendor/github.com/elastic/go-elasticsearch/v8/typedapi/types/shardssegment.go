@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ShardsSegment type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/segments/types.ts#L46-L51
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/segments/types.ts#L46-L51
 type ShardsSegment struct {
 	NumCommittedSegments int                 `json:"num_committed_segments"`
 	NumSearchSegments    int                 `json:"num_search_segments"`
@@ -61,7 +62,7 @@ func (s *ShardsSegment) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NumCommittedSegments", err)
 				}
 				s.NumCommittedSegments = value
 			case float64:
@@ -77,7 +78,7 @@ func (s *ShardsSegment) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "NumSearchSegments", err)
 				}
 				s.NumSearchSegments = value
 			case float64:
@@ -87,7 +88,7 @@ func (s *ShardsSegment) UnmarshalJSON(data []byte) error {
 
 		case "routing":
 			if err := dec.Decode(&s.Routing); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Routing", err)
 			}
 
 		case "segments":
@@ -95,7 +96,7 @@ func (s *ShardsSegment) UnmarshalJSON(data []byte) error {
 				s.Segments = make(map[string]Segment, 0)
 			}
 			if err := dec.Decode(&s.Segments); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Segments", err)
 			}
 
 		}

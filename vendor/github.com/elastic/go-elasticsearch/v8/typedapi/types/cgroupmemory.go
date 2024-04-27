@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // CgroupMemory type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/nodes/_types/Stats.ts#L521-L537
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/Stats.ts#L521-L537
 type CgroupMemory struct {
 	// ControlGroup The `memory` control group to which the Elasticsearch process belongs.
 	ControlGroup *string `json:"control_group,omitempty"`
@@ -66,7 +67,7 @@ func (s *CgroupMemory) UnmarshalJSON(data []byte) error {
 		case "control_group":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ControlGroup", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -78,7 +79,7 @@ func (s *CgroupMemory) UnmarshalJSON(data []byte) error {
 		case "limit_in_bytes":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "LimitInBytes", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -90,7 +91,7 @@ func (s *CgroupMemory) UnmarshalJSON(data []byte) error {
 		case "usage_in_bytes":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "UsageInBytes", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

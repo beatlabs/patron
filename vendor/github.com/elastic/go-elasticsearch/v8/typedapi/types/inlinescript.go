@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -32,7 +33,7 @@ import (
 
 // InlineScript type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/_types/Scripting.ts#L67-L79
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Scripting.ts#L67-L79
 type InlineScript struct {
 	// Lang Specifies the language the script is written in.
 	Lang    *scriptlanguage.ScriptLanguage `json:"lang,omitempty"`
@@ -70,7 +71,7 @@ func (s *InlineScript) UnmarshalJSON(data []byte) error {
 
 		case "lang":
 			if err := dec.Decode(&s.Lang); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Lang", err)
 			}
 
 		case "options":
@@ -78,7 +79,7 @@ func (s *InlineScript) UnmarshalJSON(data []byte) error {
 				s.Options = make(map[string]string, 0)
 			}
 			if err := dec.Decode(&s.Options); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Options", err)
 			}
 
 		case "params":
@@ -86,13 +87,13 @@ func (s *InlineScript) UnmarshalJSON(data []byte) error {
 				s.Params = make(map[string]json.RawMessage, 0)
 			}
 			if err := dec.Decode(&s.Params); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Params", err)
 			}
 
 		case "source":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Source", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)

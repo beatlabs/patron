@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // SynonymsSetItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/synonyms/get_synonyms_sets/SynonymsSetsGetResponse.ts#L30-L39
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/synonyms/get_synonyms_sets/SynonymsSetsGetResponse.ts#L30-L39
 type SynonymsSetItem struct {
 	// Count Number of synonym rules that the synonym set contains
 	Count int `json:"count"`
@@ -61,7 +62,7 @@ func (s *SynonymsSetItem) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Count", err)
 				}
 				s.Count = value
 			case float64:
@@ -71,7 +72,7 @@ func (s *SynonymsSetItem) UnmarshalJSON(data []byte) error {
 
 		case "synonyms_set":
 			if err := dec.Decode(&s.SynonymsSet); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "SynonymsSet", err)
 			}
 
 		}

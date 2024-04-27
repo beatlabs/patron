@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // Ensemble type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/ml/put_trained_model/types.ts#L93-L99
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/put_trained_model/types.ts#L93-L99
 type Ensemble struct {
 	AggregateOutput      *AggregateOutput `json:"aggregate_output,omitempty"`
 	ClassificationLabels []string         `json:"classification_labels,omitempty"`
@@ -56,23 +57,23 @@ func (s *Ensemble) UnmarshalJSON(data []byte) error {
 
 		case "aggregate_output":
 			if err := dec.Decode(&s.AggregateOutput); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "AggregateOutput", err)
 			}
 
 		case "classification_labels":
 			if err := dec.Decode(&s.ClassificationLabels); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "ClassificationLabels", err)
 			}
 
 		case "feature_names":
 			if err := dec.Decode(&s.FeatureNames); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FeatureNames", err)
 			}
 
 		case "target_type":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TargetType", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
@@ -83,7 +84,7 @@ func (s *Ensemble) UnmarshalJSON(data []byte) error {
 
 		case "trained_models":
 			if err := dec.Decode(&s.TrainedModels); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TrainedModels", err)
 			}
 
 		}

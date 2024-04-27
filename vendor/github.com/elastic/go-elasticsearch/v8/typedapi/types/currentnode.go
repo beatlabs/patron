@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // CurrentNode type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/cluster/allocation_explain/types.ts#L78-L84
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cluster/allocation_explain/types.ts#L78-L84
 type CurrentNode struct {
 	Attributes       map[string]string `json:"attributes"`
 	Id               string            `json:"id"`
@@ -59,22 +60,22 @@ func (s *CurrentNode) UnmarshalJSON(data []byte) error {
 				s.Attributes = make(map[string]string, 0)
 			}
 			if err := dec.Decode(&s.Attributes); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Attributes", err)
 			}
 
 		case "id":
 			if err := dec.Decode(&s.Id); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Id", err)
 			}
 
 		case "name":
 			if err := dec.Decode(&s.Name); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 
 		case "transport_address":
 			if err := dec.Decode(&s.TransportAddress); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TransportAddress", err)
 			}
 
 		case "weight_ranking":
@@ -85,7 +86,7 @@ func (s *CurrentNode) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "WeightRanking", err)
 				}
 				s.WeightRanking = value
 			case float64:

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package create
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package create
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/snapshot/create/SnapshotCreateRequest.ts#L24-L81
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/snapshot/create/SnapshotCreateRequest.ts#L24-L81
 type Request struct {
 
 	// FeatureStates Feature states to include in the snapshot. Each feature state includes one or
@@ -100,7 +100,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "feature_states":
 			if err := dec.Decode(&s.FeatureStates); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "FeatureStates", err)
 			}
 
 		case "ignore_unavailable":
@@ -110,7 +110,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IgnoreUnavailable", err)
 				}
 				s.IgnoreUnavailable = &value
 			case bool:
@@ -124,7 +124,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "IncludeGlobalState", err)
 				}
 				s.IncludeGlobalState = &value
 			case bool:
@@ -137,19 +137,19 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Indices", err)
 				}
 
 				s.Indices = append(s.Indices, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Indices); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Indices", err)
 				}
 			}
 
 		case "metadata":
 			if err := dec.Decode(&s.Metadata); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Metadata", err)
 			}
 
 		case "partial":
@@ -159,7 +159,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Partial", err)
 				}
 				s.Partial = &value
 			case bool:

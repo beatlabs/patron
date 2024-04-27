@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,12 +24,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // ResolveIndexDataStreamsItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/indices/resolve_index/ResolveIndexResponse.ts#L42-L46
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/resolve_index/ResolveIndexResponse.ts#L42-L46
 type ResolveIndexDataStreamsItem struct {
 	BackingIndices []string `json:"backing_indices"`
 	Name           string   `json:"name"`
@@ -57,24 +58,24 @@ func (s *ResolveIndexDataStreamsItem) UnmarshalJSON(data []byte) error {
 			if !bytes.HasPrefix(rawMsg, []byte("[")) {
 				o := new(string)
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "BackingIndices", err)
 				}
 
 				s.BackingIndices = append(s.BackingIndices, *o)
 			} else {
 				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.BackingIndices); err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "BackingIndices", err)
 				}
 			}
 
 		case "name":
 			if err := dec.Decode(&s.Name); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Name", err)
 			}
 
 		case "timestamp_field":
 			if err := dec.Decode(&s.TimestampField); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "TimestampField", err)
 			}
 
 		}

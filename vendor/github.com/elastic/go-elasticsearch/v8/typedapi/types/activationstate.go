@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67
+// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
 
 package types
 
@@ -24,13 +24,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
 
 // ActivationState type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/b7d4fb5356784b8bcde8d3a2d62a1fd5621ffd67/specification/watcher/_types/Activation.ts#L24-L27
+// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/watcher/_types/Activation.ts#L24-L27
 type ActivationState struct {
 	Active    bool     `json:"active"`
 	Timestamp DateTime `json:"timestamp"`
@@ -58,7 +59,7 @@ func (s *ActivationState) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.ParseBool(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("%s | %w", "Active", err)
 				}
 				s.Active = value
 			case bool:
@@ -67,7 +68,7 @@ func (s *ActivationState) UnmarshalJSON(data []byte) error {
 
 		case "timestamp":
 			if err := dec.Decode(&s.Timestamp); err != nil {
-				return err
+				return fmt.Errorf("%s | %w", "Timestamp", err)
 			}
 
 		}

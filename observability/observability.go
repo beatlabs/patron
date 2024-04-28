@@ -1,4 +1,5 @@
-// package observability is based on OpenTelemetry.
+// Package observability provides functionality for initializing OpenTelemetry's traces and metrics.
+// It is based on OpenTelemetry and includes methods for setting up and shutting down the observability components.
 package observability
 
 import (
@@ -8,16 +9,19 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
 	"google.golang.org/grpc"
 )
 
+// Provider represents the observability provider that includes the metric and trace providers.
 type Provider struct {
 	mp *metric.MeterProvider
 	tp *trace.TracerProvider
 }
 
 // Shutdown flushes and shuts down the metrics and traces.
+// It forces a flush of metrics and traces, logs any errors encountered during flushing,
+// and shuts down the metric and trace providers.
 func (p *Provider) Shutdown(ctx context.Context) error {
 	err := p.mp.ForceFlush(ctx)
 	if err != nil {
@@ -37,6 +41,8 @@ func (p *Provider) Shutdown(ctx context.Context) error {
 }
 
 // Setup initializes OpenTelemetry's traces and metrics.
+// It creates a resource with the given name and version, sets up the metric and trace providers,
+// and returns a Provider containing the initialized providers.
 func Setup(ctx context.Context, name, version string, conn *grpc.ClientConn) (*Provider, error) {
 	res, err := createResource(name, version)
 	if err != nil {

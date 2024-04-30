@@ -99,6 +99,14 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+  otelcol:
+    image: otel/opentelemetry-collector-contrib
+    restart: unless-stopped
+    command: [ "--config=/etc/otelcol-config.yml" ]
+    volumes:
+      - ./otelcol-config.yml:/etc/otelcol-config.yml
+    ports:
+      - 4317:4317
 volumes:
   rabbitmq_data:
     driver: local

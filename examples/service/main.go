@@ -7,6 +7,8 @@ import (
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/examples"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -35,7 +37,13 @@ func init() {
 func main() {
 	ctx := context.Background()
 
-	service, err := patron.New(name, version)
+	conn, err := grpc.NewClient("localhost:4317", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		slog.Error("failed to create grpc observability client", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	service, err := patron.New(name, version, conn)
 	if err != nil {
 		slog.Error("failed to set up service", slog.Any("error", err))
 		os.Exit(1)

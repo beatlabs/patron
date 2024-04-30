@@ -13,8 +13,10 @@ import (
 	"syscall"
 
 	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability"
 	"github.com/beatlabs/patron/trace"
 	"github.com/uber/jaeger-client-go"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -31,20 +33,23 @@ type Component interface {
 // Service is responsible for managing and setting up everything.
 // The Service will start by default an HTTP component in order to host management endpoint.
 type Service struct {
-	name          string
-	version       string
-	termSig       chan os.Signal
-	sighupHandler func()
-	logConfig     logConfig
+	name                  string
+	version               string
+	termSig               chan os.Signal
+	sighupHandler         func()
+	logConfig             logConfig
+	observabilityProvider *observability.Provider
 }
 
-func New(name, version string, options ...OptionFunc) (*Service, error) {
+func New(name, version string, observabilityConn *grpc.ClientConn, options ...OptionFunc) (*Service, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
 	if version == "" {
 		version = "dev"
 	}
+
+	ctx := context.Background()
 
 	s := &Service{
 		name:    name,

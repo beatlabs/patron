@@ -85,7 +85,7 @@ func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandator
 	sp := injectTraceHeaders(ctx, exchange, &msg)
 
 	start := time.Now()
-	err := tc.channel.Publish(exchange, key, mandatory, immediate, msg)
+	err := tc.channel.PublishWithContext(ctx, exchange, key, mandatory, immediate, msg)
 
 	observePublish(ctx, sp, start, exchange, err)
 	if err != nil {

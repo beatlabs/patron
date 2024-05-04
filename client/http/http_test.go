@@ -18,7 +18,7 @@ import (
 )
 
 func TestTracedClient_Do(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprintln(w, "Hello, client")
 	}))
 	defer ts.Close()

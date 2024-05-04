@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/beatlabs/patron"
+	patronclientsqs "github.com/beatlabs/patron/client/sqs"
 	patronsqs "github.com/beatlabs/patron/component/sqs"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/observability/log"
@@ -24,12 +25,14 @@ func createSQSConsumer() (patron.Component, error) {
 		}
 	}
 
-	api, err := examples.CreateSQSAPI()
+	cfg, err := examples.CreateSQSConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := api.CreateQueue(context.Background(), &sqs.CreateQueueInput{
+	client := patronclientsqs.NewFromConfig(cfg)
+
+	out, err := client.CreateQueue(context.Background(), &sqs.CreateQueueInput{
 		QueueName: aws.String(examples.AWSSQSQueue),
 	})
 	if err != nil {
@@ -39,5 +42,5 @@ func createSQSConsumer() (patron.Component, error) {
 		return nil, errors.New("could not create the queue")
 	}
 
-	return patronsqs.New("sqs-cmp", examples.AWSSQSQueue, api, process, patronsqs.WithPollWaitSeconds(5))
+	return patronsqs.New("sqs-cmp", examples.AWSSQSQueue, client, process, patronsqs.WithPollWaitSeconds(5))
 }

@@ -187,22 +187,19 @@ func sendAMQPMessage(ctx context.Context) error {
 }
 
 func sendSQSMessage(ctx context.Context) error {
-	api, err := examples.CreateSQSAPI()
+	cfg, err := examples.CreateSQSConfig()
 	if err != nil {
 		return err
 	}
 
-	out, err := api.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{QueueName: aws.String(examples.AWSSQSQueue)})
+	client := patronsqs.NewFromConfig(cfg)
+
+	out, err := client.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{QueueName: aws.String(examples.AWSSQSQueue)})
 	if err != nil {
 		return err
 	}
 
-	publisher, err := patronsqs.New(api)
-	if err != nil {
-		return err
-	}
-
-	_, err = publisher.Publish(ctx, &sqs.SendMessageInput{
+	client.SendMessage(ctx, &sqs.SendMessageInput{
 		QueueUrl:    out.QueueUrl,
 		MessageBody: aws.String("example message"),
 	})

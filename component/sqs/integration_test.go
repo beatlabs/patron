@@ -14,7 +14,6 @@ import (
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	patronsqscli "github.com/beatlabs/patron/client/sqs"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -95,10 +94,7 @@ func Test_SQS_Consume(t *testing.T) {
 	assert.GreaterOrEqual(t, testutil.CollectAndCount(queueSize, "component_sqs_queue_size"), 1)
 }
 
-func sendMessage(t *testing.T, api *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {
-	pub, err := patronsqscli.New(api)
-	require.NoError(t, err)
-
+func sendMessage(t *testing.T, client *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {
 	ctx := correlation.ContextWithID(context.Background(), correlationID)
 
 	sentMessages := make([]*testMessage, 0, len(ids))
@@ -116,7 +112,7 @@ func sendMessage(t *testing.T, api *sqs.Client, correlationID, queue string, ids
 			QueueUrl:     aws.String(queue),
 		}
 
-		msgID, err := pub.Publish(ctx, msg)
+		msgID, err := client.SendMessage(ctx, msg)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, msgID)
 

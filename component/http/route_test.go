@@ -81,8 +81,8 @@ func TestRoutes_Append(t *testing.T) {
 		expectedErr string
 	}{
 		"success":      {args: args{route: &Route{}, err: nil}},
-		"error exist":  {args: args{route: &Route{}, err: errors.New("TEST")}, expectedErr: "TEST\n"},
-		"route is nil": {args: args{route: nil, err: nil}, expectedErr: "route is nil\n"},
+		"error exist":  {args: args{route: &Route{}, err: errors.New("TEST")}, expectedErr: "TEST"},
+		"route is nil": {args: args{route: nil, err: nil}, expectedErr: "route is nil"},
 	}
 	for name, tt := range tests {
 		tt := tt

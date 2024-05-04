@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
@@ -74,7 +73,7 @@ func New(url string, oo ...OptionFunc) (*Publisher, error) {
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return nil, patronerrors.Aggregate(fmt.Errorf("failed to open channel: %w", err), conn.Close())
+		return nil, errors.Join(fmt.Errorf("failed to open channel: %w", err), conn.Close())
 	}
 
 	pub.connection = conn
@@ -116,7 +115,7 @@ func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishi
 
 // Close the channel and connection.
 func (tc *Publisher) Close() error {
-	return patronerrors.Aggregate(tc.channel.Close(), tc.connection.Close())
+	return errors.Join(tc.channel.Close(), tc.connection.Close())
 }
 
 type amqpHeadersCarrier map[string]interface{}

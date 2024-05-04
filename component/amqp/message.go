@@ -2,8 +2,8 @@ package amqp
 
 import (
 	"context"
+	"errors"
 
-	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/streadway/amqp"
@@ -87,33 +87,33 @@ type batch struct {
 }
 
 func (b *batch) ACK() ([]Message, error) {
-	var errors []error
+	var errs []error
 	var failed []Message
 
 	for _, msg := range b.messages {
 		err := msg.ACK()
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 			failed = append(failed, msg)
 		}
 	}
 
-	return failed, patronerrors.Aggregate(errors...)
+	return failed, errors.Join(errs...)
 }
 
 func (b *batch) NACK() ([]Message, error) {
-	var errors []error
+	var errs []error
 	var failed []Message
 
 	for _, msg := range b.messages {
 		err := msg.NACK()
 		if err != nil {
-			errors = append(errors, err)
+			errs = append(errs, err)
 			failed = append(failed, msg)
 		}
 	}
 
-	return failed, patronerrors.Aggregate(errors...)
+	return failed, errors.Join(errs...)
 }
 
 func (b *batch) Messages() []Message {

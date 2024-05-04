@@ -136,7 +136,7 @@ func TestCache(t *testing.T) {
 		"fail with args": {
 			fields:      fields{path: "GET /api"},
 			args:        args{cache: nil, ageBounds: httpcache.Age{}},
-			expectedErr: "route cache is nil\n",
+			expectedErr: "route cache is nil",
 		},
 	}
 	for name, tt := range tests {

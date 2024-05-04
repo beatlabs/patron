@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	patronhttp "github.com/beatlabs/patron/component/http/middleware"
-	patronerrors "github.com/beatlabs/patron/errors"
 )
 
 // RouteOptionFunc definition for configuring the route in a functional way.
@@ -80,5 +79,5 @@ func (r *Routes) Append(route *Route, err error) {
 
 // Result of the route aggregation.
 func (r *Routes) Result() ([]*Route, error) {
-	return r.routes, patronerrors.Aggregate(r.ee...)
+	return r.routes, errors.Join(r.ee...)
 }

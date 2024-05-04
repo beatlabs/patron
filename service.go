@@ -12,7 +12,6 @@ import (
 	"sync"
 	"syscall"
 
-	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/uber/jaeger-client-go"
@@ -75,7 +74,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	}
 
 	if len(optionErrors) > 0 {
-		return nil, patronErrors.Aggregate(optionErrors...)
+		return nil, errors.Join(optionErrors...)
 	}
 
 	setupLogging(s.logConfig)
@@ -117,7 +116,7 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 	for err := range chErr {
 		ee = append(ee, err)
 	}
-	return patronErrors.Aggregate(ee...)
+	return errors.Join(ee...)
 }
 
 func (s *Service) setupOSSignal() {

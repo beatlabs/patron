@@ -3,10 +3,10 @@ package kafka
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/IBM/sarama"
-	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -51,7 +51,7 @@ func (ap *AsyncProducer) propagateError(chErr chan<- error) {
 // scope, as it may otherwise leak memory.
 func (ap *AsyncProducer) Close() error {
 	if err := ap.asyncProd.Close(); err != nil {
-		return patronerrors.Aggregate(fmt.Errorf("failed to close async producer client: %w", err), ap.prodClient.Close())
+		return errors.Join(fmt.Errorf("failed to close async producer client: %w", err), ap.prodClient.Close())
 	}
 	if err := ap.prodClient.Close(); err != nil {
 		return fmt.Errorf("failed to close async producer: %w", err)

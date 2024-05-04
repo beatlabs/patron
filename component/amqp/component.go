@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
@@ -259,7 +258,7 @@ func (s *subscription) close() error {
 		ee = append(ee, s.conn.Close())
 	}
 	s.closed = true
-	return patronerrors.Aggregate(ee...)
+	return errors.Join(ee...)
 }
 
 func (c *Component) subscribe() (subscription, error) {
@@ -271,7 +270,7 @@ func (c *Component) subscribe() (subscription, error) {
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return subscription{}, patronerrors.Aggregate(conn.Close(), fmt.Errorf("failed get channel: %w", err))
+		return subscription{}, errors.Join(conn.Close(), fmt.Errorf("failed get channel: %w", err))
 	}
 	sub.channel = ch
 
@@ -280,7 +279,7 @@ func (c *Component) subscribe() (subscription, error) {
 
 	deliveries, err := ch.Consume(c.queueCfg.queue, tag, false, false, false, false, nil)
 	if err != nil {
-		return subscription{}, patronerrors.Aggregate(ch.Close(), conn.Close(), fmt.Errorf("failed initialize amqp consumer: %w", err))
+		return subscription{}, errors.Join(ch.Close(), conn.Close(), fmt.Errorf("failed initialize amqp consumer: %w", err))
 	}
 	sub.deliveries = deliveries
 

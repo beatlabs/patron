@@ -199,7 +199,7 @@ func sendSQSMessage(ctx context.Context) error {
 		return err
 	}
 
-	client.SendMessage(ctx, &sqs.SendMessageInput{
+	_, err = client.SendMessage(ctx, &sqs.SendMessageInput{
 		QueueUrl:    out.QueueUrl,
 		MessageBody: aws.String("example message"),
 	})

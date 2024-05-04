@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -37,8 +38,7 @@ func New(port int, options ...OptionFunction) (*Component, error) {
 		}
 	}
 
-	c.serverOptions = append(c.serverOptions, grpc.UnaryInterceptor(observableUnaryInterceptor),
-		grpc.StreamInterceptor(observableStreamInterceptor))
+	c.serverOptions = append(c.serverOptions, grpc.StatsHandler(otelgrpc.NewServerHandler()))
 	srv := grpc.NewServer(c.serverOptions...)
 
 	hs := health.NewServer()

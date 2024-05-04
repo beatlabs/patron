@@ -7,38 +7,14 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"strconv"
 	"time"
 
-	"github.com/opentracing-contrib/go-stdlib/nethttp"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
-	"github.com/beatlabs/patron/trace"
 )
-
-const (
-	clientComponent = "http-client"
-)
-
-var reqDurationMetrics *prometheus.HistogramVec
-
-func init() {
-	reqDurationMetrics = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: "client",
-			Subsystem: "http",
-			Name:      "request_duration_seconds",
-			Help:      "HTTP requests completed by the client.",
-		},
-		[]string{"method", "url", "status_code"},
-	)
-	prometheus.MustRegister(reqDurationMetrics)
-}
 
 // Client interface of an HTTP client.
 type Client interface {
@@ -56,7 +32,7 @@ func New(oo ...OptionFunc) (*TracedClient, error) {
 	tc := &TracedClient{
 		cl: &http.Client{
 			Timeout:   60 * time.Second,
-			Transport: &nethttp.Transport{},
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
 		},
 		cb: nil,
 	}
@@ -73,30 +49,13 @@ func New(oo ...OptionFunc) (*TracedClient, error) {
 
 // Do execute an HTTP request with integrated tracing and tracing propagation downstream.
 func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
-	req, ht := nethttp.TraceRequest(opentracing.GlobalTracer(), req,
-		nethttp.OperationName(opName(req.Method, req.URL.Scheme, req.URL.Host)),
-		nethttp.ComponentName(clientComponent))
-	defer ht.Finish()
-
+	// TODO: do we need this still?
 	req.Header.Set(correlation.HeaderID, correlation.IDFromContext(req.Context()))
 
-	start := time.Now()
-
 	rsp, err := tc.do(req)
-
-	ext.HTTPMethod.Set(ht.Span(), req.Method)
-	ext.HTTPUrl.Set(ht.Span(), req.URL.String())
-
 	if err != nil {
-		ext.Error.Set(ht.Span(), true)
 		return rsp, err
 	}
-
-	ext.HTTPStatusCode.Set(ht.Span(), uint16(rsp.StatusCode))
-	durationHistogram := trace.Histogram{
-		Observer: reqDurationMetrics.WithLabelValues(req.Method, req.URL.Host, strconv.Itoa(rsp.StatusCode)),
-	}
-	durationHistogram.Observe(req.Context(), time.Since(start).Seconds())
 
 	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
 		rsp.Body = decompress(hdr, rsp)

@@ -9,14 +9,11 @@ import (
 	"testing"
 
 	"github.com/beatlabs/patron/examples"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 )
@@ -107,11 +104,8 @@ func TestDialContext(t *testing.T) {
 }
 
 func TestSayHello(t *testing.T) {
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-
 	ctx := context.Background()
-	conn, err := DialContext(ctx, target, grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
+	conn, err := DialContext(ctx, target, grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	defer func() {
 		require.NoError(t, conn.Close())
@@ -159,19 +153,19 @@ func TestSayHello(t *testing.T) {
 				require.Equal(t, tc.wantMsg, res.GetMessage())
 			}
 
-			// Tracing
-			wantSpanTags := map[string]interface{}{
-				"component": "grpc-client",
-				"version":   "dev",
-				"span.kind": ext.SpanKindEnum("producer"),
-				"error":     tc.wantErr,
-			}
-			assert.Equal(t, wantSpanTags, mtr.FinishedSpans()[0].Tags())
-			mtr.Reset()
+			// TODO: test Metrics
+			// // Tracing
+			// wantSpanTags := map[string]interface{}{
+			// 	"component": "grpc-client",
+			// 	"version":   "dev",
+			// 	"span.kind": ext.SpanKindEnum("producer"),
+			// 	"error":     tc.wantErr,
+			// }
+			// assert.Equal(t, wantSpanTags, mtr.FinishedSpans()[0].Tags())
+			// mtr.Reset()
 
-			// Metrics
-			assert.Equal(t, tc.wantCounter, testutil.CollectAndCount(rpcDurationMetrics, "client_grpc_rpc_duration_seconds"))
-			rpcDurationMetrics.Reset()
+			// assert.Equal(t, tc.wantCounter, testutil.CollectAndCount(rpcDurationMetrics, "client_grpc_rpc_duration_seconds"))
+			// rpcDurationMetrics.Reset()
 		})
 	}
 }

@@ -26,8 +26,8 @@ func TestBuilder_Create(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"missing brokers": {args: args{brokers: nil, cfg: sarama.NewConfig()}, expectedErr: "brokers are empty or have an empty value\n"},
-		"missing config":  {args: args{brokers: []string{"123"}, cfg: nil}, expectedErr: "no Sarama configuration specified\n"},
+		"missing brokers": {args: args{brokers: nil, cfg: sarama.NewConfig()}, expectedErr: "brokers are empty or have an empty value"},
+		"missing config":  {args: args{brokers: []string{"123"}, cfg: nil}, expectedErr: "no Sarama configuration specified"},
 	}
 	for name, tt := range tests {
 		tt := tt
@@ -51,8 +51,8 @@ func TestBuilder_CreateAsync(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"missing brokers": {args: args{brokers: nil, cfg: sarama.NewConfig()}, expectedErr: "brokers are empty or have an empty value\n"},
-		"missing config":  {args: args{brokers: []string{"123"}, cfg: nil}, expectedErr: "no Sarama configuration specified\n"},
+		"missing brokers": {args: args{brokers: nil, cfg: sarama.NewConfig()}, expectedErr: "brokers are empty or have an empty value"},
+		"missing config":  {args: args{brokers: []string{"123"}, cfg: nil}, expectedErr: "no Sarama configuration specified"},
 	}
 	for name, tt := range tests {
 		tt := tt

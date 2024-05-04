@@ -169,7 +169,7 @@ func Test_batch_ACK(t *testing.T) {
 	btc := batch{messages: []Message{msg1, msg2}}
 
 	got, err := btc.ACK()
-	assert.EqualError(t, err, "ERROR\n")
+	assert.EqualError(t, err, "ERROR")
 	assert.Len(t, got, 1)
 	assert.Equal(t, msg2, got[0])
 }
@@ -184,7 +184,7 @@ func Test_batch_NACK(t *testing.T) {
 	btc := batch{messages: []Message{msg1, msg2}}
 
 	got, err := btc.NACK()
-	assert.EqualError(t, err, "ERROR\n")
+	assert.EqualError(t, err, "ERROR")
 	assert.Len(t, got, 1)
 	assert.Equal(t, msg2, got[0])
 }

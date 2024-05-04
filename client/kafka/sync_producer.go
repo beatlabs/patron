@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/IBM/sarama"
-	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -87,7 +86,7 @@ func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.Produce
 // scope, as it may otherwise leak memory.
 func (p *SyncProducer) Close() error {
 	if err := p.syncProd.Close(); err != nil {
-		return patronerrors.Aggregate(fmt.Errorf("failed to close sync producer client: %w", err), p.prodClient.Close())
+		return errors.Join(fmt.Errorf("failed to close sync producer client: %w", err), p.prodClient.Close())
 	}
 	if err := p.prodClient.Close(); err != nil {
 		return fmt.Errorf("failed to close sync producer: %w", err)

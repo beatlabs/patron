@@ -8,7 +8,6 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
-	patronerrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -111,7 +110,7 @@ func DefaultProducerSaramaConfig(name string, idempotent bool) (*sarama.Config, 
 // Create a new synchronous producer.
 func (b *Builder) Create() (*SyncProducer, error) {
 	if len(b.errs) > 0 {
-		return nil, patronerrors.Aggregate(b.errs...)
+		return nil, errors.Join(b.errs...)
 	}
 
 	// required for any SyncProducer; 'Errors' is already true by default for both async/sync producers
@@ -136,7 +135,7 @@ func (b *Builder) Create() (*SyncProducer, error) {
 // CreateAsync a new asynchronous producer.
 func (b Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 	if len(b.errs) > 0 {
-		return nil, nil, patronerrors.Aggregate(b.errs...)
+		return nil, nil, errors.Join(b.errs...)
 	}
 
 	ap := &AsyncProducer{

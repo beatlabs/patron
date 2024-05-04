@@ -12,7 +12,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	httpBuilderAllErrors := "attributes are empty\nprovided WithSIGHUP handler was nil\n"
+	httpBuilderAllErrors := "attributes are empty\nprovided WithSIGHUP handler was nil"
 
 	tests := map[string]struct {
 		name              string

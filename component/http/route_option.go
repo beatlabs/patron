@@ -8,7 +8,6 @@ import (
 	"github.com/beatlabs/patron/component/http/auth"
 	httpcache "github.com/beatlabs/patron/component/http/cache"
 	patronhttp "github.com/beatlabs/patron/component/http/middleware"
-	errs "github.com/beatlabs/patron/errors"
 	"golang.org/x/time/rate"
 )
 
@@ -62,11 +61,11 @@ func WithCache(cache cache.TTLCache, ageBounds httpcache.Age) RouteOptionFunc {
 		}
 		rc, ee := httpcache.NewRouteCache(cache, ageBounds)
 		if len(ee) != 0 {
-			return errs.Aggregate(ee...)
+			return errors.Join(ee...)
 		}
 		m, err := patronhttp.NewCaching(rc)
 		if err != nil {
-			return errs.Aggregate(err)
+			return errors.Join(err)
 		}
 		r.middlewares = append(r.middlewares, m)
 		return nil

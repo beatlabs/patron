@@ -11,7 +11,6 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
-	patronErrors "github.com/beatlabs/patron/errors"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
@@ -126,7 +125,7 @@ func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, 
 	}
 
 	if len(errs) > 0 {
-		return nil, patronErrors.Aggregate(errs...)
+		return nil, errors.Join(errs...)
 	}
 
 	cmp := &Component{

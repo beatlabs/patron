@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/log"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/uber/jaeger-client-go/config"
@@ -79,7 +80,7 @@ func ConsumerSpan(ctx context.Context, opName, cmp, corID string, hdr map[string
 ) (opentracing.Span, context.Context) {
 	spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.TextMapCarrier(hdr))
 	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		slog.Error("failed to extract consumer span", slog.Any("error", err))
+		slog.Error("failed to extract consumer span", log.ErrorAttr(err))
 	}
 	sp := opentracing.StartSpan(opName, consumerOption{ctx: spCtx})
 	ext.Component.Set(sp, cmp)

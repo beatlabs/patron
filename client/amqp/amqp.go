@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strconv"
 	"time"
 
@@ -107,7 +106,7 @@ func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishi
 	c := amqpHeadersCarrier(msg.Headers)
 
 	if err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, c); err != nil {
-		log.FromContext(ctx).Error("failed to inject tracing headers", slog.Any("error", err))
+		log.FromContext(ctx).Error("failed to inject tracing headers", log.ErrorAttr(err))
 	}
 	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 	return sp

@@ -200,7 +200,7 @@ func (c *Component) Run(ctx context.Context) error {
 		case <-tickerStats.C:
 			err := c.report(ctx, c.api, c.queue.url)
 			if err != nil {
-				log.FromContext(ctx).Error("failed to report sqsAPI stats", slog.Any("error", err))
+				log.FromContext(ctx).Error("failed to report sqsAPI stats", log.ErrorAttr(err))
 			}
 		}
 	}
@@ -229,7 +229,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			},
 		})
 		if err != nil {
-			logger.Error("failed to receive messages, sleeping", slog.Any("error", err), slog.Duration("wait", c.retry.wait))
+			logger.Error("failed to receive messages, sleeping", log.ErrorAttr(err), slog.Duration("wait", c.retry.wait))
 			time.Sleep(c.retry.wait)
 			retries--
 			if retries > 0 {

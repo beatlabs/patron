@@ -173,7 +173,7 @@ func (c *Component) Run(ctx context.Context) error {
 	for count > 0 {
 		sub, err := c.subscribe()
 		if err != nil {
-			slog.Warn("failed to subscribe to queue, reconnecting", slog.Any("error", err),
+			slog.Warn("failed to subscribe to queue, reconnecting", log.ErrorAttr(err),
 				slog.Duration("retry", c.retryCfg.delay))
 			time.Sleep(c.retryCfg.delay)
 			count--
@@ -186,7 +186,7 @@ func (c *Component) Run(ctx context.Context) error {
 			closeSubscription(sub)
 			return nil
 		}
-		slog.Warn("process loop failure, reconnecting", slog.Any("error", err), slog.Duration("retry", c.retryCfg.delay))
+		slog.Warn("process loop failure, reconnecting", log.ErrorAttr(err), slog.Duration("retry", c.retryCfg.delay))
 		time.Sleep(c.retryCfg.delay)
 		count--
 		closeSubscription(sub)
@@ -197,7 +197,7 @@ func (c *Component) Run(ctx context.Context) error {
 func closeSubscription(sub subscription) {
 	err := sub.close()
 	if err != nil {
-		slog.Error("failed to close amqp channel/connection", slog.Any("error", err))
+		slog.Error("failed to close amqp channel/connection", log.ErrorAttr(err))
 	}
 	slog.Debug("amqp subscription closed")
 }
@@ -228,7 +228,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 		case <-tickerStats.C:
 			err := c.stats(sub)
 			if err != nil {
-				slog.Error("failed to report sqsAPI stats: %v", slog.Any("error", err))
+				slog.Error("failed to report sqsAPI stats: %v", log.ErrorAttr(err))
 			}
 		}
 	}

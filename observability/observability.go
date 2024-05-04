@@ -6,6 +6,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/beatlabs/patron/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -13,6 +14,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 )
+
+// TODO: add tests for the observability package
 
 // Provider represents the observability provider that includes the metric and trace providers.
 type Provider struct {
@@ -51,7 +54,7 @@ func Setup(ctx context.Context, name, version string) (*Provider, error) {
 func (p *Provider) Shutdown(ctx context.Context) error {
 	err := p.mp.ForceFlush(ctx)
 	if err != nil {
-		slog.Error("failed to flush metrics", slog.Any("error", err))
+		slog.Error("failed to flush metrics", log.ErrorAttr(err))
 	}
 	err = p.mp.Shutdown(ctx)
 	if err != nil {
@@ -60,7 +63,7 @@ func (p *Provider) Shutdown(ctx context.Context) error {
 
 	err = p.tp.ForceFlush(ctx)
 	if err != nil {
-		slog.Error("failed to flush traces", slog.Any("error", err))
+		slog.Error("failed to flush traces", log.ErrorAttr(err))
 	}
 
 	return p.tp.Shutdown(ctx)

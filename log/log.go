@@ -28,3 +28,7 @@ func WithContext(ctx context.Context, l *slog.Logger) context.Context {
 func Enabled(l slog.Level) bool {
 	return slog.Default().Handler().Enabled(context.Background(), l)
 }
+
+func ErrorAttr(err error) slog.Attr {
+	return slog.Any("error", err)
+}

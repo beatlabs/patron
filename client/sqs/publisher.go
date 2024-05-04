@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strconv"
 	"time"
 
@@ -63,7 +62,7 @@ func (p Publisher) Publish(ctx context.Context, msg *sqs.SendMessageInput) (mess
 	span, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, *msg.QueueUrl), publisherComponent, ext.SpanKindProducer)
 
 	if err := injectHeaders(ctx, span, msg); err != nil {
-		log.FromContext(ctx).Error("failed to inject trace headers", slog.Any("error", err))
+		log.FromContext(ctx).Error("failed to inject trace headers", log.ErrorAttr(err))
 	}
 
 	start := time.Now()

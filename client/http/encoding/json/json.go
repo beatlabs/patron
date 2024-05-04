@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -48,7 +47,7 @@ func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) 
 	defer func() {
 		err := rsp.Body.Close()
 		if err != nil {
-			log.FromContext(ctx).Error("failed to close response body", slog.Any("error", err))
+			log.FromContext(ctx).Error("failed to close response body", log.ErrorAttr(err))
 		}
 	}()
 

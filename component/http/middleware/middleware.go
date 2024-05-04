@@ -116,7 +116,7 @@ func NewRecovery() Func {
 						err = errors.New("unknown panic")
 					}
 					_ = err
-					slog.Error("recovering from a failure", slog.Any("error", err), slog.String("stack", string(debug.Stack())))
+					slog.Error("recovering from a failure", log.ErrorAttr(err), slog.String("stack", string(debug.Stack())))
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				}
 			}()
@@ -405,9 +405,9 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
 				if err != nil {
 					msgErr := "error in deferred call to Close() method on compression middleware"
 					if isErrConnectionReset(err) {
-						slog.Info(msgErr, slog.String("header", hdr), slog.Any("error", err))
+						slog.Info(msgErr, slog.String("header", hdr), log.ErrorAttr(err))
 					} else {
-						slog.Error(msgErr, slog.String("header", hdr), slog.Any("error", err))
+						slog.Error(msgErr, slog.String("header", hdr), log.ErrorAttr(err))
 					}
 				}
 			}(dw)
@@ -532,7 +532,7 @@ func NewCaching(rc *cache.RouteCache) (Func, error) {
 			}
 			err := cache.Handler(w, r, rc, next)
 			if err != nil {
-				slog.Error("error encountered in the caching middleware", slog.Any("error", err))
+				slog.Error("error encountered in the caching middleware", log.ErrorAttr(err))
 				return
 			}
 		})
@@ -572,12 +572,12 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
 	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
 	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		slog.Error("failed to extract HTTP span", slog.Any("error", err))
+		slog.Error("failed to extract HTTP span", log.ErrorAttr(err))
 	}
 
 	strippedPath, err := stripQueryString(path)
 	if err != nil {
-		slog.Warn("unable to strip query string", slog.String("path", path), slog.Any("error", err))
+		slog.Warn("unable to strip query string", slog.String("path", path), log.ErrorAttr(err))
 		strippedPath = path
 	}
 

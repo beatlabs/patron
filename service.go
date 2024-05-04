@@ -104,7 +104,7 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 
 		err := s.observabilityProvider.Shutdown(ctx)
 		if err != nil {
-			slog.Error("failed to close observability provider", slog.Any("error", err))
+			slog.Error("failed to close observability provider", log.ErrorAttr(err))
 		}
 	}()
 	ctx, cnl := context.WithCancel(ctx)

@@ -188,7 +188,7 @@ func (c *Component) processing(ctx context.Context) error {
 		client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 		componentError = err
 		if err != nil {
-			slog.Error("error creating consumer group client for kafka component", slog.Any("error", err))
+			slog.Error("error creating consumer group client for kafka component", log.ErrorAttr(err))
 		}
 
 		if client != nil {
@@ -206,7 +206,7 @@ func (c *Component) processing(ctx context.Context) error {
 				err := client.Consume(ctx, c.topics, handler)
 				componentError = err
 				if err != nil {
-					slog.Error("failure from kafka consumer", slog.Any("error", err))
+					slog.Error("failure from kafka consumer", log.ErrorAttr(err))
 					break
 				}
 
@@ -217,7 +217,7 @@ func (c *Component) processing(ctx context.Context) error {
 
 			err = client.Close()
 			if err != nil {
-				slog.Error("error closing kafka consumer", slog.Any("error", err))
+				slog.Error("error closing kafka consumer", log.ErrorAttr(err))
 			}
 		}
 
@@ -234,7 +234,7 @@ func (c *Component) processing(ctx context.Context) error {
 			}
 
 			slog.Error("failed run", slog.Int("current", i), slog.Int("retries", int(c.retries)),
-				slog.Duration("wait", c.retryWait), slog.Any("error", componentError))
+				slog.Duration("wait", c.retryWait), log.ErrorAttr(componentError))
 			time.Sleep(c.retryWait)
 
 			if i < retries {
@@ -347,7 +347,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			}
 		case <-c.ctx.Done():
 			if !errors.Is(c.ctx.Err(), context.Canceled) {
-				slog.Info("closing consumer", slog.Any("error", c.ctx.Err()))
+				slog.Info("closing consumer", log.ErrorAttr(c.ctx.Err()))
 			}
 			return nil
 		}
@@ -412,7 +412,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
 		}
-		slog.Error("could not process message(s) so skipping with error", slog.Any("error", err))
+		slog.Error("could not process message(s) so skipping with error", log.ErrorAttr(err))
 	default:
 		slog.Error("unknown failure strategy executed")
 		return fmt.Errorf("unknown failure strategy: %v", c.failStrategy)

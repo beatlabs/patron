@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
@@ -54,7 +55,7 @@ func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfi
 			slog.Info("connection is up", slog.Int64("reason", int64(conAck.ReasonCode)))
 		},
 		OnConnectError: func(err error) {
-			slog.Error("failed to connect", slog.Any("error", err))
+			slog.Error("failed to connect", log.ErrorAttr(err))
 		},
 		ClientConfig: paho.ClientConfig{
 			ClientID: clientID,
@@ -62,7 +63,7 @@ func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfi
 				slog.Warn("server disconnect received", slog.Int64("reason", int64(disconnect.ReasonCode)))
 			},
 			OnClientError: func(err error) {
-				slog.Error("client failure", slog.Any("error", err))
+				slog.Error("client failure", log.ErrorAttr(err))
 			},
 			PublishHook: func(publish *paho.Publish) {
 				slog.Debug("message published", slog.String("topic", publish.Topic))

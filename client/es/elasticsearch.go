@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -106,7 +105,7 @@ type transportClient struct {
 func (c *transportClient) Perform(req *http.Request) (*http.Response, error) {
 	sp, err := c.startSpan(req)
 	if err != nil {
-		log.FromContext(req.Context()).Error("failed to start span", slog.Any("error", err))
+		log.FromContext(req.Context()).Error("failed to start span", log.ErrorAttr(err))
 	}
 	start := time.Now()
 	rsp, err := c.client.Perform(req)

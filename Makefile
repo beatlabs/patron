@@ -33,8 +33,11 @@ deeplint: fmtcheck
 modsync: fmtcheck
 	go mod tidy && 	go mod vendor
 
-examples:
-	$(MAKE) -C examples
+example-service:
+	OTEL_EXPORTER_OTLP_INSECURE="true" go run examples/service/*.go
+
+example-client:
+	go run examples/client/main.go
 
 deps-start:
 	docker-compose up -d && sleep 10
@@ -47,4 +50,4 @@ deps-stop:
 # under parallel conditions.
 .NOTPARALLEL:
 
-.PHONY: default test testint cover coverci fmt fmtcheck lint deeplint ci modsync deps-start deps-stop
+.PHONY: default test testint cover coverci fmt fmtcheck lint deeplint ci modsync deps-start deps-stop example-service example-client

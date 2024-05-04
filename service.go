@@ -49,6 +49,7 @@ func New(name, version string, observabilityConn *grpc.ClientConn, options ...Op
 	if version == "" {
 		version = "dev"
 	}
+	// TODO: provide a default grpc connection and optional function to override details.
 	if observabilityConn == nil {
 		return nil, errors.New("observability connection is required")
 	}

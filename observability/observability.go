@@ -6,6 +6,8 @@ import (
 	"context"
 	"log/slog"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -27,6 +29,8 @@ func Setup(ctx context.Context, name, version string, conn *grpc.ClientConn) (*P
 	if err != nil {
 		return nil, err
 	}
+
+	otel.SetTextMapPropagator(propagation.TraceContext{})
 
 	metricProvider, err := setupMeter(ctx, name, res, conn)
 	if err != nil {

@@ -9,7 +9,6 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"google.golang.org/grpc"
 )
 
 var meter metric.Meter
@@ -18,11 +17,11 @@ func Meter() metric.Meter {
 	return meter
 }
 
-func setupMeter(ctx context.Context, name string, res *resource.Resource, conn *grpc.ClientConn) (*sdkmetric.MeterProvider, error) {
+func setupMeter(ctx context.Context, name string, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
 	// Create a meter provider.
 	// You can pass this instance directly to your instrumented code if it
 	// accepts a MeterProvider instance.
-	meterProvider, err := newMeterProvider(ctx, res, conn)
+	meterProvider, err := newMeterProvider(ctx, res)
 	if err != nil {
 		return nil, err
 	}
@@ -39,12 +38,13 @@ func setupMeter(ctx context.Context, name string, res *resource.Resource, conn *
 	return meterProvider, nil
 }
 
-func newMeterProvider(ctx context.Context, res *resource.Resource, conn *grpc.ClientConn) (*sdkmetric.MeterProvider, error) {
-	metricExporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn))
+func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
+	metricExporter, err := otlpmetricgrpc.New(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO: hard coded interval for now, will be configurable later
 	meterProvider := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(res),
 		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter, sdkmetric.WithInterval(20*time.Second))),

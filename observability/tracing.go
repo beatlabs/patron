@@ -8,7 +8,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/grpc"
 )
 
 var tracer trace.Tracer
@@ -18,8 +17,8 @@ func Tracer() trace.Tracer {
 	return tracer
 }
 
-func setupTracing(ctx context.Context, name string, res *resource.Resource, conn *grpc.ClientConn) (*sdktrace.TracerProvider, error) {
-	exp, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+func setupTracing(ctx context.Context, name string, res *resource.Resource) (*sdktrace.TracerProvider, error) {
+	exp, err := otlptracegrpc.New(ctx)
 	if err != nil {
 		return nil, err
 	}

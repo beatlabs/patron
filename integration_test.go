@@ -10,15 +10,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func TestServer_Run_Shutdown(t *testing.T) {
-	conn, err := grpc.NewClient("localhost:4317", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.NoError(t, err)
-
 	tests := map[string]struct {
 		cp      Component
 		wantErr bool
@@ -33,7 +27,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 				os.Clearenv()
 			}()
 			t.Setenv("PATRON_HTTP_DEFAULT_PORT", "50099")
-			svc, err := New("test", "", conn, WithJSONLogger())
+			svc, err := New("test", "", WithJSONLogger())
 			assert.NoError(t, err)
 			err = svc.Run(context.Background(), tt.cp)
 			if temp.wantErr {
@@ -46,9 +40,6 @@ func TestServer_Run_Shutdown(t *testing.T) {
 }
 
 func TestServer_SetupTracing(t *testing.T) {
-	conn, err := grpc.NewClient("localhost:4317", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.NoError(t, err)
-
 	tests := []struct {
 		name    string
 		cp      Component
@@ -80,7 +71,7 @@ func TestServer_SetupTracing(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			svc, err := New("test", "", conn, WithJSONLogger())
+			svc, err := New("test", "", WithJSONLogger())
 			assert.NoError(t, err)
 
 			err = svc.Run(context.Background(), tt.cp)

@@ -17,7 +17,6 @@ import (
 	"github.com/beatlabs/patron/observability"
 	"github.com/beatlabs/patron/trace"
 	"github.com/uber/jaeger-client-go"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -42,21 +41,17 @@ type Service struct {
 	observabilityProvider *observability.Provider
 }
 
-func New(name, version string, observabilityConn *grpc.ClientConn, options ...OptionFunc) (*Service, error) {
+func New(name, version string, options ...OptionFunc) (*Service, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
 	if version == "" {
 		version = "dev"
 	}
-	// TODO: provide a default grpc connection and optional function to override details.
-	if observabilityConn == nil {
-		return nil, errors.New("observability connection is required")
-	}
 
 	var err error
 	ctx := context.Background()
-	observabilityProvider, err := observability.Setup(ctx, name, version, observabilityConn)
+	observabilityProvider, err := observability.Setup(ctx, name, version)
 	if err != nil {
 		return nil, err
 	}

@@ -8,17 +8,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
 )
 
 func TestNew(t *testing.T) {
 	httpBuilderAllErrors := "attributes are empty\nprovided WithSIGHUP handler was nil"
 
 	tests := map[string]struct {
-		name              string
-		fields            []slog.Attr
-		sighupHandler     func()
-		observabilityConn *grpc.ClientConn
+		name          string
+		fields        []slog.Attr
+		sighupHandler func()
+
 		uncompressedPaths []string
 		wantErr           string
 	}{
@@ -26,25 +25,18 @@ func TestNew(t *testing.T) {
 			name:              "name",
 			fields:            []slog.Attr{slog.String("env", "dev")},
 			sighupHandler:     func() { slog.Info("WithSIGHUP received: nothing setup") },
-			observabilityConn: &grpc.ClientConn{},
 			uncompressedPaths: []string{"/foo", "/bar"},
 			wantErr:           "",
 		},
 		"name missing": {
 			wantErr: "name is required",
 		},
-		"observability connection missing": {
-			name:    "name",
-			wantErr: "observability connection is required",
-		},
 		"nil inputs steps": {
-			name:              "name",
-			observabilityConn: &grpc.ClientConn{},
-			wantErr:           httpBuilderAllErrors,
+			name:    "name",
+			wantErr: httpBuilderAllErrors,
 		},
 		"error in all builder steps": {
 			name:              "name",
-			observabilityConn: &grpc.ClientConn{},
 			uncompressedPaths: []string{},
 			wantErr:           httpBuilderAllErrors,
 		},
@@ -53,7 +45,7 @@ func TestNew(t *testing.T) {
 	for name, tt := range tests {
 		temp := tt
 		t.Run(name, func(t *testing.T) {
-			gotService, gotErr := New(tt.name, "1.0", tt.observabilityConn,
+			gotService, gotErr := New(tt.name, "1.0",
 				WithLogFields(temp.fields...), WithJSONLogger(), WithSIGHUP(temp.sighupHandler))
 
 			if temp.wantErr != "" {
@@ -95,7 +87,7 @@ func TestNewServer_FailingConditions(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			svc, err := New("test", "", &grpc.ClientConn{}, WithJSONLogger())
+			svc, err := New("test", "", WithJSONLogger())
 
 			if tt.expectedConstructorError != "" {
 				require.EqualError(t, err, tt.expectedConstructorError)

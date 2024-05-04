@@ -12,7 +12,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
-	"google.golang.org/grpc"
 )
 
 // Provider represents the observability provider that includes the metric and trace providers.
@@ -24,7 +23,7 @@ type Provider struct {
 // Setup initializes OpenTelemetry's traces and metrics.
 // It creates a resource with the given name and version, sets up the metric and trace providers,
 // and returns a Provider containing the initialized providers.
-func Setup(ctx context.Context, name, version string, conn *grpc.ClientConn) (*Provider, error) {
+func Setup(ctx context.Context, name, version string) (*Provider, error) {
 	res, err := createResource(name, version)
 	if err != nil {
 		return nil, err
@@ -32,11 +31,11 @@ func Setup(ctx context.Context, name, version string, conn *grpc.ClientConn) (*P
 
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 
-	metricProvider, err := setupMeter(ctx, name, res, conn)
+	metricProvider, err := setupMeter(ctx, name, res)
 	if err != nil {
 		return nil, err
 	}
-	traceProvider, err := setupTracing(ctx, name, res, conn)
+	traceProvider, err := setupTracing(ctx, name, res)
 	if err != nil {
 		return nil, err
 	}

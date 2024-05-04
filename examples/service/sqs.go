@@ -9,7 +9,7 @@ import (
 	"github.com/beatlabs/patron"
 	patronsqs "github.com/beatlabs/patron/component/sqs"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 )
 
 func createSQSConsumer() (patron.Component, error) {

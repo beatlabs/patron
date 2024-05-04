@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/go-redis/redis/extra/rediscmd"
 	"github.com/go-redis/redis/v8"

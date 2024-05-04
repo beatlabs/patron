@@ -22,12 +22,10 @@ import (
 	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	tracinglog "github.com/opentracing/opentracing-go/log"
+	"github.com/beatlabs/patron/observability/log"
+	patrontrace "github.com/beatlabs/patron/trace"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/time/rate"
 )
 
@@ -173,10 +171,11 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) (F
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			corID := getOrSetCorrelationID(r.Header)
-			sp, r := span(path, corID, r)
 			lw := newResponseWriter(w, true)
-			next.ServeHTTP(lw, r)
-			finishSpan(sp, lw.Status(), &lw.responsePayload)
+
+			// TODO: Correlation id is needed?
+
+			otelhttp.NewMiddleware(path)(next).ServeHTTP(lw, r)
 			logRequestResponse(corID, lw, r)
 			if log.Enabled(slog.LevelError) && statusCodeLogger.shouldLog(lw.status) {
 				log.FromContext(r.Context()).Error("failed route execution", slog.String("path", path),
@@ -218,6 +217,7 @@ func getOrSetCorrelationID(h http.Header) string {
 	return cor[0]
 }
 
+// TODO: Do we need metrics anymore since we have opentelemetry and the contrib library?
 func initHTTPServerMetrics() {
 	httpStatusTracingHandledMetric = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -260,12 +260,12 @@ func NewRequestObserver(path string) (Func, error) {
 			// collect metrics about HTTP server-side handling and latency
 			status := strconv.Itoa(lw.Status())
 
-			httpStatusCounter := trace.Counter{
+			httpStatusCounter := patrontrace.Counter{
 				Counter: httpStatusTracingHandledMetric.WithLabelValues(path, status),
 			}
 			httpStatusCounter.Inc(r.Context())
 
-			httpLatencyMetricObserver := trace.Histogram{
+			httpLatencyMetricObserver := patrontrace.Histogram{
 				Observer: httpStatusTracingLatencyMetric.WithLabelValues(path, status),
 			}
 			httpLatencyMetricObserver.Observe(r.Context(), time.Since(now).Seconds())
@@ -569,27 +569,6 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 	log.FromContext(r.Context()).LogAttrs(r.Context(), slog.LevelDebug, "request log", attrs...)
 }
 
-func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
-	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		slog.Error("failed to extract HTTP span", log.ErrorAttr(err))
-	}
-
-	strippedPath, err := stripQueryString(path)
-	if err != nil {
-		slog.Warn("unable to strip query string", slog.String("path", path), log.ErrorAttr(err))
-		strippedPath = path
-	}
-
-	sp := opentracing.StartSpan(opName(r.Method, strippedPath), ext.RPCServerOption(ctx))
-	ext.HTTPMethod.Set(sp, r.Method)
-	ext.HTTPUrl.Set(sp, r.URL.String())
-	ext.Component.Set(sp, serverComponent)
-	sp.SetTag(trace.VersionTag, trace.Version)
-	sp.SetTag(correlation.ID, corID)
-	return sp, r.WithContext(opentracing.ContextWithSpan(r.Context(), sp))
-}
-
 // stripQueryString returns a path without the query string.
 func stripQueryString(path string) (string, error) {
 	u, err := url.Parse(path)
@@ -602,18 +581,4 @@ func stripQueryString(path string) (string, error) {
 	}
 
 	return path[:len(path)-len(u.RawQuery)-1], nil
-}
-
-func finishSpan(sp opentracing.Span, code int, responsePayload *bytes.Buffer) {
-	ext.HTTPStatusCode.Set(sp, uint16(code))
-	isError := code >= http.StatusInternalServerError
-	if isError && responsePayload.Len() != 0 {
-		sp.LogFields(tracinglog.String(fieldNameError, responsePayload.String()))
-	}
-	ext.Error.Set(sp, isError)
-	sp.Finish()
-}
-
-func opName(method, path string) string {
-	return method + " " + path
 }

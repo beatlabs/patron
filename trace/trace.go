@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/uber/jaeger-client-go/config"
@@ -18,6 +18,8 @@ import (
 	"github.com/uber/jaeger-lib/metrics"
 	"github.com/uber/jaeger-lib/metrics/prometheus"
 )
+
+// TODO: merge with observability package?
 
 const (
 	// HostsTag is used to tag the component's hosts.

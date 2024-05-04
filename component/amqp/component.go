@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"

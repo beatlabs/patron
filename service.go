@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/observability"
+	"github.com/beatlabs/patron/observability/log"
 	"github.com/beatlabs/patron/trace"
 	"github.com/uber/jaeger-client-go"
 )

@@ -17,7 +17,8 @@ func Tracer() trace.Tracer {
 	return tracer
 }
 
-func setupTracing(ctx context.Context, name string, res *resource.Resource) (*sdktrace.TracerProvider, error) {
+// Setup configures the global tracer.
+func Setup(ctx context.Context, name string, res *resource.Resource) (*sdktrace.TracerProvider, error) {
 	exp, err := otlptracegrpc.New(ctx)
 	if err != nil {
 		return nil, err

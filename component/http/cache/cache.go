@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 )
 
 type validationContext int

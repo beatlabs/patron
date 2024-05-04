@@ -6,7 +6,9 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -34,11 +36,11 @@ func Setup(ctx context.Context, name, version string) (*Provider, error) {
 
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 
-	metricProvider, err := setupMeter(ctx, name, res)
+	metricProvider, err := patronmetric.Setup(ctx, name, res)
 	if err != nil {
 		return nil, err
 	}
-	traceProvider, err := setupTracing(ctx, name, res)
+	traceProvider, err := patrontrace.Setup(ctx, name, res)
 	if err != nil {
 		return nil, err
 	}

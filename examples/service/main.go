@@ -7,7 +7,7 @@ import (
 
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 )
 
 const (

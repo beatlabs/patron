@@ -7,7 +7,7 @@ import (
 	"github.com/beatlabs/patron"
 	patronamqp "github.com/beatlabs/patron/component/amqp"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 	"github.com/streadway/amqp"
 )
 

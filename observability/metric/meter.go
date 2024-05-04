@@ -17,7 +17,8 @@ func Meter() metric.Meter {
 	return meter
 }
 
-func setupMeter(ctx context.Context, name string, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
+// Setup initializes OpenTelemetry's metrics.
+func Setup(ctx context.Context, name string, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
 	// Create a meter provider.
 	// You can pass this instance directly to your instrumented code if it
 	// accepts a MeterProvider instance.

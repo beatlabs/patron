@@ -10,7 +10,7 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/grpc"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 )
 
 type greeterServer struct {

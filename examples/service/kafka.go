@@ -7,7 +7,7 @@ import (
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 )
 
 func createKafkaConsumer() (patron.Component, error) {

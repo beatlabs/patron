@@ -12,7 +12,7 @@ import (
 
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 )
 
 // NewRequest creates a request, encodes the body, and sets the appropriate headers.

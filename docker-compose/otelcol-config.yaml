@@ -7,8 +7,10 @@ receivers:
       grpc:
 
 exporters:
-  debug:
-    verbosity: detailed
+  otlp:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
 
 processors:
   batch:
@@ -18,8 +20,8 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [otlp]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [otlp]

@@ -6,7 +6,7 @@ import (
 
 	"github.com/beatlabs/patron/trace"
 	"github.com/opentracing/opentracing-go"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // Message interface for an AMQP Delivery.

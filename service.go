@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/observability"
@@ -48,8 +49,16 @@ func New(name, version string, observabilityConn *grpc.ClientConn, options ...Op
 	if version == "" {
 		version = "dev"
 	}
+	if observabilityConn == nil {
+		return nil, errors.New("observability connection is required")
+	}
 
+	var err error
 	ctx := context.Background()
+	observabilityProvider, err := observability.Setup(ctx, name, version, observabilityConn)
+	if err != nil {
+		return nil, err
+	}
 
 	s := &Service{
 		name:    name,
@@ -62,9 +71,9 @@ func New(name, version string, observabilityConn *grpc.ClientConn, options ...Op
 			attrs: defaultLogAttrs(name, version),
 			json:  false,
 		},
+		observabilityProvider: observabilityProvider,
 	}
 
-	var err error
 	err = setupJaegerTracing(name, version)
 	if err != nil {
 		return nil, err
@@ -94,9 +103,12 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 	}
 
 	defer func() {
-		err := trace.Close()
+		ctx, cnl := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cnl()
+
+		err := s.observabilityProvider.Shutdown(ctx)
 		if err != nil {
-			slog.Error("failed to close trace", slog.Any("error", err))
+			slog.Error("failed to close observability provider", slog.Any("error", err))
 		}
 	}()
 	ctx, cnl := context.WithCancel(ctx)

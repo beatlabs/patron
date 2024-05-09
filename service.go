@@ -70,6 +70,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		observabilityProvider: observabilityProvider,
 	}
 
+	// TODO: Rzemove jaeger tracing after everything has been set up.
 	err = setupJaegerTracing(name, version)
 	if err != nil {
 		return nil, err

@@ -9,8 +9,11 @@ import (
 	"testing"
 
 	"github.com/beatlabs/patron/examples"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -111,6 +114,10 @@ func TestSayHello(t *testing.T) {
 		require.NoError(t, conn.Close())
 	}()
 
+	exp := tracetest.NewInMemoryExporter()
+	tracePublisher, err := patrontrace.Setup("test", nil, exp)
+	require.NoError(t, err)
+
 	client := examples.NewGreeterClient(conn)
 
 	tt := map[string]struct {
@@ -138,6 +145,8 @@ func TestSayHello(t *testing.T) {
 
 	for n, tc := range tt {
 		t.Run(n, func(t *testing.T) {
+			t.Cleanup(func() { exp.Reset() })
+
 			res, err := client.SayHello(ctx, tc.req)
 			if tc.wantErr {
 				require.Nil(t, res)
@@ -153,17 +162,18 @@ func TestSayHello(t *testing.T) {
 				require.Equal(t, tc.wantMsg, res.GetMessage())
 			}
 
-			// TODO: test Metrics
-			// // Tracing
-			// wantSpanTags := map[string]interface{}{
-			// 	"component": "grpc-client",
-			// 	"version":   "dev",
-			// 	"span.kind": ext.SpanKindEnum("producer"),
-			// 	"error":     tc.wantErr,
-			// }
-			// assert.Equal(t, wantSpanTags, mtr.FinishedSpans()[0].Tags())
-			// mtr.Reset()
+			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
+			snaps := exp.GetSpans().Snapshots()
+
+			assert.Len(t, snaps, 1)
+			assert.Equal(t, "examples.Greeter/SayHello", snaps[0].Name())
+			assert.Equal(t, attribute.String("rpc.service", "examples.Greeter"), snaps[0].Attributes()[0])
+			assert.Equal(t, attribute.String("rpc.method", "SayHello"), snaps[0].Attributes()[1])
+			assert.Equal(t, attribute.String("rpc.system", "grpc"), snaps[0].Attributes()[2])
+			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tc.wantCode)), snaps[0].Attributes()[3])
+
+			// TODO: Metrics???
 			// assert.Equal(t, tc.wantCounter, testutil.CollectAndCount(rpcDurationMetrics, "client_grpc_rpc_duration_seconds"))
 			// rpcDurationMetrics.Reset()
 		})

@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/mocktracer"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestNew(t *testing.T) {
@@ -39,11 +40,13 @@ func TestNew(t *testing.T) {
 }
 
 func Test_injectTraceHeaders(t *testing.T) {
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	t.Cleanup(func() { mtr.Reset() })
+	exp := tracetest.NewInMemoryExporter()
+	_, err := patrontrace.Setup("test", nil, exp)
+	require.NoError(t, err)
 	msg := amqp.Publishing{}
-	sp := injectTraceHeaders(context.Background(), "123", &msg)
+	ctx, sp := injectTraceHeaders(context.Background(), "123", &msg)
+	assert.NotNil(t, ctx)
 	assert.NotNil(t, sp)
-	assert.NotEmpty(t, msg.Headers)
+	assert.Len(t, msg.Headers, 2)
+	assert.Len(t, exp.GetSpans(), 0)
 }

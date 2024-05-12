@@ -70,7 +70,7 @@ func (t *tracingInfo) startSpan(req *http.Request) (opentracing.Span, error) {
 			bodyFmt = string(rawBody)
 		}
 	}
-
+	// TODO: need to change this to OT span
 	sp, _ := opentracing.StartSpanFromContext(req.Context(), opName)
 	ext.Component.Set(sp, cmpName)
 	ext.DBType.Set(sp, "elasticsearch")

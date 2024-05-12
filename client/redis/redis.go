@@ -63,6 +63,7 @@ type tracingHook struct {
 }
 
 func (th tracingHook) BeforeProcess(ctx context.Context, cmd redis.Cmder) (context.Context, error) {
+	// TODO: need to change this to OT span
 	_, ctx = startSpan(ctx, th.address, cmd.FullName())
 	return context.WithValue(ctx, duration{}, time.Now()), nil
 }

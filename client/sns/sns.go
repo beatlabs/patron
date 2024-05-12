@@ -8,6 +8,7 @@ import (
 
 // NewFromConfig creates a new SNS client from aws.Config with OpenTelemetry instrumentation enabled.
 func NewFromConfig(cfg aws.Config) *sns.Client {
+	// TODO: Is this correct without using the return values?
 	otelaws.AppendMiddlewares(&cfg.APIOptions)
 	return sns.NewFromConfig(cfg)
 }

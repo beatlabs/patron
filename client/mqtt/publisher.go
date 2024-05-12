@@ -133,6 +133,7 @@ func injectObservabilityHeaders(ctx context.Context, pub *paho.Publish, sp opent
 	ensurePublishingProperties(pub)
 	pub.Properties.User.Add(correlation.HeaderID, correlation.IDFromContext(ctx))
 
+	// TODO: need to change this to OT span
 	c := mqttHeadersCarrier(pub.Properties.User)
 	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
 	pub.Properties.User = paho.UserProperties(c)

@@ -40,6 +40,7 @@ type connInfo struct {
 }
 
 func (c *connInfo) startSpan(ctx context.Context, opName, stmt string, tags ...opentracing.Tag) (opentracing.Span, context.Context) {
+	// TODO: Make it a OTel span
 	sp, ctx := opentracing.StartSpanFromContext(ctx, opName)
 	ext.Component.Set(sp, component)
 	ext.DBType.Set(sp, dbtype)

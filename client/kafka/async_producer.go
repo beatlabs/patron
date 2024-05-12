@@ -23,6 +23,7 @@ type AsyncProducer struct {
 // Send a message to a topic, asynchronously. Producer errors are queued on the
 // channel obtained during the AsyncProducer creation.
 func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) error {
+	// TODO: need to change this to OT span
 	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeAsync, msg.Topic), componentTypeAsync,
 		ext.SpanKindProducer, asyncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
 

@@ -9,8 +9,11 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
-	"github.com/opentracing/opentracing-go"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type (
@@ -23,12 +26,12 @@ const (
 
 	deliveryStatusSent      deliveryStatus = "sent"
 	deliveryStatusSendError deliveryStatus = "send-errors"
-
-	componentTypeAsync = "kafka-async-producer"
-	componentTypeSync  = "kafka-sync-producer"
 )
 
-var messageStatus *prometheus.CounterVec
+var (
+	messageStatus *prometheus.CounterVec
+	componentAttr = attribute.String("component", "kafka")
+)
 
 func init() {
 	messageStatus = prometheus.NewCounterVec(
@@ -159,20 +162,46 @@ func (b Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 	return ap, chErr, nil
 }
 
-type kafkaHeadersCarrier []sarama.RecordHeader
+func startSpan(ctx context.Context, action, delivery, topic string) (context.Context, trace.Span) {
+	attrs := []attribute.KeyValue{
+		attribute.String("delivery", delivery),
+		componentAttr,
+	}
 
-// Set implements Set() of opentracing.TextMapWriter.
-func (c *kafkaHeadersCarrier) Set(key, val string) {
-	*c = append(*c, sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
+	if topic != "" {
+		attrs = append(attrs, attribute.String("topic", topic))
+	}
+
+	return patrontrace.Tracer().Start(ctx, action,
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(attrs...),
+	)
 }
 
-func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.ProducerMessage, sp opentracing.Span) error {
+func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.ProducerMessage) {
 	msg.Headers = append(msg.Headers, sarama.RecordHeader{
 		Key:   []byte(correlation.HeaderID),
 		Value: []byte(correlation.IDFromContext(ctx)),
 	})
-	c := kafkaHeadersCarrier(msg.Headers)
-	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
-	msg.Headers = c
-	return err
+
+	otel.GetTextMapPropagator().Inject(ctx, producerMessageCarrier{msg})
+}
+
+type producerMessageCarrier struct {
+	msg *sarama.ProducerMessage
+}
+
+// Get retrieves a single value for a given key.
+func (c producerMessageCarrier) Get(key string) string {
+	return ""
+}
+
+// Set sets a header.
+func (c producerMessageCarrier) Set(key, val string) {
+	c.msg.Headers = append(c.msg.Headers, sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c producerMessageCarrier) Keys() []string {
+	return nil
 }

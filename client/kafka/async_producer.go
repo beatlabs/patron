@@ -7,12 +7,8 @@ import (
 	"fmt"
 
 	"github.com/IBM/sarama"
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
+	"go.opentelemetry.io/otel/codes"
 )
-
-var asyncTag = opentracing.Tag{Key: "type", Value: deliveryTypeAsync}
 
 // AsyncProducer is an asynchronous Kafka producer.
 type AsyncProducer struct {
@@ -23,20 +19,14 @@ type AsyncProducer struct {
 // Send a message to a topic, asynchronously. Producer errors are queued on the
 // channel obtained during the AsyncProducer creation.
 func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) error {
-	// TODO: need to change this to OT span
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeAsync, msg.Topic), componentTypeAsync,
-		ext.SpanKindProducer, asyncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
+	ctx, sp := startSpan(ctx, "send", deliveryTypeAsync, msg.Topic)
+	defer sp.End()
 
-	err := injectTracingAndCorrelationHeaders(ctx, msg, sp)
-	if err != nil {
-		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, msg.Topic, 1)
-		trace.SpanError(sp)
-		return fmt.Errorf("failed to inject tracing headers: %w", err)
-	}
+	injectTracingAndCorrelationHeaders(ctx, msg)
 
 	ap.asyncProd.Input() <- msg
 	statusCountAdd(deliveryTypeAsync, deliveryStatusSent, msg.Topic, 1)
-	trace.SpanSuccess(sp)
+	sp.SetStatus(codes.Ok, "message sent")
 	return nil
 }
 

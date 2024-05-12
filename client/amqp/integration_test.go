@@ -37,6 +37,8 @@ func TestRun(t *testing.T) {
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent)})
 	require.NoError(t, err)
 
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
 	expected := tracetest.SpanStub{
 		Name: "publish",
 		Attributes: []attribute.KeyValue{
@@ -44,8 +46,6 @@ func TestRun(t *testing.T) {
 			attribute.String("component", "amqp"),
 		},
 	}
-
-	tracePublisher.ForceFlush(context.Background())
 
 	snaps := exp.GetSpans().Snapshots()
 

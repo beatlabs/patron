@@ -102,6 +102,7 @@ func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishi
 	if msg.Headers == nil {
 		msg.Headers = amqp.Table{}
 	}
+	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 
 	ctx, sp := patrontrace.Tracer().Start(ctx, "publish",
 		trace.WithSpanKind(trace.SpanKindProducer),
@@ -110,7 +111,6 @@ func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishi
 
 	otel.GetTextMapPropagator().Inject(ctx, producerMessageCarrier{msg})
 
-	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 	return ctx, sp
 }
 
@@ -129,11 +129,6 @@ type producerMessageCarrier struct {
 
 // Get retrieves a single value for a given key.
 func (c producerMessageCarrier) Get(key string) string {
-	for k, v := range c.msg.Headers {
-		if k == key {
-			return v.(string)
-		}
-	}
 	return ""
 }
 
@@ -144,9 +139,5 @@ func (c producerMessageCarrier) Set(key, val string) {
 
 // Keys returns a slice of all key identifiers in the carrier.
 func (c producerMessageCarrier) Keys() []string {
-	out := make([]string, 0, len(c.msg.Headers))
-	for k := range c.msg.Headers {
-		out = append(out, k)
-	}
-	return out
+	return nil
 }

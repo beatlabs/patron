@@ -7,13 +7,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 const (
@@ -22,9 +22,9 @@ const (
 )
 
 func TestRun(t *testing.T) {
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	t.Cleanup(func() { mtr.Reset() })
+	exp := tracetest.NewInMemoryExporter()
+	tracePublisher, err := patrontrace.Setup("test", nil, exp)
+	require.NoError(t, err)
 
 	require.NoError(t, createQueue(endpoint, queue))
 
@@ -37,16 +37,21 @@ func TestRun(t *testing.T) {
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent)})
 	require.NoError(t, err)
 
-	expected := map[string]interface{}{
-		"component": "amqp-publisher",
-		"error":     false,
-		"exchange":  "",
-		"span.kind": ext.SpanKindEnum("producer"),
-		"version":   "dev",
+	expected := tracetest.SpanStub{
+		Name: "publish",
+		Attributes: []attribute.KeyValue{
+			attribute.String("exchange", ""),
+			attribute.String("component", "amqp"),
+		},
 	}
 
-	assert.Len(t, mtr.FinishedSpans(), 1)
-	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+	tracePublisher.ForceFlush(context.Background())
+
+	snaps := exp.GetSpans().Snapshots()
+
+	assert.Len(t, snaps, 1)
+	assert.Equal(t, expected.Name, snaps[0].Name())
+	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
 	assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_amqp_publish_duration_seconds"))

@@ -18,11 +18,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const (
-	publisherComponent = "amqp"
+var (
+	componentAttr          = attribute.String("component", "amqp")
+	publishDurationMetrics *prometheus.HistogramVec
 )
-
-var publishDurationMetrics *prometheus.HistogramVec
 
 func init() {
 	publishDurationMetrics = prometheus.NewHistogramVec(
@@ -65,19 +64,17 @@ func New(url string, oo ...OptionFunc) (*Publisher, error) {
 	if pub.cfg == nil {
 		conn, err = amqp.Dial(url)
 	} else {
-		conn, err = amqp.DialConfig(url, *pub.cfg)
+		pub.connection, err = amqp.DialConfig(url, *pub.cfg)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to open connection: %w", err)
 	}
 
-	ch, err := conn.Channel()
+	pub.channel, err = conn.Channel()
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("failed to open channel: %w", err), conn.Close())
 	}
 
-	pub.connection = conn
-	pub.channel = ch
 	return pub, nil
 }
 
@@ -108,10 +105,8 @@ func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishi
 
 	ctx, sp := patrontrace.Tracer().Start(ctx, "publish",
 		trace.WithSpanKind(trace.SpanKindProducer),
-		trace.WithAttributes(
-			attribute.String("exchange", exchange),
-			attribute.String("component", publisherComponent),
-		))
+		trace.WithAttributes(attribute.String("exchange", exchange), componentAttr),
+	)
 
 	otel.GetTextMapPropagator().Inject(ctx, producerMessageCarrier{msg})
 

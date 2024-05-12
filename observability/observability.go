@@ -40,7 +40,7 @@ func Setup(ctx context.Context, name, version string) (*Provider, error) {
 	if err != nil {
 		return nil, err
 	}
-	traceProvider, err := patrontrace.Setup(ctx, name, res)
+	traceProvider, err := patrontrace.SetupGRPC(ctx, name, res)
 	if err != nil {
 		return nil, err
 	}

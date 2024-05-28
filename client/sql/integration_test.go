@@ -12,6 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
+
 	// Integration test.
 	_ "github.com/go-sql-driver/mysql"
 )

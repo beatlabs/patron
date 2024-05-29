@@ -7,22 +7,23 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-	"github.com/beatlabs/patron/client/redis"
+	patronredis "github.com/beatlabs/patron/client/redis"
+	"github.com/redis/go-redis/v9"
 )
 
 var _ cache.TTLCache = &Cache{}
 
 // Cache encapsulates a Redis-based caching mechanism.
 type Cache struct {
-	rdb redis.Client
+	rdb *redis.Client
 }
 
-// Options exposes the struct from go-redis package.
-type Options redis.Options
-
 // New creates a cache returns a new Redis client that will be used as the cache store.
-func New(opt Options) (*Cache, error) {
-	redisDB := redis.New(redis.Options(opt))
+func New(opt *redis.Options) (*Cache, error) {
+	redisDB, err := patronredis.New(opt)
+	if err != nil {
+		return nil, err
+	}
 	return &Cache{rdb: redisDB}, nil
 }
 

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +18,7 @@ const (
 )
 
 func TestCache(t *testing.T) {
-	cache, err := New(Options{
+	cache, err := New(&redis.Options{
 		Addr:     dsn,
 		Password: "", // no password set
 		DB:       0,  // use default DB

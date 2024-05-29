@@ -1,4 +1,4 @@
-package sns
+package sqs
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,7 +22,7 @@ func TestNewFromConfig(t *testing.T) {
 	awsRegion := "eu-west-1"
 
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if service == sns.ServiceID && region == awsRegion {
+		if service == sqs.ServiceID && region == awsRegion {
 			return aws.Endpoint{
 				URL:           "http://localhost:4566",
 				SigningRegion: awsRegion,
@@ -46,13 +46,13 @@ func TestNewFromConfig(t *testing.T) {
 
 	assert.NotNil(t, client)
 
-	out, err := client.CreateTopic(context.Background(), &sns.CreateTopicInput{
-		Name: aws.String("test-topic"),
+	out, err := client.CreateQueue(context.Background(), &sqs.CreateQueueInput{
+		QueueName: aws.String("test-queue"),
 	})
 
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, out.TopicArn)
+	assert.NotEmpty(t, out.QueueUrl)
 	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	assert.Len(t, exp.GetSpans(), 1)

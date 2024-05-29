@@ -1,13 +1,9 @@
 package sql
 
 import (
-	"context"
 	"database/sql"
 	"testing"
 
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,32 +34,6 @@ func TestParseDSN(t *testing.T) {
 			assert.Equal(t, got, tc.want)
 		})
 	}
-}
-
-func TestSQLStartFinishSpan(t *testing.T) {
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	c := connInfo{"instance", "name"}
-	tag := opentracing.Tag{Key: "key", Value: "value"}
-	sp, req := c.startSpan(context.Background(), "sa", "ssf", tag)
-	assert.NotNil(t, sp)
-	assert.NotNil(t, req)
-	assert.IsType(t, &mocktracer.MockSpan{}, sp)
-	jsp, ok := sp.(*mocktracer.MockSpan)
-	assert.True(t, ok)
-	assert.NotNil(t, jsp)
-	trace.SpanSuccess(sp)
-	rawSpan := mtr.FinishedSpans()[0]
-	assert.Equal(t, map[string]interface{}{
-		"component":    "sql",
-		"version":      "dev",
-		"db.instance":  "instance",
-		"db.statement": "ssf",
-		"db.type":      "RDBMS",
-		"db.user":      "name",
-		"error":        false,
-		"key":          "value",
-	}, rawSpan.Tags())
 }
 
 func TestFromDB(t *testing.T) {

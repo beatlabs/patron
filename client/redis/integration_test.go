@@ -7,10 +7,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/prometheus/client_golang/prometheus/testutil"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 const (
@@ -18,25 +19,20 @@ const (
 )
 
 func TestClient(t *testing.T) {
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	defer mtr.Reset()
+	exp := tracetest.NewInMemoryExporter()
+	tracePublisher, err := patrontrace.Setup("test", nil, exp)
+	require.NoError(t, err)
 
-	cl := New(Options{
-		Addr:     dsn,
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-	cmd := cl.Set(context.Background(), "key", "value", 0)
+	ctx, _ := patrontrace.Tracer().Start(context.Background(), "test")
+
+	cl, err := New(&redis.Options{Addr: dsn})
+	assert.NoError(t, err)
+	cmd := cl.Set(ctx, "key", "value", 0)
 	res, err := cmd.Result()
 	assert.NoError(t, err)
 	assert.Equal(t, res, "OK")
-	assert.Len(t, mtr.FinishedSpans(), 1)
-	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["component"], "redis")
-	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["error"], false)
-	assert.Regexp(t, `:\d+`, mtr.FinishedSpans()[0].Tags()["db.instance"])
-	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["db.statement"], "set")
-	assert.Equal(t, mtr.FinishedSpans()[0].Tags()["db.type"], "kv")
-	// Metrics
-	assert.Equal(t, 1, testutil.CollectAndCount(cmdDurationMetrics, "client_redis_cmd_duration_seconds"))
+
+	assert.NoError(t, tracePublisher.ForceFlush(ctx))
+
+	assert.Len(t, exp.GetSpans(), 2)
 }

@@ -356,6 +356,7 @@ func assertSpanAndMetric(t *testing.T, spans tracetest.SpanStubs, opName, statem
 		}
 	}
 
+	// TODO: Fix metric collection.
 	// assert.Equal(t, metricCount, testutil.CollectAndCount(opDurationMetrics, "client_sql_cmd_duration_seconds"))
 	// opDurationMetrics.Reset()
 }

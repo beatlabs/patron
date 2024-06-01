@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,7 +17,7 @@ import (
 
 func TestConnectAndExecute(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := patrontrace.Setup("test", nil, exp)
+	tracePublisher, err := trace.Setup("test", nil, exp)
 	require.NoError(t, err)
 	ctx := context.Background()
 

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/IBM/sarama"
-	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,7 +30,7 @@ var (
 func TestMain(m *testing.M) {
 	traceExporter = tracetest.NewInMemoryExporter()
 	var err error
-	tracePublisher, err = patrontrace.Setup("test", nil, traceExporter)
+	tracePublisher, err = trace.Setup("test", nil, traceExporter)
 	if err != nil {
 		os.Exit(1)
 	}

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/beatlabs/patron/examples"
-	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
@@ -115,7 +115,7 @@ func TestSayHello(t *testing.T) {
 	}()
 
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := patrontrace.Setup("test", nil, exp)
+	tracePublisher, err := trace.Setup("test", nil, exp)
 	require.NoError(t, err)
 
 	client := examples.NewGreeterClient(conn)

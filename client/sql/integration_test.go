@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
@@ -51,7 +51,7 @@ func TestOpen(t *testing.T) {
 
 func TestIntegration(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := patrontrace.Setup("test", nil, exp)
+	tracePublisher, err := trace.Setup("test", nil, exp)
 	require.NoError(t, err)
 	ctx := context.Background()
 

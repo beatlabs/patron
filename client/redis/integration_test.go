@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,10 +19,10 @@ const (
 
 func TestClient(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := patrontrace.Setup("test", nil, exp)
+	tracePublisher, err := trace.Setup("test", nil, exp)
 	require.NoError(t, err)
 
-	ctx, _ := patrontrace.Tracer().Start(context.Background(), "test")
+	ctx, _ := trace.Tracer().Start(context.Background(), "test")
 
 	cl, err := New(&redis.Options{Addr: dsn})
 	assert.NoError(t, err)

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +17,7 @@ import (
 
 func TestNew(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := patrontrace.Setup("test", nil, exp)
+	tracePublisher, err := trace.Setup("test", nil, exp)
 	require.NoError(t, err)
 
 	responseMsg := `[{"acknowledged": true, "shards_acknowledged": true, "index": "test"}]`

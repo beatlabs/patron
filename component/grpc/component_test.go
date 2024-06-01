@@ -9,21 +9,32 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/examples"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/mocktracer"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/codes"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
-var mtr = mocktracer.New()
+var (
+	tracePublisher *tracesdk.TracerProvider
+	traceExporter  = tracetest.NewInMemoryExporter()
+)
 
 func TestMain(m *testing.M) {
-	opentracing.SetGlobalTracer(mtr)
-	code := m.Run()
-	os.Exit(code)
+	var err error
+	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
+
+	tracePublisher, err = patrontrace.Setup("test", nil, traceExporter)
+	if err != nil {
+		panic(err)
+	}
+	os.Exit(m.Run())
 }
 
 func TestCreate(t *testing.T) {
@@ -58,7 +69,8 @@ func TestCreate(t *testing.T) {
 }
 
 func TestComponent_Run_Unary(t *testing.T) {
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
+
 	cmp, err := New(60000, WithReflection())
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
@@ -86,35 +98,49 @@ func TestComponent_Run_Unary(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() { mtr.Reset() })
+			t.Cleanup(func() { traceExporter.Reset() })
+
 			reqCtx := metadata.AppendToOutgoingContext(ctx, correlation.HeaderID, "123")
 			r, err := c.SayHello(reqCtx, &examples.HelloRequest{Firstname: tt.args.requestName})
+
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+
 			if tt.expErr != "" {
 				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, r)
+
+				time.Sleep(time.Second)
+				spans := traceExporter.GetSpans()
+				assert.Len(t, spans, 1)
+
+				expectedSpan := tracetest.SpanStub{
+					Name:     "examples.Greeter/SayHello",
+					SpanKind: trace.SpanKindServer,
+					Status: tracesdk.Status{
+						Code:        codes.Error,
+						Description: "ERROR",
+					},
+				}
+
+				assertSpan(t, expectedSpan, spans[0])
+
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, r.GetMessage(), "Hello TEST")
 
-				// TODO: Assert metrics and traces
-				// assert.Len(t, mtr.FinishedSpans(), 1)
+				time.Sleep(time.Second)
+				spans := traceExporter.GetSpans()
+				assert.Len(t, spans, 1)
 
-				// expectedTags := map[string]interface{}{
-				// 	"component":     "gRPC-server",
-				// 	"correlationID": "123",
-				// 	"error":         false,
-				// 	"span.kind":     ext.SpanKindEnum("consumer"),
-				// 	"version":       "dev",
-				// }
+				expectedSpan := tracetest.SpanStub{
+					Name:     "examples.Greeter/SayHello",
+					SpanKind: trace.SpanKindServer,
+					Status: tracesdk.Status{
+						Code: codes.Unset,
+					},
+				}
 
-				// for _, span := range mtr.FinishedSpans() {
-				// 	assert.Equal(t, expectedTags, span.Tags())
-				// }
-
-				// assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcHandledMetric, "component_grpc_handled_total"), 1)
-				// rpcHandledMetric.Reset()
-				// assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcLatencyMetric, "component_grpc_handled_seconds"), 1)
-				// rpcLatencyMetric.Reset()
+				assertSpan(t, expectedSpan, spans[0])
 			}
 		})
 	}
@@ -124,7 +150,8 @@ func TestComponent_Run_Unary(t *testing.T) {
 }
 
 func TestComponent_Run_Stream(t *testing.T) {
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
+
 	cmp, err := New(60000, WithReflection())
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
@@ -139,6 +166,8 @@ func TestComponent_Run_Stream(t *testing.T) {
 	require.NoError(t, err)
 	c := examples.NewGreeterClient(conn)
 
+	assert.NoError(t, tracePublisher.ForceFlush(ctx))
+
 	type args struct {
 		requestName string
 	}
@@ -152,34 +181,53 @@ func TestComponent_Run_Stream(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() { mtr.Reset() })
+			t.Cleanup(func() { traceExporter.Reset() })
+
 			reqCtx := metadata.AppendToOutgoingContext(ctx, correlation.HeaderID, "123")
 			client, err := c.SayHelloStream(reqCtx, &examples.HelloRequest{Firstname: tt.args.requestName})
 			assert.NoError(t, err)
 			resp, err := client.Recv()
+
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+
 			if tt.expErr != "" {
 				assert.EqualError(t, err, tt.expErr)
 				assert.Nil(t, resp)
+
+				time.Sleep(time.Second)
+				spans := traceExporter.GetSpans()
+				assert.Len(t, spans, 1)
+
+				expectedSpan := tracetest.SpanStub{
+					Name:     "examples.Greeter/SayHelloStream",
+					SpanKind: trace.SpanKindServer,
+					Status: tracesdk.Status{
+						Code:        codes.Error,
+						Description: "ERROR",
+					},
+				}
+
+				assertSpan(t, expectedSpan, spans[0])
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, resp.GetMessage(), "Hello TEST")
+
+				time.Sleep(time.Second)
+				spans := traceExporter.GetSpans()
+				assert.Len(t, spans, 1)
+
+				expectedSpan := tracetest.SpanStub{
+					Name:     "examples.Greeter/SayHelloStream",
+					SpanKind: trace.SpanKindServer,
+					Status: tracesdk.Status{
+						Code: codes.Unset,
+					},
+				}
+
+				assertSpan(t, expectedSpan, spans[0])
 			}
 
-			// TODO: Assert metrics and traces
-			// assert.Len(t, mtr.FinishedSpans(), 1)
-
-			// expectedTags := map[string]interface{}{
-			// 	"component":     "gRPC-server",
-			// 	"correlationID": "123",
-			// 	"error":         err != nil,
-			// 	"span.kind":     ext.SpanKindEnum("consumer"),
-			// 	"version":       "dev",
-			// }
-
-			// for _, span := range mtr.FinishedSpans() {
-			// 	assert.Equal(t, expectedTags, span.Tags())
-			// }
-
+			// TODO: Assert metrics
 			// assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcHandledMetric, "component_grpc_handled_total"), 1)
 			// rpcHandledMetric.Reset()
 			// assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcLatencyMetric, "component_grpc_handled_seconds"), 1)
@@ -210,4 +258,10 @@ func (s *server) SayHelloStream(req *examples.HelloRequest, srv examples.Greeter
 	}
 
 	return srv.Send(&examples.HelloReply{Message: "Hello " + req.GetFirstname()})
+}
+
+func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
+	assert.Equal(t, expected.Name, got.Name)
+	assert.Equal(t, expected.SpanKind, got.SpanKind)
+	assert.Equal(t, expected.Status, got.Status)
 }

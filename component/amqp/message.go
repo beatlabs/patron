@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -69,24 +69,27 @@ func (m message) Message() amqp.Delivery {
 }
 
 func (m message) ACK() error {
+	defer m.span.End()
 	err := m.msg.Ack(false)
+
 	if err != nil {
-		m.span.RecordError(err)
-		m.span.SetStatus(codes.Error, "failed ACK message")
+		patrontrace.SetSpanStatus(m.span, "failed to ACK message", err)
+	} else {
+		patrontrace.SetSpanStatus(m.span, "", err)
 	}
-	m.span.End()
 	messageCountInc(m.queue, ackMessageState, err)
 	return err
 }
 
 func (m message) NACK() error {
+	defer m.span.End()
 	err := m.msg.Nack(false, m.requeue)
 	messageCountInc(m.queue, nackMessageState, err)
 	if err != nil {
-		m.span.RecordError(err)
-		m.span.SetStatus(codes.Error, "failed ACK message")
+		patrontrace.SetSpanStatus(m.span, "failed to NACK message", err)
+	} else {
+		patrontrace.SetSpanStatus(m.span, "", err)
 	}
-	m.span.End()
 	return err
 }
 

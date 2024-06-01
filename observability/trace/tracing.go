@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -45,13 +46,24 @@ func Setup(name string, res *resource.Resource, exp sdktrace.SpanExporter) (*sdk
 }
 
 func newTraceProvider(res *resource.Resource, exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
-	return sdktrace.NewTracerProvider(
+	opts := []sdktrace.TracerProviderOption{
 		sdktrace.WithBatcher(exp),
 		sdktrace.WithResource(res),
-	)
+	}
+	return sdktrace.NewTracerProvider(opts...)
 }
 
 // ComponentOpName returns an operation name for a component.
 func ComponentOpName(cmp, target string) string {
 	return cmp + " " + target
+}
+
+// SetSpanStatus sets the status of the span based on the error.
+func SetSpanStatus(span trace.Span, msg string, err error) {
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, msg)
+		return
+	}
+	span.SetStatus(codes.Ok, msg)
 }

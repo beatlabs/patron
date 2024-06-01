@@ -16,6 +16,8 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type messageState string
@@ -287,8 +289,14 @@ func (c *Component) subscribe() (subscription, error) {
 }
 
 func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *message {
+	if len(delivery.Headers) == 0 {
+		delivery.Headers = amqp.Table{}
+	}
 	corID := getCorrelationID(delivery.Headers)
-	ctx, sp := patrontrace.Tracer().Start(ctx, patrontrace.ComponentOpName(consumerComponent, c.queueCfg.queue))
+	ctx = otel.GetTextMapPropagator().Extract(ctx, &consumerMessageCarrier{msg: &delivery})
+
+	ctx, sp := patrontrace.Tracer().Start(ctx, patrontrace.ComponentOpName(consumerComponent, c.queueCfg.queue),
+		trace.WithSpanKind(trace.SpanKindConsumer))
 
 	ctx = correlation.ContextWithID(ctx, corID)
 	ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
@@ -337,14 +345,6 @@ func messageCountInc(queue string, state messageState, err error) {
 	messageCounterVec.WithLabelValues(queue, string(state), hasError).Inc()
 }
 
-func mapHeader(hh amqp.Table) map[string]string {
-	mp := make(map[string]string)
-	for k, v := range hh {
-		mp[k] = fmt.Sprint(v)
-	}
-	return mp
-}
-
 func getCorrelationID(hh amqp.Table) string {
 	for key, value := range hh {
 		if key == correlation.HeaderID {
@@ -356,4 +356,27 @@ func getCorrelationID(hh amqp.Table) string {
 		}
 	}
 	return uuid.New().String()
+}
+
+type consumerMessageCarrier struct {
+	msg *amqp.Delivery
+}
+
+// Get retrieves a single value for a given key.
+func (c consumerMessageCarrier) Get(key string) string {
+	val, ok := c.msg.Headers[key]
+	if !ok {
+		return ""
+	}
+	return val.(string)
+}
+
+// Set sets a header.
+func (c consumerMessageCarrier) Set(key, val string) {
+	c.msg.Headers[key] = val
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c consumerMessageCarrier) Keys() []string {
+	return nil
 }

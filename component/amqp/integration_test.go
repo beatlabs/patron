@@ -9,11 +9,14 @@ import (
 
 	patronamqp "github.com/beatlabs/patron/client/amqp"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/codes"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -42,6 +45,7 @@ func TestRun(t *testing.T) {
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent[1])})
 	require.NoError(t, err)
 
+	assert.NoError(t, err, tracePublisher.ForceFlush(ctx))
 	traceExporter.Reset()
 
 	chReceived := make(chan []string)
@@ -75,22 +79,23 @@ func TestRun(t *testing.T) {
 
 	<-chDone
 
-	spans := traceExporter.GetSpans()
 	assert.ElementsMatch(t, sent, got)
+
+	assert.NoError(t, err, tracePublisher.ForceFlush(ctx))
+	time.Sleep(time.Second)
+	spans := traceExporter.GetSpans()
 	assert.Len(t, spans, 2)
 
-	expectedTags := map[string]interface{}{
-		"component":     "amqp-consumer",
-		"correlationID": "123",
-		"error":         false,
-		"queue":         "rmq-test-queue",
-		"span.kind":     ext.SpanKindEnum("consumer"),
-		"version":       "dev",
+	expectedSpan := tracetest.SpanStub{
+		Name:     "amqp rmq-test-queue",
+		SpanKind: trace.SpanKindConsumer,
+		Status: tracesdk.Status{
+			Code: codes.Ok,
+		},
 	}
 
-	for _, span := range spans {
-		assert.Equal(t, expectedTags, span.Attributes)
-	}
+	assertSpan(t, expectedSpan, spans[0])
+	assertSpan(t, expectedSpan, spans[1])
 
 	assert.Equal(t, 1, testutil.CollectAndCount(messageAge, "component_amqp_message_age"))
 	assert.Equal(t, 2, testutil.CollectAndCount(messageCounterVec, "component_amqp_message_counter"))

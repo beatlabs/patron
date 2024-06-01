@@ -7,11 +7,12 @@ import (
 	"testing"
 
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"github.com/opentracing/opentracing-go/ext"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/codes"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -19,12 +20,13 @@ const (
 )
 
 var (
-	tracePublisher *sdktrace.TracerProvider
+	tracePublisher *tracesdk.TracerProvider
 	traceExporter  = tracetest.NewInMemoryExporter()
 )
 
 func TestMain(m *testing.M) {
 	var err error
+	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
 
 	tracePublisher, err = patrontrace.Setup("test", nil, traceExporter)
 	if err != nil {
@@ -85,40 +87,33 @@ func Test_message_ACK(t *testing.T) {
 				assert.EqualError(t, err, tt.expectedErr)
 
 				expected := tracetest.SpanStub{
-					Name: "ack",
+					Name:     "amqp queueName",
+					SpanKind: trace.SpanKindConsumer,
+					Status: tracesdk.Status{
+						Code:        codes.Error,
+						Description: "failed to ACK message",
+					},
 				}
 
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 1)
-				assert.Equal(t, expected.Name, got[0].Name)
-
-				// expected := map[string]interface{}{
-				// 	"component":     "amqp-consumer",
-				// 	"error":         true,
-				// 	"span.kind":     ext.SpanKindEnum("consumer"),
-				// 	"version":       "dev",
-				// 	"correlationID": "123",
-				// }
-
+				assertSpan(t, expected, got[0])
 			} else {
 				assert.NoError(t, err)
 
 				expected := tracetest.SpanStub{
-					Name: "ack",
+					Name:     "amqp queueName",
+					SpanKind: trace.SpanKindConsumer,
+					Status: tracesdk.Status{
+						Code: codes.Ok,
+					},
 				}
 
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 1)
-				assert.Equal(t, expected.Name, got[0].Name)
-				// expected := map[string]interface{}{
-				// 	"component":     "amqp-consumer",
-				// 	"error":         false,
-				// 	"span.kind":     ext.SpanKindEnum("consumer"),
-				// 	"version":       "dev",
-				// 	"correlationID": "123",
-				// }
+				assertSpan(t, expected, got[0])
 			}
 		})
 	}
@@ -152,24 +147,35 @@ func Test_message_NACK(t *testing.T) {
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
-				expected := map[string]interface{}{
-					"component":     "amqp-consumer",
-					"error":         true,
-					"span.kind":     ext.SpanKindEnum("consumer"),
-					"version":       "dev",
-					"correlationID": "123",
+
+				expected := tracetest.SpanStub{
+					Name:     "amqp queueName",
+					SpanKind: trace.SpanKindConsumer,
+					Status: tracesdk.Status{
+						Code:        codes.Error,
+						Description: "failed to NACK message",
+					},
 				}
-				assert.Equal(t, expected, traceExporter.GetSpans())
+
+				got := traceExporter.GetSpans()
+
+				assert.Len(t, got, 1)
+				assertSpan(t, expected, got[0])
+
 			} else {
 				assert.NoError(t, err)
-				expected := map[string]interface{}{
-					"component":     "amqp-consumer",
-					"error":         false,
-					"span.kind":     ext.SpanKindEnum("consumer"),
-					"version":       "dev",
-					"correlationID": "123",
+				expected := tracetest.SpanStub{
+					Name:     "amqp queueName",
+					SpanKind: trace.SpanKindConsumer,
+					Status: tracesdk.Status{
+						Code: codes.Ok,
+					},
 				}
-				assert.Equal(t, expected, traceExporter.GetSpans())
+
+				got := traceExporter.GetSpans()
+
+				assert.Len(t, got, 1)
+				assertSpan(t, expected, got[0])
 			}
 		})
 	}
@@ -217,7 +223,7 @@ func Test_batch_NACK(t *testing.T) {
 
 func createMessage(id string, acknowledger amqp.Acknowledger) message {
 	ctx, sp := patrontrace.Tracer().Start(context.Background(),
-		patrontrace.ComponentOpName(consumerComponent, queueName))
+		patrontrace.ComponentOpName(consumerComponent, queueName), trace.WithSpanKind(trace.SpanKindConsumer))
 
 	msg := message{
 		ctx: ctx,
@@ -252,4 +258,10 @@ func (s stubAcknowledger) Nack(_ uint64, _ bool, _ bool) error {
 
 func (s stubAcknowledger) Reject(_ uint64, _ bool) error {
 	panic("implement me")
+}
+
+func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
+	assert.Equal(t, expected.Name, got.Name)
+	assert.Equal(t, expected.SpanKind, got.SpanKind)
+	assert.Equal(t, expected.Status, got.Status)
 }

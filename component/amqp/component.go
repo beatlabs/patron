@@ -11,7 +11,7 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/observability/log"
-	"github.com/beatlabs/patron/trace"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -30,7 +30,7 @@ const (
 	defaultRetryCount        = 10
 	defaultRetryDelay        = 5 * time.Second
 
-	consumerComponent = "amqp-consumer"
+	consumerComponent = "amqp"
 
 	ackMessageState     messageState = "ACK"
 	nackMessageState    messageState = "NACK"
@@ -288,14 +288,13 @@ func (c *Component) subscribe() (subscription, error) {
 
 func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *message {
 	corID := getCorrelationID(delivery.Headers)
-	sp, ctxMsg := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queueCfg.queue),
-		consumerComponent, corID, mapHeader(delivery.Headers), c.traceTag)
+	ctx, sp := patrontrace.Tracer().Start(ctx, patrontrace.ComponentOpName(consumerComponent, c.queueCfg.queue))
 
-	ctxMsg = correlation.ContextWithID(ctxMsg, corID)
-	ctxMsg = log.WithContext(ctxMsg, slog.With(slog.String(correlation.ID, corID)))
+	ctx = correlation.ContextWithID(ctx, corID)
+	ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
 
 	return &message{
-		ctx:     ctxMsg,
+		ctx:     ctx,
 		span:    sp,
 		msg:     delivery,
 		requeue: c.queueCfg.requeue,

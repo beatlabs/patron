@@ -50,3 +50,8 @@ func newTraceProvider(res *resource.Resource, exp sdktrace.SpanExporter) *sdktra
 		sdktrace.WithResource(res),
 	)
 }
+
+// ComponentOpName returns an operation name for a component.
+func ComponentOpName(cmp, target string) string {
+	return cmp + " " + target
+}

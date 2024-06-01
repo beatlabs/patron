@@ -23,7 +23,7 @@ const (
 
 func TestRun(t *testing.T) {
 	require.NoError(t, createQueue())
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
 
 	ctx, cnl := context.WithCancel(context.Background())
 
@@ -41,7 +41,8 @@ func TestRun(t *testing.T) {
 	err = pub.Publish(reqCtx, "", rabbitMQQueue, false, false,
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent[1])})
 	require.NoError(t, err)
-	mtr.Reset()
+
+	traceExporter.Reset()
 
 	chReceived := make(chan []string)
 	received := make([]string, 0)
@@ -74,8 +75,9 @@ func TestRun(t *testing.T) {
 
 	<-chDone
 
+	spans := traceExporter.GetSpans()
 	assert.ElementsMatch(t, sent, got)
-	assert.Len(t, mtr.FinishedSpans(), 2)
+	assert.Len(t, spans, 2)
 
 	expectedTags := map[string]interface{}{
 		"component":     "amqp-consumer",
@@ -86,8 +88,8 @@ func TestRun(t *testing.T) {
 		"version":       "dev",
 	}
 
-	for _, span := range mtr.FinishedSpans() {
-		assert.Equal(t, expectedTags, span.Tags())
+	for _, span := range spans {
+		assert.Equal(t, expectedTags, span.Attributes)
 	}
 
 	assert.Equal(t, 1, testutil.CollectAndCount(messageAge, "component_amqp_message_age"))

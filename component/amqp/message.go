@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Message interface for an AMQP Delivery.
@@ -21,7 +21,7 @@ type Message interface {
 	// Message will contain the raw AMQP delivery.
 	Message() amqp.Delivery
 	// Span contains the tracing span of this message.
-	Span() opentracing.Span
+	Span() trace.Span
 	// ACK deletes the message from the queue and completes the tracing span.
 	ACK() error
 	// NACK leaves the message in the queue and completes the tracing span.
@@ -42,7 +42,7 @@ type Batch interface {
 
 type message struct {
 	ctx     context.Context
-	span    opentracing.Span
+	span    trace.Span
 	msg     amqp.Delivery
 	queue   string
 	requeue bool
@@ -60,7 +60,7 @@ func (m message) Body() []byte {
 	return m.msg.Body
 }
 
-func (m message) Span() opentracing.Span {
+func (m message) Span() trace.Span {
 	return m.span
 }
 
@@ -70,7 +70,11 @@ func (m message) Message() amqp.Delivery {
 
 func (m message) ACK() error {
 	err := m.msg.Ack(false)
-	trace.SpanComplete(m.span, err)
+	if err != nil {
+		m.span.RecordError(err)
+		m.span.SetStatus(codes.Error, "failed ACK message")
+	}
+	m.span.End()
 	messageCountInc(m.queue, ackMessageState, err)
 	return err
 }
@@ -78,7 +82,11 @@ func (m message) ACK() error {
 func (m message) NACK() error {
 	err := m.msg.Nack(false, m.requeue)
 	messageCountInc(m.queue, nackMessageState, err)
-	trace.SpanComplete(m.span, err)
+	if err != nil {
+		m.span.RecordError(err)
+		m.span.SetStatus(codes.Error, "failed ACK message")
+	}
+	m.span.End()
 	return err
 }
 

@@ -8,7 +8,6 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -51,8 +50,7 @@ func Test_NewBatch(t *testing.T) {
 		Value: []byte(`{"key":"value"}`),
 	}
 
-	span := mocktracer.New().StartSpan("msg")
-	msg := NewMessage(ctx, span, cm)
+	msg := NewMessage(ctx, nil, cm)
 	btc := NewBatch([]Message{msg})
 	assert.Equal(t, 1, len(btc.Messages()))
 }
@@ -70,10 +68,9 @@ func Test_Message(t *testing.T) {
 		Value: []byte(`{"key":"value"}`),
 	}
 
-	span := mocktracer.New().StartSpan("msg")
-	msg := NewMessage(ctx, span, cm)
+	msg := NewMessage(ctx, nil, cm)
 	assert.Equal(t, ctx, msg.Context())
-	assert.Equal(t, span, msg.Span())
+	assert.Nil(t, msg.Span())
 	assert.Equal(t, cm, msg.Message())
 }
 

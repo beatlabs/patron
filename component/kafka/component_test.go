@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"errors"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -11,10 +12,28 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
+
+var (
+	tracePublisher *tracesdk.TracerProvider
+	traceExporter  = tracetest.NewInMemoryExporter()
+)
+
+func TestMain(m *testing.M) {
+	var err error
+	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
+
+	tracePublisher, err = patrontrace.Setup("test", nil, traceExporter)
+	if err != nil {
+		panic(err)
+	}
+	os.Exit(m.Run())
+}
 
 func TestNew(t *testing.T) {
 	t.Parallel()
@@ -387,7 +406,7 @@ func Test_deduplicateMessages(t *testing.T) {
 	message := func(key, val string) Message {
 		return NewMessage(
 			context.Background(),
-			opentracing.SpanFromContext(context.Background()),
+			nil,
 			&sarama.ConsumerMessage{Key: []byte(key), Value: []byte(val)})
 	}
 	find := func(collection []Message, key string) Message {

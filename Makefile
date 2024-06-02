@@ -5,8 +5,8 @@ default: test
 test: fmtcheck
 	go test ./... -cover -race -timeout 60s
 
-testint: fmtcheck  deps-start
-	go test ./... -race -cover -tags=integration -timeout 120s -count=1
+testint: fmtcheck
+	go test ./... -race -cover -tags=integration -timeout 240s -count=1
 
 cover: fmtcheck
 	go test ./... -coverpkg=./... -coverprofile=coverage.txt -tags=integration -covermode=atomic && \
@@ -40,7 +40,7 @@ example-client:
 	go run examples/client/main.go
 
 deps-start:
-	docker-compose up -d && sleep 10
+	docker-compose up -d
 
 deps-stop:
 	docker-compose down

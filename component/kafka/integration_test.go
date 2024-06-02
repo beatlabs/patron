@@ -15,12 +15,13 @@ import (
 	"github.com/IBM/sarama"
 	kafkaclient "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/codes"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -34,10 +35,7 @@ const (
 
 func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, createTopics(broker, successTopic1))
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	mtr.Reset()
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
 
 	// Test parameters
 	numOfMessagesToSend := 100
@@ -57,7 +55,8 @@ func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, client.SendBatch(ctx, messages))
 
-	mtr.Reset()
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	traceExporter.Reset()
 
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]string, 0)
@@ -99,23 +98,36 @@ func TestKafkaComponent_Success(t *testing.T) {
 	patronCancel()
 	patronWG.Wait()
 
-	assert.Len(t, mtr.FinishedSpans(), 100)
+	time.Sleep(time.Second)
 
-	expectedTags := map[string]interface{}{
-		"component":     "kafka-consumer",
-		"correlationID": "123",
-		"error":         false,
-		"span.kind":     ext.SpanKindEnum("consumer"),
-		"version":       "dev",
-	}
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
-	for _, span := range mtr.FinishedSpans() {
-		assert.Equal(t, expectedTags, span.Tags())
+	spans := traceExporter.GetSpans()
+
+	assert.Len(t, spans, 100)
+
+	for _, span := range spans {
+
+		expectedSpan := tracetest.SpanStub{
+			Name:     "kafka-consumer successTopic1",
+			SpanKind: trace.SpanKindConsumer,
+			Status: tracesdk.Status{
+				Code: codes.Ok,
+			},
+		}
+
+		assertSpan(t, expectedSpan, span)
 	}
 
 	assert.GreaterOrEqual(t, testutil.CollectAndCount(consumerErrors, "component_kafka_consumer_errors"), 0)
 	assert.GreaterOrEqual(t, testutil.CollectAndCount(topicPartitionOffsetDiff, "component_kafka_offset_diff"), 1)
 	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageStatus, "component_kafka_message_status"), 1)
+}
+
+func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
+	assert.Equal(t, expected.Name, got.Name)
+	assert.Equal(t, expected.SpanKind, got.SpanKind)
+	assert.Equal(t, expected.Status, got.Status)
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {

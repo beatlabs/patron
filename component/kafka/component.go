@@ -13,10 +13,11 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/observability/log"
-	"github.com/beatlabs/patron/trace"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -383,7 +384,8 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 
 	c.processedMessages = true
 	for _, m := range messages {
-		trace.SpanSuccess(m.Span())
+		patrontrace.SetSpanStatus(m.Span(), "", nil)
+		m.Span().End()
 		session.MarkMessage(m.Message(), "")
 	}
 
@@ -400,7 +402,8 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 	switch c.failStrategy {
 	case ExitStrategy:
 		for _, m := range messages {
-			trace.SpanError(m.Span())
+			patrontrace.SetSpanStatus(m.Span(), "executing exit strategy", err)
+			m.Span().End()
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 		}
 		slog.Error("could not process message(s)")
@@ -408,7 +411,8 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 		return err
 	case SkipStrategy:
 		for _, m := range messages {
-			trace.SpanError(m.Span())
+			patrontrace.SetSpanStatus(m.Span(), "executing skip strategy", err)
+			m.Span().End()
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
 		}
@@ -420,14 +424,16 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 	return nil
 }
 
-func (c *consumerHandler) getContextWithCorrelation(msg *sarama.ConsumerMessage) (context.Context, opentracing.Span) {
+func (c *consumerHandler) getContextWithCorrelation(msg *sarama.ConsumerMessage) (context.Context, trace.Span) {
 	corID := getCorrelationID(msg.Headers)
+	ctx := otel.GetTextMapPropagator().Extract(context.Background(), &consumerMessageCarrier{msg: msg})
 
-	sp, ctxCh := trace.ConsumerSpan(c.ctx, trace.ComponentOpName(consumerComponent, msg.Topic),
-		consumerComponent, corID, mapHeader(msg.Headers))
-	ctxCh = correlation.ContextWithID(ctxCh, corID)
-	ctxCh = log.WithContext(ctxCh, slog.With(slog.String(correlation.ID, corID)))
-	return ctxCh, sp
+	ctx, sp := patrontrace.Tracer().Start(ctx, patrontrace.ComponentOpName(consumerComponent, msg.Topic),
+		trace.WithSpanKind(trace.SpanKindConsumer))
+
+	ctx = correlation.ContextWithID(ctx, corID)
+	ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
+	return ctx, sp
 }
 
 func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) error {
@@ -477,4 +483,34 @@ func deduplicateMessages(messages []Message) []Message {
 	}
 
 	return deduplicated
+}
+
+type consumerMessageCarrier struct {
+	msg *sarama.ConsumerMessage
+}
+
+// Get retrieves a single value for a given key.
+func (c consumerMessageCarrier) Get(key string) string {
+	for _, header := range c.msg.Headers {
+		if string(header.Key) == key {
+			return string(header.Value)
+		}
+	}
+	return ""
+}
+
+// Set sets a header.
+func (c consumerMessageCarrier) Set(key, val string) {
+	for _, header := range c.msg.Headers {
+		if string(header.Key) == key {
+			header.Value = []byte(val)
+			return
+		}
+	}
+	c.msg.Headers = append(c.msg.Headers, &sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c consumerMessageCarrier) Keys() []string {
+	return nil
 }

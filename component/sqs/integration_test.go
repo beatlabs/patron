@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,7 +29,7 @@ type testMessage struct {
 }
 
 func Test_SQS_Consume(t *testing.T) {
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
 
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"
@@ -41,7 +40,7 @@ func Test_SQS_Consume(t *testing.T) {
 	require.NoError(t, err)
 
 	sent := sendMessage(t, api, correlationID, queue, "1", "2", "3")
-	mtr.Reset()
+	traceExporter.Reset()
 
 	chReceived := make(chan []*testMessage)
 	received := make([]*testMessage, 0)
@@ -74,19 +73,17 @@ func Test_SQS_Consume(t *testing.T) {
 	got := <-chReceived
 
 	assert.ElementsMatch(t, sent, got)
-	assert.Len(t, mtr.FinishedSpans(), 3)
 
-	expectedTags := map[string]interface{}{
-		"component":     "sqs-consumer",
-		"correlationID": "123",
-		"error":         false,
-		"span.kind":     ext.SpanKindEnum("consumer"),
-		"version":       "dev",
-	}
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
-	for _, span := range mtr.FinishedSpans() {
-		assert.Equal(t, expectedTags, span.Tags())
-	}
+	expected := createStubSpan("sqs-consumer", "")
+
+	spans := traceExporter.GetSpans()
+
+	assert.Len(t, got, 3)
+	assertSpan(t, expected, spans[0])
+	assertSpan(t, expected, spans[1])
+	assertSpan(t, expected, spans[2])
 
 	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageAge, "component_sqs_message_age"), 1)
 	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageCounterVec, "component_sqs_message_counter"), 1)

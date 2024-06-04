@@ -78,8 +78,7 @@ func TestDefaultProducerSaramaConfig(t *testing.T) {
 
 func Test_injectTracingAndCorrelationHeaders(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	_, err := patrontrace.Setup("test", nil, exp)
-	require.NoError(t, err)
+	_ = patrontrace.Setup("test", nil, exp)
 
 	ctx := correlation.ContextWithID(context.Background(), "123")
 

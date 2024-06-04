@@ -2,12 +2,13 @@ package sqs
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Message interface for AWS SQS message.
@@ -22,7 +23,7 @@ type Message interface {
 	// Message will contain the raw SQS message.
 	Message() types.Message
 	// Span contains the tracing span of this message.
-	Span() opentracing.Span
+	Span() trace.Span
 	// ACK deletes the message from the queue and completes the tracing span.
 	ACK() error
 	// NACK leaves the message in the queue and completes the tracing span.
@@ -50,7 +51,7 @@ type message struct {
 	queue queue
 	api   API
 	msg   types.Message
-	span  opentracing.Span
+	span  trace.Span
 }
 
 func (m message) Context() context.Context {
@@ -65,7 +66,7 @@ func (m message) Body() []byte {
 	return []byte(*m.msg.Body)
 }
 
-func (m message) Span() opentracing.Span {
+func (m message) Span() trace.Span {
 	return m.span
 }
 
@@ -74,23 +75,26 @@ func (m message) Message() types.Message {
 }
 
 func (m message) ACK() error {
+	defer m.span.End()
+
 	_, err := m.api.DeleteMessage(m.ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(m.queue.url),
 		ReceiptHandle: m.msg.ReceiptHandle,
 	})
 	if err != nil {
 		messageCountInc(m.queue.name, ackMessageState, true, 1)
-		trace.SpanError(m.span)
+		patrontrace.SetSpanError(m.span, "failed to ACK message", err)
 		return err
 	}
 	messageCountInc(m.queue.name, ackMessageState, false, 1)
-	trace.SpanSuccess(m.span)
+	patrontrace.SetSpanSuccess(m.span)
 	return nil
 }
 
 func (m message) NACK() {
+	defer m.span.End()
 	messageCountInc(m.queue.name, nackMessageState, false, 1)
-	trace.SpanSuccess(m.span)
+	patrontrace.SetSpanSuccess(m.span)
 }
 
 type batch struct {
@@ -119,7 +123,8 @@ func (b batch) ACK() ([]Message, error) {
 	if err != nil {
 		messageCountInc(b.queue.name, ackMessageState, true, len(b.messages))
 		for _, msg := range b.messages {
-			trace.SpanError(msg.Span())
+			patrontrace.SetSpanError(msg.Span(), "failed to ACK message", err)
+			msg.Span().End()
 		}
 		return nil, err
 	}
@@ -128,7 +133,9 @@ func (b batch) ACK() ([]Message, error) {
 		messageCountInc(b.queue.name, ackMessageState, false, len(output.Successful))
 
 		for _, suc := range output.Successful {
-			trace.SpanSuccess(msgMap[aws.ToString(suc.Id)].Span())
+			sp := msgMap[aws.ToString(suc.Id)].Span()
+			patrontrace.SetSpanSuccess(sp)
+			sp.End()
 		}
 	}
 
@@ -137,8 +144,10 @@ func (b batch) ACK() ([]Message, error) {
 		failed := make([]Message, 0, len(output.Failed))
 		for _, fail := range output.Failed {
 			msg := msgMap[aws.ToString(fail.Id)]
-			trace.SpanError(msg.Span())
+			failureErr := fmt.Errorf("failure code: %s message: %s", *fail.Code, *fail.Message)
+			patrontrace.SetSpanError(msg.Span(), "failed to ACK message", failureErr)
 			failed = append(failed, msg)
+			msg.Span().End()
 		}
 		return failed, nil
 	}

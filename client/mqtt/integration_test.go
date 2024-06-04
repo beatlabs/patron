@@ -26,8 +26,7 @@ const (
 
 func TestPublish(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := trace.Setup("test", nil, exp)
-	require.NoError(t, err)
+	tracePublisher := trace.Setup("test", nil, exp)
 
 	u, err := url.Parse(hiveMQURL)
 	require.NoError(t, err)

@@ -384,7 +384,7 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 
 	c.processedMessages = true
 	for _, m := range messages {
-		patrontrace.SetSpanStatus(m.Span(), "", nil)
+		patrontrace.SetSpanSuccess(m.Span())
 		m.Span().End()
 		session.MarkMessage(m.Message(), "")
 	}
@@ -402,7 +402,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 	switch c.failStrategy {
 	case ExitStrategy:
 		for _, m := range messages {
-			patrontrace.SetSpanStatus(m.Span(), "executing exit strategy", err)
+			patrontrace.SetSpanError(m.Span(), "executing exit strategy", err)
 			m.Span().End()
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 		}
@@ -411,7 +411,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 		return err
 	case SkipStrategy:
 		for _, m := range messages {
-			patrontrace.SetSpanStatus(m.Span(), "executing skip strategy", err)
+			patrontrace.SetSpanError(m.Span(), "executing skip strategy", err)
 			m.Span().End()
 			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
 			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
@@ -428,7 +428,7 @@ func (c *consumerHandler) getContextWithCorrelation(msg *sarama.ConsumerMessage)
 	corID := getCorrelationID(msg.Headers)
 	ctx := otel.GetTextMapPropagator().Extract(context.Background(), &consumerMessageCarrier{msg: msg})
 
-	ctx, sp := patrontrace.Tracer().Start(ctx, patrontrace.ComponentOpName(consumerComponent, msg.Topic),
+	ctx, sp := patrontrace.StartSpan(ctx, patrontrace.ComponentOpName(consumerComponent, msg.Topic),
 		trace.WithSpanKind(trace.SpanKindConsumer))
 
 	ctx = correlation.ContextWithID(ctx, corID)

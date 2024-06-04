@@ -14,9 +14,9 @@ import (
 
 var tracer trace.Tracer
 
-// Tracer returns the global tracer.
-func Tracer() trace.Tracer {
-	return tracer
+// StartSpan starts a span with the given name and context.
+func StartSpan(ctx context.Context, name string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	return tracer.Start(ctx, name, opts...)
 }
 
 // SetupGRPC configures the global tracer with the OTLP gRPC exporter.
@@ -26,11 +26,11 @@ func SetupGRPC(ctx context.Context, name string, res *resource.Resource) (*sdktr
 		return nil, err
 	}
 
-	return Setup(name, res, exp)
+	return Setup(name, res, exp), nil
 }
 
 // Setup TraceProvider with the given resource and exporter.
-func Setup(name string, res *resource.Resource, exp sdktrace.SpanExporter) (*sdktrace.TracerProvider, error) {
+func Setup(name string, res *resource.Resource, exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
 	tp := newTraceProvider(res, exp)
 
 	otel.SetTracerProvider(tp)
@@ -42,7 +42,7 @@ func Setup(name string, res *resource.Resource, exp sdktrace.SpanExporter) (*sdk
 
 	tracer = tp.Tracer(name)
 
-	return tp, nil
+	return tp
 }
 
 func newTraceProvider(res *resource.Resource, exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
@@ -58,12 +58,13 @@ func ComponentOpName(cmp, target string) string {
 	return cmp + " " + target
 }
 
-// SetSpanStatus sets the status of the span based on the error.
-func SetSpanStatus(span trace.Span, msg string, err error) {
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, msg)
-		return
-	}
-	span.SetStatus(codes.Ok, msg)
+// SetSpanError sets the error status on the span.
+func SetSpanError(span trace.Span, msg string, err error) {
+	span.RecordError(err)
+	span.SetStatus(codes.Error, msg)
+}
+
+// SetSpanSuccess sets the success status on the span.
+func SetSpanSuccess(span trace.Span) {
+	span.SetStatus(codes.Ok, "")
 }

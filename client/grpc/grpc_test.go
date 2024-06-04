@@ -115,8 +115,7 @@ func TestSayHello(t *testing.T) {
 	}()
 
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := trace.Setup("test", nil, exp)
-	require.NoError(t, err)
+	tracePublisher := trace.Setup("test", nil, exp)
 
 	client := examples.NewGreeterClient(conn)
 

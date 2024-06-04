@@ -29,11 +29,7 @@ var (
 
 func TestMain(m *testing.M) {
 	traceExporter = tracetest.NewInMemoryExporter()
-	var err error
-	tracePublisher, err = trace.Setup("test", nil, traceExporter)
-	if err != nil {
-		os.Exit(1)
-	}
+	tracePublisher = trace.Setup("test", nil, traceExporter)
 
 	code := m.Run()
 

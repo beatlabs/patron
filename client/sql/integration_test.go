@@ -9,7 +9,6 @@ import (
 
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	// Integration test.
@@ -51,8 +50,7 @@ func TestOpen(t *testing.T) {
 
 func TestIntegration(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := trace.Setup("test", nil, exp)
-	require.NoError(t, err)
+	tracePublisher := trace.Setup("test", nil, exp)
 	ctx := context.Background()
 
 	const query = "SELECT * FROM employee LIMIT 1"

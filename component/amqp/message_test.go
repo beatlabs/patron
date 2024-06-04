@@ -25,19 +25,16 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	var err error
 	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
 
-	tracePublisher, err = patrontrace.Setup("test", nil, traceExporter)
-	if err != nil {
-		panic(err)
-	}
+	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
+
 	os.Exit(m.Run())
 }
 
 func Test_message(t *testing.T) {
 	t.Cleanup(func() { traceExporter.Reset() })
-	ctx, sp := patrontrace.Tracer().Start(context.Background(), "test")
+	ctx, sp := patrontrace.StartSpan(context.Background(), "test")
 
 	id := "123"
 	body := []byte("body")
@@ -59,6 +56,7 @@ func Test_message(t *testing.T) {
 
 func Test_message_ACK(t *testing.T) {
 	t.Cleanup(func() { traceExporter.Reset() })
+
 	type fields struct {
 		acknowledger amqp.Acknowledger
 	}
@@ -121,6 +119,7 @@ func Test_message_ACK(t *testing.T) {
 
 func Test_message_NACK(t *testing.T) {
 	t.Cleanup(func() { traceExporter.Reset() })
+
 	type fields struct {
 		acknowledger amqp.Acknowledger
 	}
@@ -222,7 +221,7 @@ func Test_batch_NACK(t *testing.T) {
 }
 
 func createMessage(id string, acknowledger amqp.Acknowledger) message {
-	ctx, sp := patrontrace.Tracer().Start(context.Background(),
+	ctx, sp := patrontrace.StartSpan(context.Background(),
 		patrontrace.ComponentOpName(consumerComponent, queueName), trace.WithSpanKind(trace.SpanKindConsumer))
 
 	msg := message{

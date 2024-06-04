@@ -7,7 +7,6 @@ import (
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -41,8 +40,8 @@ func TestNew(t *testing.T) {
 
 func Test_injectTraceHeaders(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	_, err := patrontrace.Setup("test", nil, exp)
-	require.NoError(t, err)
+	_ = patrontrace.Setup("test", nil, exp)
+
 	msg := amqp.Publishing{}
 	ctx, sp := injectTraceHeaders(context.Background(), "123", &msg)
 	assert.NotNil(t, ctx)

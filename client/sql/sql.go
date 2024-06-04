@@ -36,8 +36,7 @@ type connInfo struct {
 }
 
 func (c *connInfo) startSpan(ctx context.Context, opName, stmt string) (context.Context, trace.Span) {
-	return patrontrace.Tracer().Start(ctx, opName,
-		trace.WithSpanKind(trace.SpanKindClient),
+	return patrontrace.StartSpan(ctx, opName, trace.WithSpanKind(trace.SpanKindClient),
 		trace.WithAttributes(c.userAttr, c.instanceAttr, c.dbNameAttr, attribute.String("db.statement", stmt)))
 }
 

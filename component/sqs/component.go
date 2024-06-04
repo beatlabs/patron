@@ -15,9 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/observability/log"
-	"github.com/beatlabs/patron/trace"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -270,14 +272,15 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 
 		corID := getCorrelationID(msg.MessageAttributes)
 
-		sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queue.name),
-			consumerComponent, corID, mapHeader(msg.MessageAttributes))
+		ctx = otel.GetTextMapPropagator().Extract(ctx, &consumerMessageCarrier{msg: &msg})
 
-		ctxCh = correlation.ContextWithID(ctxCh, corID)
-		ctxCh = log.WithContext(ctxCh, slog.With(slog.String(correlation.ID, corID)))
+		ctx, sp := patrontrace.StartSpan(ctx, consumerComponent, trace.WithSpanKind(trace.SpanKindConsumer))
+
+		ctx = correlation.ContextWithID(ctx, corID)
+		ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
 
 		btc.messages = append(btc.messages, message{
-			ctx:   ctxCh,
+			ctx:   ctx,
 			queue: c.queue,
 			api:   c.api,
 			msg:   msg,
@@ -367,12 +370,21 @@ func getCorrelationID(ma map[string]types.MessageAttributeValue) string {
 	return uuid.New().String()
 }
 
-func mapHeader(ma map[string]types.MessageAttributeValue) map[string]string {
-	mp := make(map[string]string)
-	for key, value := range ma {
-		if value.StringValue != nil {
-			mp[key] = *value.StringValue
-		}
-	}
-	return mp
+type consumerMessageCarrier struct {
+	msg *types.Message
+}
+
+// Get retrieves a single value for a given key.
+func (c consumerMessageCarrier) Get(key string) string {
+	return c.msg.Attributes[key]
+}
+
+// Set sets a header.
+func (c consumerMessageCarrier) Set(key, val string) {
+	c.msg.Attributes[key] = val
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c consumerMessageCarrier) Keys() []string {
+	return nil
 }

@@ -172,10 +172,8 @@ func startSpan(ctx context.Context, action, delivery, topic string) (context.Con
 		attrs = append(attrs, attribute.String("topic", topic))
 	}
 
-	return patrontrace.Tracer().Start(ctx, action,
-		trace.WithSpanKind(trace.SpanKindProducer),
-		trace.WithAttributes(attrs...),
-	)
+	return patrontrace.StartSpan(ctx, action, trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(attrs...))
 }
 
 func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.ProducerMessage) {

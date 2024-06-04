@@ -11,14 +11,12 @@ import (
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestNew(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := trace.Setup("test", nil, exp)
-	require.NoError(t, err)
+	tracePublisher := trace.Setup("test", nil, exp)
 
 	responseMsg := `[{"acknowledged": true, "shards_acknowledged": true, "index": "test"}]`
 	ctx, indexName := context.Background(), "test_index"

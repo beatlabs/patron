@@ -90,8 +90,7 @@ func New(ctx context.Context, cfg autopaho.ClientConfig) (*Publisher, error) {
 
 // Publish provides a instrumented publishing of a message.
 func (p *Publisher) Publish(ctx context.Context, pub *paho.Publish) (*paho.PublishResponse, error) {
-	ctx, sp := patrontrace.Tracer().Start(ctx, "publish",
-		trace.WithSpanKind(trace.SpanKindProducer),
+	ctx, sp := patrontrace.StartSpan(ctx, "publish", trace.WithSpanKind(trace.SpanKindProducer),
 		trace.WithAttributes(attribute.String("topic", pub.Topic), componentAttr),
 	)
 	defer sp.End()

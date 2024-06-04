@@ -104,8 +104,7 @@ func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishi
 	}
 	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 
-	ctx, sp := patrontrace.Tracer().Start(ctx, "publish",
-		trace.WithSpanKind(trace.SpanKindProducer),
+	ctx, sp := patrontrace.StartSpan(ctx, "publish", trace.WithSpanKind(trace.SpanKindProducer),
 		trace.WithAttributes(attribute.String("exchange", exchange), componentAttr),
 	)
 

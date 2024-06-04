@@ -295,7 +295,7 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 	corID := getCorrelationID(delivery.Headers)
 	ctx = otel.GetTextMapPropagator().Extract(ctx, &consumerMessageCarrier{msg: &delivery})
 
-	ctx, sp := patrontrace.Tracer().Start(ctx, patrontrace.ComponentOpName(consumerComponent, c.queueCfg.queue),
+	ctx, sp := patrontrace.StartSpan(ctx, patrontrace.ComponentOpName(consumerComponent, c.queueCfg.queue),
 		trace.WithSpanKind(trace.SpanKindConsumer))
 
 	ctx = correlation.ContextWithID(ctx, corID)

@@ -9,7 +9,6 @@ import (
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -19,10 +18,9 @@ const (
 
 func TestClient(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
-	tracePublisher, err := trace.Setup("test", nil, exp)
-	require.NoError(t, err)
+	tracePublisher := trace.Setup("test", nil, exp)
 
-	ctx, _ := trace.Tracer().Start(context.Background(), "test")
+	ctx, _ := trace.StartSpan(context.Background(), "test")
 
 	cl, err := New(&redis.Options{Addr: dsn})
 	assert.NoError(t, err)

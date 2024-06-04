@@ -141,7 +141,7 @@ func ensurePublishingProperties(pub *paho.Publish) {
 	}
 }
 
-func observePublish(ctx context.Context, start time.Time, topic string, err error) {
+func observePublish(_ context.Context, start time.Time, topic string, err error) {
 	publishDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err == nil)).
 		Observe(time.Since(start).Seconds())
 }

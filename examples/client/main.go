@@ -73,6 +73,9 @@ func main() {
 	ctx, cnl := context.WithTimeout(context.Background(), 50000*time.Second)
 	defer cnl()
 
+	ctx, sp := trace.StartSpan(ctx, "example-client")
+	defer sp.End()
+
 	for _, process := range prs {
 		err = process(ctx)
 		handleError(err)

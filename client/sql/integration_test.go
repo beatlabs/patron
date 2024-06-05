@@ -337,7 +337,7 @@ func TestIntegration(t *testing.T) {
 	})
 }
 
-func assertSpanAndMetric(t *testing.T, spans tracetest.SpanStubs, opName, statement string, metricCount int) {
+func assertSpanAndMetric(t *testing.T, spans tracetest.SpanStubs, opName, statement string, _ int) {
 	assert.Len(t, spans, 1)
 	assert.Equal(t, opName, spans[0].Name)
 	for _, v := range spans[0].Attributes {

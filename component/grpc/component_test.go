@@ -120,7 +120,6 @@ func TestComponent_Run_Unary(t *testing.T) {
 				}
 
 				assertSpan(t, expectedSpan, spans[0])
-
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, r.GetMessage(), "Hello TEST")

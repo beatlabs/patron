@@ -127,7 +127,7 @@ type producerMessageCarrier struct {
 }
 
 // Get retrieves a single value for a given key.
-func (c producerMessageCarrier) Get(key string) string {
+func (c producerMessageCarrier) Get(_ string) string {
 	return ""
 }
 

@@ -160,7 +160,6 @@ func Test_message_NACK(t *testing.T) {
 
 				assert.Len(t, got, 1)
 				assertSpan(t, expected, got[0])
-
 			} else {
 				assert.NoError(t, err)
 				expected := tracetest.SpanStub{

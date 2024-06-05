@@ -46,8 +46,8 @@ func init() {
 	prometheus.MustRegister(messageStatus)
 }
 
-func statusCountAdd(deliveryType string, status deliveryStatus, topic string, cnt int) {
-	messageStatus.WithLabelValues(string(status), topic, deliveryType).Add(float64(cnt))
+func statusCountAdd(deliveryType string, status deliveryStatus, topic string) {
+	messageStatus.WithLabelValues(string(status), topic, deliveryType).Inc()
 }
 
 type baseProducer struct {
@@ -190,7 +190,7 @@ type producerMessageCarrier struct {
 }
 
 // Get retrieves a single value for a given key.
-func (c producerMessageCarrier) Get(key string) string {
+func (c producerMessageCarrier) Get(_ string) string {
 	return ""
 }
 

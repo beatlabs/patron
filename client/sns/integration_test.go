@@ -22,7 +22,7 @@ func TestNewFromConfig(t *testing.T) {
 
 	awsRegion := "eu-west-1"
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, _ ...interface{}) (aws.Endpoint, error) {
 		if service == sns.ServiceID && region == awsRegion {
 			return aws.Endpoint{
 				URL:           "http://localhost:4566",

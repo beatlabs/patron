@@ -368,7 +368,11 @@ func (c consumerMessageCarrier) Get(key string) string {
 	if !ok {
 		return ""
 	}
-	return val.(string)
+	v, ok := val.(string)
+	if !ok {
+		return ""
+	}
+	return v
 }
 
 // Set sets a header.

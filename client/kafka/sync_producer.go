@@ -24,13 +24,13 @@ func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (p
 
 	partition, offset, err = p.syncProd.SendMessage(msg)
 	if err != nil {
-		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
+		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic)
 		sp.RecordError(err)
 		sp.SetStatus(codes.Error, "error sending message")
 		return -1, -1, err
 	}
 
-	statusCountAdd(deliveryTypeSync, deliveryStatusSent, msg.Topic, 1)
+	statusCountAdd(deliveryTypeSync, deliveryStatusSent, msg.Topic)
 	sp.SetStatus(codes.Ok, "message sent")
 	return partition, offset, nil
 }
@@ -75,6 +75,6 @@ func (p *SyncProducer) Close() error {
 
 func statusCountBatchAdd(deliveryType string, status deliveryStatus, messages []*sarama.ProducerMessage) {
 	for _, msg := range messages {
-		statusCountAdd(deliveryType, status, msg.Topic, 1)
+		statusCountAdd(deliveryType, status, msg.Topic)
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// TODO: introduce metrics
+// TODO: introduce metrics.
 var reqDurationMetrics *prometheus.HistogramVec
 
 func init() {

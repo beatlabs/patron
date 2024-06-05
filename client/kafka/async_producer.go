@@ -25,14 +25,14 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) 
 	injectTracingAndCorrelationHeaders(ctx, msg)
 
 	ap.asyncProd.Input() <- msg
-	statusCountAdd(deliveryTypeAsync, deliveryStatusSent, msg.Topic, 1)
+	statusCountAdd(deliveryTypeAsync, deliveryStatusSent, msg.Topic)
 	sp.SetStatus(codes.Ok, "message sent")
 	return nil
 }
 
 func (ap *AsyncProducer) propagateError(chErr chan<- error) {
 	for pe := range ap.asyncProd.Errors() {
-		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, pe.Msg.Topic, 1)
+		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, pe.Msg.Topic)
 		chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
 }

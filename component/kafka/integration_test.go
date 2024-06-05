@@ -107,7 +107,6 @@ func TestKafkaComponent_Success(t *testing.T) {
 	assert.Len(t, spans, 100)
 
 	for _, span := range spans {
-
 		expectedSpan := tracetest.SpanStub{
 			Name:     "kafka-consumer successTopic1",
 			SpanKind: trace.SpanKindConsumer,

@@ -512,7 +512,7 @@ func parseDSN(dsn string) DSNInfo {
 	return res
 }
 
-func observeDuration(ctx context.Context, start time.Time, op string, err error) {
+func observeDuration(_ context.Context, _ time.Time, _ string, _ error) {
 	// patrontrace.SpanComplete(span, err)
 
 	// durationHistogram := patrontrace.Histogram{

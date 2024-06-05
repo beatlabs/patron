@@ -272,7 +272,7 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 
 		corID := getCorrelationID(msg.MessageAttributes)
 
-		ctx = otel.GetTextMapPropagator().Extract(ctx, &consumerMessageCarrier{msg: &msg})
+		ctx = otel.GetTextMapPropagator().Extract(ctx, &consumerMessageCarrier{msg: &msg}) // nolint:gosec
 
 		ctx, sp := patrontrace.StartSpan(ctx, consumerComponent, trace.WithSpanKind(trace.SpanKindConsumer))
 

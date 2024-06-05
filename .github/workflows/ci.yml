@@ -40,7 +40,7 @@ jobs:
         run: |
           sleep 30
           make ci
-      
+
       - name: Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -48,13 +48,15 @@ jobs:
           files: ./coverage.txt
           name: codecov-umbrella # optional 
           token: ${{ secrets.CODECOV_TOKEN }} # required
-    
+
       - name: e2e
         run:  |
           go build -o service ./service/
           nohup ./service/service &
           go run client/main.go
         working-directory: ./examples
+        env:
+          OTEL_EXPORTER_OTLP_INSECURE : true
 
       - name: Stop dependencies
         run: make deps-stop

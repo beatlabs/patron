@@ -37,7 +37,7 @@ example-service:
 	OTEL_EXPORTER_OTLP_INSECURE="true" go run examples/service/*.go
 
 example-client:
-	go run examples/client/main.go
+	OTEL_EXPORTER_OTLP_INSECURE="true" go run examples/client/main.go
 
 deps-start:
 	docker-compose up -d

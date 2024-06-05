@@ -21,9 +21,11 @@ import (
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -52,6 +54,14 @@ func main() {
 	Valid values are: all, http, grpc, kafka, amqp, sqs. Default value is all.`)
 
 	flag.Parse()
+
+	tp, err := trace.SetupGRPC(context.Background(), "example-client", resource.Default())
+	handleError(err)
+
+	defer func() {
+		handleError(tp.ForceFlush(context.Background()))
+		handleError(tp.Shutdown(context.Background()))
+	}()
 
 	prs, err := processModes(modes)
 	if err != nil {

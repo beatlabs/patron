@@ -23,8 +23,6 @@ import (
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -42,10 +40,6 @@ const (
 	modeAMQP  mode = "amqp"
 	modeSQS   mode = "sqs"
 )
-
-func init() {
-	otel.SetTextMapPropagator(propagation.TraceContext{})
-}
 
 func main() {
 	var modes string

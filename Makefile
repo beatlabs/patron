@@ -14,9 +14,7 @@ cover: fmtcheck
 	rm coverage.txt
 
 ci: 
-	go test ./... -race -cover -mod=vendor -coverprofile=coverage.txt -covermode=atomic -tags=integration && \
-	mv coverage.txt coverage.txt.tmp && \
-	cat coverage.txt.tmp | grep -v "examples" > coverage.txt
+	go test `go list ./... | grep -v examples` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration 
 
 fmt:
 	go fmt ./...

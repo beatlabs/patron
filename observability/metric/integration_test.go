@@ -1,0 +1,23 @@
+//go:build integration
+
+package observability
+
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel/sdk/resource"
+)
+
+func TestSetup(t *testing.T) {
+	t.Setenv("OTEL_EXPORTER_OTLP_INSECURE", "true")
+	ctx := context.Background()
+
+	got, err := Setup(ctx, "test", resource.Default())
+	assert.NoError(t, err)
+
+	assert.NotNil(t, Meter())
+
+	assert.NoError(t, got.Shutdown(ctx))
+}

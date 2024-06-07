@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"testing"
 
@@ -20,6 +21,30 @@ func TestContext(t *testing.T) {
 		ctx := WithContext(context.Background(), nil)
 		assert.Equal(t, l, FromContext(ctx))
 	})
+}
+
+func TestEnabled(t *testing.T) {
+	type args struct {
+		l slog.Level
+	}
+	tests := map[string]struct {
+		args args
+		want bool
+	}{
+		"Disabled": {args{slog.LevelDebug}, false},
+		"Enabled":  {args{slog.LevelInfo}, true},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tt.want, Enabled(tt.args.l))
+		})
+	}
+}
+
+func TestErrorAttr(t *testing.T) {
+	err := errors.New("error")
+	errAttr := slog.Any("error", err)
+	assert.Equal(t, errAttr, ErrorAttr(err))
 }
 
 var bCtx context.Context

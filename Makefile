@@ -8,13 +8,8 @@ test: fmtcheck
 testint: fmtcheck
 	go test ./... -race -cover -tags=integration -timeout 300s -count=1
 
-cover: fmtcheck
-	go test ./... -coverpkg=./... -coverprofile=coverage.txt -tags=integration -covermode=atomic && \
-	go tool cover -func=coverage.txt && \
-	rm coverage.txt
-
-ci: 
-	go test `go list ./... | grep -v examples` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration 
+ci: fmtcheck
+	go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration 
 
 fmt:
 	go fmt ./...
@@ -27,9 +22,6 @@ lint: fmtcheck
 
 deeplint: fmtcheck
 	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.57.2 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
-
-modsync: fmtcheck
-	go mod tidy && 	go mod vendor
 
 example-service:
 	OTEL_EXPORTER_OTLP_INSECURE="true" go run examples/service/*.go

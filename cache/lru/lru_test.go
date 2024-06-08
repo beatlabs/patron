@@ -21,7 +21,7 @@ func TestNew(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, err := New(tt.size)
+			c, err := New(tt.size, "test")
 			if tt.wantErr {
 				assert.Nil(t, c)
 				assert.EqualError(t, err, tt.err)
@@ -34,7 +34,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestCacheOperations(t *testing.T) {
-	c, err := New(10)
+	c, err := New(10, "test")
 	assert.NotNil(t, c)
 	assert.NoError(t, err)
 

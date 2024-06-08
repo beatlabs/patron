@@ -5,35 +5,35 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"github.com/prometheus/client_golang/prometheus"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
 var (
 	componentAttr          = attribute.String("component", "amqp")
-	publishDurationMetrics *prometheus.HistogramVec
+	publishDurationMetrics metric.Float64Histogram
+	successAttr            = attribute.Bool("success", true)
+	failureAttr            = attribute.Bool("success", false)
 )
 
 func init() {
-	publishDurationMetrics = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: "client",
-			Subsystem: "amqp",
-			Name:      "publish_duration_seconds",
-			Help:      "AMQP publish completed by the client.",
-		},
-		[]string{"exchange", "success"},
+	var err error
+	publishDurationMetrics, err = patronmetric.Meter().Float64Histogram("amqp.publish.duration",
+		metric.WithDescription("AMQP publish duration."),
+		metric.WithUnit("ms"),
 	)
-	prometheus.MustRegister(publishDurationMetrics)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Publisher defines a RabbitMQ publisher with tracing instrumentation.
@@ -80,15 +80,13 @@ func New(url string, oo ...OptionFunc) (*Publisher, error) {
 
 // Publish a message to an exchange.
 func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error {
-	// TODO: Metrics
-
 	ctx, sp := injectTraceHeaders(ctx, exchange, &msg)
 	defer sp.End()
 
 	start := time.Now()
 	err := tc.channel.PublishWithContext(ctx, exchange, key, mandatory, immediate, msg)
 
-	observePublish(start, exchange, err)
+	observePublish(ctx, start, exchange, err)
 	if err != nil {
 		sp.RecordError(err)
 		sp.SetStatus(codes.Error, "error publishing message")
@@ -118,8 +116,16 @@ func (tc *Publisher) Close() error {
 	return errors.Join(tc.channel.Close(), tc.connection.Close())
 }
 
-func observePublish(start time.Time, exchange string, err error) {
-	publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err == nil)).Observe(time.Since(start).Seconds())
+func observePublish(ctx context.Context, start time.Time, exchange string, err error) {
+	var statusAttr attribute.KeyValue
+	if err == nil {
+		statusAttr = successAttr
+	} else {
+		statusAttr = failureAttr
+	}
+
+	publishDurationMetrics.Record(ctx, time.Since(start).Seconds(),
+		metric.WithAttributes(attribute.String("exchange", exchange), statusAttr))
 }
 
 type producerMessageCarrier struct {

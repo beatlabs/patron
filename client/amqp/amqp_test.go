@@ -2,13 +2,32 @@ package amqp
 
 import (
 	"context"
+	"os"
 	"testing"
 
+	metric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
+
+var mp *sdkmetric.MeterProvider
+
+func init() {
+	var err error
+	mp, err = metric.SetupWithMeterProvider(context.Background(), "test", nil)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestMain(m *testing.M) {
+	defer mp.Shutdown(context.Background())
+
+	os.Exit(m.Run())
+}
 
 func TestNew(t *testing.T) {
 	t.Parallel()

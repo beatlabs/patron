@@ -21,7 +21,7 @@ func TestCache(t *testing.T) {
 		Addr:     dsn,
 		Password: "", // no password set
 		DB:       0,  // use default DB
-	})
+	}, "test")
 	require.NoError(t, err)
 
 	key1 := "key1"

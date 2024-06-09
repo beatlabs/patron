@@ -4,13 +4,17 @@ package amqp
 
 import (
 	"context"
+	"log"
 	"testing"
 
 	"github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -22,8 +26,21 @@ const (
 func TestRun(t *testing.T) {
 	ctx := context.Background()
 
+	// Setup tracing
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
+
+	// Setup metrics
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		err := provider.Shutdown(context.Background())
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	otel.SetMeterProvider(provider)
 
 	require.NoError(t, createQueue(endpoint, queue))
 
@@ -53,8 +70,9 @@ func TestRun(t *testing.T) {
 	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
-	// TODO: Investigate why the metric is not being collected.
-	// assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_amqp_publish_duration_seconds"))
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
 
 	conn, err := amqp.Dial(endpoint)
 	require.NoError(t, err)

@@ -10,24 +10,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
-// var mp *sdkmetric.MeterProvider
-
-// func init() {
-// 	var err error
-// 	mp, err = metric.SetupWithMeterProvider(context.Background(), "test", nil)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
-
-// func TestMain(m *testing.M) {
-// 	code := m.Run()
-
-// 	// _ = mp.Shutdown(context.Background())
-
-// 	os.Exit(code)
-// }
-
 func TestNew(t *testing.T) {
 	t.Parallel()
 	type args struct {

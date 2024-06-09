@@ -10,34 +10,38 @@ import (
 )
 
 var (
-	_                cache.Cache = &Cache{}
-	lruAttribute                 = attribute.String("cache.type", "lru")
-	useCaseAttribute attribute.KeyValue
+	_            cache.Cache = &Cache{}
+	lruAttribute             = attribute.String("cache.type", "lru")
 )
 
 // Cache encapsulates a thread-safe fixed size LRU cache.
 type Cache struct {
-	cache *lru.Cache
+	cache            *lru.Cache
+	useCaseAttribute attribute.KeyValue
 }
 
 // New returns a new LRU cache that can hold 'size' number of keys at a time.
 func New(size int, useCase string) (*Cache, error) {
-	cache, err := lru.New(size)
+	cache.SetupMetricsOnce()
+	chc, err := lru.New(size)
 	if err != nil {
 		return nil, err
 	}
-	useCaseAttribute = attribute.String("cache.use_case", useCase)
-	return &Cache{cache: cache}, nil
+
+	return &Cache{
+		cache:            chc,
+		useCaseAttribute: cache.UseCaseAttribute(useCase),
+	}, nil
 }
 
 // Get executes a lookup and returns whether a key exists in the cache along with its value.
 func (c *Cache) Get(ctx context.Context, key string) (interface{}, bool, error) {
 	value, ok := c.cache.Get(key)
 	if !ok {
-		cache.ObserveMiss(ctx, lruAttribute, useCaseAttribute)
+		cache.ObserveMiss(ctx, lruAttribute, c.useCaseAttribute)
 		return nil, false, nil
 	}
-	cache.ObserveHit(ctx, lruAttribute, useCaseAttribute)
+	cache.ObserveHit(ctx, lruAttribute, c.useCaseAttribute)
 	return value, true, nil
 }
 

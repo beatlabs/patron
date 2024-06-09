@@ -4,42 +4,7 @@ package cache
 import (
 	"context"
 	"time"
-
-	patronmetric "github.com/beatlabs/patron/observability/metric"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 )
-
-var (
-	cashHitAttribute  = attribute.String("cache.status", "hit")
-	cashMissAttribute = attribute.String("cache.status", "miss")
-	cacheCounter      metric.Int64Counter
-)
-
-// TODO: move metric to each client implementation.
-
-func init() {
-	var err error
-	cacheCounter, err = patronmetric.Meter().Int64Counter("cache.counter",
-		metric.WithDescription("Number of cache calls."),
-		metric.WithUnit("1"),
-	)
-	if err != nil {
-		panic(err)
-	}
-}
-
-// ObserveHit increments the cache hit counter.
-func ObserveHit(ctx context.Context, attrs ...attribute.KeyValue) {
-	attrs = append(attrs, cashHitAttribute)
-	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
-}
-
-// ObserveMiss increments the cache miss counter.
-func ObserveMiss(ctx context.Context, attrs ...attribute.KeyValue) {
-	attrs = append(attrs, cashMissAttribute)
-	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
-}
 
 // Cache interface that defines the methods required.
 type Cache interface {

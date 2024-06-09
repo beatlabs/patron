@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	patronmetric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
@@ -27,7 +26,7 @@ var (
 
 func init() {
 	var err error
-	publishDurationMetrics, err = patronmetric.Meter().Float64Histogram("amqp.publish.duration",
+	publishDurationMetrics, err = otel.Meter("amqp").Float64Histogram("amqp.publish.duration",
 		metric.WithDescription("AMQP publish duration."),
 		metric.WithUnit("ms"),
 	)

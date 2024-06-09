@@ -17,11 +17,7 @@ const (
 )
 
 func TestCache(t *testing.T) {
-	cache, err := New(&redis.Options{
-		Addr:     dsn,
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	}, "test")
+	cache, err := New(&redis.Options{Addr: dsn}, "test")
 	require.NoError(t, err)
 
 	key1 := "key1"

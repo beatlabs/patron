@@ -11,12 +11,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
-var meter metric.Meter
-
-func Meter() metric.Meter {
-	return meter
-}
-
 // Setup initializes OpenTelemetry's metrics.
 func Setup(ctx context.Context, name string, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
 	meterProvider, err := newMeterProvider(ctx, res)
@@ -24,16 +18,14 @@ func Setup(ctx context.Context, name string, res *resource.Resource) (*sdkmetric
 		return nil, err
 	}
 
-	return SetupWithMeterProvider(ctx, name, meterProvider)
+	SetupWithMeterProvider(ctx, name, meterProvider)
+
+	return meterProvider, nil
 }
 
 // SetupWithMeterProvider initializes OpenTelemetry's metrics with a custom meter provider.
-func SetupWithMeterProvider(ctx context.Context, name string, provider *sdkmetric.MeterProvider) (*sdkmetric.MeterProvider, error) {
+func SetupWithMeterProvider(_ context.Context, name string, provider metric.MeterProvider) {
 	otel.SetMeterProvider(provider)
-
-	meter = otel.Meter(name)
-
-	return provider, nil
 }
 
 func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.MeterProvider, error) {

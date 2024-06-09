@@ -44,6 +44,7 @@ func Setup(ctx context.Context, name, version string) (*Provider, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &Provider{
 		mp: metricProvider,
 		tp: traceProvider,

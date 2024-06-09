@@ -11,7 +11,11 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-var deliveryTypeAsyncAttr = attribute.String("delivery", "async")
+const (
+	deliveryTypeAsync = "async"
+)
+
+var deliveryTypeAsyncAttr = attribute.String("delivery", deliveryTypeAsync)
 
 // AsyncProducer is an asynchronous Kafka producer.
 type AsyncProducer struct {

@@ -10,7 +10,11 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-var deliveryTypeSyncAttr = attribute.String("delivery", "sync")
+const (
+	deliveryTypeSync = "sync"
+)
+
+var deliveryTypeSyncAttr = attribute.String("delivery", deliveryTypeSync)
 
 // SyncProducer is a synchronous Kafka producer.
 type SyncProducer struct {

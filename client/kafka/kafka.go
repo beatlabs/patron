@@ -16,21 +16,11 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type (
-	deliveryStatus string
-)
-
-const (
-	deliveryTypeSync  = "sync"
-	deliveryTypeAsync = "async"
-)
-
 var (
 	componentAttr               = attribute.String("component", "kafka")
 	deliveryStatusSentAttr      = attribute.String("status", "sent")
 	deliveryStatusSentErrorAttr = attribute.String("status", "sent-errors")
-
-	publishCount metric.Int64Counter
+	publishCount                metric.Int64Counter
 )
 
 func init() {

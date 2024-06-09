@@ -6,8 +6,11 @@ import (
 	"fmt"
 
 	"github.com/IBM/sarama"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
+
+var deliveryTypeSyncAttr = attribute.String("delivery", "sync")
 
 // SyncProducer is a synchronous Kafka producer.
 type SyncProducer struct {
@@ -24,13 +27,13 @@ func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (p
 
 	partition, offset, err = p.syncProd.SendMessage(msg)
 	if err != nil {
-		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic)
+		publishCountAdd(ctx, deliveryTypeSyncAttr, deliveryStatusSentErrorAttr, topicAttribute(msg.Topic))
 		sp.RecordError(err)
 		sp.SetStatus(codes.Error, "error sending message")
 		return -1, -1, err
 	}
 
-	statusCountAdd(deliveryTypeSync, deliveryStatusSent, msg.Topic)
+	publishCountAdd(ctx, deliveryTypeSyncAttr, deliveryStatusSentAttr, topicAttribute(msg.Topic))
 	sp.SetStatus(codes.Ok, "message sent")
 	return partition, offset, nil
 }
@@ -49,13 +52,13 @@ func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.Produce
 	}
 
 	if err := p.syncProd.SendMessages(messages); err != nil {
-		statusCountBatchAdd(deliveryTypeSync, deliveryStatusSendError, messages)
+		statusCountBatchAdd(ctx, deliveryStatusSentErrorAttr, messages)
 		sp.RecordError(err)
 		sp.SetStatus(codes.Error, "error sending batch")
 		return err
 	}
 
-	statusCountBatchAdd(deliveryTypeSync, deliveryStatusSent, messages)
+	statusCountBatchAdd(ctx, deliveryStatusSentAttr, messages)
 	sp.SetStatus(codes.Ok, "batch sent")
 	return nil
 }
@@ -73,8 +76,8 @@ func (p *SyncProducer) Close() error {
 	return nil
 }
 
-func statusCountBatchAdd(deliveryType string, status deliveryStatus, messages []*sarama.ProducerMessage) {
+func statusCountBatchAdd(ctx context.Context, statusAttr attribute.KeyValue, messages []*sarama.ProducerMessage) {
 	for _, msg := range messages {
-		statusCountAdd(deliveryType, status, msg.Topic)
+		publishCountAdd(ctx, deliveryTypeSyncAttr, statusAttr, topicAttribute(msg.Topic))
 	}
 }

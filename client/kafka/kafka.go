@@ -10,9 +10,9 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -23,31 +23,29 @@ type (
 const (
 	deliveryTypeSync  = "sync"
 	deliveryTypeAsync = "async"
-
-	deliveryStatusSent      deliveryStatus = "sent"
-	deliveryStatusSendError deliveryStatus = "send-errors"
 )
 
 var (
-	messageStatus *prometheus.CounterVec
-	componentAttr = attribute.String("component", "kafka")
+	componentAttr               = attribute.String("component", "kafka")
+	deliveryStatusSentAttr      = attribute.String("status", "sent")
+	deliveryStatusSentErrorAttr = attribute.String("status", "sent-errors")
+
+	publishCount metric.Int64Counter
 )
 
 func init() {
-	messageStatus = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "client",
-			Subsystem: "kafka_producer",
-			Name:      "message_status",
-			Help:      "Message status counter (produced, encoded, encoding-errors) classified by topic",
-		}, []string{"status", "topic", "type"},
+	var err error
+	publishCount, err = otel.Meter("kafka").Int64Counter("kafka.publish.count",
+		metric.WithDescription("Kafka message count."),
+		metric.WithUnit("1"),
 	)
-
-	prometheus.MustRegister(messageStatus)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func statusCountAdd(deliveryType string, status deliveryStatus, topic string) {
-	messageStatus.WithLabelValues(string(status), topic, deliveryType).Inc()
+func publishCountAdd(ctx context.Context, attrs ...attribute.KeyValue) {
+	publishCount.Add(ctx, 1, metric.WithAttributes(attrs...))
 }
 
 type baseProducer struct {
@@ -183,6 +181,10 @@ func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.Produce
 	})
 
 	otel.GetTextMapPropagator().Inject(ctx, producerMessageCarrier{msg})
+}
+
+func topicAttribute(topic string) attribute.KeyValue {
+	return attribute.String("topic", topic)
 }
 
 type producerMessageCarrier struct {

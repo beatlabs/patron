@@ -12,19 +12,19 @@ import (
 )
 
 // Setup initializes OpenTelemetry's metrics.
-func Setup(ctx context.Context, name string, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
+func Setup(ctx context.Context, res *resource.Resource) (*sdkmetric.MeterProvider, error) {
 	meterProvider, err := newMeterProvider(ctx, res)
 	if err != nil {
 		return nil, err
 	}
 
-	SetupWithMeterProvider(ctx, name, meterProvider)
+	SetupWithMeterProvider(meterProvider)
 
 	return meterProvider, nil
 }
 
 // SetupWithMeterProvider initializes OpenTelemetry's metrics with a custom meter provider.
-func SetupWithMeterProvider(_ context.Context, name string, provider metric.MeterProvider) {
+func SetupWithMeterProvider(provider metric.MeterProvider) {
 	otel.SetMeterProvider(provider)
 }
 

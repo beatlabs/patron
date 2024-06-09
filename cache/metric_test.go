@@ -35,14 +35,14 @@ func TestSetupAndUseMetrics(t *testing.T) {
 	ObserveHit(context.Background(), attribute.String("test", "test"))
 
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	read.Collect(context.Background(), collectedMetrics)
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
 
 	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
 
 	ObserveMiss(context.Background(), attribute.String("test", "test"))
 
 	collectedMetrics = &metricdata.ResourceMetrics{}
-	read.Collect(context.Background(), collectedMetrics)
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
 
 	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
 }

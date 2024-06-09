@@ -15,7 +15,7 @@ func TestSetup(t *testing.T) {
 	t.Setenv("OTEL_EXPORTER_OTLP_INSECURE", "true")
 	ctx := context.Background()
 
-	got, err := Setup(ctx, "test", resource.Default())
+	got, err := Setup(ctx, resource.Default())
 	assert.NoError(t, err)
 
 	assert.NotNil(t, otel.GetMeterProvider())

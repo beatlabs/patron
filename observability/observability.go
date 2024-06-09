@@ -36,7 +36,7 @@ func Setup(ctx context.Context, name, version string) (*Provider, error) {
 
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 
-	metricProvider, err := patronmetric.Setup(ctx, name, res)
+	metricProvider, err := patronmetric.Setup(ctx, res)
 	if err != nil {
 		return nil, err
 	}

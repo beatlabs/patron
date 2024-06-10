@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
@@ -15,28 +14,10 @@ import (
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
-
-var publishDurationMetrics *prometheus.HistogramVec
-
-func init() {
-	publishDurationMetrics = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: "client",
-			Subsystem: "mqtt",
-			Name:      "publish_duration_seconds",
-			Help:      "MQTT publish completed by the client.",
-		},
-		[]string{"topic", "success"},
-	)
-	prometheus.MustRegister(publishDurationMetrics)
-}
-
-var componentAttr = attribute.String("component", "mqtt")
 
 // DefaultConfig provides a config with sane default and logging enabled on the callbacks.
 func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfig, error) {
@@ -139,11 +120,6 @@ func ensurePublishingProperties(pub *paho.Publish) {
 	if pub.Properties.User == nil {
 		pub.Properties.User = paho.UserProperties{}
 	}
-}
-
-func observePublish(_ context.Context, start time.Time, topic string, err error) {
-	publishDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err == nil)).
-		Observe(time.Since(start).Seconds())
 }
 
 type producerMessageCarrier struct {

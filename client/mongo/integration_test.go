@@ -23,7 +23,6 @@ func TestConnectAndExecute(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
 
-	// Setup metrics monitoring
 	// Metrics monitoring set up
 	read := metricsdk.NewManualReader()
 	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))

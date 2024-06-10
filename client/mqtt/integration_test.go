@@ -12,10 +12,12 @@ import (
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -25,8 +27,18 @@ const (
 )
 
 func TestPublish(t *testing.T) {
+	// Trace monitoring setup
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
+
+	// Metrics monitoring setup
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		assert.NoError(t, provider.Shutdown(context.Background()))
+	}()
+
+	otel.SetMeterProvider(provider)
 
 	u, err := url.Parse(hiveMQURL)
 	require.NoError(t, err)
@@ -84,7 +96,9 @@ func TestPublish(t *testing.T) {
 	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
-	assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_mqtt_publish_duration_seconds"))
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
 
 	<-chDone
 	require.NoError(t, cmSub.Disconnect(context.Background()))

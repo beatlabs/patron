@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/metric"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
@@ -58,8 +57,8 @@ func TestIntegration(t *testing.T) {
 	tracePublisher := trace.Setup("test", nil, exp)
 
 	// Metrics monitor setup.
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	read := metric.NewManualReader()
+	provider := metric.NewMeterProvider(metric.WithReader(read))
 	defer func() {
 		assert.NoError(t, provider.Shutdown(context.Background()))
 	}()

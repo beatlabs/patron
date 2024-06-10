@@ -9,25 +9,29 @@ import (
 	"time"
 
 	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
-// TODO: MEtrics
-// var opDurationMetrics *prometheus.HistogramVec
+var (
+	componentAttr     = attribute.String("component", "sql")
+	succeededAttr     = attribute.String("status", "succeeded")
+	failedAttr        = attribute.String("status", "failed")
+	durationHistogram metric.Int64Histogram
+)
 
-// func init() {
-// 	opDurationMetrics = prometheus.NewHistogramVec(
-// 		prometheus.HistogramOpts{
-// 			Namespace: "client",
-// 			Subsystem: "sql",
-// 			Name:      "cmd_duration_seconds",
-// 			Help:      "SQL commands completed by the client.",
-// 		},
-// 		[]string{"op", "success"},
-// 	)
-// 	prometheus.MustRegister(opDurationMetrics)
-// }
+func init() {
+	var err error
+	durationHistogram, err = otel.Meter("sql").Int64Histogram("sql.cmd.duration",
+		metric.WithDescription("SQL command duration."),
+		metric.WithUnit("ms"),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
 
 type connInfo struct {
 	userAttr     attribute.KeyValue
@@ -512,11 +516,18 @@ func parseDSN(dsn string) DSNInfo {
 	return res
 }
 
-func observeDuration(_ context.Context, _ time.Time, _ string, _ error) {
-	// patrontrace.SpanComplete(span, err)
+func observeDuration(ctx context.Context, start time.Time, op string, err error) {
+	var statusAttr attribute.KeyValue
+	if err != nil {
+		statusAttr = failedAttr
+	} else {
+		statusAttr = succeededAttr
+	}
 
-	// durationHistogram := patrontrace.Histogram{
-	// 	Observer: opDurationMetrics.WithLabelValues(op, strconv.FormatBool(err == nil)),
-	// }
-	// durationHistogram.Observe(ctx, time.Since(start).Seconds())
+	durationHistogram.Record(ctx, time.Since(start).Milliseconds(),
+		metric.WithAttributes(componentAttr, operationAttr(op), statusAttr))
+}
+
+func operationAttr(op string) attribute.KeyValue {
+	return attribute.String("op", op)
 }

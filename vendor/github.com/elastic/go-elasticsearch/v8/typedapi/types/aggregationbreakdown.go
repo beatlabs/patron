@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // AggregationBreakdown type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/search/_types/profile.ts#L23-L36
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/search/_types/profile.ts#L23-L36
 type AggregationBreakdown struct {
 	BuildAggregation        int64  `json:"build_aggregation"`
 	BuildAggregationCount   int64  `json:"build_aggregation_count"`
@@ -63,7 +63,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "build_aggregation":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -78,7 +78,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "build_aggregation_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -93,7 +93,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "build_leaf_collector":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -108,7 +108,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "build_leaf_collector_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -123,7 +123,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "collect":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -138,7 +138,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "collect_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -153,7 +153,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "initialize":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -168,7 +168,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "initialize_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -183,7 +183,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "post_collection":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -198,7 +198,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "post_collection_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -213,7 +213,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "reduce":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -228,7 +228,7 @@ func (s *AggregationBreakdown) UnmarshalJSON(data []byte) error {
 			}
 
 		case "reduce_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

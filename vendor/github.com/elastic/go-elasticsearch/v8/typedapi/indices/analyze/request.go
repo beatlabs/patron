@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package analyze
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package analyze
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/analyze/IndicesAnalyzeRequest.ts#L27-L92
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/indices/analyze/IndicesAnalyzeRequest.ts#L27-L92
 type Request struct {
 
 	// Analyzer The name of the analyzer that should be applied to the provided `text`.
@@ -66,6 +66,7 @@ type Request struct {
 // NewRequest returns a Request
 func NewRequest() *Request {
 	r := &Request{}
+
 	return r
 }
 
@@ -160,7 +161,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 						}
 						s.CharFilter = append(s.CharFilter, *o)
 					default:
-						o := new(interface{})
+						o := new(any)
 						if err := localDec.Decode(&o); err != nil {
 							return err
 						}
@@ -168,7 +169,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 					}
 				default:
 					source := bytes.NewReader(rawMsg)
-					o := new(interface{})
+					o := new(any)
 					if err := json.NewDecoder(source).Decode(&o); err != nil {
 						return fmt.Errorf("%s | %w", "CharFilter", err)
 					}
@@ -177,7 +178,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			}
 
 		case "explain":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -458,12 +459,6 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 							return err
 						}
 						s.Filter = append(s.Filter, *o)
-					case "icu_tokenizer":
-						o := types.NewIcuTokenizer()
-						if err := localDec.Decode(&o); err != nil {
-							return err
-						}
-						s.Filter = append(s.Filter, *o)
 					case "icu_collation":
 						o := types.NewIcuCollationTokenFilter()
 						if err := localDec.Decode(&o); err != nil {
@@ -501,7 +496,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 						}
 						s.Filter = append(s.Filter, *o)
 					default:
-						o := new(interface{})
+						o := new(any)
 						if err := localDec.Decode(&o); err != nil {
 							return err
 						}
@@ -509,7 +504,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 					}
 				default:
 					source := bytes.NewReader(rawMsg)
-					o := new(interface{})
+					o := new(any)
 					if err := json.NewDecoder(source).Decode(&o); err != nil {
 						return fmt.Errorf("%s | %w", "Filter", err)
 					}

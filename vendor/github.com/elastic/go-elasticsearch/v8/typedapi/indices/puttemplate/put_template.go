@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 // Creates or updates an index template.
 package puttemplate
@@ -321,14 +321,6 @@ func (r *PutTemplate) Create(create bool) *PutTemplate {
 	return r
 }
 
-// FlatSettings If `true`, returns settings in flat format.
-// API name: flat_settings
-func (r *PutTemplate) FlatSettings(flatsettings bool) *PutTemplate {
-	r.values.Set("flat_settings", strconv.FormatBool(flatsettings))
-
-	return r
-}
-
 // MasterTimeout Period to wait for a connection to the master node. If no response is
 // received before the timeout expires, the request fails and returns an error.
 // API name: master_timeout
@@ -338,12 +330,53 @@ func (r *PutTemplate) MasterTimeout(duration string) *PutTemplate {
 	return r
 }
 
-// Timeout Period to wait for a response.
-// If no response is received before the timeout expires, the request fails and
-// returns an error.
-// API name: timeout
-func (r *PutTemplate) Timeout(duration string) *PutTemplate {
-	r.values.Set("timeout", duration)
+// API name: cause
+func (r *PutTemplate) Cause(cause string) *PutTemplate {
+	r.values.Set("cause", cause)
+
+	return r
+}
+
+// ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
+// when they occur.
+// API name: error_trace
+func (r *PutTemplate) ErrorTrace(errortrace bool) *PutTemplate {
+	r.values.Set("error_trace", strconv.FormatBool(errortrace))
+
+	return r
+}
+
+// FilterPath Comma-separated list of filters in dot notation which reduce the response
+// returned by Elasticsearch.
+// API name: filter_path
+func (r *PutTemplate) FilterPath(filterpaths ...string) *PutTemplate {
+	tmp := []string{}
+	for _, item := range filterpaths {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("filter_path", strings.Join(tmp, ","))
+
+	return r
+}
+
+// Human When set to `true` will return statistics in a format suitable for humans.
+// For example `"exists_time": "1h"` for humans and
+// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
+// readable values will be omitted. This makes sense for responses being
+// consumed
+// only by machines.
+// API name: human
+func (r *PutTemplate) Human(human bool) *PutTemplate {
+	r.values.Set("human", strconv.FormatBool(human))
+
+	return r
+}
+
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
+// this option for debugging only.
+// API name: pretty
+func (r *PutTemplate) Pretty(pretty bool) *PutTemplate {
+	r.values.Set("pretty", strconv.FormatBool(pretty))
 
 	return r
 }
@@ -389,7 +422,7 @@ func (r *PutTemplate) Order(order int) *PutTemplate {
 
 // Settings Configuration options for the index.
 // API name: settings
-func (r *PutTemplate) Settings(settings map[string]json.RawMessage) *PutTemplate {
+func (r *PutTemplate) Settings(settings *types.IndexSettings) *PutTemplate {
 
 	r.req.Settings = settings
 

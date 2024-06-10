@@ -15,19 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.13.2: DO NOT EDIT
+// Code generated from specification version 8.14.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strings"
 )
 
-func newConnectorSecretDeleteFunc(t Transport) ConnectorSecretDelete {
-	return func(id string, o ...func(*ConnectorSecretDeleteRequest)) (*Response, error) {
-		var r = ConnectorSecretDeleteRequest{DocumentID: id}
+func newProfilingTopnFunctionsFunc(t Transport) ProfilingTopnFunctions {
+	return func(body io.Reader, o ...func(*ProfilingTopnFunctionsRequest)) (*Response, error) {
+		var r = ProfilingTopnFunctionsRequest{Body: body}
 		for _, f := range o {
 			f(&r)
 		}
@@ -42,14 +43,14 @@ func newConnectorSecretDeleteFunc(t Transport) ConnectorSecretDelete {
 
 // ----- API Definition -------------------------------------------------------
 
-// ConnectorSecretDelete deletes a connector secret.
+// ProfilingTopnFunctions extracts a list of topN functions from Universal Profiling.
 //
-// This API is experimental.
-type ConnectorSecretDelete func(id string, o ...func(*ConnectorSecretDeleteRequest)) (*Response, error)
+// See full documentation at https://www.elastic.co/guide/en/observability/current/universal-profiling.html.
+type ProfilingTopnFunctions func(body io.Reader, o ...func(*ProfilingTopnFunctionsRequest)) (*Response, error)
 
-// ConnectorSecretDeleteRequest configures the Connector Secret Delete API request.
-type ConnectorSecretDeleteRequest struct {
-	DocumentID string
+// ProfilingTopnFunctionsRequest configures the Profiling Topn Functions API request.
+type ProfilingTopnFunctionsRequest struct {
+	Body io.Reader
 
 	Pretty     bool
 	Human      bool
@@ -64,7 +65,7 @@ type ConnectorSecretDeleteRequest struct {
 }
 
 // Do executes the request and returns response or error.
-func (r ConnectorSecretDeleteRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
+func (r ProfilingTopnFunctionsRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
@@ -73,26 +74,18 @@ func (r ConnectorSecretDeleteRequest) Do(providedCtx context.Context, transport 
 	)
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		ctx = instrument.Start(providedCtx, "connector_secret.delete")
+		ctx = instrument.Start(providedCtx, "profiling.topn_functions")
 		defer instrument.Close(ctx)
 	}
 	if ctx == nil {
 		ctx = providedCtx
 	}
 
-	method = "DELETE"
+	method = "POST"
 
-	path.Grow(7 + 1 + len("_connector") + 1 + len("_secret") + 1 + len(r.DocumentID))
+	path.Grow(7 + len("/_profiling/topn/functions"))
 	path.WriteString("http://")
-	path.WriteString("/")
-	path.WriteString("_connector")
-	path.WriteString("/")
-	path.WriteString("_secret")
-	path.WriteString("/")
-	path.WriteString(r.DocumentID)
-	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.RecordPathPart(ctx, "id", r.DocumentID)
-	}
+	path.WriteString("/_profiling/topn/functions")
 
 	params = make(map[string]string)
 
@@ -112,7 +105,7 @@ func (r ConnectorSecretDeleteRequest) Do(providedCtx context.Context, transport 
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, err := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), r.Body)
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
 			instrument.RecordError(ctx, err)
@@ -140,16 +133,23 @@ func (r ConnectorSecretDeleteRequest) Do(providedCtx context.Context, transport 
 		}
 	}
 
+	if r.Body != nil && req.Header.Get(headerContentType) == "" {
+		req.Header[headerContentType] = headerContentTypeJSON
+	}
+
 	if ctx != nil {
 		req = req.WithContext(ctx)
 	}
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.BeforeRequest(req, "connector_secret.delete")
+		instrument.BeforeRequest(req, "profiling.topn_functions")
+		if reader := instrument.RecordRequestBody(ctx, "profiling.topn_functions", r.Body); reader != nil {
+			req.Body = reader
+		}
 	}
 	res, err := transport.Perform(req)
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.AfterRequest(req, "elasticsearch", "connector_secret.delete")
+		instrument.AfterRequest(req, "elasticsearch", "profiling.topn_functions")
 	}
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
@@ -168,43 +168,43 @@ func (r ConnectorSecretDeleteRequest) Do(providedCtx context.Context, transport 
 }
 
 // WithContext sets the request context.
-func (f ConnectorSecretDelete) WithContext(v context.Context) func(*ConnectorSecretDeleteRequest) {
-	return func(r *ConnectorSecretDeleteRequest) {
+func (f ProfilingTopnFunctions) WithContext(v context.Context) func(*ProfilingTopnFunctionsRequest) {
+	return func(r *ProfilingTopnFunctionsRequest) {
 		r.ctx = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
-func (f ConnectorSecretDelete) WithPretty() func(*ConnectorSecretDeleteRequest) {
-	return func(r *ConnectorSecretDeleteRequest) {
+func (f ProfilingTopnFunctions) WithPretty() func(*ProfilingTopnFunctionsRequest) {
+	return func(r *ProfilingTopnFunctionsRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
-func (f ConnectorSecretDelete) WithHuman() func(*ConnectorSecretDeleteRequest) {
-	return func(r *ConnectorSecretDeleteRequest) {
+func (f ProfilingTopnFunctions) WithHuman() func(*ProfilingTopnFunctionsRequest) {
+	return func(r *ProfilingTopnFunctionsRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-func (f ConnectorSecretDelete) WithErrorTrace() func(*ConnectorSecretDeleteRequest) {
-	return func(r *ConnectorSecretDeleteRequest) {
+func (f ProfilingTopnFunctions) WithErrorTrace() func(*ProfilingTopnFunctionsRequest) {
+	return func(r *ProfilingTopnFunctionsRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
-func (f ConnectorSecretDelete) WithFilterPath(v ...string) func(*ConnectorSecretDeleteRequest) {
-	return func(r *ConnectorSecretDeleteRequest) {
+func (f ProfilingTopnFunctions) WithFilterPath(v ...string) func(*ProfilingTopnFunctionsRequest) {
+	return func(r *ProfilingTopnFunctionsRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
-func (f ConnectorSecretDelete) WithHeader(h map[string]string) func(*ConnectorSecretDeleteRequest) {
-	return func(r *ConnectorSecretDeleteRequest) {
+func (f ProfilingTopnFunctions) WithHeader(h map[string]string) func(*ProfilingTopnFunctionsRequest) {
+	return func(r *ProfilingTopnFunctionsRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -215,8 +215,8 @@ func (f ConnectorSecretDelete) WithHeader(h map[string]string) func(*ConnectorSe
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-func (f ConnectorSecretDelete) WithOpaqueID(s string) func(*ConnectorSecretDeleteRequest) {
-	return func(r *ConnectorSecretDeleteRequest) {
+func (f ProfilingTopnFunctions) WithOpaqueID(s string) func(*ProfilingTopnFunctionsRequest) {
+	return func(r *ProfilingTopnFunctionsRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

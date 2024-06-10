@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TransformIndexerStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/transform/get_transform_stats/types.ts#L56-L74
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/transform/get_transform_stats/types.ts#L56-L74
 type TransformIndexerStats struct {
 	DeleteTimeInMs                     *int64  `json:"delete_time_in_ms,omitempty"`
 	DocumentsDeleted                   *int64  `json:"documents_deleted,omitempty"`
@@ -73,7 +73,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "documents_deleted":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -88,7 +88,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "documents_indexed":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -103,7 +103,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "documents_processed":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -123,7 +123,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "exponential_avg_documents_indexed":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -139,7 +139,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "exponential_avg_documents_processed":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -155,7 +155,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "index_failures":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -175,7 +175,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "index_total":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -190,7 +190,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "pages_processed":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -210,7 +210,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "processing_total":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -225,7 +225,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "search_failures":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -245,7 +245,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "search_total":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -260,7 +260,7 @@ func (s *TransformIndexerStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "trigger_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

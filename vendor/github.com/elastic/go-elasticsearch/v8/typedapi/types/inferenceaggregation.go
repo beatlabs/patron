@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // InferenceAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/pipeline.ts#L205-L214
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/pipeline.ts#L205-L214
 type InferenceAggregation struct {
 	// BucketsPath Path to the buckets that contain one set of values to correlate.
 	BucketsPath BucketsPath `json:"buckets_path,omitempty"`
@@ -45,10 +45,8 @@ type InferenceAggregation struct {
 	GapPolicy *gappolicy.GapPolicy `json:"gap_policy,omitempty"`
 	// InferenceConfig Contains the inference type and its options.
 	InferenceConfig *InferenceConfigContainer `json:"inference_config,omitempty"`
-	Meta            Metadata                  `json:"meta,omitempty"`
 	// ModelId The ID or alias for the trained model.
-	ModelId string  `json:"model_id"`
-	Name    *string `json:"name,omitempty"`
+	ModelId string `json:"model_id"`
 }
 
 func (s *InferenceAggregation) UnmarshalJSON(data []byte) error {
@@ -93,27 +91,10 @@ func (s *InferenceAggregation) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "InferenceConfig", err)
 			}
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
 		case "model_id":
 			if err := dec.Decode(&s.ModelId); err != nil {
 				return fmt.Errorf("%s | %w", "ModelId", err)
 			}
-
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
 
 		}
 	}

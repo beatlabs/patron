@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package executewatch
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package executewatch
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/watcher/execute_watch/WatcherExecuteWatchResponse.ts#L23-L25
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/watcher/execute_watch/WatcherExecuteWatchResponse.ts#L23-L25
 type Response struct {
 	Id_         string            `json:"_id"`
 	WatchRecord types.WatchRecord `json:"watch_record"`

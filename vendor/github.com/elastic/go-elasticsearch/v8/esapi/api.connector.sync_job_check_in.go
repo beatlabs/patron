@@ -15,20 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.13.2: DO NOT EDIT
+// Code generated from specification version 8.14.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"strings"
 )
 
-func newConnectorSecretPutFunc(t Transport) ConnectorSecretPut {
-	return func(id string, body io.Reader, o ...func(*ConnectorSecretPutRequest)) (*Response, error) {
-		var r = ConnectorSecretPutRequest{DocumentID: id, Body: body}
+func newConnectorSyncJobCheckInFunc(t Transport) ConnectorSyncJobCheckIn {
+	return func(connector_sync_job_id string, o ...func(*ConnectorSyncJobCheckInRequest)) (*Response, error) {
+		var r = ConnectorSyncJobCheckInRequest{ConnectorSyncJobID: connector_sync_job_id}
 		for _, f := range o {
 			f(&r)
 		}
@@ -43,16 +42,16 @@ func newConnectorSecretPutFunc(t Transport) ConnectorSecretPut {
 
 // ----- API Definition -------------------------------------------------------
 
-// ConnectorSecretPut creates or updates a secret for a Connector.
+// ConnectorSyncJobCheckIn checks in a connector sync job (refreshes 'last_seen').
 //
 // This API is experimental.
-type ConnectorSecretPut func(id string, body io.Reader, o ...func(*ConnectorSecretPutRequest)) (*Response, error)
+//
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/check-in-connector-sync-job-api.html.
+type ConnectorSyncJobCheckIn func(connector_sync_job_id string, o ...func(*ConnectorSyncJobCheckInRequest)) (*Response, error)
 
-// ConnectorSecretPutRequest configures the Connector Secret Put API request.
-type ConnectorSecretPutRequest struct {
-	DocumentID string
-
-	Body io.Reader
+// ConnectorSyncJobCheckInRequest configures the Connector Sync Job Check In API request.
+type ConnectorSyncJobCheckInRequest struct {
+	ConnectorSyncJobID string
 
 	Pretty     bool
 	Human      bool
@@ -67,7 +66,7 @@ type ConnectorSecretPutRequest struct {
 }
 
 // Do executes the request and returns response or error.
-func (r ConnectorSecretPutRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
+func (r ConnectorSyncJobCheckInRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
@@ -76,7 +75,7 @@ func (r ConnectorSecretPutRequest) Do(providedCtx context.Context, transport Tra
 	)
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		ctx = instrument.Start(providedCtx, "connector_secret.put")
+		ctx = instrument.Start(providedCtx, "connector.sync_job_check_in")
 		defer instrument.Close(ctx)
 	}
 	if ctx == nil {
@@ -85,17 +84,19 @@ func (r ConnectorSecretPutRequest) Do(providedCtx context.Context, transport Tra
 
 	method = "PUT"
 
-	path.Grow(7 + 1 + len("_connector") + 1 + len("_secret") + 1 + len(r.DocumentID))
+	path.Grow(7 + 1 + len("_connector") + 1 + len("_sync_job") + 1 + len(r.ConnectorSyncJobID) + 1 + len("_check_in"))
 	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_connector")
 	path.WriteString("/")
-	path.WriteString("_secret")
+	path.WriteString("_sync_job")
 	path.WriteString("/")
-	path.WriteString(r.DocumentID)
+	path.WriteString(r.ConnectorSyncJobID)
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.RecordPathPart(ctx, "id", r.DocumentID)
+		instrument.RecordPathPart(ctx, "connector_sync_job_id", r.ConnectorSyncJobID)
 	}
+	path.WriteString("/")
+	path.WriteString("_check_in")
 
 	params = make(map[string]string)
 
@@ -115,7 +116,7 @@ func (r ConnectorSecretPutRequest) Do(providedCtx context.Context, transport Tra
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, err := newRequest(method, path.String(), r.Body)
+	req, err := newRequest(method, path.String(), nil)
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
 			instrument.RecordError(ctx, err)
@@ -143,23 +144,16 @@ func (r ConnectorSecretPutRequest) Do(providedCtx context.Context, transport Tra
 		}
 	}
 
-	if r.Body != nil && req.Header.Get(headerContentType) == "" {
-		req.Header[headerContentType] = headerContentTypeJSON
-	}
-
 	if ctx != nil {
 		req = req.WithContext(ctx)
 	}
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.BeforeRequest(req, "connector_secret.put")
-		if reader := instrument.RecordRequestBody(ctx, "connector_secret.put", r.Body); reader != nil {
-			req.Body = reader
-		}
+		instrument.BeforeRequest(req, "connector.sync_job_check_in")
 	}
 	res, err := transport.Perform(req)
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.AfterRequest(req, "elasticsearch", "connector_secret.put")
+		instrument.AfterRequest(req, "elasticsearch", "connector.sync_job_check_in")
 	}
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
@@ -178,43 +172,43 @@ func (r ConnectorSecretPutRequest) Do(providedCtx context.Context, transport Tra
 }
 
 // WithContext sets the request context.
-func (f ConnectorSecretPut) WithContext(v context.Context) func(*ConnectorSecretPutRequest) {
-	return func(r *ConnectorSecretPutRequest) {
+func (f ConnectorSyncJobCheckIn) WithContext(v context.Context) func(*ConnectorSyncJobCheckInRequest) {
+	return func(r *ConnectorSyncJobCheckInRequest) {
 		r.ctx = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
-func (f ConnectorSecretPut) WithPretty() func(*ConnectorSecretPutRequest) {
-	return func(r *ConnectorSecretPutRequest) {
+func (f ConnectorSyncJobCheckIn) WithPretty() func(*ConnectorSyncJobCheckInRequest) {
+	return func(r *ConnectorSyncJobCheckInRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
-func (f ConnectorSecretPut) WithHuman() func(*ConnectorSecretPutRequest) {
-	return func(r *ConnectorSecretPutRequest) {
+func (f ConnectorSyncJobCheckIn) WithHuman() func(*ConnectorSyncJobCheckInRequest) {
+	return func(r *ConnectorSyncJobCheckInRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-func (f ConnectorSecretPut) WithErrorTrace() func(*ConnectorSecretPutRequest) {
-	return func(r *ConnectorSecretPutRequest) {
+func (f ConnectorSyncJobCheckIn) WithErrorTrace() func(*ConnectorSyncJobCheckInRequest) {
+	return func(r *ConnectorSyncJobCheckInRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
-func (f ConnectorSecretPut) WithFilterPath(v ...string) func(*ConnectorSecretPutRequest) {
-	return func(r *ConnectorSecretPutRequest) {
+func (f ConnectorSyncJobCheckIn) WithFilterPath(v ...string) func(*ConnectorSyncJobCheckInRequest) {
+	return func(r *ConnectorSyncJobCheckInRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
-func (f ConnectorSecretPut) WithHeader(h map[string]string) func(*ConnectorSecretPutRequest) {
-	return func(r *ConnectorSecretPutRequest) {
+func (f ConnectorSyncJobCheckIn) WithHeader(h map[string]string) func(*ConnectorSyncJobCheckInRequest) {
+	return func(r *ConnectorSyncJobCheckInRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -225,8 +219,8 @@ func (f ConnectorSecretPut) WithHeader(h map[string]string) func(*ConnectorSecre
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-func (f ConnectorSecretPut) WithOpaqueID(s string) func(*ConnectorSecretPutRequest) {
-	return func(r *ConnectorSecretPutRequest) {
+func (f ConnectorSyncJobCheckIn) WithOpaqueID(s string) func(*ConnectorSyncJobCheckInRequest) {
+	return func(r *ConnectorSyncJobCheckInRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

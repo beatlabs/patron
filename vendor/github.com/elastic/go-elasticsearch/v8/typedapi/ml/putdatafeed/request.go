@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package putdatafeed
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package putdatafeed
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/put_datafeed/MlPutDatafeedRequest.ts#L37-L172
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/put_datafeed/MlPutDatafeedRequest.ts#L37-L172
 type Request struct {
 
 	// Aggregations If set, the datafeed performs aggregation searches.
@@ -121,6 +121,7 @@ func NewRequest() *Request {
 		Aggregations: make(map[string]types.Aggregations, 0),
 		ScriptFields: make(map[string]types.ScriptField, 0),
 	}
+
 	return r
 }
 
@@ -206,7 +207,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "max_empty_searches":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -245,7 +246,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "scroll_size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

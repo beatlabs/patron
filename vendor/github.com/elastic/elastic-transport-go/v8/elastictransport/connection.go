@@ -45,6 +45,10 @@ type ConnectionPool interface {
 	URLs() []*url.URL            // URLs returns the list of URLs of available connections.
 }
 
+type UpdatableConnectionPool interface {
+	Update([]*Connection) error // Update injects newly found nodes in the cluster.
+}
+
 // Connection represents a connection to a node.
 type Connection struct {
 	sync.Mutex
@@ -58,6 +62,15 @@ type Connection struct {
 	Name       string
 	Roles      []string
 	Attributes map[string]interface{}
+}
+
+func (c *Connection) Cmp(connection *Connection) bool {
+	if c.URL.Hostname() == connection.URL.Hostname() {
+		if c.URL.Port() == connection.URL.Port() {
+			return c.URL.Path == connection.URL.Path
+		}
+	}
+	return false
 }
 
 type singleConnectionPool struct {
@@ -175,20 +188,6 @@ func (cp *statusConnectionPool) OnFailure(c *Connection) error {
 	cp.scheduleResurrect(c)
 	c.Unlock()
 
-	// Push item to dead list and sort slice by number of failures
-	cp.dead = append(cp.dead, c)
-	sort.Slice(cp.dead, func(i, j int) bool {
-		c1 := cp.dead[i]
-		c2 := cp.dead[j]
-		c1.Lock()
-		c2.Lock()
-		defer c1.Unlock()
-		defer c2.Unlock()
-
-		res := c1.Failures > c2.Failures
-		return res
-	})
-
 	// Check if connection exists in the list, return error if not.
 	index := -1
 	for i, conn := range cp.live {
@@ -200,9 +199,84 @@ func (cp *statusConnectionPool) OnFailure(c *Connection) error {
 		return errors.New("connection not in live list")
 	}
 
+	// Push item to dead list and sort slice by number of failures
+	cp.dead = append(cp.dead, c)
+	sort.Slice(cp.dead, func(i, j int) bool {
+		c1 := cp.dead[i]
+		c2 := cp.dead[j]
+
+		res := c1.Failures > c2.Failures
+		return res
+	})
+
 	// Remove item; https://github.com/golang/go/wiki/SliceTricks
 	copy(cp.live[index:], cp.live[index+1:])
 	cp.live = cp.live[:len(cp.live)-1]
+
+	return nil
+}
+
+// Update merges the existing live and dead connections with the latest nodes discovered from the cluster.
+// ConnectionPool must be locked before calling.
+func (cp *statusConnectionPool) Update(connections []*Connection) error {
+	if len(connections) == 0 {
+		return errors.New("no connections provided, connection pool left untouched")
+	}
+
+	// Remove hosts that are no longer in the new list of connections
+	for i := 0; i < len(cp.live); i++ {
+		found := false
+		for _, c := range connections {
+			if cp.live[i].Cmp(c) {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			// Remove item; https://github.com/golang/go/wiki/SliceTricks
+			copy(cp.live[i:], cp.live[i+1:])
+			cp.live = cp.live[:len(cp.live)-1]
+			i--
+		}
+	}
+
+	// Remove hosts that are no longer in the dead list of connections
+	for i := 0; i < len(cp.dead); i++ {
+		found := false
+		for _, c := range connections {
+			if cp.dead[i].Cmp(c) {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			copy(cp.dead[i:], cp.dead[i+1:])
+			cp.dead = cp.dead[:len(cp.dead)-1]
+			i--
+		}
+	}
+
+	// Add new connections that are not already in the live or dead list
+	for _, c := range connections {
+		found := false
+		for _, conn := range cp.live {
+			if conn.Cmp(c) {
+				found = true
+				break
+			}
+		}
+		for _, conn := range cp.dead {
+			if conn.Cmp(c) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			cp.live = append(cp.live, c)
+		}
+	}
 
 	return nil
 }

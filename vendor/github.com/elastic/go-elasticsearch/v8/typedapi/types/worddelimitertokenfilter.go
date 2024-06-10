@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // WordDelimiterTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/token_filters.ts#L132-L147
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/analysis/token_filters.ts#L134-L149
 type WordDelimiterTokenFilter struct {
 	CatenateAll           *bool              `json:"catenate_all,omitempty"`
 	CatenateNumbers       *bool              `json:"catenate_numbers,omitempty"`
@@ -66,7 +66,7 @@ func (s *WordDelimiterTokenFilter) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "catenate_all":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -80,7 +80,7 @@ func (s *WordDelimiterTokenFilter) UnmarshalJSON(data []byte) error {
 			}
 
 		case "catenate_numbers":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -94,7 +94,7 @@ func (s *WordDelimiterTokenFilter) UnmarshalJSON(data []byte) error {
 			}
 
 		case "catenate_words":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -108,7 +108,7 @@ func (s *WordDelimiterTokenFilter) UnmarshalJSON(data []byte) error {
 			}
 
 		case "generate_number_parts":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -122,7 +122,7 @@ func (s *WordDelimiterTokenFilter) UnmarshalJSON(data []byte) error {
 			}
 
 		case "generate_word_parts":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -158,7 +158,7 @@ func (s *WordDelimiterTokenFilter) UnmarshalJSON(data []byte) error {
 			s.ProtectedWordsPath = &o
 
 		case "split_on_case_change":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -172,7 +172,7 @@ func (s *WordDelimiterTokenFilter) UnmarshalJSON(data []byte) error {
 			}
 
 		case "split_on_numerics":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -186,7 +186,7 @@ func (s *WordDelimiterTokenFilter) UnmarshalJSON(data []byte) error {
 			}
 
 		case "stem_english_possessive":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

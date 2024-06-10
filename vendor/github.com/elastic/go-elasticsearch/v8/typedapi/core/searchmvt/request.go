@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package searchmvt
 
@@ -35,7 +35,7 @@ import (
 
 // Request holds the request body struct for the package searchmvt
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/search_mvt/SearchMvtRequest.ts#L33-L188
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/search_mvt/SearchMvtRequest.ts#L33-L188
 type Request struct {
 
 	// Aggs Sub-aggregations for the geotile_grid.
@@ -109,6 +109,7 @@ func NewRequest() *Request {
 	r := &Request{
 		Aggs: make(map[string]types.Aggregations, 0),
 	}
+
 	return r
 }
 
@@ -148,7 +149,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "buffer":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -163,7 +164,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			}
 
 		case "exact_bounds":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -178,7 +179,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "extent":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -215,7 +216,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "grid_precision":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -246,7 +247,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -282,7 +283,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			}
 
 		case "with_labels":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

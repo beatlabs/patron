@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // SignificantTextAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L834-L906
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L838-L910
 type SignificantTextAggregation struct {
 	// BackgroundFilter A background filter that can be used to focus in on significant terms within
 	// a narrower context, instead of the entire index.
@@ -56,14 +56,12 @@ type SignificantTextAggregation struct {
 	// Include Values to include.
 	Include TermsInclude `json:"include,omitempty"`
 	// Jlh Use JLH score as the significance score.
-	Jlh  *EmptyObject `json:"jlh,omitempty"`
-	Meta Metadata     `json:"meta,omitempty"`
+	Jlh *EmptyObject `json:"jlh,omitempty"`
 	// MinDocCount Only return values that are found in more than `min_doc_count` hits.
 	MinDocCount *int64 `json:"min_doc_count,omitempty"`
 	// MutualInformation Use mutual information as described in "Information Retrieval", Manning et
 	// al., Chapter 13.5.1, as the significance score.
 	MutualInformation *MutualInformationHeuristic `json:"mutual_information,omitempty"`
-	Name              *string                     `json:"name,omitempty"`
 	// Percentage A simple calculation of the number of documents in the foreground sample with
 	// a term divided by the number of documents in the background with the term.
 	Percentage *PercentageScoreHeuristic `json:"percentage,omitempty"`
@@ -136,7 +134,7 @@ func (s *SignificantTextAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "filter_duplicate_text":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -164,13 +162,8 @@ func (s *SignificantTextAggregation) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Jlh", err)
 			}
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
 		case "min_doc_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -189,18 +182,6 @@ func (s *SignificantTextAggregation) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "MutualInformation", err)
 			}
 
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
-
 		case "percentage":
 			if err := dec.Decode(&s.Percentage); err != nil {
 				return fmt.Errorf("%s | %w", "Percentage", err)
@@ -212,7 +193,7 @@ func (s *SignificantTextAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "shard_min_doc_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -228,7 +209,7 @@ func (s *SignificantTextAggregation) UnmarshalJSON(data []byte) error {
 
 		case "shard_size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -244,7 +225,7 @@ func (s *SignificantTextAggregation) UnmarshalJSON(data []byte) error {
 
 		case "size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package rollupsearch
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package rollupsearch
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/rollup/rollup_search/RollupSearchRequest.ts#L27-L57
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/rollup/rollup_search/RollupSearchRequest.ts#L27-L57
 type Request struct {
 
 	// Aggregations Specifies aggregations.
@@ -49,6 +49,7 @@ func NewRequest() *Request {
 	r := &Request{
 		Aggregations: make(map[string]types.Aggregations, 0),
 	}
+
 	return r
 }
 
@@ -93,7 +94,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 		case "size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

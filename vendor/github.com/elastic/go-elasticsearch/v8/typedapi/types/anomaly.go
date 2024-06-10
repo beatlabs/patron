@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // Anomaly type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/Anomaly.ts#L24-L121
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/_types/Anomaly.ts#L24-L121
 type Anomaly struct {
 	// Actual The actual value for the bucket.
 	Actual []Float64 `json:"actual,omitempty"`
@@ -173,7 +173,7 @@ func (s *Anomaly) UnmarshalJSON(data []byte) error {
 
 		case "detector_index":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -234,7 +234,7 @@ func (s *Anomaly) UnmarshalJSON(data []byte) error {
 			}
 
 		case "initial_record_score":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -250,7 +250,7 @@ func (s *Anomaly) UnmarshalJSON(data []byte) error {
 			}
 
 		case "is_interim":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -324,7 +324,7 @@ func (s *Anomaly) UnmarshalJSON(data []byte) error {
 			s.PartitionFieldValue = &o
 
 		case "probability":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -340,7 +340,7 @@ func (s *Anomaly) UnmarshalJSON(data []byte) error {
 			}
 
 		case "record_score":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

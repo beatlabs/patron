@@ -15,19 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.13.2: DO NOT EDIT
+// Code generated from specification version 8.14.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strings"
 )
 
-func newConnectorSyncJobDeleteFunc(t Transport) ConnectorSyncJobDelete {
-	return func(connector_sync_job_id string, o ...func(*ConnectorSyncJobDeleteRequest)) (*Response, error) {
-		var r = ConnectorSyncJobDeleteRequest{ConnectorSyncJobID: connector_sync_job_id}
+func newConnectorUpdateFilteringValidationFunc(t Transport) ConnectorUpdateFilteringValidation {
+	return func(body io.Reader, connector_id string, o ...func(*ConnectorUpdateFilteringValidationRequest)) (*Response, error) {
+		var r = ConnectorUpdateFilteringValidationRequest{Body: body, ConnectorID: connector_id}
 		for _, f := range o {
 			f(&r)
 		}
@@ -42,16 +43,18 @@ func newConnectorSyncJobDeleteFunc(t Transport) ConnectorSyncJobDelete {
 
 // ----- API Definition -------------------------------------------------------
 
-// ConnectorSyncJobDelete deletes a connector sync job.
+// ConnectorUpdateFilteringValidation updates the validation info of the draft filtering rules.
 //
 // This API is experimental.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/delete-connector-sync-job-api.html.
-type ConnectorSyncJobDelete func(connector_sync_job_id string, o ...func(*ConnectorSyncJobDeleteRequest)) (*Response, error)
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/update-connector-filtering-api.html.
+type ConnectorUpdateFilteringValidation func(body io.Reader, connector_id string, o ...func(*ConnectorUpdateFilteringValidationRequest)) (*Response, error)
 
-// ConnectorSyncJobDeleteRequest configures the Connector Sync Job Delete API request.
-type ConnectorSyncJobDeleteRequest struct {
-	ConnectorSyncJobID string
+// ConnectorUpdateFilteringValidationRequest configures the Connector Update Filtering Validation API request.
+type ConnectorUpdateFilteringValidationRequest struct {
+	Body io.Reader
+
+	ConnectorID string
 
 	Pretty     bool
 	Human      bool
@@ -66,7 +69,7 @@ type ConnectorSyncJobDeleteRequest struct {
 }
 
 // Do executes the request and returns response or error.
-func (r ConnectorSyncJobDeleteRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
+func (r ConnectorUpdateFilteringValidationRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
@@ -75,26 +78,28 @@ func (r ConnectorSyncJobDeleteRequest) Do(providedCtx context.Context, transport
 	)
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		ctx = instrument.Start(providedCtx, "connector_sync_job.delete")
+		ctx = instrument.Start(providedCtx, "connector.update_filtering_validation")
 		defer instrument.Close(ctx)
 	}
 	if ctx == nil {
 		ctx = providedCtx
 	}
 
-	method = "DELETE"
+	method = "PUT"
 
-	path.Grow(7 + 1 + len("_connector") + 1 + len("_sync_job") + 1 + len(r.ConnectorSyncJobID))
+	path.Grow(7 + 1 + len("_connector") + 1 + len(r.ConnectorID) + 1 + len("_filtering") + 1 + len("_validation"))
 	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_connector")
 	path.WriteString("/")
-	path.WriteString("_sync_job")
-	path.WriteString("/")
-	path.WriteString(r.ConnectorSyncJobID)
+	path.WriteString(r.ConnectorID)
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.RecordPathPart(ctx, "connector_sync_job_id", r.ConnectorSyncJobID)
+		instrument.RecordPathPart(ctx, "connector_id", r.ConnectorID)
 	}
+	path.WriteString("/")
+	path.WriteString("_filtering")
+	path.WriteString("/")
+	path.WriteString("_validation")
 
 	params = make(map[string]string)
 
@@ -114,7 +119,7 @@ func (r ConnectorSyncJobDeleteRequest) Do(providedCtx context.Context, transport
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, err := newRequest(method, path.String(), nil)
+	req, err := newRequest(method, path.String(), r.Body)
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
 			instrument.RecordError(ctx, err)
@@ -142,16 +147,23 @@ func (r ConnectorSyncJobDeleteRequest) Do(providedCtx context.Context, transport
 		}
 	}
 
+	if r.Body != nil && req.Header.Get(headerContentType) == "" {
+		req.Header[headerContentType] = headerContentTypeJSON
+	}
+
 	if ctx != nil {
 		req = req.WithContext(ctx)
 	}
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.BeforeRequest(req, "connector_sync_job.delete")
+		instrument.BeforeRequest(req, "connector.update_filtering_validation")
+		if reader := instrument.RecordRequestBody(ctx, "connector.update_filtering_validation", r.Body); reader != nil {
+			req.Body = reader
+		}
 	}
 	res, err := transport.Perform(req)
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.AfterRequest(req, "elasticsearch", "connector_sync_job.delete")
+		instrument.AfterRequest(req, "elasticsearch", "connector.update_filtering_validation")
 	}
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
@@ -170,43 +182,43 @@ func (r ConnectorSyncJobDeleteRequest) Do(providedCtx context.Context, transport
 }
 
 // WithContext sets the request context.
-func (f ConnectorSyncJobDelete) WithContext(v context.Context) func(*ConnectorSyncJobDeleteRequest) {
-	return func(r *ConnectorSyncJobDeleteRequest) {
+func (f ConnectorUpdateFilteringValidation) WithContext(v context.Context) func(*ConnectorUpdateFilteringValidationRequest) {
+	return func(r *ConnectorUpdateFilteringValidationRequest) {
 		r.ctx = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
-func (f ConnectorSyncJobDelete) WithPretty() func(*ConnectorSyncJobDeleteRequest) {
-	return func(r *ConnectorSyncJobDeleteRequest) {
+func (f ConnectorUpdateFilteringValidation) WithPretty() func(*ConnectorUpdateFilteringValidationRequest) {
+	return func(r *ConnectorUpdateFilteringValidationRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
-func (f ConnectorSyncJobDelete) WithHuman() func(*ConnectorSyncJobDeleteRequest) {
-	return func(r *ConnectorSyncJobDeleteRequest) {
+func (f ConnectorUpdateFilteringValidation) WithHuman() func(*ConnectorUpdateFilteringValidationRequest) {
+	return func(r *ConnectorUpdateFilteringValidationRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-func (f ConnectorSyncJobDelete) WithErrorTrace() func(*ConnectorSyncJobDeleteRequest) {
-	return func(r *ConnectorSyncJobDeleteRequest) {
+func (f ConnectorUpdateFilteringValidation) WithErrorTrace() func(*ConnectorUpdateFilteringValidationRequest) {
+	return func(r *ConnectorUpdateFilteringValidationRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
-func (f ConnectorSyncJobDelete) WithFilterPath(v ...string) func(*ConnectorSyncJobDeleteRequest) {
-	return func(r *ConnectorSyncJobDeleteRequest) {
+func (f ConnectorUpdateFilteringValidation) WithFilterPath(v ...string) func(*ConnectorUpdateFilteringValidationRequest) {
+	return func(r *ConnectorUpdateFilteringValidationRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
-func (f ConnectorSyncJobDelete) WithHeader(h map[string]string) func(*ConnectorSyncJobDeleteRequest) {
-	return func(r *ConnectorSyncJobDeleteRequest) {
+func (f ConnectorUpdateFilteringValidation) WithHeader(h map[string]string) func(*ConnectorUpdateFilteringValidationRequest) {
+	return func(r *ConnectorUpdateFilteringValidationRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -217,8 +229,8 @@ func (f ConnectorSyncJobDelete) WithHeader(h map[string]string) func(*ConnectorS
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-func (f ConnectorSyncJobDelete) WithOpaqueID(s string) func(*ConnectorSyncJobDeleteRequest) {
-	return func(r *ConnectorSyncJobDeleteRequest) {
+func (f ConnectorUpdateFilteringValidation) WithOpaqueID(s string) func(*ConnectorUpdateFilteringValidationRequest) {
+	return func(r *ConnectorUpdateFilteringValidationRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

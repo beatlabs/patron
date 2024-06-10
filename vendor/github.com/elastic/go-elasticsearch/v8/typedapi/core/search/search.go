@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 // Returns results matching a query.
 package search
@@ -651,6 +651,50 @@ func (r *Search) ForceSyntheticSource(forcesyntheticsource bool) *Search {
 	return r
 }
 
+// ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
+// when they occur.
+// API name: error_trace
+func (r *Search) ErrorTrace(errortrace bool) *Search {
+	r.values.Set("error_trace", strconv.FormatBool(errortrace))
+
+	return r
+}
+
+// FilterPath Comma-separated list of filters in dot notation which reduce the response
+// returned by Elasticsearch.
+// API name: filter_path
+func (r *Search) FilterPath(filterpaths ...string) *Search {
+	tmp := []string{}
+	for _, item := range filterpaths {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("filter_path", strings.Join(tmp, ","))
+
+	return r
+}
+
+// Human When set to `true` will return statistics in a format suitable for humans.
+// For example `"exists_time": "1h"` for humans and
+// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
+// readable values will be omitted. This makes sense for responses being
+// consumed
+// only by machines.
+// API name: human
+func (r *Search) Human(human bool) *Search {
+	r.values.Set("human", strconv.FormatBool(human))
+
+	return r
+}
+
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
+// this option for debugging only.
+// API name: pretty
+func (r *Search) Pretty(pretty bool) *Search {
+	r.values.Set("pretty", strconv.FormatBool(pretty))
+
+	return r
+}
+
 // Aggregations Defines the aggregations that are run as part of the search request.
 // API name: aggregations
 func (r *Search) Aggregations(aggregations map[string]types.Aggregations) *Search {
@@ -739,7 +783,7 @@ func (r *Search) IndicesBoost(indicesboosts ...map[string]types.Float64) *Search
 
 // Knn Defines the approximate kNN search to run.
 // API name: knn
-func (r *Search) Knn(knns ...types.KnnQuery) *Search {
+func (r *Search) Knn(knns ...types.KnnSearch) *Search {
 	r.req.Knn = knns
 
 	return r
@@ -810,6 +854,17 @@ func (r *Search) Rank(rank *types.RankContainer) *Search {
 // API name: rescore
 func (r *Search) Rescore(rescores ...types.Rescore) *Search {
 	r.req.Rescore = rescores
+
+	return r
+}
+
+// Retriever A retriever is a specification to describe top documents returned from a
+// search. A retriever replaces other elements of the search API that also
+// return top documents such as query and knn.
+// API name: retriever
+func (r *Search) Retriever(retriever *types.RetrieverContainer) *Search {
+
+	r.req.Retriever = retriever
 
 	return r
 }

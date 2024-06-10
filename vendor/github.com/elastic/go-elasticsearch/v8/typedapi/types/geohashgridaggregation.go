@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,15 +31,13 @@ import (
 
 // GeoHashGridAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L403-L428
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L407-L432
 type GeoHashGridAggregation struct {
 	// Bounds The bounding box to filter the points in each bucket.
 	Bounds GeoBounds `json:"bounds,omitempty"`
 	// Field Field containing indexed `geo_point` or `geo_shape` values.
 	// If the field contains an array, `geohash_grid` aggregates all array values.
-	Field *string  `json:"field,omitempty"`
-	Meta  Metadata `json:"meta,omitempty"`
-	Name  *string  `json:"name,omitempty"`
+	Field *string `json:"field,omitempty"`
 	// Precision The string length of the geohashes used to define cells/buckets in the
 	// results.
 	Precision GeoHashPrecision `json:"precision,omitempty"`
@@ -77,23 +75,6 @@ func (s *GeoHashGridAggregation) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Field", err)
 			}
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
-
 		case "precision":
 			if err := dec.Decode(&s.Precision); err != nil {
 				return fmt.Errorf("%s | %w", "Precision", err)
@@ -101,7 +82,7 @@ func (s *GeoHashGridAggregation) UnmarshalJSON(data []byte) error {
 
 		case "shard_size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -117,7 +98,7 @@ func (s *GeoHashGridAggregation) UnmarshalJSON(data []byte) error {
 
 		case "size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -36,20 +36,20 @@ import (
 
 // IcuCollationTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/icu-plugin.ts#L51-L65
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/analysis/icu-plugin.ts#L51-L65
 type IcuCollationTokenFilter struct {
 	Alternate              *icucollationalternate.IcuCollationAlternate         `json:"alternate,omitempty"`
-	CaseFirst              *icucollationcasefirst.IcuCollationCaseFirst         `json:"caseFirst,omitempty"`
-	CaseLevel              *bool                                                `json:"caseLevel,omitempty"`
+	CaseFirst              *icucollationcasefirst.IcuCollationCaseFirst         `json:"case_first,omitempty"`
+	CaseLevel              *bool                                                `json:"case_level,omitempty"`
 	Country                *string                                              `json:"country,omitempty"`
 	Decomposition          *icucollationdecomposition.IcuCollationDecomposition `json:"decomposition,omitempty"`
-	HiraganaQuaternaryMode *bool                                                `json:"hiraganaQuaternaryMode,omitempty"`
+	HiraganaQuaternaryMode *bool                                                `json:"hiragana_quaternary_mode,omitempty"`
 	Language               *string                                              `json:"language,omitempty"`
 	Numeric                *bool                                                `json:"numeric,omitempty"`
 	Rules                  *string                                              `json:"rules,omitempty"`
 	Strength               *icucollationstrength.IcuCollationStrength           `json:"strength,omitempty"`
 	Type                   string                                               `json:"type,omitempty"`
-	VariableTop            *string                                              `json:"variableTop,omitempty"`
+	VariableTop            *string                                              `json:"variable_top,omitempty"`
 	Variant                *string                                              `json:"variant,omitempty"`
 	Version                *string                                              `json:"version,omitempty"`
 }
@@ -74,13 +74,13 @@ func (s *IcuCollationTokenFilter) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Alternate", err)
 			}
 
-		case "caseFirst":
+		case "case_first":
 			if err := dec.Decode(&s.CaseFirst); err != nil {
 				return fmt.Errorf("%s | %w", "CaseFirst", err)
 			}
 
-		case "caseLevel":
-			var tmp interface{}
+		case "case_level":
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -110,8 +110,8 @@ func (s *IcuCollationTokenFilter) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Decomposition", err)
 			}
 
-		case "hiraganaQuaternaryMode":
-			var tmp interface{}
+		case "hiragana_quaternary_mode":
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -137,7 +137,7 @@ func (s *IcuCollationTokenFilter) UnmarshalJSON(data []byte) error {
 			s.Language = &o
 
 		case "numeric":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -172,7 +172,7 @@ func (s *IcuCollationTokenFilter) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Type", err)
 			}
 
-		case "variableTop":
+		case "variable_top":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
 				return fmt.Errorf("%s | %w", "VariableTop", err)

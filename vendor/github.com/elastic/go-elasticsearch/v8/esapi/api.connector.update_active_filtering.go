@@ -15,20 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.13.2: DO NOT EDIT
+// Code generated from specification version 8.14.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"strings"
 )
 
-func newConnectorSyncJobErrorFunc(t Transport) ConnectorSyncJobError {
-	return func(body io.Reader, connector_sync_job_id string, o ...func(*ConnectorSyncJobErrorRequest)) (*Response, error) {
-		var r = ConnectorSyncJobErrorRequest{Body: body, ConnectorSyncJobID: connector_sync_job_id}
+func newConnectorUpdateActiveFilteringFunc(t Transport) ConnectorUpdateActiveFiltering {
+	return func(connector_id string, o ...func(*ConnectorUpdateActiveFilteringRequest)) (*Response, error) {
+		var r = ConnectorUpdateActiveFilteringRequest{ConnectorID: connector_id}
 		for _, f := range o {
 			f(&r)
 		}
@@ -43,18 +42,16 @@ func newConnectorSyncJobErrorFunc(t Transport) ConnectorSyncJobError {
 
 // ----- API Definition -------------------------------------------------------
 
-// ConnectorSyncJobError sets an error for a connector sync job.
+// ConnectorUpdateActiveFiltering activates the draft filtering rules if they are in a validated state.
 //
 // This API is experimental.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/set-connector-sync-job-error-api.html.
-type ConnectorSyncJobError func(body io.Reader, connector_sync_job_id string, o ...func(*ConnectorSyncJobErrorRequest)) (*Response, error)
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/update-connector-filtering-api.html.
+type ConnectorUpdateActiveFiltering func(connector_id string, o ...func(*ConnectorUpdateActiveFilteringRequest)) (*Response, error)
 
-// ConnectorSyncJobErrorRequest configures the Connector Sync Job Error API request.
-type ConnectorSyncJobErrorRequest struct {
-	Body io.Reader
-
-	ConnectorSyncJobID string
+// ConnectorUpdateActiveFilteringRequest configures the Connector Update Active Filtering API request.
+type ConnectorUpdateActiveFilteringRequest struct {
+	ConnectorID string
 
 	Pretty     bool
 	Human      bool
@@ -69,7 +66,7 @@ type ConnectorSyncJobErrorRequest struct {
 }
 
 // Do executes the request and returns response or error.
-func (r ConnectorSyncJobErrorRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
+func (r ConnectorUpdateActiveFilteringRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
@@ -78,7 +75,7 @@ func (r ConnectorSyncJobErrorRequest) Do(providedCtx context.Context, transport 
 	)
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		ctx = instrument.Start(providedCtx, "connector_sync_job.error")
+		ctx = instrument.Start(providedCtx, "connector.update_active_filtering")
 		defer instrument.Close(ctx)
 	}
 	if ctx == nil {
@@ -87,19 +84,19 @@ func (r ConnectorSyncJobErrorRequest) Do(providedCtx context.Context, transport 
 
 	method = "PUT"
 
-	path.Grow(7 + 1 + len("_connector") + 1 + len("_sync_job") + 1 + len(r.ConnectorSyncJobID) + 1 + len("_error"))
+	path.Grow(7 + 1 + len("_connector") + 1 + len(r.ConnectorID) + 1 + len("_filtering") + 1 + len("_activate"))
 	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_connector")
 	path.WriteString("/")
-	path.WriteString("_sync_job")
-	path.WriteString("/")
-	path.WriteString(r.ConnectorSyncJobID)
+	path.WriteString(r.ConnectorID)
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.RecordPathPart(ctx, "connector_sync_job_id", r.ConnectorSyncJobID)
+		instrument.RecordPathPart(ctx, "connector_id", r.ConnectorID)
 	}
 	path.WriteString("/")
-	path.WriteString("_error")
+	path.WriteString("_filtering")
+	path.WriteString("/")
+	path.WriteString("_activate")
 
 	params = make(map[string]string)
 
@@ -119,7 +116,7 @@ func (r ConnectorSyncJobErrorRequest) Do(providedCtx context.Context, transport 
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, err := newRequest(method, path.String(), r.Body)
+	req, err := newRequest(method, path.String(), nil)
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
 			instrument.RecordError(ctx, err)
@@ -147,23 +144,16 @@ func (r ConnectorSyncJobErrorRequest) Do(providedCtx context.Context, transport 
 		}
 	}
 
-	if r.Body != nil && req.Header.Get(headerContentType) == "" {
-		req.Header[headerContentType] = headerContentTypeJSON
-	}
-
 	if ctx != nil {
 		req = req.WithContext(ctx)
 	}
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.BeforeRequest(req, "connector_sync_job.error")
-		if reader := instrument.RecordRequestBody(ctx, "connector_sync_job.error", r.Body); reader != nil {
-			req.Body = reader
-		}
+		instrument.BeforeRequest(req, "connector.update_active_filtering")
 	}
 	res, err := transport.Perform(req)
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.AfterRequest(req, "elasticsearch", "connector_sync_job.error")
+		instrument.AfterRequest(req, "elasticsearch", "connector.update_active_filtering")
 	}
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
@@ -182,43 +172,43 @@ func (r ConnectorSyncJobErrorRequest) Do(providedCtx context.Context, transport 
 }
 
 // WithContext sets the request context.
-func (f ConnectorSyncJobError) WithContext(v context.Context) func(*ConnectorSyncJobErrorRequest) {
-	return func(r *ConnectorSyncJobErrorRequest) {
+func (f ConnectorUpdateActiveFiltering) WithContext(v context.Context) func(*ConnectorUpdateActiveFilteringRequest) {
+	return func(r *ConnectorUpdateActiveFilteringRequest) {
 		r.ctx = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
-func (f ConnectorSyncJobError) WithPretty() func(*ConnectorSyncJobErrorRequest) {
-	return func(r *ConnectorSyncJobErrorRequest) {
+func (f ConnectorUpdateActiveFiltering) WithPretty() func(*ConnectorUpdateActiveFilteringRequest) {
+	return func(r *ConnectorUpdateActiveFilteringRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
-func (f ConnectorSyncJobError) WithHuman() func(*ConnectorSyncJobErrorRequest) {
-	return func(r *ConnectorSyncJobErrorRequest) {
+func (f ConnectorUpdateActiveFiltering) WithHuman() func(*ConnectorUpdateActiveFilteringRequest) {
+	return func(r *ConnectorUpdateActiveFilteringRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-func (f ConnectorSyncJobError) WithErrorTrace() func(*ConnectorSyncJobErrorRequest) {
-	return func(r *ConnectorSyncJobErrorRequest) {
+func (f ConnectorUpdateActiveFiltering) WithErrorTrace() func(*ConnectorUpdateActiveFilteringRequest) {
+	return func(r *ConnectorUpdateActiveFilteringRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
-func (f ConnectorSyncJobError) WithFilterPath(v ...string) func(*ConnectorSyncJobErrorRequest) {
-	return func(r *ConnectorSyncJobErrorRequest) {
+func (f ConnectorUpdateActiveFiltering) WithFilterPath(v ...string) func(*ConnectorUpdateActiveFilteringRequest) {
+	return func(r *ConnectorUpdateActiveFilteringRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
-func (f ConnectorSyncJobError) WithHeader(h map[string]string) func(*ConnectorSyncJobErrorRequest) {
-	return func(r *ConnectorSyncJobErrorRequest) {
+func (f ConnectorUpdateActiveFiltering) WithHeader(h map[string]string) func(*ConnectorUpdateActiveFilteringRequest) {
+	return func(r *ConnectorUpdateActiveFilteringRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -229,8 +219,8 @@ func (f ConnectorSyncJobError) WithHeader(h map[string]string) func(*ConnectorSy
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-func (f ConnectorSyncJobError) WithOpaqueID(s string) func(*ConnectorSyncJobErrorRequest) {
-	return func(r *ConnectorSyncJobErrorRequest) {
+func (f ConnectorUpdateActiveFiltering) WithOpaqueID(s string) func(*ConnectorUpdateActiveFilteringRequest) {
+	return func(r *ConnectorUpdateActiveFilteringRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

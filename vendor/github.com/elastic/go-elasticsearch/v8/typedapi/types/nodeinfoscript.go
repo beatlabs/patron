@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,10 +31,10 @@ import (
 
 // NodeInfoScript type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/info/types.ts#L281-L284
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/nodes/info/types.ts#L281-L284
 type NodeInfoScript struct {
-	AllowedTypes               string `json:"allowed_types"`
-	DisableMaxCompilationsRate string `json:"disable_max_compilations_rate"`
+	AllowedTypes               string  `json:"allowed_types"`
+	DisableMaxCompilationsRate *string `json:"disable_max_compilations_rate,omitempty"`
 }
 
 func (s *NodeInfoScript) UnmarshalJSON(data []byte) error {
@@ -74,7 +74,7 @@ func (s *NodeInfoScript) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.DisableMaxCompilationsRate = o
+			s.DisableMaxCompilationsRate = &o
 
 		}
 	}

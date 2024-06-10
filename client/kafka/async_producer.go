@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/IBM/sarama"
+	"github.com/beatlabs/patron/observability"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
@@ -32,14 +33,14 @@ func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) 
 	injectTracingAndCorrelationHeaders(ctx, msg)
 
 	ap.asyncProd.Input() <- msg
-	publishCountAdd(ctx, deliveryTypeAsyncAttr, deliveryStatusSentAttr, topicAttribute(msg.Topic))
+	publishCountAdd(ctx, deliveryTypeAsyncAttr, observability.SucceededAttribute, topicAttribute(msg.Topic))
 	sp.SetStatus(codes.Ok, "message sent")
 	return nil
 }
 
 func (ap *AsyncProducer) propagateError(chErr chan<- error) {
 	for pe := range ap.asyncProd.Errors() {
-		publishCountAdd(context.Background(), deliveryTypeAsyncAttr, deliveryStatusSentErrorAttr, topicAttribute(pe.Msg.Topic))
+		publishCountAdd(context.Background(), deliveryTypeAsyncAttr, observability.FailedAttribute, topicAttribute(pe.Msg.Topic))
 		chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
 }

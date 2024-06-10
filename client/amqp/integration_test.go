@@ -59,7 +59,7 @@ func TestRun(t *testing.T) {
 		Name: "publish",
 		Attributes: []attribute.KeyValue{
 			attribute.String("exchange", ""),
-			attribute.String("component", "amqp"),
+			attribute.String("client", "amqp"),
 		},
 	}
 

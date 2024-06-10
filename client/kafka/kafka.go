@@ -9,6 +9,7 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
+	"github.com/beatlabs/patron/observability"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -16,12 +17,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var (
-	componentAttr               = attribute.String("component", "kafka")
-	deliveryStatusSentAttr      = attribute.String("status", "sent")
-	deliveryStatusSentErrorAttr = attribute.String("status", "sent-errors")
-	publishCount                metric.Int64Counter
-)
+var publishCount metric.Int64Counter
 
 func init() {
 	var err error
@@ -153,7 +149,7 @@ func (b Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 func startSpan(ctx context.Context, action, delivery, topic string) (context.Context, trace.Span) {
 	attrs := []attribute.KeyValue{
 		attribute.String("delivery", delivery),
-		componentAttr,
+		observability.ClientAttribute("kafka"),
 	}
 
 	if topic != "" {

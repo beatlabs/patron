@@ -3,18 +3,14 @@ package mongo
 import (
 	"context"
 
+	"github.com/beatlabs/patron/observability"
 	"go.mongodb.org/mongo-driver/event"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
 
-var (
-	componentAttr     = attribute.String("component", "mongo")
-	succeededAttr     = attribute.String("status", "succeeded")
-	failedAttr        = attribute.String("status", "failed")
-	durationHistogram metric.Int64Histogram
-)
+var durationHistogram metric.Int64Histogram
 
 func init() {
 	var err error
@@ -48,13 +44,15 @@ func (m *observabilityMonitor) Started(ctx context.Context, evt *event.CommandSt
 
 func (m *observabilityMonitor) Succeeded(ctx context.Context, evt *event.CommandSucceededEvent) {
 	durationHistogram.Record(ctx, evt.Duration.Milliseconds(),
-		metric.WithAttributes(componentAttr, succeededAttr, commandAttr(evt.CommandName)))
+		metric.WithAttributes(observability.ClientAttribute("mongo"), observability.SucceededAttribute,
+			commandAttr(evt.CommandName)))
 	m.traceMonitor.Succeeded(ctx, evt)
 }
 
 func (m *observabilityMonitor) Failed(ctx context.Context, evt *event.CommandFailedEvent) {
 	durationHistogram.Record(ctx, evt.Duration.Milliseconds(),
-		metric.WithAttributes(componentAttr, failedAttr, commandAttr(evt.CommandName)))
+		metric.WithAttributes(observability.ClientAttribute("mongo"), observability.FailedAttribute,
+			commandAttr(evt.CommandName)))
 	m.traceMonitor.Failed(ctx, evt)
 }
 

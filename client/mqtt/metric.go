@@ -4,17 +4,13 @@ import (
 	"context"
 	"time"
 
+	"github.com/beatlabs/patron/observability"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
 
-var (
-	componentAttr     = attribute.String("component", "mqtt")
-	succeededAttr     = attribute.String("status", "succeeded")
-	failedAttr        = attribute.String("status", "failed")
-	durationHistogram metric.Int64Histogram
-)
+var durationHistogram metric.Int64Histogram
 
 func init() {
 	var err error
@@ -32,13 +28,7 @@ func topicAttr(topic string) attribute.KeyValue {
 }
 
 func observePublish(ctx context.Context, start time.Time, topic string, err error) {
-	var statusAttr attribute.KeyValue
-	if err != nil {
-		statusAttr = failedAttr
-	} else {
-		statusAttr = succeededAttr
-	}
-
 	durationHistogram.Record(ctx, time.Since(start).Milliseconds(),
-		metric.WithAttributes(componentAttr, succeededAttr, topicAttr(topic), statusAttr))
+		metric.WithAttributes(observability.ClientAttribute("mqtt"), topicAttr(topic),
+			observability.StatusAttribute(err)))
 }

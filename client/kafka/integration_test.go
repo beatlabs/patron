@@ -92,7 +92,7 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 		Name: "send",
 		Attributes: []attribute.KeyValue{
 			attribute.String("delivery", "async"),
-			attribute.String("component", "kafka"),
+			attribute.String("client", "kafka"),
 			attribute.String("topic", "clientTopic"),
 		},
 	}
@@ -136,7 +136,7 @@ func TestSyncProducer_SendMessage_Close(t *testing.T) {
 		Name: "send",
 		Attributes: []attribute.KeyValue{
 			attribute.String("delivery", "sync"),
-			attribute.String("component", "kafka"),
+			attribute.String("client", "kafka"),
 			attribute.String("topic", "clientTopic"),
 		},
 	}
@@ -176,7 +176,7 @@ func TestSyncProducer_SendMessages_Close(t *testing.T) {
 		Name: "send-batch",
 		Attributes: []attribute.KeyValue{
 			attribute.String("delivery", "sync"),
-			attribute.String("component", "kafka"),
+			attribute.String("client", "kafka"),
 		},
 	}
 

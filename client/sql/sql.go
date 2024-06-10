@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/beatlabs/patron/observability"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -15,12 +16,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var (
-	componentAttr     = attribute.String("component", "sql")
-	succeededAttr     = attribute.String("status", "succeeded")
-	failedAttr        = attribute.String("status", "failed")
-	durationHistogram metric.Int64Histogram
-)
+var durationHistogram metric.Int64Histogram
 
 func init() {
 	var err error
@@ -517,15 +513,9 @@ func parseDSN(dsn string) DSNInfo {
 }
 
 func observeDuration(ctx context.Context, start time.Time, op string, err error) {
-	var statusAttr attribute.KeyValue
-	if err != nil {
-		statusAttr = failedAttr
-	} else {
-		statusAttr = succeededAttr
-	}
-
 	durationHistogram.Record(ctx, time.Since(start).Milliseconds(),
-		metric.WithAttributes(componentAttr, operationAttr(op), statusAttr))
+		metric.WithAttributes(observability.ClientAttribute("sql"), operationAttr(op),
+			observability.StatusAttribute(err)))
 }
 
 func operationAttr(op string) attribute.KeyValue {

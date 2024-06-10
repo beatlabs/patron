@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/observability"
 	"github.com/beatlabs/patron/observability/log"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/eclipse/paho.golang/autopaho"
@@ -72,7 +73,7 @@ func New(ctx context.Context, cfg autopaho.ClientConfig) (*Publisher, error) {
 // Publish provides a instrumented publishing of a message.
 func (p *Publisher) Publish(ctx context.Context, pub *paho.Publish) (*paho.PublishResponse, error) {
 	ctx, sp := patrontrace.StartSpan(ctx, "publish", trace.WithSpanKind(trace.SpanKindProducer),
-		trace.WithAttributes(attribute.String("topic", pub.Topic), componentAttr),
+		trace.WithAttributes(attribute.String("topic", pub.Topic), observability.ClientAttribute("mqtt")),
 	)
 	defer sp.End()
 

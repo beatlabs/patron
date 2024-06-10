@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/IBM/sarama"
+	"github.com/beatlabs/patron/observability"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
@@ -31,13 +32,13 @@ func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (p
 
 	partition, offset, err = p.syncProd.SendMessage(msg)
 	if err != nil {
-		publishCountAdd(ctx, deliveryTypeSyncAttr, deliveryStatusSentErrorAttr, topicAttribute(msg.Topic))
+		publishCountAdd(ctx, deliveryTypeSyncAttr, observability.FailedAttribute, topicAttribute(msg.Topic))
 		sp.RecordError(err)
 		sp.SetStatus(codes.Error, "error sending message")
 		return -1, -1, err
 	}
 
-	publishCountAdd(ctx, deliveryTypeSyncAttr, deliveryStatusSentAttr, topicAttribute(msg.Topic))
+	publishCountAdd(ctx, deliveryTypeSyncAttr, observability.SucceededAttribute, topicAttribute(msg.Topic))
 	sp.SetStatus(codes.Ok, "message sent")
 	return partition, offset, nil
 }
@@ -56,13 +57,13 @@ func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.Produce
 	}
 
 	if err := p.syncProd.SendMessages(messages); err != nil {
-		statusCountBatchAdd(ctx, deliveryStatusSentErrorAttr, messages)
+		statusCountBatchAdd(ctx, observability.FailedAttribute, messages)
 		sp.RecordError(err)
 		sp.SetStatus(codes.Error, "error sending batch")
 		return err
 	}
 
-	statusCountBatchAdd(ctx, deliveryStatusSentAttr, messages)
+	statusCountBatchAdd(ctx, observability.SucceededAttribute, messages)
 	sp.SetStatus(codes.Ok, "batch sent")
 	return nil
 }

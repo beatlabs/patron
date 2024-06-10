@@ -85,7 +85,7 @@ func TestPublish(t *testing.T) {
 		Name: "publish",
 		Attributes: []attribute.KeyValue{
 			attribute.String("topic", testTopic),
-			attribute.String("component", "mqtt"),
+			attribute.String("client", "mqtt"),
 		},
 	}
 

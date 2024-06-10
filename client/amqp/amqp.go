@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/observability"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
@@ -17,12 +18,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var (
-	componentAttr          = attribute.String("component", "amqp")
-	publishDurationMetrics metric.Float64Histogram
-	successAttr            = attribute.Bool("success", true)
-	failureAttr            = attribute.Bool("success", false)
-)
+var publishDurationMetrics metric.Float64Histogram
 
 func init() {
 	var err error
@@ -102,7 +98,7 @@ func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishi
 	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
 
 	ctx, sp := patrontrace.StartSpan(ctx, "publish", trace.WithSpanKind(trace.SpanKindProducer),
-		trace.WithAttributes(attribute.String("exchange", exchange), componentAttr),
+		trace.WithAttributes(attribute.String("exchange", exchange), observability.ClientAttribute("amqp")),
 	)
 
 	otel.GetTextMapPropagator().Inject(ctx, producerMessageCarrier{msg})
@@ -116,15 +112,8 @@ func (tc *Publisher) Close() error {
 }
 
 func observePublish(ctx context.Context, start time.Time, exchange string, err error) {
-	var statusAttr attribute.KeyValue
-	if err == nil {
-		statusAttr = successAttr
-	} else {
-		statusAttr = failureAttr
-	}
-
 	publishDurationMetrics.Record(ctx, time.Since(start).Seconds(),
-		metric.WithAttributes(attribute.String("exchange", exchange), statusAttr))
+		metric.WithAttributes(attribute.String("exchange", exchange), observability.StatusAttribute(err)))
 }
 
 type producerMessageCarrier struct {

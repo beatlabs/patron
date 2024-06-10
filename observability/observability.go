@@ -10,6 +10,7 @@ import (
 	patronmetric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -17,12 +18,35 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
 )
 
-// TODO: add tests for the observability package
-
 // Provider represents the observability provider that includes the metric and trace providers.
 type Provider struct {
 	mp *metric.MeterProvider
 	tp *trace.TracerProvider
+}
+
+var (
+	// SucceededAttribute is the attribute key-value pair for a succeeded operation.
+	SucceededAttribute = attribute.String("status", "succeeded")
+	// FailedAttribute is the attribute key-value pair for a failed operation.
+	FailedAttribute = attribute.String("status", "failed")
+)
+
+// ComponentAttribute returns the attribute key-value pair for a component.
+func ComponentAttribute(name string) attribute.KeyValue {
+	return attribute.String("component", name)
+}
+
+// ClientAttribute returns the attribute key-value pair for a client.
+func ClientAttribute(name string) attribute.KeyValue {
+	return attribute.String("client", name)
+}
+
+// StatusAttribute returns the attribute key-value pair for the status of an operation.
+func StatusAttribute(err error) attribute.KeyValue {
+	if err != nil {
+		return FailedAttribute
+	}
+	return SucceededAttribute
 }
 
 // Setup initializes OpenTelemetry's traces and metrics.

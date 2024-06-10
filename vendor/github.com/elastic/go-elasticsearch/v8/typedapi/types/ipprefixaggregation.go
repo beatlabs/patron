@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // IpPrefixAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L1113-L1142
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L1117-L1146
 type IpPrefixAggregation struct {
 	// AppendPrefixLength Defines whether the prefix length is appended to IP address keys in the
 	// response.
@@ -42,12 +42,10 @@ type IpPrefixAggregation struct {
 	IsIpv6 *bool `json:"is_ipv6,omitempty"`
 	// Keyed Defines whether buckets are returned as a hash rather than an array in the
 	// response.
-	Keyed *bool    `json:"keyed,omitempty"`
-	Meta  Metadata `json:"meta,omitempty"`
+	Keyed *bool `json:"keyed,omitempty"`
 	// MinDocCount Minimum number of documents in a bucket for it to be included in the
 	// response.
-	MinDocCount *int64  `json:"min_doc_count,omitempty"`
-	Name        *string `json:"name,omitempty"`
+	MinDocCount *int64 `json:"min_doc_count,omitempty"`
 	// PrefixLength Length of the network prefix. For IPv4 addresses the accepted range is [0,
 	// 32].
 	// For IPv6 addresses the accepted range is [0, 128].
@@ -70,7 +68,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "append_prefix_length":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -89,7 +87,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "is_ipv6":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -103,7 +101,7 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "keyed":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -116,13 +114,8 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 				s.Keyed = &v
 			}
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
 		case "min_doc_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -136,21 +129,9 @@ func (s *IpPrefixAggregation) UnmarshalJSON(data []byte) error {
 				s.MinDocCount = &f
 			}
 
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
-
 		case "prefix_length":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

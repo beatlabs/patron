@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package getprivileges
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package getprivileges
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/get_privileges/SecurityGetPrivilegesResponse.ts#L23-L25
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/security/get_privileges/SecurityGetPrivilegesResponse.ts#L23-L26
 
 type Response map[string]map[string]types.PrivilegesActions
 

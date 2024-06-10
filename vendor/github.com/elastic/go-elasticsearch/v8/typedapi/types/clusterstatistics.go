@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ClusterStatistics type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Stats.ts#L27-L35
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/Stats.ts#L27-L35
 type ClusterStatistics struct {
 	Details    map[string]ClusterDetails `json:"details,omitempty"`
 	Failed     int                       `json:"failed"`
@@ -67,7 +67,7 @@ func (s *ClusterStatistics) UnmarshalJSON(data []byte) error {
 
 		case "failed":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -83,7 +83,7 @@ func (s *ClusterStatistics) UnmarshalJSON(data []byte) error {
 
 		case "partial":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -99,7 +99,7 @@ func (s *ClusterStatistics) UnmarshalJSON(data []byte) error {
 
 		case "running":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -115,7 +115,7 @@ func (s *ClusterStatistics) UnmarshalJSON(data []byte) error {
 
 		case "skipped":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -131,7 +131,7 @@ func (s *ClusterStatistics) UnmarshalJSON(data []byte) error {
 
 		case "successful":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -147,7 +147,7 @@ func (s *ClusterStatistics) UnmarshalJSON(data []byte) error {
 
 		case "total":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

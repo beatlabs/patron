@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,13 +31,13 @@ import (
 
 // AdjacencyMatrixAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L55-L61
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L55-L65
 type AdjacencyMatrixAggregation struct {
 	// Filters Filters used to create buckets.
 	// At least one filter is required.
 	Filters map[string]Query `json:"filters,omitempty"`
-	Meta    Metadata         `json:"meta,omitempty"`
-	Name    *string          `json:"name,omitempty"`
+	// Separator Separator used to concatenate filter names. Defaults to &.
+	Separator *string `json:"separator,omitempty"`
 }
 
 func (s *AdjacencyMatrixAggregation) UnmarshalJSON(data []byte) error {
@@ -63,22 +63,17 @@ func (s *AdjacencyMatrixAggregation) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Filters", err)
 			}
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
-		case "name":
+		case "separator":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
+				return fmt.Errorf("%s | %w", "Separator", err)
 			}
 			o := string(tmp[:])
 			o, err = strconv.Unquote(o)
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Name = &o
+			s.Separator = &o
 
 		}
 	}

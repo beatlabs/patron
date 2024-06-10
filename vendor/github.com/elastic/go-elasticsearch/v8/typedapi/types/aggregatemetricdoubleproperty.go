@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -34,7 +34,7 @@ import (
 
 // AggregateMetricDoubleProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/mapping/complex.ts#L60-L65
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/mapping/complex.ts#L61-L66
 type AggregateMetricDoubleProperty struct {
 	DefaultMetric string                         `json:"default_metric"`
 	Dynamic       *dynamicmapping.DynamicMapping `json:"dynamic,omitempty"`
@@ -87,7 +87,7 @@ func (s *AggregateMetricDoubleProperty) UnmarshalJSON(data []byte) error {
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
-				kind := make(map[string]interface{})
+				kind := make(map[string]any)
 				buf := bytes.NewReader(message)
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
@@ -378,6 +378,12 @@ func (s *AggregateMetricDoubleProperty) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Fields[key] = oo
+				case "icu_collation_keyword":
+					oo := NewIcuCollationProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Fields[key] = oo
 				default:
 					oo := new(Property)
 					if err := localDec.Decode(&oo); err != nil {
@@ -389,7 +395,7 @@ func (s *AggregateMetricDoubleProperty) UnmarshalJSON(data []byte) error {
 
 		case "ignore_above":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -423,7 +429,7 @@ func (s *AggregateMetricDoubleProperty) UnmarshalJSON(data []byte) error {
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
-				kind := make(map[string]interface{})
+				kind := make(map[string]any)
 				buf := bytes.NewReader(message)
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
@@ -710,6 +716,12 @@ func (s *AggregateMetricDoubleProperty) UnmarshalJSON(data []byte) error {
 					s.Properties[key] = oo
 				case "long_range":
 					oo := NewLongRangeProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Properties[key] = oo
+				case "icu_collation_keyword":
+					oo := NewIcuCollationProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}

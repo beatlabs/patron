@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package remoteinfo
 
@@ -32,7 +32,7 @@ import (
 
 // Response holds the response body struct for the package remoteinfo
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cluster/remote_info/ClusterRemoteInfoResponse.ts#L24-L26
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/cluster/remote_info/ClusterRemoteInfoResponse.ts#L24-L27
 
 type Response map[string]types.ClusterRemoteInfo
 
@@ -45,7 +45,7 @@ func NewResponse() Response {
 func (r Response) UnmarshalJSON(data []byte) error {
 
 	dec := json.NewDecoder(bytes.NewReader(data))
-	o := make(map[string]interface{}, 0)
+	o := make(map[string]any, 0)
 	dec.Decode(&o)
 	dec = json.NewDecoder(bytes.NewReader(data))
 	for {
@@ -59,7 +59,7 @@ func (r Response) UnmarshalJSON(data []byte) error {
 
 		key := fmt.Sprintf("%s", t)
 		if target, ok := o[key]; ok {
-			if t, ok := target.(map[string]interface{})["mode"]; ok {
+			if t, ok := target.(map[string]any)["mode"]; ok {
 
 				switch t {
 

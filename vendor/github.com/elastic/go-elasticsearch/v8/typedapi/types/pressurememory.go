@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // PressureMemory type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/Stats.ts#L144-L199
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/nodes/_types/Stats.ts#L144-L199
 type PressureMemory struct {
 	// All Memory consumed by indexing requests in the coordinating, primary, or replica
 	// stage.
@@ -89,7 +89,7 @@ func (s *PressureMemory) UnmarshalJSON(data []byte) error {
 			}
 
 		case "all_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -109,7 +109,7 @@ func (s *PressureMemory) UnmarshalJSON(data []byte) error {
 			}
 
 		case "combined_coordinating_and_primary_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -129,7 +129,7 @@ func (s *PressureMemory) UnmarshalJSON(data []byte) error {
 			}
 
 		case "coordinating_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -144,7 +144,7 @@ func (s *PressureMemory) UnmarshalJSON(data []byte) error {
 			}
 
 		case "coordinating_rejections":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -164,7 +164,7 @@ func (s *PressureMemory) UnmarshalJSON(data []byte) error {
 			}
 
 		case "primary_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -179,7 +179,7 @@ func (s *PressureMemory) UnmarshalJSON(data []byte) error {
 			}
 
 		case "primary_rejections":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -199,7 +199,7 @@ func (s *PressureMemory) UnmarshalJSON(data []byte) error {
 			}
 
 		case "replica_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -214,7 +214,7 @@ func (s *PressureMemory) UnmarshalJSON(data []byte) error {
 			}
 
 		case "replica_rejections":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

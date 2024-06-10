@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ClassificationInferenceOptions type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/inference.ts#L93-L108
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/_types/inference.ts#L93-L108
 type ClassificationInferenceOptions struct {
 	// NumTopClasses Specifies the number of top class predictions to return. Defaults to 0.
 	NumTopClasses *int `json:"num_top_classes,omitempty"`
@@ -66,7 +66,7 @@ func (s *ClassificationInferenceOptions) UnmarshalJSON(data []byte) error {
 
 		case "num_top_classes":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -82,7 +82,7 @@ func (s *ClassificationInferenceOptions) UnmarshalJSON(data []byte) error {
 
 		case "num_top_feature_importance_values":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

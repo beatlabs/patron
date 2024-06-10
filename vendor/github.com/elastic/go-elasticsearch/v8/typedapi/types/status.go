@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // Status type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/snapshot/_types/SnapshotStatus.ts#L26-L35
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/snapshot/_types/SnapshotStatus.ts#L26-L35
 type Status struct {
 	IncludeGlobalState bool                          `json:"include_global_state"`
 	Indices            map[string]SnapshotIndexStats `json:"indices"`
@@ -59,7 +59,7 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "include_global_state":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

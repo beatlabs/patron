@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TranslogStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Stats.ts#L397-L405
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/Stats.ts#L397-L405
 type TranslogStats struct {
 	EarliestLastModifiedAge int64   `json:"earliest_last_modified_age"`
 	Operations              int64   `json:"operations"`
@@ -58,7 +58,7 @@ func (s *TranslogStats) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "earliest_last_modified_age":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -73,7 +73,7 @@ func (s *TranslogStats) UnmarshalJSON(data []byte) error {
 			}
 
 		case "operations":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -100,7 +100,7 @@ func (s *TranslogStats) UnmarshalJSON(data []byte) error {
 			s.Size = &o
 
 		case "size_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -116,7 +116,7 @@ func (s *TranslogStats) UnmarshalJSON(data []byte) error {
 
 		case "uncommitted_operations":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -143,7 +143,7 @@ func (s *TranslogStats) UnmarshalJSON(data []byte) error {
 			s.UncommittedSize = &o
 
 		case "uncommitted_size_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

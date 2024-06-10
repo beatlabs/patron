@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // BucketSummary type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/Bucket.ts#L31-L78
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/_types/Bucket.ts#L31-L78
 type BucketSummary struct {
 	// AnomalyScore The maximum anomaly score, between 0-100, for any of the bucket influencers.
 	// This is an overall, rate-limited
@@ -85,7 +85,7 @@ func (s *BucketSummary) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "anomaly_score":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -111,7 +111,7 @@ func (s *BucketSummary) UnmarshalJSON(data []byte) error {
 			}
 
 		case "event_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -126,7 +126,7 @@ func (s *BucketSummary) UnmarshalJSON(data []byte) error {
 			}
 
 		case "initial_anomaly_score":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -142,7 +142,7 @@ func (s *BucketSummary) UnmarshalJSON(data []byte) error {
 			}
 
 		case "is_interim":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

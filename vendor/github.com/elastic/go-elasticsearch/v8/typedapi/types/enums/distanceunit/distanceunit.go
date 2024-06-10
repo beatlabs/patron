@@ -16,36 +16,36 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 // Package distanceunit
 package distanceunit
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Geo.ts#L30-L40
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/Geo.ts#L30-L40
 type DistanceUnit struct {
 	Name string
 }
 
 var (
-	In = DistanceUnit{"in"}
+	Inches = DistanceUnit{"in"}
 
-	Ft = DistanceUnit{"ft"}
+	Feet = DistanceUnit{"ft"}
 
-	Yd = DistanceUnit{"yd"}
+	Yards = DistanceUnit{"yd"}
 
-	Mi = DistanceUnit{"mi"}
+	Miles = DistanceUnit{"mi"}
 
-	Nmi = DistanceUnit{"nmi"}
+	Nauticmiles = DistanceUnit{"nmi"}
 
-	Km = DistanceUnit{"km"}
+	Kilometers = DistanceUnit{"km"}
 
-	M = DistanceUnit{"m"}
+	Meters = DistanceUnit{"m"}
 
-	Cm = DistanceUnit{"cm"}
+	Centimeters = DistanceUnit{"cm"}
 
-	Mm = DistanceUnit{"mm"}
+	Millimeters = DistanceUnit{"mm"}
 )
 
 func (d DistanceUnit) MarshalText() (text []byte, err error) {
@@ -56,23 +56,23 @@ func (d *DistanceUnit) UnmarshalText(text []byte) error {
 	switch strings.ReplaceAll(strings.ToLower(string(text)), "\"", "") {
 
 	case "in":
-		*d = In
+		*d = Inches
 	case "ft":
-		*d = Ft
+		*d = Feet
 	case "yd":
-		*d = Yd
+		*d = Yards
 	case "mi":
-		*d = Mi
+		*d = Miles
 	case "nmi":
-		*d = Nmi
+		*d = Nauticmiles
 	case "km":
-		*d = Km
+		*d = Kilometers
 	case "m":
-		*d = M
+		*d = Meters
 	case "cm":
-		*d = Cm
+		*d = Centimeters
 	case "mm":
-		*d = Mm
+		*d = Millimeters
 	default:
 		*d = DistanceUnit{string(text)}
 	}

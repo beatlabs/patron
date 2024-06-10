@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // RepositoryMeteringInformation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/RepositoryMeteringInformation.ts#L24-L66
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/nodes/_types/RepositoryMeteringInformation.ts#L24-L66
 type RepositoryMeteringInformation struct {
 	// Archived A flag that tells whether or not this object has been archived. When a
 	// repository is closed or updated the
@@ -83,7 +83,7 @@ func (s *RepositoryMeteringInformation) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "archived":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

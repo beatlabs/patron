@@ -16,22 +16,22 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 // Package holtwinterstype
 package holtwinterstype
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/pipeline.ts#L283-L286
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/pipeline.ts#L283-L286
 type HoltWintersType struct {
 	Name string
 }
 
 var (
-	Add = HoltWintersType{"add"}
+	Additive = HoltWintersType{"add"}
 
-	Mult = HoltWintersType{"mult"}
+	Multiplicative = HoltWintersType{"mult"}
 )
 
 func (h HoltWintersType) MarshalText() (text []byte, err error) {
@@ -42,9 +42,9 @@ func (h *HoltWintersType) UnmarshalText(text []byte) error {
 	switch strings.ReplaceAll(strings.ToLower(string(text)), "\"", "") {
 
 	case "add":
-		*h = Add
+		*h = Additive
 	case "mult":
-		*h = Mult
+		*h = Multiplicative
 	default:
 		*h = HoltWintersType{string(text)}
 	}

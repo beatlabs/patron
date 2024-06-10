@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,13 +31,11 @@ import (
 
 // CompositeAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L118-L134
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L122-L138
 type CompositeAggregation struct {
 	// After When paginating, use the `after_key` value returned in the previous response
 	// to retrieve the next page.
 	After CompositeAggregateKey `json:"after,omitempty"`
-	Meta  Metadata              `json:"meta,omitempty"`
-	Name  *string               `json:"name,omitempty"`
 	// Size The number of composite buckets that should be returned.
 	Size *int `json:"size,omitempty"`
 	// Sources The value sources used to build composite buckets.
@@ -65,26 +63,9 @@ func (s *CompositeAggregation) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "After", err)
 			}
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
-
 		case "size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

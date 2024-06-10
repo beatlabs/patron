@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -63,7 +63,6 @@ package types
 //	KuromojiStemmerTokenFilter
 //	KuromojiReadingFormTokenFilter
 //	KuromojiPartOfSpeechTokenFilter
-//	IcuTokenizer
 //	IcuCollationTokenFilter
 //	IcuFoldingTokenFilter
 //	IcuNormalizationTokenFilter
@@ -71,5 +70,5 @@ package types
 //	PhoneticTokenFilter
 //	DictionaryDecompounderTokenFilter
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/token_filters.ts#L348-L401
-type TokenFilterDefinition interface{}
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/analysis/token_filters.ts#L350-L402
+type TokenFilterDefinition any

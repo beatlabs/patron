@@ -15,20 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.13.2: DO NOT EDIT
+// Code generated from specification version 8.14.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"strings"
 )
 
-func newConnectorSyncJobUpdateStatsFunc(t Transport) ConnectorSyncJobUpdateStats {
-	return func(body io.Reader, connector_sync_job_id string, o ...func(*ConnectorSyncJobUpdateStatsRequest)) (*Response, error) {
-		var r = ConnectorSyncJobUpdateStatsRequest{Body: body, ConnectorSyncJobID: connector_sync_job_id}
+func newConnectorSyncJobDeleteFunc(t Transport) ConnectorSyncJobDelete {
+	return func(connector_sync_job_id string, o ...func(*ConnectorSyncJobDeleteRequest)) (*Response, error) {
+		var r = ConnectorSyncJobDeleteRequest{ConnectorSyncJobID: connector_sync_job_id}
 		for _, f := range o {
 			f(&r)
 		}
@@ -43,17 +42,15 @@ func newConnectorSyncJobUpdateStatsFunc(t Transport) ConnectorSyncJobUpdateStats
 
 // ----- API Definition -------------------------------------------------------
 
-// ConnectorSyncJobUpdateStats updates the stats fields in the connector sync job document.
+// ConnectorSyncJobDelete deletes a connector sync job.
 //
 // This API is experimental.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/set-connector-sync-job-stats-api.html.
-type ConnectorSyncJobUpdateStats func(body io.Reader, connector_sync_job_id string, o ...func(*ConnectorSyncJobUpdateStatsRequest)) (*Response, error)
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/delete-connector-sync-job-api.html.
+type ConnectorSyncJobDelete func(connector_sync_job_id string, o ...func(*ConnectorSyncJobDeleteRequest)) (*Response, error)
 
-// ConnectorSyncJobUpdateStatsRequest configures the Connector Sync Job Update Stats API request.
-type ConnectorSyncJobUpdateStatsRequest struct {
-	Body io.Reader
-
+// ConnectorSyncJobDeleteRequest configures the Connector Sync Job Delete API request.
+type ConnectorSyncJobDeleteRequest struct {
 	ConnectorSyncJobID string
 
 	Pretty     bool
@@ -69,7 +66,7 @@ type ConnectorSyncJobUpdateStatsRequest struct {
 }
 
 // Do executes the request and returns response or error.
-func (r ConnectorSyncJobUpdateStatsRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
+func (r ConnectorSyncJobDeleteRequest) Do(providedCtx context.Context, transport Transport) (*Response, error) {
 	var (
 		method string
 		path   strings.Builder
@@ -78,16 +75,16 @@ func (r ConnectorSyncJobUpdateStatsRequest) Do(providedCtx context.Context, tran
 	)
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		ctx = instrument.Start(providedCtx, "connector_sync_job.update_stats")
+		ctx = instrument.Start(providedCtx, "connector.sync_job_delete")
 		defer instrument.Close(ctx)
 	}
 	if ctx == nil {
 		ctx = providedCtx
 	}
 
-	method = "PUT"
+	method = "DELETE"
 
-	path.Grow(7 + 1 + len("_connector") + 1 + len("_sync_job") + 1 + len(r.ConnectorSyncJobID) + 1 + len("_stats"))
+	path.Grow(7 + 1 + len("_connector") + 1 + len("_sync_job") + 1 + len(r.ConnectorSyncJobID))
 	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString("_connector")
@@ -98,8 +95,6 @@ func (r ConnectorSyncJobUpdateStatsRequest) Do(providedCtx context.Context, tran
 	if instrument, ok := r.instrument.(Instrumentation); ok {
 		instrument.RecordPathPart(ctx, "connector_sync_job_id", r.ConnectorSyncJobID)
 	}
-	path.WriteString("/")
-	path.WriteString("_stats")
 
 	params = make(map[string]string)
 
@@ -119,7 +114,7 @@ func (r ConnectorSyncJobUpdateStatsRequest) Do(providedCtx context.Context, tran
 		params["filter_path"] = strings.Join(r.FilterPath, ",")
 	}
 
-	req, err := newRequest(method, path.String(), r.Body)
+	req, err := newRequest(method, path.String(), nil)
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
 			instrument.RecordError(ctx, err)
@@ -147,23 +142,16 @@ func (r ConnectorSyncJobUpdateStatsRequest) Do(providedCtx context.Context, tran
 		}
 	}
 
-	if r.Body != nil && req.Header.Get(headerContentType) == "" {
-		req.Header[headerContentType] = headerContentTypeJSON
-	}
-
 	if ctx != nil {
 		req = req.WithContext(ctx)
 	}
 
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.BeforeRequest(req, "connector_sync_job.update_stats")
-		if reader := instrument.RecordRequestBody(ctx, "connector_sync_job.update_stats", r.Body); reader != nil {
-			req.Body = reader
-		}
+		instrument.BeforeRequest(req, "connector.sync_job_delete")
 	}
 	res, err := transport.Perform(req)
 	if instrument, ok := r.instrument.(Instrumentation); ok {
-		instrument.AfterRequest(req, "elasticsearch", "connector_sync_job.update_stats")
+		instrument.AfterRequest(req, "elasticsearch", "connector.sync_job_delete")
 	}
 	if err != nil {
 		if instrument, ok := r.instrument.(Instrumentation); ok {
@@ -182,43 +170,43 @@ func (r ConnectorSyncJobUpdateStatsRequest) Do(providedCtx context.Context, tran
 }
 
 // WithContext sets the request context.
-func (f ConnectorSyncJobUpdateStats) WithContext(v context.Context) func(*ConnectorSyncJobUpdateStatsRequest) {
-	return func(r *ConnectorSyncJobUpdateStatsRequest) {
+func (f ConnectorSyncJobDelete) WithContext(v context.Context) func(*ConnectorSyncJobDeleteRequest) {
+	return func(r *ConnectorSyncJobDeleteRequest) {
 		r.ctx = v
 	}
 }
 
 // WithPretty makes the response body pretty-printed.
-func (f ConnectorSyncJobUpdateStats) WithPretty() func(*ConnectorSyncJobUpdateStatsRequest) {
-	return func(r *ConnectorSyncJobUpdateStatsRequest) {
+func (f ConnectorSyncJobDelete) WithPretty() func(*ConnectorSyncJobDeleteRequest) {
+	return func(r *ConnectorSyncJobDeleteRequest) {
 		r.Pretty = true
 	}
 }
 
 // WithHuman makes statistical values human-readable.
-func (f ConnectorSyncJobUpdateStats) WithHuman() func(*ConnectorSyncJobUpdateStatsRequest) {
-	return func(r *ConnectorSyncJobUpdateStatsRequest) {
+func (f ConnectorSyncJobDelete) WithHuman() func(*ConnectorSyncJobDeleteRequest) {
+	return func(r *ConnectorSyncJobDeleteRequest) {
 		r.Human = true
 	}
 }
 
 // WithErrorTrace includes the stack trace for errors in the response body.
-func (f ConnectorSyncJobUpdateStats) WithErrorTrace() func(*ConnectorSyncJobUpdateStatsRequest) {
-	return func(r *ConnectorSyncJobUpdateStatsRequest) {
+func (f ConnectorSyncJobDelete) WithErrorTrace() func(*ConnectorSyncJobDeleteRequest) {
+	return func(r *ConnectorSyncJobDeleteRequest) {
 		r.ErrorTrace = true
 	}
 }
 
 // WithFilterPath filters the properties of the response body.
-func (f ConnectorSyncJobUpdateStats) WithFilterPath(v ...string) func(*ConnectorSyncJobUpdateStatsRequest) {
-	return func(r *ConnectorSyncJobUpdateStatsRequest) {
+func (f ConnectorSyncJobDelete) WithFilterPath(v ...string) func(*ConnectorSyncJobDeleteRequest) {
+	return func(r *ConnectorSyncJobDeleteRequest) {
 		r.FilterPath = v
 	}
 }
 
 // WithHeader adds the headers to the HTTP request.
-func (f ConnectorSyncJobUpdateStats) WithHeader(h map[string]string) func(*ConnectorSyncJobUpdateStatsRequest) {
-	return func(r *ConnectorSyncJobUpdateStatsRequest) {
+func (f ConnectorSyncJobDelete) WithHeader(h map[string]string) func(*ConnectorSyncJobDeleteRequest) {
+	return func(r *ConnectorSyncJobDeleteRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}
@@ -229,8 +217,8 @@ func (f ConnectorSyncJobUpdateStats) WithHeader(h map[string]string) func(*Conne
 }
 
 // WithOpaqueID adds the X-Opaque-Id header to the HTTP request.
-func (f ConnectorSyncJobUpdateStats) WithOpaqueID(s string) func(*ConnectorSyncJobUpdateStatsRequest) {
-	return func(r *ConnectorSyncJobUpdateStatsRequest) {
+func (f ConnectorSyncJobDelete) WithOpaqueID(s string) func(*ConnectorSyncJobDeleteRequest) {
+	return func(r *ConnectorSyncJobDeleteRequest) {
 		if r.Header == nil {
 			r.Header = make(http.Header)
 		}

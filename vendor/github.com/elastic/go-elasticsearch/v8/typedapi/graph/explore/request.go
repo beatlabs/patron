@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package explore
 
@@ -29,7 +29,7 @@ import (
 
 // Request holds the request body struct for the package explore
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/graph/explore/GraphExploreRequest.ts#L28-L72
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/graph/explore/GraphExploreRequest.ts#L28-L72
 type Request struct {
 
 	// Connections Specifies or more fields from which you want to extract terms that are
@@ -48,6 +48,7 @@ type Request struct {
 // NewRequest returns a Request
 func NewRequest() *Request {
 	r := &Request{}
+
 	return r
 }
 

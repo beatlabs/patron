@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // MaxBucketAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/pipeline.ts#L224-L224
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/pipeline.ts#L224-L224
 type MaxBucketAggregation struct {
 	// BucketsPath Path to the buckets that contain one set of values to correlate.
 	BucketsPath BucketsPath `json:"buckets_path,omitempty"`
@@ -43,8 +43,6 @@ type MaxBucketAggregation struct {
 	Format *string `json:"format,omitempty"`
 	// GapPolicy Policy to apply when gaps are found in the data.
 	GapPolicy *gappolicy.GapPolicy `json:"gap_policy,omitempty"`
-	Meta      Metadata             `json:"meta,omitempty"`
-	Name      *string              `json:"name,omitempty"`
 }
 
 func (s *MaxBucketAggregation) UnmarshalJSON(data []byte) error {
@@ -83,23 +81,6 @@ func (s *MaxBucketAggregation) UnmarshalJSON(data []byte) error {
 			if err := dec.Decode(&s.GapPolicy); err != nil {
 				return fmt.Errorf("%s | %w", "GapPolicy", err)
 			}
-
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
 
 		}
 	}

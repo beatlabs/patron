@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ApiKey type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/_types/ApiKey.ts#L27-L77
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/security/_types/ApiKey.ts#L27-L89
 type ApiKey struct {
 	// Creation Creation time for the API key in milliseconds.
 	Creation *int64 `json:"creation,omitempty"`
@@ -52,8 +52,13 @@ type ApiKey struct {
 	Metadata Metadata `json:"metadata,omitempty"`
 	// Name Name of the API key.
 	Name string `json:"name"`
+	// ProfileUid The profile uid for the API key owner principal, if requested and if it
+	// exists
+	ProfileUid *string `json:"profile_uid,omitempty"`
 	// Realm Realm name of the principal for which this API key was created.
 	Realm *string `json:"realm,omitempty"`
+	// RealmType Realm type of the principal for which this API key was created
+	RealmType *string `json:"realm_type,omitempty"`
 	// RoleDescriptors The role descriptors assigned to this API key when it was created or last
 	// updated.
 	// An empty role descriptor means the API key inherits the owner user’s
@@ -80,7 +85,7 @@ func (s *ApiKey) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "creation":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -95,7 +100,7 @@ func (s *ApiKey) UnmarshalJSON(data []byte) error {
 			}
 
 		case "expiration":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -115,7 +120,7 @@ func (s *ApiKey) UnmarshalJSON(data []byte) error {
 			}
 
 		case "invalidated":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -143,6 +148,18 @@ func (s *ApiKey) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Name", err)
 			}
 
+		case "profile_uid":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return fmt.Errorf("%s | %w", "ProfileUid", err)
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.ProfileUid = &o
+
 		case "realm":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
@@ -154,6 +171,18 @@ func (s *ApiKey) UnmarshalJSON(data []byte) error {
 				o = string(tmp[:])
 			}
 			s.Realm = &o
+
+		case "realm_type":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return fmt.Errorf("%s | %w", "RealmType", err)
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.RealmType = &o
 
 		case "role_descriptors":
 			if s.RoleDescriptors == nil {

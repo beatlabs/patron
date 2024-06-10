@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // CompletionContext type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/search/_types/suggester.ts#L232-L261
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/search/_types/suggester.ts#L232-L261
 type CompletionContext struct {
 	// Boost The factor by which the score of the suggestion should be boosted.
 	// The score is computed by multiplying the boost with the suggestion weight.
@@ -74,7 +74,7 @@ func (s *CompletionContext) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "boost":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -120,7 +120,7 @@ func (s *CompletionContext) UnmarshalJSON(data []byte) error {
 			}
 
 		case "prefix":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

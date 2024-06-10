@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TokenPruningConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/TokenPruningConfig.ts#L22-L35
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/query_dsl/TokenPruningConfig.ts#L22-L35
 type TokenPruningConfig struct {
 	// OnlyScorePrunedTokens Whether to only score pruned tokens, vs only scoring kept tokens.
 	OnlyScorePrunedTokens *bool `json:"only_score_pruned_tokens,omitempty"`
@@ -60,7 +60,7 @@ func (s *TokenPruningConfig) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "only_score_pruned_tokens":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -75,7 +75,7 @@ func (s *TokenPruningConfig) UnmarshalJSON(data []byte) error {
 
 		case "tokens_freq_ratio_threshold":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -90,7 +90,7 @@ func (s *TokenPruningConfig) UnmarshalJSON(data []byte) error {
 			}
 
 		case "tokens_weight_threshold":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TermVectorsToken type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/termvectors/types.ts#L42-L47
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/termvectors/types.ts#L42-L47
 type TermVectorsToken struct {
 	EndOffset   *int    `json:"end_offset,omitempty"`
 	Payload     *string `json:"payload,omitempty"`
@@ -56,7 +56,7 @@ func (s *TermVectorsToken) UnmarshalJSON(data []byte) error {
 
 		case "end_offset":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -84,7 +84,7 @@ func (s *TermVectorsToken) UnmarshalJSON(data []byte) error {
 
 		case "position":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -100,7 +100,7 @@ func (s *TermVectorsToken) UnmarshalJSON(data []byte) error {
 
 		case "start_offset":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

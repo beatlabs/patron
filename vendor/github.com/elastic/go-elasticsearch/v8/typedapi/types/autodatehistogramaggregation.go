@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // AutoDateHistogramAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L63-L98
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L67-L102
 type AutoDateHistogramAggregation struct {
 	// Buckets The target number of buckets.
 	Buckets *int `json:"buckets,omitempty"`
@@ -42,8 +42,7 @@ type AutoDateHistogramAggregation struct {
 	// Format The date format used to format `key_as_string` in the response.
 	// If no `format` is specified, the first date format specified in the field
 	// mapping is used.
-	Format *string  `json:"format,omitempty"`
-	Meta   Metadata `json:"meta,omitempty"`
+	Format *string `json:"format,omitempty"`
 	// MinimumInterval The minimum rounding interval.
 	// This can make the collection process more efficient, as the aggregation will
 	// not attempt to round at any interval lower than `minimum_interval`.
@@ -51,7 +50,6 @@ type AutoDateHistogramAggregation struct {
 	// Missing The value to apply to documents that do not have a value.
 	// By default, documents without a value are ignored.
 	Missing DateTime `json:"missing,omitempty"`
-	Name    *string  `json:"name,omitempty"`
 	// Offset Time zone specified as a ISO 8601 UTC offset.
 	Offset *string                    `json:"offset,omitempty"`
 	Params map[string]json.RawMessage `json:"params,omitempty"`
@@ -77,7 +75,7 @@ func (s *AutoDateHistogramAggregation) UnmarshalJSON(data []byte) error {
 
 		case "buckets":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -108,11 +106,6 @@ func (s *AutoDateHistogramAggregation) UnmarshalJSON(data []byte) error {
 			}
 			s.Format = &o
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
 		case "minimum_interval":
 			if err := dec.Decode(&s.MinimumInterval); err != nil {
 				return fmt.Errorf("%s | %w", "MinimumInterval", err)
@@ -122,18 +115,6 @@ func (s *AutoDateHistogramAggregation) UnmarshalJSON(data []byte) error {
 			if err := dec.Decode(&s.Missing); err != nil {
 				return fmt.Errorf("%s | %w", "Missing", err)
 			}
-
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
 
 		case "offset":
 			var tmp json.RawMessage

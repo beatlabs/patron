@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package movetostep
 
@@ -29,7 +29,7 @@ import (
 
 // Request holds the request body struct for the package movetostep
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ilm/move_to_step/MoveToStepRequest.ts#L24-L36
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ilm/move_to_step/MoveToStepRequest.ts#L24-L36
 type Request struct {
 	CurrentStep *types.StepKey `json:"current_step,omitempty"`
 	NextStep    *types.StepKey `json:"next_step,omitempty"`
@@ -38,6 +38,7 @@ type Request struct {
 // NewRequest returns a Request
 func NewRequest() *Request {
 	r := &Request{}
+
 	return r
 }
 

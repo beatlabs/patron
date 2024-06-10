@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // NodeShard type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/Node.ts#L60-L71
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/Node.ts#L60-L71
 type NodeShard struct {
 	AllocationId          map[string]string                   `json:"allocation_id,omitempty"`
 	Index                 string                              `json:"index"`
@@ -81,7 +81,7 @@ func (s *NodeShard) UnmarshalJSON(data []byte) error {
 			}
 
 		case "primary":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -114,7 +114,7 @@ func (s *NodeShard) UnmarshalJSON(data []byte) error {
 
 		case "shard":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

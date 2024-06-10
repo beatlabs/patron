@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TransportHistogram type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/Stats.ts#L1092-L1106
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/nodes/_types/Stats.ts#L1092-L1106
 type TransportHistogram struct {
 	// Count The number of times a transport thread took a period of time within the
 	// bounds of this bucket to handle an inbound message.
@@ -60,7 +60,7 @@ func (s *TransportHistogram) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -75,7 +75,7 @@ func (s *TransportHistogram) UnmarshalJSON(data []byte) error {
 			}
 
 		case "ge_millis":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -90,7 +90,7 @@ func (s *TransportHistogram) UnmarshalJSON(data []byte) error {
 			}
 
 		case "lt_millis":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

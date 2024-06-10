@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -33,14 +33,12 @@ import (
 
 // BucketSortAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/pipeline.ts#L169-L190
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/pipeline.ts#L169-L190
 type BucketSortAggregation struct {
 	// From Buckets in positions prior to `from` will be truncated.
 	From *int `json:"from,omitempty"`
 	// GapPolicy The policy to apply when gaps are found in the data.
 	GapPolicy *gappolicy.GapPolicy `json:"gap_policy,omitempty"`
-	Meta      Metadata             `json:"meta,omitempty"`
-	Name      *string              `json:"name,omitempty"`
 	// Size The number of buckets to return.
 	// Defaults to all buckets of the parent aggregation.
 	Size *int `json:"size,omitempty"`
@@ -65,7 +63,7 @@ func (s *BucketSortAggregation) UnmarshalJSON(data []byte) error {
 
 		case "from":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -84,26 +82,9 @@ func (s *BucketSortAggregation) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "GapPolicy", err)
 			}
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
-
 		case "size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

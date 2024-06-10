@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // CgroupCpu type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/Stats.ts#L487-L504
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/nodes/_types/Stats.ts#L487-L504
 type CgroupCpu struct {
 	// CfsPeriodMicros The period of time, in microseconds, for how regularly all tasks in the same
 	// cgroup as the Elasticsearch process should have their access to CPU resources
@@ -64,7 +64,7 @@ func (s *CgroupCpu) UnmarshalJSON(data []byte) error {
 
 		case "cfs_period_micros":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -80,7 +80,7 @@ func (s *CgroupCpu) UnmarshalJSON(data []byte) error {
 
 		case "cfs_quota_micros":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

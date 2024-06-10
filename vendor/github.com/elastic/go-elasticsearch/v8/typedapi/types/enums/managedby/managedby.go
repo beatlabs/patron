@@ -16,22 +16,22 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 // Package managedby
 package managedby
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/_types/DataStream.ts#L32-L37
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/indices/_types/DataStream.ts#L32-L37
 type ManagedBy struct {
 	Name string
 }
 
 var (
-	IndexLifecycleManagement = ManagedBy{"Index Lifecycle Management"}
+	Ilm = ManagedBy{"Index Lifecycle Management"}
 
-	DataStreamLifecycle = ManagedBy{"Data stream lifecycle"}
+	Datastream = ManagedBy{"Data stream lifecycle"}
 
 	Unmanaged = ManagedBy{"Unmanaged"}
 )
@@ -44,9 +44,9 @@ func (m *ManagedBy) UnmarshalText(text []byte) error {
 	switch strings.ReplaceAll(strings.ToLower(string(text)), "\"", "") {
 
 	case "Index Lifecycle Management":
-		*m = IndexLifecycleManagement
+		*m = Ilm
 	case "Data stream lifecycle":
-		*m = DataStreamLifecycle
+		*m = Datastream
 	case "Unmanaged":
 		*m = Unmanaged
 	default:

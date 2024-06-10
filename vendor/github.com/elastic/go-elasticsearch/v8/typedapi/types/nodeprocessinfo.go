@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // NodeProcessInfo type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/info/types.ts#L391-L398
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/nodes/info/types.ts#L391-L398
 type NodeProcessInfo struct {
 	// Id Process identifier (PID)
 	Id int64 `json:"id"`
@@ -57,7 +57,7 @@ func (s *NodeProcessInfo) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "id":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -72,7 +72,7 @@ func (s *NodeProcessInfo) UnmarshalJSON(data []byte) error {
 			}
 
 		case "mlockall":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

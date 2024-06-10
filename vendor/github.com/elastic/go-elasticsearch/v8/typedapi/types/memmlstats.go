@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // MemMlStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/get_memory_stats/types.ts#L90-L111
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/get_memory_stats/types.ts#L90-L111
 type MemMlStats struct {
 	// AnomalyDetectors Amount of native memory set aside for anomaly detection jobs.
 	AnomalyDetectors ByteSize `json:"anomaly_detectors,omitempty"`
@@ -83,7 +83,7 @@ func (s *MemMlStats) UnmarshalJSON(data []byte) error {
 
 		case "anomaly_detectors_in_bytes":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -104,7 +104,7 @@ func (s *MemMlStats) UnmarshalJSON(data []byte) error {
 
 		case "data_frame_analytics_in_bytes":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -125,7 +125,7 @@ func (s *MemMlStats) UnmarshalJSON(data []byte) error {
 
 		case "max_in_bytes":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -146,7 +146,7 @@ func (s *MemMlStats) UnmarshalJSON(data []byte) error {
 
 		case "native_code_overhead_in_bytes":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -167,7 +167,7 @@ func (s *MemMlStats) UnmarshalJSON(data []byte) error {
 
 		case "native_inference_in_bytes":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

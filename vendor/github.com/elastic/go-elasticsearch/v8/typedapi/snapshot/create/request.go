@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package create
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package create
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/snapshot/create/SnapshotCreateRequest.ts#L24-L81
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/snapshot/create/SnapshotCreateRequest.ts#L24-L81
 type Request struct {
 
 	// FeatureStates Feature states to include in the snapshot. Each feature state includes one or
@@ -69,6 +69,7 @@ type Request struct {
 // NewRequest returns a Request
 func NewRequest() *Request {
 	r := &Request{}
+
 	return r
 }
 
@@ -104,7 +105,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			}
 
 		case "ignore_unavailable":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -118,7 +119,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			}
 
 		case "include_global_state":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -153,7 +154,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			}
 
 		case "partial":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

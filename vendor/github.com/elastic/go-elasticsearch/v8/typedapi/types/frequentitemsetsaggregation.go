@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // FrequentItemSetsAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L1158-L1182
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L1162-L1186
 type FrequentItemSetsAggregation struct {
 	// Fields Fields to analyze.
 	Fields []FrequentItemSetsField `json:"fields"`
@@ -72,7 +72,7 @@ func (s *FrequentItemSetsAggregation) UnmarshalJSON(data []byte) error {
 
 		case "minimum_set_size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -87,7 +87,7 @@ func (s *FrequentItemSetsAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "minimum_support":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -104,7 +104,7 @@ func (s *FrequentItemSetsAggregation) UnmarshalJSON(data []byte) error {
 
 		case "size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -34,7 +34,7 @@ import (
 
 // DateHistogramAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L187-L245
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L191-L249
 type DateHistogramAggregation struct {
 	// CalendarInterval Calendar-aware interval.
 	// Can be specified using the unit name, such as `month`, or as a single unit
@@ -56,8 +56,7 @@ type DateHistogramAggregation struct {
 	Interval   Duration                     `json:"interval,omitempty"`
 	// Keyed Set to `true` to associate a unique string key with each bucket and return
 	// the ranges as a hash rather than an array.
-	Keyed *bool    `json:"keyed,omitempty"`
-	Meta  Metadata `json:"meta,omitempty"`
+	Keyed *bool `json:"keyed,omitempty"`
 	// MinDocCount Only returns buckets that have `min_doc_count` number of documents.
 	// By default, all buckets between the first bucket that matches documents and
 	// the last one are returned.
@@ -65,7 +64,6 @@ type DateHistogramAggregation struct {
 	// Missing The value to apply to documents that do not have a value.
 	// By default, documents without a value are ignored.
 	Missing DateTime `json:"missing,omitempty"`
-	Name    *string  `json:"name,omitempty"`
 	// Offset Changes the start value of each bucket by the specified positive (`+`) or
 	// negative offset (`-`) duration.
 	Offset Duration `json:"offset,omitempty"`
@@ -136,7 +134,7 @@ func (s *DateHistogramAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "keyed":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -149,14 +147,9 @@ func (s *DateHistogramAggregation) UnmarshalJSON(data []byte) error {
 				s.Keyed = &v
 			}
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
 		case "min_doc_count":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -174,18 +167,6 @@ func (s *DateHistogramAggregation) UnmarshalJSON(data []byte) error {
 			if err := dec.Decode(&s.Missing); err != nil {
 				return fmt.Errorf("%s | %w", "Missing", err)
 			}
-
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
 
 		case "offset":
 			if err := dec.Decode(&s.Offset); err != nil {

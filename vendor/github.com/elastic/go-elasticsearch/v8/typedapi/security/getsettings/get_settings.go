@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 // Retrieve settings for the security system indices
 package getsettings
@@ -26,7 +26,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -203,7 +202,7 @@ func (r GetSettings) IsSuccess(providedCtx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	io.Copy(ioutil.Discard, res.Body)
+	io.Copy(io.Discard, res.Body)
 	err = res.Body.Close()
 	if err != nil {
 		return false, err

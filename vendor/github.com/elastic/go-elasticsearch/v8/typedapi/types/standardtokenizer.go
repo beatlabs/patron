@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // StandardTokenizer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/tokenizers.ts#L105-L108
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/analysis/tokenizers.ts#L105-L108
 type StandardTokenizer struct {
 	MaxTokenLength *int    `json:"max_token_length,omitempty"`
 	Type           string  `json:"type,omitempty"`
@@ -55,7 +55,7 @@ func (s *StandardTokenizer) UnmarshalJSON(data []byte) error {
 
 		case "max_token_length":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

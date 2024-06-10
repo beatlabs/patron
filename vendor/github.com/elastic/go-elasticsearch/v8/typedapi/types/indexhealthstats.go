@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // IndexHealthStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cluster/health/types.ts#L24-L34
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/cluster/health/types.ts#L24-L34
 type IndexHealthStats struct {
 	ActivePrimaryShards int                         `json:"active_primary_shards"`
 	ActiveShards        int                         `json:"active_shards"`
@@ -63,7 +63,7 @@ func (s *IndexHealthStats) UnmarshalJSON(data []byte) error {
 
 		case "active_primary_shards":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -79,7 +79,7 @@ func (s *IndexHealthStats) UnmarshalJSON(data []byte) error {
 
 		case "active_shards":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -95,7 +95,7 @@ func (s *IndexHealthStats) UnmarshalJSON(data []byte) error {
 
 		case "initializing_shards":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -111,7 +111,7 @@ func (s *IndexHealthStats) UnmarshalJSON(data []byte) error {
 
 		case "number_of_replicas":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -127,7 +127,7 @@ func (s *IndexHealthStats) UnmarshalJSON(data []byte) error {
 
 		case "number_of_shards":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -143,7 +143,7 @@ func (s *IndexHealthStats) UnmarshalJSON(data []byte) error {
 
 		case "relocating_shards":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -172,7 +172,7 @@ func (s *IndexHealthStats) UnmarshalJSON(data []byte) error {
 
 		case "unassigned_shards":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

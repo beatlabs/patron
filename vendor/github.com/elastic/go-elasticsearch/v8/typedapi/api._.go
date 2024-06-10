@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package typedapi
 
@@ -311,6 +311,7 @@ import (
 	ml_update_filter "github.com/elastic/go-elasticsearch/v8/typedapi/ml/updatefilter"
 	ml_update_job "github.com/elastic/go-elasticsearch/v8/typedapi/ml/updatejob"
 	ml_update_model_snapshot "github.com/elastic/go-elasticsearch/v8/typedapi/ml/updatemodelsnapshot"
+	ml_update_trained_model_deployment "github.com/elastic/go-elasticsearch/v8/typedapi/ml/updatetrainedmodeldeployment"
 	ml_upgrade_job_snapshot "github.com/elastic/go-elasticsearch/v8/typedapi/ml/upgradejobsnapshot"
 	ml_validate "github.com/elastic/go-elasticsearch/v8/typedapi/ml/validate"
 	ml_validate_detector "github.com/elastic/go-elasticsearch/v8/typedapi/ml/validatedetector"
@@ -1481,6 +1482,9 @@ type Ml struct {
 	// Updates certain properties of a snapshot.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-update-snapshot.html
 	UpdateModelSnapshot ml_update_model_snapshot.NewUpdateModelSnapshot
+	// Updates certain properties of trained model deployment.
+	// https://www.elastic.co/guide/en/elasticsearch/reference/current/update-trained-model-deployment.html
+	UpdateTrainedModelDeployment ml_update_trained_model_deployment.NewUpdateTrainedModelDeployment
 	// Upgrades a given job snapshot to the current major version.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-upgrade-job-model-snapshot.html
 	UpgradeJobSnapshot ml_upgrade_job_snapshot.NewUpgradeJobSnapshot
@@ -2617,6 +2621,7 @@ func New(tp elastictransport.Interface) *API {
 			UpdateFilter:                     ml_update_filter.NewUpdateFilterFunc(tp),
 			UpdateJob:                        ml_update_job.NewUpdateJobFunc(tp),
 			UpdateModelSnapshot:              ml_update_model_snapshot.NewUpdateModelSnapshotFunc(tp),
+			UpdateTrainedModelDeployment:     ml_update_trained_model_deployment.NewUpdateTrainedModelDeploymentFunc(tp),
 			UpgradeJobSnapshot:               ml_upgrade_job_snapshot.NewUpgradeJobSnapshotFunc(tp),
 			Validate:                         ml_validate.NewValidateFunc(tp),
 			ValidateDetector:                 ml_validate_detector.NewValidateDetectorFunc(tp),

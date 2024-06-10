@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // NGramTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/token_filters.ts#L266-L271
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/analysis/token_filters.ts#L268-L273
 type NGramTokenFilter struct {
 	MaxGram          *int               `json:"max_gram,omitempty"`
 	MinGram          *int               `json:"min_gram,omitempty"`
@@ -57,7 +57,7 @@ func (s *NGramTokenFilter) UnmarshalJSON(data []byte) error {
 
 		case "max_gram":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -73,7 +73,7 @@ func (s *NGramTokenFilter) UnmarshalJSON(data []byte) error {
 
 		case "min_gram":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

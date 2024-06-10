@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // HunspellTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/token_filters.ts#L200-L206
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/analysis/token_filters.ts#L202-L208
 type HunspellTokenFilter struct {
 	Dedup       *bool   `json:"dedup,omitempty"`
 	Dictionary  *string `json:"dictionary,omitempty"`
@@ -57,7 +57,7 @@ func (s *HunspellTokenFilter) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "dedup":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -95,7 +95,7 @@ func (s *HunspellTokenFilter) UnmarshalJSON(data []byte) error {
 			s.Locale = o
 
 		case "longest_only":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

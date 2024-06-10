@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // AllField type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/mapping/meta-fields.ts#L29-L40
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/mapping/meta-fields.ts#L29-L40
 type AllField struct {
 	Analyzer                 string `json:"analyzer"`
 	Enabled                  bool   `json:"enabled"`
@@ -73,7 +73,7 @@ func (s *AllField) UnmarshalJSON(data []byte) error {
 			s.Analyzer = o
 
 		case "enabled":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -87,7 +87,7 @@ func (s *AllField) UnmarshalJSON(data []byte) error {
 			}
 
 		case "omit_norms":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -125,7 +125,7 @@ func (s *AllField) UnmarshalJSON(data []byte) error {
 			s.Similarity = o
 
 		case "store":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -139,7 +139,7 @@ func (s *AllField) UnmarshalJSON(data []byte) error {
 			}
 
 		case "store_term_vector_offsets":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -153,7 +153,7 @@ func (s *AllField) UnmarshalJSON(data []byte) error {
 			}
 
 		case "store_term_vector_payloads":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -167,7 +167,7 @@ func (s *AllField) UnmarshalJSON(data []byte) error {
 			}
 
 		case "store_term_vector_positions":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -181,7 +181,7 @@ func (s *AllField) UnmarshalJSON(data []byte) error {
 			}
 
 		case "store_term_vectors":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // UserIndicesPrivileges type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/_types/Privileges.ts#L107-L129
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/security/_types/Privileges.ts#L129-L151
 type UserIndicesPrivileges struct {
 	// AllowRestrictedIndices Set to `true` if using wildcard or regular expressions for patterns that
 	// cover restricted indices. Implicitly, restricted indices have limited
@@ -72,7 +72,7 @@ func (s *UserIndicesPrivileges) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "allow_restricted_indices":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

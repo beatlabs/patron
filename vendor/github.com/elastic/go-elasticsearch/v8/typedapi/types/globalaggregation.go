@@ -16,62 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
-import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
-	"strconv"
-)
-
 // GlobalAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/bucket.ts#L485-L485
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L489-L489
 type GlobalAggregation struct {
-	Meta Metadata `json:"meta,omitempty"`
-	Name *string  `json:"name,omitempty"`
-}
-
-func (s *GlobalAggregation) UnmarshalJSON(data []byte) error {
-
-	dec := json.NewDecoder(bytes.NewReader(data))
-
-	for {
-		t, err := dec.Token()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return err
-		}
-
-		switch t {
-
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
-
-		}
-	}
-	return nil
 }
 
 // NewGlobalAggregation returns a GlobalAggregation.

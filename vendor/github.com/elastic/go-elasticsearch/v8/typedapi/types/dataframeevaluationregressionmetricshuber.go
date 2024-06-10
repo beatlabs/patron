@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // DataframeEvaluationRegressionMetricsHuber type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/DataframeEvaluation.ts#L117-L120
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/_types/DataframeEvaluation.ts#L117-L120
 type DataframeEvaluationRegressionMetricsHuber struct {
 	// Delta Approximates 1/2 (prediction - actual)2 for values much less than delta and
 	// approximates a straight line with slope delta for values much larger than
@@ -55,7 +55,7 @@ func (s *DataframeEvaluationRegressionMetricsHuber) UnmarshalJSON(data []byte) e
 		switch t {
 
 		case "delta":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

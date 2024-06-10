@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ClusterRemoteProxyInfo type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/cluster/remote_info/ClusterRemoteInfoResponse.ts#L41-L50
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/cluster/remote_info/ClusterRemoteInfoResponse.ts#L42-L51
 type ClusterRemoteProxyInfo struct {
 	Connected                 bool     `json:"connected"`
 	InitialConnectTimeout     Duration `json:"initial_connect_timeout"`
@@ -59,7 +59,7 @@ func (s *ClusterRemoteProxyInfo) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "connected":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -79,7 +79,7 @@ func (s *ClusterRemoteProxyInfo) UnmarshalJSON(data []byte) error {
 
 		case "max_proxy_socket_connections":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -100,7 +100,7 @@ func (s *ClusterRemoteProxyInfo) UnmarshalJSON(data []byte) error {
 
 		case "num_proxy_sockets_connected":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -139,7 +139,7 @@ func (s *ClusterRemoteProxyInfo) UnmarshalJSON(data []byte) error {
 			s.ServerName = o
 
 		case "skip_unavailable":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

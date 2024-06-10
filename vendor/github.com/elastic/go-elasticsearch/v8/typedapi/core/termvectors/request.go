@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package termvectors
 
@@ -29,7 +29,7 @@ import (
 
 // Request holds the request body struct for the package termvectors
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/termvectors/TermVectorsRequest.ts#L33-L118
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/termvectors/TermVectorsRequest.ts#L33-L118
 type Request struct {
 
 	// Doc An artificial document (a document not present in the index) for which you
@@ -46,6 +46,7 @@ func NewRequest() *Request {
 	r := &Request{
 		PerFieldAnalyzer: make(map[string]string, 0),
 	}
+
 	return r
 }
 

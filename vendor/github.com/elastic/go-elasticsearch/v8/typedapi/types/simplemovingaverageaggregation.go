@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // SimpleMovingAverageAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/pipeline.ts#L247-L250
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/pipeline.ts#L247-L250
 type SimpleMovingAverageAggregation struct {
 	// BucketsPath Path to the buckets that contain one set of values to correlate.
 	BucketsPath BucketsPath `json:"buckets_path,omitempty"`
@@ -43,10 +43,8 @@ type SimpleMovingAverageAggregation struct {
 	Format *string `json:"format,omitempty"`
 	// GapPolicy Policy to apply when gaps are found in the data.
 	GapPolicy *gappolicy.GapPolicy `json:"gap_policy,omitempty"`
-	Meta      Metadata             `json:"meta,omitempty"`
 	Minimize  *bool                `json:"minimize,omitempty"`
 	Model     string               `json:"model,omitempty"`
-	Name      *string              `json:"name,omitempty"`
 	Predict   *int                 `json:"predict,omitempty"`
 	Settings  EmptyObject          `json:"settings"`
 	Window    *int                 `json:"window,omitempty"`
@@ -89,13 +87,8 @@ func (s *SimpleMovingAverageAggregation) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "GapPolicy", err)
 			}
 
-		case "meta":
-			if err := dec.Decode(&s.Meta); err != nil {
-				return fmt.Errorf("%s | %w", "Meta", err)
-			}
-
 		case "minimize":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -113,21 +106,9 @@ func (s *SimpleMovingAverageAggregation) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Model", err)
 			}
 
-		case "name":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Name", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Name = &o
-
 		case "predict":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -148,7 +129,7 @@ func (s *SimpleMovingAverageAggregation) UnmarshalJSON(data []byte) error {
 
 		case "window":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -174,10 +155,8 @@ func (s SimpleMovingAverageAggregation) MarshalJSON() ([]byte, error) {
 		BucketsPath: s.BucketsPath,
 		Format:      s.Format,
 		GapPolicy:   s.GapPolicy,
-		Meta:        s.Meta,
 		Minimize:    s.Minimize,
 		Model:       s.Model,
-		Name:        s.Name,
 		Predict:     s.Predict,
 		Settings:    s.Settings,
 		Window:      s.Window,

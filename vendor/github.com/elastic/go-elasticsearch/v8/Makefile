@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-ELASTICSEARCH_DEFAULT_BUILD_VERSION = "8.13.2-SNAPSHOT"
+ELASTICSEARCH_DEFAULT_BUILD_VERSION = "8.14.0-SNAPSHOT"
 
 ##@ Test
 test-unit:  ## Run unit tests
@@ -24,6 +24,7 @@ endif
 test: test-unit
 
 test-integ:  ## Run integration tests
+	@mkdir -p tmp
 	@printf "\033[2m→ Running integration tests...\033[0m\n"
 	$(eval testintegtags += "integration")
 ifdef multinode
@@ -32,17 +33,15 @@ endif
 ifdef race
 	$(eval testintegargs += "-race")
 endif
-	$(eval testintegargs += "-cover" "-coverprofile=tmp/integration-client.cov" "-tags='$(testintegtags)'" "-timeout=1h")
-	@mkdir -p tmp
+	$(eval testintegargs += "-cover" "-coverpkg=github.com/elastic/go-elasticsearch/v8,github.com/elastic/go-elasticsearch/v8/esutil,github.com/elastic/go-elasticsearch/v8/typedapi" "-coverprofile=$(PWD)/tmp/integration-client.cov" "-tags='$(testintegtags)'" "-timeout=1h")
 	@if which gotestsum > /dev/null 2>&1 ; then \
-  		export ELASTICSEARCH_URL='http://elastic:elastic@localhost:9200'; \
-		echo "gotestsum --format=short-verbose --junitfile=tmp/integration-report.xml --" $(testintegargs); \
-		gotestsum --format=short-verbose --junitfile=tmp/integration-report.xml -- $(testintegargs) "."; \
-		gotestsum --format=short-verbose --junitfile=tmp/integration-report.xml -- $(testintegargs) "./esapi" "./esutil"; \
+  		cd internal/testing/e2e; \
+		echo "gotestsum --format=short-verbose --junitfile=$(PWD)/tmp/integration-report.xml --" $(testintegargs); \
+		gotestsum --format=short-verbose --junitfile=$(PWD)/tmp/integration-report.xml -- $(testintegargs); \
 	else \
-	  	export ELASTICSEARCH_URL='http://elastic:elastic@localhost:9200'; \
-		echo "go test -v" $(testintegargs) "."; \
-		go test -v $(testintegargs) "./esapi" "./esutil"; \
+	  	cd internal/testing/e2e; \
+		echo "go test -v -count=1" $(testintegargs); \
+		go test -v -count=1 $(testintegargs); \
 	fi;
 
 test-api:  ## Run generated API integration tests
@@ -156,7 +155,6 @@ test-coverage:  ## Generate test coverage report
 lint:  ## Run lint on the package
 	@printf "\033[2m→ Running lint...\033[0m\n"
 	go vet github.com/elastic/go-elasticsearch/...
-	go list github.com/elastic/go-elasticsearch/... | 'grep' -v internal | xargs golint -set_exit_status
 	@{ \
 		set -e ; \
 		trap "test -d ../../../.git && git checkout --quiet go.mod" INT TERM EXIT; \

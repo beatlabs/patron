@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // CompletionSuggestOption type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/search/_types/suggester.ts#L73-L84
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/search/_types/suggester.ts#L73-L84
 type CompletionSuggestOption struct {
 	CollateMatch *bool                      `json:"collate_match,omitempty"`
 	Contexts     map[string][]Context       `json:"contexts,omitempty"`
@@ -61,7 +61,7 @@ func (s *CompletionSuggestOption) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "collate_match":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -113,7 +113,7 @@ func (s *CompletionSuggestOption) UnmarshalJSON(data []byte) error {
 			}
 
 		case "score":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -129,7 +129,7 @@ func (s *CompletionSuggestOption) UnmarshalJSON(data []byte) error {
 			}
 
 		case "_score":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

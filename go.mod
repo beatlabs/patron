@@ -10,8 +10,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.31.4
 	github.com/eclipse/paho.golang v0.21.0
-	github.com/elastic/elastic-transport-go/v8 v8.5.0
-	github.com/elastic/go-elasticsearch/v8 v8.13.1
+	github.com/elastic/elastic-transport-go/v8 v8.6.0
+	github.com/elastic/go-elasticsearch/v8 v8.14.0
 	github.com/go-redis/redis/extra/rediscmd v0.2.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.8.1
@@ -82,7 +82,7 @@ require (
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240415180920-8c6c420018be // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // AnalyzeDetail type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/analyze/types.ts#L24-L30
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/indices/analyze/types.ts#L24-L30
 type AnalyzeDetail struct {
 	Analyzer       *AnalyzerDetail    `json:"analyzer,omitempty"`
 	Charfilters    []CharFilterDetail `json:"charfilters,omitempty"`
@@ -66,7 +66,7 @@ func (s *AnalyzeDetail) UnmarshalJSON(data []byte) error {
 			}
 
 		case "custom_analyzer":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

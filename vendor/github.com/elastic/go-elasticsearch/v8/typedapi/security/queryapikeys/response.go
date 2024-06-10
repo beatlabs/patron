@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package queryapikeys
 
@@ -34,7 +34,7 @@ import (
 
 // Response holds the response body struct for the package queryapikeys
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/security/query_api_keys/QueryApiKeysResponse.ts#L26-L45
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/security/query_api_keys/QueryApiKeysResponse.ts#L26-L45
 type Response struct {
 
 	// Aggregations The aggregations result, if requested.
@@ -183,7 +183,7 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 								s.Aggregations[elems[1]] = o
 
 							default:
-								o := make(map[string]interface{}, 0)
+								o := make(map[string]any, 0)
 								if err := dec.Decode(&o); err != nil {
 									return fmt.Errorf("%s | %w", "Aggregations", err)
 								}
@@ -193,7 +193,7 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 							return errors.New("cannot decode JSON for field Aggregations")
 						}
 					} else {
-						o := make(map[string]interface{}, 0)
+						o := make(map[string]any, 0)
 						if err := dec.Decode(&o); err != nil {
 							return fmt.Errorf("%s | %w", "Aggregations", err)
 						}
@@ -209,7 +209,7 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 
 		case "count":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -225,7 +225,7 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 
 		case "total":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

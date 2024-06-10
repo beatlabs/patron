@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -32,7 +32,7 @@ import (
 
 // VariableWidthHistogramBucket type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/Aggregate.ts#L366-L373
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/Aggregate.ts#L366-L373
 type VariableWidthHistogramBucket struct {
 	Aggregations map[string]Aggregate `json:"-"`
 	DocCount     int64                `json:"doc_count"`
@@ -60,7 +60,7 @@ func (s *VariableWidthHistogramBucket) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "doc_count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -75,7 +75,7 @@ func (s *VariableWidthHistogramBucket) UnmarshalJSON(data []byte) error {
 			}
 
 		case "key":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -103,7 +103,7 @@ func (s *VariableWidthHistogramBucket) UnmarshalJSON(data []byte) error {
 			s.KeyAsString = &o
 
 		case "max":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -131,7 +131,7 @@ func (s *VariableWidthHistogramBucket) UnmarshalJSON(data []byte) error {
 			s.MaxAsString = &o
 
 		case "min":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -603,7 +603,7 @@ func (s *VariableWidthHistogramBucket) UnmarshalJSON(data []byte) error {
 							}
 							s.Aggregations[elems[1]] = o
 
-						case "box_plot":
+						case "boxplot":
 							o := NewBoxPlotAggregate()
 							if err := dec.Decode(&o); err != nil {
 								return fmt.Errorf("%s | %w", "Aggregations", err)
@@ -653,7 +653,7 @@ func (s *VariableWidthHistogramBucket) UnmarshalJSON(data []byte) error {
 							s.Aggregations[elems[1]] = o
 
 						default:
-							o := make(map[string]interface{}, 0)
+							o := make(map[string]any, 0)
 							if err := dec.Decode(&o); err != nil {
 								return fmt.Errorf("%s | %w", "Aggregations", err)
 							}
@@ -663,7 +663,7 @@ func (s *VariableWidthHistogramBucket) UnmarshalJSON(data []byte) error {
 						return errors.New("cannot decode JSON for field Aggregations")
 					}
 				} else {
-					o := make(map[string]interface{}, 0)
+					o := make(map[string]any, 0)
 					if err := dec.Decode(&o); err != nil {
 						return fmt.Errorf("%s | %w", "Aggregations", err)
 					}
@@ -680,7 +680,7 @@ func (s *VariableWidthHistogramBucket) UnmarshalJSON(data []byte) error {
 func (s VariableWidthHistogramBucket) MarshalJSON() ([]byte, error) {
 	type opt VariableWidthHistogramBucket
 	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]interface{}, 0)
+	tmp := make(map[string]any, 0)
 
 	data, err := json.Marshal(opt(s))
 	if err != nil {

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // PublishedClusterStates type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/Stats.ts#L263-L276
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/nodes/_types/Stats.ts#L263-L276
 type PublishedClusterStates struct {
 	// CompatibleDiffs Number of compatible differences between published cluster states.
 	CompatibleDiffs *int64 `json:"compatible_diffs,omitempty"`
@@ -57,7 +57,7 @@ func (s *PublishedClusterStates) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "compatible_diffs":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -72,7 +72,7 @@ func (s *PublishedClusterStates) UnmarshalJSON(data []byte) error {
 			}
 
 		case "full_states":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -87,7 +87,7 @@ func (s *PublishedClusterStates) UnmarshalJSON(data []byte) error {
 			}
 
 		case "incompatible_diffs":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

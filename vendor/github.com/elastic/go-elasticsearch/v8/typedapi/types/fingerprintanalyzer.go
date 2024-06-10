@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // FingerprintAnalyzer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/analysis/analyzers.ts#L37-L45
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/analysis/analyzers.ts#L37-L45
 type FingerprintAnalyzer struct {
 	MaxOutputSize    int      `json:"max_output_size"`
 	PreserveOriginal bool     `json:"preserve_original"`
@@ -59,7 +59,7 @@ func (s *FingerprintAnalyzer) UnmarshalJSON(data []byte) error {
 
 		case "max_output_size":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -74,7 +74,7 @@ func (s *FingerprintAnalyzer) UnmarshalJSON(data []byte) error {
 			}
 
 		case "preserve_original":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

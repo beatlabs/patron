@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // MatrixStatsFields type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/aggregations/Aggregate.ts#L763-L772
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/Aggregate.ts#L763-L772
 type MatrixStatsFields struct {
 	Correlation map[string]Float64 `json:"correlation"`
 	Count       int64              `json:"count"`
@@ -67,7 +67,7 @@ func (s *MatrixStatsFields) UnmarshalJSON(data []byte) error {
 			}
 
 		case "count":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -90,7 +90,7 @@ func (s *MatrixStatsFields) UnmarshalJSON(data []byte) error {
 			}
 
 		case "kurtosis":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -106,7 +106,7 @@ func (s *MatrixStatsFields) UnmarshalJSON(data []byte) error {
 			}
 
 		case "mean":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -127,7 +127,7 @@ func (s *MatrixStatsFields) UnmarshalJSON(data []byte) error {
 			}
 
 		case "skewness":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -143,7 +143,7 @@ func (s *MatrixStatsFields) UnmarshalJSON(data []byte) error {
 			}
 
 		case "variance":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

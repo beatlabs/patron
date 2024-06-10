@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -32,7 +32,7 @@ import (
 
 // MultiSearchItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_global/msearch/types.ts#L213-L216
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/msearch/types.ts#L213-L216
 type MultiSearchItem struct {
 	Aggregations    map[string]Aggregate       `json:"aggregations,omitempty"`
 	Clusters_       *ClusterStatistics         `json:"_clusters,omitempty"`
@@ -522,7 +522,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 								}
 								s.Aggregations[elems[1]] = o
 
-							case "box_plot":
+							case "boxplot":
 								o := NewBoxPlotAggregate()
 								if err := dec.Decode(&o); err != nil {
 									return fmt.Errorf("%s | %w", "Aggregations", err)
@@ -572,7 +572,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 								s.Aggregations[elems[1]] = o
 
 							default:
-								o := make(map[string]interface{}, 0)
+								o := make(map[string]any, 0)
 								if err := dec.Decode(&o); err != nil {
 									return fmt.Errorf("%s | %w", "Aggregations", err)
 								}
@@ -582,7 +582,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 							return errors.New("cannot decode JSON for field Aggregations")
 						}
 					} else {
-						o := make(map[string]interface{}, 0)
+						o := make(map[string]any, 0)
 						if err := dec.Decode(&o); err != nil {
 							return fmt.Errorf("%s | %w", "Aggregations", err)
 						}
@@ -610,7 +610,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 			}
 
 		case "max_score":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -626,7 +626,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 			}
 
 		case "num_reduce_phases":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -662,7 +662,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 
 		case "status":
 
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -720,7 +720,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 								s.Suggest[elems[1]] = append(s.Suggest[elems[1]], o)
 
 							default:
-								o := make(map[string]interface{}, 0)
+								o := make(map[string]any, 0)
 								if err := dec.Decode(&o); err != nil {
 									return fmt.Errorf("%s | %w", "Suggest", err)
 								}
@@ -730,7 +730,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 							return errors.New("cannot decode JSON for field Suggest")
 						}
 					} else {
-						o := make(map[string]interface{}, 0)
+						o := make(map[string]any, 0)
 						if err := dec.Decode(&o); err != nil {
 							return fmt.Errorf("%s | %w", "Suggest", err)
 						}
@@ -740,7 +740,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 			}
 
 		case "terminated_early":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -754,7 +754,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 			}
 
 		case "timed_out":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -768,7 +768,7 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 			}
 
 		case "took":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

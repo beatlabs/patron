@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ScriptScoreQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/_types/query_dsl/specialized.ts#L326-L340
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/query_dsl/specialized.ts#L326-L340
 type ScriptScoreQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -67,7 +67,7 @@ func (s *ScriptScoreQuery) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "boost":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -83,7 +83,7 @@ func (s *ScriptScoreQuery) UnmarshalJSON(data []byte) error {
 			}
 
 		case "min_score":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package putmapping
 
@@ -34,7 +34,7 @@ import (
 
 // Request holds the request body struct for the package putmapping
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/put_mapping/IndicesPutMappingRequest.ts#L42-L149
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/indices/put_mapping/IndicesPutMappingRequest.ts#L42-L149
 type Request struct {
 
 	// DateDetection Controls whether dynamic date detection is enabled.
@@ -74,6 +74,7 @@ func NewRequest() *Request {
 	r := &Request{
 		Properties: make(map[string]types.Property, 0),
 	}
+
 	return r
 }
 
@@ -104,7 +105,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "date_detection":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -159,7 +160,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			}
 
 		case "numeric_detection":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -179,7 +180,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
-				kind := make(map[string]interface{})
+				kind := make(map[string]any)
 				buf := bytes.NewReader(message)
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
@@ -466,6 +467,12 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 					s.Properties[key] = oo
 				case "long_range":
 					oo := types.NewLongRangeProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Properties[key] = oo
+				case "icu_collation_keyword":
+					oo := types.NewIcuCollationProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}

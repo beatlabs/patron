@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // JobConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/ml/_types/Job.ts#L182-L283
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/_types/Job.ts#L182-L283
 type JobConfig struct {
 	// AllowLazyOpen Advanced configuration option. Specifies whether this job can open when there
 	// is insufficient machine learning node capacity for it to be immediately
@@ -135,7 +135,7 @@ func (s *JobConfig) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "allow_lazy_open":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -169,7 +169,7 @@ func (s *JobConfig) UnmarshalJSON(data []byte) error {
 			}
 
 		case "daily_model_snapshot_retention_after_days":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -233,7 +233,7 @@ func (s *JobConfig) UnmarshalJSON(data []byte) error {
 			}
 
 		case "model_snapshot_retention_days":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -248,7 +248,7 @@ func (s *JobConfig) UnmarshalJSON(data []byte) error {
 			}
 
 		case "renormalization_window_days":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -268,7 +268,7 @@ func (s *JobConfig) UnmarshalJSON(data []byte) error {
 			}
 
 		case "results_retention_days":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

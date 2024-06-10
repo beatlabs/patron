@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // Pool type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/nodes/_types/Stats.ts#L878-L895
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/nodes/_types/Stats.ts#L878-L895
 type Pool struct {
 	// MaxInBytes Maximum amount of memory, in bytes, available for use by the heap.
 	MaxInBytes *int64 `json:"max_in_bytes,omitempty"`
@@ -59,7 +59,7 @@ func (s *Pool) UnmarshalJSON(data []byte) error {
 		switch t {
 
 		case "max_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -74,7 +74,7 @@ func (s *Pool) UnmarshalJSON(data []byte) error {
 			}
 
 		case "peak_max_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -89,7 +89,7 @@ func (s *Pool) UnmarshalJSON(data []byte) error {
 			}
 
 		case "peak_used_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:
@@ -104,7 +104,7 @@ func (s *Pool) UnmarshalJSON(data []byte) error {
 			}
 
 		case "used_in_bytes":
-			var tmp interface{}
+			var tmp any
 			dec.Decode(&tmp)
 			switch v := tmp.(type) {
 			case string:

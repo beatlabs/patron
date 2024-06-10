@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1
+// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
 
 package types
 
@@ -29,7 +29,7 @@ import (
 
 // IndexSettingsAnalysis type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/5bf86339cd4bda77d07f6eaa6789b72f9c0279b1/specification/indices/_types/IndexSettings.ts#L317-L323
+// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/indices/_types/IndexSettings.ts#L317-L323
 type IndexSettingsAnalysis struct {
 	Analyzer   map[string]Analyzer    `json:"analyzer,omitempty"`
 	CharFilter map[string]CharFilter  `json:"char_filter,omitempty"`
@@ -60,7 +60,7 @@ func (s *IndexSettingsAnalysis) UnmarshalJSON(data []byte) error {
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
-				kind := make(map[string]interface{})
+				kind := make(map[string]any)
 				buf := bytes.NewReader(message)
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
@@ -169,7 +169,7 @@ func (s *IndexSettingsAnalysis) UnmarshalJSON(data []byte) error {
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
-				kind := make(map[string]interface{})
+				kind := make(map[string]any)
 				buf := bytes.NewReader(message)
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
@@ -222,7 +222,7 @@ func (s *IndexSettingsAnalysis) UnmarshalJSON(data []byte) error {
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
-				kind := make(map[string]interface{})
+				kind := make(map[string]any)
 				buf := bytes.NewReader(message)
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
@@ -475,12 +475,6 @@ func (s *IndexSettingsAnalysis) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Filter[key] = oo
-				case "icu_tokenizer":
-					oo := NewIcuTokenizer()
-					if err := localDec.Decode(&oo); err != nil {
-						return err
-					}
-					s.Filter[key] = oo
 				case "icu_collation":
 					oo := NewIcuCollationTokenFilter()
 					if err := localDec.Decode(&oo); err != nil {
@@ -533,12 +527,14 @@ func (s *IndexSettingsAnalysis) UnmarshalJSON(data []byte) error {
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
-				kind := make(map[string]interface{})
+				kind := make(map[string]any)
 				buf := bytes.NewReader(message)
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)
 				buf.Seek(0, io.SeekStart)
-
+				if _, ok := kind["type"]; !ok {
+					kind["type"] = "custom"
+				}
 				switch kind["type"] {
 				case "lowercase":
 					oo := NewLowercaseNormalizer()
@@ -568,7 +564,7 @@ func (s *IndexSettingsAnalysis) UnmarshalJSON(data []byte) error {
 			refs := make(map[string]json.RawMessage, 0)
 			dec.Decode(&refs)
 			for key, message := range refs {
-				kind := make(map[string]interface{})
+				kind := make(map[string]any)
 				buf := bytes.NewReader(message)
 				localDec := json.NewDecoder(buf)
 				localDec.Decode(&kind)

@@ -77,14 +77,14 @@ func (m message) ACK() error {
 	} else {
 		patrontrace.SetSpanSuccess(m.span)
 	}
-	messageCountInc(m.queue, ackMessageState, err)
+	observeMessageCountInc(m.ctx, m.queue, ackMessageState, err)
 	return err
 }
 
 func (m message) NACK() error {
 	defer m.span.End()
 	err := m.msg.Nack(false, m.requeue)
-	messageCountInc(m.queue, nackMessageState, err)
+	observeMessageCountInc(m.ctx, m.queue, nackMessageState, err)
 	if err != nil {
 		patrontrace.SetSpanError(m.span, "failed to NACK message", err)
 	} else {

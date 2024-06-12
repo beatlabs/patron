@@ -9,11 +9,13 @@ import (
 
 	patronamqp "github.com/beatlabs/patron/client/amqp"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -26,7 +28,21 @@ const (
 
 func TestRun(t *testing.T) {
 	require.NoError(t, createQueue())
+
+	// Setup tracing
 	t.Cleanup(func() { traceExporter.Reset() })
+
+	// Setup metrics
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		err := provider.Shutdown(context.Background())
+		if err != nil {
+			require.NoError(t, err)
+		}
+	}()
+
+	otel.SetMeterProvider(provider)
 
 	ctx, cnl := context.WithCancel(context.Background())
 
@@ -97,9 +113,14 @@ func TestRun(t *testing.T) {
 	assertSpan(t, expectedSpan, spans[0])
 	assertSpan(t, expectedSpan, spans[1])
 
-	assert.Equal(t, 1, testutil.CollectAndCount(messageAge, "component_amqp_message_age"))
-	assert.Equal(t, 2, testutil.CollectAndCount(messageCounterVec, "component_amqp_message_counter"))
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(queueSize, "component_amqp_queue_size"), 0)
+	// Metrics
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Equal(t, 3, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	assert.Equal(t, "amqp.publish.duration", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
+	assert.Equal(t, "amqp.message.age", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
+	assert.Equal(t, "amqp.message.counter", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
 }
 
 func createQueue() error {

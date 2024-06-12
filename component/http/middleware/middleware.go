@@ -173,8 +173,6 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) (F
 			corID := getOrSetCorrelationID(r.Header)
 			lw := newResponseWriter(w, true)
 
-			// TODO: Correlation id is needed?
-
 			otelhttp.NewMiddleware(path)(next).ServeHTTP(lw, r)
 			logRequestResponse(corID, lw, r)
 			if log.Enabled(slog.LevelError) && statusCodeLogger.shouldLog(lw.status) {

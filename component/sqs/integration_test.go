@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
 
 const (
@@ -29,7 +31,20 @@ type testMessage struct {
 }
 
 func Test_SQS_Consume(t *testing.T) {
+	// Trace setup
 	t.Cleanup(func() { traceExporter.Reset() })
+
+	// Metrics setup
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		err := provider.Shutdown(context.Background())
+		if err != nil {
+			require.NoError(t, err)
+		}
+	}()
+
+	otel.SetMeterProvider(provider)
 
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"
@@ -85,9 +100,14 @@ func Test_SQS_Consume(t *testing.T) {
 	assertSpan(t, expected, spans[1])
 	assertSpan(t, expected, spans[2])
 
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageAge, "component_sqs_message_age"), 1)
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageCounterVec, "component_sqs_message_counter"), 1)
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(queueSize, "component_sqs_queue_size"), 1)
+	// Metrics
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Equal(t, 3, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	assert.Equal(t, "sqs.message.age", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
+	assert.Equal(t, "sqs.message.counter", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
+	assert.Equal(t, "sqs.queue.size", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
 }
 
 func sendMessage(t *testing.T, client *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {

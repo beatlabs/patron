@@ -45,8 +45,17 @@ func init() {
 }
 
 func observeMessageCountInc(ctx context.Context, queue string, state messageState, err error) {
-	messageCounter.Add(ctx, 1, metric.WithAttributes(queueAttributes(queue),
-		attribute.String("state", string(state)),
+	var stateAttr attribute.KeyValue
+	switch state {
+	case ackMessageState:
+		stateAttr = ackStateAttr
+	case nackMessageState:
+		stateAttr = nackStateAttr
+	case fetchedMessageState:
+		stateAttr = fetchedStateAttr
+	}
+
+	messageCounter.Add(ctx, 1, metric.WithAttributes(queueAttributes(queue), stateAttr,
 		observability.StatusAttribute(err)))
 }
 

@@ -35,13 +35,7 @@ func TestRun(t *testing.T) {
 	// Setup metrics
 	read := metricsdk.NewManualReader()
 	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		err := provider.Shutdown(context.Background())
-		if err != nil {
-			require.NoError(t, err)
-		}
-	}()
-
+	defer func() { require.NoError(t, provider.Shutdown(context.Background())) }()
 	otel.SetMeterProvider(provider)
 
 	ctx, cnl := context.WithCancel(context.Background())

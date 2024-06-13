@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"strconv"
 	"sync"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/beatlabs/patron/observability/log"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -23,10 +21,6 @@ import (
 const (
 	consumerComponent = "kafka-consumer"
 	subsystem         = "kafka"
-	messageReceived   = "received"
-	messageProcessed  = "processed"
-	messageErrored    = "errored"
-	messageSkipped    = "skipped"
 )
 
 const (
@@ -36,64 +30,6 @@ const (
 	defaultBatchTimeout    = 100 * time.Millisecond
 	defaultFailureStrategy = ExitStrategy
 )
-
-var (
-	consumerErrors           *prometheus.CounterVec
-	topicPartitionOffsetDiff *prometheus.GaugeVec
-	messageStatus            *prometheus.CounterVec
-)
-
-func init() {
-	consumerErrors = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: subsystem,
-			Name:      "consumer_errors",
-			Help:      "Consumer errors, classified by consumer name",
-		},
-		[]string{"name"},
-	)
-
-	topicPartitionOffsetDiff = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "component",
-			Subsystem: subsystem,
-			Name:      "offset_diff",
-			Help:      "Message offset difference with high watermark, classified by topic and partition",
-		},
-		[]string{"group", "topic", "partition"},
-	)
-
-	messageStatus = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: subsystem,
-			Name:      "message_status",
-			Help:      "Message status counter (received, processed, errored) classified by topic and partition",
-		}, []string{"status", "group", "topic"},
-	)
-
-	prometheus.MustRegister(
-		consumerErrors,
-		topicPartitionOffsetDiff,
-		messageStatus,
-	)
-}
-
-// consumerErrorsInc increments the number of errors encountered by a specific consumer.
-func consumerErrorsInc(name string) {
-	consumerErrors.WithLabelValues(name).Inc()
-}
-
-// topicPartitionOffsetDiffGaugeSet creates a new Gauge that measures partition offsets.
-func topicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high, offset int64) {
-	topicPartitionOffsetDiff.WithLabelValues(group, topic, strconv.FormatInt(int64(partition), 10)).Set(float64(high - offset))
-}
-
-// messageStatusCountInc increments the messageStatus counter for a certain status.
-func messageStatusCountInc(status, group, topic string) {
-	messageStatus.WithLabelValues(status, group, topic).Inc()
-}
 
 // New initializes a new  kafka consumer component with support for functional configuration.
 // The default failure strategy is the ExitStrategy.
@@ -222,7 +158,7 @@ func (c *Component) processing(ctx context.Context) error {
 			}
 		}
 
-		consumerErrorsInc(c.name)
+		consumerErrorsInc(ctx, c.name)
 
 		if c.retries > 0 {
 			if handler.processedMessages {
@@ -329,8 +265,8 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			if ok {
 				slog.Debug("message claimed", slog.String("value", string(msg.Value)),
 					slog.Time("timestamp", msg.Timestamp), slog.String("topic", msg.Topic))
-				topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-				messageStatusCountInc(messageReceived, c.group, msg.Topic)
+				topicPartitionOffsetDiffGaugeSet(c.ctx, c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
+				messageStatusCountInc(c.ctx, messageReceived, c.group, msg.Topic)
 				err := c.insertMessage(session, msg)
 				if err != nil {
 					return err
@@ -362,8 +298,8 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 
 	messages := make([]Message, 0, len(c.msgBuf))
 	for _, msg := range c.msgBuf {
-		messageStatusCountInc(messageProcessed, c.group, msg.Topic)
 		ctx, sp := c.getContextWithCorrelation(msg)
+		messageStatusCountInc(ctx, messageProcessed, c.group, msg.Topic)
 		messages = append(messages, NewMessage(ctx, sp, msg))
 	}
 
@@ -404,7 +340,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 		for _, m := range messages {
 			patrontrace.SetSpanError(m.Span(), "executing exit strategy", err)
 			m.Span().End()
-			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
+			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Message().Topic)
 		}
 		slog.Error("could not process message(s)")
 		c.err = err
@@ -413,8 +349,8 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 		for _, m := range messages {
 			patrontrace.SetSpanError(m.Span(), "executing skip strategy", err)
 			m.Span().End()
-			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
-			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
+			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Message().Topic)
+			messageStatusCountInc(m.Context(), messageSkipped, c.group, m.Message().Topic)
 		}
 		slog.Error("could not process message(s) so skipping with error", log.ErrorAttr(err))
 	default:

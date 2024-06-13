@@ -7,16 +7,9 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/observability"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-)
-
-var (
-	messageAge1        *prometheus.GaugeVec
-	messageCounterVec1 *prometheus.CounterVec
-	queueSize1         *prometheus.GaugeVec
 )
 
 var (

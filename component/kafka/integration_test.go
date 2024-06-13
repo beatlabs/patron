@@ -15,10 +15,12 @@ import (
 	"github.com/IBM/sarama"
 	kafkaclient "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -35,7 +37,16 @@ const (
 
 func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, createTopics(broker, successTopic1))
+
+	// Setup tracing
 	t.Cleanup(func() { traceExporter.Reset() })
+
+	// Setup metrics
+	// Setup metrics
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() { require.NoError(t, provider.Shutdown(context.Background())) }()
+	otel.SetMeterProvider(provider)
 
 	// Test parameters
 	numOfMessagesToSend := 100
@@ -118,9 +129,14 @@ func TestKafkaComponent_Success(t *testing.T) {
 		assertSpan(t, expectedSpan, span)
 	}
 
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(consumerErrors, "component_kafka_consumer_errors"), 0)
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(topicPartitionOffsetDiff, "component_kafka_offset_diff"), 1)
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageStatus, "component_kafka_message_status"), 1)
+	// Metrics
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Equal(t, 3, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	assert.Equal(t, "kafka.publish.count", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
+	assert.Equal(t, "kafka.consumer.offset.diff", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
+	assert.Equal(t, "kafka.message.status", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
 }
 
 func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {

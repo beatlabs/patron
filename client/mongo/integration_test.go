@@ -16,8 +16,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
-// TODO: introduce metrics?
-
 func TestConnectAndExecute(t *testing.T) {
 	// Setup tracing monitoring
 	exp := tracetest.NewInMemoryExporter()
@@ -48,6 +46,7 @@ func TestConnectAndExecute(t *testing.T) {
 		collectedMetrics := &metricdata.ResourceMetrics{}
 		assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
 		assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+		assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics[0].Metrics))
 	})
 
 	t.Run("failure", func(t *testing.T) {
@@ -61,5 +60,6 @@ func TestConnectAndExecute(t *testing.T) {
 		collectedMetrics := &metricdata.ResourceMetrics{}
 		assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
 		assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+		assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics[0].Metrics))
 	})
 }

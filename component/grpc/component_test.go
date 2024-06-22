@@ -12,7 +12,10 @@ import (
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -148,6 +151,15 @@ func TestComponent_Run_Unary(t *testing.T) {
 func TestComponent_Run_Stream(t *testing.T) {
 	t.Cleanup(func() { traceExporter.Reset() })
 
+	// Metrics monitoring set up
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		assert.NoError(t, provider.Shutdown(context.Background()))
+	}()
+
+	otel.SetMeterProvider(provider)
+
 	cmp, err := New(60000, WithReflection())
 	require.NoError(t, err)
 	examples.RegisterGreeterServer(cmp.Server(), &server{})
@@ -223,11 +235,11 @@ func TestComponent_Run_Stream(t *testing.T) {
 				assertSpan(t, expectedSpan, spans[0])
 			}
 
-			// TODO: Assert metrics
-			// assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcHandledMetric, "component_grpc_handled_total"), 1)
-			// rpcHandledMetric.Reset()
-			// assert.GreaterOrEqual(t, testutil.CollectAndCount(rpcLatencyMetric, "component_grpc_handled_seconds"), 1)
-			// rpcLatencyMetric.Reset()
+			// Metrics
+			collectedMetrics := &metricdata.ResourceMetrics{}
+			assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+			assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+			assert.Equal(t, 5, len(collectedMetrics.ScopeMetrics[0].Metrics))
 
 			assert.NoError(t, client.CloseSend())
 		})

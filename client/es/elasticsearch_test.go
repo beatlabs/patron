@@ -2,6 +2,7 @@ package es
 
 import (
 	"context"
+	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -11,12 +12,27 @@ import (
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestNew(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
+
+	// Setup metrics
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		err := provider.Shutdown(context.Background())
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	otel.SetMeterProvider(provider)
 
 	responseMsg := `[{"acknowledged": true, "shards_acknowledged": true, "index": "test"}]`
 	ctx, indexName := context.Background(), "test_index"
@@ -57,4 +73,10 @@ func TestNew(t *testing.T) {
 	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	assert.Len(t, exp.GetSpans(), 1)
+
+	// Metrics
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics[0].Metrics))
 }

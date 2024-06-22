@@ -39,6 +39,8 @@ func (m *prometheusMetrics) evict(path string, context validationContext, age in
 	m.operations.WithLabelValues(path, "evict", validationReason[context]).Inc()
 }
 
+// TODO: Metrics move to OpenTelemetry.
+
 // newPrometheusMetrics constructs a new prometheus metrics implementation instance.
 func newPrometheusMetrics() *prometheusMetrics {
 	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{

@@ -6,10 +6,11 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 )
 
+// TODO: Metrics are not supported yet.
+
 // New creates a new elasticsearch client with tracing capabilities.
 func New(cfg elasticsearch.Config, version string) (*elasticsearch.Client, error) {
 	cfg.Instrumentation = elastictransport.NewOtelInstrumentation(nil, false, version)
-	cfg.EnableMetrics = true
 
 	return elasticsearch.NewClient(cfg)
 }

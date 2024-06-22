@@ -31,6 +31,8 @@ var (
 	statusMap      = map[status]string{closed: "closed", opened: "opened"}
 )
 
+// TODO: Metrics move to OpenTelemetry.
+
 func init() {
 	breakerCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{

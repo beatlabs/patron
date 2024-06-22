@@ -73,6 +73,7 @@ func TestRun(t *testing.T) {
 	collectedMetrics := &metricdata.ResourceMetrics{}
 	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
 	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics[0].Metrics))
 
 	conn, err := amqp.Dial(endpoint)
 	require.NoError(t, err)

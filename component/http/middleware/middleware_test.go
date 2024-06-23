@@ -170,8 +170,6 @@ func TestNewLoggingTracing(t *testing.T) {
 	}
 }
 
-// TODO: test the actual logging and tracing with OT
-
 // TestSpanLogError tests whether an HTTP handler with a tracing middleware adds a log event in case of we return an error.
 func TestSpanLogError(t *testing.T) {
 	// Setup tracing

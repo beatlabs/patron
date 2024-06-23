@@ -7,21 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-func Test_metricRoute(t *testing.T) {
-	route := MetricRoute()
-	assert.Equal(t, "GET /metrics", route.path)
-
-	resp := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodGet, "/metrics", nil)
-	require.NoError(t, err)
-
-	route.handler(resp, req)
-
-	assert.Equal(t, http.StatusOK, resp.Code)
-}
 
 type profilingTestCase struct {
 	path string

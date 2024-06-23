@@ -42,12 +42,6 @@ const (
 	headerWarning        = "Warning"
 )
 
-var monitor metrics
-
-func init() {
-	monitor = newPrometheusMetrics()
-}
-
 // NowSeconds returns the current unix timestamp in seconds.
 var NowSeconds = func() int64 {
 	return time.Now().Unix()
@@ -117,13 +111,13 @@ func getResponse(ctx context.Context, cfg *control, path, key string, now int64,
 
 	rsp := get(ctx, key, rc)
 	if rsp == nil {
-		monitor.miss(path)
+		observeCacheMiss(path)
 		response := exec(now, key)
 		return response
 	}
 	if rsp.Err != nil {
 		slog.Error("failure during cache interaction", log.ErrorAttr(rsp.Err))
-		monitor.err(path)
+		observeCacheErr(path)
 		return exec(now, key)
 	}
 	// if the object has expired
@@ -133,15 +127,15 @@ func getResponse(ctx context.Context, cfg *control, path, key string, now int64,
 		// serve the last cached value, with a Warning Header
 		if cfg.forceCache || tmpRsp.Err != nil {
 			rsp.Warning = "last-valid"
-			monitor.hit(path)
+			observeCacheHit(path)
 		} else {
 			rsp = tmpRsp
-			monitor.evict(path, cx, now-rsp.LastValid)
+			observeCacheEvict(path, cx, now-rsp.LastValid)
 		}
 	} else {
 		// add any Warning generated while parsing the headers
 		rsp.Warning = cfg.warning
-		monitor.hit(path)
+		observeCacheHit(path)
 	}
 
 	return rsp
@@ -200,15 +194,15 @@ func save(ctx context.Context, path, key string, rsp *response, cache cache.TTLC
 		bytes, err := rsp.encode()
 		if err != nil {
 			slog.Error("could not encode response", slog.String("key", key), log.ErrorAttr(err))
-			monitor.err(path)
+			observeCacheErr(path)
 			return
 		}
 		if err := cache.SetTTL(ctx, key, bytes, maxAge); err != nil {
 			slog.Error("could not cache response", slog.String("key", key), log.ErrorAttr(err))
-			monitor.err(path)
+			observeCacheErr(path)
 			return
 		}
-		monitor.add(path)
+		observeCacheAdd(path)
 	}
 }
 

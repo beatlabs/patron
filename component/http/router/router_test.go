@@ -68,12 +68,6 @@ func TestVerifyRouter(t *testing.T) {
 		assert.Equal(t, appVersion, rsp.Header.Get(appVersionHeader))
 	}
 
-	t.Run("check metrics endpoint", func(t *testing.T) {
-		rsp, err := http.Get(srv.URL + "/metrics")
-		require.NoError(t, err)
-		assertResponse(t, rsp)
-	})
-
 	t.Run("check alive endpoint", func(t *testing.T) {
 		rsp, err := http.Get(srv.URL + "/alive")
 		require.NoError(t, err)

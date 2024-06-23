@@ -857,60 +857,6 @@ func TestNewCaching(t *testing.T) {
 	}
 }
 
-func TestNewRequestObserver(t *testing.T) {
-	type args struct {
-		path string
-	}
-	tests := map[string]struct {
-		args        args
-		expectedErr string
-	}{
-		"empty path should return error":                     {args: args{path: ""}, expectedErr: "path cannot be empty"},
-		"valid path and method should succeed without error": {args: args{path: "GET /api"}, expectedErr: ""},
-	}
-
-	for name, test := range tests {
-		tt := test
-		t.Run(name, func(t *testing.T) {
-			appNameVersionMiddleware, err := NewRequestObserver(tt.args.path)
-			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
-				assert.Nil(t, appNameVersionMiddleware)
-				return
-			}
-
-			assert.NoError(t, err)
-			assert.NotNil(t, appNameVersionMiddleware)
-			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
-
-			// check if the route actually ignored
-			req, err := http.NewRequest("GET", "/api", nil)
-			assert.NoError(t, err)
-
-			rc := httptest.NewRecorder()
-			appNameVersionMiddleware(handler).ServeHTTP(rc, req)
-
-			assert.Equal(t, 200, rc.Code)
-		})
-	}
-}
-
-func TestRequestObserver(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
-	middleware, err := NewRequestObserver("GET /api")
-	require.NoError(t, err)
-	assert.NotNil(t, middleware)
-
-	// check if the route actually ignored
-	req, err := http.NewRequest("GET", "/api", nil)
-	assert.NoError(t, err)
-
-	rc := httptest.NewRecorder()
-	middleware(handler).ServeHTTP(rc, req)
-
-	assert.Equal(t, 200, rc.Code)
-}
-
 func TestNewAppVersion(t *testing.T) {
 	type args struct {
 		name    string

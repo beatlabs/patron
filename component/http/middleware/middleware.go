@@ -15,16 +15,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/observability/log"
-	patrontrace "github.com/beatlabs/patron/trace"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/time/rate"
 )
@@ -39,12 +35,6 @@ const (
 	anythingHeader   = "*"
 	appVersionHeader = "X-App-Version"
 	appNameHeader    = "X-App-Name"
-)
-
-var (
-	httpStatusTracingInit          sync.Once
-	httpStatusTracingHandledMetric *prometheus.CounterVec
-	httpStatusTracingLatencyMetric *prometheus.HistogramVec
 )
 
 type responseWriter struct {
@@ -213,62 +203,6 @@ func getOrSetCorrelationID(h http.Header) string {
 		return corID
 	}
 	return cor[0]
-}
-
-// TODO: Do we need metrics anymore since we have opentelemetry and the contrib library?
-func initHTTPServerMetrics() {
-	httpStatusTracingHandledMetric = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: "http",
-			Name:      "handled_total",
-			Help:      "Total number of HTTP responses served by the server.",
-		},
-		[]string{"path", "status_code"},
-	)
-	prometheus.MustRegister(httpStatusTracingHandledMetric)
-	httpStatusTracingLatencyMetric = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: "component",
-			Subsystem: "http",
-			Name:      "handled_seconds",
-			Help:      "Latency of a completed HTTP response served by the server.",
-		},
-		[]string{"path", "status_code"})
-	prometheus.MustRegister(httpStatusTracingLatencyMetric)
-}
-
-// NewRequestObserver creates a Func that captures status code and duration metrics about the responses returned;
-// metrics are exposed via Prometheus.
-// This middleware is enabled by default.
-func NewRequestObserver(path string) (Func, error) {
-	if path == "" {
-		return nil, errors.New("path cannot be empty")
-	}
-
-	// register Prometheus metrics on first use
-	httpStatusTracingInit.Do(initHTTPServerMetrics)
-
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			now := time.Now()
-			lw := newResponseWriter(w, false)
-			next.ServeHTTP(lw, r)
-
-			// collect metrics about HTTP server-side handling and latency
-			status := strconv.Itoa(lw.Status())
-
-			httpStatusCounter := patrontrace.Counter{
-				Counter: httpStatusTracingHandledMetric.WithLabelValues(path, status),
-			}
-			httpStatusCounter.Inc(r.Context())
-
-			httpLatencyMetricObserver := patrontrace.Histogram{
-				Observer: httpStatusTracingLatencyMetric.WithLabelValues(path, status),
-			}
-			httpLatencyMetricObserver.Observe(r.Context(), time.Since(now).Seconds())
-		})
-	}, nil
 }
 
 // NewRateLimiting creates a Func that adds a rate limit to a route.

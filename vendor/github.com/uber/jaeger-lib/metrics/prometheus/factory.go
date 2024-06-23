@@ -169,13 +169,12 @@ func (f *Factory) Timer(options metrics.TimerOptions) metrics.Timer {
 		help = options.Name
 	}
 	name := f.subScope(options.Name)
-	buckets := f.selectBuckets(asFloatBuckets(options.Buckets))
 	tags := f.mergeTags(options.Tags)
 	labelNames := f.tagNames(tags)
 	opts := prometheus.HistogramOpts{
 		Name:    name,
 		Help:    help,
-		Buckets: buckets,
+		Buckets: asFloatBuckets(options.Buckets),
 	}
 	hv := f.cache.getOrMakeHistogramVec(opts, labelNames)
 	return &timer{

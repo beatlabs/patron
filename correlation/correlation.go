@@ -7,8 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// TODO: Do we need this with opentelemetry? Merge with observability package?
-
 const (
 	// HeaderID constant.
 	HeaderID string = "X-Correlation-Id"

@@ -71,11 +71,4 @@ func TestNew(t *testing.T) {
 	// Traces
 	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
 	assert.Len(t, exp.GetSpans(), 1)
-
-	// TODO: Support metrics first.
-	// // Metrics
-	// collectedMetrics := &metricdata.ResourceMetrics{}
-	// assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	// assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
-	// assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics[0].Metrics))
 }

@@ -35,8 +35,6 @@ var (
 	statusCounter metric.Int64Counter
 )
 
-// TODO: Metrics move to OpenTelemetry.
-
 func init() {
 	var err error
 	statusCounter, err = otel.Meter("circuitbreaker").Int64Counter("circuitbreaker.status",

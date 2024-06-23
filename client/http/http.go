@@ -48,7 +48,6 @@ func New(oo ...OptionFunc) (*TracedClient, error) {
 
 // Do execute an HTTP request with integrated tracing and tracing propagation downstream.
 func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
-	// TODO: do we need this still?
 	req.Header.Set(correlation.HeaderID, correlation.IDFromContext(req.Context()))
 
 	rsp, err := tc.do(req)

@@ -44,7 +44,6 @@ func New(oo ...OptionFunc) (*http.ServeMux, error) {
 	var stdRoutes []*patronhttp.Route
 
 	mux := http.NewServeMux()
-	// TODO: Introduce metrics route???
 	stdRoutes = append(stdRoutes, patronhttp.ProfilingRoutes(cfg.enableProfilingExpVar)...)
 
 	route, err := patronhttp.LivenessCheckRoute(cfg.aliveCheckFunc)

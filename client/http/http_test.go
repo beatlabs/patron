@@ -65,9 +65,6 @@ func TestTracedClient_Do(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, rsp)
 			}
-			// TODO: test tracing/metrics
-			// assert.Equal(t, tt.wantCounter, testutil.CollectAndCount(reqDurationMetrics, "client_http_request_duration_seconds"))
-			// reqDurationMetrics.Reset()
 		})
 	}
 }

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,10 +10,10 @@ import (
 
 	httpcache "github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"golang.org/x/time/rate"
 )
 
@@ -173,9 +174,9 @@ func TestNewLoggingTracing(t *testing.T) {
 
 // TestSpanLogError tests whether an HTTP handler with a tracing middleware adds a log event in case of we return an error.
 func TestSpanLogError(t *testing.T) {
-	t.Skip()
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
+	// Setup tracing
+	exp := tracetest.NewInMemoryExporter()
+	tracePublisher := trace.Setup("test", nil, exp)
 
 	successHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -197,18 +198,26 @@ func TestSpanLogError(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name                 string
-		args                 args
-		expectedCode         int
-		expectedBody         string
-		expectedSpanLogError string
+		name         string
+		args         args
+		expectedCode int
+		expectedBody string
 	}{
-		{"tracing middleware - error", args{next: errorHandler, mws: []Func{loggingTracingMiddleware}}, http.StatusInternalServerError, "foo", "foo"},
-		{"tracing middleware - success", args{next: successHandler, mws: []Func{loggingTracingMiddleware}}, http.StatusOK, "", ""},
+		{
+			"tracing middleware - error",
+			args{next: errorHandler, mws: []Func{loggingTracingMiddleware}},
+			http.StatusInternalServerError, "foo",
+		},
+		{
+			"tracing middleware - success",
+			args{next: successHandler, mws: []Func{loggingTracingMiddleware}},
+			http.StatusOK, "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mtr.Reset()
+			defer exp.Reset()
+
 			rc := httptest.NewRecorder()
 			rw := newResponseWriter(rc, true)
 			tt.args.next = Chain(tt.args.next, tt.args.mws...)
@@ -216,11 +225,10 @@ func TestSpanLogError(t *testing.T) {
 			assert.Equal(t, tt.expectedCode, rw.Status())
 			assert.Equal(t, tt.expectedBody, rc.Body.String())
 
-			if tt.expectedSpanLogError != "" {
-				require.Equal(t, 1, len(mtr.FinishedSpans()))
-				spanLogError := getSpanLogError(t, mtr.FinishedSpans()[0])
-				assert.Equal(t, tt.expectedSpanLogError, spanLogError)
-			}
+			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
+			snaps := exp.GetSpans().Snapshots()
+			assert.Len(t, snaps, 1)
 		})
 	}
 }
@@ -293,25 +301,6 @@ func TestStripQueryString(t *testing.T) {
 			}
 		})
 	}
-}
-
-func getSpanLogError(t *testing.T, span *mocktracer.MockSpan) string {
-	logs := span.Logs()
-	if len(logs) == 0 {
-		assert.FailNow(t, "empty logs")
-		return ""
-	}
-
-	for _, log := range logs {
-		for _, field := range log.Fields {
-			if field.Key == fieldNameError {
-				return field.ValueString
-			}
-		}
-	}
-
-	assert.FailNowf(t, "missing logs", "missing field %s", fieldNameError)
-	return ""
 }
 
 func TestNewCompressionMiddleware(t *testing.T) {

@@ -4,7 +4,6 @@ The framework makes primarily use of the following OSS projects:
 
 * [github.com/IBM/sarama](github.com/IBM/sarama)
 * [github.com/opentracing/opentracing-go](https://github.com/opentracing/opentracing-go)
-* [github.com/prometheus/client_golang](https://github.com/prometheus/client_golang)
 * [github.com/rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go)
 * [github.com/stretchr/testify](https://github.com/stretchr/testify)ß
 * [github.com/uber/jaeger-client-go](https://github.com/uber/jaeger-client-go)

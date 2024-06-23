@@ -3,7 +3,6 @@ package cache
 import (
 	"context"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -21,23 +20,6 @@ var (
 )
 
 func init() {
-	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "http_cache",
-		Subsystem: "handler",
-		Name:      "expiration",
-		Help:      "Expiry age for evicted objects.",
-		Buckets:   []float64{1, 10, 30, 60, 60 * 5, 60 * 10, 60 * 30, 60 * 60},
-	}, []string{"route"})
-	prometheus.MustRegister(histogram)
-
-	operations := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "http_cache",
-		Subsystem: "handler",
-		Name:      "operations",
-		Help:      "Number of cache operations.",
-	}, []string{"route", "operation", "reason"})
-	prometheus.MustRegister(operations)
-
 	var err error
 	cacheExpirationHistogram, err = otel.Meter("http_cache").Int64Histogram("http.cache.expiration",
 		metric.WithDescription("HTTP cache expiration."),

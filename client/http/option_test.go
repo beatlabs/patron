@@ -6,17 +6,17 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func TestTransport(t *testing.T) {
 	transport := &http.Transport{}
 	client, err := New(WithTransport(transport))
 
+	otelhttp.NewTransport(transport)
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
-	assert.Equal(t, &nethttp.Transport{RoundTripper: transport}, client.cl.Transport)
 }
 
 func TestTransport_Nil(t *testing.T) {

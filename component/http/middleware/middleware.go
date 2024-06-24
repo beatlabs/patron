@@ -26,9 +26,6 @@ import (
 )
 
 const (
-	serverComponent = "http-server"
-	fieldNameError  = "error"
-
 	gzipHeader       = "gzip"
 	deflateHeader    = "deflate"
 	identityHeader   = "identity"

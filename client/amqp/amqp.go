@@ -9,6 +9,7 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/observability"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
@@ -21,14 +22,8 @@ import (
 var publishDurationMetrics metric.Float64Histogram
 
 func init() {
-	var err error
-	publishDurationMetrics, err = otel.Meter("amqp").Float64Histogram("amqp.publish.duration",
-		metric.WithDescription("AMQP publish duration."),
-		metric.WithUnit("ms"),
-	)
-	if err != nil {
-		panic(err)
-	}
+	publishDurationMetrics = patronmetric.Float64Histogram("amqp", "amqp.publish.duration",
+		"AMQP publish duration.", "ms")
 }
 
 // Publisher defines a RabbitMQ publisher with tracing instrumentation.

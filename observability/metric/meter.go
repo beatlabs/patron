@@ -40,3 +40,15 @@ func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.M
 	)
 	return meterProvider, nil
 }
+
+func Float64Histogram(pkg, name, description, unit string) metric.Float64Histogram {
+	histogram, err := otel.Meter(pkg).Float64Histogram(name,
+		metric.WithDescription(description),
+		metric.WithUnit(unit),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return histogram
+}

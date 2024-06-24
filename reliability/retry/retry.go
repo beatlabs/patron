@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-// TODO: Introduce metrics.
-
 // Action function to execute in retry.
 type Action func() (interface{}, error)
 

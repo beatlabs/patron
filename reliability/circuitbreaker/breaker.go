@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"go.opentelemetry.io/otel"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -23,6 +23,8 @@ func (oe OpenError) Error() string {
 type status int
 
 const (
+	packageName = "circuit-breaker"
+
 	closed status = iota
 	opened
 )
@@ -36,14 +38,7 @@ var (
 )
 
 func init() {
-	var err error
-	statusCounter, err = otel.Meter("circuitbreaker").Int64Counter("circuitbreaker.status",
-		metric.WithDescription("Circuit breaker status counter."),
-		metric.WithUnit("1"),
-	)
-	if err != nil {
-		panic(err)
-	}
+	statusCounter = patronmetric.Int64Counter(packageName, "circuit-breaker.status", "Circuit breaker status counter.", "1")
 }
 
 func breakerCounterInc(name string, st status) {

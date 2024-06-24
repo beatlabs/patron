@@ -41,6 +41,7 @@ func newMeterProvider(ctx context.Context, res *resource.Resource) (*sdkmetric.M
 	return meterProvider, nil
 }
 
+// Float64Histogram creates a float64 histogram metric.
 func Float64Histogram(pkg, name, description, unit string) metric.Float64Histogram {
 	histogram, err := otel.Meter(pkg).Float64Histogram(name,
 		metric.WithDescription(description),
@@ -51,4 +52,56 @@ func Float64Histogram(pkg, name, description, unit string) metric.Float64Histogr
 	}
 
 	return histogram
+}
+
+// Int64Histogram creates an int64 histogram metric.
+func Int64Histogram(pkg, name, description, unit string) metric.Int64Histogram {
+	histogram, err := otel.Meter(pkg).Int64Histogram(name,
+		metric.WithDescription(description),
+		metric.WithUnit(unit),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return histogram
+}
+
+// Int64Counter creates an int64 counter metric.
+func Int64Counter(pkg, name, description, unit string) metric.Int64Counter {
+	counter, err := otel.Meter(pkg).Int64Counter(name,
+		metric.WithDescription(description),
+		metric.WithUnit(unit),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return counter
+}
+
+// Float64Gauge creates a float64 gauge metric.
+func Float64Gauge(pkg, name, description, unit string) metric.Float64Gauge {
+	gauge, err := otel.Meter(pkg).Float64Gauge(name,
+		metric.WithDescription(description),
+		metric.WithUnit(unit),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return gauge
+}
+
+// Int64Gauge creates an int64 gauge metric.
+func Int64Gauge(pkg, name, description, unit string) metric.Int64Gauge {
+	gauge, err := otel.Meter(pkg).Int64Gauge(name,
+		metric.WithDescription(description),
+		metric.WithUnit(unit),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return gauge
 }

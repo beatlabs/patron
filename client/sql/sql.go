@@ -9,24 +9,19 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/observability"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
+const packageName = "sql"
+
 var durationHistogram metric.Int64Histogram
 
 func init() {
-	var err error
-	durationHistogram, err = otel.Meter("sql").Int64Histogram("sql.cmd.duration",
-		metric.WithDescription("SQL command duration."),
-		metric.WithUnit("ms"),
-	)
-	if err != nil {
-		panic(err)
-	}
+	durationHistogram = patronmetric.Int64Histogram(packageName, "sql.cmd.duration", "SQL command duration.", "ms")
 }
 
 type connInfo struct {

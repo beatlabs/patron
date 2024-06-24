@@ -19,10 +19,12 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+const packageName = "amqp"
+
 var publishDurationMetrics metric.Float64Histogram
 
 func init() {
-	publishDurationMetrics = patronmetric.Float64Histogram("amqp", "amqp.publish.duration",
+	publishDurationMetrics = patronmetric.Float64Histogram(packageName, "amqp.publish.duration",
 		"AMQP publish duration.", "ms")
 }
 

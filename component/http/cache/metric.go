@@ -3,10 +3,12 @@ package cache
 import (
 	"context"
 
-	"go.opentelemetry.io/otel"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
+
+const packageName = "http-cache"
 
 var (
 	validationReason         = map[validationContext]string{0: "nil", ttlValidation: "expired", maxAgeValidation: "max_age", minFreshValidation: "min_fresh"}
@@ -20,20 +22,8 @@ var (
 )
 
 func init() {
-	var err error
-	cacheExpirationHistogram, err = otel.Meter("http_cache").Int64Histogram("http.cache.expiration",
-		metric.WithDescription("HTTP cache expiration."),
-		metric.WithUnit("s"))
-	if err != nil {
-		panic(err)
-	}
-
-	cacheStatusCounter, err = otel.Meter("http_cache").Int64Counter("http.cache.status",
-		metric.WithDescription("HTTP cache status."),
-		metric.WithUnit("1"))
-	if err != nil {
-		panic(err)
-	}
+	cacheExpirationHistogram = patronmetric.Int64Histogram(packageName, "http.cache.expiration", "HTTP cache expiration.", "s")
+	cacheStatusCounter = patronmetric.Int64Counter(packageName, "http.cache.status", "HTTP cache status.", "1")
 }
 
 func observeCacheAdd(path string) {

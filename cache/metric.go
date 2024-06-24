@@ -4,10 +4,12 @@ import (
 	"context"
 	"sync"
 
-	"go.opentelemetry.io/otel"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
+
+const packageName = "cache"
 
 var (
 	cashHitAttribute  = attribute.String("cache.status", "hit")
@@ -19,14 +21,7 @@ var (
 // SetupMetricsOnce initializes the cache counter.
 func SetupMetricsOnce() {
 	cacheOnce.Do(func() {
-		var err error
-		cacheCounter, err = otel.Meter("cache").Int64Counter("cache.counter",
-			metric.WithDescription("Number of cache calls."),
-			metric.WithUnit("1"),
-		)
-		if err != nil {
-			panic(err)
-		}
+		cacheCounter = patronmetric.Int64Counter(packageName, "cache.counter", "Number of cache calls.", "1")
 	})
 }
 

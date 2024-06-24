@@ -4,23 +4,18 @@ import (
 	"context"
 
 	"github.com/beatlabs/patron/observability"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	"go.mongodb.org/mongo-driver/event"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
 
+const packageName = "mongo"
+
 var durationHistogram metric.Int64Histogram
 
 func init() {
-	var err error
-	durationHistogram, err = otel.Meter("mongo").Int64Histogram("mongo.duration",
-		metric.WithDescription("Mongo command duration."),
-		metric.WithUnit("ms"),
-	)
-	if err != nil {
-		panic(err)
-	}
+	durationHistogram = patronmetric.Int64Histogram(packageName, "mongo.duration", "Mongo command duration.", "ms")
 }
 
 type observabilityMonitor struct {

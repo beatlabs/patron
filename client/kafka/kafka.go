@@ -10,6 +10,7 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/observability"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -17,17 +18,12 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+const packageName = "kafka"
+
 var publishCount metric.Int64Counter
 
 func init() {
-	var err error
-	publishCount, err = otel.Meter("kafka").Int64Counter("kafka.publish.count",
-		metric.WithDescription("Kafka message count."),
-		metric.WithUnit("1"),
-	)
-	if err != nil {
-		panic(err)
-	}
+	publishCount = patronmetric.Int64Counter(packageName, "kafka.publish.count", "Kafka message count.", "1")
 }
 
 func publishCountAdd(ctx context.Context, attrs ...attribute.KeyValue) {

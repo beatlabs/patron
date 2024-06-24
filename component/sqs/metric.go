@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/observability"
-	"go.opentelemetry.io/otel"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
+
+const packageName = "sqs"
 
 var (
 	messageAgeGauge       metric.Float64Gauge
@@ -23,27 +25,9 @@ var (
 )
 
 func init() {
-	var err error
-	messageAgeGauge, err = otel.Meter("sqs").Float64Gauge("sqs.message.age",
-		metric.WithDescription("SQS message age."),
-		metric.WithUnit("s"))
-	if err != nil {
-		panic(err)
-	}
-
-	messageCounter, err = otel.Meter("sqs").Int64Counter("sqs.message.counter",
-		metric.WithDescription("AMQP message counter."),
-		metric.WithUnit("1"))
-	if err != nil {
-		panic(err)
-	}
-
-	messageQueueSizeGauge, err = otel.Meter("sqs").Float64Gauge("sqs.queue.size",
-		metric.WithDescription("SQS message queue size."),
-		metric.WithUnit("1"))
-	if err != nil {
-		panic(err)
-	}
+	messageAgeGauge = patronmetric.Float64Gauge(packageName, "sqs.message.age", "SQS message age.", "s")
+	messageCounter = patronmetric.Int64Counter(packageName, "sqs.message.counter", "SQS message counter.", "1")
+	messageQueueSizeGauge = patronmetric.Float64Gauge(packageName, "sqs.queue.size", "SQS message queue size.", "1")
 }
 
 func observerMessageAge(ctx context.Context, queue string, attributes map[string]string) {

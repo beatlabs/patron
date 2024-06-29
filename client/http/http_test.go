@@ -6,7 +6,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,22 +14,14 @@ import (
 
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/reliability/circuitbreaker"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTracedClient_Do(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "true", r.Header.Get("Mockpfx-Ids-Sampled"))
-		assert.NotEmpty(t, r.Header.Get("Mockpfx-Ids-Spanid"))
-		assert.NotEmpty(t, r.Header.Get("Mockpfx-Ids-Traceid"))
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprintln(w, "Hello, client")
 	}))
 	defer ts.Close()
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
 	c, err := New()
 	assert.NoError(t, err)
 	cb, err := New(WithCircuitBreaker("test", circuitbreaker.Setting{}))
@@ -73,13 +65,6 @@ func TestTracedClient_Do(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, rsp)
 			}
-			sp := mtr.FinishedSpans()[0]
-			assert.NotNil(t, sp)
-			assert.Equal(t, tt.wantOpName, sp.OperationName)
-			mtr.Reset()
-			// Test counters.
-			assert.Equal(t, tt.wantCounter, testutil.CollectAndCount(reqDurationMetrics, "client_http_request_duration_seconds"))
-			reqDurationMetrics.Reset()
 		})
 	}
 }
@@ -97,6 +82,7 @@ func TestTracedClient_Do_Redirect(t *testing.T) {
 	assert.NoError(t, err)
 
 	res, err := c.Do(req)
+	defer assert.NoError(t, res.Body.Close())
 
 	assert.Errorf(t, err, "stop redirects")
 	assert.NotNil(t, res)
@@ -201,36 +187,10 @@ func TestDecompress(t *testing.T) {
 			rsp, err := c.Do(req)
 			assert.Nil(t, err)
 
-			b, err := ioutil.ReadAll(rsp.Body)
+			b, err := io.ReadAll(rsp.Body)
 			assert.Nil(t, err)
 			body := string(b)
 			assert.Equal(t, msg, body)
-		})
-	}
-}
-
-func TestOpName(t *testing.T) {
-	type args struct {
-		method string
-		scheme string
-		host   string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{"get http host", args{"GET", "http", "host"}, "GET http://host"},
-		{"post https host:port", args{"POST", "https", "host:443"}, "POST https://host:443"},
-		{"empty method", args{"", "http", "host"}, " http://host"},
-		{"empty scheme", args{"GET", "", "host"}, "GET ://host"},
-		{"empty host", args{"GET", "http", ""}, "GET http://"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := opName(tt.args.method, tt.args.scheme, tt.args.host); got != tt.want {
-				t.Errorf("opName() = %v, want %v", got, tt.want)
-			}
 		})
 	}
 }

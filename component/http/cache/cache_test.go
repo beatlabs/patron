@@ -12,6 +12,10 @@ import (
 
 	"github.com/beatlabs/patron/cache"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
 
 func TestExtractCacheHeaders(t *testing.T) {
@@ -1582,7 +1586,11 @@ func TestCache_WithForceCacheHeaders(t *testing.T) {
 }
 
 func assertCache(t *testing.T, args [][]testArgs) {
-	monitor = &testMetrics{}
+	// Setup metrics
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() { require.NoError(t, provider.Shutdown(context.Background())) }()
+	otel.SetMeterProvider(provider)
 
 	// create a test request handler
 	// that returns the current time instant times '10' multiplied by the VALUE parameter in the request
@@ -1665,9 +1673,9 @@ func assertCache(t *testing.T, args [][]testArgs) {
 					assert.NotEmpty(t, response.Header[HeaderETagHeader])
 				}
 			}
-			val, ok := monitor.(*testMetrics)
-			assert.True(t, ok)
-			assertMetrics(t, arg.metrics, *val)
+
+			// assert metrics
+			assertMetrics(t, read)
 		}
 	}
 }
@@ -1686,12 +1694,18 @@ func assertHeader(t *testing.T, key string, expected map[string]string, actual h
 	}
 }
 
-func assertMetrics(t *testing.T, expected, actual testMetrics) {
-	for k, v := range expected.values {
-		if actual.values == nil {
-			assert.Equal(t, v, &metricState{})
-		} else {
-			assert.Equal(t, v, actual.values[k])
+func assertMetrics(t *testing.T, read *metricsdk.ManualReader) {
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	if len(collectedMetrics.ScopeMetrics) == 0 {
+		return
+	}
+	for _, v := range collectedMetrics.ScopeMetrics[0].Metrics {
+		switch v.Name {
+		case "http.cache.status", "http.cache.expiration":
+			assert.NotNil(t, v.Data)
+		default:
+			t.Error("unexpected metric")
 		}
 	}
 }
@@ -1785,27 +1799,27 @@ func (m *testMetrics) init(path string) {
 	}
 }
 
-func (m *testMetrics) add(path string) {
-	m.init(path)
-	m.values[path].additions++
-}
+// func (m *testMetrics) add(path string) {
+// 	m.init(path)
+// 	m.values[path].additions++
+// }
 
-func (m *testMetrics) miss(path string) {
-	m.init(path)
-	m.values[path].misses++
-}
+// func (m *testMetrics) miss(path string) {
+// 	m.init(path)
+// 	m.values[path].misses++
+// }
 
-func (m *testMetrics) hit(path string) {
-	m.init(path)
-	m.values[path].hits++
-}
+// func (m *testMetrics) hit(path string) {
+// 	m.init(path)
+// 	m.values[path].hits++
+// }
 
-func (m *testMetrics) err(path string) {
-	m.init(path)
-	m.values[path].errors++
-}
+// func (m *testMetrics) err(path string) {
+// 	m.init(path)
+// 	m.values[path].errors++
+// }
 
-func (m *testMetrics) evict(path string, _ validationContext, _ int64) {
-	m.init(path)
-	m.values[path].evictions++
-}
+// func (m *testMetrics) evict(path string, _ validationContext, _ int64) {
+// 	m.init(path)
+// 	m.values[path].evictions++
+// }

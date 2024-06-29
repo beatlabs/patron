@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package kafka
 
@@ -16,12 +15,15 @@ import (
 	"github.com/IBM/sarama"
 	kafkaclient "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -35,10 +37,16 @@ const (
 
 func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, createTopics(broker, successTopic1))
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	mtr.Reset()
-	t.Cleanup(func() { mtr.Reset() })
+
+	// Setup tracing
+	t.Cleanup(func() { traceExporter.Reset() })
+
+	// Setup metrics
+	// Setup metrics
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() { require.NoError(t, provider.Shutdown(context.Background())) }()
+	otel.SetMeterProvider(provider)
 
 	// Test parameters
 	numOfMessagesToSend := 100
@@ -58,7 +66,8 @@ func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, client.SendBatch(ctx, messages))
 
-	mtr.Reset()
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	traceExporter.Reset()
 
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]string, 0)
@@ -100,23 +109,40 @@ func TestKafkaComponent_Success(t *testing.T) {
 	patronCancel()
 	patronWG.Wait()
 
-	assert.Len(t, mtr.FinishedSpans(), 100)
+	time.Sleep(time.Second)
 
-	expectedTags := map[string]interface{}{
-		"component":     "kafka-consumer",
-		"correlationID": "123",
-		"error":         false,
-		"span.kind":     ext.SpanKindEnum("consumer"),
-		"version":       "dev",
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
+	spans := traceExporter.GetSpans()
+
+	assert.Len(t, spans, 100)
+
+	for _, span := range spans {
+		expectedSpan := tracetest.SpanStub{
+			Name:     "kafka-consumer successTopic1",
+			SpanKind: trace.SpanKindConsumer,
+			Status: tracesdk.Status{
+				Code: codes.Ok,
+			},
+		}
+
+		assertSpan(t, expectedSpan, span)
 	}
 
-	for _, span := range mtr.FinishedSpans() {
-		assert.Equal(t, expectedTags, span.Tags())
-	}
+	// Metrics
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Equal(t, 3, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	assert.Equal(t, "kafka.publish.count", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
+	assert.Equal(t, "kafka.consumer.offset.diff", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
+	assert.Equal(t, "kafka.message.status", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
+}
 
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(consumerErrors, "component_kafka_consumer_errors"), 0)
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(topicPartitionOffsetDiff, "component_kafka_offset_diff"), 1)
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageStatus, "component_kafka_message_status"), 1)
+func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
+	assert.Equal(t, expected.Name, got.Name)
+	assert.Equal(t, expected.SpanKind, got.SpanKind)
+	assert.Equal(t, expected.Status, got.Status)
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {

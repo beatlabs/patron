@@ -1,67 +1,57 @@
 package cache
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"context"
 
-var validationReason = map[validationContext]string{0: "nil", ttlValidation: "expired", maxAgeValidation: "max_age", minFreshValidation: "min_fresh"}
+	patronmetric "github.com/beatlabs/patron/observability/metric"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+)
 
-type metrics interface {
-	add(path string)
-	miss(path string)
-	hit(path string)
-	err(path string)
-	evict(path string, context validationContext, age int64)
+const packageName = "http-cache"
+
+var (
+	validationReason         = map[validationContext]string{0: "nil", ttlValidation: "expired", maxAgeValidation: "max_age", minFreshValidation: "min_fresh"}
+	cacheExpirationHistogram metric.Int64Histogram
+	cacheStatusCounter       metric.Int64Counter
+	statusAddAttr            = attribute.String("status", "add")
+	statusHitAttr            = attribute.String("status", "hit")
+	statusMissAttr           = attribute.String("status", "miss")
+	statusErrAttr            = attribute.String("status", "err")
+	statusEvictAttr          = attribute.String("status", "evict")
+)
+
+func init() {
+	cacheExpirationHistogram = patronmetric.Int64Histogram(packageName, "http.cache.expiration", "HTTP cache expiration.", "s")
+	cacheStatusCounter = patronmetric.Int64Counter(packageName, "http.cache.status", "HTTP cache status.", "1")
 }
 
-// prometheusMetrics is the prometheus implementation for exposing cache metrics.
-type prometheusMetrics struct {
-	ageHistogram *prometheus.HistogramVec
-	operations   *prometheus.CounterVec
+func observeCacheAdd(path string) {
+	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusAddAttr))
 }
 
-func (m *prometheusMetrics) add(path string) {
-	m.operations.WithLabelValues(path, "add", "").Inc()
+func observeCacheMiss(path string) {
+	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusMissAttr))
 }
 
-func (m *prometheusMetrics) miss(path string) {
-	m.operations.WithLabelValues(path, "miss", "").Inc()
+func observeCacheHit(path string) {
+	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusHitAttr))
 }
 
-func (m *prometheusMetrics) hit(path string) {
-	m.operations.WithLabelValues(path, "hit", "").Inc()
+func observeCacheErr(path string) {
+	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusErrAttr))
 }
 
-func (m *prometheusMetrics) err(path string) {
-	m.operations.WithLabelValues(path, "Err", "").Inc()
+func observeCacheEvict(path string, validationContext validationContext, age int64) {
+	cacheExpirationHistogram.Record(context.Background(), age, metric.WithAttributes(routeAttr(path)))
+	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusEvictAttr,
+		reasonAttr(validationReason[validationContext])))
 }
 
-func (m *prometheusMetrics) evict(path string, context validationContext, age int64) {
-	m.ageHistogram.WithLabelValues(path).Observe(float64(age))
-	m.operations.WithLabelValues(path, "evict", validationReason[context]).Inc()
+func routeAttr(route string) attribute.KeyValue {
+	return attribute.String("route", route)
 }
 
-// newPrometheusMetrics constructs a new prometheus metrics implementation instance.
-func newPrometheusMetrics() *prometheusMetrics {
-	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "http_cache",
-		Subsystem: "handler",
-		Name:      "expiration",
-		Help:      "Expiry age for evicted objects.",
-		Buckets:   []float64{1, 10, 30, 60, 60 * 5, 60 * 10, 60 * 30, 60 * 60},
-	}, []string{"route"})
-
-	operations := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "http_cache",
-		Subsystem: "handler",
-		Name:      "operations",
-		Help:      "Number of cache operations.",
-	}, []string{"route", "operation", "reason"})
-
-	m := &prometheusMetrics{
-		ageHistogram: histogram,
-		operations:   operations,
-	}
-
-	prometheus.MustRegister(m.ageHistogram, m.operations)
-
-	return m
+func reasonAttr(reason string) attribute.KeyValue {
+	return attribute.String("reason", reason)
 }

@@ -15,38 +15,23 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/beatlabs/patron/component/http/auth"
 	"github.com/beatlabs/patron/component/http/cache"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	tracinglog "github.com/opentracing/opentracing-go/log"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/beatlabs/patron/observability/log"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/time/rate"
 )
 
 const (
-	serverComponent = "http-server"
-	fieldNameError  = "error"
-
 	gzipHeader       = "gzip"
 	deflateHeader    = "deflate"
 	identityHeader   = "identity"
 	anythingHeader   = "*"
 	appVersionHeader = "X-App-Version"
 	appNameHeader    = "X-App-Name"
-)
-
-var (
-	httpStatusTracingInit          sync.Once
-	httpStatusTracingHandledMetric *prometheus.CounterVec
-	httpStatusTracingLatencyMetric *prometheus.HistogramVec
 )
 
 type responseWriter struct {
@@ -116,7 +101,7 @@ func NewRecovery() Func {
 						err = errors.New("unknown panic")
 					}
 					_ = err
-					slog.Error("recovering from a failure", slog.Any("error", err), slog.String("stack", string(debug.Stack())))
+					slog.Error("recovering from a failure", log.ErrorAttr(err), slog.String("stack", string(debug.Stack())))
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				}
 			}()
@@ -173,10 +158,9 @@ func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) (F
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			corID := getOrSetCorrelationID(r.Header)
-			sp, r := span(path, corID, r)
 			lw := newResponseWriter(w, true)
-			next.ServeHTTP(lw, r)
-			finishSpan(sp, lw.Status(), &lw.responsePayload)
+
+			otelhttp.NewMiddleware(path)(next).ServeHTTP(lw, r)
 			logRequestResponse(corID, lw, r)
 			if log.Enabled(slog.LevelError) && statusCodeLogger.shouldLog(lw.status) {
 				log.FromContext(r.Context()).Error("failed route execution", slog.String("path", path),
@@ -216,61 +200,6 @@ func getOrSetCorrelationID(h http.Header) string {
 		return corID
 	}
 	return cor[0]
-}
-
-func initHTTPServerMetrics() {
-	httpStatusTracingHandledMetric = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: "http",
-			Name:      "handled_total",
-			Help:      "Total number of HTTP responses served by the server.",
-		},
-		[]string{"path", "status_code"},
-	)
-	prometheus.MustRegister(httpStatusTracingHandledMetric)
-	httpStatusTracingLatencyMetric = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: "component",
-			Subsystem: "http",
-			Name:      "handled_seconds",
-			Help:      "Latency of a completed HTTP response served by the server.",
-		},
-		[]string{"path", "status_code"})
-	prometheus.MustRegister(httpStatusTracingLatencyMetric)
-}
-
-// NewRequestObserver creates a Func that captures status code and duration metrics about the responses returned;
-// metrics are exposed via Prometheus.
-// This middleware is enabled by default.
-func NewRequestObserver(path string) (Func, error) {
-	if path == "" {
-		return nil, errors.New("path cannot be empty")
-	}
-
-	// register Prometheus metrics on first use
-	httpStatusTracingInit.Do(initHTTPServerMetrics)
-
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			now := time.Now()
-			lw := newResponseWriter(w, false)
-			next.ServeHTTP(lw, r)
-
-			// collect metrics about HTTP server-side handling and latency
-			status := strconv.Itoa(lw.Status())
-
-			httpStatusCounter := trace.Counter{
-				Counter: httpStatusTracingHandledMetric.WithLabelValues(path, status),
-			}
-			httpStatusCounter.Inc(r.Context())
-
-			httpLatencyMetricObserver := trace.Histogram{
-				Observer: httpStatusTracingLatencyMetric.WithLabelValues(path, status),
-			}
-			httpLatencyMetricObserver.Observe(r.Context(), time.Since(now).Seconds())
-		})
-	}, nil
 }
 
 // NewRateLimiting creates a Func that adds a rate limit to a route.
@@ -405,9 +334,9 @@ func NewCompression(deflateLevel int, ignoreRoutes ...string) (Func, error) {
 				if err != nil {
 					msgErr := "error in deferred call to Close() method on compression middleware"
 					if isErrConnectionReset(err) {
-						slog.Info(msgErr, slog.String("header", hdr), slog.Any("error", err))
+						slog.Info(msgErr, slog.String("header", hdr), log.ErrorAttr(err))
 					} else {
-						slog.Error(msgErr, slog.String("header", hdr), slog.Any("error", err))
+						slog.Error(msgErr, slog.String("header", hdr), log.ErrorAttr(err))
 					}
 				}
 			}(dw)
@@ -532,7 +461,7 @@ func NewCaching(rc *cache.RouteCache) (Func, error) {
 			}
 			err := cache.Handler(w, r, rc, next)
 			if err != nil {
-				slog.Error("error encountered in the caching middleware", slog.Any("error", err))
+				slog.Error("error encountered in the caching middleware", log.ErrorAttr(err))
 				return
 			}
 		})
@@ -569,27 +498,6 @@ func logRequestResponse(corID string, w *responseWriter, r *http.Request) {
 	log.FromContext(r.Context()).LogAttrs(r.Context(), slog.LevelDebug, "request log", attrs...)
 }
 
-func span(path, corID string, r *http.Request) (opentracing.Span, *http.Request) {
-	ctx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	if err != nil && !errors.Is(err, opentracing.ErrSpanContextNotFound) {
-		slog.Error("failed to extract HTTP span", slog.Any("error", err))
-	}
-
-	strippedPath, err := stripQueryString(path)
-	if err != nil {
-		slog.Warn("unable to strip query string", slog.String("path", path), slog.Any("error", err))
-		strippedPath = path
-	}
-
-	sp := opentracing.StartSpan(opName(r.Method, strippedPath), ext.RPCServerOption(ctx))
-	ext.HTTPMethod.Set(sp, r.Method)
-	ext.HTTPUrl.Set(sp, r.URL.String())
-	ext.Component.Set(sp, serverComponent)
-	sp.SetTag(trace.VersionTag, trace.Version)
-	sp.SetTag(correlation.ID, corID)
-	return sp, r.WithContext(opentracing.ContextWithSpan(r.Context(), sp))
-}
-
 // stripQueryString returns a path without the query string.
 func stripQueryString(path string) (string, error) {
 	u, err := url.Parse(path)
@@ -602,18 +510,4 @@ func stripQueryString(path string) (string, error) {
 	}
 
 	return path[:len(path)-len(u.RawQuery)-1], nil
-}
-
-func finishSpan(sp opentracing.Span, code int, responsePayload *bytes.Buffer) {
-	ext.HTTPStatusCode.Set(sp, uint16(code))
-	isError := code >= http.StatusInternalServerError
-	if isError && responsePayload.Len() != 0 {
-		sp.LogFields(tracinglog.String(fieldNameError, responsePayload.String()))
-	}
-	ext.Error.Set(sp, isError)
-	sp.Finish()
-}
-
-func opName(method, path string) string {
-	return method + " " + path
 }

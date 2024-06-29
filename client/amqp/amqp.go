@@ -5,36 +5,27 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
-	"strconv"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/streadway/amqp"
+	"github.com/beatlabs/patron/observability"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
+	amqp "github.com/rabbitmq/amqp091-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
-const (
-	publisherComponent = "amqp-publisher"
-)
+const packageName = "amqp"
 
-var publishDurationMetrics *prometheus.HistogramVec
+var publishDurationMetrics metric.Float64Histogram
 
 func init() {
-	publishDurationMetrics = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: "client",
-			Subsystem: "amqp",
-			Name:      "publish_duration_seconds",
-			Help:      "AMQP publish completed by the client.",
-		},
-		[]string{"exchange", "success"},
-	)
-	prometheus.MustRegister(publishDurationMetrics)
+	publishDurationMetrics = patronmetric.Float64Histogram(packageName, "amqp.publish.duration",
+		"AMQP publish duration.", "ms")
 }
 
 // Publisher defines a RabbitMQ publisher with tracing instrumentation.
@@ -65,52 +56,51 @@ func New(url string, oo ...OptionFunc) (*Publisher, error) {
 	if pub.cfg == nil {
 		conn, err = amqp.Dial(url)
 	} else {
-		conn, err = amqp.DialConfig(url, *pub.cfg)
+		pub.connection, err = amqp.DialConfig(url, *pub.cfg)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to open connection: %w", err)
 	}
 
-	ch, err := conn.Channel()
+	pub.channel, err = conn.Channel()
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("failed to open channel: %w", err), conn.Close())
 	}
 
-	pub.connection = conn
-	pub.channel = ch
 	return pub, nil
 }
 
 // Publish a message to an exchange.
 func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error {
-	sp := injectTraceHeaders(ctx, exchange, &msg)
+	ctx, sp := injectTraceHeaders(ctx, exchange, &msg)
+	defer sp.End()
 
 	start := time.Now()
-	err := tc.channel.Publish(exchange, key, mandatory, immediate, msg)
+	err := tc.channel.PublishWithContext(ctx, exchange, key, mandatory, immediate, msg)
 
-	observePublish(ctx, sp, start, exchange, err)
+	observePublish(ctx, start, exchange, err)
 	if err != nil {
+		sp.RecordError(err)
+		sp.SetStatus(codes.Error, "error publishing message")
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
 
 	return nil
 }
 
-func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishing) opentracing.Span {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(publisherComponent, exchange),
-		publisherComponent, ext.SpanKindProducer, opentracing.Tag{Key: "exchange", Value: exchange})
-
+func injectTraceHeaders(ctx context.Context, exchange string, msg *amqp.Publishing) (context.Context, trace.Span) {
 	if msg.Headers == nil {
 		msg.Headers = amqp.Table{}
 	}
-
-	c := amqpHeadersCarrier(msg.Headers)
-
-	if err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, c); err != nil {
-		log.FromContext(ctx).Error("failed to inject tracing headers", slog.Any("error", err))
-	}
 	msg.Headers[correlation.HeaderID] = correlation.IDFromContext(ctx)
-	return sp
+
+	ctx, sp := patrontrace.StartSpan(ctx, "publish", trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(attribute.String("exchange", exchange), observability.ClientAttribute("amqp")),
+	)
+
+	otel.GetTextMapPropagator().Inject(ctx, producerMessageCarrier{msg})
+
+	return ctx, sp
 }
 
 // Close the channel and connection.
@@ -118,18 +108,26 @@ func (tc *Publisher) Close() error {
 	return errors.Join(tc.channel.Close(), tc.connection.Close())
 }
 
-type amqpHeadersCarrier map[string]interface{}
-
-// Set implements Set() of opentracing.TextMapWriter.
-func (c amqpHeadersCarrier) Set(key, val string) {
-	c[key] = val
+func observePublish(ctx context.Context, start time.Time, exchange string, err error) {
+	publishDurationMetrics.Record(ctx, time.Since(start).Seconds(),
+		metric.WithAttributes(attribute.String("exchange", exchange), observability.StatusAttribute(err)))
 }
 
-func observePublish(ctx context.Context, span opentracing.Span, start time.Time, exchange string, err error) {
-	trace.SpanComplete(span, err)
+type producerMessageCarrier struct {
+	msg *amqp.Publishing
+}
 
-	durationHistogram := trace.Histogram{
-		Observer: publishDurationMetrics.WithLabelValues(exchange, strconv.FormatBool(err == nil)),
-	}
-	durationHistogram.Observe(ctx, time.Since(start).Seconds())
+// Get retrieves a single value for a given key.
+func (c producerMessageCarrier) Get(_ string) string {
+	return ""
+}
+
+// Set sets a header.
+func (c producerMessageCarrier) Set(key, val string) {
+	c.msg.Headers[key] = val
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c producerMessageCarrier) Keys() []string {
+	return nil
 }

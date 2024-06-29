@@ -1,7 +1,7 @@
 package amqp
 
 import (
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // OptionFunc definition for configuring the publisher in a functional way.

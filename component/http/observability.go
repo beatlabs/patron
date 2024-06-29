@@ -5,22 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
-
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
-
-const (
-	// MetricsPath of the component.
-	MetricsPath = "GET /metrics"
-)
-
-// MetricRoute creation.
-func MetricRoute() *Route {
-	return &Route{
-		path:    MetricsPath,
-		handler: promhttp.Handler().ServeHTTP,
-	}
-}
 
 func ProfilingRoutes(enableExpVar bool) []*Route {
 	var routes []*Route

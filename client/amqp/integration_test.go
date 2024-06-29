@@ -1,19 +1,21 @@
 //go:build integration
-// +build integration
 
 package amqp
 
 import (
 	"context"
+	"log"
 	"testing"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/prometheus/client_golang/prometheus/testutil"
-	"github.com/streadway/amqp"
+	"github.com/beatlabs/patron/observability/trace"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 const (
@@ -22,9 +24,23 @@ const (
 )
 
 func TestRun(t *testing.T) {
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
-	t.Cleanup(func() { mtr.Reset() })
+	ctx := context.Background()
+
+	// Setup tracing
+	exp := tracetest.NewInMemoryExporter()
+	tracePublisher := trace.Setup("test", nil, exp)
+
+	// Setup metrics
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		err := provider.Shutdown(context.Background())
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	otel.SetMeterProvider(provider)
 
 	require.NoError(t, createQueue(endpoint, queue))
 
@@ -33,23 +49,31 @@ func TestRun(t *testing.T) {
 
 	sent := "sent"
 
-	err = pub.Publish(context.Background(), "", queue, false, false,
+	err = pub.Publish(ctx, "", queue, false, false,
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent)})
 	require.NoError(t, err)
 
-	expected := map[string]interface{}{
-		"component": "amqp-publisher",
-		"error":     false,
-		"exchange":  "",
-		"span.kind": ext.SpanKindEnum("producer"),
-		"version":   "dev",
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
+	expected := tracetest.SpanStub{
+		Name: "publish",
+		Attributes: []attribute.KeyValue{
+			attribute.String("exchange", ""),
+			attribute.String("client", "amqp"),
+		},
 	}
 
-	assert.Len(t, mtr.FinishedSpans(), 1)
-	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+	snaps := exp.GetSpans().Snapshots()
+
+	assert.Len(t, snaps, 1)
+	assert.Equal(t, expected.Name, snaps[0].Name())
+	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
-	assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_amqp_publish_duration_seconds"))
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics[0].Metrics))
 
 	conn, err := amqp.Dial(endpoint)
 	require.NoError(t, err)

@@ -7,34 +7,18 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/trace"
+	"github.com/beatlabs/patron/observability"
+	"github.com/beatlabs/patron/observability/log"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
-
-const componentType = "mqtt-publisher"
-
-var publishDurationMetrics *prometheus.HistogramVec
-
-func init() {
-	publishDurationMetrics = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: "client",
-			Subsystem: "mqtt",
-			Name:      "publish_duration_seconds",
-			Help:      "MQTT publish completed by the client.",
-		},
-		[]string{"topic", "success"},
-	)
-	prometheus.MustRegister(publishDurationMetrics)
-}
 
 // DefaultConfig provides a config with sane default and logging enabled on the callbacks.
 func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfig, error) {
@@ -54,7 +38,7 @@ func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfi
 			slog.Info("connection is up", slog.Int64("reason", int64(conAck.ReasonCode)))
 		},
 		OnConnectError: func(err error) {
-			slog.Error("failed to connect", slog.Any("error", err))
+			slog.Error("failed to connect", log.ErrorAttr(err))
 		},
 		ClientConfig: paho.ClientConfig{
 			ClientID: clientID,
@@ -62,7 +46,7 @@ func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfi
 				slog.Warn("server disconnect received", slog.Int64("reason", int64(disconnect.ReasonCode)))
 			},
 			OnClientError: func(err error) {
-				slog.Error("client failure", slog.Any("error", err))
+				slog.Error("client failure", log.ErrorAttr(err))
 			},
 			PublishHook: func(publish *paho.Publish) {
 				slog.Debug("message published", slog.String("topic", publish.Topic))
@@ -88,29 +72,28 @@ func New(ctx context.Context, cfg autopaho.ClientConfig) (*Publisher, error) {
 
 // Publish provides a instrumented publishing of a message.
 func (p *Publisher) Publish(ctx context.Context, pub *paho.Publish) (*paho.PublishResponse, error) {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentType, pub.Topic), componentType,
-		ext.SpanKindProducer, opentracing.Tag{Key: "topic", Value: pub.Topic})
+	ctx, sp := patrontrace.StartSpan(ctx, "publish", trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(attribute.String("topic", pub.Topic), observability.ClientAttribute("mqtt")),
+	)
+	defer sp.End()
 
 	start := time.Now()
 
 	err := p.cm.AwaitConnection(ctx)
 	if err != nil {
-		observePublish(ctx, sp, start, pub.Topic, err)
+		observePublish(ctx, start, pub.Topic, err)
 		return nil, fmt.Errorf("connection is not up: %w", err)
 	}
 
-	if err = injectObservabilityHeaders(ctx, pub, sp); err != nil {
-		observePublish(ctx, sp, start, pub.Topic, err)
-		return nil, fmt.Errorf("failed to inject tracing headers: %w", err)
-	}
+	injectObservabilityHeaders(ctx, pub)
 
 	rsp, err := p.cm.Publish(ctx, pub)
 	if err != nil {
-		observePublish(ctx, sp, start, pub.Topic, err)
+		observePublish(ctx, start, pub.Topic, err)
 		return nil, fmt.Errorf("failed to publish message: %w", err)
 	}
 
-	observePublish(ctx, sp, start, pub.Topic, err)
+	observePublish(ctx, start, pub.Topic, nil)
 	return rsp, nil
 }
 
@@ -119,23 +102,13 @@ func (p *Publisher) Disconnect(ctx context.Context) error {
 	return p.cm.Disconnect(ctx)
 }
 
-type mqttHeadersCarrier paho.UserProperties
-
-// Set implements Set() of opentracing.TextMapWriter.
-func (m *mqttHeadersCarrier) Set(key, val string) {
-	hdr := paho.UserProperties(*m)
-	hdr.Add(key, val)
-	*m = mqttHeadersCarrier(hdr)
-}
-
-func injectObservabilityHeaders(ctx context.Context, pub *paho.Publish, sp opentracing.Span) error {
+func injectObservabilityHeaders(ctx context.Context, pub *paho.Publish) {
 	ensurePublishingProperties(pub)
-	pub.Properties.User.Add(correlation.HeaderID, correlation.IDFromContext(ctx))
 
-	c := mqttHeadersCarrier(pub.Properties.User)
-	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
-	pub.Properties.User = paho.UserProperties(c)
-	return err
+	ensurePublishingProperties(pub)
+	otel.GetTextMapPropagator().Inject(ctx, producerMessageCarrier{pub})
+
+	pub.Properties.User.Add(correlation.HeaderID, correlation.IDFromContext(ctx))
 }
 
 func ensurePublishingProperties(pub *paho.Publish) {
@@ -150,11 +123,21 @@ func ensurePublishingProperties(pub *paho.Publish) {
 	}
 }
 
-func observePublish(ctx context.Context, span opentracing.Span, start time.Time, topic string, err error) {
-	trace.SpanComplete(span, err)
+type producerMessageCarrier struct {
+	pub *paho.Publish
+}
 
-	durationHistogram := trace.Histogram{
-		Observer: publishDurationMetrics.WithLabelValues(topic, strconv.FormatBool(err == nil)),
-	}
-	durationHistogram.Observe(ctx, time.Since(start).Seconds())
+// Get retrieves a single value for a given key.
+func (c producerMessageCarrier) Get(key string) string {
+	return c.pub.Properties.User.Get(key)
+}
+
+// Set sets a header.
+func (c producerMessageCarrier) Set(key, val string) {
+	c.pub.Properties.User.Add(key, val)
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c producerMessageCarrier) Keys() []string {
+	return nil
 }

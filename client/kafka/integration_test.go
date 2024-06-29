@@ -4,22 +4,39 @@ package kafka
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/IBM/sarama"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 const (
 	clientTopic = "clientTopic"
 )
 
-var brokers = []string{"127.0.0.1:9092"}
+var (
+	brokers        = []string{"127.0.0.1:9092"}
+	tracePublisher *sdktrace.TracerProvider
+	traceExporter  *tracetest.InMemoryExporter
+)
+
+func TestMain(m *testing.M) {
+	traceExporter = tracetest.NewInMemoryExporter()
+	tracePublisher = trace.Setup("test", nil, traceExporter)
+
+	code := m.Run()
+
+	os.Exit(code)
+}
 
 func TestNewAsyncProducer_Success(t *testing.T) {
 	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
@@ -41,12 +58,20 @@ func TestNewSyncProducer_Success(t *testing.T) {
 }
 
 func TestAsyncProducer_SendMessage_Close(t *testing.T) {
+	t.Cleanup(func() { traceExporter.Reset() })
+
+	// Metrics monitoring set up
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		assert.NoError(t, provider.Shutdown(context.Background()))
+	}()
+
+	otel.SetMeterProvider(provider)
+
 	saramaCfg, err := DefaultProducerSaramaConfig("test-consumer", false)
 	require.Nil(t, err)
 
-	mtr := mocktracer.New()
-	defer mtr.Reset()
-	opentracing.SetGlobalTracer(mtr)
 	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
 	assert.NoError(t, err)
 	assert.NotNil(t, ap)
@@ -59,29 +84,38 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	err = ap.Send(context.Background(), msg)
 	assert.NoError(t, err)
 	assert.NoError(t, ap.Close())
-	assert.Len(t, mtr.FinishedSpans(), 1)
 
-	expected := map[string]interface{}{
-		"component": "kafka-async-producer",
-		"error":     false,
-		"span.kind": ext.SpanKindEnum("producer"),
-		"topic":     clientTopic,
-		"type":      "async",
-		"version":   "dev",
+	// Tracing
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
+	expected := tracetest.SpanStub{
+		Name: "send",
+		Attributes: []attribute.KeyValue{
+			attribute.String("delivery", "async"),
+			attribute.String("client", "kafka"),
+			attribute.String("topic", "clientTopic"),
+		},
 	}
-	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+	snaps := traceExporter.GetSpans().Snapshots()
+
+	assert.Len(t, snaps, 1)
+	assert.Equal(t, expected.Name, snaps[0].Name())
+	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
-	assert.Equal(t, 1, testutil.CollectAndCount(messageStatus, "client_kafka_producer_message_status"))
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
 }
 
 func TestSyncProducer_SendMessage_Close(t *testing.T) {
+	t.Cleanup(func() {
+		traceExporter.Reset()
+	})
 	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
 	require.NoError(t, err)
 
-	mtr := mocktracer.New()
-	defer mtr.Reset()
-	opentracing.SetGlobalTracer(mtr)
 	p, err := New(brokers, saramaCfg).Create()
 	require.NoError(t, err)
 	assert.NotNil(t, p)
@@ -94,26 +128,33 @@ func TestSyncProducer_SendMessage_Close(t *testing.T) {
 	assert.True(t, partition >= 0)
 	assert.True(t, offset >= 0)
 	assert.NoError(t, p.Close())
-	assert.Len(t, mtr.FinishedSpans(), 1)
 
-	expected := map[string]interface{}{
-		"component": "kafka-sync-producer",
-		"error":     false,
-		"span.kind": ext.SpanKindEnum("producer"),
-		"topic":     clientTopic,
-		"type":      "sync",
-		"version":   "dev",
+	// Tracing
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
+	expected := tracetest.SpanStub{
+		Name: "send",
+		Attributes: []attribute.KeyValue{
+			attribute.String("delivery", "sync"),
+			attribute.String("client", "kafka"),
+			attribute.String("topic", "clientTopic"),
+		},
 	}
-	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+	snaps := traceExporter.GetSpans().Snapshots()
+
+	assert.Len(t, snaps, 1)
+	assert.Equal(t, expected.Name, snaps[0].Name())
+	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 }
 
 func TestSyncProducer_SendMessages_Close(t *testing.T) {
+	t.Cleanup(func() {
+		traceExporter.Reset()
+	})
 	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
 	require.NoError(t, err)
 
-	mtr := mocktracer.New()
-	defer mtr.Reset()
-	opentracing.SetGlobalTracer(mtr)
 	p, err := New(brokers, saramaCfg).Create()
 	require.NoError(t, err)
 	assert.NotNil(t, p)
@@ -128,17 +169,22 @@ func TestSyncProducer_SendMessages_Close(t *testing.T) {
 	err = p.SendBatch(context.Background(), []*sarama.ProducerMessage{msg1, msg2})
 	assert.NoError(t, err)
 	assert.NoError(t, p.Close())
-	assert.Len(t, mtr.FinishedSpans(), 2)
+	// Tracing
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
-	expected := map[string]interface{}{
-		"component": "kafka-sync-producer",
-		"error":     false,
-		"span.kind": ext.SpanKindEnum("producer"),
-		"topic":     "batch",
-		"type":      "sync",
-		"version":   "dev",
+	expected := tracetest.SpanStub{
+		Name: "send-batch",
+		Attributes: []attribute.KeyValue{
+			attribute.String("delivery", "sync"),
+			attribute.String("client", "kafka"),
+		},
 	}
-	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+	snaps := traceExporter.GetSpans().Snapshots()
+
+	assert.Len(t, snaps, 1)
+	assert.Equal(t, expected.Name, snaps[0].Name())
+	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 }
 
 func TestAsyncProducerActiveBrokers(t *testing.T) {

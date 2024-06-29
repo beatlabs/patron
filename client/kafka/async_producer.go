@@ -7,12 +7,16 @@ import (
 	"fmt"
 
 	"github.com/IBM/sarama"
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
+	"github.com/beatlabs/patron/observability"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
 
-var asyncTag = opentracing.Tag{Key: "type", Value: deliveryTypeAsync}
+const (
+	deliveryTypeAsync = "async"
+)
+
+var deliveryTypeAsyncAttr = attribute.String("delivery", deliveryTypeAsync)
 
 // AsyncProducer is an asynchronous Kafka producer.
 type AsyncProducer struct {
@@ -23,25 +27,20 @@ type AsyncProducer struct {
 // Send a message to a topic, asynchronously. Producer errors are queued on the
 // channel obtained during the AsyncProducer creation.
 func (ap *AsyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) error {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeAsync, msg.Topic), componentTypeAsync,
-		ext.SpanKindProducer, asyncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
+	ctx, sp := startSpan(ctx, "send", deliveryTypeAsync, msg.Topic)
+	defer sp.End()
 
-	err := injectTracingAndCorrelationHeaders(ctx, msg, sp)
-	if err != nil {
-		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, msg.Topic, 1)
-		trace.SpanError(sp)
-		return fmt.Errorf("failed to inject tracing headers: %w", err)
-	}
+	injectTracingAndCorrelationHeaders(ctx, msg)
 
 	ap.asyncProd.Input() <- msg
-	statusCountAdd(deliveryTypeAsync, deliveryStatusSent, msg.Topic, 1)
-	trace.SpanSuccess(sp)
+	publishCountAdd(ctx, deliveryTypeAsyncAttr, observability.SucceededAttribute, topicAttribute(msg.Topic))
+	sp.SetStatus(codes.Ok, "message sent")
 	return nil
 }
 
 func (ap *AsyncProducer) propagateError(chErr chan<- error) {
 	for pe := range ap.asyncProd.Errors() {
-		statusCountAdd(deliveryTypeAsync, deliveryStatusSendError, pe.Msg.Topic, 1)
+		publishCountAdd(context.Background(), deliveryTypeAsyncAttr, observability.FailedAttribute, topicAttribute(pe.Msg.Topic))
 		chErr <- fmt.Errorf("failed to send message: %w", pe)
 	}
 }

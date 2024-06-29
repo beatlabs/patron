@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package redis
 
@@ -8,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,11 +17,7 @@ const (
 )
 
 func TestCache(t *testing.T) {
-	cache, err := New(Options{
-		Addr:     dsn,
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
+	cache, err := New(&redis.Options{Addr: dsn}, "test")
 	require.NoError(t, err)
 
 	key1 := "key1"

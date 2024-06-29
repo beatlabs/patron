@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
+	"github.com/beatlabs/patron/observability/log"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type messageState string
@@ -30,51 +30,12 @@ const (
 	defaultRetryCount        = 10
 	defaultRetryDelay        = 5 * time.Second
 
-	consumerComponent = "amqp-consumer"
+	consumerComponent = "amqp"
 
 	ackMessageState     messageState = "ACK"
 	nackMessageState    messageState = "NACK"
 	fetchedMessageState messageState = "FETCHED"
 )
-
-var (
-	messageAge        *prometheus.GaugeVec
-	messageCounterVec *prometheus.CounterVec
-	queueSize         *prometheus.GaugeVec
-)
-
-func init() {
-	messageAge = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "component",
-			Subsystem: "amqp",
-			Name:      "message_age",
-			Help:      "Message age based on the AMQP timestamp",
-		},
-		[]string{"queue"},
-	)
-	prometheus.MustRegister(messageAge)
-	messageCounterVec = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: "amqp",
-			Name:      "message_counter",
-			Help:      "Message counter by state and error",
-		},
-		[]string{"queue", "state", "hasError"},
-	)
-	prometheus.MustRegister(messageCounterVec)
-	queueSize = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "component",
-			Subsystem: "amqp",
-			Name:      "queue_size",
-			Help:      "Queue size reported by AMQP",
-		},
-		[]string{"queue"},
-	)
-	prometheus.MustRegister(queueSize)
-}
 
 // ProcessorFunc definition of an async processor.
 type ProcessorFunc func(context.Context, Batch)
@@ -107,7 +68,6 @@ type Component struct {
 	statsCfg statsConfig
 	retryCfg retryConfig
 	cfg      amqp.Config
-	traceTag opentracing.Tag
 }
 
 // New creates a new component with support for functional configuration.
@@ -130,8 +90,7 @@ func New(url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Component, e
 			queue:   queue,
 			requeue: true,
 		},
-		proc:     proc,
-		traceTag: opentracing.Tag{Key: "queue", Value: queue},
+		proc: proc,
 		batchCfg: batchConfig{
 			count:   defaultBatchCount,
 			timeout: defaultBatchTimeout,
@@ -173,7 +132,7 @@ func (c *Component) Run(ctx context.Context) error {
 	for count > 0 {
 		sub, err := c.subscribe()
 		if err != nil {
-			slog.Warn("failed to subscribe to queue, reconnecting", slog.Any("error", err),
+			slog.Warn("failed to subscribe to queue, reconnecting", log.ErrorAttr(err),
 				slog.Duration("retry", c.retryCfg.delay))
 			time.Sleep(c.retryCfg.delay)
 			count--
@@ -186,7 +145,7 @@ func (c *Component) Run(ctx context.Context) error {
 			closeSubscription(sub)
 			return nil
 		}
-		slog.Warn("process loop failure, reconnecting", slog.Any("error", err), slog.Duration("retry", c.retryCfg.delay))
+		slog.Warn("process loop failure, reconnecting", log.ErrorAttr(err), slog.Duration("retry", c.retryCfg.delay))
 		time.Sleep(c.retryCfg.delay)
 		count--
 		closeSubscription(sub)
@@ -197,7 +156,7 @@ func (c *Component) Run(ctx context.Context) error {
 func closeSubscription(sub subscription) {
 	err := sub.close()
 	if err != nil {
-		slog.Error("failed to close amqp channel/connection", slog.Any("error", err))
+		slog.Error("failed to close amqp channel/connection", log.ErrorAttr(err))
 	}
 	slog.Debug("amqp subscription closed")
 }
@@ -220,23 +179,18 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 				return errors.New("subscription channel closed")
 			}
 			slog.Debug("processing message", slog.Int64("tag", int64(delivery.DeliveryTag)))
-			observeReceivedMessageStats(c.queueCfg.queue, delivery.Timestamp)
+			observeReceivedMessageStats(ctx, c.queueCfg.queue, delivery.Timestamp)
 			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
 			slog.Debug("batch timeout expired, sending batch")
 			c.sendBatch(ctx, btc)
 		case <-tickerStats.C:
-			err := c.stats(sub)
+			err := c.stats(ctx, sub)
 			if err != nil {
-				slog.Error("failed to report sqsAPI stats: %v", slog.Any("error", err))
+				slog.Error("failed to report sqsAPI stats: %v", log.ErrorAttr(err))
 			}
 		}
 	}
-}
-
-func observeReceivedMessageStats(queue string, timestamp time.Time) {
-	messageAge.WithLabelValues(queue).Set(time.Now().UTC().Sub(timestamp).Seconds())
-	messageCountInc(queue, fetchedMessageState, nil)
 }
 
 type subscription struct {
@@ -287,15 +241,20 @@ func (c *Component) subscribe() (subscription, error) {
 }
 
 func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *message {
+	if len(delivery.Headers) == 0 {
+		delivery.Headers = amqp.Table{}
+	}
 	corID := getCorrelationID(delivery.Headers)
-	sp, ctxMsg := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queueCfg.queue),
-		consumerComponent, corID, mapHeader(delivery.Headers), c.traceTag)
+	ctx = otel.GetTextMapPropagator().Extract(ctx, &consumerMessageCarrier{msg: &delivery})
 
-	ctxMsg = correlation.ContextWithID(ctxMsg, corID)
-	ctxMsg = log.WithContext(ctxMsg, slog.With(slog.String(correlation.ID, corID)))
+	ctx, sp := patrontrace.StartSpan(ctx, patrontrace.ComponentOpName(consumerComponent, c.queueCfg.queue),
+		trace.WithSpanKind(trace.SpanKindConsumer))
+
+	ctx = correlation.ContextWithID(ctx, corID)
+	ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
 
 	return &message{
-		ctx:     ctxMsg,
+		ctx:     ctx,
 		span:    sp,
 		msg:     delivery,
 		requeue: c.queueCfg.requeue,
@@ -320,30 +279,14 @@ func (c *Component) processAndResetBatch(ctx context.Context, btc *batch) {
 	btc.reset()
 }
 
-func (c *Component) stats(sub subscription) error {
+func (c *Component) stats(ctx context.Context, sub subscription) error {
 	q, err := sub.channel.QueueInspect(c.queueCfg.queue)
 	if err != nil {
 		return err
 	}
 
-	queueSize.WithLabelValues(c.queueCfg.queue).Set(float64(q.Messages))
+	observeQueueSize(ctx, c.queueCfg.queue, q.Messages)
 	return nil
-}
-
-func messageCountInc(queue string, state messageState, err error) {
-	hasError := "false"
-	if err != nil {
-		hasError = "true"
-	}
-	messageCounterVec.WithLabelValues(queue, string(state), hasError).Inc()
-}
-
-func mapHeader(hh amqp.Table) map[string]string {
-	mp := make(map[string]string)
-	for k, v := range hh {
-		mp[k] = fmt.Sprint(v)
-	}
-	return mp
 }
 
 func getCorrelationID(hh amqp.Table) string {
@@ -357,4 +300,31 @@ func getCorrelationID(hh amqp.Table) string {
 		}
 	}
 	return uuid.New().String()
+}
+
+type consumerMessageCarrier struct {
+	msg *amqp.Delivery
+}
+
+// Get retrieves a single value for a given key.
+func (c consumerMessageCarrier) Get(key string) string {
+	val, ok := c.msg.Headers[key]
+	if !ok {
+		return ""
+	}
+	v, ok := val.(string)
+	if !ok {
+		return ""
+	}
+	return v
+}
+
+// Set sets a header.
+func (c consumerMessageCarrier) Set(key, val string) {
+	c.msg.Headers[key] = val
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c consumerMessageCarrier) Keys() []string {
+	return nil
 }

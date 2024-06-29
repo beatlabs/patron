@@ -29,3 +29,4 @@ coverage.txt
 
 # tmp folder used in examples for storing logging, binaries and pids
 examples/tmp/
+docker-compose/tempo-data/

@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package sql
 
@@ -8,10 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+
 	// Integration test.
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -50,8 +52,19 @@ func TestOpen(t *testing.T) {
 }
 
 func TestIntegration(t *testing.T) {
-	mtr := mocktracer.New()
-	opentracing.SetGlobalTracer(mtr)
+	// Tracing monitor setup.
+	exp := tracetest.NewInMemoryExporter()
+	tracePublisher := trace.Setup("test", nil, exp)
+
+	// Metrics monitor setup.
+	read := metric.NewManualReader()
+	provider := metric.NewMeterProvider(metric.WithReader(read))
+	defer func() {
+		assert.NoError(t, provider.Shutdown(context.Background()))
+	}()
+
+	otel.SetMeterProvider(provider)
+
 	ctx := context.Background()
 
 	const query = "SELECT * FROM employee LIMIT 1"
@@ -65,16 +78,18 @@ func TestIntegration(t *testing.T) {
 	db.SetMaxOpenConns(10)
 
 	t.Run("db.Ping", func(t *testing.T) {
-		mtr.Reset()
+		exp.Reset()
 		assert.NoError(t, db.Ping(ctx))
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Ping", "", 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Ping", "")
 	})
 
 	t.Run("db.Stats", func(t *testing.T) {
-		mtr.Reset()
+		exp.Reset()
 		stats := db.Stats(ctx)
 		assert.NotNil(t, stats)
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Stats", "", 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Stats", "")
 	})
 
 	t.Run("db.Exec", func(t *testing.T) {
@@ -83,221 +98,277 @@ func TestIntegration(t *testing.T) {
 		count, err := result.RowsAffected()
 		assert.NoError(t, err)
 		assert.True(t, count >= 0)
-		mtr.Reset()
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		exp.Reset()
 		result, err = db.Exec(ctx, insertQuery, "patron")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Exec", insertQuery, 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Exec", insertQuery)
 	})
 
 	t.Run("db.Query", func(t *testing.T) {
-		mtr.Reset()
+		exp.Reset()
 		rows, err := db.Query(ctx, query)
 		defer func() {
 			assert.NoError(t, rows.Close())
 		}()
 		assert.NoError(t, err)
 		assert.NotNil(t, rows)
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Query", query, 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Query", query)
 	})
 
 	t.Run("db.QueryRow", func(t *testing.T) {
-		mtr.Reset()
+		exp.Reset()
 		row := db.QueryRow(ctx, query)
 		assert.NotNil(t, row)
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.QueryRow", query, 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.QueryRow", query)
 	})
 
 	t.Run("db.Driver", func(t *testing.T) {
-		mtr.Reset()
+		exp.Reset()
 		drv := db.Driver(ctx)
 		assert.NotNil(t, drv)
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Driver", "", 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Driver", "")
 	})
 
 	t.Run("stmt", func(t *testing.T) {
-		mtr.Reset()
+		exp.Reset()
 		stmt, err := db.Prepare(ctx, query)
 		assert.NoError(t, err)
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Prepare", query, 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Prepare", query)
 
 		t.Run("stmt.Exec", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			result, err := stmt.Exec(ctx)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "stmt.Exec", query, 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Exec", query)
 		})
 
 		t.Run("stmt.Query", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			rows, err := stmt.Query(ctx)
 			assert.NoError(t, err)
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "stmt.Query", query, 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Query", query)
 		})
 
 		t.Run("stmt.QueryRow", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			row := stmt.QueryRow(ctx)
 			assert.NotNil(t, row)
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "stmt.QueryRow", query, 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.QueryRow", query)
 		})
 
-		mtr.Reset()
+		exp.Reset()
 		assert.NoError(t, stmt.Close(ctx))
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "stmt.Close", "", 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
 	})
 
 	t.Run("conn", func(t *testing.T) {
-		mtr.Reset()
+		exp.Reset()
 		conn, err := db.Conn(ctx)
 		assert.NoError(t, err)
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Conn", "", 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Conn", "")
 
 		t.Run("conn.Ping", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			assert.NoError(t, conn.Ping(ctx))
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Ping", "", 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Ping", "")
 		})
 
 		t.Run("conn.Exec", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			result, err := conn.Exec(ctx, insertQuery, "patron")
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Exec", insertQuery, 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Exec", insertQuery)
 		})
 
 		t.Run("conn.Query", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			rows, err := conn.Query(ctx, query)
 			assert.NoError(t, err)
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Query", query, 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Query", query)
 		})
 
 		t.Run("conn.QueryRow", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			row := conn.QueryRow(ctx, query)
 			var id int
 			var name string
 			assert.NoError(t, row.Scan(&id, &name))
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.QueryRow", query, 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.QueryRow", query)
 		})
 
 		t.Run("conn.Prepare", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			stmt, err := conn.Prepare(ctx, query)
 			assert.NoError(t, err)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Prepare", query)
+			exp.Reset()
 			assert.NoError(t, stmt.Close(ctx))
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Prepare", query, 2)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
 		})
 
 		t.Run("conn.BeginTx", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			tx, err := conn.BeginTx(ctx, nil)
 			assert.NoError(t, err)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.BeginTx", "")
+			exp.Reset()
 			assert.NoError(t, tx.Commit(ctx))
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.BeginTx", "", 2)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Commit", "")
 		})
 
-		mtr.Reset()
+		exp.Reset()
 		assert.NoError(t, conn.Close(ctx))
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "conn.Close", "", 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Close", "")
 	})
 
 	t.Run("tx", func(t *testing.T) {
-		mtr.Reset()
+		exp.Reset()
 		tx, err := db.BeginTx(ctx, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, tx)
-		assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.BeginTx", "", 1)
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.BeginTx", "")
 
 		t.Run("tx.Exec", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			result, err := tx.Exec(ctx, insertQuery, "patron")
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Exec", insertQuery, 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Exec", insertQuery)
 		})
 
 		t.Run("tx.Query", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			rows, err := tx.Query(ctx, query)
 			assert.NoError(t, err)
 			defer func() {
 				assert.NoError(t, rows.Close())
 			}()
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Query", query, 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Query", query)
 		})
 
 		t.Run("tx.QueryRow", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			row := tx.QueryRow(ctx, query)
 			var id int
 			var name string
 			assert.NoError(t, row.Scan(&id, &name))
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.QueryRow", query, 1)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.QueryRow", query)
 		})
 
 		t.Run("tx.Prepare", func(t *testing.T) {
-			mtr.Reset()
+			exp.Reset()
 			stmt, err := tx.Prepare(ctx, query)
 			assert.NoError(t, err)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Prepare", query)
+			exp.Reset()
 			assert.NoError(t, stmt.Close(ctx))
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Prepare", query, 2)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
 		})
 
 		t.Run("tx.Stmt", func(t *testing.T) {
+			exp.Reset()
 			stmt, err := db.Prepare(ctx, query)
 			assert.NoError(t, err)
-			mtr.Reset()
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "db.Prepare", query)
+			exp.Reset()
 			txStmt := tx.Stmt(ctx, stmt)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Stmt", query)
+			exp.Reset()
 			assert.NoError(t, txStmt.Close(ctx))
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
+			exp.Reset()
 			assert.NoError(t, stmt.Close(ctx))
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Stmt", query, 3)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
 		})
 
-		assert.NoError(t, tx.Commit(ctx))
-
 		t.Run("tx.Rollback", func(t *testing.T) {
+			exp.Reset()
 			tx, err := db.BeginTx(ctx, nil)
 			assert.NoError(t, err)
 			assert.NotNil(t, db)
-
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "db.BeginTx", "")
+			exp.Reset()
 			row := tx.QueryRow(ctx, query)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.QueryRow", query)
 			var id int
 			var name string
 			assert.NoError(t, row.Scan(&id, &name))
-
-			mtr.Reset()
+			exp.Reset()
 			assert.NoError(t, tx.Rollback(ctx))
-			assertSpanAndMetric(t, mtr.FinishedSpans()[0], "tx.Rollback", "", 4)
+			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Rollback", "")
 		})
-	})
 
-	mtr.Reset()
-	assert.NoError(t, db.Close(ctx))
-	assertSpanAndMetric(t, mtr.FinishedSpans()[0], "db.Close", "", 1)
+		exp.Reset()
+		assert.NoError(t, tx.Commit(ctx))
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Commit", "")
+		exp.Reset()
+		assert.NoError(t, db.Close(ctx))
+		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Close", "")
+	})
 }
 
-func assertSpanAndMetric(t *testing.T, sp *mocktracer.MockSpan, opName, statement string, metricCount int) {
-	assert.Equal(t, opName, sp.OperationName)
-	assert.Equal(t, map[string]interface{}{
-		"component":    "sql",
-		"db.instance":  "patrondb",
-		"db.statement": statement,
-		"db.type":      "RDBMS",
-		"db.user":      "patron",
-		"version":      "dev",
-		"error":        false,
-	}, sp.Tags())
+func assertSpanAndMetric(t *testing.T, spans tracetest.SpanStubs, read *metric.ManualReader, opName, statement string) {
+	assert.Len(t, spans, 1)
+	assert.Equal(t, opName, spans[0].Name)
+	for _, v := range spans[0].Attributes {
+		switch v.Key {
+		case "db.instance":
+			assert.Equal(t, "localhost:3306", v.Value.AsString())
+		case "db.name":
+			assert.Equal(t, "patrondb", v.Value.AsString())
+		case "db.user":
+			assert.Equal(t, "patron", v.Value.AsString())
+		case "db.statement":
+			assert.Equal(t, statement, v.Value.AsString())
+		}
+	}
 
-	assert.Equal(t, metricCount, testutil.CollectAndCount(opDurationMetrics, "client_sql_cmd_duration_seconds"))
-	opDurationMetrics.Reset()
+	// Metrics
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
 }

@@ -7,13 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 )
 
 // NewRequest creates a request, encodes the body, and sets the appropriate headers.
@@ -48,7 +47,7 @@ func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) 
 	defer func() {
 		err := rsp.Body.Close()
 		if err != nil {
-			log.FromContext(ctx).Error("failed to close response body", slog.Any("error", err))
+			log.FromContext(ctx).Error("failed to close response body", log.ErrorAttr(err))
 		}
 	}()
 

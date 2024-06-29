@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package sqs
 
@@ -14,12 +13,12 @@ import (
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	patronsqscli "github.com/beatlabs/patron/client/sqs"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
 
 const (
@@ -32,7 +31,20 @@ type testMessage struct {
 }
 
 func Test_SQS_Consume(t *testing.T) {
-	t.Cleanup(func() { mtr.Reset() })
+	// Trace setup
+	t.Cleanup(func() { traceExporter.Reset() })
+
+	// Metrics setup
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		err := provider.Shutdown(context.Background())
+		if err != nil {
+			require.NoError(t, err)
+		}
+	}()
+
+	otel.SetMeterProvider(provider)
 
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"
@@ -43,7 +55,7 @@ func Test_SQS_Consume(t *testing.T) {
 	require.NoError(t, err)
 
 	sent := sendMessage(t, api, correlationID, queue, "1", "2", "3")
-	mtr.Reset()
+	traceExporter.Reset()
 
 	chReceived := make(chan []*testMessage)
 	received := make([]*testMessage, 0)
@@ -76,29 +88,29 @@ func Test_SQS_Consume(t *testing.T) {
 	got := <-chReceived
 
 	assert.ElementsMatch(t, sent, got)
-	assert.Len(t, mtr.FinishedSpans(), 3)
 
-	expectedTags := map[string]interface{}{
-		"component":     "sqs-consumer",
-		"correlationID": "123",
-		"error":         false,
-		"span.kind":     ext.SpanKindEnum("consumer"),
-		"version":       "dev",
-	}
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
-	for _, span := range mtr.FinishedSpans() {
-		assert.Equal(t, expectedTags, span.Tags())
-	}
+	expected := createStubSpan("sqs-consumer", "")
 
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageAge, "component_sqs_message_age"), 1)
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(messageCounterVec, "component_sqs_message_counter"), 1)
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(queueSize, "component_sqs_queue_size"), 1)
+	spans := traceExporter.GetSpans()
+
+	assert.Len(t, got, 3)
+	assertSpan(t, expected, spans[0])
+	assertSpan(t, expected, spans[1])
+	assertSpan(t, expected, spans[2])
+
+	// Metrics
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Equal(t, 3, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	assert.Equal(t, "sqs.message.age", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
+	assert.Equal(t, "sqs.message.counter", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
+	assert.Equal(t, "sqs.queue.size", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
 }
 
-func sendMessage(t *testing.T, api *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {
-	pub, err := patronsqscli.New(api)
-	require.NoError(t, err)
-
+func sendMessage(t *testing.T, client *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {
 	ctx := correlation.ContextWithID(context.Background(), correlationID)
 
 	sentMessages := make([]*testMessage, 0, len(ids))
@@ -116,7 +128,7 @@ func sendMessage(t *testing.T, api *sqs.Client, correlationID, queue string, ids
 			QueueUrl:     aws.String(queue),
 		}
 
-		msgID, err := pub.Publish(ctx, msg)
+		msgID, err := client.SendMessage(ctx, msg)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, msgID)
 

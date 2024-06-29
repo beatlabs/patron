@@ -7,8 +7,8 @@ import (
 	"github.com/beatlabs/patron"
 	patronamqp "github.com/beatlabs/patron/component/amqp"
 	"github.com/beatlabs/patron/examples"
-	"github.com/beatlabs/patron/log"
-	"github.com/streadway/amqp"
+	"github.com/beatlabs/patron/observability/log"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func createAMQPConsumer() (patron.Component, error) {

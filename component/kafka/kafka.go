@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/IBM/sarama"
-	"github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // FailStrategy type definition.
@@ -32,11 +32,11 @@ type Message interface {
 	// Message will contain the raw Kafka message.
 	Message() *sarama.ConsumerMessage
 	// Span contains the tracing span of this message.
-	Span() opentracing.Span
+	Span() trace.Span
 }
 
 // NewMessage initializes a new message which is an implementation of the kafka Message interface.
-func NewMessage(ctx context.Context, sp opentracing.Span, msg *sarama.ConsumerMessage) Message {
+func NewMessage(ctx context.Context, sp trace.Span, msg *sarama.ConsumerMessage) Message {
 	return &message{
 		ctx: ctx,
 		sp:  sp,
@@ -46,7 +46,7 @@ func NewMessage(ctx context.Context, sp opentracing.Span, msg *sarama.ConsumerMe
 
 type message struct {
 	ctx context.Context
-	sp  opentracing.Span
+	sp  trace.Span
 	msg *sarama.ConsumerMessage
 }
 
@@ -62,7 +62,7 @@ func (m *message) Message() *sarama.ConsumerMessage {
 }
 
 // Span contains the tracing span of this message.
-func (m *message) Span() opentracing.Span {
+func (m *message) Span() trace.Span {
 	return m.sp
 }
 

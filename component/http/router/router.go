@@ -44,7 +44,6 @@ func New(oo ...OptionFunc) (*http.ServeMux, error) {
 	var stdRoutes []*patronhttp.Route
 
 	mux := http.NewServeMux()
-	stdRoutes = append(stdRoutes, patronhttp.MetricRoute())
 	stdRoutes = append(stdRoutes, patronhttp.ProfilingRoutes(cfg.enableProfilingExpVar)...)
 
 	route, err := patronhttp.LivenessCheckRoute(cfg.aliveCheckFunc)
@@ -88,11 +87,6 @@ func New(oo ...OptionFunc) (*http.ServeMux, error) {
 			return nil, err
 		}
 		middlewares = append(middlewares, loggingTracingMiddleware)
-		requestObserverMiddleware, err := middleware.NewRequestObserver(route.Path())
-		if err != nil {
-			return nil, err
-		}
-		middlewares = append(middlewares, requestObserverMiddleware)
 		compressionMiddleware, err := middleware.NewCompression(cfg.deflateLevel)
 		if err != nil {
 			return nil, err

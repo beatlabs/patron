@@ -7,23 +7,33 @@ import (
 	"time"
 
 	"github.com/beatlabs/patron/cache"
-	"github.com/beatlabs/patron/client/redis"
+	patronredis "github.com/beatlabs/patron/client/redis"
+	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ cache.TTLCache = &Cache{}
+var (
+	_              cache.TTLCache = &Cache{}
+	redisAttribute                = attribute.String("cache.type", "redis")
+)
 
 // Cache encapsulates a Redis-based caching mechanism.
 type Cache struct {
-	rdb redis.Client
+	rdb              *redis.Client
+	useCaseAttribute attribute.KeyValue
 }
 
-// Options exposes the struct from go-redis package.
-type Options redis.Options
-
 // New creates a cache returns a new Redis client that will be used as the cache store.
-func New(opt Options) (*Cache, error) {
-	redisDB := redis.New(redis.Options(opt))
-	return &Cache{rdb: redisDB}, nil
+func New(opt *redis.Options, useCase string) (*Cache, error) {
+	cache.SetupMetricsOnce()
+	redisDB, err := patronredis.New(opt)
+	if err != nil {
+		return nil, err
+	}
+	return &Cache{
+		rdb:              redisDB,
+		useCaseAttribute: cache.UseCaseAttribute(useCase),
+	}, nil
 }
 
 // Get executes a lookup and returns whether a key exists in the cache along with its value.
@@ -31,10 +41,12 @@ func (c *Cache) Get(ctx context.Context, key string) (interface{}, bool, error) 
 	res, err := c.rdb.Do(ctx, "get", key).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) { // cache miss
+			cache.ObserveMiss(ctx, redisAttribute, c.useCaseAttribute)
 			return nil, false, nil
 		}
 		return nil, false, err
 	}
+	cache.ObserveHit(ctx, redisAttribute, c.useCaseAttribute)
 	return res, true, nil
 }
 

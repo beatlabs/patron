@@ -20,7 +20,6 @@ func TestNew(t *testing.T) {
 		delay    time.Duration
 	}
 	tests := map[string]struct {
-		name    string
 		args    args
 		wantErr bool
 	}{

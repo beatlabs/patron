@@ -14,10 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
+	"github.com/beatlabs/patron/observability/log"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -46,45 +47,6 @@ const (
 	nackMessageState    messageState = "NACK"
 	fetchedMessageState messageState = "FETCHED"
 )
-
-var (
-	messageAge        *prometheus.GaugeVec
-	messageCounterVec *prometheus.CounterVec
-	queueSize         *prometheus.GaugeVec
-)
-
-func init() {
-	messageAge = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "component",
-			Subsystem: "sqs",
-			Name:      "message_age",
-			Help:      "Message age based on the SentTimestamp SQS attribute",
-		},
-		[]string{"queue"},
-	)
-	prometheus.MustRegister(messageAge)
-	messageCounterVec = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: "sqs",
-			Name:      "message_counter",
-			Help:      "Message counter",
-		},
-		[]string{"queue", "state", "hasError"},
-	)
-	prometheus.MustRegister(messageCounterVec)
-	queueSize = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "component",
-			Subsystem: "sqs",
-			Name:      "queue_size",
-			Help:      "Queue size reported by AWS",
-		},
-		[]string{"state"},
-	)
-	prometheus.MustRegister(queueSize)
-}
 
 type retry struct {
 	count uint
@@ -200,7 +162,7 @@ func (c *Component) Run(ctx context.Context) error {
 		case <-tickerStats.C:
 			err := c.report(ctx, c.api, c.queue.url)
 			if err != nil {
-				log.FromContext(ctx).Error("failed to report sqsAPI stats", slog.Any("error", err))
+				log.FromContext(ctx).Error("failed to report sqsAPI stats", log.ErrorAttr(err))
 			}
 		}
 	}
@@ -229,7 +191,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			},
 		})
 		if err != nil {
-			logger.Error("failed to receive messages, sleeping", slog.Any("error", err), slog.Duration("wait", c.retry.wait))
+			logger.Error("failed to receive messages, sleeping", log.ErrorAttr(err), slog.Duration("wait", c.retry.wait))
 			time.Sleep(c.retry.wait)
 			retries--
 			if retries > 0 {
@@ -245,7 +207,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 		}
 
 		logger.Debug("consume: received messages", slog.Int("count", len(output.Messages)))
-		messageCountInc(c.queue.name, fetchedMessageState, false, len(output.Messages))
+		observeMessageCount(ctx, c.queue.name, fetchedMessageState, nil, len(output.Messages))
 
 		if len(output.Messages) == 0 {
 			continue
@@ -266,18 +228,19 @@ func (c *Component) createBatch(ctx context.Context, output *sqs.ReceiveMessageO
 	}
 
 	for _, msg := range output.Messages {
-		observerMessageAge(c.queue.name, msg.Attributes)
+		observerMessageAge(ctx, c.queue.name, msg.Attributes)
 
 		corID := getCorrelationID(msg.MessageAttributes)
 
-		sp, ctxCh := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, c.queue.name),
-			consumerComponent, corID, mapHeader(msg.MessageAttributes))
+		ctx = otel.GetTextMapPropagator().Extract(ctx, &consumerMessageCarrier{msg: &msg}) // nolint:gosec
 
-		ctxCh = correlation.ContextWithID(ctxCh, corID)
-		ctxCh = log.WithContext(ctxCh, slog.With(slog.String(correlation.ID, corID)))
+		ctx, sp := patrontrace.StartSpan(ctx, consumerComponent, trace.WithSpanKind(trace.SpanKindConsumer))
+
+		ctx = correlation.ContextWithID(ctx, corID)
+		ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
 
 		btc.messages = append(btc.messages, message{
-			ctx:   ctxCh,
+			ctx:   ctx,
 			queue: c.queue,
 			api:   c.api,
 			msg:   msg,
@@ -306,19 +269,19 @@ func (c *Component) report(ctx context.Context, sqsAPI API, queueURL string) err
 	if err != nil {
 		return err
 	}
-	queueSize.WithLabelValues("available").Set(size)
+	observeQueueSize(ctx, c.queue.name, "available", size)
 
 	size, err = getAttributeFloat64(rsp.Attributes, sqsAttributeApproximateNumberOfMessagesDelayed)
 	if err != nil {
 		return err
 	}
-	queueSize.WithLabelValues("delayed").Set(size)
+	observeQueueSize(ctx, c.queue.name, "delayed", size)
 
 	size, err = getAttributeFloat64(rsp.Attributes, sqsAttributeApproximateNumberOfMessagesNotVisible)
 	if err != nil {
 		return err
 	}
-	queueSize.WithLabelValues("invisible").Set(size)
+	observeQueueSize(ctx, c.queue.name, "invisible", size)
 	return nil
 }
 
@@ -334,27 +297,6 @@ func getAttributeFloat64(attr map[string]string, key string) (float64, error) {
 	return value, nil
 }
 
-func observerMessageAge(queue string, attributes map[string]string) {
-	attribute, ok := attributes[sqsAttributeSentTimestamp]
-	if !ok || len(strings.TrimSpace(attribute)) == 0 {
-		return
-	}
-	timestamp, err := strconv.ParseInt(attribute, 10, 64)
-	if err != nil {
-		return
-	}
-	messageAge.WithLabelValues(queue).Set(time.Now().UTC().Sub(time.Unix(timestamp, 0)).Seconds())
-}
-
-func messageCountInc(queue string, state messageState, hasError bool, count int) {
-	hasErrorString := "false"
-	if hasError {
-		hasErrorString = "true"
-	}
-
-	messageCounterVec.WithLabelValues(queue, string(state), hasErrorString).Add(float64(count))
-}
-
 func getCorrelationID(ma map[string]types.MessageAttributeValue) string {
 	for key, value := range ma {
 		if key == correlation.HeaderID {
@@ -367,12 +309,21 @@ func getCorrelationID(ma map[string]types.MessageAttributeValue) string {
 	return uuid.New().String()
 }
 
-func mapHeader(ma map[string]types.MessageAttributeValue) map[string]string {
-	mp := make(map[string]string)
-	for key, value := range ma {
-		if value.StringValue != nil {
-			mp[key] = *value.StringValue
-		}
-	}
-	return mp
+type consumerMessageCarrier struct {
+	msg *types.Message
+}
+
+// Get retrieves a single value for a given key.
+func (c consumerMessageCarrier) Get(key string) string {
+	return c.msg.Attributes[key]
+}
+
+// Set sets a header.
+func (c consumerMessageCarrier) Set(key, val string) {
+	c.msg.Attributes[key] = val
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c consumerMessageCarrier) Keys() []string {
+	return nil
 }

@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package amqp
 
@@ -10,11 +9,16 @@ import (
 
 	patronamqp "github.com/beatlabs/patron/client/amqp"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/prometheus/client_golang/prometheus/testutil"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -24,7 +28,15 @@ const (
 
 func TestRun(t *testing.T) {
 	require.NoError(t, createQueue())
-	t.Cleanup(func() { mtr.Reset() })
+
+	// Setup tracing
+	t.Cleanup(func() { traceExporter.Reset() })
+
+	// Setup metrics
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() { require.NoError(t, provider.Shutdown(context.Background())) }()
+	otel.SetMeterProvider(provider)
 
 	ctx, cnl := context.WithCancel(context.Background())
 
@@ -42,7 +54,9 @@ func TestRun(t *testing.T) {
 	err = pub.Publish(reqCtx, "", rabbitMQQueue, false, false,
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent[1])})
 	require.NoError(t, err)
-	mtr.Reset()
+
+	assert.NoError(t, err, tracePublisher.ForceFlush(ctx))
+	traceExporter.Reset()
 
 	chReceived := make(chan []string)
 	received := make([]string, 0)
@@ -76,24 +90,31 @@ func TestRun(t *testing.T) {
 	<-chDone
 
 	assert.ElementsMatch(t, sent, got)
-	assert.Len(t, mtr.FinishedSpans(), 2)
 
-	expectedTags := map[string]interface{}{
-		"component":     "amqp-consumer",
-		"correlationID": "123",
-		"error":         false,
-		"queue":         "rmq-test-queue",
-		"span.kind":     ext.SpanKindEnum("consumer"),
-		"version":       "dev",
+	assert.NoError(t, err, tracePublisher.ForceFlush(ctx))
+	time.Sleep(time.Second)
+	spans := traceExporter.GetSpans()
+	assert.Len(t, spans, 2)
+
+	expectedSpan := tracetest.SpanStub{
+		Name:     "amqp rmq-test-queue",
+		SpanKind: trace.SpanKindConsumer,
+		Status: tracesdk.Status{
+			Code: codes.Ok,
+		},
 	}
 
-	for _, span := range mtr.FinishedSpans() {
-		assert.Equal(t, expectedTags, span.Tags())
-	}
+	assertSpan(t, expectedSpan, spans[0])
+	assertSpan(t, expectedSpan, spans[1])
 
-	assert.Equal(t, 1, testutil.CollectAndCount(messageAge, "component_amqp_message_age"))
-	assert.Equal(t, 2, testutil.CollectAndCount(messageCounterVec, "component_amqp_message_counter"))
-	assert.GreaterOrEqual(t, testutil.CollectAndCount(queueSize, "component_amqp_queue_size"), 0)
+	// Metrics
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Equal(t, 3, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	assert.Equal(t, "amqp.publish.duration", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
+	assert.Equal(t, "amqp.message.age", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
+	assert.Equal(t, "amqp.message.counter", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
 }
 
 func createQueue() error {

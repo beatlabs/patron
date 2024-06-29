@@ -8,7 +8,7 @@ import (
 	"github.com/beatlabs/patron"
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/router"
-	"github.com/beatlabs/patron/log"
+	"github.com/beatlabs/patron/observability/log"
 )
 
 func createHttpRouter() (patron.Component, error) {

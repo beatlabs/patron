@@ -6,14 +6,16 @@ import (
 	"fmt"
 
 	"github.com/IBM/sarama"
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
+	"github.com/beatlabs/patron/observability"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
 
-const batchTarget = "batch"
+const (
+	deliveryTypeSync = "sync"
+)
 
-var syncTag = opentracing.Tag{Key: "type", Value: deliveryTypeSync}
+var deliveryTypeSyncAttr = attribute.String("delivery", deliveryTypeSync)
 
 // SyncProducer is a synchronous Kafka producer.
 type SyncProducer struct {
@@ -23,25 +25,21 @@ type SyncProducer struct {
 
 // Send a message to a topic.
 func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (partition int32, offset int64, err error) {
-	sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeSync, msg.Topic), componentTypeSync,
-		ext.SpanKindProducer, syncTag, opentracing.Tag{Key: "topic", Value: msg.Topic})
+	ctx, sp := startSpan(ctx, "send", deliveryTypeSync, msg.Topic)
+	defer sp.End()
 
-	err = injectTracingAndCorrelationHeaders(ctx, msg, sp)
-	if err != nil {
-		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
-		trace.SpanError(sp)
-		return -1, -1, fmt.Errorf("failed to inject tracing headers: %w", err)
-	}
+	injectTracingAndCorrelationHeaders(ctx, msg)
 
 	partition, offset, err = p.syncProd.SendMessage(msg)
 	if err != nil {
-		statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, 1)
-		trace.SpanError(sp)
+		publishCountAdd(ctx, deliveryTypeSyncAttr, observability.FailedAttribute, topicAttribute(msg.Topic))
+		sp.RecordError(err)
+		sp.SetStatus(codes.Error, "error sending message")
 		return -1, -1, err
 	}
 
-	statusCountAdd(deliveryTypeSync, deliveryStatusSent, msg.Topic, 1)
-	trace.SpanSuccess(sp)
+	publishCountAdd(ctx, deliveryTypeSyncAttr, observability.SucceededAttribute, topicAttribute(msg.Topic))
+	sp.SetStatus(codes.Ok, "message sent")
 	return partition, offset, nil
 }
 
@@ -51,33 +49,22 @@ func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.Produce
 		return errors.New("messages are empty or nil")
 	}
 
-	spans := make([]opentracing.Span, 0, len(messages))
+	ctx, sp := startSpan(ctx, "send-batch", deliveryTypeSync, "")
+	defer sp.End()
 
 	for _, msg := range messages {
-		sp, _ := trace.ChildSpan(ctx, trace.ComponentOpName(componentTypeSync, batchTarget), componentTypeSync,
-			ext.SpanKindProducer, syncTag, opentracing.Tag{Key: "topic", Value: batchTarget})
-
-		if err := injectTracingAndCorrelationHeaders(ctx, msg, sp); err != nil {
-			statusCountAdd(deliveryTypeSync, deliveryStatusSendError, msg.Topic, len(messages))
-			trace.SpanError(sp)
-			return fmt.Errorf("failed to inject tracing headers: %w", err)
-		}
-		spans = append(spans, sp)
+		injectTracingAndCorrelationHeaders(ctx, msg)
 	}
 
 	if err := p.syncProd.SendMessages(messages); err != nil {
-		statusCountBatchAdd(deliveryTypeSync, deliveryStatusSendError, messages)
-		for _, sp := range spans {
-			trace.SpanError(sp)
-		}
-
+		statusCountBatchAdd(ctx, observability.FailedAttribute, messages)
+		sp.RecordError(err)
+		sp.SetStatus(codes.Error, "error sending batch")
 		return err
 	}
 
-	statusCountBatchAdd(deliveryTypeSync, deliveryStatusSent, messages)
-	for _, sp := range spans {
-		trace.SpanSuccess(sp)
-	}
+	statusCountBatchAdd(ctx, observability.SucceededAttribute, messages)
+	sp.SetStatus(codes.Ok, "batch sent")
 	return nil
 }
 
@@ -94,8 +81,8 @@ func (p *SyncProducer) Close() error {
 	return nil
 }
 
-func statusCountBatchAdd(deliveryType string, status deliveryStatus, messages []*sarama.ProducerMessage) {
+func statusCountBatchAdd(ctx context.Context, statusAttr attribute.KeyValue, messages []*sarama.ProducerMessage) {
 	for _, msg := range messages {
-		statusCountAdd(deliveryType, status, msg.Topic, 1)
+		publishCountAdd(ctx, deliveryTypeSyncAttr, statusAttr, topicAttribute(msg.Topic))
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 const (
@@ -34,7 +34,7 @@ const (
 	KafkaBroker = "localhost:9092"
 )
 
-func CreateSQSAPI() (*sqs.Client, error) {
+func CreateSQSConfig() (aws.Config, error) {
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if service == sqs.ServiceID && region == AWSRegion {
 			return aws.Endpoint{
@@ -46,17 +46,10 @@ func CreateSQSAPI() (*sqs.Client, error) {
 		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
 	})
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
+	return config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(AWSRegion),
 		config.WithEndpointResolverWithOptions(customResolver),
 		config.WithCredentialsProvider(aws.NewCredentialsCache(
 			credentials.NewStaticCredentialsProvider(AWSID, AWSSecret, AWSToken))),
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	api := sqs.NewFromConfig(cfg)
-
-	return api, nil
 }

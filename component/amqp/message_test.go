@@ -6,32 +6,35 @@ import (
 	"os"
 	"testing"
 
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/streadway/amqp"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel/codes"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
 	queueName = "queueName"
 )
 
-var mtr = mocktracer.New()
+var (
+	tracePublisher *tracesdk.TracerProvider
+	traceExporter  = tracetest.NewInMemoryExporter()
+)
 
 func TestMain(m *testing.M) {
-	opentracing.SetGlobalTracer(mtr)
-	code := m.Run()
-	os.Exit(code)
+	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
+
+	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
+
+	os.Exit(m.Run())
 }
 
 func Test_message(t *testing.T) {
-	defer mtr.Reset()
-
-	ctx := context.Background()
-	sp, ctx := trace.ConsumerSpan(ctx, trace.ComponentOpName(consumerComponent, queueName),
-		consumerComponent, "123", nil)
+	t.Cleanup(func() { traceExporter.Reset() })
+	ctx, sp := patrontrace.StartSpan(context.Background(), "test")
 
 	id := "123"
 	body := []byte("body")
@@ -52,7 +55,8 @@ func Test_message(t *testing.T) {
 }
 
 func Test_message_ACK(t *testing.T) {
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
+
 	type fields struct {
 		acknowledger amqp.Acknowledger
 	}
@@ -71,37 +75,51 @@ func Test_message_ACK(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() { mtr.Reset() })
+			t.Cleanup(func() { traceExporter.Reset() })
 			m := createMessage("1", tt.fields.acknowledger)
 			err := m.ACK()
 
+			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
-				expected := map[string]interface{}{
-					"component":     "amqp-consumer",
-					"error":         true,
-					"span.kind":     ext.SpanKindEnum("consumer"),
-					"version":       "dev",
-					"correlationID": "123",
+
+				expected := tracetest.SpanStub{
+					Name:     "amqp queueName",
+					SpanKind: trace.SpanKindConsumer,
+					Status: tracesdk.Status{
+						Code:        codes.Error,
+						Description: "failed to ACK message",
+					},
 				}
-				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+				got := traceExporter.GetSpans()
+
+				assert.Len(t, got, 1)
+				assertSpan(t, expected, got[0])
 			} else {
 				assert.NoError(t, err)
-				expected := map[string]interface{}{
-					"component":     "amqp-consumer",
-					"error":         false,
-					"span.kind":     ext.SpanKindEnum("consumer"),
-					"version":       "dev",
-					"correlationID": "123",
+
+				expected := tracetest.SpanStub{
+					Name:     "amqp queueName",
+					SpanKind: trace.SpanKindConsumer,
+					Status: tracesdk.Status{
+						Code: codes.Ok,
+					},
 				}
-				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+				got := traceExporter.GetSpans()
+
+				assert.Len(t, got, 1)
+				assertSpan(t, expected, got[0])
 			}
 		})
 	}
 }
 
 func Test_message_NACK(t *testing.T) {
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
+
 	type fields struct {
 		acknowledger amqp.Acknowledger
 	}
@@ -120,30 +138,42 @@ func Test_message_NACK(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() { mtr.Reset() })
+			t.Cleanup(func() { traceExporter.Reset() })
 			m := createMessage("1", tt.fields.acknowledger)
 			err := m.NACK()
 
+			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
-				expected := map[string]interface{}{
-					"component":     "amqp-consumer",
-					"error":         true,
-					"span.kind":     ext.SpanKindEnum("consumer"),
-					"version":       "dev",
-					"correlationID": "123",
+
+				expected := tracetest.SpanStub{
+					Name:     "amqp queueName",
+					SpanKind: trace.SpanKindConsumer,
+					Status: tracesdk.Status{
+						Code:        codes.Error,
+						Description: "failed to NACK message",
+					},
 				}
-				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+				got := traceExporter.GetSpans()
+
+				assert.Len(t, got, 1)
+				assertSpan(t, expected, got[0])
 			} else {
 				assert.NoError(t, err)
-				expected := map[string]interface{}{
-					"component":     "amqp-consumer",
-					"error":         false,
-					"span.kind":     ext.SpanKindEnum("consumer"),
-					"version":       "dev",
-					"correlationID": "123",
+				expected := tracetest.SpanStub{
+					Name:     "amqp queueName",
+					SpanKind: trace.SpanKindConsumer,
+					Status: tracesdk.Status{
+						Code: codes.Ok,
+					},
 				}
-				assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+				got := traceExporter.GetSpans()
+
+				assert.Len(t, got, 1)
+				assertSpan(t, expected, got[0])
 			}
 		})
 	}
@@ -190,8 +220,8 @@ func Test_batch_NACK(t *testing.T) {
 }
 
 func createMessage(id string, acknowledger amqp.Acknowledger) message {
-	sp, ctx := trace.ConsumerSpan(context.Background(), trace.ComponentOpName(consumerComponent, queueName),
-		consumerComponent, "123", nil)
+	ctx, sp := patrontrace.StartSpan(context.Background(),
+		patrontrace.ComponentOpName(consumerComponent, queueName), trace.WithSpanKind(trace.SpanKindConsumer))
 
 	msg := message{
 		ctx: ctx,
@@ -226,4 +256,10 @@ func (s stubAcknowledger) Nack(_ uint64, _ bool, _ bool) error {
 
 func (s stubAcknowledger) Reject(_ uint64, _ bool) error {
 	panic("implement me")
+}
+
+func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
+	assert.Equal(t, expected.Name, got.Name)
+	assert.Equal(t, expected.SpanKind, got.SpanKind)
+	assert.Equal(t, expected.Status, got.Status)
 }

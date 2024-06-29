@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package mqtt
 
@@ -10,14 +9,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/observability/trace"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 const (
@@ -26,9 +27,18 @@ const (
 )
 
 func TestPublish(t *testing.T) {
-	mtr := mocktracer.New()
-	defer mtr.Reset()
-	opentracing.SetGlobalTracer(mtr)
+	// Trace monitoring setup
+	exp := tracetest.NewInMemoryExporter()
+	tracePublisher := trace.Setup("test", nil, exp)
+
+	// Metrics monitoring setup
+	read := metricsdk.NewManualReader()
+	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
+	defer func() {
+		assert.NoError(t, provider.Shutdown(context.Background()))
+	}()
+
+	otel.SetMeterProvider(provider)
 
 	u, err := url.Parse(hiveMQURL)
 	require.NoError(t, err)
@@ -36,7 +46,7 @@ func TestPublish(t *testing.T) {
 	var gotPub *paho.Publish
 	chDone := make(chan struct{})
 
-	router := paho.NewSingleHandlerRouter(func(m *paho.Publish) {
+	router := paho.NewStandardRouterWithDefault(func(m *paho.Publish) {
 		gotPub = m
 		chDone <- struct{}{}
 	})
@@ -69,18 +79,26 @@ func TestPublish(t *testing.T) {
 	require.NoError(t, pub.Disconnect(ctx))
 
 	// Traces
-	assert.Len(t, mtr.FinishedSpans(), 1)
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
-	expected := map[string]interface{}{
-		"component": "mqtt-publisher",
-		"error":     false,
-		"span.kind": ext.SpanKindEnum("producer"),
-		"topic":     testTopic,
-		"version":   "dev",
+	expected := tracetest.SpanStub{
+		Name: "publish",
+		Attributes: []attribute.KeyValue{
+			attribute.String("topic", testTopic),
+			attribute.String("client", "mqtt"),
+		},
 	}
-	assert.Equal(t, expected, mtr.FinishedSpans()[0].Tags())
+
+	snaps := exp.GetSpans().Snapshots()
+
+	assert.Len(t, snaps, 1)
+	assert.Equal(t, expected.Name, snaps[0].Name())
+	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
+
 	// Metrics
-	assert.Equal(t, 1, testutil.CollectAndCount(publishDurationMetrics, "client_mqtt_publish_duration_seconds"))
+	collectedMetrics := &metricdata.ResourceMetrics{}
+	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
 
 	<-chDone
 	require.NoError(t, cmSub.Disconnect(context.Background()))

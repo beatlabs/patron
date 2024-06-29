@@ -5,27 +5,22 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
+	"github.com/beatlabs/patron/observability/log"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
-	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
 	consumerComponent = "kafka-consumer"
 	subsystem         = "kafka"
-	messageReceived   = "received"
-	messageProcessed  = "processed"
-	messageErrored    = "errored"
-	messageSkipped    = "skipped"
 )
 
 const (
@@ -35,64 +30,6 @@ const (
 	defaultBatchTimeout    = 100 * time.Millisecond
 	defaultFailureStrategy = ExitStrategy
 )
-
-var (
-	consumerErrors           *prometheus.CounterVec
-	topicPartitionOffsetDiff *prometheus.GaugeVec
-	messageStatus            *prometheus.CounterVec
-)
-
-func init() {
-	consumerErrors = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: subsystem,
-			Name:      "consumer_errors",
-			Help:      "Consumer errors, classified by consumer name",
-		},
-		[]string{"name"},
-	)
-
-	topicPartitionOffsetDiff = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "component",
-			Subsystem: subsystem,
-			Name:      "offset_diff",
-			Help:      "Message offset difference with high watermark, classified by topic and partition",
-		},
-		[]string{"group", "topic", "partition"},
-	)
-
-	messageStatus = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "component",
-			Subsystem: subsystem,
-			Name:      "message_status",
-			Help:      "Message status counter (received, processed, errored) classified by topic and partition",
-		}, []string{"status", "group", "topic"},
-	)
-
-	prometheus.MustRegister(
-		consumerErrors,
-		topicPartitionOffsetDiff,
-		messageStatus,
-	)
-}
-
-// consumerErrorsInc increments the number of errors encountered by a specific consumer.
-func consumerErrorsInc(name string) {
-	consumerErrors.WithLabelValues(name).Inc()
-}
-
-// topicPartitionOffsetDiffGaugeSet creates a new Gauge that measures partition offsets.
-func topicPartitionOffsetDiffGaugeSet(group, topic string, partition int32, high, offset int64) {
-	topicPartitionOffsetDiff.WithLabelValues(group, topic, strconv.FormatInt(int64(partition), 10)).Set(float64(high - offset))
-}
-
-// messageStatusCountInc increments the messageStatus counter for a certain status.
-func messageStatusCountInc(status, group, topic string) {
-	messageStatus.WithLabelValues(status, group, topic).Inc()
-}
 
 // New initializes a new  kafka consumer component with support for functional configuration.
 // The default failure strategy is the ExitStrategy.
@@ -188,7 +125,7 @@ func (c *Component) processing(ctx context.Context) error {
 		client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
 		componentError = err
 		if err != nil {
-			slog.Error("error creating consumer group client for kafka component", slog.Any("error", err))
+			slog.Error("error creating consumer group client for kafka component", log.ErrorAttr(err))
 		}
 
 		if client != nil {
@@ -206,7 +143,7 @@ func (c *Component) processing(ctx context.Context) error {
 				err := client.Consume(ctx, c.topics, handler)
 				componentError = err
 				if err != nil {
-					slog.Error("failure from kafka consumer", slog.Any("error", err))
+					slog.Error("failure from kafka consumer", log.ErrorAttr(err))
 					break
 				}
 
@@ -217,11 +154,11 @@ func (c *Component) processing(ctx context.Context) error {
 
 			err = client.Close()
 			if err != nil {
-				slog.Error("error closing kafka consumer", slog.Any("error", err))
+				slog.Error("error closing kafka consumer", log.ErrorAttr(err))
 			}
 		}
 
-		consumerErrorsInc(c.name)
+		consumerErrorsInc(ctx, c.name)
 
 		if c.retries > 0 {
 			if handler.processedMessages {
@@ -234,7 +171,7 @@ func (c *Component) processing(ctx context.Context) error {
 			}
 
 			slog.Error("failed run", slog.Int("current", i), slog.Int("retries", int(c.retries)),
-				slog.Duration("wait", c.retryWait), slog.Any("error", componentError))
+				slog.Duration("wait", c.retryWait), log.ErrorAttr(componentError))
 			time.Sleep(c.retryWait)
 
 			if i < retries {
@@ -328,8 +265,8 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			if ok {
 				slog.Debug("message claimed", slog.String("value", string(msg.Value)),
 					slog.Time("timestamp", msg.Timestamp), slog.String("topic", msg.Topic))
-				topicPartitionOffsetDiffGaugeSet(c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-				messageStatusCountInc(messageReceived, c.group, msg.Topic)
+				topicPartitionOffsetDiffGaugeSet(c.ctx, c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
+				messageStatusCountInc(c.ctx, messageReceived, c.group, msg.Topic)
 				err := c.insertMessage(session, msg)
 				if err != nil {
 					return err
@@ -347,7 +284,7 @@ func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			}
 		case <-c.ctx.Done():
 			if !errors.Is(c.ctx.Err(), context.Canceled) {
-				slog.Info("closing consumer", slog.Any("error", c.ctx.Err()))
+				slog.Info("closing consumer", log.ErrorAttr(c.ctx.Err()))
 			}
 			return nil
 		}
@@ -361,8 +298,8 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 
 	messages := make([]Message, 0, len(c.msgBuf))
 	for _, msg := range c.msgBuf {
-		messageStatusCountInc(messageProcessed, c.group, msg.Topic)
 		ctx, sp := c.getContextWithCorrelation(msg)
+		messageStatusCountInc(ctx, messageProcessed, c.group, msg.Topic)
 		messages = append(messages, NewMessage(ctx, sp, msg))
 	}
 
@@ -383,7 +320,8 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 
 	c.processedMessages = true
 	for _, m := range messages {
-		trace.SpanSuccess(m.Span())
+		patrontrace.SetSpanSuccess(m.Span())
+		m.Span().End()
 		session.MarkMessage(m.Message(), "")
 	}
 
@@ -400,19 +338,21 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 	switch c.failStrategy {
 	case ExitStrategy:
 		for _, m := range messages {
-			trace.SpanError(m.Span())
-			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
+			patrontrace.SetSpanError(m.Span(), "executing exit strategy", err)
+			m.Span().End()
+			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Message().Topic)
 		}
 		slog.Error("could not process message(s)")
 		c.err = err
 		return err
 	case SkipStrategy:
 		for _, m := range messages {
-			trace.SpanError(m.Span())
-			messageStatusCountInc(messageErrored, c.group, m.Message().Topic)
-			messageStatusCountInc(messageSkipped, c.group, m.Message().Topic)
+			patrontrace.SetSpanError(m.Span(), "executing skip strategy", err)
+			m.Span().End()
+			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Message().Topic)
+			messageStatusCountInc(m.Context(), messageSkipped, c.group, m.Message().Topic)
 		}
-		slog.Error("could not process message(s) so skipping with error", slog.Any("error", err))
+		slog.Error("could not process message(s) so skipping with error", log.ErrorAttr(err))
 	default:
 		slog.Error("unknown failure strategy executed")
 		return fmt.Errorf("unknown failure strategy: %v", c.failStrategy)
@@ -420,14 +360,16 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 	return nil
 }
 
-func (c *consumerHandler) getContextWithCorrelation(msg *sarama.ConsumerMessage) (context.Context, opentracing.Span) {
+func (c *consumerHandler) getContextWithCorrelation(msg *sarama.ConsumerMessage) (context.Context, trace.Span) {
 	corID := getCorrelationID(msg.Headers)
+	ctx := otel.GetTextMapPropagator().Extract(context.Background(), &consumerMessageCarrier{msg: msg})
 
-	sp, ctxCh := trace.ConsumerSpan(c.ctx, trace.ComponentOpName(consumerComponent, msg.Topic),
-		consumerComponent, corID, mapHeader(msg.Headers))
-	ctxCh = correlation.ContextWithID(ctxCh, corID)
-	ctxCh = log.WithContext(ctxCh, slog.With(slog.String(correlation.ID, corID)))
-	return ctxCh, sp
+	ctx, sp := patrontrace.StartSpan(ctx, patrontrace.ComponentOpName(consumerComponent, msg.Topic),
+		trace.WithSpanKind(trace.SpanKindConsumer))
+
+	ctx = correlation.ContextWithID(ctx, corID)
+	ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
+	return ctx, sp
 }
 
 func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) error {
@@ -477,4 +419,34 @@ func deduplicateMessages(messages []Message) []Message {
 	}
 
 	return deduplicated
+}
+
+type consumerMessageCarrier struct {
+	msg *sarama.ConsumerMessage
+}
+
+// Get retrieves a single value for a given key.
+func (c consumerMessageCarrier) Get(key string) string {
+	for _, header := range c.msg.Headers {
+		if string(header.Key) == key {
+			return string(header.Value)
+		}
+	}
+	return ""
+}
+
+// Set sets a header.
+func (c consumerMessageCarrier) Set(key, val string) {
+	for _, header := range c.msg.Headers {
+		if string(header.Key) == key {
+			header.Value = []byte(val)
+			return
+		}
+	}
+	c.msg.Headers = append(c.msg.Headers, &sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c consumerMessageCarrier) Keys() []string {
+	return nil
 }

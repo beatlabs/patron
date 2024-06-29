@@ -21,7 +21,9 @@ import (
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
-	"github.com/streadway/amqp"
+	"github.com/beatlabs/patron/observability/trace"
+	amqp "github.com/rabbitmq/amqp091-go"
+	"go.opentelemetry.io/otel/sdk/resource"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -47,6 +49,14 @@ func main() {
 
 	flag.Parse()
 
+	tp, err := trace.SetupGRPC(context.Background(), "example-client", resource.Default())
+	handleError(err)
+
+	defer func() {
+		handleError(tp.ForceFlush(context.Background()))
+		handleError(tp.Shutdown(context.Background()))
+	}()
+
 	prs, err := processModes(modes)
 	if err != nil {
 		fmt.Printf("failed to parse flags: %v\n", err)
@@ -56,6 +66,9 @@ func main() {
 
 	ctx, cnl := context.WithTimeout(context.Background(), 50000*time.Second)
 	defer cnl()
+
+	ctx, sp := trace.StartSpan(ctx, "example-client")
+	defer sp.End()
 
 	for _, process := range prs {
 		err = process(ctx)
@@ -181,22 +194,19 @@ func sendAMQPMessage(ctx context.Context) error {
 }
 
 func sendSQSMessage(ctx context.Context) error {
-	api, err := examples.CreateSQSAPI()
+	cfg, err := examples.CreateSQSConfig()
 	if err != nil {
 		return err
 	}
 
-	out, err := api.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{QueueName: aws.String(examples.AWSSQSQueue)})
+	client := patronsqs.NewFromConfig(cfg)
+
+	out, err := client.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{QueueName: aws.String(examples.AWSSQSQueue)})
 	if err != nil {
 		return err
 	}
 
-	publisher, err := patronsqs.New(api)
-	if err != nil {
-		return err
-	}
-
-	_, err = publisher.Publish(ctx, &sqs.SendMessageInput{
+	_, err = client.SendMessage(ctx, &sqs.SendMessageInput{
 		QueueUrl:    out.QueueUrl,
 		MessageBody: aws.String("example message"),
 	})

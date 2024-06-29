@@ -3,13 +3,30 @@ package sqs
 import (
 	"context"
 	"errors"
+	"os"
 	"sync"
 	"testing"
 	"time"
 
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
+
+var (
+	tracePublisher *tracesdk.TracerProvider
+	traceExporter  = tracetest.NewInMemoryExporter()
+)
+
+func TestMain(m *testing.M) {
+	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
+
+	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
+
+	os.Exit(m.Run())
+}
 
 func TestNew(t *testing.T) {
 	t.Parallel()
@@ -135,13 +152,14 @@ func TestNew(t *testing.T) {
 }
 
 func TestComponent_Run_Success(t *testing.T) {
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
+
 	sp := stubProcessor{t: t}
 
-	sqsAPI := stubSQSAPI{
-		succeededMessage: createMessage(nil, "1"),
-		failedMessage:    createMessage(nil, "2"),
-	}
+	sqsAPI := newStubSQSAPI()
+	sqsAPI.succeededMessage = createMessage(nil, "1")
+	sqsAPI.failedMessage = createMessage(nil, "2")
+
 	cmp, err := New("name", queueName, sqsAPI, sp.process, WithQueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
@@ -156,18 +174,29 @@ func TestComponent_Run_Success(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	cnl()
 	wg.Wait()
-	assert.True(t, len(mtr.FinishedSpans()) > 0)
+
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
+	expectedSuc := createStubSpan("sqs-consumer", "")
+	expectedFail := createStubSpan("sqs-consumer", "failed to ACK message")
+
+	got := traceExporter.GetSpans()
+
+	assert.Len(t, got, 2)
+	assertSpan(t, expectedSuc, got[0])
+	assertSpan(t, expectedFail, got[1])
 }
 
 func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
+
 	sp := stubProcessor{t: t}
 
-	sqsAPI := stubSQSAPI{
-		succeededMessage:                 createMessage(nil, "1"),
-		failedMessage:                    createMessage(nil, "2"),
-		getQueueAttributesWithContextErr: errors.New("STATS FAIL"),
-	}
+	sqsAPI := newStubSQSAPI()
+	sqsAPI.succeededMessage = createMessage(nil, "1")
+	sqsAPI.failedMessage = createMessage(nil, "2")
+	sqsAPI.getQueueAttributesWithContextErr = errors.New("STATS FAIL")
+
 	cmp, err := New("name", queueName, sqsAPI, sp.process, WithQueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
@@ -175,18 +204,29 @@ func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
 	wg.Add(1)
 
 	go func() {
-		require.NoError(t, cmp.Run(ctx))
+		_ = cmp.Run(ctx)
 		wg.Done()
 	}()
 
 	time.Sleep(1 * time.Second)
 	cnl()
 	wg.Wait()
-	assert.True(t, len(mtr.FinishedSpans()) > 0)
+
+	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
+	expectedSuc := createStubSpan("sqs-consumer", "")
+	expectedFail := createStubSpan("sqs-consumer", "failed to ACK message")
+
+	got := traceExporter.GetSpans()
+
+	assert.Len(t, got, 2, "expected 2 spans, got %d", len(got))
+	assertSpan(t, expectedSuc, got[0])
+	assertSpan(t, expectedFail, got[1])
 }
 
 func TestComponent_Run_Error(t *testing.T) {
-	t.Cleanup(func() { mtr.Reset() })
+	t.Cleanup(func() { traceExporter.Reset() })
+
 	sp := stubProcessor{t: t}
 
 	sqsAPI := stubSQSAPI{

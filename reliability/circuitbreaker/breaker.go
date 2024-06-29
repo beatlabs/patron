@@ -2,12 +2,15 @@
 package circuitbreaker
 
 import (
+	"context"
 	"errors"
 	"math"
 	"sync"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 )
 
 // OpenError definition for the open state.
@@ -20,33 +23,33 @@ func (oe OpenError) Error() string {
 type status int
 
 const (
+	packageName = "circuit-breaker"
+
 	closed status = iota
 	opened
 )
 
 var (
-	tsFuture       = int64(math.MaxInt64)
-	errOpen        = new(OpenError)
-	breakerCounter *prometheus.CounterVec
-	statusMap      = map[status]string{closed: "closed", opened: "opened"}
+	tsFuture      = int64(math.MaxInt64)
+	errOpen       = new(OpenError)
+	openedAttr    = attribute.Int64("status", int64(opened))
+	closedAttr    = attribute.Int64("status", int64(closed))
+	statusCounter metric.Int64Counter
 )
 
 func init() {
-	breakerCounter = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "reliability",
-			Subsystem: "circuit_breaker",
-			Name:      "errors",
-			Help:      "Circuit breaker status, classified by name and status",
-		},
-		[]string{"name", "status"},
-	)
-
-	prometheus.MustRegister(breakerCounter)
+	statusCounter = patronmetric.Int64Counter(packageName, "circuit-breaker.status", "Circuit breaker status counter.", "1")
 }
 
 func breakerCounterInc(name string, st status) {
-	breakerCounter.WithLabelValues(name, statusMap[st]).Inc()
+	stateAttr := closedAttr
+	switch st {
+	case opened:
+		stateAttr = openedAttr
+	case closed:
+		stateAttr = closedAttr
+	}
+	statusCounter.Add(context.Background(), 1, metric.WithAttributes(stateAttr, attribute.String("name", name)))
 }
 
 // Setting definition.

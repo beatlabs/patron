@@ -9,42 +9,25 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
-	"github.com/opentracing/opentracing-go"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/beatlabs/patron/observability"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
-type (
-	deliveryStatus string
-)
+const packageName = "kafka"
 
-const (
-	deliveryTypeSync  = "sync"
-	deliveryTypeAsync = "async"
-
-	deliveryStatusSent      deliveryStatus = "sent"
-	deliveryStatusSendError deliveryStatus = "send-errors"
-
-	componentTypeAsync = "kafka-async-producer"
-	componentTypeSync  = "kafka-sync-producer"
-)
-
-var messageStatus *prometheus.CounterVec
+var publishCount metric.Int64Counter
 
 func init() {
-	messageStatus = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "client",
-			Subsystem: "kafka_producer",
-			Name:      "message_status",
-			Help:      "Message status counter (produced, encoded, encoding-errors) classified by topic",
-		}, []string{"status", "topic", "type"},
-	)
-
-	prometheus.MustRegister(messageStatus)
+	publishCount = patronmetric.Int64Counter(packageName, "kafka.publish.count", "Kafka message count.", "1")
 }
 
-func statusCountAdd(deliveryType string, status deliveryStatus, topic string, cnt int) {
-	messageStatus.WithLabelValues(string(status), topic, deliveryType).Add(float64(cnt))
+func publishCountAdd(ctx context.Context, attrs ...attribute.KeyValue) {
+	publishCount.Add(ctx, 1, metric.WithAttributes(attrs...))
 }
 
 type baseProducer struct {
@@ -159,20 +142,48 @@ func (b Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 	return ap, chErr, nil
 }
 
-type kafkaHeadersCarrier []sarama.RecordHeader
+func startSpan(ctx context.Context, action, delivery, topic string) (context.Context, trace.Span) {
+	attrs := []attribute.KeyValue{
+		attribute.String("delivery", delivery),
+		observability.ClientAttribute("kafka"),
+	}
 
-// Set implements Set() of opentracing.TextMapWriter.
-func (c *kafkaHeadersCarrier) Set(key, val string) {
-	*c = append(*c, sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
+	if topic != "" {
+		attrs = append(attrs, attribute.String("topic", topic))
+	}
+
+	return patrontrace.StartSpan(ctx, action, trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(attrs...))
 }
 
-func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.ProducerMessage, sp opentracing.Span) error {
+func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.ProducerMessage) {
 	msg.Headers = append(msg.Headers, sarama.RecordHeader{
 		Key:   []byte(correlation.HeaderID),
 		Value: []byte(correlation.IDFromContext(ctx)),
 	})
-	c := kafkaHeadersCarrier(msg.Headers)
-	err := sp.Tracer().Inject(sp.Context(), opentracing.TextMap, &c)
-	msg.Headers = c
-	return err
+
+	otel.GetTextMapPropagator().Inject(ctx, producerMessageCarrier{msg})
+}
+
+func topicAttribute(topic string) attribute.KeyValue {
+	return attribute.String("topic", topic)
+}
+
+type producerMessageCarrier struct {
+	msg *sarama.ProducerMessage
+}
+
+// Get retrieves a single value for a given key.
+func (c producerMessageCarrier) Get(_ string) string {
+	return ""
+}
+
+// Set sets a header.
+func (c producerMessageCarrier) Set(key, val string) {
+	c.msg.Headers = append(c.msg.Headers, sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
+}
+
+// Keys returns a slice of all key identifiers in the carrier.
+func (c producerMessageCarrier) Keys() []string {
+	return nil
 }

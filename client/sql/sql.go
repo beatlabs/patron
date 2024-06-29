@@ -6,51 +6,33 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"regexp"
-	"strconv"
 	"time"
 
-	"github.com/beatlabs/patron/trace"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/beatlabs/patron/observability"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
-const (
-	component = "sql"
-	dbtype    = "RDBMS"
-)
+const packageName = "sql"
 
-var opDurationMetrics *prometheus.HistogramVec
+var durationHistogram metric.Int64Histogram
 
 func init() {
-	opDurationMetrics = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: "client",
-			Subsystem: "sql",
-			Name:      "cmd_duration_seconds",
-			Help:      "SQL commands completed by the client.",
-		},
-		[]string{"op", "success"},
-	)
-	prometheus.MustRegister(opDurationMetrics)
+	durationHistogram = patronmetric.Int64Histogram(packageName, "sql.cmd.duration", "SQL command duration.", "ms")
 }
 
 type connInfo struct {
-	instance, user string
+	userAttr     attribute.KeyValue
+	instanceAttr attribute.KeyValue
+	dbNameAttr   attribute.KeyValue
 }
 
-func (c *connInfo) startSpan(ctx context.Context, opName, stmt string, tags ...opentracing.Tag) (opentracing.Span, context.Context) {
-	sp, ctx := opentracing.StartSpanFromContext(ctx, opName)
-	ext.Component.Set(sp, component)
-	ext.DBType.Set(sp, dbtype)
-	ext.DBInstance.Set(sp, c.instance)
-	ext.DBUser.Set(sp, c.user)
-	ext.DBStatement.Set(sp, stmt)
-	for _, t := range tags {
-		sp.SetTag(t.Key, t.Value)
-	}
-	sp.SetTag(trace.VersionTag, trace.Version)
-	return sp, ctx
+func (c *connInfo) startSpan(ctx context.Context, opName, stmt string) (context.Context, trace.Span) {
+	return patrontrace.StartSpan(ctx, opName, trace.WithSpanKind(trace.SpanKindClient),
+		trace.WithAttributes(c.userAttr, c.instanceAttr, c.dbNameAttr, attribute.String("db.statement", stmt)))
 }
 
 // Conn represents a single database connection.
@@ -72,10 +54,12 @@ type DSNInfo struct {
 // BeginTx starts a transaction.
 func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	op := "conn.BeginTx"
-	sp, _ := c.startSpan(ctx, op, "")
+	ctx, sp := c.startSpan(ctx, op, "")
+	defer sp.End()
+
 	start := time.Now()
 	tx, err := c.conn.BeginTx(ctx, opts)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -86,40 +70,44 @@ func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 // Close returns the connection to the connection pool.
 func (c *Conn) Close(ctx context.Context) error {
 	op := "conn.Close"
-	sp, _ := c.startSpan(ctx, op, "")
+	ctx, sp := c.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	err := c.conn.Close()
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	return err
 }
 
 // Exec executes a query without returning any rows.
 func (c *Conn) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	op := "conn.Exec"
-	sp, _ := c.startSpan(ctx, op, query)
+	ctx, sp := c.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	res, err := c.conn.ExecContext(ctx, query, args...)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	return res, err
 }
 
 // Ping verifies the connection to the database is still alive.
 func (c *Conn) Ping(ctx context.Context) error {
 	op := "conn.Ping"
-	sp, _ := c.startSpan(ctx, op, "")
+	ctx, sp := c.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	err := c.conn.PingContext(ctx)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	return err
 }
 
 // Prepare creates a prepared statement for later queries or executions.
 func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	op := "conn.Prepare"
-	sp, _ := c.startSpan(ctx, op, query)
+	ctx, sp := c.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	stmt, err := c.conn.PrepareContext(ctx, query)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -129,10 +117,11 @@ func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 // Query executes a query that returns rows.
 func (c *Conn) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	op := "conn.Query"
-	sp, _ := c.startSpan(ctx, op, query)
+	ctx, sp := c.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	rows, err := c.conn.QueryContext(ctx, query, args...)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -143,10 +132,11 @@ func (c *Conn) Query(ctx context.Context, query string, args ...interface{}) (*s
 // QueryRow executes a query that is expected to return at most one row.
 func (c *Conn) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	op := "conn.QueryRow"
-	sp, _ := c.startSpan(ctx, op, query)
+	ctx, sp := c.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	row := c.conn.QueryRowContext(ctx, query, args...)
-	observeDuration(ctx, sp, start, op, nil)
+	observeDuration(ctx, start, op, nil)
 	return row
 }
 
@@ -163,8 +153,13 @@ func Open(driverName, dataSourceName string) (*DB, error) {
 		return nil, err
 	}
 	info := parseDSN(dataSourceName)
+	connInfo := connInfo{
+		userAttr:     attribute.String("db.user", info.User),
+		instanceAttr: attribute.String("db.instance", info.Address),
+		dbNameAttr:   attribute.String("db.name", info.DBName),
+	}
 
-	return &DB{connInfo: connInfo{info.DBName, info.User}, db: db}, nil
+	return &DB{connInfo: connInfo, db: db}, nil
 }
 
 // OpenDB opens a database.
@@ -188,33 +183,36 @@ func (db *DB) DB() *sql.DB {
 // BeginTx starts a transaction.
 func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	op := "db.BeginTx"
-	sp, _ := db.startSpan(ctx, op, "")
+	ctx, sp := db.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	tx, err := db.db.BeginTx(ctx, opts)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
-	return &Tx{tx: tx, connInfo: connInfo{instance: db.instance, user: db.user}}, nil
+	return &Tx{tx: tx, connInfo: db.connInfo}, nil
 }
 
 // Close closes the database, releasing any open resources.
 func (db *DB) Close(ctx context.Context) error {
 	op := "db.Close"
-	sp, _ := db.startSpan(ctx, op, "")
+	ctx, sp := db.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	err := db.db.Close()
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	return err
 }
 
 // Conn returns a connection.
 func (db *DB) Conn(ctx context.Context) (*Conn, error) {
 	op := "db.Conn"
-	sp, _ := db.startSpan(ctx, op, "")
+	ctx, sp := db.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	conn, err := db.db.Conn(ctx)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -225,20 +223,22 @@ func (db *DB) Conn(ctx context.Context) (*Conn, error) {
 // Driver returns the database's underlying driver.
 func (db *DB) Driver(ctx context.Context) driver.Driver {
 	op := "db.Driver"
-	sp, _ := db.startSpan(ctx, op, "")
+	ctx, sp := db.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	drv := db.db.Driver()
-	observeDuration(ctx, sp, start, op, nil)
+	observeDuration(ctx, start, op, nil)
 	return drv
 }
 
 // Exec executes a query without returning any rows.
 func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	op := "db.Exec"
-	sp, _ := db.startSpan(ctx, op, query)
+	ctx, sp := db.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	res, err := db.db.ExecContext(ctx, query, args...)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -249,20 +249,22 @@ func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 // Ping verifies a connection to the database is still alive, establishing a connection if necessary.
 func (db *DB) Ping(ctx context.Context) error {
 	op := "db.Ping"
-	sp, _ := db.startSpan(ctx, op, "")
+	ctx, sp := db.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	err := db.db.PingContext(ctx)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	return err
 }
 
 // Prepare creates a prepared statement for later queries or executions.
 func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	op := "db.Prepare"
-	sp, _ := db.startSpan(ctx, op, query)
+	ctx, sp := db.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	stmt, err := db.db.PrepareContext(ctx, query)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -273,10 +275,11 @@ func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 // Query executes a query that returns rows.
 func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	op := "db.Query"
-	sp, _ := db.startSpan(ctx, op, query)
+	ctx, sp := db.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	rows, err := db.db.QueryContext(ctx, query, args...)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -287,10 +290,11 @@ func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (*sq
 // QueryRow executes a query that is expected to return at most one row.
 func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	op := "db.QueryRow"
-	sp, _ := db.startSpan(ctx, op, query)
+	ctx, sp := db.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	row := db.db.QueryRowContext(ctx, query, args...)
-	observeDuration(ctx, sp, start, op, nil)
+	observeDuration(ctx, start, op, nil)
 	return row
 }
 
@@ -312,10 +316,11 @@ func (db *DB) SetMaxOpenConns(n int) {
 // Stats returns database statistics.
 func (db *DB) Stats(ctx context.Context) sql.DBStats {
 	op := "db.Stats"
-	sp, _ := db.startSpan(ctx, op, "")
+	ctx, sp := db.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	stats := db.db.Stats()
-	observeDuration(ctx, sp, start, op, nil)
+	observeDuration(ctx, start, op, nil)
 	return stats
 }
 
@@ -329,20 +334,22 @@ type Stmt struct {
 // Close closes the statement.
 func (s *Stmt) Close(ctx context.Context) error {
 	op := "stmt.Close"
-	sp, _ := s.startSpan(ctx, op, "")
+	ctx, sp := s.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	err := s.stmt.Close()
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	return err
 }
 
 // Exec executes a prepared statement.
 func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error) {
 	op := "stmt.Exec"
-	sp, _ := s.startSpan(ctx, op, s.query)
+	ctx, sp := s.startSpan(ctx, op, s.query)
+	defer sp.End()
 	start := time.Now()
 	res, err := s.stmt.ExecContext(ctx, args...)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -353,10 +360,11 @@ func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error
 // Query executes a prepared query statement.
 func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
 	op := "stmt.Query"
-	sp, _ := s.startSpan(ctx, op, s.query)
+	ctx, sp := s.startSpan(ctx, op, s.query)
+	defer sp.End()
 	start := time.Now()
 	rows, err := s.stmt.QueryContext(ctx, args...)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -367,10 +375,11 @@ func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error
 // QueryRow executes a prepared query statement.
 func (s *Stmt) QueryRow(ctx context.Context, args ...interface{}) *sql.Row {
 	op := "stmt.QueryRow"
-	sp, _ := s.startSpan(ctx, op, s.query)
+	ctx, sp := s.startSpan(ctx, op, s.query)
+	defer sp.End()
 	start := time.Now()
 	row := s.stmt.QueryRowContext(ctx, args...)
-	observeDuration(ctx, sp, start, op, nil)
+	observeDuration(ctx, start, op, nil)
 	return row
 }
 
@@ -383,20 +392,22 @@ type Tx struct {
 // Commit commits the transaction.
 func (tx *Tx) Commit(ctx context.Context) error {
 	op := "tx.Commit"
-	sp, _ := tx.startSpan(ctx, op, "")
+	ctx, sp := tx.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	err := tx.tx.Commit()
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	return err
 }
 
 // Exec executes a query that doesn't return rows.
 func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	op := "tx.Exec"
-	sp, _ := tx.startSpan(ctx, op, query)
+	ctx, sp := tx.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	res, err := tx.tx.ExecContext(ctx, query, args...)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -407,10 +418,11 @@ func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 // Prepare creates a prepared statement for use within a transaction.
 func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	op := "tx.Prepare"
-	sp, _ := tx.startSpan(ctx, op, query)
+	ctx, sp := tx.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	stmt, err := tx.tx.PrepareContext(ctx, query)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -421,10 +433,11 @@ func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 // Query executes a query that returns rows.
 func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	op := "tx.Query"
-	sp, _ := tx.startSpan(ctx, op, query)
+	ctx, sp := tx.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	rows, err := tx.tx.QueryContext(ctx, query, args...)
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -434,30 +447,33 @@ func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sq
 // QueryRow executes a query that is expected to return at most one row.
 func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	op := "tx.QueryRow"
-	sp, _ := tx.startSpan(ctx, op, query)
+	ctx, sp := tx.startSpan(ctx, op, query)
+	defer sp.End()
 	start := time.Now()
 	row := tx.tx.QueryRowContext(ctx, query, args...)
-	observeDuration(ctx, sp, start, op, nil)
+	observeDuration(ctx, start, op, nil)
 	return row
 }
 
 // Rollback aborts the transaction.
 func (tx *Tx) Rollback(ctx context.Context) error {
 	op := "tx.Rollback"
-	sp, _ := tx.startSpan(ctx, op, "")
+	ctx, sp := tx.startSpan(ctx, op, "")
+	defer sp.End()
 	start := time.Now()
 	err := tx.tx.Rollback()
-	observeDuration(ctx, sp, start, op, err)
+	observeDuration(ctx, start, op, err)
 	return err
 }
 
 // Stmt returns a transaction-specific prepared statement from an existing statement.
 func (tx *Tx) Stmt(ctx context.Context, stmt *Stmt) *Stmt {
 	op := "tx.Stmt"
-	sp, _ := tx.startSpan(ctx, op, stmt.query)
+	ctx, sp := tx.startSpan(ctx, op, stmt.query)
+	defer sp.End()
 	start := time.Now()
 	st := &Stmt{stmt: tx.tx.StmtContext(ctx, stmt.stmt), connInfo: tx.connInfo, query: stmt.query}
-	observeDuration(ctx, sp, start, op, nil)
+	observeDuration(ctx, start, op, nil)
 	return st
 }
 
@@ -491,11 +507,12 @@ func parseDSN(dsn string) DSNInfo {
 	return res
 }
 
-func observeDuration(ctx context.Context, span opentracing.Span, start time.Time, op string, err error) {
-	trace.SpanComplete(span, err)
+func observeDuration(ctx context.Context, start time.Time, op string, err error) {
+	durationHistogram.Record(ctx, time.Since(start).Milliseconds(),
+		metric.WithAttributes(observability.ClientAttribute("sql"), operationAttr(op),
+			observability.StatusAttribute(err)))
+}
 
-	durationHistogram := trace.Histogram{
-		Observer: opDurationMetrics.WithLabelValues(op, strconv.FormatBool(err == nil)),
-	}
-	durationHistogram.Observe(ctx, time.Since(start).Seconds())
+func operationAttr(op string) attribute.KeyValue {
+	return attribute.String("op", op)
 }

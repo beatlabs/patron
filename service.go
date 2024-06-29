@@ -3,18 +3,15 @@ package patron
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
-	"strconv"
-	"strings"
 	"sync"
 	"syscall"
+	"time"
 
-	"github.com/beatlabs/patron/log"
-	"github.com/beatlabs/patron/trace"
-	"github.com/uber/jaeger-client-go"
+	"github.com/beatlabs/patron/observability"
+	"github.com/beatlabs/patron/observability/log"
 )
 
 const (
@@ -31,11 +28,12 @@ type Component interface {
 // Service is responsible for managing and setting up everything.
 // The Service will start by default an HTTP component in order to host management endpoint.
 type Service struct {
-	name          string
-	version       string
-	termSig       chan os.Signal
-	sighupHandler func()
-	logConfig     logConfig
+	name                  string
+	version               string
+	termSig               chan os.Signal
+	sighupHandler         func()
+	logConfig             logConfig
+	observabilityProvider *observability.Provider
 }
 
 func New(name, version string, options ...OptionFunc) (*Service, error) {
@@ -44,6 +42,13 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	}
 	if version == "" {
 		version = "dev"
+	}
+
+	var err error
+	ctx := context.Background()
+	observabilityProvider, err := observability.Setup(ctx, name, version)
+	if err != nil {
+		return nil, err
 	}
 
 	s := &Service{
@@ -57,12 +62,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 			attrs: defaultLogAttrs(name, version),
 			json:  false,
 		},
-	}
-
-	var err error
-	err = setupJaegerTracing(name, version)
-	if err != nil {
-		return nil, err
+		observabilityProvider: observabilityProvider,
 	}
 
 	optionErrors := make([]error, 0)
@@ -89,9 +89,12 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 	}
 
 	defer func() {
-		err := trace.Close()
+		ctx, cnl := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cnl()
+
+		err := s.observabilityProvider.Shutdown(ctx)
 		if err != nil {
-			slog.Error("failed to close trace", slog.Any("error", err))
+			slog.Error("failed to close observability provider", log.ErrorAttr(err))
 		}
 	}()
 	ctx, cnl := context.WithCancel(ctx)
@@ -192,43 +195,4 @@ func setupLogging(lc logConfig) {
 	}
 
 	slog.New(hnd.WithAttrs(lc.attrs))
-}
-
-func setupJaegerTracing(name, version string) error {
-	host, ok := os.LookupEnv("PATRON_JAEGER_AGENT_HOST")
-	if !ok {
-		host = "0.0.0.0"
-	}
-	port, ok := os.LookupEnv("PATRON_JAEGER_AGENT_PORT")
-	if !ok {
-		port = "6831"
-	}
-	agent := host + ":" + port
-	tp, ok := os.LookupEnv("PATRON_JAEGER_SAMPLER_TYPE")
-	if !ok {
-		tp = jaeger.SamplerTypeProbabilistic
-	}
-	prmVal := 0.0
-
-	if prm, ok := os.LookupEnv("PATRON_JAEGER_SAMPLER_PARAM"); ok {
-		tmpVal, err := strconv.ParseFloat(prm, 64)
-		if err != nil {
-			return fmt.Errorf("env var for jaeger sampler param is not valid: %w", err)
-		}
-		prmVal = tmpVal
-	}
-
-	var buckets []float64
-	if b, ok := os.LookupEnv("PATRON_JAEGER_DEFAULT_BUCKETS"); ok {
-		for _, bs := range strings.Split(b, ",") {
-			val, err := strconv.ParseFloat(strings.TrimSpace(bs), 64)
-			if err != nil {
-				return fmt.Errorf("env var for jaeger default buckets contains invalid value: %w", err)
-			}
-			buckets = append(buckets, val)
-		}
-	}
-
-	slog.Debug("setting up default tracing", slog.String("agent", agent), slog.String("param", tp), slog.Float64("val", prmVal))
-	return trace.Setup(name, version, agent, tp, prmVal, buckets)
 }

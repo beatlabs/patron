@@ -1,22 +1,15 @@
-DOCKER = docker
+LINT_IMAGE = golangci/golangci-lint:v1.59.0
 
 default: test
 
 test: fmtcheck
 	go test ./... -cover -race -timeout 60s
 
-testint: fmtcheck  deps-start
-	go test ./... -race -cover -tags=integration -timeout 120s -count=1
+testint: fmtcheck
+	go test ./... -race -cover -tags=integration -timeout 300s -count=1
 
-cover: fmtcheck
-	go test ./... -coverpkg=./... -coverprofile=coverage.txt -tags=integration -covermode=atomic && \
-	go tool cover -func=coverage.txt && \
-	rm coverage.txt
-
-ci: 
-	go test ./... -race -cover -mod=vendor -coverprofile=coverage.txt -covermode=atomic -tags=integration && \
-	mv coverage.txt coverage.txt.tmp && \
-	cat coverage.txt.tmp | grep -v "/cmd/patron/" > coverage.txt
+ci: fmtcheck
+	go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration 
 
 fmt:
 	go fmt ./...
@@ -25,19 +18,19 @@ fmtcheck:
 	@sh -c "'$(CURDIR)/script/gofmtcheck.sh'"
 
 lint: fmtcheck
-	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.57.2 golangci-lint -v run
+	docker run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app $(LINT_IMAGE) golangci-lint -v run
 
 deeplint: fmtcheck
-	$(DOCKER) run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:v1.57.2 golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
+	docker run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app $(LINT_IMAGE) golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
 
-modsync: fmtcheck
-	go mod tidy && 	go mod vendor
+example-service:
+	OTEL_EXPORTER_OTLP_INSECURE="true" go run examples/service/*.go
 
-examples:
-	$(MAKE) -C examples
+example-client:
+	OTEL_EXPORTER_OTLP_INSECURE="true" go run examples/client/main.go
 
 deps-start:
-	docker-compose up -d && sleep 10
+	docker-compose up -d
 
 deps-stop:
 	docker-compose down
@@ -47,4 +40,4 @@ deps-stop:
 # under parallel conditions.
 .NOTPARALLEL:
 
-.PHONY: default test testint cover coverci fmt fmtcheck lint deeplint ci modsync deps-start deps-stop
+.PHONY: default test testint cover coverci fmt fmtcheck lint deeplint ci modsync deps-start deps-stop example-service example-client

@@ -16,23 +16,17 @@ The client implements all Patron clients for the components used by the service.
 First we need to start the dependencies of the example by running:
 
 ```bash
-docker-compose -f docker-compose.yml up -d
+make deps-start
 ```
 
 Next we run the service:
 
 ```bash
-go run examples/service/*
+make example-service
 ```
 
 and afterwards the client:
 
 ```bash
-go run examples/client/main.go
-```
-
-The client is able to target specific server components with a flag. Run the following argument to see what is available:
-
-```bash
-go run examples/client/main.go --help
+make example-client
 ```

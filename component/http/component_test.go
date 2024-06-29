@@ -135,6 +135,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 	rsp, err := http.Get(fmt.Sprintf("http://localhost:%d/", port.Port))
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rsp.StatusCode)
+	assert.NoError(t, rsp.Body.Close())
 	cnl()
 	assert.True(t, <-done)
 }

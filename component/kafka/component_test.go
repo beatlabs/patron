@@ -102,7 +102,7 @@ func TestNew(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "failed, invalid retry retry timeout",
+			name:    "failed, invalid retry timeout",
 			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, retryWait: -2, saramaCfg: saramaCfg},
 			wantErr: true,
 		},

@@ -72,23 +72,27 @@ func TestVerifyRouter(t *testing.T) {
 		rsp, err := http.Get(srv.URL + "/alive")
 		require.NoError(t, err)
 		assertResponse(t, rsp)
+		assert.NoError(t, rsp.Body.Close())
 	})
 
 	t.Run("check alive endpoint", func(t *testing.T) {
 		rsp, err := http.Get(srv.URL + "/ready")
 		require.NoError(t, err)
 		assertResponse(t, rsp)
+		assert.NoError(t, rsp.Body.Close())
 	})
 
 	t.Run("check pprof endpoint", func(t *testing.T) {
 		rsp, err := http.Get(srv.URL + "/debug/pprof")
 		require.NoError(t, err)
 		assertResponse(t, rsp)
+		assert.NoError(t, rsp.Body.Close())
 	})
 
 	t.Run("check provided endpoint", func(t *testing.T) {
 		rsp, err := http.Get(srv.URL + "/api")
 		require.NoError(t, err)
 		assertResponse(t, rsp)
+		assert.NoError(t, rsp.Body.Close())
 	})
 }

@@ -437,6 +437,7 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 			resp, err := s.Client().Do(req)
 			assert.Nil(t, err)
 			assert.Equal(t, tt.expectedEncoding, resp.Header.Get("Content-Encoding"))
+			assert.NoError(t, resp.Body.Close())
 		})
 	}
 }
@@ -726,19 +727,19 @@ func TestIsConnectionReset(t *testing.T) {
 		expected bool
 	}{
 		"Broken pipe": {
-			err:      errors.New("blah blah broken pipe blah blah"),
+			err:      errors.New("blah broken pipe blah"),
 			expected: true,
 		},
 		"connection reset": {
-			err:      errors.New("blah blah connection reset blah blah"),
+			err:      errors.New("blah connection reset blah"),
 			expected: true,
 		},
 		"read: connection reset": {
-			err:      errors.New("blah blah read: connection reset blah blah"),
+			err:      errors.New("blah read: connection reset blah"),
 			expected: false,
 		},
 		"b00m random error": {
-			err:      errors.New("blah blah b00m random error blah blah"),
+			err:      errors.New("blah b00m random error blah"),
 			expected: false,
 		},
 	}

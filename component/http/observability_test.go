@@ -25,6 +25,7 @@ func TestProfilingRoutes(t *testing.T) {
 				resp, err := http.Get(fmt.Sprintf("%s/%s", server.URL, tt.path))
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want, resp.StatusCode)
+				assert.NoError(t, resp.Body.Close())
 			})
 		}
 	})
@@ -39,6 +40,7 @@ func TestProfilingRoutes(t *testing.T) {
 				resp, err := http.Get(fmt.Sprintf("%s/%s", server.URL, tt.path))
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want, resp.StatusCode)
+				assert.NoError(t, resp.Body.Close())
 			})
 		}
 	})

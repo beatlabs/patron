@@ -64,6 +64,7 @@ func TestTracedClient_Do(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, rsp)
+				assert.NoError(t, rsp.Body.Close())
 			}
 		})
 	}
@@ -191,6 +192,7 @@ func TestDecompress(t *testing.T) {
 			assert.Nil(t, err)
 			body := string(b)
 			assert.Equal(t, msg, body)
+			assert.NoError(t, rsp.Body.Close())
 		})
 	}
 }

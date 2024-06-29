@@ -62,7 +62,7 @@ func TestFromResponse(t *testing.T) {
 
 			got := customer{}
 
-			err = FromResponse(context.Background(), rsp.Result(), &got)
+			err = FromResponse(context.Background(), rsp.Result(), &got) // nolint: bodyclose
 
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)

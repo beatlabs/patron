@@ -1708,19 +1708,6 @@ func assertMetrics(t *testing.T, read *metricsdk.ManualReader) {
 			t.Error("unexpected metric")
 		}
 	}
-	// TODO: check the right metrics are gathered!!!
-	// assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
-	// assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics[0].Metrics))
-	// assert.Equal(t, "http.cache.status", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
-	// assert.Equal(t, "http.cache.expiration", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
-
-	// for k, v := range expected.values {
-	// 	// v.additions
-	// 	// v.errors
-	// 	// v.evictions
-	// 	// v.hits
-	// 	// v.misses
-	// }
 }
 
 type testingCacheEntity struct {

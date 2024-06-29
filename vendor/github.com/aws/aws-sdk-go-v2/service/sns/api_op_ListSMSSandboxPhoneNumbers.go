@@ -12,15 +12,18 @@ import (
 )
 
 // Lists the calling Amazon Web Services account's current verified and pending
-// destination phone numbers in the SMS sandbox. When you start using Amazon SNS to
-// send SMS messages, your Amazon Web Services account is in the SMS sandbox. The
-// SMS sandbox provides a safe environment for you to try Amazon SNS features
-// without risking your reputation as an SMS sender. While your Amazon Web Services
-// account is in the SMS sandbox, you can use all of the features of Amazon SNS.
-// However, you can send SMS messages only to verified destination phone numbers.
-// For more information, including how to move out of the sandbox to send messages
-// without restrictions, see SMS sandbox (https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html)
-// in the Amazon SNS Developer Guide.
+// destination phone numbers in the SMS sandbox.
+//
+// When you start using Amazon SNS to send SMS messages, your Amazon Web Services
+// account is in the SMS sandbox. The SMS sandbox provides a safe environment for
+// you to try Amazon SNS features without risking your reputation as an SMS sender.
+// While your Amazon Web Services account is in the SMS sandbox, you can use all of
+// the features of Amazon SNS. However, you can send SMS messages only to verified
+// destination phone numbers. For more information, including how to move out of
+// the sandbox to send messages without restrictions, see [SMS sandbox]in the Amazon SNS
+// Developer Guide.
+//
+// [SMS sandbox]: https://docs.aws.amazon.com/sns/latest/dg/sns-sms-sandbox.html
 func (c *Client) ListSMSSandboxPhoneNumbers(ctx context.Context, params *ListSMSSandboxPhoneNumbersInput, optFns ...func(*Options)) (*ListSMSSandboxPhoneNumbersOutput, error) {
 	if params == nil {
 		params = &ListSMSSandboxPhoneNumbersInput{}
@@ -119,6 +122,12 @@ func (c *Client) addOperationListSMSSandboxPhoneNumbersMiddlewares(stack *middle
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opListSMSSandboxPhoneNumbers(options.Region), middleware.Before); err != nil {
 		return err
 	}
@@ -139,14 +148,6 @@ func (c *Client) addOperationListSMSSandboxPhoneNumbersMiddlewares(stack *middle
 	}
 	return nil
 }
-
-// ListSMSSandboxPhoneNumbersAPIClient is a client that implements the
-// ListSMSSandboxPhoneNumbers operation.
-type ListSMSSandboxPhoneNumbersAPIClient interface {
-	ListSMSSandboxPhoneNumbers(context.Context, *ListSMSSandboxPhoneNumbersInput, ...func(*Options)) (*ListSMSSandboxPhoneNumbersOutput, error)
-}
-
-var _ ListSMSSandboxPhoneNumbersAPIClient = (*Client)(nil)
 
 // ListSMSSandboxPhoneNumbersPaginatorOptions is the paginator options for
 // ListSMSSandboxPhoneNumbers
@@ -214,6 +215,9 @@ func (p *ListSMSSandboxPhoneNumbersPaginator) NextPage(ctx context.Context, optF
 	}
 	params.MaxResults = limit
 
+	optFns = append([]func(*Options){
+		addIsPaginatorUserAgent,
+	}, optFns...)
 	result, err := p.client.ListSMSSandboxPhoneNumbers(ctx, &params, optFns...)
 	if err != nil {
 		return nil, err
@@ -232,6 +236,14 @@ func (p *ListSMSSandboxPhoneNumbersPaginator) NextPage(ctx context.Context, optF
 
 	return result, nil
 }
+
+// ListSMSSandboxPhoneNumbersAPIClient is a client that implements the
+// ListSMSSandboxPhoneNumbers operation.
+type ListSMSSandboxPhoneNumbersAPIClient interface {
+	ListSMSSandboxPhoneNumbers(context.Context, *ListSMSSandboxPhoneNumbersInput, ...func(*Options)) (*ListSMSSandboxPhoneNumbersOutput, error)
+}
+
+var _ ListSMSSandboxPhoneNumbersAPIClient = (*Client)(nil)
 
 func newServiceMetadataMiddleware_opListSMSSandboxPhoneNumbers(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{

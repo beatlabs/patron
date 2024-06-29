@@ -18,9 +18,11 @@ import (
 // the first page results, then a NextToken string will be returned. To receive the
 // next page, you call ListEndpointsByPlatformApplication again using the
 // NextToken string received from the previous call. When there are no more records
-// to return, NextToken will be null. For more information, see Using Amazon SNS
-// Mobile Push Notifications (https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html)
-// . This action is throttled at 30 transactions per second (TPS).
+// to return, NextToken will be null. For more information, see [Using Amazon SNS Mobile Push Notifications].
+//
+// This action is throttled at 30 transactions per second (TPS).
+//
+// [Using Amazon SNS Mobile Push Notifications]: https://docs.aws.amazon.com/sns/latest/dg/SNSMobilePush.html
 func (c *Client) ListEndpointsByPlatformApplication(ctx context.Context, params *ListEndpointsByPlatformApplicationInput, optFns ...func(*Options)) (*ListEndpointsByPlatformApplicationOutput, error) {
 	if params == nil {
 		params = &ListEndpointsByPlatformApplicationInput{}
@@ -122,6 +124,12 @@ func (c *Client) addOperationListEndpointsByPlatformApplicationMiddlewares(stack
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
 	if err = addOpListEndpointsByPlatformApplicationValidationMiddleware(stack); err != nil {
 		return err
 	}
@@ -145,14 +153,6 @@ func (c *Client) addOperationListEndpointsByPlatformApplicationMiddlewares(stack
 	}
 	return nil
 }
-
-// ListEndpointsByPlatformApplicationAPIClient is a client that implements the
-// ListEndpointsByPlatformApplication operation.
-type ListEndpointsByPlatformApplicationAPIClient interface {
-	ListEndpointsByPlatformApplication(context.Context, *ListEndpointsByPlatformApplicationInput, ...func(*Options)) (*ListEndpointsByPlatformApplicationOutput, error)
-}
-
-var _ ListEndpointsByPlatformApplicationAPIClient = (*Client)(nil)
 
 // ListEndpointsByPlatformApplicationPaginatorOptions is the paginator options for
 // ListEndpointsByPlatformApplication
@@ -208,6 +208,9 @@ func (p *ListEndpointsByPlatformApplicationPaginator) NextPage(ctx context.Conte
 	params := *p.params
 	params.NextToken = p.nextToken
 
+	optFns = append([]func(*Options){
+		addIsPaginatorUserAgent,
+	}, optFns...)
 	result, err := p.client.ListEndpointsByPlatformApplication(ctx, &params, optFns...)
 	if err != nil {
 		return nil, err
@@ -226,6 +229,14 @@ func (p *ListEndpointsByPlatformApplicationPaginator) NextPage(ctx context.Conte
 
 	return result, nil
 }
+
+// ListEndpointsByPlatformApplicationAPIClient is a client that implements the
+// ListEndpointsByPlatformApplication operation.
+type ListEndpointsByPlatformApplicationAPIClient interface {
+	ListEndpointsByPlatformApplication(context.Context, *ListEndpointsByPlatformApplicationInput, ...func(*Options)) (*ListEndpointsByPlatformApplicationOutput, error)
+}
+
+var _ ListEndpointsByPlatformApplicationAPIClient = (*Client)(nil)
 
 func newServiceMetadataMiddleware_opListEndpointsByPlatformApplication(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{

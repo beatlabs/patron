@@ -13,8 +13,9 @@ import (
 
 // Returns a list of the requester's topics. Each call returns a limited list of
 // topics, up to 100. If there are more topics, a NextToken is also returned. Use
-// the NextToken parameter in a new ListTopics call to get further results. This
-// action is throttled at 30 transactions per second (TPS).
+// the NextToken parameter in a new ListTopics call to get further results.
+//
+// This action is throttled at 30 transactions per second (TPS).
 func (c *Client) ListTopics(ctx context.Context, params *ListTopicsInput, optFns ...func(*Options)) (*ListTopicsOutput, error) {
 	if params == nil {
 		params = &ListTopicsInput{}
@@ -109,6 +110,12 @@ func (c *Client) addOperationListTopicsMiddlewares(stack *middleware.Stack, opti
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opListTopics(options.Region), middleware.Before); err != nil {
 		return err
 	}
@@ -129,13 +136,6 @@ func (c *Client) addOperationListTopicsMiddlewares(stack *middleware.Stack, opti
 	}
 	return nil
 }
-
-// ListTopicsAPIClient is a client that implements the ListTopics operation.
-type ListTopicsAPIClient interface {
-	ListTopics(context.Context, *ListTopicsInput, ...func(*Options)) (*ListTopicsOutput, error)
-}
-
-var _ ListTopicsAPIClient = (*Client)(nil)
 
 // ListTopicsPaginatorOptions is the paginator options for ListTopics
 type ListTopicsPaginatorOptions struct {
@@ -188,6 +188,9 @@ func (p *ListTopicsPaginator) NextPage(ctx context.Context, optFns ...func(*Opti
 	params := *p.params
 	params.NextToken = p.nextToken
 
+	optFns = append([]func(*Options){
+		addIsPaginatorUserAgent,
+	}, optFns...)
 	result, err := p.client.ListTopics(ctx, &params, optFns...)
 	if err != nil {
 		return nil, err
@@ -206,6 +209,13 @@ func (p *ListTopicsPaginator) NextPage(ctx context.Context, optFns ...func(*Opti
 
 	return result, nil
 }
+
+// ListTopicsAPIClient is a client that implements the ListTopics operation.
+type ListTopicsAPIClient interface {
+	ListTopics(context.Context, *ListTopicsInput, ...func(*Options)) (*ListTopicsOutput, error)
+}
+
+var _ ListTopicsAPIClient = (*Client)(nil)
 
 func newServiceMetadataMiddleware_opListTopics(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{

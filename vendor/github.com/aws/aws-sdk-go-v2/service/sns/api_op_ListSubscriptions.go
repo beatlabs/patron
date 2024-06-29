@@ -14,8 +14,9 @@ import (
 // Returns a list of the requester's subscriptions. Each call returns a limited
 // list of subscriptions, up to 100. If there are more subscriptions, a NextToken
 // is also returned. Use the NextToken parameter in a new ListSubscriptions call
-// to get further results. This action is throttled at 30 transactions per second
-// (TPS).
+// to get further results.
+//
+// This action is throttled at 30 transactions per second (TPS).
 func (c *Client) ListSubscriptions(ctx context.Context, params *ListSubscriptionsInput, optFns ...func(*Options)) (*ListSubscriptionsOutput, error) {
 	if params == nil {
 		params = &ListSubscriptionsInput{}
@@ -111,6 +112,12 @@ func (c *Client) addOperationListSubscriptionsMiddlewares(stack *middleware.Stac
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opListSubscriptions(options.Region), middleware.Before); err != nil {
 		return err
 	}
@@ -131,14 +138,6 @@ func (c *Client) addOperationListSubscriptionsMiddlewares(stack *middleware.Stac
 	}
 	return nil
 }
-
-// ListSubscriptionsAPIClient is a client that implements the ListSubscriptions
-// operation.
-type ListSubscriptionsAPIClient interface {
-	ListSubscriptions(context.Context, *ListSubscriptionsInput, ...func(*Options)) (*ListSubscriptionsOutput, error)
-}
-
-var _ ListSubscriptionsAPIClient = (*Client)(nil)
 
 // ListSubscriptionsPaginatorOptions is the paginator options for ListSubscriptions
 type ListSubscriptionsPaginatorOptions struct {
@@ -191,6 +190,9 @@ func (p *ListSubscriptionsPaginator) NextPage(ctx context.Context, optFns ...fun
 	params := *p.params
 	params.NextToken = p.nextToken
 
+	optFns = append([]func(*Options){
+		addIsPaginatorUserAgent,
+	}, optFns...)
 	result, err := p.client.ListSubscriptions(ctx, &params, optFns...)
 	if err != nil {
 		return nil, err
@@ -209,6 +211,14 @@ func (p *ListSubscriptionsPaginator) NextPage(ctx context.Context, optFns ...fun
 
 	return result, nil
 }
+
+// ListSubscriptionsAPIClient is a client that implements the ListSubscriptions
+// operation.
+type ListSubscriptionsAPIClient interface {
+	ListSubscriptions(context.Context, *ListSubscriptionsInput, ...func(*Options)) (*ListSubscriptionsOutput, error)
+}
+
+var _ ListSubscriptionsAPIClient = (*Client)(nil)
 
 func newServiceMetadataMiddleware_opListSubscriptions(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{

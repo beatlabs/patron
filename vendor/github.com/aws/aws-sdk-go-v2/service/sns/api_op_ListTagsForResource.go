@@ -11,9 +11,10 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// List all tags added to the specified Amazon SNS topic. For an overview, see
-// Amazon SNS Tags (https://docs.aws.amazon.com/sns/latest/dg/sns-tags.html) in the
-// Amazon Simple Notification Service Developer Guide.
+// List all tags added to the specified Amazon SNS topic. For an overview, see [Amazon SNS Tags] in
+// the Amazon Simple Notification Service Developer Guide.
+//
+// [Amazon SNS Tags]: https://docs.aws.amazon.com/sns/latest/dg/sns-tags.html
 func (c *Client) ListTagsForResource(ctx context.Context, params *ListTagsForResourceInput, optFns ...func(*Options)) (*ListTagsForResourceOutput, error) {
 	if params == nil {
 		params = &ListTagsForResourceInput{}
@@ -103,6 +104,12 @@ func (c *Client) addOperationListTagsForResourceMiddlewares(stack *middleware.St
 		return err
 	}
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
 	if err = addOpListTagsForResourceValidationMiddleware(stack); err != nil {

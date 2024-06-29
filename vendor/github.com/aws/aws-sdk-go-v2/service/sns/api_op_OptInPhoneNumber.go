@@ -11,8 +11,9 @@ import (
 )
 
 // Use this request to opt in a phone number that is opted out, which enables you
-// to resume sending SMS messages to the number. You can opt in a phone number only
-// once every 30 days.
+// to resume sending SMS messages to the number.
+//
+// You can opt in a phone number only once every 30 days.
 func (c *Client) OptInPhoneNumber(ctx context.Context, params *OptInPhoneNumberInput, optFns ...func(*Options)) (*OptInPhoneNumberOutput, error) {
 	if params == nil {
 		params = &OptInPhoneNumberInput{}
@@ -100,6 +101,12 @@ func (c *Client) addOperationOptInPhoneNumberMiddlewares(stack *middleware.Stack
 		return err
 	}
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
 	if err = addOpOptInPhoneNumberValidationMiddleware(stack); err != nil {

@@ -12,9 +12,10 @@ import (
 )
 
 // Lists the calling Amazon Web Services account's dedicated origination numbers
-// and their metadata. For more information about origination numbers, see
-// Origination numbers (https://docs.aws.amazon.com/sns/latest/dg/channels-sms-originating-identities-origination-numbers.html)
-// in the Amazon SNS Developer Guide.
+// and their metadata. For more information about origination numbers, see [Origination numbers]in the
+// Amazon SNS Developer Guide.
+//
+// [Origination numbers]: https://docs.aws.amazon.com/sns/latest/dg/channels-sms-originating-identities-origination-numbers.html
 func (c *Client) ListOriginationNumbers(ctx context.Context, params *ListOriginationNumbersInput, optFns ...func(*Options)) (*ListOriginationNumbersOutput, error) {
 	if params == nil {
 		params = &ListOriginationNumbersInput{}
@@ -111,6 +112,12 @@ func (c *Client) addOperationListOriginationNumbersMiddlewares(stack *middleware
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opListOriginationNumbers(options.Region), middleware.Before); err != nil {
 		return err
 	}
@@ -131,14 +138,6 @@ func (c *Client) addOperationListOriginationNumbersMiddlewares(stack *middleware
 	}
 	return nil
 }
-
-// ListOriginationNumbersAPIClient is a client that implements the
-// ListOriginationNumbers operation.
-type ListOriginationNumbersAPIClient interface {
-	ListOriginationNumbers(context.Context, *ListOriginationNumbersInput, ...func(*Options)) (*ListOriginationNumbersOutput, error)
-}
-
-var _ ListOriginationNumbersAPIClient = (*Client)(nil)
 
 // ListOriginationNumbersPaginatorOptions is the paginator options for
 // ListOriginationNumbers
@@ -204,6 +203,9 @@ func (p *ListOriginationNumbersPaginator) NextPage(ctx context.Context, optFns .
 	}
 	params.MaxResults = limit
 
+	optFns = append([]func(*Options){
+		addIsPaginatorUserAgent,
+	}, optFns...)
 	result, err := p.client.ListOriginationNumbers(ctx, &params, optFns...)
 	if err != nil {
 		return nil, err
@@ -222,6 +224,14 @@ func (p *ListOriginationNumbersPaginator) NextPage(ctx context.Context, optFns .
 
 	return result, nil
 }
+
+// ListOriginationNumbersAPIClient is a client that implements the
+// ListOriginationNumbers operation.
+type ListOriginationNumbersAPIClient interface {
+	ListOriginationNumbers(context.Context, *ListOriginationNumbersInput, ...func(*Options)) (*ListOriginationNumbersOutput, error)
+}
+
+var _ ListOriginationNumbersAPIClient = (*Client)(nil)
 
 func newServiceMetadataMiddleware_opListOriginationNumbers(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{

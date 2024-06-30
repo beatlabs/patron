@@ -74,13 +74,8 @@ linters:
     - dogsled
     - protogetter
     - usestdlibvars
-    # - wsl
-    #- wrapcheck
+    - testableexamples
   fast: false
-
-
-# testableexamples 	Linter checks if examples are testable (have an expected output).	test		v1.50.0	
-# usestdlibvars 	A linter that detect the possibility to use variables/constants from the Go standard library.	style		v1.48.0	
 
 issues:
   exclude-dirs:

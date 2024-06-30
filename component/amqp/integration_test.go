@@ -55,7 +55,7 @@ func TestRun(t *testing.T) {
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent[1])})
 	require.NoError(t, err)
 
-	assert.NoError(t, err, tracePublisher.ForceFlush(ctx))
+	require.NoError(t, tracePublisher.ForceFlush(ctx))
 	traceExporter.Reset()
 
 	chReceived := make(chan []string)
@@ -65,7 +65,7 @@ func TestRun(t *testing.T) {
 	procFunc := func(_ context.Context, b Batch) {
 		for _, msg := range b.Messages() {
 			received = append(received, string(msg.Body()))
-			assert.NoError(t, msg.ACK())
+			require.NoError(t, msg.ACK())
 		}
 
 		count += len(b.Messages())
@@ -80,7 +80,7 @@ func TestRun(t *testing.T) {
 	chDone := make(chan struct{})
 
 	go func() {
-		require.NoError(t, cmp.Run(ctx))
+		assert.NoError(t, cmp.Run(ctx))
 		chDone <- struct{}{}
 	}()
 
@@ -91,7 +91,7 @@ func TestRun(t *testing.T) {
 
 	assert.ElementsMatch(t, sent, got)
 
-	assert.NoError(t, err, tracePublisher.ForceFlush(ctx))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 	time.Sleep(time.Second)
 	spans := traceExporter.GetSpans()
 	assert.Len(t, spans, 2)
@@ -109,9 +109,9 @@ func TestRun(t *testing.T) {
 
 	// Metrics
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
-	assert.Equal(t, 3, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
 	assert.Equal(t, "amqp.publish.duration", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
 	assert.Equal(t, "amqp.message.age", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
 	assert.Equal(t, "amqp.message.counter", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)

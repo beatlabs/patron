@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSetup(t *testing.T) {
@@ -14,7 +14,7 @@ func TestSetup(t *testing.T) {
 	ctx := context.Background()
 
 	got, err := Setup(ctx, "test", "1.2.3")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.NoError(t, got.Shutdown(ctx))
+	require.NoError(t, got.Shutdown(ctx))
 }

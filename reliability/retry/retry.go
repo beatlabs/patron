@@ -9,7 +9,7 @@ import (
 // Action function to execute in retry.
 type Action func() (interface{}, error)
 
-// Retry implementation with configurable attempts and and optional delay.
+// Retry implementation with configurable attempts and optional delay.
 type Retry struct {
 	attempts int
 	delay    time.Duration

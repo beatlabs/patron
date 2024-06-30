@@ -1,9 +1,11 @@
 package cache
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResponseReadWriter_Header(t *testing.T) {
@@ -14,19 +16,19 @@ func TestResponseReadWriter_Header(t *testing.T) {
 
 func TestResponseReadWriter_StatusCode(t *testing.T) {
 	rw := newResponseReadWriter()
-	rw.WriteHeader(100)
-	assert.Equal(t, 100, rw.statusCode)
+	rw.WriteHeader(http.StatusContinue)
+	assert.Equal(t, http.StatusContinue, rw.statusCode)
 }
 
 func TestResponseReadWriter_ReadWrite(t *testing.T) {
 	rw := newResponseReadWriter()
 	str := "body"
 	i, err := rw.Write([]byte(str))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	r := make([]byte, i)
 	j, err := rw.Read(r)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, i, j)
 	assert.Equal(t, str, string(r))
@@ -36,12 +38,12 @@ func TestResponseReadWriter_ReadWriteAll(t *testing.T) {
 	rw := newResponseReadWriter()
 	str := "body"
 	i, err := rw.Write([]byte(str))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	b, err := rw.ReadAll()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, i, len(b))
+	assert.Len(t, b, i)
 	assert.Equal(t, str, string(b))
 }
 
@@ -49,8 +51,8 @@ func TestResponseReadWriter_ReadAllEmpty(t *testing.T) {
 	rw := newResponseReadWriter()
 
 	b, err := rw.ReadAll()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, 0, len(b))
+	assert.Empty(t, b)
 	assert.Equal(t, "", string(b))
 }

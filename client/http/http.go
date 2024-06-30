@@ -68,7 +68,7 @@ func (tc *TracedClient) do(req *http.Request) (*http.Response, error) {
 	}
 
 	r, err := tc.cb.Execute(func() (interface{}, error) {
-		return tc.cl.Do(req)
+		return tc.cl.Do(req) // nolint:bodyclose
 	})
 	if err != nil {
 		return nil, err

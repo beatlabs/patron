@@ -15,7 +15,7 @@ import (
 type stubHandler struct{}
 
 func (s stubHandler) ServeHTTP(rw http.ResponseWriter, _ *http.Request) {
-	rw.WriteHeader(200)
+	rw.WriteHeader(http.StatusOK)
 }
 
 func TestNew(t *testing.T) {
@@ -106,10 +106,10 @@ func TestNew(t *testing.T) {
 
 			got, err := New(tt.args.handler, tt.args.oo...)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.expected, got)
 			}
 		})
@@ -124,7 +124,7 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 	require.NoError(t, listener.Close())
 
 	cmp, err := New(&stubHandler{}, WithPort(port.Port))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	done := make(chan bool)
 	ctx, cnl := context.WithCancel(context.Background())
 	go func() {
@@ -132,9 +132,12 @@ func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
 		done <- true
 	}()
 	time.Sleep(10 * time.Millisecond)
-	rsp, err := http.Get(fmt.Sprintf("http://localhost:%d/", port.Port))
-	assert.NoError(t, err)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("http://localhost:%d/", port.Port), nil)
+	require.NoError(t, err)
+	rsp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rsp.StatusCode)
+	require.NoError(t, rsp.Body.Close())
 	cnl()
 	assert.True(t, <-done)
 }

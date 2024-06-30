@@ -71,7 +71,7 @@ type executor func(now int64, key string) *response
 // exec is the processor func that the cache will wrap
 // rc is the route cache implementation to be used.
 func handler(exec executor, rc *RouteCache) func(request *handlerRequest) (response *handlerResponse, e error) {
-	return func(request *handlerRequest) (handlerResponse *handlerResponse, e error) {
+	return func(request *handlerRequest) (*handlerResponse, error) {
 		now := NowSeconds()
 
 		key := request.getKey()
@@ -89,17 +89,16 @@ func handler(exec executor, rc *RouteCache) func(request *handlerRequest) (respo
 		}
 
 		rsp = getResponse(request.ctx, cfg, request.path, key, now, rc, exec)
-		e = rsp.Err
-
-		if e == nil {
-			handlerResponse = &rsp.Response
-			addResponseHeaders(now, handlerResponse.Header, rsp, rc.age.max)
-			if !rsp.FromCache && !cfg.noCache {
-				save(request.ctx, request.path, key, rsp, rc.cache, time.Duration(rc.age.max)*time.Second)
-			}
+		if rsp.Err != nil {
+			return nil, rsp.Err
 		}
 
-		return
+		addResponseHeaders(now, rsp.Response.Header, rsp, rc.age.max)
+		if !rsp.FromCache && !cfg.noCache {
+			save(request.ctx, request.path, key, rsp, rc.cache, time.Duration(rc.age.max)*time.Second)
+		}
+
+		return &rsp.Response, nil
 	}
 }
 

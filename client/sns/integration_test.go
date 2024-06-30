@@ -51,10 +51,10 @@ func TestNewFromConfig(t *testing.T) {
 		Name: aws.String("test-topic"),
 	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.NotEmpty(t, out.TopicArn)
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	assert.Len(t, exp.GetSpans(), 1)
 }

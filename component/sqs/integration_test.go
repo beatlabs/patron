@@ -83,13 +83,13 @@ func Test_SQS_Consume(t *testing.T) {
 		WithPollWaitSeconds(20), WithVisibilityTimeout(30), WithQueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 
-	go func() { require.NoError(t, cmp.Run(context.Background())) }()
+	go func() { assert.NoError(t, cmp.Run(context.Background())) }()
 
 	got := <-chReceived
 
 	assert.ElementsMatch(t, sent, got)
 
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expected := createStubSpan("sqs-consumer", "")
 
@@ -102,9 +102,9 @@ func Test_SQS_Consume(t *testing.T) {
 
 	// Metrics
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
-	assert.Equal(t, 3, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
 	assert.Equal(t, "sqs.message.age", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
 	assert.Equal(t, "sqs.message.counter", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
 	assert.Equal(t, "sqs.queue.size", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
@@ -129,7 +129,7 @@ func sendMessage(t *testing.T, client *sqs.Client, correlationID, queue string, 
 		}
 
 		msgID, err := client.SendMessage(ctx, msg)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotEmpty(t, msgID)
 
 		sentMessages = append(sentMessages, sentMsg)

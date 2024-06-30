@@ -51,10 +51,10 @@ func TestNewFromConfig(t *testing.T) {
 		QueueName: aws.String("test-queue"),
 	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.NotEmpty(t, out.QueueUrl)
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	assert.Len(t, exp.GetSpans(), 1)
 }

@@ -5,6 +5,7 @@ import (
 
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTimeout(t *testing.T) {
@@ -13,6 +14,6 @@ func TestTimeout(t *testing.T) {
 	}
 
 	p := Publisher{}
-	assert.NoError(t, WithConfig(cfg)(&p))
+	require.NoError(t, WithConfig(cfg)(&p))
 	assert.Equal(t, cfg, *p.cfg)
 }

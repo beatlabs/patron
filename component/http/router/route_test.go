@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -45,14 +46,14 @@ func TestNewFileServerRoute(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := NewFileServerRoute(tt.args.path, tt.args.assetsDir, tt.args.fallbackPath)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, got)
 				assert.Equal(t, "GET /frontend/*path", got.Path())
 				assert.NotNil(t, got.Handler())
-				assert.Len(t, got.Middlewares(), 0)
+				assert.Empty(t, got.Middlewares())
 			}
 		})
 	}
@@ -76,7 +77,7 @@ func TestFileServerRouteHandler(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, tt.args.path, nil)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, tt.args.path, nil)
 			require.NoError(t, err)
 			rc := httptest.NewRecorder()
 			handler.Handler().ServeHTTP(rc, req)

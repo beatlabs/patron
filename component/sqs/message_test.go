@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/codes"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
@@ -76,10 +77,10 @@ func Test_message_ACK(t *testing.T) {
 			m := createMessage(tt.fields.sqsAPI, "1")
 			err := m.ACK()
 
-			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+			require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 
 				expected := createStubSpan("123", "failed to ACK message")
 
@@ -88,7 +89,7 @@ func Test_message_ACK(t *testing.T) {
 				assert.Len(t, got, 1)
 				assertSpan(t, expected, got[0])
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				expected := createStubSpan("123", "")
 
@@ -108,7 +109,7 @@ func Test_message_NACK(t *testing.T) {
 
 	m.NACK()
 
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expected := createStubSpan("123", "")
 
@@ -163,7 +164,7 @@ func Test_batch_NACK(t *testing.T) {
 
 	btc.NACK()
 
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expected := createStubSpan("123", "")
 
@@ -221,10 +222,10 @@ func Test_batch_ACK(t *testing.T) {
 			}
 			failed, err := btc.ACK()
 
-			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+			require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 
 				expected := createStubSpan("123", "")
 
@@ -234,7 +235,7 @@ func Test_batch_ACK(t *testing.T) {
 				assertSpan(t, expected, got[0])
 				assertSpan(t, expected, got[1])
 			} else {
-				assert.NoError(t, err, tt)
+				require.NoError(t, err, tt)
 				assert.Len(t, failed, 1)
 				assert.Equal(t, msg1, failed[0])
 

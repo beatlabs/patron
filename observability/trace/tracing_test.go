@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
@@ -13,7 +14,7 @@ import (
 
 func TestSetupGRPC(t *testing.T) {
 	got, err := SetupGRPC(context.Background(), "test", resource.Default())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, got)
 }
 
@@ -31,7 +32,7 @@ func TestSetSpanStatus(t *testing.T) {
 		assert.NotNil(t, ctx)
 		SetSpanSuccess(sp)
 		sp.End()
-		assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+		require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 		spans := exp.GetSpans()
 		assert.Len(t, spans, 1)
 		assert.Equal(t, "test", spans[0].Name)
@@ -44,7 +45,7 @@ func TestSetSpanStatus(t *testing.T) {
 		assert.NotNil(t, ctx)
 		SetSpanError(sp, "error msg", errors.New("error"))
 		sp.End()
-		assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+		require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 		spans := exp.GetSpans()
 		assert.Len(t, spans, 1)
 		assert.Equal(t, "test", spans[0].Name)

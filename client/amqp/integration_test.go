@@ -53,7 +53,7 @@ func TestRun(t *testing.T) {
 		amqp.Publishing{ContentType: "text/plain", Body: []byte(sent)})
 	require.NoError(t, err)
 
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expected := tracetest.SpanStub{
 		Name: "publish",
@@ -71,9 +71,9 @@ func TestRun(t *testing.T) {
 
 	// Metrics
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 1)
 
 	conn, err := amqp.Dial(endpoint)
 	require.NoError(t, err)
@@ -92,8 +92,8 @@ func TestRun(t *testing.T) {
 	}
 
 	assert.Equal(t, sent, got)
-	assert.NoError(t, channel.Close())
-	assert.NoError(t, conn.Close())
+	require.NoError(t, channel.Close())
+	require.NoError(t, conn.Close())
 }
 
 func createQueue(endpoint, queue string) error {

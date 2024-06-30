@@ -53,10 +53,10 @@ func TestNewRoute(t *testing.T) {
 			t.Parallel()
 			got, err := NewRoute(tt.args.path, tt.args.handler, tt.args.optionFuncs...)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assertRoute(t, tt.args.path, got)
 				assert.Equal(t, "GET /api", got.String())
 			}
@@ -92,10 +92,10 @@ func TestRoutes_Append(t *testing.T) {
 			r.Append(tt.args.route, tt.args.err)
 			routes, err := r.Result()
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Empty(t, routes)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotEmpty(t, routes)
 			}
 		})

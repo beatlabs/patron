@@ -9,6 +9,7 @@ import (
 
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
@@ -41,10 +42,10 @@ func TestOpen(t *testing.T) {
 			got, err := Open(tt.args.driverName, dsn)
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, got)
 			}
 		})
@@ -60,7 +61,7 @@ func TestIntegration(t *testing.T) {
 	read := metric.NewManualReader()
 	provider := metric.NewMeterProvider(metric.WithReader(read))
 	defer func() {
-		assert.NoError(t, provider.Shutdown(context.Background()))
+		require.NoError(t, provider.Shutdown(context.Background()))
 	}()
 
 	otel.SetMeterProvider(provider)
@@ -71,7 +72,7 @@ func TestIntegration(t *testing.T) {
 	const insertQuery = "INSERT INTO employee(name) value (?)"
 
 	db, err := Open("mysql", dsn)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, db)
 	db.SetConnMaxLifetime(time.Minute)
 	db.SetMaxIdleConns(10)
@@ -79,8 +80,8 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("db.Ping", func(t *testing.T) {
 		exp.Reset()
-		assert.NoError(t, db.Ping(ctx))
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, db.Ping(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Ping", "")
 	})
 
@@ -88,22 +89,22 @@ func TestIntegration(t *testing.T) {
 		exp.Reset()
 		stats := db.Stats(ctx)
 		assert.NotNil(t, stats)
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Stats", "")
 	})
 
 	t.Run("db.Exec", func(t *testing.T) {
 		result, err := db.Exec(ctx, "CREATE TABLE IF NOT EXISTS employee(id int NOT NULL AUTO_INCREMENT PRIMARY KEY,name VARCHAR(255) NOT NULL)")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		count, err := result.RowsAffected()
-		assert.NoError(t, err)
-		assert.True(t, count >= 0)
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, err)
+		assert.GreaterOrEqual(t, count, int64(0))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		exp.Reset()
 		result, err = db.Exec(ctx, insertQuery, "patron")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, result)
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Exec", insertQuery)
 	})
 
@@ -111,11 +112,12 @@ func TestIntegration(t *testing.T) {
 		exp.Reset()
 		rows, err := db.Query(ctx, query)
 		defer func() {
-			assert.NoError(t, rows.Close())
+			require.NoError(t, rows.Close())
 		}()
-		assert.NoError(t, err)
+		require.NoError(t, err)
+		require.NoError(t, rows.Err())
 		assert.NotNil(t, rows)
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Query", query)
 	})
 
@@ -123,7 +125,7 @@ func TestIntegration(t *testing.T) {
 		exp.Reset()
 		row := db.QueryRow(ctx, query)
 		assert.NotNil(t, row)
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.QueryRow", query)
 	})
 
@@ -131,34 +133,35 @@ func TestIntegration(t *testing.T) {
 		exp.Reset()
 		drv := db.Driver(ctx)
 		assert.NotNil(t, drv)
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Driver", "")
 	})
 
 	t.Run("stmt", func(t *testing.T) {
 		exp.Reset()
 		stmt, err := db.Prepare(ctx, query)
-		assert.NoError(t, err)
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, err)
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Prepare", query)
 
 		t.Run("stmt.Exec", func(t *testing.T) {
 			exp.Reset()
 			result, err := stmt.Exec(ctx)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, result)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Exec", query)
 		})
 
 		t.Run("stmt.Query", func(t *testing.T) {
 			exp.Reset()
 			rows, err := stmt.Query(ctx)
-			assert.NoError(t, err)
+			require.NoError(t, err)
+			require.NoError(t, rows.Err())
 			defer func() {
-				assert.NoError(t, rows.Close())
+				require.NoError(t, rows.Close())
 			}()
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Query", query)
 		})
 
@@ -166,47 +169,48 @@ func TestIntegration(t *testing.T) {
 			exp.Reset()
 			row := stmt.QueryRow(ctx)
 			assert.NotNil(t, row)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.QueryRow", query)
 		})
 
 		exp.Reset()
-		assert.NoError(t, stmt.Close(ctx))
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, stmt.Close(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
 	})
 
 	t.Run("conn", func(t *testing.T) {
 		exp.Reset()
 		conn, err := db.Conn(ctx)
-		assert.NoError(t, err)
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, err)
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Conn", "")
 
 		t.Run("conn.Ping", func(t *testing.T) {
 			exp.Reset()
-			assert.NoError(t, conn.Ping(ctx))
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, conn.Ping(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Ping", "")
 		})
 
 		t.Run("conn.Exec", func(t *testing.T) {
 			exp.Reset()
 			result, err := conn.Exec(ctx, insertQuery, "patron")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, result)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Exec", insertQuery)
 		})
 
 		t.Run("conn.Query", func(t *testing.T) {
 			exp.Reset()
 			rows, err := conn.Query(ctx, query)
-			assert.NoError(t, err)
+			require.NoError(t, err)
+			require.NoError(t, rows.Err())
 			defer func() {
-				assert.NoError(t, rows.Close())
+				require.NoError(t, rows.Close())
 			}()
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Query", query)
 		})
 
@@ -215,66 +219,67 @@ func TestIntegration(t *testing.T) {
 			row := conn.QueryRow(ctx, query)
 			var id int
 			var name string
-			assert.NoError(t, row.Scan(&id, &name))
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, row.Scan(&id, &name))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.QueryRow", query)
 		})
 
 		t.Run("conn.Prepare", func(t *testing.T) {
 			exp.Reset()
 			stmt, err := conn.Prepare(ctx, query)
-			assert.NoError(t, err)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, err)
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Prepare", query)
 			exp.Reset()
-			assert.NoError(t, stmt.Close(ctx))
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, stmt.Close(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
 		})
 
 		t.Run("conn.BeginTx", func(t *testing.T) {
 			exp.Reset()
 			tx, err := conn.BeginTx(ctx, nil)
-			assert.NoError(t, err)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, err)
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "conn.BeginTx", "")
 			exp.Reset()
-			assert.NoError(t, tx.Commit(ctx))
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tx.Commit(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Commit", "")
 		})
 
 		exp.Reset()
-		assert.NoError(t, conn.Close(ctx))
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, conn.Close(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "conn.Close", "")
 	})
 
 	t.Run("tx", func(t *testing.T) {
 		exp.Reset()
 		tx, err := db.BeginTx(ctx, nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, tx)
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.BeginTx", "")
 
 		t.Run("tx.Exec", func(t *testing.T) {
 			exp.Reset()
 			result, err := tx.Exec(ctx, insertQuery, "patron")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, result)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Exec", insertQuery)
 		})
 
 		t.Run("tx.Query", func(t *testing.T) {
 			exp.Reset()
 			rows, err := tx.Query(ctx, query)
-			assert.NoError(t, err)
+			require.NoError(t, err)
+			require.NoError(t, rows.Err())
 			defer func() {
-				assert.NoError(t, rows.Close())
+				require.NoError(t, rows.Close())
 			}()
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Query", query)
 		})
 
@@ -283,70 +288,70 @@ func TestIntegration(t *testing.T) {
 			row := tx.QueryRow(ctx, query)
 			var id int
 			var name string
-			assert.NoError(t, row.Scan(&id, &name))
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, row.Scan(&id, &name))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.QueryRow", query)
 		})
 
 		t.Run("tx.Prepare", func(t *testing.T) {
 			exp.Reset()
 			stmt, err := tx.Prepare(ctx, query)
-			assert.NoError(t, err)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, err)
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Prepare", query)
 			exp.Reset()
-			assert.NoError(t, stmt.Close(ctx))
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, stmt.Close(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
 		})
 
 		t.Run("tx.Stmt", func(t *testing.T) {
 			exp.Reset()
 			stmt, err := db.Prepare(ctx, query)
-			assert.NoError(t, err)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, err)
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "db.Prepare", query)
 			exp.Reset()
 			txStmt := tx.Stmt(ctx, stmt)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Stmt", query)
 			exp.Reset()
-			assert.NoError(t, txStmt.Close(ctx))
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, txStmt.Close(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
 			exp.Reset()
-			assert.NoError(t, stmt.Close(ctx))
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, stmt.Close(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "stmt.Close", "")
 		})
 
 		t.Run("tx.Rollback", func(t *testing.T) {
 			exp.Reset()
 			tx, err := db.BeginTx(ctx, nil)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, db)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "db.BeginTx", "")
 			exp.Reset()
 			row := tx.QueryRow(ctx, query)
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.QueryRow", query)
 			var id int
 			var name string
-			assert.NoError(t, row.Scan(&id, &name))
+			require.NoError(t, row.Scan(&id, &name))
 			exp.Reset()
-			assert.NoError(t, tx.Rollback(ctx))
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tx.Rollback(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 			assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Rollback", "")
 		})
 
 		exp.Reset()
-		assert.NoError(t, tx.Commit(ctx))
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, tx.Commit(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "tx.Commit", "")
 		exp.Reset()
-		assert.NoError(t, db.Close(ctx))
-		assert.NoError(t, tracePublisher.ForceFlush(ctx))
+		require.NoError(t, db.Close(ctx))
+		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Close", "")
 	})
 }
@@ -369,6 +374,6 @@ func assertSpanAndMetric(t *testing.T, spans tracetest.SpanStubs, read *metric.M
 
 	// Metrics
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
 }

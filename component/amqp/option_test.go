@@ -6,12 +6,13 @@ import (
 
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAMQPConfig(t *testing.T) {
 	cfg := amqp.Config{Locale: "123"}
 	c := &Component{}
-	assert.NoError(t, WithConfig(cfg)(c))
+	require.NoError(t, WithConfig(cfg)(c))
 	assert.Equal(t, cfg, c.cfg)
 }
 
@@ -38,7 +39,7 @@ func TestBatching(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.batchCfg.count, tt.args.count)
 				assert.Equal(t, c.batchCfg.timeout, tt.args.timeout)
 			}
@@ -50,14 +51,14 @@ func TestRetry(t *testing.T) {
 	retryCount := uint(5)
 	retryDelay := 2 * time.Second
 	c := &Component{}
-	assert.NoError(t, WithRetry(retryCount, retryDelay)(c))
+	require.NoError(t, WithRetry(retryCount, retryDelay)(c))
 	assert.Equal(t, retryCount, c.retryCfg.count)
 	assert.Equal(t, retryDelay, c.retryCfg.delay)
 }
 
 func TestRequeue(t *testing.T) {
 	c := &Component{}
-	assert.NoError(t, WithRequeue(false)(c))
+	require.NoError(t, WithRequeue(false)(c))
 	assert.False(t, c.queueCfg.requeue)
 }
 
@@ -82,7 +83,7 @@ func TestStatsInterval(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.statsCfg.interval, tt.args.interval)
 			}
 		})

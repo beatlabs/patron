@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +14,7 @@ import (
 func TestNew(t *testing.T) {
 	t.Parallel()
 	route, err := patronhttp.NewRoute("GET /api/", func(writer http.ResponseWriter, _ *http.Request) {
-		writer.WriteHeader(200)
+		writer.WriteHeader(http.StatusOK)
 	})
 	require.NoError(t, err)
 	type args struct {
@@ -42,7 +43,7 @@ func TestNew(t *testing.T) {
 
 func TestVerifyRouter(t *testing.T) {
 	route, err := patronhttp.NewRoute("GET /api/", func(writer http.ResponseWriter, _ *http.Request) {
-		writer.WriteHeader(200)
+		writer.WriteHeader(http.StatusOK)
 	})
 	require.NoError(t, err)
 
@@ -69,26 +70,38 @@ func TestVerifyRouter(t *testing.T) {
 	}
 
 	t.Run("check alive endpoint", func(t *testing.T) {
-		rsp, err := http.Get(srv.URL + "/alive")
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, srv.URL+"/alive", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		assertResponse(t, rsp)
+		require.NoError(t, rsp.Body.Close())
 	})
 
 	t.Run("check alive endpoint", func(t *testing.T) {
-		rsp, err := http.Get(srv.URL + "/ready")
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, srv.URL+"/ready", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		assertResponse(t, rsp)
+		require.NoError(t, rsp.Body.Close())
 	})
 
 	t.Run("check pprof endpoint", func(t *testing.T) {
-		rsp, err := http.Get(srv.URL + "/debug/pprof")
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, srv.URL+"/debug/pprof", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		assertResponse(t, rsp)
+		require.NoError(t, rsp.Body.Close())
 	})
 
 	t.Run("check provided endpoint", func(t *testing.T) {
-		rsp, err := http.Get(srv.URL + "/api")
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, srv.URL+"/api", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		assertResponse(t, rsp)
+		require.NoError(t, rsp.Body.Close())
 	})
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
@@ -55,7 +56,7 @@ func TestNew(t *testing.T) {
 
 	version := "1.0.0"
 	client, err := New(cfg, version)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, client)
 
 	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}`
@@ -65,10 +66,10 @@ func TestNew(t *testing.T) {
 		client.Indices.Create.WithBody(strings.NewReader(queryBody)),
 		client.Indices.Create.WithContext(ctx),
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, rsp)
 
 	// Traces
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 	assert.Len(t, exp.GetSpans(), 1)
 }

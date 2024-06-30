@@ -1,12 +1,14 @@
 package http
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type profilingTestCase struct {
@@ -22,9 +24,12 @@ func TestProfilingRoutes(t *testing.T) {
 		for name, tt := range createProfilingTestCases(false) {
 			tt := tt
 			t.Run(name, func(t *testing.T) {
-				resp, err := http.Get(fmt.Sprintf("%s/%s", server.URL, tt.path))
-				assert.NoError(t, err)
+				req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("%s/%s", server.URL, tt.path), nil)
+				require.NoError(t, err)
+				resp, err := http.DefaultClient.Do(req)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, resp.StatusCode)
+				require.NoError(t, resp.Body.Close())
 			})
 		}
 	})
@@ -36,9 +41,12 @@ func TestProfilingRoutes(t *testing.T) {
 		for name, tt := range createProfilingTestCases(true) {
 			tt := tt
 			t.Run(name, func(t *testing.T) {
-				resp, err := http.Get(fmt.Sprintf("%s/%s", server.URL, tt.path))
-				assert.NoError(t, err)
+				req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("%s/%s", server.URL, tt.path), nil)
+				require.NoError(t, err)
+				resp, err := http.DefaultClient.Do(req)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, resp.StatusCode)
+				require.NoError(t, resp.Body.Close())
 			})
 		}
 	})

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLogFields(t *testing.T) {
@@ -36,10 +37,10 @@ func TestLogFields(t *testing.T) {
 			err := WithLogFields(tt.args.fields...)(svc)
 
 			if tt.expectedErr == "" {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, svc.logConfig)
 			} else {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 			}
 		})
 	}
@@ -64,7 +65,7 @@ func TestSIGHUP(t *testing.T) {
 		comp := &testSighupAlterable{}
 
 		err := WithSIGHUP(testSighupHandle(comp))(svc)
-		assert.Equal(t, nil, err)
+		require.NoError(t, err)
 		assert.NotNil(t, svc.sighupHandler)
 		svc.sighupHandler()
 		assert.Equal(t, 1, comp.value)

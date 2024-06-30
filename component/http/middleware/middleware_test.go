@@ -58,11 +58,11 @@ func getMockLimiter(allow bool) *rate.Limiter {
 
 func TestMiddlewareChain(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(202)
+		w.WriteHeader(http.StatusAccepted)
 	})
 
-	r, err := http.NewRequest("POST", "/test", nil)
-	assert.NoError(t, err)
+	r, err := http.NewRequest(http.MethodPost, "/test", nil)
+	require.NoError(t, err)
 
 	t1 := tagMiddleware("t1\n")
 	t2 := tagMiddleware("t2\n")
@@ -96,10 +96,10 @@ func TestMiddlewareChain(t *testing.T) {
 
 func TestMiddlewares(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(202)
+		w.WriteHeader(http.StatusAccepted)
 	})
 
-	r, err := http.NewRequest("POST", "/test", nil)
+	r, err := http.NewRequest(http.MethodPost, "/test", nil)
 	require.NoError(t, err)
 
 	loggingTracingMiddleware, err := NewLoggingTracing("/index", StatusCodeLoggerHandler{})
@@ -160,10 +160,10 @@ func TestNewLoggingTracing(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			loggingTracingMiddleware, err := NewLoggingTracing(tt.args.path, tt.args.statusCodeLogger)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, loggingTracingMiddleware)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, loggingTracingMiddleware)
 			}
 		})
@@ -182,11 +182,11 @@ func TestSpanLogError(t *testing.T) {
 	errorHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err := w.Write([]byte("foo"))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 	})
 
-	r, err := http.NewRequest("POST", "/test", nil)
-	assert.NoError(t, err)
+	r, err := http.NewRequest(http.MethodPost, "/test", nil)
+	require.NoError(t, err)
 
 	type args struct {
 		next http.Handler
@@ -223,7 +223,7 @@ func TestSpanLogError(t *testing.T) {
 			assert.Equal(t, tt.expectedCode, rw.Status())
 			assert.Equal(t, tt.expectedBody, rc.Body.String())
 
-			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+			require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 			snaps := exp.GetSpans().Snapshots()
 			assert.Len(t, snaps, 1)
@@ -236,10 +236,10 @@ func TestResponseWriter(t *testing.T) {
 	rw := newResponseWriter(rc, true)
 
 	_, err := rw.Write([]byte("test"))
-	assert.NoError(t, err)
-	rw.WriteHeader(202)
+	require.NoError(t, err)
+	rw.WriteHeader(http.StatusAccepted)
 
-	assert.Equal(t, 202, rw.status, "status expected 202 but got %d", rw.status)
+	assert.Equal(t, http.StatusAccepted, rw.status, "status expected 202 but got %d", rw.status)
 	assert.Len(t, rw.Header(), 1, "Header count expected to be 1")
 	assert.True(t, rw.statusHeaderWritten, "expected to be true")
 	assert.Equal(t, "test", rc.Body.String(), "body expected to be test but was %s", rc.Body.String())
@@ -321,17 +321,17 @@ func TestNewCompressionMiddleware(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			compressionMiddleware, err := NewCompression(tt.args.deflateLevel)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, compressionMiddleware)
 				return
 			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Header().Add("Content-Length", "123")
-				w.WriteHeader(202)
+				w.WriteHeader(http.StatusAccepted)
 			})
-			req, err := http.NewRequest("GET", "/test", nil)
-			assert.NoError(t, err)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/test", nil)
+			require.NoError(t, err)
 
 			req.Header.Set("Accept-Encoding", tt.compressionTypeHeader)
 
@@ -430,13 +430,14 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 			s := httptest.NewServer(compressionMiddleware(handler))
 			defer s.Close()
 
-			req, err := http.NewRequest("GET", s.URL, nil)
-			assert.NoError(t, err)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, s.URL, nil)
+			require.NoError(t, err)
 			req.Header.Set("Accept-Encoding", tt.acceptEncoding)
 
 			resp, err := s.Client().Do(req)
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.expectedEncoding, resp.Header.Get("Content-Encoding"))
+			require.NoError(t, resp.Body.Close())
 		})
 	}
 }
@@ -444,13 +445,13 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	var ceh string // accept-encoding, content type
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(202) })
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusAccepted) })
 	middleware, err := NewCompression(8, "/metrics")
 	require.NoError(t, err)
 	require.NotNil(t, middleware)
 
 	// check if the route actually ignored
-	req1, err := http.NewRequest("GET", "/metrics", nil)
+	req1, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/metrics", nil)
 	require.NoError(t, err)
 	req1.Header.Set("Accept-Encoding", "gzip")
 
@@ -459,11 +460,11 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 
 	ceh = rc1.Header().Get("Content-Encoding")
 	assert.NotNil(t, ceh)
-	assert.Equal(t, ceh, "")
+	assert.Equal(t, "", ceh)
 
 	// check if other routes remains untouched
-	req2, err := http.NewRequest("GET", "/alive", nil)
-	assert.NoError(t, err)
+	req2, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/alive", nil)
+	require.NoError(t, err)
 	req2.Header.Set("Accept-Encoding", "gzip")
 
 	rc2 := httptest.NewRecorder()
@@ -503,7 +504,7 @@ func TestNewCompressionMiddleware_Headers(t *testing.T) {
 		t.Run(fmt.Sprintf("%q: compression middleware acts according the Accept-Encoding header", encodingName), func(t *testing.T) {
 			require.NotNil(t, tc.cm)
 			// given
-			req1, err := http.NewRequest("GET", "/alive", nil)
+			req1, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/alive", nil)
 			require.NoError(t, err)
 			if encodingName != "not present" {
 				req1.Header.Set("Accept-Encoding", encodingName)
@@ -636,7 +637,7 @@ func TestParseWeights(t *testing.T) {
 			result := parseWeight(tc.priorityStr)
 
 			// then
-			assert.Equal(t, tc.expected, result)
+			assert.Equal(t, tc.expected, result) //nolint: testifylint
 		})
 	}
 }
@@ -726,19 +727,19 @@ func TestIsConnectionReset(t *testing.T) {
 		expected bool
 	}{
 		"Broken pipe": {
-			err:      errors.New("blah blah broken pipe blah blah"),
+			err:      errors.New("blah broken pipe blah"),
 			expected: true,
 		},
 		"connection reset": {
-			err:      errors.New("blah blah connection reset blah blah"),
+			err:      errors.New("blah connection reset blah"),
 			expected: true,
 		},
 		"read: connection reset": {
-			err:      errors.New("blah blah read: connection reset blah blah"),
+			err:      errors.New("blah read: connection reset blah"),
 			expected: false,
 		},
 		"b00m random error": {
-			err:      errors.New("blah blah b00m random error blah blah"),
+			err:      errors.New("blah b00m random error blah"),
 			expected: false,
 		},
 	}
@@ -761,7 +762,7 @@ func (fw *failWriter) Header() http.Header {
 }
 
 func (fw *failWriter) Write([]byte) (int, error) {
-	return 0, fmt.Errorf("foo")
+	return 0, errors.New("foo")
 }
 
 func (fw *failWriter) WriteHeader(_ int) {
@@ -788,20 +789,20 @@ func TestSetResponseWriterStatusOnResponseFailWrite(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
 			_, err := test.ResponseWriter.Write([]byte(`"foo":"bar"`))
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.Equal(t, http.StatusOK, test.ResponseWriter.status)
 		})
 	}
 }
 
 func TestNewInjectObservability(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
 	middleware := NewInjectObservability()
 	assert.NotNil(t, middleware)
 
 	// check if the route actually ignored
-	req, err := http.NewRequest("GET", "/metrics", nil)
-	assert.NoError(t, err)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/metrics", nil)
+	require.NoError(t, err)
 
 	rc := httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rc, req)
@@ -823,18 +824,18 @@ func TestNewCaching(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			cachingMiddleware, err := NewCaching(tt.cache)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, cachingMiddleware)
 				return
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, cachingMiddleware)
 
-			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
+			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
 
 			// check if the route is actually ignored
-			req, err := http.NewRequest("GET", "/metrics", nil)
-			assert.NoError(t, err)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/metrics", nil)
+			require.NoError(t, err)
 
 			rc := httptest.NewRecorder()
 			cachingMiddleware(handler).ServeHTTP(rc, req)
@@ -863,18 +864,18 @@ func TestNewAppVersion(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			appNameVersionMiddleware, err := NewAppNameVersion(tt.args.name, tt.args.version)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, appNameVersionMiddleware)
 				return
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, appNameVersionMiddleware)
-			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
+			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
 
 			// check if the route actually ignored
-			req, err := http.NewRequest("GET", "/api", nil)
-			assert.NoError(t, err)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/api", nil)
+			require.NoError(t, err)
 			rc := httptest.NewRecorder()
 
 			appNameVersionMiddleware(handler).ServeHTTP(rc, req)

@@ -111,7 +111,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 		assert.Equal(t, param.wrn, cfg.warning)
 		assert.Equal(t, param.cfg.noCache, cfg.noCache)
 		assert.Equal(t, param.cfg.forceCache, cfg.forceCache)
-		assert.Equal(t, param.cfg.validators, len(cfg.validators))
+		assert.Len(t, cfg.validators, param.cfg.validators)
 		assert.Equal(t, param.cfg.expiryValidator, cfg.expiryValidator != nil)
 	}
 }
@@ -1624,10 +1624,10 @@ func assertCache(t *testing.T, args [][]testArgs) {
 				path = arg.requestParams.path
 			}
 
-			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s?%s", path, arg.requestParams.query), nil)
-			assert.NoError(t, err)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("%s?%s", path, arg.requestParams.query), nil)
+			require.NoError(t, err)
 			propagateHeaders(arg.requestParams.header, req.Header)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			request := toCacheHandlerRequest(req)
 
 			var hnd executor
@@ -1657,14 +1657,14 @@ func assertCache(t *testing.T, args [][]testArgs) {
 			response, err := handler(hnd, routeCache)(request)
 
 			if arg.err != nil {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, response)
 				assert.Equal(t, err, arg.err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, response)
 				payload, err := strconv.Atoi(string(response.Bytes))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, arg.response.Payload, payload)
 				assertHeader(t, HeaderCacheControl, arg.response.Header, response.Header)
 				assertHeader(t, headerWarning, arg.response.Header, response.Header)
@@ -1696,7 +1696,7 @@ func assertHeader(t *testing.T, key string, expected map[string]string, actual h
 
 func assertMetrics(t *testing.T, read *metricsdk.ManualReader) {
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
 	if len(collectedMetrics.ScopeMetrics) == 0 {
 		return
 	}

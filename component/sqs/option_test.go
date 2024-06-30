@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMaxMessages(t *testing.T) {
@@ -37,7 +38,7 @@ func TestMaxMessages(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.cfg.maxMessages, tt.args.maxMessages)
 			}
 		})
@@ -72,9 +73,9 @@ func TestPollWaitSeconds(t *testing.T) {
 			c := &Component{}
 			err := WithPollWaitSeconds(tt.args.waitSeconds)(c)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.cfg.pollWaitSeconds, tt.args.waitSeconds)
 			}
 		})
@@ -111,7 +112,7 @@ func TestVisibilityTimeout(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.cfg.visibilityTimeout, tt.args.timeout)
 			}
 		})
@@ -144,7 +145,7 @@ func TestQueueStatsInterval(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.stats.interval, tt.args.interval)
 			}
 		})
@@ -154,8 +155,8 @@ func TestQueueStatsInterval(t *testing.T) {
 func TestRetries(t *testing.T) {
 	c := &Component{}
 	err := WithRetries(20)(c)
-	assert.NoError(t, err)
-	assert.Equal(t, c.retry.count, uint(20))
+	require.NoError(t, err)
+	assert.Equal(t, uint(20), c.retry.count)
 }
 
 func TestRetryWait(t *testing.T) {
@@ -184,7 +185,7 @@ func TestRetryWait(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.retry.wait, tt.args.retryWait)
 			}
 		})
@@ -217,7 +218,7 @@ func TestQueueOwner(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.queueOwner, tt.args.queueOwner)
 			}
 		})

@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestServer_Run_Shutdown(t *testing.T) {
@@ -27,12 +27,12 @@ func TestServer_Run_Shutdown(t *testing.T) {
 			}()
 			t.Setenv("PATRON_HTTP_DEFAULT_PORT", "50099")
 			svc, err := New("test", "", WithJSONLogger())
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			err = svc.Run(context.Background(), tt.cp)
 			if temp.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}
@@ -59,22 +59,22 @@ func TestServer_SetupTracing(t *testing.T) {
 
 			if temp.host != "" {
 				err := os.Setenv("PATRON_JAEGER_AGENT_HOST", temp.host)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			if temp.port != "" {
 				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", temp.port)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			if temp.buckets != "" {
 				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", temp.buckets)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 
 			svc, err := New("test", "", WithJSONLogger())
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			err = svc.Run(context.Background(), tt.cp)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		})
 	}
 }

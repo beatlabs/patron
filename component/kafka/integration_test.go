@@ -66,7 +66,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, client.SendBatch(ctx, messages))
 
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 	traceExporter.Reset()
 
 	// Set up the kafka component
@@ -77,7 +77,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 		for _, msg := range batch.Messages() {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgContent)
 			consumerWG.Done()
 		}
@@ -91,7 +91,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 	patronWG.Add(1)
 	go func() {
 		err := component.Run(patronContext)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		patronWG.Done()
 	}()
 
@@ -111,7 +111,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	spans := traceExporter.GetSpans()
 
@@ -131,9 +131,9 @@ func TestKafkaComponent_Success(t *testing.T) {
 
 	// Metrics
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
-	assert.Equal(t, 3, len(collectedMetrics.ScopeMetrics[0].Metrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
 	assert.Equal(t, "kafka.publish.count", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
 	assert.Equal(t, "kafka.consumer.offset.diff", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
 	assert.Equal(t, "kafka.message.status", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
@@ -158,10 +158,10 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 		for _, msg := range batch.Messages() {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			msgIndex, err := strconv.Atoi(msgContent)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			if msgIndex == errAtIndex {
 				atomic.AddInt32(&actualNumOfRuns, 1)
@@ -189,7 +189,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	require.NoError(t, err)
 
 	err = component.Run(context.Background())
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	// Verify all messages were processed in the right order
 	for i := 0; i < len(actualSuccessfulMessages)-1; i++ {
@@ -223,10 +223,10 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 		for _, msg := range batch.Messages() {
 			var msgContent string
 			err := decodeString(msg.Message().Value, &msgContent)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			msgIndex, err := strconv.Atoi(msgContent)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			if msgIndex == 50 && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
 				return errors.New("expected error")
@@ -243,10 +243,11 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	producerWG.Add(1)
 	go func() {
 		producer, err := newProducer(broker)
-		require.NoError(t, err)
+		assert.NoError(t, err)
+
 		for i := 1; i <= numOfMessagesToSend; i++ {
 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
-			require.NoError(t, err)
+			assert.NoError(t, err)
 		}
 		producerWG.Done()
 	}()
@@ -256,7 +257,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	var patronWG sync.WaitGroup
 	patronWG.Add(1)
 	go func() {
-		require.NoError(t, component.Run(patronContext))
+		assert.NoError(t, component.Run(patronContext))
 		patronWG.Done()
 	}()
 
@@ -296,7 +297,7 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	}
 	_, err := New(successTopic2, successTopic2+groupSuffix, []string{"127.0.0.1:9999"},
 		[]string{successTopic2}, processorFunc, sarama.NewConfig(), WithCheckTopic())
-	require.NotNil(t, err)
+	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to create client:")
 }
 

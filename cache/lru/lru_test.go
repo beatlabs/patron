@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -27,7 +28,7 @@ func TestNew(t *testing.T) {
 				assert.EqualError(t, err, tt.err)
 			} else {
 				assert.NotNil(t, c)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}
@@ -36,7 +37,7 @@ func TestNew(t *testing.T) {
 func TestCacheOperations(t *testing.T) {
 	c, err := New(10, "test")
 	assert.NotNil(t, c)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	k, v := "foo", "bar"
 	ctx := context.Background()
@@ -45,38 +46,38 @@ func TestCacheOperations(t *testing.T) {
 		res, ok, err := c.Get(ctx, k)
 		assert.Nil(t, res)
 		assert.False(t, ok)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("testSetGet", func(t *testing.T) {
 		err = c.Set(ctx, k, v)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		res, ok, err := c.Get(ctx, k)
 		assert.Equal(t, v, res)
 		assert.True(t, ok)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("testRemove", func(t *testing.T) {
 		err = c.Remove(ctx, k)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		res, ok, err := c.Get(ctx, k)
 		assert.Nil(t, res)
 		assert.False(t, ok)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("testPurge", func(t *testing.T) {
 		err = c.Set(ctx, "key1", "val1")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = c.Set(ctx, "key2", "val2")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = c.Set(ctx, "key3", "val3")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
-		assert.Equal(t, c.cache.Len(), 3)
+		assert.Equal(t, 3, c.cache.Len())
 		err = c.Purge(ctx)
-		assert.NoError(t, err)
-		assert.Equal(t, c.cache.Len(), 0)
+		require.NoError(t, err)
+		assert.Equal(t, 0, c.cache.Len())
 	})
 }

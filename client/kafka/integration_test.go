@@ -40,20 +40,20 @@ func TestMain(m *testing.M) {
 
 func TestNewAsyncProducer_Success(t *testing.T) {
 	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
 }
 
 func TestNewSyncProducer_Success(t *testing.T) {
 	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	p, err := New(brokers, saramaCfg).Create()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, p)
 }
 
@@ -64,16 +64,16 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	read := metricsdk.NewManualReader()
 	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
 	defer func() {
-		assert.NoError(t, provider.Shutdown(context.Background()))
+		require.NoError(t, provider.Shutdown(context.Background()))
 	}()
 
 	otel.SetMeterProvider(provider)
 
 	saramaCfg, err := DefaultProducerSaramaConfig("test-consumer", false)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
 	msg := &sarama.ProducerMessage{
@@ -82,11 +82,11 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 		Headers: []sarama.RecordHeader{{Key: []byte("123"), Value: []byte("123")}},
 	}
 	err = ap.Send(context.Background(), msg)
-	assert.NoError(t, err)
-	assert.NoError(t, ap.Close())
+	require.NoError(t, err)
+	require.NoError(t, ap.Close())
 
 	// Tracing
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expected := tracetest.SpanStub{
 		Name: "send",
@@ -105,8 +105,8 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 
 	// Metrics
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
 }
 
 func TestSyncProducer_SendMessage_Close(t *testing.T) {
@@ -124,13 +124,13 @@ func TestSyncProducer_SendMessage_Close(t *testing.T) {
 		Value: sarama.StringEncoder("TEST"),
 	}
 	partition, offset, err := p.Send(context.Background(), msg)
-	assert.NoError(t, err)
-	assert.True(t, partition >= 0)
-	assert.True(t, offset >= 0)
-	assert.NoError(t, p.Close())
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, partition, int32(0))
+	assert.GreaterOrEqual(t, offset, int64(0))
+	require.NoError(t, p.Close())
 
 	// Tracing
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expected := tracetest.SpanStub{
 		Name: "send",
@@ -167,10 +167,10 @@ func TestSyncProducer_SendMessages_Close(t *testing.T) {
 		Value: sarama.StringEncoder("TEST2"),
 	}
 	err = p.SendBatch(context.Background(), []*sarama.ProducerMessage{msg1, msg2})
-	assert.NoError(t, err)
-	assert.NoError(t, p.Close())
+	require.NoError(t, err)
+	require.NoError(t, p.Close())
 	// Tracing
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expected := tracetest.SpanStub{
 		Name: "send-batch",
@@ -192,11 +192,11 @@ func TestAsyncProducerActiveBrokers(t *testing.T) {
 	require.NoError(t, err)
 
 	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotNil(t, chErr)
 	assert.NotEmpty(t, ap.ActiveBrokers())
-	assert.NoError(t, ap.Close())
+	require.NoError(t, ap.Close())
 }
 
 func TestSyncProducerActiveBrokers(t *testing.T) {
@@ -204,8 +204,8 @@ func TestSyncProducerActiveBrokers(t *testing.T) {
 	require.NoError(t, err)
 
 	ap, err := New(brokers, saramaCfg).Create()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, ap)
 	assert.NotEmpty(t, ap.ActiveBrokers())
-	assert.NoError(t, ap.Close())
+	require.NoError(t, ap.Close())
 }

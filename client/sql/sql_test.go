@@ -28,10 +28,10 @@ func TestParseDSN(t *testing.T) {
 		"non-matching string":   {"rosebud", DSNInfo{"", "", "", "", ""}},
 	}
 
-	for name, tc := range tests {
+	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := parseDSN(tc.dsn)
-			assert.Equal(t, got, tc.want)
+			got := parseDSN(tt.dsn)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

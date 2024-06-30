@@ -5,6 +5,7 @@ import (
 
 	"github.com/beatlabs/patron/encoding/json"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResponse(t *testing.T) {
@@ -37,7 +38,7 @@ func TestResponse(t *testing.T) {
 
 func assertForHandlerResponse(t *testing.T, payload interface{}) {
 	bp, err := json.Encode(payload)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	r := response{
 		Response: handlerResponse{
@@ -52,11 +53,11 @@ func assertForHandlerResponse(t *testing.T, payload interface{}) {
 	}
 
 	b, err := r.encode()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	rsp := response{}
 	err = rsp.decode(b)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, r, rsp)
 }

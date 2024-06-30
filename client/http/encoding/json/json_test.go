@@ -21,7 +21,7 @@ func TestNewRequest(t *testing.T) {
 	t.Parallel()
 
 	got, err := NewRequest(context.Background(), http.MethodPost, "/api/customer", customer{Name: "John Wick"})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, json.Type, got.Header.Get(encoding.ContentTypeHeader))
 	assert.Equal(t, "20", got.Header.Get(encoding.ContentLengthHeader))
 }
@@ -65,9 +65,9 @@ func TestFromResponse(t *testing.T) {
 			err = FromResponse(context.Background(), rsp.Result(), &got) // nolint: bodyclose
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, expected, got)
 			}
 		})

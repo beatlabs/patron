@@ -66,6 +66,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	}
 
 	optionErrors := make([]error, 0)
+
 	for _, option := range options {
 		err = option(s)
 		if err != nil {

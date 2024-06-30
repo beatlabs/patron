@@ -141,10 +141,10 @@ func TestNew(t *testing.T) {
 			got, err := New(tt.args.name, tt.args.queueName, tt.args.sqsAPI, tt.args.proc, tt.args.oo...)
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, got)
 			}
 		})
@@ -167,7 +167,7 @@ func TestComponent_Run_Success(t *testing.T) {
 	wg.Add(1)
 
 	go func() {
-		require.NoError(t, cmp.Run(ctx))
+		assert.NoError(t, cmp.Run(ctx))
 		wg.Done()
 	}()
 
@@ -175,7 +175,7 @@ func TestComponent_Run_Success(t *testing.T) {
 	cnl()
 	wg.Wait()
 
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expectedSuc := createStubSpan("sqs-consumer", "")
 	expectedFail := createStubSpan("sqs-consumer", "failed to ACK message")
@@ -212,7 +212,7 @@ func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
 	cnl()
 	wg.Wait()
 
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expectedSuc := createStubSpan("sqs-consumer", "")
 	expectedFail := createStubSpan("sqs-consumer", "failed to ACK message")
@@ -241,7 +241,7 @@ func TestComponent_Run_Error(t *testing.T) {
 	wg.Add(1)
 
 	go func() {
-		require.Error(t, cmp.Run(ctx))
+		assert.Error(t, cmp.Run(ctx))
 		wg.Done()
 	}()
 

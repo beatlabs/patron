@@ -9,6 +9,7 @@ import (
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/codes"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
@@ -79,10 +80,10 @@ func Test_message_ACK(t *testing.T) {
 			m := createMessage("1", tt.fields.acknowledger)
 			err := m.ACK()
 
-			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+			require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 
 				expected := tracetest.SpanStub{
 					Name:     "amqp queueName",
@@ -98,7 +99,7 @@ func Test_message_ACK(t *testing.T) {
 				assert.Len(t, got, 1)
 				assertSpan(t, expected, got[0])
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				expected := tracetest.SpanStub{
 					Name:     "amqp queueName",
@@ -142,10 +143,10 @@ func Test_message_NACK(t *testing.T) {
 			m := createMessage("1", tt.fields.acknowledger)
 			err := m.NACK()
 
-			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+			require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 
 				expected := tracetest.SpanStub{
 					Name:     "amqp queueName",
@@ -161,7 +162,7 @@ func Test_message_NACK(t *testing.T) {
 				assert.Len(t, got, 1)
 				assertSpan(t, expected, got[0])
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				expected := tracetest.SpanStub{
 					Name:     "amqp queueName",
 					SpanKind: trace.SpanKindConsumer,
@@ -199,7 +200,7 @@ func Test_batch_ACK(t *testing.T) {
 	btc := batch{messages: []Message{msg1, msg2}}
 
 	got, err := btc.ACK()
-	assert.EqualError(t, err, "ERROR")
+	require.EqualError(t, err, "ERROR")
 	assert.Len(t, got, 1)
 	assert.Equal(t, msg2, got[0])
 }
@@ -214,7 +215,7 @@ func Test_batch_NACK(t *testing.T) {
 	btc := batch{messages: []Message{msg1, msg2}}
 
 	got, err := btc.NACK()
-	assert.EqualError(t, err, "ERROR")
+	require.EqualError(t, err, "ERROR")
 	assert.Len(t, got, 1)
 	assert.Equal(t, msg2, got[0])
 }

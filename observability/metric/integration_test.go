@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
@@ -16,9 +17,9 @@ func TestSetup(t *testing.T) {
 	ctx := context.Background()
 
 	got, err := Setup(ctx, resource.Default())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.NotNil(t, otel.GetMeterProvider())
 
-	assert.NoError(t, got.Shutdown(ctx))
+	require.NoError(t, got.Shutdown(ctx))
 }

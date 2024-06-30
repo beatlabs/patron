@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MockValidator struct {
@@ -36,10 +37,10 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := New(tt.args.val)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, got)
 			}
 		})
@@ -48,15 +49,15 @@ func TestNew(t *testing.T) {
 
 func TestAuthenticator_Authenticate(t *testing.T) {
 	reqOk, err := http.NewRequest("POST", "/test", nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	reqOk.Header.Set("Authorization", "Apikey 123456")
 	reqMissingHeader, err := http.NewRequest("POST", "/test", nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	reqMissingKey, err := http.NewRequest("POST", "/test", nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	reqMissingKey.Header.Set("Authorization", "Apikey")
 	reqInvalidAuthMethod, err := http.NewRequest("POST", "/test", nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	reqInvalidAuthMethod.Header.Set("Authorization", "Bearer 123456")
 
 	type fields struct {
@@ -86,10 +87,10 @@ func TestAuthenticator_Authenticate(t *testing.T) {
 			}
 			got, err := a.Authenticate(tt.args.req)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.False(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, got)
 			}
 		})

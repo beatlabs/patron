@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,16 +25,16 @@ func Test_aliveCheckRoute(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route, err := LivenessCheckRoute(tt.acf)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, "GET /alive", route.path)
 
 			resp := httptest.NewRecorder()
-			req, err := http.NewRequest(http.MethodGet, "/alive", nil)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/alive", nil)
 			require.NoError(t, err)
 
 			route.handler(resp, req)
 
-			assert.Equal(t, tt.want, resp.Code)
+			require.Equal(t, tt.want, resp.Code)
 		})
 	}
 }
@@ -53,11 +54,11 @@ func Test_readyCheckRoute(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route, err := ReadyCheckRoute(tt.rcf)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, "GET /ready", route.path)
 
 			resp := httptest.NewRecorder()
-			req, err := http.NewRequest(http.MethodGet, "/ready", nil)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/ready", nil)
 			require.NoError(t, err)
 
 			route.handler(resp, req)

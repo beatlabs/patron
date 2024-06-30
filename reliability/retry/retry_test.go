@@ -31,10 +31,10 @@ func TestNew(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := New(tt.args.attempts, tt.args.delay)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, got)
 			}
 		})
@@ -104,14 +104,13 @@ func Test_Retry_Execute(t *testing.T) {
 				assert.Equal(t, err, errTest)
 				assert.Nil(t, res)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, testResult, res)
 			}
 
 			assert.Equal(t, tt.expectedExecutions, tt.action.executions)
-
 			// Assert that the total time takes into account the delay between attempts
-			assert.True(t, elapsed > tt.delay*time.Duration(tt.expectedExecutions-1))
+			assert.Greater(t, elapsed, tt.delay*time.Duration(tt.expectedExecutions-1))
 		})
 	}
 }

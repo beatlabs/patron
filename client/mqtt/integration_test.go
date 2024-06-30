@@ -35,7 +35,7 @@ func TestPublish(t *testing.T) {
 	read := metricsdk.NewManualReader()
 	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
 	defer func() {
-		assert.NoError(t, provider.Shutdown(context.Background()))
+		require.NoError(t, provider.Shutdown(context.Background()))
 	}()
 
 	otel.SetMeterProvider(provider)
@@ -79,7 +79,7 @@ func TestPublish(t *testing.T) {
 	require.NoError(t, pub.Disconnect(ctx))
 
 	// Traces
-	assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	expected := tracetest.SpanStub{
 		Name: "publish",
@@ -97,8 +97,8 @@ func TestPublish(t *testing.T) {
 
 	// Metrics
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
 
 	<-chDone
 	require.NoError(t, cmSub.Disconnect(context.Background()))

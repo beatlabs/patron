@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTLS(t *testing.T) {
@@ -29,9 +30,9 @@ func TestTLS(t *testing.T) {
 			err := WithTLS(tt.args.cert, tt.args.key)(cmp)
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.args.cert, cmp.certFile)
 				assert.Equal(t, tt.args.key, cmp.keyFile)
 			}
@@ -59,9 +60,9 @@ func TestReadTimeout(t *testing.T) {
 			err := WithReadTimeout(tt.args.rt)(cmp)
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.args.rt, cmp.readTimeout)
 			}
 		})
@@ -88,9 +89,9 @@ func TestWriteTimeout(t *testing.T) {
 			err := WithWriteTimeout(tt.args.wt)(cmp)
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.args.wt, cmp.writeTimeout)
 			}
 		})
@@ -119,7 +120,7 @@ func TestHandlerTimeout(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.args.wt, cmp.handlerTimeout)
 			}
 		})
@@ -148,7 +149,7 @@ func TestShutdownGracePeriod(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.args.gp, cmp.shutdownGracePeriod)
 			}
 		})
@@ -175,9 +176,9 @@ func TestPort(t *testing.T) {
 			err := WithPort(tt.args.port)(cmp)
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.args.port, cmp.port)
 			}
 		})

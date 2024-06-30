@@ -57,10 +57,10 @@ func TestCreate(t *testing.T) {
 				WithServerOptions(grpc.ConnectionTimeout(1*time.Second)),
 				WithReflection())
 			if tt.expErr != "" {
-				assert.EqualError(t, err, tt.expErr)
+				require.EqualError(t, err, tt.expErr)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.args.port, got.port)
 				assert.NotNil(t, got.Server())
 			}
@@ -103,10 +103,10 @@ func TestComponent_Run_Unary(t *testing.T) {
 			reqCtx := metadata.AppendToOutgoingContext(ctx, correlation.HeaderID, "123")
 			r, err := c.SayHello(reqCtx, &examples.HelloRequest{Firstname: tt.args.requestName})
 
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 
 			if tt.expErr != "" {
-				assert.EqualError(t, err, tt.expErr)
+				require.EqualError(t, err, tt.expErr)
 				assert.Nil(t, r)
 
 				time.Sleep(time.Second)
@@ -125,7 +125,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 				assertSpan(t, expectedSpan, spans[0])
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, r.GetMessage(), "Hello TEST")
+				assert.Equal(t, "Hello TEST", r.GetMessage())
 
 				time.Sleep(time.Second)
 				spans := traceExporter.GetSpans()
@@ -155,7 +155,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 	read := metricsdk.NewManualReader()
 	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
 	defer func() {
-		assert.NoError(t, provider.Shutdown(context.Background()))
+		require.NoError(t, provider.Shutdown(context.Background()))
 	}()
 
 	otel.SetMeterProvider(provider)
@@ -174,7 +174,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 	require.NoError(t, err)
 	c := examples.NewGreeterClient(conn)
 
-	assert.NoError(t, tracePublisher.ForceFlush(ctx))
+	require.NoError(t, tracePublisher.ForceFlush(ctx))
 
 	type args struct {
 		requestName string
@@ -193,13 +193,13 @@ func TestComponent_Run_Stream(t *testing.T) {
 
 			reqCtx := metadata.AppendToOutgoingContext(ctx, correlation.HeaderID, "123")
 			client, err := c.SayHelloStream(reqCtx, &examples.HelloRequest{Firstname: tt.args.requestName})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			resp, err := client.Recv()
 
-			assert.NoError(t, tracePublisher.ForceFlush(ctx))
+			require.NoError(t, tracePublisher.ForceFlush(ctx))
 
 			if tt.expErr != "" {
-				assert.EqualError(t, err, tt.expErr)
+				require.EqualError(t, err, tt.expErr)
 				assert.Nil(t, resp)
 
 				time.Sleep(time.Second)
@@ -218,7 +218,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 				assertSpan(t, expectedSpan, spans[0])
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, resp.GetMessage(), "Hello TEST")
+				assert.Equal(t, "Hello TEST", resp.GetMessage())
 
 				time.Sleep(time.Second)
 				spans := traceExporter.GetSpans()
@@ -237,11 +237,11 @@ func TestComponent_Run_Stream(t *testing.T) {
 
 			// Metrics
 			collectedMetrics := &metricdata.ResourceMetrics{}
-			assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-			assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
-			assert.Equal(t, 5, len(collectedMetrics.ScopeMetrics[0].Metrics))
+			require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+			assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+			assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 5)
 
-			assert.NoError(t, client.CloseSend())
+			require.NoError(t, client.CloseSend())
 		})
 	}
 	cnl()

@@ -6,6 +6,7 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFailureStrategy(t *testing.T) {
@@ -35,9 +36,9 @@ func TestFailureStrategy(t *testing.T) {
 			c := &Component{}
 			err := WithFailureStrategy(tt.args.strategy)(c)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.failStrategy, tt.args.strategy)
 			}
 		})
@@ -47,8 +48,8 @@ func TestFailureStrategy(t *testing.T) {
 func TestRetries(t *testing.T) {
 	c := &Component{}
 	err := WithRetries(20)(c)
-	assert.NoError(t, err)
-	assert.Equal(t, c.retries, uint(20))
+	require.NoError(t, err)
+	assert.Equal(t, uint(20), c.retries)
 }
 
 func TestRetryWait(t *testing.T) {
@@ -77,7 +78,7 @@ func TestRetryWait(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.retryWait, tt.args.retryWait)
 			}
 		})
@@ -110,7 +111,7 @@ func TestBatchSize(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.batchSize, tt.args.batchSize)
 			}
 		})
@@ -143,7 +144,7 @@ func TestBatchTimeout(t *testing.T) {
 			if tt.expectedErr != "" {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, c.batchTimeout, tt.args.batchTimeout)
 			}
 		})
@@ -176,10 +177,10 @@ func TestNewSessionCallback(t *testing.T) {
 			c := &Component{}
 			err := WithNewSessionCallback(tt.args.sessionCallback)(c)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, c.sessionCallback)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, c.sessionCallback)
 			}
 		})
@@ -189,6 +190,6 @@ func TestNewSessionCallback(t *testing.T) {
 func TestBatchMessageDeduplication(t *testing.T) {
 	c := &Component{}
 	err := WithBatchMessageDeduplication()(c)
-	assert.NoError(t, err)
-	assert.Equal(t, c.batchMessageDeduplication, true)
+	require.NoError(t, err)
+	assert.True(t, c.batchMessageDeduplication)
 }

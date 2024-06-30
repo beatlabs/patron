@@ -52,7 +52,7 @@ func Test_NewBatch(t *testing.T) {
 
 	msg := NewMessage(ctx, nil, cm)
 	btc := NewBatch([]Message{msg})
-	assert.Equal(t, 1, len(btc.Messages()))
+	assert.Len(t, btc.Messages(), 1)
 }
 
 func Test_Message(t *testing.T) {

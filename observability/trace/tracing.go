@@ -16,7 +16,7 @@ var tracer trace.Tracer
 
 // StartSpan starts a span with the given name and context.
 func StartSpan(ctx context.Context, name string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	return tracer.Start(ctx, name, opts...)
+	return tracer.Start(ctx, name, opts...) //nolint:spancheck
 }
 
 // SetupGRPC configures the global tracer with the OTLP gRPC exporter.

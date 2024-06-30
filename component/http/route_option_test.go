@@ -49,7 +49,7 @@ func TestRateLimiting(t *testing.T) {
 				assert.EqualError(t, err, tt.expectedErr)
 			} else {
 				require.NoError(t, err)
-				assert.NoError(t, rateLimiting(route))
+				require.NoError(t, rateLimiting(route))
 			}
 		})
 	}

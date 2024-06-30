@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -46,10 +47,10 @@ func TestNew(t *testing.T) {
 				WithLogFields(temp.fields...), WithJSONLogger(), WithSIGHUP(temp.sighupHandler))
 
 			if temp.wantErr != "" {
-				assert.EqualError(t, gotErr, temp.wantErr)
+				require.EqualError(t, gotErr, temp.wantErr)
 				assert.Nil(t, gotService)
 			} else {
-				assert.Nil(t, gotErr)
+				require.NoError(t, gotErr)
 				assert.NotNil(t, gotService)
 				assert.IsType(t, &Service{}, gotService)
 				assert.NotNil(t, gotService.termSig)

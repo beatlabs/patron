@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -69,30 +70,38 @@ func TestVerifyRouter(t *testing.T) {
 	}
 
 	t.Run("check alive endpoint", func(t *testing.T) {
-		rsp, err := http.Get(srv.URL + "/alive")
+		req, err := http.NewRequestWithContext(context.Background(), "GET", srv.URL+"/alive", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		assertResponse(t, rsp)
-		assert.NoError(t, rsp.Body.Close())
+		require.NoError(t, rsp.Body.Close())
 	})
 
 	t.Run("check alive endpoint", func(t *testing.T) {
-		rsp, err := http.Get(srv.URL + "/ready")
+		req, err := http.NewRequestWithContext(context.Background(), "GET", srv.URL+"/ready", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		assertResponse(t, rsp)
-		assert.NoError(t, rsp.Body.Close())
+		require.NoError(t, rsp.Body.Close())
 	})
 
 	t.Run("check pprof endpoint", func(t *testing.T) {
-		rsp, err := http.Get(srv.URL + "/debug/pprof")
+		req, err := http.NewRequestWithContext(context.Background(), "GET", srv.URL+"/debug/pprof", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		assertResponse(t, rsp)
-		assert.NoError(t, rsp.Body.Close())
+		require.NoError(t, rsp.Body.Close())
 	})
 
 	t.Run("check provided endpoint", func(t *testing.T) {
-		rsp, err := http.Get(srv.URL + "/api")
+		req, err := http.NewRequestWithContext(context.Background(), "GET", srv.URL+"/api", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		assertResponse(t, rsp)
-		assert.NoError(t, rsp.Body.Close())
+		require.NoError(t, rsp.Body.Close())
 	})
 }

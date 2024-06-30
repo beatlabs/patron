@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const complexConfig = "200;(210,212);(220,222];[230,232);[240,242]"
@@ -45,7 +46,7 @@ func TestStatusCode(t *testing.T) {
 			t.Parallel()
 			h, err := NewStatusCodeLoggerHandler(tt.args.cfg)
 			if tt.expectedParsingErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
 				got := h.shouldLog(tt.args.statusCode)
 				assert.Equal(t, tt.expectedResult, got)
@@ -56,7 +57,7 @@ func TestStatusCode(t *testing.T) {
 
 func BenchmarkName(b *testing.B) {
 	h, err := NewStatusCodeLoggerHandler(complexConfig)
-	assert.NoError(b, err)
+	require.NoError(b, err)
 	b.ReportAllocs()
 	b.ResetTimer()
 

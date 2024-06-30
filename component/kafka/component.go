@@ -130,6 +130,7 @@ func (c *Component) processing(ctx context.Context) error {
 
 		if client != nil {
 			slog.Debug("consuming messages", slog.Any("topics", c.topics), slog.String("group", c.group))
+
 			for {
 				// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
 				if ctx.Err() != nil {

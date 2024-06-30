@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
@@ -35,14 +36,14 @@ func TestSetupAndUseMetrics(t *testing.T) {
 	ObserveHit(context.Background(), attribute.String("test", "test"))
 
 	collectedMetrics := &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
 
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
 
 	ObserveMiss(context.Background(), attribute.String("test", "test"))
 
 	collectedMetrics = &metricdata.ResourceMetrics{}
-	assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
 
-	assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
 }

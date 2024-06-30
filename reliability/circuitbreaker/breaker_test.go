@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -32,10 +33,10 @@ func TestNew(t *testing.T) {
 
 			got, err := New(tt.args.name, tt.args.s)
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, got)
 			}
 		})
@@ -135,9 +136,9 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 
 	set := Setting{FailureThreshold: uint(1), RetryTimeout: retryTimeout, RetrySuccessThreshold: 2, MaxRetryExecutionThreshold: 2}
 	cb, err := New("test", set)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = cb.Execute(testSuccessAction)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
@@ -145,48 +146,48 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, tsFuture, cb.nextRetry)
 	// will transition to open
 	_, err = cb.Execute(testFailureAction)
-	assert.EqualError(t, err, "test error")
+	require.EqualError(t, err, "test error")
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
 	assert.True(t, cb.isOpen())
-	assert.True(t, cb.nextRetry < tsFuture)
+	assert.Less(t, cb.nextRetry, tsFuture)
 	// open, returns err immediately
 	_, err = cb.Execute(testSuccessAction)
-	assert.EqualError(t, err, "circuit is open")
+	require.EqualError(t, err, "circuit is open")
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
 	assert.True(t, cb.isOpen())
-	assert.True(t, cb.nextRetry < tsFuture)
+	assert.Less(t, cb.nextRetry, tsFuture)
 	// should be half open now and will stay in there
 	time.Sleep(waitRetryTimeout)
 	_, err = cb.Execute(testFailureAction)
-	assert.EqualError(t, err, "test error")
+	require.EqualError(t, err, "test error")
 	assert.Equal(t, uint(1), cb.failures)
 	assert.Equal(t, uint(1), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
 	assert.True(t, cb.isHalfOpen())
-	assert.True(t, cb.nextRetry < tsFuture)
+	assert.Less(t, cb.nextRetry, tsFuture)
 	// should be half open now and will transition to open
 	_, err = cb.Execute(testFailureAction)
-	assert.EqualError(t, err, "test error")
+	require.EqualError(t, err, "test error")
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
 	assert.True(t, cb.isOpen())
-	assert.True(t, cb.nextRetry < tsFuture)
+	assert.Less(t, cb.nextRetry, tsFuture)
 	// should be half open now and will transition to close
 	time.Sleep(waitRetryTimeout)
 	_, err = cb.Execute(testSuccessAction)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(1), cb.executions)
 	assert.Equal(t, uint(1), cb.retries)
 	assert.True(t, cb.isHalfOpen())
-	assert.True(t, cb.nextRetry < tsFuture)
+	assert.Less(t, cb.nextRetry, tsFuture)
 	_, err = cb.Execute(testSuccessAction)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)

@@ -7,6 +7,7 @@ import (
 	patronhttp "github.com/beatlabs/patron/component/http"
 	"github.com/beatlabs/patron/component/http/middleware"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRoutes(t *testing.T) {
@@ -152,7 +153,7 @@ func TestDisableProfiling(t *testing.T) {
 	t.Parallel()
 	cfg := &Config{}
 	err := WithExpVarProfiling()(cfg)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, cfg.enableProfilingExpVar)
 }
 
@@ -175,14 +176,14 @@ func TestEnableAppNameHeaders(t *testing.T) {
 			optionFunc, err := WithAppNameHeaders(tt.args.name, tt.args.version)
 
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, optionFunc)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, optionFunc)
 				cfg := &Config{}
 				err = optionFunc(cfg)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, optionFunc)
 			}
 		})

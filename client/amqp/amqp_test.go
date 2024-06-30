@@ -7,6 +7,7 @@ import (
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -28,10 +29,10 @@ func TestNew(t *testing.T) {
 
 			got, err := New(tt.args.url)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, got)
 			}
 		})
@@ -47,5 +48,5 @@ func Test_injectTraceHeaders(t *testing.T) {
 	assert.NotNil(t, ctx)
 	assert.NotNil(t, sp)
 	assert.Len(t, msg.Headers, 2)
-	assert.Len(t, exp.GetSpans(), 0)
+	assert.Empty(t, exp.GetSpans())
 }

@@ -46,7 +46,7 @@ func TestReflection(t *testing.T) {
 			comp := new(Component)
 			err := WithReflection()(comp)
 			if tt.expectedError == nil {
-				assert.Equal(t, true, comp.enableReflection)
+				assert.True(t, comp.enableReflection)
 			} else {
 				assert.Equal(t, err.Error(), tt.expectedError.Error())
 			}

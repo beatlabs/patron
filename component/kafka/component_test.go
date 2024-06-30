@@ -15,6 +15,7 @@ import (
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
@@ -141,10 +142,10 @@ func TestNew(t *testing.T) {
 				WithBatchTimeout(tt.args.batchTimeout),
 				WithCommitSync())
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Nil(t, got)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, got)
 			}
 		})
@@ -337,9 +338,9 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 			_ = h.Cleanup(session)
 
 			if tt.expectError {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, tt.expectedProcessExecutions, tt.proc.GetExecs())
 		})

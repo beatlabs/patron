@@ -9,6 +9,7 @@ import (
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -23,13 +24,13 @@ func TestClient(t *testing.T) {
 	ctx, _ := trace.StartSpan(context.Background(), "test")
 
 	cl, err := New(&redis.Options{Addr: dsn})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	cmd := cl.Set(ctx, "key", "value", 0)
 	res, err := cmd.Result()
-	assert.NoError(t, err)
-	assert.Equal(t, res, "OK")
+	require.NoError(t, err)
+	assert.Equal(t, "OK", res)
 
-	assert.NoError(t, tracePublisher.ForceFlush(ctx))
+	require.NoError(t, tracePublisher.ForceFlush(ctx))
 
 	assert.Len(t, exp.GetSpans(), 2)
 }

@@ -69,9 +69,9 @@ func bufDialer(_ context.Context, _ string) (net.Conn, error) {
 
 func TestDial(t *testing.T) {
 	conn, err := Dial(target, grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, conn)
-	assert.NoError(t, conn.Close())
+	require.NoError(t, conn.Close())
 }
 
 func TestDialContext(t *testing.T) {
@@ -99,10 +99,10 @@ func TestDialContext(t *testing.T) {
 			t.Parallel()
 			gotConn, err := DialContext(context.Background(), target, tt.args.opts...)
 			if tt.expectedErr != "" {
-				assert.EqualError(t, err, tt.expectedErr)
+				require.EqualError(t, err, tt.expectedErr)
 				assert.Nil(t, gotConn)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, gotConn)
 			}
 		})
@@ -125,7 +125,7 @@ func TestSayHello(t *testing.T) {
 	read := metricsdk.NewManualReader()
 	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
 	defer func() {
-		assert.NoError(t, provider.Shutdown(context.Background()))
+		require.NoError(t, provider.Shutdown(context.Background()))
 	}()
 
 	otel.SetMeterProvider(provider)
@@ -174,7 +174,7 @@ func TestSayHello(t *testing.T) {
 				require.Equal(t, tc.wantMsg, res.GetMessage())
 			}
 
-			assert.NoError(t, tracePublisher.ForceFlush(context.Background()))
+			require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 			snaps := exp.GetSpans().Snapshots()
 
@@ -187,9 +187,9 @@ func TestSayHello(t *testing.T) {
 
 			// Metrics
 			collectedMetrics := &metricdata.ResourceMetrics{}
-			assert.NoError(t, read.Collect(context.Background(), collectedMetrics))
-			assert.Equal(t, 1, len(collectedMetrics.ScopeMetrics))
-			assert.Equal(t, 5, len(collectedMetrics.ScopeMetrics[0].Metrics))
+			require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+			assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+			assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 5)
 		})
 	}
 }

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,8 +16,8 @@ func TestResponseReadWriter_Header(t *testing.T) {
 
 func TestResponseReadWriter_StatusCode(t *testing.T) {
 	rw := newResponseReadWriter()
-	rw.WriteHeader(100)
-	assert.Equal(t, 100, rw.statusCode)
+	rw.WriteHeader(http.StatusContinue)
+	assert.Equal(t, http.StatusContinue, rw.statusCode)
 }
 
 func TestResponseReadWriter_ReadWrite(t *testing.T) {

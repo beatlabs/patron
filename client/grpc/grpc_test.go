@@ -40,10 +40,10 @@ func (s *server) SayHelloStream(_ *examples.HelloRequest, _ examples.Greeter_Say
 }
 
 func (s *server) SayHello(_ context.Context, req *examples.HelloRequest) (*examples.HelloReply, error) {
-	if req.Firstname == "" {
+	if req.GetFirstname() == "" {
 		return nil, status.Error(codes.InvalidArgument, "first name cannot be empty")
 	}
-	return &examples.HelloReply{Message: fmt.Sprintf("Hello %s!", req.Firstname)}, nil
+	return &examples.HelloReply{Message: fmt.Sprintf("Hello %s!", req.GetFirstname())}, nil
 }
 
 func TestMain(m *testing.M) {

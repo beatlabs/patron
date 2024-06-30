@@ -15,7 +15,7 @@ import (
 type stubHandler struct{}
 
 func (s stubHandler) ServeHTTP(rw http.ResponseWriter, _ *http.Request) {
-	rw.WriteHeader(200)
+	rw.WriteHeader(http.StatusOK)
 }
 
 func TestNew(t *testing.T) {

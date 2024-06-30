@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"net/http"
 	"strings"
 
 	"github.com/beatlabs/patron/cache"
@@ -56,7 +57,7 @@ func WithAuth(auth auth.Authenticator) RouteOptionFunc {
 // WithCache option for setting the route cache.
 func WithCache(cache cache.TTLCache, ageBounds httpcache.Age) RouteOptionFunc {
 	return func(r *Route) error {
-		if !strings.HasPrefix(r.path, "GET") {
+		if !strings.HasPrefix(r.path, http.MethodGet) {
 			return errors.New("cannot apply cache to a route with any method other than GET")
 		}
 		rc, ee := httpcache.NewRouteCache(cache, ageBounds)

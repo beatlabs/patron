@@ -71,36 +71,14 @@ linters:
     - wastedassign
     - nonamedreturns
     - perfsprint
+    - dogsled
+    - protogetter
+    - usestdlibvars
     # - wsl
     #- wrapcheck
   fast: false
 
 
-# containedctx 	Containedctx is a linter that detects struct contained context.Context field.	style		1.44.0	
-# contextcheck 	Check whether the function uses a non-inherited context.	bugs		v1.43.0	
-# copyloopvar 	Copyloopvar is a linter detects places where loop variables are copied.	style		v1.57.0	
-# cyclop 	Checks function and package cyclomatic complexity.	complexity		v1.37.0	
-# decorder 	Check declaration order and count of types, constants, variables and functions.	format, style		v1.44.0	
-# depguard 	Go linter that checks if package imports are in a list of acceptable packages.	style, import, module		v1.4.0	
-# dogsled 	Checks assignments with too many blank identifiers (e.g. x, , , _, := f()).	style		v1.19.0	
-# dupl 	Tool for code clone detection.	style		v1.0.0	
-# exhaustruct 	Checks if all structure fields are initialized.	style, test		v1.46.0	
-# dupword 	Checks for duplicate words in the source code.	comment		1.50.0	
-# execinquery 	Execinquery is a linter about query string checker in Query function which reads your Go src files and warning it finds.	sql		v1.46.0	
-# importas 	Enforces consistent import aliases.	style		v1.38.0	
-
-# exportloopref 	Checks for pointers to enclosing loop variables.	bugs		v1.28.0	
-# forbidigo 	Forbids identifiers.	style		v1.34.0	
-# funlen 	Tool for detection of long functions.	complexity		v1.18.0	
-# gocheckcompilerdirectives 	Checks that go compiler directive comments (//go:) are valid.	bugs		v1.51.0	
-# gochecknoglobals 	Check that no global variables exist.	style		v1.12.0	
-# gochecknoinits	Checks that no init functions are present in Go code.	style		v1.12.0	
-# gocognit 	Computes and checks the cognitive complexity of functions.	complexity		v1.20.0	
-
-# nosprintfhostport 	Checks for misuse of Sprintf to construct a host with port in a URL.	style		v1.46.0	
-# paralleltest 	Detects missing usage of t.Parallel() method in your Go test.	style, test		v1.33.0	
-# perfsprint 	Checks that fmt.Sprintf can be replaced with a faster alternative.	performance		v1.55.0	
-# protogetter 	Reports direct reads from proto message fields when getters should be used.	bugs	✔	v1.55.0	
 # testableexamples 	Linter checks if examples are testable (have an expected output).	test		v1.50.0	
 # usestdlibvars 	A linter that detect the possibility to use variables/constants from the Go standard library.	style		v1.48.0	
 

@@ -30,14 +30,14 @@ func TestTracedClient_Do(t *testing.T) {
 	require.NoError(t, err)
 	ct, err := New(WithTransport(&http.Transport{}))
 	require.NoError(t, err)
-	req, err := http.NewRequest("GET", ts.URL, nil)
+	req, err := http.NewRequest(http.MethodGet, ts.URL, nil)
 	require.NoError(t, err)
-	reqErr, err := http.NewRequest("GET", "", nil)
+	reqErr, err := http.NewRequest(http.MethodGet, "", nil)
 	require.NoError(t, err)
 	reqErr.Header.Set(encoding.AcceptEncodingHeader, "gzip")
 	u, err := req.URL.Parse(ts.URL)
 	require.NoError(t, err)
-	opName := opName("GET", u.Scheme, u.Host)
+	opName := opName(http.MethodGet, u.Scheme, u.Host)
 	opNameError := "HTTP GET"
 
 	type args struct {
@@ -81,7 +81,7 @@ func TestTracedClient_Do_Redirect(t *testing.T) {
 		return errors.New("stop redirects")
 	}))
 	require.NoError(t, err)
-	req, err := http.NewRequestWithContext(context.Background(), "GET", ts.URL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, ts.URL, nil)
 	require.NoError(t, err)
 
 	res, err := c.Do(req)
@@ -184,7 +184,7 @@ func TestDecompress(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequestWithContext(context.Background(), "GET", tt.url, nil)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, tt.url, nil)
 			require.NoError(t, err)
 			req.Header.Add(encoding.AcceptEncodingHeader, tt.hdr)
 			rsp, err := c.Do(req)

@@ -16,7 +16,7 @@ func Dial(target string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 
 // DialContext creates a client connection to the given target with a context and
 // a tracing and metrics unary interceptor.
-func DialContext(ctx context.Context, target string, opts ...grpc.DialOption) (conn *grpc.ClientConn, err error) {
+func DialContext(ctx context.Context, target string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	if len(opts) == 0 {
 		opts = make([]grpc.DialOption, 0)
 	}

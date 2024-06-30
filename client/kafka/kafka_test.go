@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -68,7 +67,7 @@ func TestBuilder_CreateAsync(t *testing.T) {
 func TestDefaultProducerSaramaConfig(t *testing.T) {
 	sc, err := DefaultProducerSaramaConfig("name", true)
 	require.NoError(t, err)
-	require.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
+	require.True(t, strings.HasSuffix(sc.ClientID, "-name"))
 	require.True(t, sc.Producer.Idempotent)
 
 	sc, err = DefaultProducerSaramaConfig("name", false)

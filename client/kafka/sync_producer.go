@@ -24,13 +24,13 @@ type SyncProducer struct {
 }
 
 // Send a message to a topic.
-func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (partition int32, offset int64, err error) {
+func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (int32, int64, error) {
 	ctx, sp := startSpan(ctx, "send", deliveryTypeSync, msg.Topic)
 	defer sp.End()
 
 	injectTracingAndCorrelationHeaders(ctx, msg)
 
-	partition, offset, err = p.syncProd.SendMessage(msg)
+	partition, offset, err := p.syncProd.SendMessage(msg)
 	if err != nil {
 		publishCountAdd(ctx, deliveryTypeSyncAttr, observability.FailedAttribute, topicAttribute(msg.Topic))
 		sp.RecordError(err)

@@ -115,6 +115,7 @@ func TestIntegration(t *testing.T) {
 			require.NoError(t, rows.Close())
 		}()
 		require.NoError(t, err)
+		require.NoError(t, rows.Err())
 		assert.NotNil(t, rows)
 		require.NoError(t, tracePublisher.ForceFlush(ctx))
 		assertSpanAndMetric(t, exp.GetSpans(), read, "db.Query", query)
@@ -156,6 +157,7 @@ func TestIntegration(t *testing.T) {
 			exp.Reset()
 			rows, err := stmt.Query(ctx)
 			require.NoError(t, err)
+			require.NoError(t, rows.Err())
 			defer func() {
 				require.NoError(t, rows.Close())
 			}()
@@ -204,6 +206,7 @@ func TestIntegration(t *testing.T) {
 			exp.Reset()
 			rows, err := conn.Query(ctx, query)
 			require.NoError(t, err)
+			require.NoError(t, rows.Err())
 			defer func() {
 				require.NoError(t, rows.Close())
 			}()
@@ -272,6 +275,7 @@ func TestIntegration(t *testing.T) {
 			exp.Reset()
 			rows, err := tx.Query(ctx, query)
 			require.NoError(t, err)
+			require.NoError(t, rows.Err())
 			defer func() {
 				require.NoError(t, rows.Close())
 			}()

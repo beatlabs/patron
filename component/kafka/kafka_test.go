@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -77,7 +76,7 @@ func Test_Message(t *testing.T) {
 func Test_DefaultConsumerSaramaConfig(t *testing.T) {
 	sc, err := DefaultConsumerSaramaConfig("name", true)
 	require.NoError(t, err)
-	require.True(t, strings.HasSuffix(sc.ClientID, fmt.Sprintf("-%s", "name")))
+	require.True(t, strings.HasSuffix(sc.ClientID, "-name"))
 	require.Equal(t, sarama.ReadCommitted, sc.Consumer.IsolationLevel)
 
 	sc, err = DefaultConsumerSaramaConfig("name", false)

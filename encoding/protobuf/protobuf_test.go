@@ -40,6 +40,6 @@ func TestDecodeError(t *testing.T) {
 
 type errReader int
 
-func (errReader) Read(_ []byte) (n int, err error) {
+func (errReader) Read(_ []byte) (int, error) {
 	return 0, errors.New("test error")
 }

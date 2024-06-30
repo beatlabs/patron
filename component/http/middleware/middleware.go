@@ -293,7 +293,7 @@ func parseWeight(qStr string) float64 {
 
 func selectByWeight(weighted map[float64]string) (string, error) {
 	if len(weighted) == 0 {
-		return "", fmt.Errorf("no valid compression encoding accepted by client")
+		return "", errors.New("no valid compression encoding accepted by client")
 	}
 
 	keys := make([]float64, 0, len(weighted))

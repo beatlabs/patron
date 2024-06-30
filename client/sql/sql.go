@@ -120,7 +120,7 @@ func (c *Conn) Query(ctx context.Context, query string, args ...interface{}) (*s
 	ctx, sp := c.startSpan(ctx, op, query)
 	defer sp.End()
 	start := time.Now()
-	rows, err := c.conn.QueryContext(ctx, query, args...)
+	rows, err := c.conn.QueryContext(ctx, query, args...) // nolint:sqlclosecheck
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
@@ -278,7 +278,7 @@ func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (*sq
 	ctx, sp := db.startSpan(ctx, op, query)
 	defer sp.End()
 	start := time.Now()
-	rows, err := db.db.QueryContext(ctx, query, args...)
+	rows, err := db.db.QueryContext(ctx, query, args...) // nolint:sqlclosecheck
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
@@ -363,7 +363,7 @@ func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error
 	ctx, sp := s.startSpan(ctx, op, s.query)
 	defer sp.End()
 	start := time.Now()
-	rows, err := s.stmt.QueryContext(ctx, args...)
+	rows, err := s.stmt.QueryContext(ctx, args...) // nolint:sqlclosecheck
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
@@ -436,7 +436,7 @@ func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sq
 	ctx, sp := tx.startSpan(ctx, op, query)
 	defer sp.End()
 	start := time.Now()
-	rows, err := tx.tx.QueryContext(ctx, query, args...)
+	rows, err := tx.tx.QueryContext(ctx, query, args...) // nolint:sqlclosecheck
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err

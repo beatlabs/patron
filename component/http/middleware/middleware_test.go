@@ -637,7 +637,7 @@ func TestParseWeights(t *testing.T) {
 			result := parseWeight(tc.priorityStr)
 
 			// then
-			assert.Equal(t, tc.expected, result) // nolint: testifylint
+			assert.Equal(t, tc.expected, result) //nolint: testifylint
 		})
 	}
 }
@@ -762,7 +762,7 @@ func (fw *failWriter) Header() http.Header {
 }
 
 func (fw *failWriter) Write([]byte) (int, error) {
-	return 0, fmt.Errorf("foo")
+	return 0, errors.New("foo")
 }
 
 func (fw *failWriter) WriteHeader(_ int) {

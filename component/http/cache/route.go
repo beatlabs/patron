@@ -84,7 +84,7 @@ func newResponseReadWriter() *responseReadWriter {
 }
 
 // Read reads the responsereadWriter Payload.
-func (rw *responseReadWriter) Read(p []byte) (n int, err error) {
+func (rw *responseReadWriter) Read(p []byte) (int, error) {
 	return rw.buffer.Read(p)
 }
 

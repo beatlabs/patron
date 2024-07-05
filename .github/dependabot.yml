@@ -21,4 +21,3 @@ updates:
     ignore:
       - dependency-name: "github.com/aws/aws-sdk-go"
         update-types: ["version-update:semver-patch"]
-    open-pull-requests-limit: 1

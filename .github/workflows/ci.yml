@@ -37,8 +37,9 @@ jobs:
         run: make deps-start
 
       - name: Running CI
-        run: |
+        run: |          
           sleep 30
+          docker ps
           make ci
 
       - name: Codecov

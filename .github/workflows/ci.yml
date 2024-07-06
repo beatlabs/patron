@@ -40,9 +40,7 @@ jobs:
         run: |
           sleep 30
           make ci
-
-      - name: Show docker processes
-        run: docker ps
+          docker ps
 
       - name: Codecov
         uses: codecov/codecov-action@v4

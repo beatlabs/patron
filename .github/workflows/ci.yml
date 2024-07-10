@@ -33,6 +33,14 @@ jobs:
         with:
           go-version-file: "go.mod"
 
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.docker
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
       - name: Start dependencies
         run: make deps-start
 
@@ -40,6 +48,7 @@ jobs:
         run: |
           sleep 30
           make ci
+          docker ps
 
       - name: Codecov
         uses: codecov/codecov-action@v4

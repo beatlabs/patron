@@ -6,6 +6,9 @@ test: fmtcheck
 	go test ./... -cover -race -timeout 60s
 
 testint: fmtcheck
+	go test ./... -race -cover -tags=integration -timeout 300s
+
+testint-nocache: fmtcheck
 	go test ./... -race -cover -tags=integration -timeout 300s -count=1
 
 ci: fmtcheck
@@ -40,4 +43,4 @@ deps-stop:
 # under parallel conditions.
 .NOTPARALLEL:
 
-.PHONY: default test testint cover coverci fmt fmtcheck lint deeplint ci modsync deps-start deps-stop example-service example-client
+.PHONY: default test testint testint-nocache cover coverci fmt fmtcheck lint deeplint ci modsync deps-start deps-stop example-service example-client

@@ -25,23 +25,6 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 
 ## Table of Contents
 
-- [Architecture](docs/Architecture.md)
-- Components
-  - [Async](docs/components/async/Async.md)
-    - [Kafka](docs/components/async/Kafka.md)
-    - [AMQP](docs/components/async/AMQP.md)
-    - [AWS SQS (deprecated)](docs/components/async/AWSSQS.md)
-  - [HTTP (deprecated)](docs/components/HTTP.md)
-  - [HTTP v2](docs/components/HTTPv2.md)
-  - [gRPC](docs/components/gRPC.md)
-  - [AWS SQS](docs/components/SQS.md)
-  - [AMQP](docs/components/AMQP.md)
-- [Clients](docs/clients/Clients.md)
-- Packages
-  - [Observability](docs/observability/Observability.md)
-  - [Distributed Tracing](docs/observability/DistributedTracing.md)  
-  - [Errors](docs/other/Errors.md)
-- [Examples](docs/Examples.md)
 - [Code of Conduct](docs/CodeOfConduct.md)
 - [Contribution Guidelines](docs/ContributionGuidelines.md)
 - [Acknowledgments](docs/ACKNOWLEDGMENTS.md)

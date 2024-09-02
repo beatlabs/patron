@@ -16,12 +16,12 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.16 h1:jYfy8UPmd+6kJW5YhY
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.16/go.mod h1:7ZfEPZxkW42Afq4uQB8H2E2e6ebh6mXTueEpYzjCzcs=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 h1:VaRN3TlFdd6KxX1x3ILT5ynH6HvKgqdiXoTxAF4HQcQ=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1/go.mod h1:FbtygfRFze9usAadmnGJNc8KsP346kEe+y2/oyhGAGc=
-github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.1 h1:Szwz1vpZkvfhFMJ0X5uUECgHeUmPAxk1UGqAVs/pARw=
-github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.1/go.mod h1:b4wouGyJlzkr2HAvPrDGgYNp1EtmlXOkzhEOvl0c0FQ=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.6 h1:LKZuRTlh8RszjuWcUwEDvCGwjx5olHPp6ZOepyZV5p8=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.6/go.mod h1:s2fYaueBuCnwv1XQn6T8TfShxJWusv5tWPMcL+GY6+g=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.4 h1:KypMCbLPPHEmf9DgMGw51jMj77VfGPAN2Kv4cfhlfgI=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.4/go.mod h1:Vz1JQXliGcQktFTN/LN6uGppAIRoLBR2bMvIMP0gOjc=
-github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.14 h1:X1J0Kd17n1PeXeoArNXlvnKewCyMvhVQh7iNMy6oi3s=
-github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.14/go.mod h1:VYMN7l7dxp6xtQRjqIau6d7QAbmPG+yJ75GtCy70f18=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.17 h1:HDJGz1jlV7RokVgTPfx1UHBHANC0N5Uk++xgyYgz5E0=
+github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.17/go.mod h1:5szDu6TWdRDytfDxUQVv2OYfpTQMKApVFyqpm+TcA98=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.18 h1:tJ5RnkHCiSH0jyd6gROjlJtNwov0eGYNz8s8nFcR0jQ=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.18/go.mod h1:++NHzT+nAF7ZPrHPsA+ENvsXkOO8wEu+C6RXltAG4/c=
 github.com/aws/aws-sdk-go-v2/service/sns v1.31.4 h1:Bwb1nTBy6jrLJgSlI+jLt27rjyS1Kg030X5yWPnTecI=
@@ -154,8 +154,8 @@ github.com/youmark/pkcs8 v0.0.0-20240424034433-3c2c7870ae76/go.mod h1:SQliXeA7Dh
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 go.mongodb.org/mongo-driver v1.16.1 h1:rIVLL3q0IHM39dvE+z2ulZLp9ENZKThVfuvN/IiN4l8=
 go.mongodb.org/mongo-driver v1.16.1/go.mod h1:oB6AhJQvFQL4LEHyXi6aJzQJtBiTQHiAd83l0GdFaiw=
-go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.53.0 h1:1B6+VGkx6SYIB3c2NxGCOscCDRn5MGZGBa+HakVOl1s=
-go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.53.0/go.mod h1:BwIY9dxFVSGry/WRhvUmpbvT9JFmBdDUcLHoHmPqy/s=
+go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.54.0 h1:By10h8DrrjRcZjy10wBEkRdwhe4kOFuNTfprm8RXQQk=
+go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.54.0/go.mod h1:EtfcBqee4PFJSl+TXvfhg8ADvLWGFXwwX7SYNHG/VGM=
 go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.53.0 h1:/g+er1+hOsTE7iGcq5dnjfbYEiIbbRABm1rTvp5EsE0=
 go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.53.0/go.mod h1:RHcOHuTeWbvM5a/FElwi/kavuik1RFoSRKcSnIybFlE=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.53.0 h1:9G6E0TXzGFVfTnawRzrPl83iHOAV7L8NJiR8RSGYV1g=

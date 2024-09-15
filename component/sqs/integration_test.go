@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
@@ -105,9 +106,9 @@ func Test_SQS_Consume(t *testing.T) {
 	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
 	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
 	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
-	assert.Equal(t, "sqs.message.age", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
-	assert.Equal(t, "sqs.message.counter", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
-	assert.Equal(t, "sqs.queue.size", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
+	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.message.age")
+	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.message.counter")
+	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.queue.size")
 }
 
 func sendMessage(t *testing.T, client *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {

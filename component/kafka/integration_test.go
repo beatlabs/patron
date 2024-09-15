@@ -15,6 +15,7 @@ import (
 	"github.com/IBM/sarama"
 	kafkaclient "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
@@ -134,9 +135,9 @@ func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
 	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
 	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
-	assert.Equal(t, "kafka.publish.count", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
-	assert.Equal(t, "kafka.consumer.offset.diff", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
-	assert.Equal(t, "kafka.message.status", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
+	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.consumer.offset.diff")
+	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.publish.count")
+	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.message.status")
 }
 
 func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {

@@ -9,6 +9,7 @@ import (
 
 	patronamqp "github.com/beatlabs/patron/client/amqp"
 	"github.com/beatlabs/patron/correlation"
+	"github.com/beatlabs/patron/internal/test"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -112,9 +113,9 @@ func TestRun(t *testing.T) {
 	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
 	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
 	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
-	assert.Equal(t, "amqp.publish.duration", collectedMetrics.ScopeMetrics[0].Metrics[0].Name)
-	assert.Equal(t, "amqp.message.age", collectedMetrics.ScopeMetrics[0].Metrics[1].Name)
-	assert.Equal(t, "amqp.message.counter", collectedMetrics.ScopeMetrics[0].Metrics[2].Name)
+	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.publish.duration")
+	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.message.age")
+	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.message.counter")
 }
 
 func createQueue() error {

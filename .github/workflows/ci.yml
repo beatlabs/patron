@@ -40,7 +40,9 @@ jobs:
         run: make deps-start
 
       - name: Running CI
-        run: make ci
+        run: |
+          sleep 30
+          make ci
 
       - name: Codecov
         uses: codecov/codecov-action@v4

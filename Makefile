@@ -33,7 +33,7 @@ example-client:
 	OTEL_EXPORTER_OTLP_INSECURE="true" go run examples/client/main.go
 
 deps-start:
-	docker compose up -d
+	docker compose up -d --wait
 
 deps-stop:
 	docker compose down

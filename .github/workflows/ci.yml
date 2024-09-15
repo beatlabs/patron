@@ -32,6 +32,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
+      
+      - name: Run unit tests
+        run: make test
 
       - name: Start dependencies
         run: make deps-start

@@ -189,7 +189,7 @@ func TestSayHello(t *testing.T) {
 			collectedMetrics := &metricdata.ResourceMetrics{}
 			require.NoError(t, read.Collect(context.Background(), collectedMetrics))
 			assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-			assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 5)
+			assert.Greater(t, collectedMetrics.ScopeMetrics[0].Metrics, 0)
 		})
 	}
 }

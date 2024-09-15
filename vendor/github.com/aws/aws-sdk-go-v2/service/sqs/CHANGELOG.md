@@ -1,3 +1,15 @@
+# v1.34.8 (2024-09-04)
+
+* No change notes available for this release.
+
+# v1.34.7 (2024-09-03)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.34.6 (2024-08-30)
+
+* **Bug Fix**: Fix issue where SDK could not send a VisibilityTimeout of 0 in a ChangeMessageVisibilityBatchRequestEntry.
+
 # v1.34.5 (2024-08-22)
 
 * No change notes available for this release.

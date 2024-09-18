@@ -16,10 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Migrates the indices and ILM policies away from custom node attribute
-// allocation routing to data tiers routing
+// Switches the indices, ILM policies, and legacy, composable and component
+// templates from using custom node attributes and
+// attribute-based allocation filters to using data tiers, and optionally
+// deletes one legacy index template.+
+// Using node roles enables ILM to automatically move the indices between data
+// tiers.
 package migratetodatatiers
 
 import (
@@ -74,8 +78,12 @@ func NewMigrateToDataTiersFunc(tp elastictransport.Interface) NewMigrateToDataTi
 	}
 }
 
-// Migrates the indices and ILM policies away from custom node attribute
-// allocation routing to data tiers routing
+// Switches the indices, ILM policies, and legacy, composable and component
+// templates from using custom node attributes and
+// attribute-based allocation filters to using data tiers, and optionally
+// deletes one legacy index template.+
+// Using node roles enables ILM to automatically move the indices between data
+// tiers.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-migrate-to-data-tiers.html
 func New(tp elastictransport.Interface) *MigrateToDataTiers {

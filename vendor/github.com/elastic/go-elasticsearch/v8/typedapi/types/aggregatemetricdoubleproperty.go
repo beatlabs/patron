@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -34,7 +34,7 @@ import (
 
 // AggregateMetricDoubleProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/mapping/complex.ts#L61-L66
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/mapping/complex.ts#L61-L66
 type AggregateMetricDoubleProperty struct {
 	DefaultMetric string                         `json:"default_metric"`
 	Dynamic       *dynamicmapping.DynamicMapping `json:"dynamic,omitempty"`
@@ -198,12 +198,6 @@ func (s *AggregateMetricDoubleProperty) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Fields[key] = oo
-				case "sparse_vector":
-					oo := NewSparseVectorProperty()
-					if err := localDec.Decode(&oo); err != nil {
-						return err
-					}
-					s.Fields[key] = oo
 				case "flattened":
 					oo := NewFlattenedProperty()
 					if err := localDec.Decode(&oo); err != nil {
@@ -218,6 +212,18 @@ func (s *AggregateMetricDoubleProperty) UnmarshalJSON(data []byte) error {
 					s.Fields[key] = oo
 				case "object":
 					oo := NewObjectProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Fields[key] = oo
+				case "semantic_text":
+					oo := NewSemanticTextProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Fields[key] = oo
+				case "sparse_vector":
+					oo := NewSparseVectorProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}
@@ -540,12 +546,6 @@ func (s *AggregateMetricDoubleProperty) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Properties[key] = oo
-				case "sparse_vector":
-					oo := NewSparseVectorProperty()
-					if err := localDec.Decode(&oo); err != nil {
-						return err
-					}
-					s.Properties[key] = oo
 				case "flattened":
 					oo := NewFlattenedProperty()
 					if err := localDec.Decode(&oo); err != nil {
@@ -560,6 +560,18 @@ func (s *AggregateMetricDoubleProperty) UnmarshalJSON(data []byte) error {
 					s.Properties[key] = oo
 				case "object":
 					oo := NewObjectProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Properties[key] = oo
+				case "semantic_text":
+					oo := NewSemanticTextProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Properties[key] = oo
+				case "sparse_vector":
+					oo := NewSparseVectorProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // Vector type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/xpack/usage/types.ts#L454-L458
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/xpack/usage/types.ts#L454-L458
 type Vector struct {
 	Available               bool `json:"available"`
 	DenseVectorDimsAvgCount int  `json:"dense_vector_dims_avg_count"`

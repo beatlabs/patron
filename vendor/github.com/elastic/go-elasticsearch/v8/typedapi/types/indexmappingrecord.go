@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
 // IndexMappingRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/indices/get_mapping/IndicesGetMappingResponse.ts#L29-L32
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/indices/get_mapping/IndicesGetMappingResponse.ts#L29-L32
 type IndexMappingRecord struct {
 	Item     *TypeMapping `json:"item,omitempty"`
 	Mappings TypeMapping  `json:"mappings"`

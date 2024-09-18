@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package simulatetemplate
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package simulatetemplate
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/indices/simulate_template/IndicesSimulateTemplateRequest.ts#L27-L119
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/indices/simulate_template/IndicesSimulateTemplateRequest.ts#L27-L120
 type Request struct {
 
 	// AllowAutoCreate This setting overrides the value of the `action.auto_create_index` cluster

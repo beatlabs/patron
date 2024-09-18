@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Adds and updates Logstash Pipelines used for Central Management
+// Creates or updates a pipeline used for Logstash Central Management.
 package putpipeline
 
 import (
@@ -81,7 +81,7 @@ func NewPutPipelineFunc(tp elastictransport.Interface) NewPutPipeline {
 	}
 }
 
-// Adds and updates Logstash Pipelines used for Central Management
+// Creates or updates a pipeline used for Logstash Central Management.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/logstash-api-put-pipeline.html
 func New(tp elastictransport.Interface) *PutPipeline {

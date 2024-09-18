@@ -16,10 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Allows to perform multiple index/update/delete operations in a single
-// request.
+// Performs multiple indexing or delete operations in a single API call.
+// This reduces overhead and can greatly increase indexing speed.
 package bulk
 
 import (
@@ -81,8 +81,8 @@ func NewBulkFunc(tp elastictransport.Interface) NewBulk {
 	}
 }
 
-// Allows to perform multiple index/update/delete operations in a single
-// request.
+// Performs multiple indexing or delete operations in a single API call.
+// This reduces overhead and can greatly increase indexing speed.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
 func New(tp elastictransport.Interface) *Bulk {

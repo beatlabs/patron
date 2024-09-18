@@ -16,10 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Provides a snapshot of how many shards are allocated to each data node and
-// how much disk space they are using.
+// Provides a snapshot of the number of shards allocated to each data node and
+// their disk space.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications.
 package allocation
 
 import (
@@ -76,8 +78,10 @@ func NewAllocationFunc(tp elastictransport.Interface) NewAllocation {
 	}
 }
 
-// Provides a snapshot of how many shards are allocated to each data node and
-// how much disk space they are using.
+// Provides a snapshot of the number of shards allocated to each data node and
+// their disk space.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-allocation.html
 func New(tp elastictransport.Interface) *Allocation {

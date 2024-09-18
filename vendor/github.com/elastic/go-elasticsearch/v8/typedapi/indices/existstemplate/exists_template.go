@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
+// Check existence of index templates.
 // Returns information about whether a particular index template exists.
 package existstemplate
 
@@ -74,6 +75,7 @@ func NewExistsTemplateFunc(tp elastictransport.Interface) NewExistsTemplate {
 	}
 }
 
+// Check existence of index templates.
 // Returns information about whether a particular index template exists.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-template-exists-v1.html

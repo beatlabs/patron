@@ -16,9 +16,17 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Upgrades a given job snapshot to the current major version.
+// Upgrades an anomaly detection model snapshot to the latest major version.
+// Over time, older snapshot formats are deprecated and removed. Anomaly
+// detection jobs support only snapshots that are from the current or previous
+// major version.
+// This API provides a means to upgrade a snapshot to the current major version.
+// This aids in preparing the cluster for an upgrade to the next major version.
+// Only one snapshot per anomaly detection job can be upgraded at a time and the
+// upgraded snapshot cannot be the current snapshot of the anomaly detection
+// job.
 package upgradejobsnapshot
 
 import (
@@ -81,7 +89,15 @@ func NewUpgradeJobSnapshotFunc(tp elastictransport.Interface) NewUpgradeJobSnaps
 	}
 }
 
-// Upgrades a given job snapshot to the current major version.
+// Upgrades an anomaly detection model snapshot to the latest major version.
+// Over time, older snapshot formats are deprecated and removed. Anomaly
+// detection jobs support only snapshots that are from the current or previous
+// major version.
+// This API provides a means to upgrade a snapshot to the current major version.
+// This aids in preparing the cluster for an upgrade to the next major version.
+// Only one snapshot per anomaly detection job can be upgraded at a time and the
+// upgraded snapshot cannot be the current snapshot of the anomaly detection
+// job.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-upgrade-job-model-snapshot.html
 func New(tp elastictransport.Interface) *UpgradeJobSnapshot {

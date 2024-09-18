@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
 // InferenceConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ingest/_types/Processors.ts#L746-L758
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/ingest/_types/Processors.ts#L746-L758
 type InferenceConfig struct {
 	// Classification Classification configuration for inference.
 	Classification *InferenceConfigClassification `json:"classification,omitempty"`

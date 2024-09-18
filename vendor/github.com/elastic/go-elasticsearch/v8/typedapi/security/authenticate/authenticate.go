@@ -16,10 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Enables authentication as a user and retrieve information about the
-// authenticated user.
+// Enables you to submit a request with a basic auth header to authenticate a
+// user and retrieve information about the authenticated user.
+// A successful call returns a JSON structure that shows user information such
+// as their username, the roles that are assigned to the user, any assigned
+// metadata, and information about the realms that authenticated and authorized
+// the user.
+// If the user cannot be authenticated, this API returns a 401 status code.
 package authenticate
 
 import (
@@ -69,8 +74,13 @@ func NewAuthenticateFunc(tp elastictransport.Interface) NewAuthenticate {
 	}
 }
 
-// Enables authentication as a user and retrieve information about the
-// authenticated user.
+// Enables you to submit a request with a basic auth header to authenticate a
+// user and retrieve information about the authenticated user.
+// A successful call returns a JSON structure that shows user information such
+// as their username, the roles that are assigned to the user, any assigned
+// metadata, and information about the realms that authenticated and authorized
+// the user.
+// If the user cannot be authenticated, this API returns a 401 status code.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-authenticate.html
 func New(tp elastictransport.Interface) *Authenticate {

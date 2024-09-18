@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -26,13 +26,13 @@ import (
 
 // HitsSequence type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/eql/_types/EqlHits.ts#L51-L59
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/eql/_types/EqlHits.ts#L56-L64
 type HitsSequence struct {
 	// Events Contains events matching the query. Each object represents a matching event.
 	Events []HitsEvent `json:"events"`
 	// JoinKeys Shared field values used to constrain matches in the sequence. These are
 	// defined using the by keyword in the EQL query syntax.
-	JoinKeys []json.RawMessage `json:"join_keys"`
+	JoinKeys []json.RawMessage `json:"join_keys,omitempty"`
 }
 
 // NewHitsSequence returns a HitsSequence.

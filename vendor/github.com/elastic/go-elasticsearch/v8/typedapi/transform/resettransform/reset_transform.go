@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Resets an existing transform.
+// Resets a transform.
+// Before you can reset it, you must stop it; alternatively, use the `force`
+// query parameter.
+// If the destination index was created by the transform, it is deleted.
 package resettransform
 
 import (
@@ -76,7 +79,10 @@ func NewResetTransformFunc(tp elastictransport.Interface) NewResetTransform {
 	}
 }
 
-// Resets an existing transform.
+// Resets a transform.
+// Before you can reset it, you must stop it; alternatively, use the `force`
+// query parameter.
+// If the destination index was created by the transform, it is deleted.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/reset-transform.html
 func New(tp elastictransport.Interface) *ResetTransform {

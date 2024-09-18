@@ -16,9 +16,16 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Opens one or more anomaly detection jobs.
+// An anomaly detection job must be opened in order for it to be ready to
+// receive and analyze data. It can be opened and closed multiple times
+// throughout its lifecycle.
+// When you open a new job, it starts with an empty model.
+// When you open an existing job, the most recent model state is automatically
+// loaded. The job is ready to resume its analysis from where it left off, once
+// new data is received.
 package openjob
 
 import (
@@ -82,6 +89,13 @@ func NewOpenJobFunc(tp elastictransport.Interface) NewOpenJob {
 }
 
 // Opens one or more anomaly detection jobs.
+// An anomaly detection job must be opened in order for it to be ready to
+// receive and analyze data. It can be opened and closed multiple times
+// throughout its lifecycle.
+// When you open a new job, it starts with an empty model.
+// When you open an existing job, the most recent model state is automatically
+// loaded. The job is ready to resume its analysis from where it left off, once
+// new data is received.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-open-job.html
 func New(tp elastictransport.Interface) *OpenJob {

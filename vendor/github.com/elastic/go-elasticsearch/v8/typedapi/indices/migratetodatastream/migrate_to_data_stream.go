@@ -16,9 +16,20 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Migrates an alias to a data stream
+// Converts an index alias to a data stream.
+// You must have a matching index template that is data stream enabled.
+// The alias must meet the following criteria:
+// The alias must have a write index;
+// All indices for the alias must have a `@timestamp` field mapping of a `date`
+// or `date_nanos` field type;
+// The alias must not have any filters;
+// The alias must not use custom routing.
+// If successful, the request removes the alias and creates a data stream with
+// the same name.
+// The indices for the alias become hidden backing indices for the stream.
+// The write index for the alias becomes the write index for the stream.
 package migratetodatastream
 
 import (
@@ -76,7 +87,18 @@ func NewMigrateToDataStreamFunc(tp elastictransport.Interface) NewMigrateToDataS
 	}
 }
 
-// Migrates an alias to a data stream
+// Converts an index alias to a data stream.
+// You must have a matching index template that is data stream enabled.
+// The alias must meet the following criteria:
+// The alias must have a write index;
+// All indices for the alias must have a `@timestamp` field mapping of a `date`
+// or `date_nanos` field type;
+// The alias must not have any filters;
+// The alias must not use custom routing.
+// If successful, the request removes the alias and creates a data stream with
+// the same name.
+// The indices for the alias become hidden backing indices for the stream.
+// The write index for the alias becomes the write index for the stream.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/data-streams.html
 func New(tp elastictransport.Interface) *MigrateToDataStream {

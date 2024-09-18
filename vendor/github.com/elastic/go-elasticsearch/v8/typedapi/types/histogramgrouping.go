@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // HistogramGrouping type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/rollup/_types/Groupings.ts#L84-L97
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/rollup/_types/Groupings.ts#L84-L97
 type HistogramGrouping struct {
 	// Fields The set of fields that you wish to build histograms for.
 	// All fields specified must be some kind of numeric.

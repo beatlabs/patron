@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Creates a trained model vocabulary
+// Creates a trained model vocabulary.
+// This API is supported only for natural language processing (NLP) models.
+// The vocabulary is stored in the index as described in
+// `inference_config.*.vocabulary` of the trained model definition.
 package puttrainedmodelvocabulary
 
 import (
@@ -81,7 +84,10 @@ func NewPutTrainedModelVocabularyFunc(tp elastictransport.Interface) NewPutTrain
 	}
 }
 
-// Creates a trained model vocabulary
+// Creates a trained model vocabulary.
+// This API is supported only for natural language processing (NLP) models.
+// The vocabulary is stored in the index as described in
+// `inference_config.*.vocabulary` of the trained model definition.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/put-trained-model-vocabulary.html
 func New(tp elastictransport.Interface) *PutTrainedModelVocabulary {

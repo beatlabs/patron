@@ -16,9 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns cluster repositories metering information.
+// You can use the cluster repositories metering API to retrieve repositories
+// metering information in a cluster.
+// This API exposes monotonically non-decreasing counters and it’s expected that
+// clients would durably store the
+// information needed to compute aggregations over a period of time.
+// Additionally, the information exposed by this
+// API is volatile, meaning that it won’t be present after node restarts.
 package getrepositoriesmeteringinfo
 
 import (
@@ -76,7 +82,13 @@ func NewGetRepositoriesMeteringInfoFunc(tp elastictransport.Interface) NewGetRep
 	}
 }
 
-// Returns cluster repositories metering information.
+// You can use the cluster repositories metering API to retrieve repositories
+// metering information in a cluster.
+// This API exposes monotonically non-decreasing counters and it’s expected that
+// clients would durably store the
+// information needed to compute aggregations over a period of time.
+// Additionally, the information exposed by this
+// API is volatile, meaning that it won’t be present after node restarts.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/get-repositories-metering-api.html
 func New(tp elastictransport.Interface) *GetRepositoriesMeteringInfo {

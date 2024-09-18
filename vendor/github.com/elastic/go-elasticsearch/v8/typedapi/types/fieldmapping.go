@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // FieldMapping type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/mapping/meta-fields.ts#L24-L27
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/mapping/meta-fields.ts#L24-L27
 type FieldMapping struct {
 	FullName string              `json:"full_name"`
 	Mapping  map[string]Property `json:"mapping"`
@@ -182,12 +182,6 @@ func (s *FieldMapping) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Mapping[key] = oo
-				case "sparse_vector":
-					oo := NewSparseVectorProperty()
-					if err := localDec.Decode(&oo); err != nil {
-						return err
-					}
-					s.Mapping[key] = oo
 				case "flattened":
 					oo := NewFlattenedProperty()
 					if err := localDec.Decode(&oo); err != nil {
@@ -202,6 +196,18 @@ func (s *FieldMapping) UnmarshalJSON(data []byte) error {
 					s.Mapping[key] = oo
 				case "object":
 					oo := NewObjectProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Mapping[key] = oo
+				case "semantic_text":
+					oo := NewSemanticTextProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Mapping[key] = oo
+				case "sparse_vector":
+					oo := NewSparseVectorProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}

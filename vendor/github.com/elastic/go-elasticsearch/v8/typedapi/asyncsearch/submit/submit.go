@@ -16,9 +16,19 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Executes a search request asynchronously.
+// Runs a search request asynchronously.
+// When the primary sort of the results is an indexed field, shards get sorted
+// based on minimum and maximum value that they hold for that field, hence
+// partial results become available following the sort criteria that was
+// requested.
+// Warning: Async search does not support scroll nor search requests that only
+// include the suggest section.
+// By default, Elasticsearch doesn’t allow you to store an async search response
+// larger than 10Mb and an attempt to do this results in an error.
+// The maximum allowed size for a stored async search response can be set by
+// changing the `search.max_async_search_response_size` cluster level setting.
 package submit
 
 import (
@@ -83,7 +93,17 @@ func NewSubmitFunc(tp elastictransport.Interface) NewSubmit {
 	}
 }
 
-// Executes a search request asynchronously.
+// Runs a search request asynchronously.
+// When the primary sort of the results is an indexed field, shards get sorted
+// based on minimum and maximum value that they hold for that field, hence
+// partial results become available following the sort criteria that was
+// requested.
+// Warning: Async search does not support scroll nor search requests that only
+// include the suggest section.
+// By default, Elasticsearch doesn’t allow you to store an async search response
+// larger than 10Mb and an attempt to do this results in an error.
+// The maximum allowed size for a stored async search response can be set by
+// changing the `search.max_async_search_response_size` cluster level setting.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/async-search.html
 func New(tp elastictransport.Interface) *Submit {

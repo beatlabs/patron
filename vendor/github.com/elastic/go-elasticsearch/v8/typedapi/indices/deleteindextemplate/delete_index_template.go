@@ -16,9 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Deletes an index template.
+// Delete an index template.
+// The provided <index-template> may contain multiple template names separated
+// by a comma. If multiple template
+// names are specified then there is no wildcard support and the provided names
+// should match completely with
+// existing templates.
 package deleteindextemplate
 
 import (
@@ -76,7 +81,12 @@ func NewDeleteIndexTemplateFunc(tp elastictransport.Interface) NewDeleteIndexTem
 	}
 }
 
-// Deletes an index template.
+// Delete an index template.
+// The provided <index-template> may contain multiple template names separated
+// by a comma. If multiple template
+// names are specified then there is no wildcard support and the provided names
+// should match completely with
+// existing templates.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-delete-template.html
 func New(tp elastictransport.Interface) *DeleteIndexTemplate {

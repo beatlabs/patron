@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -37,7 +37,7 @@ import (
 
 // DynamicProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/mapping/core.ts#L288-L319
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/mapping/core.ts#L300-L331
 type DynamicProperty struct {
 	Analyzer            *string                        `json:"analyzer,omitempty"`
 	Boost               *Float64                       `json:"boost,omitempty"`
@@ -64,7 +64,7 @@ type DynamicProperty struct {
 	PositionIncrementGap *int                                       `json:"position_increment_gap,omitempty"`
 	PrecisionStep        *int                                       `json:"precision_step,omitempty"`
 	Properties           map[string]Property                        `json:"properties,omitempty"`
-	Script               Script                                     `json:"script,omitempty"`
+	Script               *Script                                    `json:"script,omitempty"`
 	SearchAnalyzer       *string                                    `json:"search_analyzer,omitempty"`
 	SearchQuoteAnalyzer  *string                                    `json:"search_quote_analyzer,omitempty"`
 	Similarity           *string                                    `json:"similarity,omitempty"`
@@ -312,12 +312,6 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Fields[key] = oo
-				case "sparse_vector":
-					oo := NewSparseVectorProperty()
-					if err := localDec.Decode(&oo); err != nil {
-						return err
-					}
-					s.Fields[key] = oo
 				case "flattened":
 					oo := NewFlattenedProperty()
 					if err := localDec.Decode(&oo); err != nil {
@@ -332,6 +326,18 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 					s.Fields[key] = oo
 				case "object":
 					oo := NewObjectProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Fields[key] = oo
+				case "semantic_text":
+					oo := NewSemanticTextProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Fields[key] = oo
+				case "sparse_vector":
+					oo := NewSparseVectorProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}
@@ -781,12 +787,6 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Properties[key] = oo
-				case "sparse_vector":
-					oo := NewSparseVectorProperty()
-					if err := localDec.Decode(&oo); err != nil {
-						return err
-					}
-					s.Properties[key] = oo
 				case "flattened":
 					oo := NewFlattenedProperty()
 					if err := localDec.Decode(&oo); err != nil {
@@ -801,6 +801,18 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 					s.Properties[key] = oo
 				case "object":
 					oo := NewObjectProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Properties[key] = oo
+				case "semantic_text":
+					oo := NewSemanticTextProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Properties[key] = oo
+				case "sparse_vector":
+					oo := NewSparseVectorProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}
@@ -977,39 +989,8 @@ func (s *DynamicProperty) UnmarshalJSON(data []byte) error {
 			}
 
 		case "script":
-			message := json.RawMessage{}
-			if err := dec.Decode(&message); err != nil {
+			if err := dec.Decode(&s.Script); err != nil {
 				return fmt.Errorf("%s | %w", "Script", err)
-			}
-			keyDec := json.NewDecoder(bytes.NewReader(message))
-			for {
-				t, err := keyDec.Token()
-				if err != nil {
-					if errors.Is(err, io.EOF) {
-						break
-					}
-					return fmt.Errorf("%s | %w", "Script", err)
-				}
-
-				switch t {
-
-				case "lang", "options", "source":
-					o := NewInlineScript()
-					localDec := json.NewDecoder(bytes.NewReader(message))
-					if err := localDec.Decode(&o); err != nil {
-						return fmt.Errorf("%s | %w", "Script", err)
-					}
-					s.Script = o
-
-				case "id":
-					o := NewStoredScriptId()
-					localDec := json.NewDecoder(bytes.NewReader(message))
-					if err := localDec.Decode(&o); err != nil {
-						return fmt.Errorf("%s | %w", "Script", err)
-					}
-					s.Script = o
-
-				}
 			}
 
 		case "search_analyzer":

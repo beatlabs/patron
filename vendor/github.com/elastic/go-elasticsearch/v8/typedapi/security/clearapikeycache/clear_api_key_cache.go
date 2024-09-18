@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Clear a subset or all entries from the API key cache.
+// Evicts a subset of all entries from the API key cache.
+// The cache is also automatically cleared on state changes of the security
+// index.
 package clearapikeycache
 
 import (
@@ -76,7 +78,9 @@ func NewClearApiKeyCacheFunc(tp elastictransport.Interface) NewClearApiKeyCache 
 	}
 }
 
-// Clear a subset or all entries from the API key cache.
+// Evicts a subset of all entries from the API key cache.
+// The cache is also automatically cleared on state changes of the security
+// index.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-clear-api-key-cache.html
 func New(tp elastictransport.Interface) *ClearApiKeyCache {

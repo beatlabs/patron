@@ -16,9 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information about existing templates.
+// Returns information about index templates in a cluster.
+// You can use index templates to apply index settings and field mappings to new
+// indices at creation.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the get index template API.
 package templates
 
 import (
@@ -74,7 +79,12 @@ func NewTemplatesFunc(tp elastictransport.Interface) NewTemplates {
 	}
 }
 
-// Returns information about existing templates.
+// Returns information about index templates in a cluster.
+// You can use index templates to apply index settings and field mappings to new
+// indices at creation.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the get index template API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-templates.html
 func New(tp elastictransport.Interface) *Templates {

@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns mappings for one or more indices.
+// Retrieves mapping definitions for one or more indices.
+// For data streams, the API retrieves mappings for the stream’s backing
+// indices.
 package getmapping
 
 import (
@@ -75,7 +77,9 @@ func NewGetMappingFunc(tp elastictransport.Interface) NewGetMapping {
 	}
 }
 
-// Returns mappings for one or more indices.
+// Retrieves mapping definitions for one or more indices.
+// For data streams, the API retrieves mappings for the stream’s backing
+// indices.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
 func New(tp elastictransport.Interface) *GetMapping {

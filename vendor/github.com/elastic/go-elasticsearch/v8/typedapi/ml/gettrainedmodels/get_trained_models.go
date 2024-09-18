@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Retrieves configuration information for a trained inference model.
+// Retrieves configuration information for a trained model.
 package gettrainedmodels
 
 import (
@@ -75,7 +75,7 @@ func NewGetTrainedModelsFunc(tp elastictransport.Interface) NewGetTrainedModels 
 	}
 }
 
-// Retrieves configuration information for a trained inference model.
+// Retrieves configuration information for a trained model.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/get-trained-models.html
 func New(tp elastictransport.Interface) *GetTrainedModels {
@@ -296,7 +296,11 @@ func (r *GetTrainedModels) Header(key, value string) *GetTrainedModels {
 	return r
 }
 
-// ModelId The unique identifier of the trained model.
+// ModelId The unique identifier of the trained model or a model alias.
+//
+// You can get information for multiple trained models in a single API
+// request by using a comma-separated list of model IDs or a wildcard
+// expression.
 // API Name: modelid
 func (r *GetTrainedModels) ModelId(modelid string) *GetTrainedModels {
 	r.paramSet |= modelidMask
@@ -368,8 +372,12 @@ func (r *GetTrainedModels) Size(size int) *GetTrainedModels {
 // none. When supplied, only trained models that contain all the supplied
 // tags are returned.
 // API name: tags
-func (r *GetTrainedModels) Tags(tags string) *GetTrainedModels {
-	r.values.Set("tags", tags)
+func (r *GetTrainedModels) Tags(tags ...string) *GetTrainedModels {
+	tmp := []string{}
+	for _, item := range tags {
+		tmp = append(tmp, fmt.Sprintf("%v", item))
+	}
+	r.values.Set("tags", strings.Join(tmp, ","))
 
 	return r
 }

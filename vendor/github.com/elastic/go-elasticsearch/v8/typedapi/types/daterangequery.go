@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // DateRangeQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/query_dsl/term.ts#L116-L143
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/query_dsl/term.ts#L146-L155
 type DateRangeQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -43,7 +43,7 @@ type DateRangeQuery struct {
 	Boost *float32 `json:"boost,omitempty"`
 	// Format Date format used to convert `date` values in the query.
 	Format *string `json:"format,omitempty"`
-	From   string  `json:"from,omitempty"`
+	From   *string `json:"from,omitempty"`
 	// Gt Greater than.
 	Gt *string `json:"gt,omitempty"`
 	// Gte Greater than or equal to.
@@ -58,7 +58,7 @@ type DateRangeQuery struct {
 	// TimeZone Coordinated Universal Time (UTC) offset or IANA time zone used to convert
 	// `date` values in the query to UTC.
 	TimeZone *string `json:"time_zone,omitempty"`
-	To       string  `json:"to,omitempty"`
+	To       *string `json:"to,omitempty"`
 }
 
 func (s *DateRangeQuery) UnmarshalJSON(data []byte) error {

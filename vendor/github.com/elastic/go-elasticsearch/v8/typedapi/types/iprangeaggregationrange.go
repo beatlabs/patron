@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,14 +31,14 @@ import (
 
 // IpRangeAggregationRange type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L561-L574
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/aggregations/bucket.ts#L561-L574
 type IpRangeAggregationRange struct {
 	// From Start of the range.
-	From string `json:"from,omitempty"`
+	From *string `json:"from,omitempty"`
 	// Mask IP range defined as a CIDR mask.
 	Mask *string `json:"mask,omitempty"`
 	// To End of the range.
-	To string `json:"to,omitempty"`
+	To *string `json:"to,omitempty"`
 }
 
 func (s *IpRangeAggregationRange) UnmarshalJSON(data []byte) error {
@@ -66,7 +66,7 @@ func (s *IpRangeAggregationRange) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.From = o
+			s.From = &o
 
 		case "mask":
 			var tmp json.RawMessage
@@ -90,7 +90,7 @@ func (s *IpRangeAggregationRange) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.To = o
+			s.To = &o
 
 		}
 	}

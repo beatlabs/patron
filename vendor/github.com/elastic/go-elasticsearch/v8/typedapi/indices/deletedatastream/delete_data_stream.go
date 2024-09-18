@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Deletes a data stream.
+// Deletes one or more data streams and their backing indices.
 package deletedatastream
 
 import (
@@ -77,7 +77,7 @@ func NewDeleteDataStreamFunc(tp elastictransport.Interface) NewDeleteDataStream 
 	}
 }
 
-// Deletes a data stream.
+// Deletes one or more data streams and their backing indices.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/data-streams.html
 func New(tp elastictransport.Interface) *DeleteDataStream {

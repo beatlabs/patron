@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information about snapshot repositories registered in the cluster.
+// Returns the snapshot repositories for a cluster.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the get snapshot repository API.
 package repositories
 
 import (
@@ -68,7 +71,10 @@ func NewRepositoriesFunc(tp elastictransport.Interface) NewRepositories {
 	}
 }
 
-// Returns information about snapshot repositories registered in the cluster.
+// Returns the snapshot repositories for a cluster.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the get snapshot repository API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-repositories.html
 func New(tp elastictransport.Interface) *Repositories {

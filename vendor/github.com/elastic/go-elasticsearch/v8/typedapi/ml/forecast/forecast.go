@@ -16,10 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Predicts the future behavior of a time series by using its historical
 // behavior.
+//
+// Forecasts are not supported for jobs that perform population analysis; an
+// error occurs if you try to create a forecast for a job that has an
+// `over_field_name` in its configuration.
 package forecast
 
 import (
@@ -84,6 +88,10 @@ func NewForecastFunc(tp elastictransport.Interface) NewForecast {
 
 // Predicts the future behavior of a time series by using its historical
 // behavior.
+//
+// Forecasts are not supported for jobs that perform population analysis; an
+// error occurs if you try to create a forecast for a job that has an
+// `over_field_name` in its configuration.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-forecast.html
 func New(tp elastictransport.Interface) *Forecast {

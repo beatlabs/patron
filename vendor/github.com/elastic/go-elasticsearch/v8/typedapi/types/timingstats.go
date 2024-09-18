@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // TimingStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/_types/DataframeAnalytics.ts#L563-L568
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/ml/_types/DataframeAnalytics.ts#L563-L568
 type TimingStats struct {
 	// ElapsedTime Runtime of the analysis in milliseconds.
 	ElapsedTime int64 `json:"elapsed_time"`

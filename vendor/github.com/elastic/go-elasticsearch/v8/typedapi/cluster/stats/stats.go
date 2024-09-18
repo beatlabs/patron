@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns high-level overview of cluster statistics.
+// Returns cluster statistics.
+// It returns basic index metrics (shard numbers, store size, memory usage) and
+// information about the current nodes that form the cluster (number, roles, os,
+// jvm versions, memory usage, cpu and installed plugins).
 package stats
 
 import (
@@ -74,7 +77,10 @@ func NewStatsFunc(tp elastictransport.Interface) NewStats {
 	}
 }
 
-// Returns high-level overview of cluster statistics.
+// Returns cluster statistics.
+// It returns basic index metrics (shard numbers, store size, memory usage) and
+// information about the current nodes that form the cluster (number, roles, os,
+// jvm versions, memory usage, cpu and installed plugins).
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-stats.html
 func New(tp elastictransport.Interface) *Stats {

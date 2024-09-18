@@ -16,9 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns all snapshots in a specific repository.
+// Returns information about the snapshots stored in one or more repositories.
+// A snapshot is a backup of an index or running Elasticsearch cluster.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the get snapshot API.
 package snapshots
 
 import (
@@ -74,7 +78,11 @@ func NewSnapshotsFunc(tp elastictransport.Interface) NewSnapshots {
 	}
 }
 
-// Returns all snapshots in a specific repository.
+// Returns information about the snapshots stored in one or more repositories.
+// A snapshot is a backup of an index or running Elasticsearch cluster.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the get snapshot API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-snapshots.html
 func New(tp elastictransport.Interface) *Snapshots {

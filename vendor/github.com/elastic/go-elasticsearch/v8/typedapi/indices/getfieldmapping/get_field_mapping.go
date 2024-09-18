@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns mapping for one or more fields.
+// Retrieves mapping definitions for one or more fields.
+// For data streams, the API retrieves field mappings for the stream’s backing
+// indices.
 package getfieldmapping
 
 import (
@@ -80,7 +82,9 @@ func NewGetFieldMappingFunc(tp elastictransport.Interface) NewGetFieldMapping {
 	}
 }
 
-// Returns mapping for one or more fields.
+// Retrieves mapping definitions for one or more fields.
+// For data streams, the API retrieves field mappings for the stream’s backing
+// indices.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-field-mapping.html
 func New(tp elastictransport.Interface) *GetFieldMapping {

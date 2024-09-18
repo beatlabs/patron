@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Retrieves information about service accounts.
+// This API returns a list of service accounts that match the provided path
+// parameter(s).
 package getserviceaccounts
 
 import (
@@ -77,7 +78,8 @@ func NewGetServiceAccountsFunc(tp elastictransport.Interface) NewGetServiceAccou
 	}
 }
 
-// Retrieves information about service accounts.
+// This API returns a list of service accounts that match the provided path
+// parameter(s).
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-service-accounts.html
 func New(tp elastictransport.Interface) *GetServiceAccounts {

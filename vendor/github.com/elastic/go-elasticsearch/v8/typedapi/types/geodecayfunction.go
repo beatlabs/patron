@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -29,9 +29,9 @@ import (
 
 // GeoDecayFunction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/query_dsl/compound.ts#L190-L192
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/query_dsl/compound.ts#L194-L197
 type GeoDecayFunction struct {
-	GeoDecayFunction map[string]DecayPlacementGeoLocationDistance `json:"-"`
+	DecayFunctionBaseGeoLocationDistance map[string]DecayPlacementGeoLocationDistance `json:"-"`
 	// MultiValueMode Determines how the distance is calculated when a field used for computing the
 	// decay contains multiple values.
 	MultiValueMode *multivaluemode.MultiValueMode `json:"multi_value_mode,omitempty"`
@@ -53,10 +53,10 @@ func (s GeoDecayFunction) MarshalJSON() ([]byte, error) {
 	}
 
 	// We inline the additional fields from the underlying map
-	for key, value := range s.GeoDecayFunction {
+	for key, value := range s.DecayFunctionBaseGeoLocationDistance {
 		tmp[fmt.Sprintf("%s", key)] = value
 	}
-	delete(tmp, "GeoDecayFunction")
+	delete(tmp, "DecayFunctionBaseGeoLocationDistance")
 
 	data, err = json.Marshal(tmp)
 	if err != nil {
@@ -69,7 +69,7 @@ func (s GeoDecayFunction) MarshalJSON() ([]byte, error) {
 // NewGeoDecayFunction returns a GeoDecayFunction.
 func NewGeoDecayFunction() *GeoDecayFunction {
 	r := &GeoDecayFunction{
-		GeoDecayFunction: make(map[string]DecayPlacementGeoLocationDistance, 0),
+		DecayFunctionBaseGeoLocationDistance: make(map[string]DecayPlacementGeoLocationDistance, 0),
 	}
 
 	return r

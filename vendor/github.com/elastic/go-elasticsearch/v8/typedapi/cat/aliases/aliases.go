@@ -16,10 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Shows information about currently configured aliases to indices including
-// filter and routing infos.
+// Retrieves the cluster’s index aliases, including filter and routing
+// information.
+// The API does not return data stream aliases.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or the Kibana console. They are not intended for use by applications.
+// For application consumption, use the aliases API.
 package aliases
 
 import (
@@ -76,8 +80,12 @@ func NewAliasesFunc(tp elastictransport.Interface) NewAliases {
 	}
 }
 
-// Shows information about currently configured aliases to indices including
-// filter and routing infos.
+// Retrieves the cluster’s index aliases, including filter and routing
+// information.
+// The API does not return data stream aliases.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or the Kibana console. They are not intended for use by applications.
+// For application consumption, use the aliases API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-alias.html
 func New(tp elastictransport.Interface) *Aliases {

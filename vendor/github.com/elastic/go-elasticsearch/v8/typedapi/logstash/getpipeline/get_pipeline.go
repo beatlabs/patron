@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Retrieves Logstash Pipelines used by Central Management
+// Retrieves pipelines used for Logstash Central Management.
 package getpipeline
 
 import (
@@ -74,7 +74,7 @@ func NewGetPipelineFunc(tp elastictransport.Interface) NewGetPipeline {
 	}
 }
 
-// Retrieves Logstash Pipelines used by Central Management
+// Retrieves pipelines used for Logstash Central Management.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/logstash-api-get-pipeline.html
 func New(tp elastictransport.Interface) *GetPipeline {

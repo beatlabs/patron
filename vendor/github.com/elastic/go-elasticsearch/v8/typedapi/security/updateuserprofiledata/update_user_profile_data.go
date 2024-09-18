@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Update application specific data for the user profile of the given unique ID.
+// Updates specific data for the user profile that's associated with the
+// specified unique ID.
 package updateuserprofiledata
 
 import (
@@ -82,7 +83,8 @@ func NewUpdateUserProfileDataFunc(tp elastictransport.Interface) NewUpdateUserPr
 	}
 }
 
-// Update application specific data for the user profile of the given unique ID.
+// Updates specific data for the user profile that's associated with the
+// specified unique ID.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-update-user-profile-data.html
 func New(tp elastictransport.Interface) *UpdateUserProfileData {

@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information about any matching indices, aliases, and data streams
+// Resolves the specified name(s) and/or index patterns for indices, aliases,
+// and data streams.
+// Multiple patterns and remote clusters are supported.
 package resolveindex
 
 import (
@@ -77,7 +79,9 @@ func NewResolveIndexFunc(tp elastictransport.Interface) NewResolveIndex {
 	}
 }
 
-// Returns information about any matching indices, aliases, and data streams
+// Resolves the specified name(s) and/or index patterns for indices, aliases,
+// and data streams.
+// Multiple patterns and remote clusters are supported.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-resolve-index-api.html
 func New(tp elastictransport.Interface) *ResolveIndex {

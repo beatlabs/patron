@@ -16,9 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Retrieves usage information for datafeeds.
+// You can get statistics for multiple datafeeds in a single API request by
+// using a comma-separated list of datafeeds or a wildcard expression. You can
+// get statistics for all datafeeds by using `_all`, by specifying `*` as the
+// `<feed_id>`, or by omitting the `<feed_id>`. If the datafeed is stopped, the
+// only information you receive is the `datafeed_id` and the `state`.
+// This API returns a maximum of 10,000 datafeeds.
 package getdatafeedstats
 
 import (
@@ -75,6 +81,12 @@ func NewGetDatafeedStatsFunc(tp elastictransport.Interface) NewGetDatafeedStats 
 }
 
 // Retrieves usage information for datafeeds.
+// You can get statistics for multiple datafeeds in a single API request by
+// using a comma-separated list of datafeeds or a wildcard expression. You can
+// get statistics for all datafeeds by using `_all`, by specifying `*` as the
+// `<feed_id>`, or by omitting the `<feed_id>`. If the datafeed is stopped, the
+// only information you receive is the `datafeed_id` and the `state`.
+// This API returns a maximum of 10,000 datafeeds.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-get-datafeed-stats.html
 func New(tp elastictransport.Interface) *GetDatafeedStats {

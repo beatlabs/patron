@@ -16,9 +16,17 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Deletes expired and unused machine learning data.
+// Deletes all job results, model snapshots and forecast data that have exceeded
+// their retention days period. Machine learning state documents that are not
+// associated with any job are also deleted.
+// You can limit the request to a single or set of anomaly detection jobs by
+// using a job identifier, a group name, a comma-separated list of jobs, or a
+// wildcard expression. You can delete expired data for all anomaly detection
+// jobs by using _all, by specifying * as the <job_id>, or by omitting the
+// <job_id>.
 package deleteexpireddata
 
 import (
@@ -80,6 +88,14 @@ func NewDeleteExpiredDataFunc(tp elastictransport.Interface) NewDeleteExpiredDat
 }
 
 // Deletes expired and unused machine learning data.
+// Deletes all job results, model snapshots and forecast data that have exceeded
+// their retention days period. Machine learning state documents that are not
+// associated with any job are also deleted.
+// You can limit the request to a single or set of anomaly detection jobs by
+// using a job identifier, a group name, a comma-separated list of jobs, or a
+// wildcard expression. You can delete expired data for all anomaly detection
+// jobs by using _all, by specifying * as the <job_id>, or by omitting the
+// <job_id>.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-delete-expired-data.html
 func New(tp elastictransport.Interface) *DeleteExpiredData {

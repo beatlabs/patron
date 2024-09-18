@@ -16,9 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Updates certain properties of a datafeed.
+// Updates the properties of a datafeed.
+// You must stop and start the datafeed for the changes to be applied.
+// When Elasticsearch security features are enabled, your datafeed remembers
+// which roles the user who updated it had at
+// the time of the update and runs the query using those same roles. If you
+// provide secondary authorization headers,
+// those credentials are used instead.
 package updatedatafeed
 
 import (
@@ -82,7 +88,13 @@ func NewUpdateDatafeedFunc(tp elastictransport.Interface) NewUpdateDatafeed {
 	}
 }
 
-// Updates certain properties of a datafeed.
+// Updates the properties of a datafeed.
+// You must stop and start the datafeed for the changes to be applied.
+// When Elasticsearch security features are enabled, your datafeed remembers
+// which roles the user who updated it had at
+// the time of the update and runs the query using those same roles. If you
+// provide secondary authorization headers,
+// those credentials are used instead.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-update-datafeed.html
 func New(tp elastictransport.Interface) *UpdateDatafeed {

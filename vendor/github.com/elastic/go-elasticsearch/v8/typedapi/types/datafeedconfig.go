@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // DatafeedConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/_types/Datafeed.ts#L59-L116
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/ml/_types/Datafeed.ts#L59-L116
 type DatafeedConfig struct {
 	// Aggregations If set, the datafeed performs aggregation searches. Support for aggregations
 	// is limited and should be used only with low cardinality data.
@@ -145,8 +145,19 @@ func (s *DatafeedConfig) UnmarshalJSON(data []byte) error {
 			}
 
 		case "indices", "indexes":
-			if err := dec.Decode(&s.Indices); err != nil {
-				return fmt.Errorf("%s | %w", "Indices", err)
+			rawMsg := json.RawMessage{}
+			dec.Decode(&rawMsg)
+			if !bytes.HasPrefix(rawMsg, []byte("[")) {
+				o := new(string)
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
+					return fmt.Errorf("%s | %w", "Indices", err)
+				}
+
+				s.Indices = append(s.Indices, *o)
+			} else {
+				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Indices); err != nil {
+					return fmt.Errorf("%s | %w", "Indices", err)
+				}
 			}
 
 		case "indices_options":

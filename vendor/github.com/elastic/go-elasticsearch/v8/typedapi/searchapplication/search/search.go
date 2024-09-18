@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Perform a search against a search application
+// Perform a search against a search application.
 package search
 
 import (
@@ -81,7 +81,7 @@ func NewSearchFunc(tp elastictransport.Interface) NewSearch {
 	}
 }
 
-// Perform a search against a search application
+// Perform a search against a search application.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-application-search.html
 func New(tp elastictransport.Interface) *Search {

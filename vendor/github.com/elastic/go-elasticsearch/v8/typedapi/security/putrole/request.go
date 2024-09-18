@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package putrole
 
@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/clusterprivilege"
@@ -33,7 +34,7 @@ import (
 
 // Request holds the request body struct for the package putrole
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/security/put_role/SecurityPutRoleRequest.ts#L30-L79
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/security/put_role/SecurityPutRoleRequest.ts#L30-L84
 type Request struct {
 
 	// Applications A list of application privilege entries.
@@ -41,6 +42,8 @@ type Request struct {
 	// Cluster A list of cluster privileges. These privileges define the cluster-level
 	// actions for users with this role.
 	Cluster []clusterprivilege.ClusterPrivilege `json:"cluster,omitempty"`
+	// Description Optional description of the role descriptor
+	Description *string `json:"description,omitempty"`
 	// Global An object defining global privileges. A global privilege is a form of cluster
 	// privilege that is request-aware. Support for global privileges is currently
 	// limited to the management of application privileges.
@@ -50,7 +53,9 @@ type Request struct {
 	// Metadata Optional metadata. Within the metadata object, keys that begin with an
 	// underscore (`_`) are reserved for system use.
 	Metadata types.Metadata `json:"metadata,omitempty"`
-	// RunAs A list of users that the owners of this role can impersonate.
+	// RunAs A list of users that the owners of this role can impersonate. *Note*: in
+	// Serverless, the run-as feature is disabled. For API compatibility, you can
+	// still specify an empty `run_as` field, but a non-empty list will be rejected.
 	RunAs []string `json:"run_as,omitempty"`
 	// TransientMetadata Indicates roles that might be incompatible with the current cluster license,
 	// specifically roles with document and field level security. When the cluster
@@ -106,6 +111,18 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			if err := dec.Decode(&s.Cluster); err != nil {
 				return fmt.Errorf("%s | %w", "Cluster", err)
 			}
+
+		case "description":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return fmt.Errorf("%s | %w", "Description", err)
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Description = &o
 
 		case "global":
 			if s.Global == nil {

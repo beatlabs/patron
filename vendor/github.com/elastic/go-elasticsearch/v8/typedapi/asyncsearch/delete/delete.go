@@ -16,10 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Deletes an async search by ID. If the search is still running, the search
-// request will be cancelled. Otherwise, the saved search results are deleted.
+// Deletes an async search by identifier.
+// If the search is still running, the search request will be cancelled.
+// Otherwise, the saved search results are deleted.
+// If the Elasticsearch security features are enabled, the deletion of a
+// specific async search is restricted to: the authenticated user that submitted
+// the original search request; users that have the `cancel_task` cluster
+// privilege.
 package delete
 
 import (
@@ -77,8 +82,13 @@ func NewDeleteFunc(tp elastictransport.Interface) NewDelete {
 	}
 }
 
-// Deletes an async search by ID. If the search is still running, the search
-// request will be cancelled. Otherwise, the saved search results are deleted.
+// Deletes an async search by identifier.
+// If the search is still running, the search request will be cancelled.
+// Otherwise, the saved search results are deleted.
+// If the Elasticsearch security features are enabled, the deletion of a
+// specific async search is restricted to: the authenticated user that submitted
+// the original search request; users that have the `cancel_task` cluster
+// privilege.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/async-search.html
 func New(tp elastictransport.Interface) *Delete {

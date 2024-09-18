@@ -16,11 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns cluster-wide thread pool statistics per node.
-// By default the active, queue and rejected statistics are returned for all
-// thread pools.
+// Returns thread pool statistics for each node in a cluster.
+// Returned information includes all built-in thread pools and custom thread
+// pools.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the nodes info API.
 package threadpool
 
 import (
@@ -77,9 +80,12 @@ func NewThreadPoolFunc(tp elastictransport.Interface) NewThreadPool {
 	}
 }
 
-// Returns cluster-wide thread pool statistics per node.
-// By default the active, queue and rejected statistics are returned for all
-// thread pools.
+// Returns thread pool statistics for each node in a cluster.
+// Returned information includes all built-in thread pools and custom thread
+// pools.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the nodes info API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-thread-pool.html
 func New(tp elastictransport.Interface) *ThreadPool {

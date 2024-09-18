@@ -16,10 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns the status of a previously submitted async or stored Event Query
-// Language (EQL) search
+// Returns the current status for an async EQL search or a stored synchronous
+// EQL search without returning results.
 package getstatus
 
 import (
@@ -77,8 +77,8 @@ func NewGetStatusFunc(tp elastictransport.Interface) NewGetStatus {
 	}
 }
 
-// Returns the status of a previously submitted async or stored Event Query
-// Language (EQL) search
+// Returns the current status for an async EQL search or a stored synchronous
+// EQL search without returning results.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/get-async-eql-status-api.html
 func New(tp elastictransport.Interface) *GetStatus {

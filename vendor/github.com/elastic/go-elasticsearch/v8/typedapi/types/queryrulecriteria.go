@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -33,9 +33,9 @@ import (
 
 // QueryRuleCriteria type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/query_ruleset/_types/QueryRuleset.ts#L48-L52
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/query_rules/_types/QueryRuleset.ts#L48-L52
 type QueryRuleCriteria struct {
-	Metadata string                                      `json:"metadata"`
+	Metadata *string                                     `json:"metadata,omitempty"`
 	Type     queryrulecriteriatype.QueryRuleCriteriaType `json:"type"`
 	Values   []json.RawMessage                           `json:"values,omitempty"`
 }
@@ -65,7 +65,7 @@ func (s *QueryRuleCriteria) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Metadata = o
+			s.Metadata = &o
 
 		case "type":
 			if err := dec.Decode(&s.Type); err != nil {

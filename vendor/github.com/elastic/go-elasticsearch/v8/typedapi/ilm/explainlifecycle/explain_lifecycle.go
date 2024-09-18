@@ -16,10 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Retrieves information about the index's current lifecycle state, such as the
-// currently executing phase, action, and step.
+// Retrieves information about the index’s current lifecycle state, such as the
+// currently executing phase, action, and step. Shows when the index entered
+// each one, the definition of the running phase, and information about any
+// failures.
 package explainlifecycle
 
 import (
@@ -77,8 +79,10 @@ func NewExplainLifecycleFunc(tp elastictransport.Interface) NewExplainLifecycle 
 	}
 }
 
-// Retrieves information about the index's current lifecycle state, such as the
-// currently executing phase, action, and step.
+// Retrieves information about the index’s current lifecycle state, such as the
+// currently executing phase, action, and step. Shows when the index entered
+// each one, the definition of the running phase, and information about any
+// failures.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-explain-lifecycle.html
 func New(tp elastictransport.Interface) *ExplainLifecycle {

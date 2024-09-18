@@ -16,14 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Package fieldtype
 package fieldtype
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/mapping/Property.ts#L164-L210
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/mapping/Property.ts#L166-L213
 type FieldType struct {
 	Name string
 }
@@ -112,6 +112,8 @@ var (
 	Aggregatemetricdouble = FieldType{"aggregate_metric_double"}
 
 	Densevector = FieldType{"dense_vector"}
+
+	Semantictext = FieldType{"semantic_text"}
 
 	Sparsevector = FieldType{"sparse_vector"}
 
@@ -211,6 +213,8 @@ func (f *FieldType) UnmarshalText(text []byte) error {
 		*f = Aggregatemetricdouble
 	case "dense_vector":
 		*f = Densevector
+	case "semantic_text":
+		*f = Semantictext
 	case "sparse_vector":
 		*f = Sparsevector
 	case "match_only_text":

@@ -16,9 +16,18 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information about index shard recoveries, both on-going completed.
+// Returns information about ongoing and completed shard recoveries.
+// Shard recovery is the process of initializing a shard copy, such as restoring
+// a primary shard from a snapshot or syncing a replica shard from a primary
+// shard. When a shard recovery completes, the recovered shard is available for
+// search and indexing.
+// For data streams, the API returns information about the stream’s backing
+// indices.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the index recovery API.
 package recovery
 
 import (
@@ -75,7 +84,16 @@ func NewRecoveryFunc(tp elastictransport.Interface) NewRecovery {
 	}
 }
 
-// Returns information about index shard recoveries, both on-going completed.
+// Returns information about ongoing and completed shard recoveries.
+// Shard recovery is the process of initializing a shard copy, such as restoring
+// a primary shard from a snapshot or syncing a replica shard from a primary
+// shard. When a shard recovery completes, the recovered shard is available for
+// search and indexing.
+// For data streams, the API returns information about the stream’s backing
+// indices.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the index recovery API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-recovery.html
 func New(tp elastictransport.Interface) *Recovery {

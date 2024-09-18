@@ -16,9 +16,18 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Upgrades all transforms.
+// This API identifies transforms that have a legacy configuration format and
+// upgrades them to the latest version. It
+// also cleans up the internal data structures that store the transform state
+// and checkpoints. The upgrade does not
+// affect the source and destination indices. The upgrade also does not affect
+// the roles that transforms use when
+// Elasticsearch security features are enabled; the role used to read source
+// data and write to the destination index
+// remains unchanged.
 package upgradetransforms
 
 import (
@@ -69,6 +78,15 @@ func NewUpgradeTransformsFunc(tp elastictransport.Interface) NewUpgradeTransform
 }
 
 // Upgrades all transforms.
+// This API identifies transforms that have a legacy configuration format and
+// upgrades them to the latest version. It
+// also cleans up the internal data structures that store the transform state
+// and checkpoints. The upgrade does not
+// affect the source and destination indices. The upgrade also does not affect
+// the roles that transforms use when
+// Elasticsearch security features are enabled; the role used to read source
+// data and write to the destination index
+// remains unchanged.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/upgrade-transforms.html
 func New(tp elastictransport.Interface) *UpgradeTransforms {

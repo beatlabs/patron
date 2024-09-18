@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// starts a limited time trial license.
+// The start trial API enables you to start a 30-day trial, which gives access
+// to all subscription features.
 package poststarttrial
 
 import (
@@ -68,7 +69,8 @@ func NewPostStartTrialFunc(tp elastictransport.Interface) NewPostStartTrial {
 	}
 }
 
-// starts a limited time trial license.
+// The start trial API enables you to start a 30-day trial, which gives access
+// to all subscription features.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/start-trial.html
 func New(tp elastictransport.Interface) *PostStartTrial {

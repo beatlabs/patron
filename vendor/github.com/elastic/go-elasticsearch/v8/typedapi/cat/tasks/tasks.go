@@ -16,10 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information about the tasks currently executing on one or more nodes
-// in the cluster.
+// Returns information about tasks currently executing in the cluster.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the task management API.
 package tasks
 
 import (
@@ -69,8 +71,10 @@ func NewTasksFunc(tp elastictransport.Interface) NewTasks {
 	}
 }
 
-// Returns information about the tasks currently executing on one or more nodes
-// in the cluster.
+// Returns information about tasks currently executing in the cluster.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the task management API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/tasks.html
 func New(tp elastictransport.Interface) *Tasks {

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -38,7 +38,7 @@ import (
 
 // IcuCollationProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/mapping/specialized.ts#L94-L122
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/mapping/specialized.ts#L94-L118
 type IcuCollationProperty struct {
 	Alternate              *icucollationalternate.IcuCollationAlternate         `json:"alternate,omitempty"`
 	CaseFirst              *icucollationcasefirst.IcuCollationCaseFirst         `json:"case_first,omitempty"`
@@ -60,13 +60,11 @@ type IcuCollationProperty struct {
 	Norms *bool             `json:"norms,omitempty"`
 	// NullValue Accepts a string value which is substituted for any explicit null values.
 	// Defaults to null, which means the field is treated as missing.
-	NullValue  *string             `json:"null_value,omitempty"`
-	Numeric    *bool               `json:"numeric,omitempty"`
-	Properties map[string]Property `json:"properties,omitempty"`
-	Rules      *string             `json:"rules,omitempty"`
-	Similarity *string             `json:"similarity,omitempty"`
-	// Store Whether the field value should be stored and retrievable separately from the
-	// `_source` field.
+	NullValue   *string                                    `json:"null_value,omitempty"`
+	Numeric     *bool                                      `json:"numeric,omitempty"`
+	Properties  map[string]Property                        `json:"properties,omitempty"`
+	Rules       *string                                    `json:"rules,omitempty"`
+	Similarity  *string                                    `json:"similarity,omitempty"`
 	Store       *bool                                      `json:"store,omitempty"`
 	Strength    *icucollationstrength.IcuCollationStrength `json:"strength,omitempty"`
 	Type        string                                     `json:"type,omitempty"`
@@ -283,12 +281,6 @@ func (s *IcuCollationProperty) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Fields[key] = oo
-				case "sparse_vector":
-					oo := NewSparseVectorProperty()
-					if err := localDec.Decode(&oo); err != nil {
-						return err
-					}
-					s.Fields[key] = oo
 				case "flattened":
 					oo := NewFlattenedProperty()
 					if err := localDec.Decode(&oo); err != nil {
@@ -303,6 +295,18 @@ func (s *IcuCollationProperty) UnmarshalJSON(data []byte) error {
 					s.Fields[key] = oo
 				case "object":
 					oo := NewObjectProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Fields[key] = oo
+				case "semantic_text":
+					oo := NewSemanticTextProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Fields[key] = oo
+				case "sparse_vector":
+					oo := NewSparseVectorProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}
@@ -705,12 +709,6 @@ func (s *IcuCollationProperty) UnmarshalJSON(data []byte) error {
 						return err
 					}
 					s.Properties[key] = oo
-				case "sparse_vector":
-					oo := NewSparseVectorProperty()
-					if err := localDec.Decode(&oo); err != nil {
-						return err
-					}
-					s.Properties[key] = oo
 				case "flattened":
 					oo := NewFlattenedProperty()
 					if err := localDec.Decode(&oo); err != nil {
@@ -725,6 +723,18 @@ func (s *IcuCollationProperty) UnmarshalJSON(data []byte) error {
 					s.Properties[key] = oo
 				case "object":
 					oo := NewObjectProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Properties[key] = oo
+				case "semantic_text":
+					oo := NewSemanticTextProperty()
+					if err := localDec.Decode(&oo); err != nil {
+						return err
+					}
+					s.Properties[key] = oo
+				case "sparse_vector":
+					oo := NewSparseVectorProperty()
 					if err := localDec.Decode(&oo); err != nil {
 						return err
 					}

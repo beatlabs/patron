@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Deletes documents matching the provided query.
+// Deletes documents that match the specified query.
 package deletebyquery
 
 import (
@@ -85,7 +85,7 @@ func NewDeleteByQueryFunc(tp elastictransport.Interface) NewDeleteByQuery {
 	}
 }
 
-// Deletes documents matching the provided query.
+// Deletes documents that match the specified query.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
 func New(tp elastictransport.Interface) *DeleteByQuery {

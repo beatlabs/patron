@@ -16,11 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Search API where the search will only be executed after specified checkpoints
-// are available due to a refresh. This API is designed for internal use by the
-// fleet server project.
+// The purpose of the fleet search api is to provide a search api where the
+// search will only be executed
+// after provided checkpoint has been processed and is visible for searches
+// inside of Elasticsearch.
 package search
 
 import (
@@ -87,9 +88,10 @@ func NewSearchFunc(tp elastictransport.Interface) NewSearch {
 	}
 }
 
-// Search API where the search will only be executed after specified checkpoints
-// are available due to a refresh. This API is designed for internal use by the
-// fleet server project.
+// The purpose of the fleet search api is to provide a search api where the
+// search will only be executed
+// after provided checkpoint has been processed and is visible for searches
+// inside of Elasticsearch.
 func New(tp elastictransport.Interface) *Search {
 	r := &Search{
 		transport: tp,

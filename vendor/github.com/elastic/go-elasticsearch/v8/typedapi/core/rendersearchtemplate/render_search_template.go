@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Allows to use the Mustache language to pre-render a search definition.
+// Renders a search template as a search request body.
 package rendersearchtemplate
 
 import (
@@ -79,7 +79,7 @@ func NewRenderSearchTemplateFunc(tp elastictransport.Interface) NewRenderSearchT
 	}
 }
 
-// Allows to use the Mustache language to pre-render a search definition.
+// Renders a search template as a search request body.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/render-search-template-api.html
 func New(tp elastictransport.Interface) *RenderSearchTemplate {

@@ -16,9 +16,22 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Previews a datafeed.
+// This API returns the first "page" of search results from a datafeed.
+// You can preview an existing datafeed or provide configuration details for a
+// datafeed
+// and anomaly detection job in the API. The preview shows the structure of the
+// data
+// that will be passed to the anomaly detection engine.
+// IMPORTANT: When Elasticsearch security features are enabled, the preview uses
+// the credentials of the user that
+// called the API. However, when the datafeed starts it uses the roles of the
+// last user that created or updated the
+// datafeed. To get a preview that accurately reflects the behavior of the
+// datafeed, use the appropriate credentials.
+// You can also use secondary authorization headers to supply the credentials.
 package previewdatafeed
 
 import (
@@ -80,6 +93,19 @@ func NewPreviewDatafeedFunc(tp elastictransport.Interface) NewPreviewDatafeed {
 }
 
 // Previews a datafeed.
+// This API returns the first "page" of search results from a datafeed.
+// You can preview an existing datafeed or provide configuration details for a
+// datafeed
+// and anomaly detection job in the API. The preview shows the structure of the
+// data
+// that will be passed to the anomaly detection engine.
+// IMPORTANT: When Elasticsearch security features are enabled, the preview uses
+// the credentials of the user that
+// called the API. However, when the datafeed starts it uses the roles of the
+// last user that created or updated the
+// datafeed. To get a preview that accurately reflects the behavior of the
+// datafeed, use the appropriate credentials.
+// You can also use secondary authorization headers to supply the credentials.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-preview-datafeed.html
 func New(tp elastictransport.Interface) *PreviewDatafeed {

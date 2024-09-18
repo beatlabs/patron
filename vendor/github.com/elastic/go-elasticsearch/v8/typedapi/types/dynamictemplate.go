@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -32,7 +32,7 @@ import (
 
 // DynamicTemplate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/mapping/dynamic-template.ts#L22-L42
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/mapping/dynamic-template.ts#L22-L42
 type DynamicTemplate struct {
 	Mapping            Property             `json:"mapping,omitempty"`
 	Match              []string             `json:"match,omitempty"`
@@ -176,12 +176,6 @@ func (s *DynamicTemplate) UnmarshalJSON(data []byte) error {
 					return err
 				}
 				s.Mapping = *o
-			case "sparse_vector":
-				o := NewSparseVectorProperty()
-				if err := localDec.Decode(&o); err != nil {
-					return err
-				}
-				s.Mapping = *o
 			case "flattened":
 				o := NewFlattenedProperty()
 				if err := localDec.Decode(&o); err != nil {
@@ -196,6 +190,18 @@ func (s *DynamicTemplate) UnmarshalJSON(data []byte) error {
 				s.Mapping = *o
 			case "object":
 				o := NewObjectProperty()
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.Mapping = *o
+			case "semantic_text":
+				o := NewSemanticTextProperty()
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.Mapping = *o
+			case "sparse_vector":
+				o := NewSparseVectorProperty()
 				if err := localDec.Decode(&o); err != nil {
 					return err
 				}
@@ -553,12 +559,6 @@ func (s *DynamicTemplate) UnmarshalJSON(data []byte) error {
 					return err
 				}
 				s.Runtime = *o
-			case "sparse_vector":
-				o := NewSparseVectorProperty()
-				if err := localDec.Decode(&o); err != nil {
-					return err
-				}
-				s.Runtime = *o
 			case "flattened":
 				o := NewFlattenedProperty()
 				if err := localDec.Decode(&o); err != nil {
@@ -573,6 +573,18 @@ func (s *DynamicTemplate) UnmarshalJSON(data []byte) error {
 				s.Runtime = *o
 			case "object":
 				o := NewObjectProperty()
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.Runtime = *o
+			case "semantic_text":
+				o := NewSemanticTextProperty()
+				if err := localDec.Decode(&o); err != nil {
+					return err
+				}
+				s.Runtime = *o
+			case "sparse_vector":
+				o := NewSparseVectorProperty()
 				if err := localDec.Decode(&o); err != nil {
 					return err
 				}

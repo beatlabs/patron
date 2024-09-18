@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,11 +31,11 @@ import (
 
 // User type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/security/_types/User.ts#L23-L31
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/security/_types/User.ts#L23-L31
 type User struct {
-	Email      string   `json:"email,omitempty"`
+	Email      *string  `json:"email,omitempty"`
 	Enabled    bool     `json:"enabled"`
-	FullName   string   `json:"full_name,omitempty"`
+	FullName   *string  `json:"full_name,omitempty"`
 	Metadata   Metadata `json:"metadata"`
 	ProfileUid *string  `json:"profile_uid,omitempty"`
 	Roles      []string `json:"roles"`
@@ -67,7 +67,7 @@ func (s *User) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Email = o
+			s.Email = &o
 
 		case "enabled":
 			var tmp any

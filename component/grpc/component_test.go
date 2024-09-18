@@ -50,7 +50,6 @@ func TestCreate(t *testing.T) {
 		"invalid port": {args: args{port: -1}, expErr: "port is invalid: -1"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, err := New(tt.args.port,
@@ -96,7 +95,6 @@ func TestComponent_Run_Unary(t *testing.T) {
 		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 
@@ -187,7 +185,6 @@ func TestComponent_Run_Stream(t *testing.T) {
 		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 

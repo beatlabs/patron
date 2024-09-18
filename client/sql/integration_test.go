@@ -36,7 +36,6 @@ func TestOpen(t *testing.T) {
 		"failure with wrong": {args: args{driverName: "XXX"}, expectedErr: "sql: unknown driver \"XXX\" (forgotten import?)"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, err := Open(tt.args.driverName, dsn)

@@ -40,7 +40,6 @@ func TestRateLimiting(t *testing.T) {
 		"correct params success":             {args: args{limit: 1, bust: 1}, expectedErr: ""},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route := &Route{}
@@ -68,7 +67,6 @@ func TestRouteMiddlewares(t *testing.T) {
 		"fail":    {args: args{mm: nil}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route := &Route{}
@@ -95,7 +93,6 @@ func TestAuth(t *testing.T) {
 		"fail":    {args: args{auth: nil}, expectedErr: "authenticator is nil"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route := &Route{}
@@ -140,7 +137,6 @@ func TestCache(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route := &Route{path: tt.fields.path}

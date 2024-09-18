@@ -70,7 +70,6 @@ func Test_message_ACK(t *testing.T) {
 		"failure": {fields: fields{sqsAPI: &stubSQSAPI{deleteMessageWithContextErr: errors.New("TEST")}}, expectedErr: "TEST"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 
@@ -207,7 +206,6 @@ func Test_batch_ACK(t *testing.T) {
 		// },
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 

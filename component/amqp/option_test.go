@@ -31,7 +31,6 @@ func TestBatching(t *testing.T) {
 		"invalid timeout": {args: args{count: 2, timeout: -3}, expectedErr: "timeout should be a positive number"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
@@ -75,7 +74,6 @@ func TestStatsInterval(t *testing.T) {
 		"invalid interval": {args: args{interval: -3}, expectedErr: "stats interval should be a positive number"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}

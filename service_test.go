@@ -41,13 +41,12 @@ func TestNew(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		temp := tt
 		t.Run(name, func(t *testing.T) {
 			gotService, gotErr := New(tt.name, "1.0",
-				WithLogFields(temp.fields...), WithJSONLogger(), WithSIGHUP(temp.sighupHandler))
+				WithLogFields(tt.fields...), WithJSONLogger(), WithSIGHUP(tt.sighupHandler))
 
-			if temp.wantErr != "" {
-				require.EqualError(t, gotErr, temp.wantErr)
+			if tt.wantErr != "" {
+				require.EqualError(t, gotErr, tt.wantErr)
 				assert.Nil(t, gotService)
 			} else {
 				require.NoError(t, gotErr)
@@ -72,7 +71,6 @@ func TestNew(t *testing.T) {
 // 	}
 
 // 	for name, tt := range tests {
-// 		tt := tt
 // 		t.Run(name, func(t *testing.T) {
 // 			defer os.Clearenv()
 
@@ -120,7 +118,6 @@ func Test_getLogLevel(t *testing.T) {
 		"invalid level": {lvl: "invalid", want: slog.LevelInfo},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Setenv("PATRON_LOG_LEVEL", tt.lvl)
 			assert.Equal(t, tt.want, getLogLevel())

@@ -27,7 +27,6 @@ func TestNew(t *testing.T) {
 		"invalid attempts": {args: args{attempts: -1, delay: 3 * time.Second}, wantErr: true},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			got, err := New(tt.args.attempts, tt.args.delay)
 			if tt.wantErr {
@@ -87,7 +86,6 @@ func Test_Retry_Execute(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

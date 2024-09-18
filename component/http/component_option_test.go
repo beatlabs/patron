@@ -23,7 +23,6 @@ func TestTLS(t *testing.T) {
 		"missing key":  {args: args{cert: "cert", key: ""}, expectedErr: "cert file or key file was empty"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
@@ -53,7 +52,6 @@ func TestReadTimeout(t *testing.T) {
 		"missing cert": {args: args{rt: -1 * time.Second}, expectedErr: "negative or zero read timeout provided"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
@@ -82,7 +80,6 @@ func TestWriteTimeout(t *testing.T) {
 		"missing cert": {args: args{wt: -1 * time.Second}, expectedErr: "negative or zero write timeout provided"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
@@ -111,7 +108,6 @@ func TestHandlerTimeout(t *testing.T) {
 		"missing cert": {args: args{wt: -1 * time.Second}, expectedErr: "negative or zero handler timeout provided"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
@@ -140,7 +136,6 @@ func TestShutdownGracePeriod(t *testing.T) {
 		"missing cert": {args: args{gp: -1 * time.Second}, expectedErr: "negative or zero shutdown grace period timeout provided"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}
@@ -169,7 +164,6 @@ func TestPort(t *testing.T) {
 		"missing cert": {args: args{port: 120000}, expectedErr: "invalid HTTP Port provided"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cmp := &Component{}

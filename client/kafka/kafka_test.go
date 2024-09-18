@@ -27,7 +27,6 @@ func TestBuilder_Create(t *testing.T) {
 		"missing config":  {args: args{brokers: []string{"123"}, cfg: nil}, expectedErr: "no Sarama configuration specified"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, err := New(tt.args.brokers, tt.args.cfg).Create()
@@ -52,7 +51,6 @@ func TestBuilder_CreateAsync(t *testing.T) {
 		"missing config":  {args: args{brokers: []string{"123"}, cfg: nil}, expectedErr: "no Sarama configuration specified"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, chErr, err := New(tt.args.brokers, tt.args.cfg).CreateAsync()

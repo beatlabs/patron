@@ -90,7 +90,6 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			if tt.args.port != "" {
 				t.Setenv("PATRON_HTTP_DEFAULT_PORT", tt.args.port)

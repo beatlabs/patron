@@ -48,7 +48,6 @@ func TestNewRoute(t *testing.T) {
 		}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, err := NewRoute(tt.args.path, tt.args.handler, tt.args.optionFuncs...)
@@ -85,7 +84,6 @@ func TestRoutes_Append(t *testing.T) {
 		"route is nil": {args: args{route: nil, err: nil}, expectedErr: "route is nil"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			r := &Routes{}

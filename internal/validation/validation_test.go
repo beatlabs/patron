@@ -7,46 +7,21 @@ import (
 )
 
 func TestIsStringSliceEmpty(t *testing.T) {
-	tcases := []struct {
-		name       string
+	tests := map[string]struct {
 		values     []string
 		wantResult bool
 	}{
-		{
-			name:       "nil slice",
-			values:     nil,
-			wantResult: true,
-		},
-		{
-			name:       "empty slice",
-			values:     []string{},
-			wantResult: true,
-		},
-		{
-			name:       "all values are empty",
-			values:     []string{"", ""},
-			wantResult: true,
-		},
-		{
-			name:       "one of the values is empty",
-			values:     []string{"", "value"},
-			wantResult: true,
-		},
-		{
-			name:       "one of the values is only-spaces value",
-			values:     []string{"     ", "value"},
-			wantResult: true,
-		},
-		{
-			name:       "all values are non-empty",
-			values:     []string{"value1", "value2"},
-			wantResult: false,
-		},
+		"nil slice":                              {values: nil, wantResult: true},
+		"empty slice":                            {values: []string{}, wantResult: true},
+		"all values are empty":                   {values: []string{"", ""}, wantResult: true},
+		"one of the values is empty":             {values: []string{"", "value"}, wantResult: true},
+		"one of the values is only-spaces value": {values: []string{"     ", "value"}, wantResult: true},
+		"all values are non-empty":               {values: []string{"value1", "value2"}, wantResult: false},
 	}
 
-	for _, tc := range tcases {
-		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.wantResult, IsStringSliceEmpty(tc.values))
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tt.wantResult, IsStringSliceEmpty(tt.values))
 		})
 	}
 }

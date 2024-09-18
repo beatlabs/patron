@@ -74,7 +74,6 @@ func Test_message_ACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 			m := createMessage("1", tt.fields.acknowledger)
@@ -137,7 +136,6 @@ func Test_message_NACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 			m := createMessage("1", tt.fields.acknowledger)

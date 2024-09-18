@@ -23,7 +23,6 @@ func TestNew(t *testing.T) {
 		"fail, missing url": {args: args{}, expectedErr: "url is required"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

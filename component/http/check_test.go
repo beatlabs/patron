@@ -21,7 +21,6 @@ func Test_aliveCheckRoute(t *testing.T) {
 		"default":      {func() AliveStatus { return 10 }, http.StatusServiceUnavailable},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route, err := LivenessCheckRoute(tt.acf)
@@ -50,7 +49,6 @@ func Test_readyCheckRoute(t *testing.T) {
 		"default":  {func() ReadyStatus { return 10 }, http.StatusServiceUnavailable},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			route, err := ReadyCheckRoute(tt.rcf)

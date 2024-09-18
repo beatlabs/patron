@@ -23,7 +23,6 @@ func TestRoutes(t *testing.T) {
 		"fail":    {args: args{routes: nil}, expectedErr: "routes are empty"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
@@ -50,7 +49,6 @@ func TestAliveCheck(t *testing.T) {
 		"fail":    {args: args{acf: nil}, expectedErr: "alive check function is nil"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
@@ -77,7 +75,6 @@ func TestReadyCheck(t *testing.T) {
 		"fail":    {args: args{rcf: nil}, expectedErr: "ready check function is nil"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
@@ -107,17 +104,16 @@ func TestDeflateLevel(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		temp := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
-			err := WithDeflateLevel(temp.args.deflateLevel)(cfg)
-			if temp.expectedErr != "" {
-				assert.EqualError(t, err, temp.expectedErr)
+			err := WithDeflateLevel(tt.args.deflateLevel)(cfg)
+			if tt.expectedErr != "" {
+				assert.EqualError(t, err, tt.expectedErr)
 				return
 			}
 
-			assert.Equal(t, temp.args.deflateLevel, cfg.deflateLevel)
+			assert.Equal(t, tt.args.deflateLevel, cfg.deflateLevel)
 		})
 	}
 }
@@ -135,7 +131,6 @@ func TestMiddlewares(t *testing.T) {
 		"fail":    {args: args{mm: nil}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := &Config{}
@@ -171,7 +166,6 @@ func TestEnableAppNameHeaders(t *testing.T) {
 		"missing version": {args: args{name: "name", version: ""}, expectedErr: "app version cannot be empty"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			optionFunc, err := WithAppNameHeaders(tt.args.name, tt.args.version)
 

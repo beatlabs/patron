@@ -94,7 +94,6 @@ func TestDialContext(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			gotConn, err := DialContext(context.Background(), target, tt.args.opts...)
@@ -155,23 +154,23 @@ func TestSayHello(t *testing.T) {
 		},
 	}
 
-	for n, tc := range tt {
+	for n, tt := range tt {
 		t.Run(n, func(t *testing.T) {
 			t.Cleanup(func() { exp.Reset() })
 
-			res, err := client.SayHello(ctx, tc.req)
-			if tc.wantErr {
+			res, err := client.SayHello(ctx, tt.req)
+			if tt.wantErr {
 				require.Nil(t, res)
 				require.Error(t, err)
 
 				rpcStatus, ok := status.FromError(err)
 				require.True(t, ok)
-				require.Equal(t, tc.wantCode, rpcStatus.Code())
-				require.Equal(t, tc.wantMsg, rpcStatus.Message())
+				require.Equal(t, tt.wantCode, rpcStatus.Code())
+				require.Equal(t, tt.wantMsg, rpcStatus.Message())
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, res)
-				require.Equal(t, tc.wantMsg, res.GetMessage())
+				require.Equal(t, tt.wantMsg, res.GetMessage())
 			}
 
 			require.NoError(t, tracePublisher.ForceFlush(context.Background()))
@@ -183,7 +182,7 @@ func TestSayHello(t *testing.T) {
 			assert.Equal(t, attribute.String("rpc.service", "examples.Greeter"), snaps[0].Attributes()[0])
 			assert.Equal(t, attribute.String("rpc.method", "SayHello"), snaps[0].Attributes()[1])
 			assert.Equal(t, attribute.String("rpc.system", "grpc"), snaps[0].Attributes()[2])
-			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tc.wantCode)), snaps[0].Attributes()[3])
+			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tt.wantCode)), snaps[0].Attributes()[3])
 
 			// Metrics
 			collectedMetrics := &metricdata.ResourceMetrics{}

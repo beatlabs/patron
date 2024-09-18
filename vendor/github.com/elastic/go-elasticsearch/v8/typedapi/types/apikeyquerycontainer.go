@@ -16,13 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+)
+
 // ApiKeyQueryContainer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/security/query_api_keys/types.ts#L142-L206
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/security/query_api_keys/types.ts#L142-L206
 type ApiKeyQueryContainer struct {
 	// Bool matches documents matching boolean combinations of other queries.
 	Bool *BoolQuery `json:"bool,omitempty"`
@@ -53,6 +61,107 @@ type ApiKeyQueryContainer struct {
 	Terms *TermsQuery `json:"terms,omitempty"`
 	// Wildcard Returns documents that contain terms matching a wildcard pattern.
 	Wildcard map[string]WildcardQuery `json:"wildcard,omitempty"`
+}
+
+func (s *ApiKeyQueryContainer) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "bool":
+			if err := dec.Decode(&s.Bool); err != nil {
+				return fmt.Errorf("%s | %w", "Bool", err)
+			}
+
+		case "exists":
+			if err := dec.Decode(&s.Exists); err != nil {
+				return fmt.Errorf("%s | %w", "Exists", err)
+			}
+
+		case "ids":
+			if err := dec.Decode(&s.Ids); err != nil {
+				return fmt.Errorf("%s | %w", "Ids", err)
+			}
+
+		case "match":
+			if s.Match == nil {
+				s.Match = make(map[string]MatchQuery, 0)
+			}
+			if err := dec.Decode(&s.Match); err != nil {
+				return fmt.Errorf("%s | %w", "Match", err)
+			}
+
+		case "match_all":
+			if err := dec.Decode(&s.MatchAll); err != nil {
+				return fmt.Errorf("%s | %w", "MatchAll", err)
+			}
+
+		case "prefix":
+			if s.Prefix == nil {
+				s.Prefix = make(map[string]PrefixQuery, 0)
+			}
+			if err := dec.Decode(&s.Prefix); err != nil {
+				return fmt.Errorf("%s | %w", "Prefix", err)
+			}
+
+		case "range":
+			if s.Range == nil {
+				s.Range = make(map[string]RangeQuery, 0)
+			}
+			messages := make(map[string]json.RawMessage)
+			err := dec.Decode(&messages)
+			if err != nil {
+				return fmt.Errorf("%s | %w", "Range", err)
+			}
+
+			untyped := NewUntypedRangeQuery()
+			for key, message := range messages {
+				err := json.Unmarshal(message, &untyped)
+				if err != nil {
+					return fmt.Errorf("%s | %w", "Range", err)
+				}
+				s.Range[key] = untyped
+			}
+
+		case "simple_query_string":
+			if err := dec.Decode(&s.SimpleQueryString); err != nil {
+				return fmt.Errorf("%s | %w", "SimpleQueryString", err)
+			}
+
+		case "term":
+			if s.Term == nil {
+				s.Term = make(map[string]TermQuery, 0)
+			}
+			if err := dec.Decode(&s.Term); err != nil {
+				return fmt.Errorf("%s | %w", "Term", err)
+			}
+
+		case "terms":
+			if err := dec.Decode(&s.Terms); err != nil {
+				return fmt.Errorf("%s | %w", "Terms", err)
+			}
+
+		case "wildcard":
+			if s.Wildcard == nil {
+				s.Wildcard = make(map[string]WildcardQuery, 0)
+			}
+			if err := dec.Decode(&s.Wildcard); err != nil {
+				return fmt.Errorf("%s | %w", "Wildcard", err)
+			}
+
+		}
+	}
+	return nil
 }
 
 // NewApiKeyQueryContainer returns a ApiKeyQueryContainer.

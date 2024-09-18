@@ -16,9 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Gets configuration and usage information about inference trained models.
+// Returns configuration and usage information about inference trained models.
+//
+// IMPORTANT: cat APIs are only intended for human consumption using the Kibana
+// console or command line. They are not intended for use by applications. For
+// application consumption, use the get trained models statistics API.
 package mltrainedmodels
 
 import (
@@ -76,7 +80,11 @@ func NewMlTrainedModelsFunc(tp elastictransport.Interface) NewMlTrainedModels {
 	}
 }
 
-// Gets configuration and usage information about inference trained models.
+// Returns configuration and usage information about inference trained models.
+//
+// IMPORTANT: cat APIs are only intended for human consumption using the Kibana
+// console or command line. They are not intended for use by applications. For
+// application consumption, use the get trained models statistics API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-trained-model.html
 func New(tp elastictransport.Interface) *MlTrainedModels {

@@ -16,10 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Explore extracted and summarized information about the documents and terms in
-// an index.
+// Extracts and summarizes information about the documents and terms in an
+// Elasticsearch data stream or index.
 package explore
 
 import (
@@ -82,8 +82,8 @@ func NewExploreFunc(tp elastictransport.Interface) NewExplore {
 	}
 }
 
-// Explore extracted and summarized information about the documents and terms in
-// an index.
+// Extracts and summarizes information about the documents and terms in an
+// Elasticsearch data stream or index.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/graph-explore-api.html
 func New(tp elastictransport.Interface) *Explore {

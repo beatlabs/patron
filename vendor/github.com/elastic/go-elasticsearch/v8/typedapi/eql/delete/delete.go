@@ -16,10 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Deletes an async EQL search by ID. If the search is still running, the search
-// request will be cancelled. Otherwise, the saved search results are deleted.
+// Deletes an async EQL search or a stored synchronous EQL search.
+// The API also deletes results for the search.
 package delete
 
 import (
@@ -77,8 +77,8 @@ func NewDeleteFunc(tp elastictransport.Interface) NewDelete {
 	}
 }
 
-// Deletes an async EQL search by ID. If the search is still running, the search
-// request will be cancelled. Otherwise, the saved search results are deleted.
+// Deletes an async EQL search or a stored synchronous EQL search.
+// The API also deletes results for the search.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/eql-search-api.html
 func New(tp elastictransport.Interface) *Delete {

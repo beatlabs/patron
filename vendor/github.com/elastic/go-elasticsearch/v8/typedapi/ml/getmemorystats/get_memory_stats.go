@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information on how ML is using memory.
+// Get information about how machine learning jobs and trained models are using
+// memory,
+// on each node, both within the JVM heap, and natively, outside of the JVM.
 package getmemorystats
 
 import (
@@ -74,7 +76,9 @@ func NewGetMemoryStatsFunc(tp elastictransport.Interface) NewGetMemoryStats {
 	}
 }
 
-// Returns information on how ML is using memory.
+// Get information about how machine learning jobs and trained models are using
+// memory,
+// on each node, both within the JVM heap, and natively, outside of the JVM.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/get-ml-memory.html
 func New(tp elastictransport.Interface) *GetMemoryStats {

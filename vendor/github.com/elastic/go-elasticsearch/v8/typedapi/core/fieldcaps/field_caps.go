@@ -16,10 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns the information about the capabilities of fields among multiple
-// indices.
+// The field capabilities API returns the information about the capabilities of
+// fields among multiple indices.
+// The field capabilities API returns runtime fields like any other field. For
+// example, a runtime field with a type
+// of keyword is returned as any other field that belongs to the `keyword`
+// family.
 package fieldcaps
 
 import (
@@ -81,8 +85,12 @@ func NewFieldCapsFunc(tp elastictransport.Interface) NewFieldCaps {
 	}
 }
 
-// Returns the information about the capabilities of fields among multiple
-// indices.
+// The field capabilities API returns the information about the capabilities of
+// fields among multiple indices.
+// The field capabilities API returns runtime fields like any other field. For
+// example, a runtime field with a type
+// of keyword is returned as any other field that belongs to the `keyword`
+// family.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-field-caps.html
 func New(tp elastictransport.Interface) *FieldCaps {

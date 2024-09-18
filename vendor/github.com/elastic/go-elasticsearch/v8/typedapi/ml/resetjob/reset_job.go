@@ -16,9 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Resets an existing anomaly detection job.
+// Resets an anomaly detection job.
+// All model state and results are deleted. The job is ready to start over as if
+// it had just been created.
+// It is not currently possible to reset multiple jobs using wildcards or a
+// comma separated list.
 package resetjob
 
 import (
@@ -76,7 +80,11 @@ func NewResetJobFunc(tp elastictransport.Interface) NewResetJob {
 	}
 }
 
-// Resets an existing anomaly detection job.
+// Resets an anomaly detection job.
+// All model state and results are deleted. The job is ready to start over as if
+// it had just been created.
+// It is not currently possible to reset multiple jobs using wildcards or a
+// comma separated list.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-reset-job.html
 func New(tp elastictransport.Interface) *ResetJob {

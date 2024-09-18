@@ -16,11 +16,17 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns a list of any cluster-level changes (e.g. create index, update
-// mapping,
-// allocate or fail shard) which have not yet been executed.
+// Returns cluster-level changes (such as create index, update mapping, allocate
+// or fail shard) that have not yet been executed.
+// NOTE: This API returns a list of any pending updates to the cluster state.
+// These are distinct from the tasks reported by the Task Management API which
+// include periodic tasks and tasks initiated by the user, such as node stats,
+// search queries, or create index requests.
+// However, if a user-initiated task such as a create index command causes a
+// cluster state update, the activity of this task might be reported by both
+// task api and pending cluster tasks API.
 package pendingtasks
 
 import (
@@ -70,9 +76,15 @@ func NewPendingTasksFunc(tp elastictransport.Interface) NewPendingTasks {
 	}
 }
 
-// Returns a list of any cluster-level changes (e.g. create index, update
-// mapping,
-// allocate or fail shard) which have not yet been executed.
+// Returns cluster-level changes (such as create index, update mapping, allocate
+// or fail shard) that have not yet been executed.
+// NOTE: This API returns a list of any pending updates to the cluster state.
+// These are distinct from the tasks reported by the Task Management API which
+// include periodic tasks and tasks initiated by the user, such as node stats,
+// search queries, or create index requests.
+// However, if a user-initiated task such as a create index command causes a
+// cluster state update, the activity of this task might be reported by both
+// task api and pending cluster tasks API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-pending.html
 func New(tp elastictransport.Interface) *PendingTasks {

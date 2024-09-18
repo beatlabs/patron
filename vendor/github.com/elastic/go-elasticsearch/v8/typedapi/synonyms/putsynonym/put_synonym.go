@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Creates or updates a synonyms set
+// Creates or updates a synonym set.
 package putsynonym
 
 import (
@@ -81,7 +81,7 @@ func NewPutSynonymFunc(tp elastictransport.Interface) NewPutSynonym {
 	}
 }
 
-// Creates or updates a synonyms set
+// Creates or updates a synonym set.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/put-synonyms-set.html
 func New(tp elastictransport.Interface) *PutSynonym {

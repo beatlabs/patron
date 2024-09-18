@@ -16,9 +16,24 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Instantiates a datafeed.
+// Datafeeds retrieve data from Elasticsearch for analysis by an anomaly
+// detection job.
+// You can associate only one datafeed with each anomaly detection job.
+// The datafeed contains a query that runs at a defined interval (`frequency`).
+// If you are concerned about delayed data, you can add a delay (`query_delay')
+// at each interval.
+// When Elasticsearch security features are enabled, your datafeed remembers
+// which roles the user who created it had
+// at the time of creation and runs the query using those same roles. If you
+// provide secondary authorization headers,
+// those credentials are used instead.
+// You must use Kibana, this API, or the create anomaly detection jobs API to
+// create a datafeed. Do not add a datafeed
+// directly to the `.ml-config` index. Do not give users `write` privileges on
+// the `.ml-config` index.
 package putdatafeed
 
 import (
@@ -83,6 +98,21 @@ func NewPutDatafeedFunc(tp elastictransport.Interface) NewPutDatafeed {
 }
 
 // Instantiates a datafeed.
+// Datafeeds retrieve data from Elasticsearch for analysis by an anomaly
+// detection job.
+// You can associate only one datafeed with each anomaly detection job.
+// The datafeed contains a query that runs at a defined interval (`frequency`).
+// If you are concerned about delayed data, you can add a delay (`query_delay')
+// at each interval.
+// When Elasticsearch security features are enabled, your datafeed remembers
+// which roles the user who created it had
+// at the time of creation and runs the query using those same roles. If you
+// provide secondary authorization headers,
+// those credentials are used instead.
+// You must use Kibana, this API, or the create anomaly detection jobs API to
+// create a datafeed. Do not add a datafeed
+// directly to the `.ml-config` index. Do not give users `write` privileges on
+// the `.ml-config` index.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-put-datafeed.html
 func New(tp elastictransport.Interface) *PutDatafeed {

@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Adds and updates roles in the native realm.
+// The role management APIs are generally the preferred way to manage roles,
+// rather than using file-based role management.
+// The create or update roles API cannot update roles that are defined in roles
+// files.
 package putrole
 
 import (
@@ -83,7 +86,10 @@ func NewPutRoleFunc(tp elastictransport.Interface) NewPutRole {
 	}
 }
 
-// Adds and updates roles in the native realm.
+// The role management APIs are generally the preferred way to manage roles,
+// rather than using file-based role management.
+// The create or update roles API cannot update roles that are defined in roles
+// files.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-put-role.html
 func New(tp elastictransport.Interface) *PutRole {
@@ -388,6 +394,15 @@ func (r *PutRole) Cluster(clusters ...clusterprivilege.ClusterPrivilege) *PutRol
 	return r
 }
 
+// Description Optional description of the role descriptor
+// API name: description
+func (r *PutRole) Description(description string) *PutRole {
+
+	r.req.Description = &description
+
+	return r
+}
+
 // Global An object defining global privileges. A global privilege is a form of cluster
 // privilege that is request-aware. Support for global privileges is currently
 // limited to the management of application privileges.
@@ -416,7 +431,9 @@ func (r *PutRole) Metadata(metadata types.Metadata) *PutRole {
 	return r
 }
 
-// RunAs A list of users that the owners of this role can impersonate.
+// RunAs A list of users that the owners of this role can impersonate. *Note*: in
+// Serverless, the run-as feature is disabled. For API compatibility, you can
+// still specify an empty `run_as` field, but a non-empty list will be rejected.
 // API name: run_as
 func (r *PutRole) RunAs(runas ...string) *PutRole {
 	r.req.RunAs = runas

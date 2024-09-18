@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information about why a specific matches (or doesn't match) a query.
+// Returns information about why a specific document matches (or doesn’t match)
+// a query.
 package explain
 
 import (
@@ -87,7 +88,8 @@ func NewExplainFunc(tp elastictransport.Interface) NewExplain {
 	}
 }
 
-// Returns information about why a specific matches (or doesn't match) a query.
+// Returns information about why a specific document matches (or doesn’t match)
+// a query.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-explain.html
 func New(tp elastictransport.Interface) *Explain {

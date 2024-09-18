@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package inference
 
@@ -31,10 +31,10 @@ import (
 
 // Request holds the request body struct for the package inference
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/inference/inference/InferenceRequest.ts#L26-L66
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/inference/inference/InferenceRequest.ts#L26-L66
 type Request struct {
 
-	// Input Text input to the model.
+	// Input Inference input.
 	// Either a string or an array of strings.
 	Input []string `json:"input"`
 	// Query Query input, required for rerank task.

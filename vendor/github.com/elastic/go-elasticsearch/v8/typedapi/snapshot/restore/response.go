@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package restore
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package restore
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/snapshot/restore/SnapshotRestoreResponse.ts#L23-L25
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/snapshot/restore/SnapshotRestoreResponse.ts#L23-L25
 type Response struct {
 	Snapshot types.SnapshotRestore `json:"snapshot"`
 }

@@ -16,10 +16,22 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information about indices: number of primaries and replicas, document
-// counts, disk size, ...
+// Returns high-level information about indices in a cluster, including backing
+// indices for data streams.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console.
+// They are not intended for use by applications. For application consumption,
+// use the get index API.
+// Use the cat indices API to get the following information for each index in a
+// cluster: shard count; document count; deleted document count; primary store
+// size; total store size of all shards, including shard replicas.
+// These metrics are retrieved directly from Lucene, which Elasticsearch uses
+// internally to power indexing and search. As a result, all document counts
+// include hidden nested documents.
+// To get an accurate count of Elasticsearch documents, use the cat count or
+// count APIs.
 package indices
 
 import (
@@ -79,8 +91,20 @@ func NewIndicesFunc(tp elastictransport.Interface) NewIndices {
 	}
 }
 
-// Returns information about indices: number of primaries and replicas, document
-// counts, disk size, ...
+// Returns high-level information about indices in a cluster, including backing
+// indices for data streams.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console.
+// They are not intended for use by applications. For application consumption,
+// use the get index API.
+// Use the cat indices API to get the following information for each index in a
+// cluster: shard count; document count; deleted document count; primary store
+// size; total store size of all shards, including shard replicas.
+// These metrics are retrieved directly from Lucene, which Elasticsearch uses
+// internally to power indexing and search. As a result, all document counts
+// include hidden nested documents.
+// To get an accurate count of Elasticsearch documents, use the cat count or
+// count APIs.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-indices.html
 func New(tp elastictransport.Interface) *Indices {

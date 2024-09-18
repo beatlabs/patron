@@ -16,9 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Creates an API key for access without requiring basic authentication.
+// A successful request returns a JSON structure that contains the API key, its
+// unique id, and its name.
+// If applicable, it also returns expiration information for the API key in
+// milliseconds.
+// NOTE: By default, API keys never expire. You can specify expiration
+// information when you create the API keys.
 package createapikey
 
 import (
@@ -75,6 +81,12 @@ func NewCreateApiKeyFunc(tp elastictransport.Interface) NewCreateApiKey {
 }
 
 // Creates an API key for access without requiring basic authentication.
+// A successful request returns a JSON structure that contains the API key, its
+// unique id, and its name.
+// If applicable, it also returns expiration information for the API key in
+// milliseconds.
+// NOTE: By default, API keys never expire. You can specify expiration
+// information when you create the API keys.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html
 func New(tp elastictransport.Interface) *CreateApiKey {

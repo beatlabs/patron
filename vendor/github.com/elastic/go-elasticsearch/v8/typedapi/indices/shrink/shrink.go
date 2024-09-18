@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Allow to shrink an existing index into a new index with fewer primary shards.
+// Shrinks an existing index into a new index with fewer primary shards.
 package shrink
 
 import (
@@ -86,7 +86,7 @@ func NewShrinkFunc(tp elastictransport.Interface) NewShrink {
 	}
 }
 
-// Allow to shrink an existing index into a new index with fewer primary shards.
+// Shrinks an existing index into a new index with fewer primary shards.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-shrink-index.html
 func New(tp elastictransport.Interface) *Shrink {

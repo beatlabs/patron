@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Generates SAML metadata for the Elastic stack SAML 2.0 Service Provider
+// Generate SAML metadata for a SAML 2.0 Service Provider.
 package samlserviceprovidermetadata
 
 import (
@@ -76,7 +76,7 @@ func NewSamlServiceProviderMetadataFunc(tp elastictransport.Interface) NewSamlSe
 	}
 }
 
-// Generates SAML metadata for the Elastic stack SAML 2.0 Service Provider
+// Generate SAML metadata for a SAML 2.0 Service Provider.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-saml-sp-metadata.html
 func New(tp elastictransport.Interface) *SamlServiceProviderMetadata {

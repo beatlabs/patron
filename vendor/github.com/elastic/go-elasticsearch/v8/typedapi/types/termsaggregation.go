@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -36,7 +36,7 @@ import (
 
 // TermsAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/bucket.ts#L912-L972
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/aggregations/bucket.ts#L912-L977
 type TermsAggregation struct {
 	// CollectMode Determines how child aggregations should be calculated: breadth-first or
 	// depth-first.
@@ -63,7 +63,12 @@ type TermsAggregation struct {
 	// Order Specifies the sort order of the buckets.
 	// Defaults to sorting by descending document count.
 	Order  AggregateOrder `json:"order,omitempty"`
-	Script Script         `json:"script,omitempty"`
+	Script *Script        `json:"script,omitempty"`
+	// ShardMinDocCount Regulates the certainty a shard has if the term should actually be added to
+	// the candidate list or not with respect to the `min_doc_count`.
+	// Terms will only be considered if their local shard frequency within the set
+	// is higher than the `shard_min_doc_count`.
+	ShardMinDocCount *int64 `json:"shard_min_doc_count,omitempty"`
 	// ShardSize The number of candidate terms produced by each shard.
 	// By default, `shard_size` will be automatically estimated based on the number
 	// of shards and the `size` parameter.
@@ -136,8 +141,39 @@ func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
 			s.Format = &o
 
 		case "include":
-			if err := dec.Decode(&s.Include); err != nil {
+			message := json.RawMessage{}
+			if err := dec.Decode(&message); err != nil {
 				return fmt.Errorf("%s | %w", "Include", err)
+			}
+			keyDec := json.NewDecoder(bytes.NewReader(message))
+		include_field:
+			for {
+				t, err := keyDec.Token()
+				if err != nil {
+					if errors.Is(err, io.EOF) {
+						break
+					}
+					return fmt.Errorf("%s | %w", "Include", err)
+				}
+
+				switch t {
+
+				case "num_partitions", "partition":
+					o := NewTermsPartition()
+					localDec := json.NewDecoder(bytes.NewReader(message))
+					if err := localDec.Decode(&o); err != nil {
+						return fmt.Errorf("%s | %w", "Include", err)
+					}
+					s.Include = o
+					break include_field
+
+				}
+			}
+			if s.Include == nil {
+				localDec := json.NewDecoder(bytes.NewReader(message))
+				if err := localDec.Decode(&s.Include); err != nil {
+					return fmt.Errorf("%s | %w", "Include", err)
+				}
 			}
 
 		case "min_doc_count":
@@ -202,39 +238,23 @@ func (s *TermsAggregation) UnmarshalJSON(data []byte) error {
 			}
 
 		case "script":
-			message := json.RawMessage{}
-			if err := dec.Decode(&message); err != nil {
+			if err := dec.Decode(&s.Script); err != nil {
 				return fmt.Errorf("%s | %w", "Script", err)
 			}
-			keyDec := json.NewDecoder(bytes.NewReader(message))
-			for {
-				t, err := keyDec.Token()
+
+		case "shard_min_doc_count":
+			var tmp any
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseInt(v, 10, 64)
 				if err != nil {
-					if errors.Is(err, io.EOF) {
-						break
-					}
-					return fmt.Errorf("%s | %w", "Script", err)
+					return fmt.Errorf("%s | %w", "ShardMinDocCount", err)
 				}
-
-				switch t {
-
-				case "lang", "options", "source":
-					o := NewInlineScript()
-					localDec := json.NewDecoder(bytes.NewReader(message))
-					if err := localDec.Decode(&o); err != nil {
-						return fmt.Errorf("%s | %w", "Script", err)
-					}
-					s.Script = o
-
-				case "id":
-					o := NewStoredScriptId()
-					localDec := json.NewDecoder(bytes.NewReader(message))
-					if err := localDec.Decode(&o); err != nil {
-						return fmt.Errorf("%s | %w", "Script", err)
-					}
-					s.Script = o
-
-				}
+				s.ShardMinDocCount = &value
+			case float64:
+				f := int64(v)
+				s.ShardMinDocCount = &f
 			}
 
 		case "shard_size":

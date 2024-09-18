@@ -16,9 +16,36 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Starts one or more transforms.
+// Starts a transform.
+//
+// When you start a transform, it creates the destination index if it does not
+// already exist. The `number_of_shards` is
+// set to `1` and the `auto_expand_replicas` is set to `0-1`. If it is a pivot
+// transform, it deduces the mapping
+// definitions for the destination index from the source indices and the
+// transform aggregations. If fields in the
+// destination index are derived from scripts (as in the case of
+// `scripted_metric` or `bucket_script` aggregations),
+// the transform uses dynamic mappings unless an index template exists. If it is
+// a latest transform, it does not deduce
+// mapping definitions; it uses dynamic mappings. To use explicit mappings,
+// create the destination index before you
+// start the transform. Alternatively, you can create an index template, though
+// it does not affect the deduced mappings
+// in a pivot transform.
+//
+// When the transform starts, a series of validations occur to ensure its
+// success. If you deferred validation when you
+// created the transform, they occur when you start the transform—​with the
+// exception of privilege checks. When
+// Elasticsearch security features are enabled, the transform remembers which
+// roles the user that created it had at the
+// time of creation and uses those same roles. If those roles do not have the
+// required privileges on the source and
+// destination indices, the transform fails when it attempts unauthorized
+// operations.
 package starttransform
 
 import (
@@ -76,7 +103,34 @@ func NewStartTransformFunc(tp elastictransport.Interface) NewStartTransform {
 	}
 }
 
-// Starts one or more transforms.
+// Starts a transform.
+//
+// When you start a transform, it creates the destination index if it does not
+// already exist. The `number_of_shards` is
+// set to `1` and the `auto_expand_replicas` is set to `0-1`. If it is a pivot
+// transform, it deduces the mapping
+// definitions for the destination index from the source indices and the
+// transform aggregations. If fields in the
+// destination index are derived from scripts (as in the case of
+// `scripted_metric` or `bucket_script` aggregations),
+// the transform uses dynamic mappings unless an index template exists. If it is
+// a latest transform, it does not deduce
+// mapping definitions; it uses dynamic mappings. To use explicit mappings,
+// create the destination index before you
+// start the transform. Alternatively, you can create an index template, though
+// it does not affect the deduced mappings
+// in a pivot transform.
+//
+// When the transform starts, a series of validations occur to ensure its
+// success. If you deferred validation when you
+// created the transform, they occur when you start the transform—​with the
+// exception of privilege checks. When
+// Elasticsearch security features are enabled, the transform remembers which
+// roles the user that created it had at the
+// time of creation and uses those same roles. If those roles do not have the
+// required privileges on the source and
+// destination indices, the transform fails when it attempts unauthorized
+// operations.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/start-transform.html
 func New(tp elastictransport.Interface) *StartTransform {

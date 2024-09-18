@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package getbuckets
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package getbuckets
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ml/get_buckets/MlGetBucketsResponse.ts#L23-L28
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/ml/get_buckets/MlGetBucketsResponse.ts#L23-L28
 type Response struct {
 	Buckets []types.BucketSummary `json:"buckets"`
 	Count   int64                 `json:"count"`

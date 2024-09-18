@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Provides a detailed view of shard allocation on nodes.
+// Returns information about the shards in a cluster.
+// For data streams, the API returns information about the backing indices.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications.
 package shards
 
 import (
@@ -75,7 +78,10 @@ func NewShardsFunc(tp elastictransport.Interface) NewShards {
 	}
 }
 
-// Provides a detailed view of shard allocation on nodes.
+// Returns information about the shards in a cluster.
+// For data streams, the API returns information about the backing indices.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console. They are not intended for use by applications.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-shards.html
 func New(tp elastictransport.Interface) *Shards {

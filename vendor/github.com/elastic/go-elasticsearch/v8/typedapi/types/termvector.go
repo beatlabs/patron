@@ -16,16 +16,16 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
 // TermVector type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/termvectors/types.ts#L23-L26
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_global/termvectors/types.ts#L23-L26
 type TermVector struct {
-	FieldStatistics FieldStatistics `json:"field_statistics"`
-	Terms           map[string]Term `json:"terms"`
+	FieldStatistics *FieldStatistics `json:"field_statistics,omitempty"`
+	Terms           map[string]Term  `json:"terms"`
 }
 
 // NewTermVector returns a TermVector.

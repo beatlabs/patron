@@ -16,10 +16,20 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Sets a cluster wide upgrade_mode setting that prepares machine learning
 // indices for an upgrade.
+// When upgrading your cluster, in some circumstances you must restart your
+// nodes and reindex your machine learning indices. In those circumstances,
+// there must be no machine learning jobs running. You can close the machine
+// learning jobs, do the upgrade, then open all the jobs again. Alternatively,
+// you can use this API to temporarily halt tasks associated with the jobs and
+// datafeeds and prevent new jobs from opening. You can also use this API
+// during upgrades that do not require you to reindex your machine learning
+// indices, though stopping jobs is not a requirement in that case.
+// You can see the current value for the upgrade_mode setting by using the get
+// machine learning info API.
 package setupgrademode
 
 import (
@@ -71,6 +81,16 @@ func NewSetUpgradeModeFunc(tp elastictransport.Interface) NewSetUpgradeMode {
 
 // Sets a cluster wide upgrade_mode setting that prepares machine learning
 // indices for an upgrade.
+// When upgrading your cluster, in some circumstances you must restart your
+// nodes and reindex your machine learning indices. In those circumstances,
+// there must be no machine learning jobs running. You can close the machine
+// learning jobs, do the upgrade, then open all the jobs again. Alternatively,
+// you can use this API to temporarily halt tasks associated with the jobs and
+// datafeeds and prevent new jobs from opening. You can also use this API
+// during upgrades that do not require you to reindex your machine learning
+// indices, though stopping jobs is not a requirement in that case.
+// You can see the current value for the upgrade_mode setting by using the get
+// machine learning info API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-set-upgrade-mode.html
 func New(tp elastictransport.Interface) *SetUpgradeMode {

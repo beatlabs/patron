@@ -16,9 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Forces the execution of a stored watch.
+// This API can be used to force execution of the watch outside of its
+// triggering logic or to simulate the watch execution for debugging purposes.
+// For testing and debugging purposes, you also have fine-grained control on how
+// the watch runs. You can execute the watch without executing all of its
+// actions or alternatively by simulating them. You can also force execution by
+// ignoring the watch condition and control whether a watch record would be
+// written to the watch history after execution.
 package executewatch
 
 import (
@@ -80,7 +86,13 @@ func NewExecuteWatchFunc(tp elastictransport.Interface) NewExecuteWatch {
 	}
 }
 
-// Forces the execution of a stored watch.
+// This API can be used to force execution of the watch outside of its
+// triggering logic or to simulate the watch execution for debugging purposes.
+// For testing and debugging purposes, you also have fine-grained control on how
+// the watch runs. You can execute the watch without executing all of its
+// actions or alternatively by simulating them. You can also force execution by
+// ignoring the watch condition and control whether a watch record would be
+// written to the watch history after execution.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/watcher-api-execute-watch.html
 func New(tp elastictransport.Interface) *ExecuteWatch {

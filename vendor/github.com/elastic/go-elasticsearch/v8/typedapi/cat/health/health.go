@@ -16,9 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns a concise representation of the cluster health.
+// Returns the health status of a cluster, similar to the cluster health API.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console.
+// They are not intended for use by applications. For application consumption,
+// use the cluster health API.
+// This API is often used to check malfunctioning clusters.
+// To help you track cluster health alongside log files and alerting systems,
+// the API returns timestamps in two formats:
+// `HH:MM:SS`, which is human-readable but includes no date information;
+// `Unix epoch time`, which is machine-sortable and includes date information.
+// The latter format is useful for cluster recoveries that take multiple days.
+// You can use the cat health API to verify cluster health across multiple
+// nodes.
+// You also can use the API to track the recovery of a large cluster over a
+// longer period of time.
 package health
 
 import (
@@ -69,7 +83,21 @@ func NewHealthFunc(tp elastictransport.Interface) NewHealth {
 	}
 }
 
-// Returns a concise representation of the cluster health.
+// Returns the health status of a cluster, similar to the cluster health API.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console.
+// They are not intended for use by applications. For application consumption,
+// use the cluster health API.
+// This API is often used to check malfunctioning clusters.
+// To help you track cluster health alongside log files and alerting systems,
+// the API returns timestamps in two formats:
+// `HH:MM:SS`, which is human-readable but includes no date information;
+// `Unix epoch time`, which is machine-sortable and includes date information.
+// The latter format is useful for cluster recoveries that take multiple days.
+// You can use the cat health API to verify cluster health across multiple
+// nodes.
+// You also can use the API to track the recovery of a large cluster over a
+// longer period of time.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-health.html
 func New(tp elastictransport.Interface) *Health {

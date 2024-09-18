@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns an index template.
+// Get index templates.
+// Retrieves information about one or more index templates.
 package gettemplate
 
 import (
@@ -74,7 +75,8 @@ func NewGetTemplateFunc(tp elastictransport.Interface) NewGetTemplate {
 	}
 }
 
-// Returns an index template.
+// Get index templates.
+// Retrieves information about one or more index templates.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-template-v1.html
 func New(tp elastictransport.Interface) *GetTemplate {

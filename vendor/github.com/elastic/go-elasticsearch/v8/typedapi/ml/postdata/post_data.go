@@ -16,9 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Sends data to an anomaly detection job for analysis.
+//
+// IMPORTANT: For each job, data can be accepted from only a single connection
+// at a time.
+// It is not currently possible to post data to multiple jobs using wildcards or
+// a comma-separated list.
 package postdata
 
 import (
@@ -82,6 +87,11 @@ func NewPostDataFunc(tp elastictransport.Interface) NewPostData {
 }
 
 // Sends data to an anomaly detection job for analysis.
+//
+// IMPORTANT: For each job, data can be accepted from only a single connection
+// at a time.
+// It is not currently possible to post data to multiple jobs using wildcards or
+// a comma-separated list.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-post-data.html
 func New(tp elastictransport.Interface) *PostData {

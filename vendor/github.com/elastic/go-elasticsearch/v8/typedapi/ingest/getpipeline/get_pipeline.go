@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns a pipeline.
+// Returns information about one or more ingest pipelines.
+// This API returns a local reference of the pipeline.
 package getpipeline
 
 import (
@@ -74,7 +75,8 @@ func NewGetPipelineFunc(tp elastictransport.Interface) NewGetPipeline {
 	}
 }
 
-// Returns a pipeline.
+// Returns information about one or more ingest pipelines.
+// This API returns a local reference of the pipeline.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/get-pipeline-api.html
 func New(tp elastictransport.Interface) *GetPipeline {

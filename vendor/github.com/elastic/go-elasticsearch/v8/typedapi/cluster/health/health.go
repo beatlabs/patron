@@ -16,9 +16,18 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns basic information about the health of the cluster.
+// The cluster health API returns a simple status on the health of the cluster.
+// You can also use the API to get the health status of only specified data
+// streams and indices. For data streams, the API retrieves the health status of
+// the stream’s backing indices.
+// The cluster health status is: green, yellow or red. On the shard level, a red
+// status indicates that the specific shard is not allocated in the cluster,
+// yellow means that the primary shard is allocated but replicas are not, and
+// green means that all shards are allocated. The index level status is
+// controlled by the worst shard status. The cluster status is controlled by the
+// worst index status.
 package health
 
 import (
@@ -79,7 +88,16 @@ func NewHealthFunc(tp elastictransport.Interface) NewHealth {
 	}
 }
 
-// Returns basic information about the health of the cluster.
+// The cluster health API returns a simple status on the health of the cluster.
+// You can also use the API to get the health status of only specified data
+// streams and indices. For data streams, the API retrieves the health status of
+// the stream’s backing indices.
+// The cluster health status is: green, yellow or red. On the shard level, a red
+// status indicates that the specific shard is not allocated in the cluster,
+// yellow means that the primary shard is allocated but replicas are not, and
+// green means that all shards are allocated. The index level status is
+// controlled by the worst shard status. The cluster status is controlled by the
+// worst index status.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html
 func New(tp elastictransport.Interface) *Health {
@@ -337,8 +355,9 @@ func (r *Health) Header(key, value string) *Health {
 }
 
 // Index Comma-separated list of data streams, indices, and index aliases used to
-// limit the request. Wildcard expressions (*) are supported. To target all data
-// streams and indices in a cluster, omit this parameter or use _all or *.
+// limit the request. Wildcard expressions (`*`) are supported. To target all
+// data streams and indices in a cluster, omit this parameter or use _all or
+// `*`.
 // API Name: index
 func (r *Health) Index(index string) *Health {
 	r.paramSet |= indexMask

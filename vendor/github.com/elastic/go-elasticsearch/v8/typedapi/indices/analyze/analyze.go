@@ -16,10 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Performs the analysis process on a text and return the tokens breakdown of
-// the text.
+// Performs analysis on a text string and returns the resulting tokens.
 package analyze
 
 import (
@@ -80,8 +79,7 @@ func NewAnalyzeFunc(tp elastictransport.Interface) NewAnalyze {
 	}
 }
 
-// Performs the analysis process on a text and return the tokens breakdown of
-// the text.
+// Performs analysis on a text string and returns the resulting tokens.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-analyze.html
 func New(tp elastictransport.Interface) *Analyze {

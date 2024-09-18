@@ -16,14 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Updates documents that match the specified query. If no query is specified,
-//
-//	performs an update on every document in the index without changing the
-//
-// source,
-// for example to pick up a mapping change.
+// Updates documents that match the specified query.
+// If no query is specified, performs an update on every document in the data
+// stream or index without modifying the source, which is useful for picking up
+// mapping changes.
 package updatebyquery
 
 import (
@@ -90,12 +88,10 @@ func NewUpdateByQueryFunc(tp elastictransport.Interface) NewUpdateByQuery {
 	}
 }
 
-// Updates documents that match the specified query. If no query is specified,
-//
-//	performs an update on every document in the index without changing the
-//
-// source,
-// for example to pick up a mapping change.
+// Updates documents that match the specified query.
+// If no query is specified, performs an update on every document in the data
+// stream or index without modifying the source, which is useful for picking up
+// mapping changes.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html
 func New(tp elastictransport.Interface) *UpdateByQuery {
@@ -667,7 +663,8 @@ func (r *UpdateByQuery) Query(query *types.Query) *UpdateByQuery {
 
 // Script The script to run to update the document source or metadata when updating.
 // API name: script
-func (r *UpdateByQuery) Script(script types.Script) *UpdateByQuery {
+func (r *UpdateByQuery) Script(script *types.Script) *UpdateByQuery {
+
 	r.req.Script = script
 
 	return r

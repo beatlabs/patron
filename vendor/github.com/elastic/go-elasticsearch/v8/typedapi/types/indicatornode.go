@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,10 +31,10 @@ import (
 
 // IndicatorNode type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/health_report/types.ts#L90-L93
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_global/health_report/types.ts#L90-L93
 type IndicatorNode struct {
-	Name   string `json:"name,omitempty"`
-	NodeId string `json:"node_id,omitempty"`
+	Name   *string `json:"name,omitempty"`
+	NodeId *string `json:"node_id,omitempty"`
 }
 
 func (s *IndicatorNode) UnmarshalJSON(data []byte) error {
@@ -62,7 +62,7 @@ func (s *IndicatorNode) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Name = o
+			s.Name = &o
 
 		case "node_id":
 			var tmp json.RawMessage
@@ -74,7 +74,7 @@ func (s *IndicatorNode) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.NodeId = o
+			s.NodeId = &o
 
 		}
 	}

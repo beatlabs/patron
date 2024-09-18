@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Retrieves user profiles for the given unique ID(s).
+// Retrieves a user's profile using the unique profile ID.
 package getuserprofile
 
 import (
@@ -76,7 +76,7 @@ func NewGetUserProfileFunc(tp elastictransport.Interface) NewGetUserProfile {
 	}
 }
 
-// Retrieves user profiles for the given unique ID(s).
+// Retrieves a user's profile using the unique profile ID.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-user-profile.html
 func New(tp elastictransport.Interface) *GetUserProfile {

@@ -16,10 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns the rollup capabilities of all jobs inside of a rollup index (e.g.
-// the index where rollup data is stored).
+// Returns the rollup capabilities of all jobs inside of a rollup index (for
+// example, the index where rollup data is stored).
 package getrollupindexcaps
 
 import (
@@ -77,8 +77,8 @@ func NewGetRollupIndexCapsFunc(tp elastictransport.Interface) NewGetRollupIndexC
 	}
 }
 
-// Returns the rollup capabilities of all jobs inside of a rollup index (e.g.
-// the index where rollup data is stored).
+// Returns the rollup capabilities of all jobs inside of a rollup index (for
+// example, the index where rollup data is stored).
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/rollup-get-rollup-index-caps.html
 func New(tp elastictransport.Interface) *GetRollupIndexCaps {

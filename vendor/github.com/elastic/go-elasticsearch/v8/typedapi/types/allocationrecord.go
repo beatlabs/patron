@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,23 +31,25 @@ import (
 
 // AllocationRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/cat/allocation/types.ts#L24-L75
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/cat/allocation/types.ts#L24-L98
 type AllocationRecord struct {
 	// DiskAvail Free disk space available to Elasticsearch.
 	// Elasticsearch retrieves this metric from the node’s operating system.
 	// Disk-based shard allocation uses this metric to assign shards to nodes based
 	// on available disk space.
-	DiskAvail ByteSize `json:"disk.avail,omitempty"`
+	DiskAvail *ByteSize `json:"disk.avail,omitempty"`
 	// DiskIndices Disk space used by the node’s shards. Does not include disk space for the
 	// translog or unassigned shards.
 	// IMPORTANT: This metric double-counts disk space for hard-linked files, such
 	// as those created when shrinking, splitting, or cloning an index.
-	DiskIndices ByteSize `json:"disk.indices,omitempty"`
+	DiskIndices *ByteSize `json:"disk.indices,omitempty"`
+	// DiskIndicesForecast Sum of shard size forecasts
+	DiskIndicesForecast *ByteSize `json:"disk.indices.forecast,omitempty"`
 	// DiskPercent Total percentage of disk space in use. Calculated as `disk.used /
 	// disk.total`.
-	DiskPercent Percentage `json:"disk.percent,omitempty"`
+	DiskPercent *Percentage `json:"disk.percent,omitempty"`
 	// DiskTotal Total disk space for the node, including in-use and available space.
-	DiskTotal ByteSize `json:"disk.total,omitempty"`
+	DiskTotal *ByteSize `json:"disk.total,omitempty"`
 	// DiskUsed Total disk space in use.
 	// Elasticsearch retrieves this metric from the node’s operating system (OS).
 	// The metric includes disk space for: Elasticsearch, including the translog and
@@ -55,15 +57,22 @@ type AllocationRecord struct {
 	// files on the node.
 	// Unlike `disk.indices`, this metric does not double-count disk space for
 	// hard-linked files.
-	DiskUsed ByteSize `json:"disk.used,omitempty"`
+	DiskUsed *ByteSize `json:"disk.used,omitempty"`
 	// Host Network host for the node. Set using the `network.host` setting.
-	Host string `json:"host,omitempty"`
+	Host *string `json:"host,omitempty"`
 	// Ip IP address and port for the node.
-	Ip string `json:"ip,omitempty"`
+	Ip *string `json:"ip,omitempty"`
 	// Node Name for the node. Set using the `node.name` setting.
-	Node *string `json:"node,omitempty"`
+	Node string `json:"node"`
+	// NodeRole Node roles
+	NodeRole *string `json:"node.role,omitempty"`
 	// Shards Number of primary and replica shards assigned to the node.
-	Shards *string `json:"shards,omitempty"`
+	Shards string `json:"shards"`
+	// ShardsUndesired Amount of shards that are scheduled to be moved elsewhere in the cluster or
+	// -1 other than desired balance allocator is used
+	ShardsUndesired *string `json:"shards.undesired,omitempty"`
+	// WriteLoadForecast Sum of index write load forecasts
+	WriteLoadForecast *Float64 `json:"write_load.forecast,omitempty"`
 }
 
 func (s *AllocationRecord) UnmarshalJSON(data []byte) error {
@@ -89,6 +98,11 @@ func (s *AllocationRecord) UnmarshalJSON(data []byte) error {
 		case "disk.indices", "di", "diskIndices":
 			if err := dec.Decode(&s.DiskIndices); err != nil {
 				return fmt.Errorf("%s | %w", "DiskIndices", err)
+			}
+
+		case "disk.indices.forecast", "dif", "diskIndicesForecast":
+			if err := dec.Decode(&s.DiskIndicesForecast); err != nil {
+				return fmt.Errorf("%s | %w", "DiskIndicesForecast", err)
 			}
 
 		case "disk.percent", "dp", "diskPercent":
@@ -126,7 +140,19 @@ func (s *AllocationRecord) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Node = &o
+			s.Node = o
+
+		case "node.role", "r", "role", "nodeRole":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return fmt.Errorf("%s | %w", "NodeRole", err)
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.NodeRole = &o
 
 		case "shards", "s":
 			var tmp json.RawMessage
@@ -138,7 +164,24 @@ func (s *AllocationRecord) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Shards = &o
+			s.Shards = o
+
+		case "shards.undesired":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return fmt.Errorf("%s | %w", "ShardsUndesired", err)
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.ShardsUndesired = &o
+
+		case "write_load.forecast", "wlf", "writeLoadForecast":
+			if err := dec.Decode(&s.WriteLoadForecast); err != nil {
+				return fmt.Errorf("%s | %w", "WriteLoadForecast", err)
+			}
 
 		}
 	}

@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Estimates the model memory
+// Makes an estimation of the memory usage for an anomaly detection job model.
+// It is based on analysis configuration details for the job and cardinality
+// estimates for the fields it references.
 package estimatemodelmemory
 
 import (
@@ -73,7 +75,9 @@ func NewEstimateModelMemoryFunc(tp elastictransport.Interface) NewEstimateModelM
 	}
 }
 
-// Estimates the model memory
+// Makes an estimation of the memory usage for an anomaly detection job model.
+// It is based on analysis configuration details for the job and cardinality
+// estimates for the fields it references.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-apis.html
 func New(tp elastictransport.Interface) *EstimateModelMemory {

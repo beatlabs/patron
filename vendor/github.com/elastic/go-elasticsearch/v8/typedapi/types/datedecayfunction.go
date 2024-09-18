@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -29,9 +29,9 @@ import (
 
 // DateDecayFunction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/query_dsl/compound.ts#L186-L188
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/query_dsl/compound.ts#L193-L193
 type DateDecayFunction struct {
-	DateDecayFunction map[string]DecayPlacementDateMathDuration `json:"-"`
+	DecayFunctionBaseDateMathDuration map[string]DecayPlacementDateMathDuration `json:"-"`
 	// MultiValueMode Determines how the distance is calculated when a field used for computing the
 	// decay contains multiple values.
 	MultiValueMode *multivaluemode.MultiValueMode `json:"multi_value_mode,omitempty"`
@@ -53,10 +53,10 @@ func (s DateDecayFunction) MarshalJSON() ([]byte, error) {
 	}
 
 	// We inline the additional fields from the underlying map
-	for key, value := range s.DateDecayFunction {
+	for key, value := range s.DecayFunctionBaseDateMathDuration {
 		tmp[fmt.Sprintf("%s", key)] = value
 	}
-	delete(tmp, "DateDecayFunction")
+	delete(tmp, "DecayFunctionBaseDateMathDuration")
 
 	data, err = json.Marshal(tmp)
 	if err != nil {
@@ -69,7 +69,7 @@ func (s DateDecayFunction) MarshalJSON() ([]byte, error) {
 // NewDateDecayFunction returns a DateDecayFunction.
 func NewDateDecayFunction() *DateDecayFunction {
 	r := &DateDecayFunction{
-		DateDecayFunction: make(map[string]DecayPlacementDateMathDuration, 0),
+		DecayFunctionBaseDateMathDuration: make(map[string]DecayPlacementDateMathDuration, 0),
 	}
 
 	return r

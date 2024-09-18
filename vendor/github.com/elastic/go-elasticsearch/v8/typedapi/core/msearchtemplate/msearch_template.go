@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Allows to execute several search template operations in one request.
+// Runs multiple templated searches with a single request.
 package msearchtemplate
 
 import (
@@ -80,7 +80,7 @@ func NewMsearchTemplateFunc(tp elastictransport.Interface) NewMsearchTemplate {
 	}
 }
 
-// Allows to execute several search template operations in one request.
+// Runs multiple templated searches with a single request.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html
 func New(tp elastictransport.Interface) *MsearchTemplate {

@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Downsample an index
+// Aggregates a time series (TSDS) index and stores pre-computed statistical
+// summaries (`min`, `max`, `sum`, `value_count` and `avg`) for each metric
+// field grouped by a configured time interval.
 package downsample
 
 import (
@@ -86,7 +88,9 @@ func NewDownsampleFunc(tp elastictransport.Interface) NewDownsample {
 	}
 }
 
-// Downsample an index
+// Aggregates a time series (TSDS) index and stores pre-computed statistical
+// summaries (`min`, `max`, `sum`, `value_count` and `avg`) for each metric
+// field grouped by a configured time interval.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-downsample-data-stream.html
 func New(tp elastictransport.Interface) *Downsample {

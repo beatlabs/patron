@@ -16,10 +16,16 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Provides quick access to the document count of the entire cluster, or
-// individual indices.
+// Provides quick access to a document count for a data stream, an index, or an
+// entire cluster.
+// NOTE: The document count only includes live documents, not deleted documents
+// which have not yet been removed by the merge process.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console.
+// They are not intended for use by applications. For application consumption,
+// use the count API.
 package count
 
 import (
@@ -75,8 +81,14 @@ func NewCountFunc(tp elastictransport.Interface) NewCount {
 	}
 }
 
-// Provides quick access to the document count of the entire cluster, or
-// individual indices.
+// Provides quick access to a document count for a data stream, an index, or an
+// entire cluster.
+// NOTE: The document count only includes live documents, not deleted documents
+// which have not yet been removed by the merge process.
+// IMPORTANT: cat APIs are only intended for human consumption using the command
+// line or Kibana console.
+// They are not intended for use by applications. For application consumption,
+// use the count API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-count.html
 func New(tp elastictransport.Interface) *Count {

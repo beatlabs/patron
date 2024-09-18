@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Retrieves licensing information for the cluster
+// This API returns information about the type of license, when it was issued,
+// and when it expires, for example.
+// For more information about the different types of licenses, see
+// https://www.elastic.co/subscriptions.
 package get
 
 import (
@@ -68,7 +71,10 @@ func NewGetFunc(tp elastictransport.Interface) NewGet {
 	}
 }
 
-// Retrieves licensing information for the cluster
+// This API returns information about the type of license, when it was issued,
+// and when it expires, for example.
+// For more information about the different types of licenses, see
+// https://www.elastic.co/subscriptions.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/get-license.html
 func New(tp elastictransport.Interface) *Get {

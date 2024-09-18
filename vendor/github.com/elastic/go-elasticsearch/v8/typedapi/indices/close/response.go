@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package close
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package close
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/indices/close/CloseIndexResponse.ts#L24-L30
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/indices/close/CloseIndexResponse.ts#L24-L30
 type Response struct {
 	Acknowledged       bool                              `json:"acknowledged"`
 	Indices            map[string]types.CloseIndexResult `json:"indices"`

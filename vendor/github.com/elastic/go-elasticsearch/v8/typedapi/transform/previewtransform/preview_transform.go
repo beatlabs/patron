@@ -16,9 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Previews a transform.
+//
+// It returns a maximum of 100 results. The calculations are based on all the
+// current data in the source index. It also
+// generates a list of mappings and settings for the destination index. These
+// values are determined based on the field
+// types of the source index and the transform aggregations.
 package previewtransform
 
 import (
@@ -80,6 +86,12 @@ func NewPreviewTransformFunc(tp elastictransport.Interface) NewPreviewTransform 
 }
 
 // Previews a transform.
+//
+// It returns a maximum of 100 results. The calculations are based on all the
+// current data in the source index. It also
+// generates a list of mappings and settings for the destination index. These
+// values are determined based on the field
+// types of the source index and the transform aggregations.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/preview-transform.html
 func New(tp elastictransport.Interface) *PreviewTransform {

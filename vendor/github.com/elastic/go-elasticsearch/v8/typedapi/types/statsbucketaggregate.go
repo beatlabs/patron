@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,15 +31,15 @@ import (
 
 // StatsBucketAggregate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/Aggregate.ts#L257-L258
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/aggregations/Aggregate.ts#L257-L258
 type StatsBucketAggregate struct {
-	Avg         Float64  `json:"avg,omitempty"`
+	Avg         *Float64 `json:"avg,omitempty"`
 	AvgAsString *string  `json:"avg_as_string,omitempty"`
 	Count       int64    `json:"count"`
-	Max         Float64  `json:"max,omitempty"`
+	Max         *Float64 `json:"max,omitempty"`
 	MaxAsString *string  `json:"max_as_string,omitempty"`
 	Meta        Metadata `json:"meta,omitempty"`
-	Min         Float64  `json:"min,omitempty"`
+	Min         *Float64 `json:"min,omitempty"`
 	MinAsString *string  `json:"min_as_string,omitempty"`
 	Sum         Float64  `json:"sum"`
 	SumAsString *string  `json:"sum_as_string,omitempty"`

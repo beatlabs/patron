@@ -16,9 +16,19 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Open a point in time that can be used in subsequent searches
+// A search request by default executes against the most recent visible data of
+// the target indices,
+// which is called point in time. Elasticsearch pit (point in time) is a
+// lightweight view into the
+// state of the data as it existed when initiated. In some cases, it’s preferred
+// to perform multiple
+// search requests using the same point in time. For example, if refreshes
+// happen between
+// `search_after` requests, then the results of those requests might not be
+// consistent as changes happening
+// between searches are only visible to the more recent point in time.
 package openpointintime
 
 import (
@@ -77,7 +87,17 @@ func NewOpenPointInTimeFunc(tp elastictransport.Interface) NewOpenPointInTime {
 	}
 }
 
-// Open a point in time that can be used in subsequent searches
+// A search request by default executes against the most recent visible data of
+// the target indices,
+// which is called point in time. Elasticsearch pit (point in time) is a
+// lightweight view into the
+// state of the data as it existed when initiated. In some cases, it’s preferred
+// to perform multiple
+// search requests using the same point in time. For example, if refreshes
+// happen between
+// `search_after` requests, then the results of those requests might not be
+// consistent as changes happening
+// between searches are only visible to the more recent point in time.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/point-in-time-api.html
 func New(tp elastictransport.Interface) *OpenPointInTime {
@@ -135,6 +155,12 @@ func (r *OpenPointInTime) HttpRequest(ctx context.Context) (*http.Request, error
 	}
 
 	req.Header = r.headers.Clone()
+
+	if req.Header.Get("Content-Type") == "" {
+		if r.raw != nil {
+			req.Header.Set("Content-Type", "application/vnd.elasticsearch+json;compatible-with=8")
+		}
+	}
 
 	if req.Header.Get("Accept") == "" {
 		req.Header.Set("Accept", "application/vnd.elasticsearch+json;compatible-with=8")

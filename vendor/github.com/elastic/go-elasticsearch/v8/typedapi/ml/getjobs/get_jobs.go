@@ -16,9 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Retrieves configuration information for anomaly detection jobs.
+// You can get information for multiple anomaly detection jobs in a single API
+// request by using a group name, a comma-separated list of jobs, or a wildcard
+// expression. You can get information for all anomaly detection jobs by using
+// `_all`, by specifying `*` as the `<job_id>`, or by omitting the `<job_id>`.
 package getjobs
 
 import (
@@ -75,6 +79,10 @@ func NewGetJobsFunc(tp elastictransport.Interface) NewGetJobs {
 }
 
 // Retrieves configuration information for anomaly detection jobs.
+// You can get information for multiple anomaly detection jobs in a single API
+// request by using a group name, a comma-separated list of jobs, or a wildcard
+// expression. You can get information for all anomaly detection jobs by using
+// `_all`, by specifying `*` as the `<job_id>`, or by omitting the `<job_id>`.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-get-job.html
 func New(tp elastictransport.Interface) *GetJobs {

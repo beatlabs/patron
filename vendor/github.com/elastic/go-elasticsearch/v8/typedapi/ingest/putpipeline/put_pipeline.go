@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Creates or updates a pipeline.
+// Creates or updates an ingest pipeline.
+// Changes made using this API take effect immediately.
 package putpipeline
 
 import (
@@ -81,7 +82,8 @@ func NewPutPipelineFunc(tp elastictransport.Interface) NewPutPipeline {
 	}
 }
 
-// Creates or updates a pipeline.
+// Creates or updates an ingest pipeline.
+// Changes made using this API take effect immediately.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ingest.html
 func New(tp elastictransport.Interface) *PutPipeline {

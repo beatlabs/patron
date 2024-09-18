@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -30,14 +30,14 @@ import (
 
 // StandardDeviationBounds type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/aggregations/Aggregate.ts#L260-L267
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/aggregations/Aggregate.ts#L260-L267
 type StandardDeviationBounds struct {
-	Lower           Float64 `json:"lower,omitempty"`
-	LowerPopulation Float64 `json:"lower_population,omitempty"`
-	LowerSampling   Float64 `json:"lower_sampling,omitempty"`
-	Upper           Float64 `json:"upper,omitempty"`
-	UpperPopulation Float64 `json:"upper_population,omitempty"`
-	UpperSampling   Float64 `json:"upper_sampling,omitempty"`
+	Lower           *Float64 `json:"lower,omitempty"`
+	LowerPopulation *Float64 `json:"lower_population,omitempty"`
+	LowerSampling   *Float64 `json:"lower_sampling,omitempty"`
+	Upper           *Float64 `json:"upper,omitempty"`
+	UpperPopulation *Float64 `json:"upper_population,omitempty"`
+	UpperSampling   *Float64 `json:"upper_sampling,omitempty"`
 }
 
 func (s *StandardDeviationBounds) UnmarshalJSON(data []byte) error {

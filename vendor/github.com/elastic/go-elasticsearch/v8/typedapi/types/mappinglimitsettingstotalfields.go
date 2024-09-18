@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,8 +31,19 @@ import (
 
 // MappingLimitSettingsTotalFields type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/indices/_types/IndexSettings.ts#L424-L432
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/indices/_types/IndexSettings.ts#L426-L443
 type MappingLimitSettingsTotalFields struct {
+	// IgnoreDynamicBeyondLimit This setting determines what happens when a dynamically mapped field would
+	// exceed the total fields limit. When set
+	// to false (the default), the index request of the document that tries to add a
+	// dynamic field to the mapping will fail
+	// with the message Limit of total fields [X] has been exceeded. When set to
+	// true, the index request will not fail.
+	// Instead, fields that would exceed the limit are not added to the mapping,
+	// similar to dynamic: false.
+	// The fields that were not added to the mapping will be added to the _ignored
+	// field.
+	IgnoreDynamicBeyondLimit *bool `json:"ignore_dynamic_beyond_limit,omitempty"`
 	// Limit The maximum number of fields in an index. Field and object mappings, as well
 	// as field aliases count towards this limit.
 	// The limit is in place to prevent mappings and searches from becoming too
@@ -56,6 +67,20 @@ func (s *MappingLimitSettingsTotalFields) UnmarshalJSON(data []byte) error {
 		}
 
 		switch t {
+
+		case "ignore_dynamic_beyond_limit":
+			var tmp any
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return fmt.Errorf("%s | %w", "IgnoreDynamicBeyondLimit", err)
+				}
+				s.IgnoreDynamicBeyondLimit = &value
+			case bool:
+				s.IgnoreDynamicBeyondLimit = &v
+			}
 
 		case "limit":
 			var tmp any

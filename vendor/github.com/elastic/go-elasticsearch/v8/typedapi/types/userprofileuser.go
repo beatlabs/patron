@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,10 +31,10 @@ import (
 
 // UserProfileUser type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/security/_types/UserProfile.ts#L33-L40
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/security/_types/UserProfile.ts#L33-L40
 type UserProfileUser struct {
-	Email       string   `json:"email,omitempty"`
-	FullName    string   `json:"full_name,omitempty"`
+	Email       *string  `json:"email,omitempty"`
+	FullName    *string  `json:"full_name,omitempty"`
 	RealmDomain *string  `json:"realm_domain,omitempty"`
 	RealmName   string   `json:"realm_name"`
 	Roles       []string `json:"roles"`
@@ -66,7 +66,7 @@ func (s *UserProfileUser) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Email = o
+			s.Email = &o
 
 		case "full_name":
 			if err := dec.Decode(&s.FullName); err != nil {

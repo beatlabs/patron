@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,10 +31,12 @@ import (
 
 // QueryRulesetListItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/query_ruleset/list/types.ts#L22-L31
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/query_rules/list_rulesets/types.ts#L23-L37
 type QueryRulesetListItem struct {
-	// RulesCount The number of rules associated with this ruleset
-	RulesCount int `json:"rules_count"`
+	// RuleCriteriaTypesCounts A map of criteria type to the number of rules of that type
+	RuleCriteriaTypesCounts map[string]int `json:"rule_criteria_types_counts"`
+	// RuleTotalCount The number of rules associated with this ruleset
+	RuleTotalCount int `json:"rule_total_count"`
 	// RulesetId Ruleset unique identifier
 	RulesetId string `json:"ruleset_id"`
 }
@@ -54,7 +56,15 @@ func (s *QueryRulesetListItem) UnmarshalJSON(data []byte) error {
 
 		switch t {
 
-		case "rules_count":
+		case "rule_criteria_types_counts":
+			if s.RuleCriteriaTypesCounts == nil {
+				s.RuleCriteriaTypesCounts = make(map[string]int, 0)
+			}
+			if err := dec.Decode(&s.RuleCriteriaTypesCounts); err != nil {
+				return fmt.Errorf("%s | %w", "RuleCriteriaTypesCounts", err)
+			}
+
+		case "rule_total_count":
 
 			var tmp any
 			dec.Decode(&tmp)
@@ -62,12 +72,12 @@ func (s *QueryRulesetListItem) UnmarshalJSON(data []byte) error {
 			case string:
 				value, err := strconv.Atoi(v)
 				if err != nil {
-					return fmt.Errorf("%s | %w", "RulesCount", err)
+					return fmt.Errorf("%s | %w", "RuleTotalCount", err)
 				}
-				s.RulesCount = value
+				s.RuleTotalCount = value
 			case float64:
 				f := int(v)
-				s.RulesCount = f
+				s.RuleTotalCount = f
 			}
 
 		case "ruleset_id":
@@ -82,7 +92,9 @@ func (s *QueryRulesetListItem) UnmarshalJSON(data []byte) error {
 
 // NewQueryRulesetListItem returns a QueryRulesetListItem.
 func NewQueryRulesetListItem() *QueryRulesetListItem {
-	r := &QueryRulesetListItem{}
+	r := &QueryRulesetListItem{
+		RuleCriteriaTypesCounts: make(map[string]int, 0),
+	}
 
 	return r
 }

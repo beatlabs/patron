@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Retrieves usage information for trained inference models.
+// Retrieves usage information for trained models. You can get usage information
+// for multiple trained
+// models in a single API request by using a comma-separated list of model IDs
+// or a wildcard expression.
 package gettrainedmodelsstats
 
 import (
@@ -74,7 +77,10 @@ func NewGetTrainedModelsStatsFunc(tp elastictransport.Interface) NewGetTrainedMo
 	}
 }
 
-// Retrieves usage information for trained inference models.
+// Retrieves usage information for trained models. You can get usage information
+// for multiple trained
+// models in a single API request by using a comma-separated list of model IDs
+// or a wildcard expression.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/get-trained-models-stats.html
 func New(tp elastictransport.Interface) *GetTrainedModelsStats {

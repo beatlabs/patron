@@ -16,9 +16,18 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Invalidates one or more API keys.
+// The `manage_api_key` privilege allows deleting any API keys.
+// The `manage_own_api_key` only allows deleting API keys that are owned by the
+// user.
+// In addition, with the `manage_own_api_key` privilege, an invalidation request
+// must be issued in one of the three formats:
+// - Set the parameter `owner=true`.
+// - Or, set both `username` and `realm_name` to match the user’s identity.
+// - Or, if the request is issued by an API key, i.e. an API key invalidates
+// itself, specify its ID in the `ids` field.
 package invalidateapikey
 
 import (
@@ -74,6 +83,15 @@ func NewInvalidateApiKeyFunc(tp elastictransport.Interface) NewInvalidateApiKey 
 }
 
 // Invalidates one or more API keys.
+// The `manage_api_key` privilege allows deleting any API keys.
+// The `manage_own_api_key` only allows deleting API keys that are owned by the
+// user.
+// In addition, with the `manage_own_api_key` privilege, an invalidation request
+// must be issued in one of the three formats:
+// - Set the parameter `owner=true`.
+// - Or, set both `username` and `realm_name` to match the user’s identity.
+// - Or, if the request is issued by an API key, i.e. an API key invalidates
+// itself, specify its ID in the `ids` field.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-invalidate-api-key.html
 func New(tp elastictransport.Interface) *InvalidateApiKey {

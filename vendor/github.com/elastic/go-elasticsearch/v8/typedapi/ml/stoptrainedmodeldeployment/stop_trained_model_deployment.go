@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Stop a trained model deployment.
+// Stops a trained model deployment.
 package stoptrainedmodeldeployment
 
 import (
@@ -76,7 +76,7 @@ func NewStopTrainedModelDeploymentFunc(tp elastictransport.Interface) NewStopTra
 	}
 }
 
-// Stop a trained model deployment.
+// Stops a trained model deployment.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/stop-trained-model-deployment.html
 func New(tp elastictransport.Interface) *StopTrainedModelDeployment {

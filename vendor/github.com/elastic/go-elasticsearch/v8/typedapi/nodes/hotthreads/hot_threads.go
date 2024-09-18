@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information about hot threads on each node in the cluster.
+// This API yields a breakdown of the hot threads on each selected node in the
+// cluster.
+// The output is plain text with a breakdown of each node’s top hot threads.
 package hotthreads
 
 import (
@@ -75,7 +77,9 @@ func NewHotThreadsFunc(tp elastictransport.Interface) NewHotThreads {
 	}
 }
 
-// Returns information about hot threads on each node in the cluster.
+// This API yields a breakdown of the hot threads on each selected node in the
+// cluster.
+// The output is plain text with a breakdown of each node’s top hot threads.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-hot-threads.html
 func New(tp elastictransport.Interface) *HotThreads {

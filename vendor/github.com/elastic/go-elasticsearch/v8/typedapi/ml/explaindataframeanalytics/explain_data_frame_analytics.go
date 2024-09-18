@@ -16,9 +16,17 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Explains a data frame analytics config.
+// This API provides explanations for a data frame analytics config that either
+// exists already or one that has not been created yet. The following
+// explanations are provided:
+// * which fields are included or not in the analysis and why,
+// * how much memory is estimated to be required. The estimate can be used when
+// deciding the appropriate value for model_memory_limit setting later on.
+// If you have object fields or fields that are excluded via source filtering,
+// they are not included in the explanation.
 package explaindataframeanalytics
 
 import (
@@ -80,6 +88,14 @@ func NewExplainDataFrameAnalyticsFunc(tp elastictransport.Interface) NewExplainD
 }
 
 // Explains a data frame analytics config.
+// This API provides explanations for a data frame analytics config that either
+// exists already or one that has not been created yet. The following
+// explanations are provided:
+// * which fields are included or not in the analysis and why,
+// * how much memory is estimated to be required. The estimate can be used when
+// deciding the appropriate value for model_memory_limit setting later on.
+// If you have object fields or fields that are excluded via source filtering,
+// they are not included in the explanation.
 //
 // http://www.elastic.co/guide/en/elasticsearch/reference/current/explain-dfanalytics.html
 func New(tp elastictransport.Interface) *ExplainDataFrameAnalytics {

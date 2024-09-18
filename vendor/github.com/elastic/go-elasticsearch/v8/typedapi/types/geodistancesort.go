@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -36,12 +36,13 @@ import (
 
 // GeoDistanceSort type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/sort.ts#L58-L66
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/sort.ts#L59-L71
 type GeoDistanceSort struct {
 	DistanceType    *geodistancetype.GeoDistanceType `json:"distance_type,omitempty"`
 	GeoDistanceSort map[string][]GeoLocation         `json:"-"`
 	IgnoreUnmapped  *bool                            `json:"ignore_unmapped,omitempty"`
 	Mode            *sortmode.SortMode               `json:"mode,omitempty"`
+	Nested          *NestedSortValue                 `json:"nested,omitempty"`
 	Order           *sortorder.SortOrder             `json:"order,omitempty"`
 	Unit            *distanceunit.DistanceUnit       `json:"unit,omitempty"`
 }
@@ -83,6 +84,11 @@ func (s *GeoDistanceSort) UnmarshalJSON(data []byte) error {
 		case "mode":
 			if err := dec.Decode(&s.Mode); err != nil {
 				return fmt.Errorf("%s | %w", "Mode", err)
+			}
+
+		case "nested":
+			if err := dec.Decode(&s.Nested); err != nil {
+				return fmt.Errorf("%s | %w", "Nested", err)
 			}
 
 		case "order":

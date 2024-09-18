@@ -16,9 +16,31 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Creates or updates a component template
+// Creates or updates a component template.
+// Component templates are building blocks for constructing index templates that
+// specify index mappings, settings, and aliases.
+//
+// An index template can be composed of multiple component templates.
+// To use a component template, specify it in an index template’s `composed_of`
+// list.
+// Component templates are only applied to new data streams and indices as part
+// of a matching index template.
+//
+// Settings and mappings specified directly in the index template or the create
+// index request override any settings or mappings specified in a component
+// template.
+//
+// Component templates are only used during index creation.
+// For data streams, this includes data stream creation and the creation of a
+// stream’s backing indices.
+// Changes to component templates do not affect existing indices, including a
+// stream’s backing indices.
+//
+// You can use C-style `/* *\/` block comments in component templates.
+// You can include comments anywhere in the request body except before the
+// opening curly bracket.
 package putcomponenttemplate
 
 import (
@@ -81,7 +103,29 @@ func NewPutComponentTemplateFunc(tp elastictransport.Interface) NewPutComponentT
 	}
 }
 
-// Creates or updates a component template
+// Creates or updates a component template.
+// Component templates are building blocks for constructing index templates that
+// specify index mappings, settings, and aliases.
+//
+// An index template can be composed of multiple component templates.
+// To use a component template, specify it in an index template’s `composed_of`
+// list.
+// Component templates are only applied to new data streams and indices as part
+// of a matching index template.
+//
+// Settings and mappings specified directly in the index template or the create
+// index request override any settings or mappings specified in a component
+// template.
+//
+// Component templates are only used during index creation.
+// For data streams, this includes data stream creation and the creation of a
+// stream’s backing indices.
+// Changes to component templates do not affect existing indices, including a
+// stream’s backing indices.
+//
+// You can use C-style `/* *\/` block comments in component templates.
+// You can include comments anywhere in the request body except before the
+// opening curly bracket.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-component-template.html
 func New(tp elastictransport.Interface) *PutComponentTemplate {

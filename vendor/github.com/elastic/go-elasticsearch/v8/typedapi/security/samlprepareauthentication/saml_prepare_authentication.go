@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Creates a SAML authentication request
+// Creates a SAML authentication request (<AuthnRequest>) as a URL string, based
+// on the configuration of the respective SAML realm in Elasticsearch.
 package samlprepareauthentication
 
 import (
@@ -73,7 +74,8 @@ func NewSamlPrepareAuthenticationFunc(tp elastictransport.Interface) NewSamlPrep
 	}
 }
 
-// Creates a SAML authentication request
+// Creates a SAML authentication request (<AuthnRequest>) as a URL string, based
+// on the configuration of the respective SAML realm in Elasticsearch.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-saml-prepare-authentication.html
 func New(tp elastictransport.Interface) *SamlPrepareAuthentication {

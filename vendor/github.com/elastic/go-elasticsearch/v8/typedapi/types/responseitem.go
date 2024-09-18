@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ResponseItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/bulk/types.ts#L37-L81
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_global/bulk/types.ts#L37-L81
 type ResponseItem struct {
 	// Error Contains additional information about the failed operation.
 	// The parameter is only returned for failed operations.
@@ -39,7 +39,7 @@ type ResponseItem struct {
 	ForcedRefresh *bool                     `json:"forced_refresh,omitempty"`
 	Get           *InlineGetDictUserDefined `json:"get,omitempty"`
 	// Id_ The document ID associated with the operation.
-	Id_ string `json:"_id,omitempty"`
+	Id_ *string `json:"_id,omitempty"`
 	// Index_ Name of the index associated with the operation.
 	// If the operation targeted a data stream, this is the backing index into which
 	// the document was written.
@@ -111,7 +111,7 @@ func (s *ResponseItem) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Id_ = o
+			s.Id_ = &o
 
 		case "_index":
 			var tmp json.RawMessage

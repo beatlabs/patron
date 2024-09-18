@@ -16,10 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Simulate matching the given index name against the index templates in the
-// system
+// Simulate an index.
+// Returns the index configuration that would be applied to the specified index
+// from an existing index template.
 package simulateindextemplate
 
 import (
@@ -77,8 +78,9 @@ func NewSimulateIndexTemplateFunc(tp elastictransport.Interface) NewSimulateInde
 	}
 }
 
-// Simulate matching the given index name against the index templates in the
-// system
+// Simulate an index.
+// Returns the index configuration that would be applied to the specified index
+// from an existing index template.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-simulate-index.html
 func New(tp elastictransport.Interface) *SimulateIndexTemplate {

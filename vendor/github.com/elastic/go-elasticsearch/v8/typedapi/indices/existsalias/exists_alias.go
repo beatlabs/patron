@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Returns information about whether a particular alias exists.
+// Checks if an alias exists.
 package existsalias
 
 import (
@@ -78,7 +78,7 @@ func NewExistsAliasFunc(tp elastictransport.Interface) NewExistsAlias {
 	}
 }
 
-// Returns information about whether a particular alias exists.
+// Checks if an alias exists.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html
 func New(tp elastictransport.Interface) *ExistsAlias {

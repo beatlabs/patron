@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TermsSetQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_types/query_dsl/term.ts#L249-L262
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/query_dsl/term.ts#L254-L267
 type TermsSetQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -44,7 +44,7 @@ type TermsSetQuery struct {
 	MinimumShouldMatchField *string `json:"minimum_should_match_field,omitempty"`
 	// MinimumShouldMatchScript Custom script containing the number of matching terms required to return a
 	// document.
-	MinimumShouldMatchScript Script  `json:"minimum_should_match_script,omitempty"`
+	MinimumShouldMatchScript *Script `json:"minimum_should_match_script,omitempty"`
 	QueryName_               *string `json:"_name,omitempty"`
 	// Terms Array of terms you wish to find in the provided field.
 	Terms []string `json:"terms"`
@@ -87,39 +87,8 @@ func (s *TermsSetQuery) UnmarshalJSON(data []byte) error {
 			}
 
 		case "minimum_should_match_script":
-			message := json.RawMessage{}
-			if err := dec.Decode(&message); err != nil {
+			if err := dec.Decode(&s.MinimumShouldMatchScript); err != nil {
 				return fmt.Errorf("%s | %w", "MinimumShouldMatchScript", err)
-			}
-			keyDec := json.NewDecoder(bytes.NewReader(message))
-			for {
-				t, err := keyDec.Token()
-				if err != nil {
-					if errors.Is(err, io.EOF) {
-						break
-					}
-					return fmt.Errorf("%s | %w", "MinimumShouldMatchScript", err)
-				}
-
-				switch t {
-
-				case "lang", "options", "source":
-					o := NewInlineScript()
-					localDec := json.NewDecoder(bytes.NewReader(message))
-					if err := localDec.Decode(&o); err != nil {
-						return fmt.Errorf("%s | %w", "MinimumShouldMatchScript", err)
-					}
-					s.MinimumShouldMatchScript = o
-
-				case "id":
-					o := NewStoredScriptId()
-					localDec := json.NewDecoder(bytes.NewReader(message))
-					if err := localDec.Decode(&o); err != nil {
-						return fmt.Errorf("%s | %w", "MinimumShouldMatchScript", err)
-					}
-					s.MinimumShouldMatchScript = o
-
-				}
 			}
 
 		case "_name":

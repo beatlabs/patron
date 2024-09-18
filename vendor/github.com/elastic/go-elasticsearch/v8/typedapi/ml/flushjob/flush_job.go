@@ -16,9 +16,17 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Forces any buffered data to be processed by the job.
+// The flush jobs API is only applicable when sending data for analysis using
+// the post data API. Depending on the content of the buffer, then it might
+// additionally calculate new results. Both flush and close operations are
+// similar, however the flush is more efficient if you are expecting to send
+// more data for analysis. When flushing, the job remains open and is available
+// to continue analyzing data. A close operation additionally prunes and
+// persists the model state to disk and the job must be opened again before
+// analyzing further data.
 package flushjob
 
 import (
@@ -82,6 +90,14 @@ func NewFlushJobFunc(tp elastictransport.Interface) NewFlushJob {
 }
 
 // Forces any buffered data to be processed by the job.
+// The flush jobs API is only applicable when sending data for analysis using
+// the post data API. Depending on the content of the buffer, then it might
+// additionally calculate new results. Both flush and close operations are
+// similar, however the flush is more efficient if you are expecting to send
+// more data for analysis. When flushing, the job remains open and is available
+// to continue analyzing data. A close operation additionally prunes and
+// persists the model state to disk and the job must be opened again before
+// analyzing further data.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-flush-job.html
 func New(tp elastictransport.Interface) *FlushJob {

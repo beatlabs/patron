@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Clears all or specific caches for one or more indices.
+// Clears the caches of one or more indices.
+// For data streams, the API clears the caches of the stream’s backing indices.
 package clearcache
 
 import (
@@ -75,7 +76,8 @@ func NewClearCacheFunc(tp elastictransport.Interface) NewClearCache {
 	}
 }
 
-// Clears all or specific caches for one or more indices.
+// Clears the caches of one or more indices.
+// For data streams, the API clears the caches of the stream’s backing indices.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-clearcache.html
 func New(tp elastictransport.Interface) *ClearCache {

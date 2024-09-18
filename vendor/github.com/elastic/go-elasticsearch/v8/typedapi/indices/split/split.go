@@ -16,10 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Allows you to split an existing index into a new index with more primary
-// shards.
+// Splits an existing index into a new index with more primary shards.
 package split
 
 import (
@@ -87,8 +86,7 @@ func NewSplitFunc(tp elastictransport.Interface) NewSplit {
 	}
 }
 
-// Allows you to split an existing index into a new index with more primary
-// shards.
+// Splits an existing index into a new index with more primary shards.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-split-index.html
 func New(tp elastictransport.Interface) *Split {

@@ -16,14 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Package queryrulecriteriatype
 package queryrulecriteriatype
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/query_ruleset/_types/QueryRuleset.ts#L54-L65
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/query_rules/_types/QueryRuleset.ts#L54-L67
 type QueryRuleCriteriaType struct {
 	Name string
 }
@@ -34,6 +34,8 @@ var (
 	Exact = QueryRuleCriteriaType{"exact"}
 
 	Exactfuzzy = QueryRuleCriteriaType{"exact_fuzzy"}
+
+	Fuzzy = QueryRuleCriteriaType{"fuzzy"}
 
 	Prefix = QueryRuleCriteriaType{"prefix"}
 
@@ -48,6 +50,8 @@ var (
 	Gt = QueryRuleCriteriaType{"gt"}
 
 	Gte = QueryRuleCriteriaType{"gte"}
+
+	Always = QueryRuleCriteriaType{"always"}
 )
 
 func (q QueryRuleCriteriaType) MarshalText() (text []byte, err error) {
@@ -63,6 +67,8 @@ func (q *QueryRuleCriteriaType) UnmarshalText(text []byte) error {
 		*q = Exact
 	case "exact_fuzzy":
 		*q = Exactfuzzy
+	case "fuzzy":
+		*q = Fuzzy
 	case "prefix":
 		*q = Prefix
 	case "suffix":
@@ -77,6 +83,8 @@ func (q *QueryRuleCriteriaType) UnmarshalText(text []byte) error {
 		*q = Gt
 	case "gte":
 		*q = Gte
+	case "always":
+		*q = Always
 	default:
 		*q = QueryRuleCriteriaType{string(text)}
 	}

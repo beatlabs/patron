@@ -16,9 +16,19 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Updates certain properties of a transform.
+//
+// All updated properties except `description` do not take effect until after
+// the transform starts the next checkpoint,
+// thus there is data consistency in each checkpoint. To use this API, you must
+// have `read` and `view_index_metadata`
+// privileges for the source indices. You must also have `index` and `read`
+// privileges for the destination index. When
+// Elasticsearch security features are enabled, the transform remembers which
+// roles the user who updated it had at the
+// time of update and runs with those privileges.
 package updatetransform
 
 import (
@@ -82,6 +92,16 @@ func NewUpdateTransformFunc(tp elastictransport.Interface) NewUpdateTransform {
 }
 
 // Updates certain properties of a transform.
+//
+// All updated properties except `description` do not take effect until after
+// the transform starts the next checkpoint,
+// thus there is data consistency in each checkpoint. To use this API, you must
+// have `read` and `view_index_metadata`
+// privileges for the source indices. You must also have `index` and `read`
+// privileges for the destination index. When
+// Elasticsearch security features are enabled, the transform remembers which
+// roles the user who updated it had at the
+// time of update and runs with those privileges.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/update-transform.html
 func New(tp elastictransport.Interface) *UpdateTransform {
@@ -419,7 +439,7 @@ func (r *UpdateTransform) Meta_(metadata types.Metadata) *UpdateTransform {
 // criteria is deleted from the destination index.
 // API name: retention_policy
 func (r *UpdateTransform) RetentionPolicy(retentionpolicy types.RetentionPolicyContainer) *UpdateTransform {
-	r.req.RetentionPolicy = retentionpolicy
+	r.req.RetentionPolicy = &retentionpolicy
 
 	return r
 }

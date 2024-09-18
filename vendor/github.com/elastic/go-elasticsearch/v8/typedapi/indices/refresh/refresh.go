@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Performs the refresh operation in one or more indices.
+// A refresh makes recent operations performed on one or more indices available
+// for search.
+// For data streams, the API runs the refresh operation on the stream’s backing
+// indices.
 package refresh
 
 import (
@@ -75,7 +78,10 @@ func NewRefreshFunc(tp elastictransport.Interface) NewRefresh {
 	}
 }
 
-// Performs the refresh operation in one or more indices.
+// A refresh makes recent operations performed on one or more indices available
+// for search.
+// For data streams, the API runs the refresh operation on the stream’s backing
+// indices.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-refresh.html
 func New(tp elastictransport.Interface) *Refresh {

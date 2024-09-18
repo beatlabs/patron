@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package msearchtemplate
 
@@ -26,5 +26,5 @@ import (
 
 // Request holds the request body struct for the package msearchtemplate
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/_global/msearch_template/MultiSearchTemplateRequest.ts#L25-L70
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_global/msearch_template/MultiSearchTemplateRequest.ts#L25-L70
 type Request = []types.RequestItem

@@ -16,12 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Creates a new document in the index.
-//
-// Returns a 409 response when a document with a same ID already exists in the
-// index.
+// Adds a JSON document to the specified data stream or index and makes it
+// searchable.
+// If the target is an index and the document already exists, the request
+// updates the document and increments its version.
 package create
 
 import (
@@ -91,10 +91,10 @@ func NewCreateFunc(tp elastictransport.Interface) NewCreate {
 	}
 }
 
-// Creates a new document in the index.
-//
-// Returns a 409 response when a document with a same ID already exists in the
-// index.
+// Adds a JSON document to the specified data stream or index and makes it
+// searchable.
+// If the target is an index and the document already exists, the request
+// updates the document and increments its version.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html
 func New(tp elastictransport.Interface) *Create {

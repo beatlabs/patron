@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Adds and updates users in the native realm. These users are commonly referred
 // to as native users.
@@ -374,7 +374,7 @@ func (r *PutUser) Pretty(pretty bool) *PutUser {
 
 // API name: email
 func (r *PutUser) Email(email string) *PutUser {
-	r.req.Email = email
+	r.req.Email = &email
 
 	return r
 }
@@ -388,7 +388,7 @@ func (r *PutUser) Enabled(enabled bool) *PutUser {
 
 // API name: full_name
 func (r *PutUser) FullName(fullname string) *PutUser {
-	r.req.FullName = fullname
+	r.req.FullName = &fullname
 
 	return r
 }

@@ -16,9 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
-// Clear the cached results from a trained model deployment
+// Clears a trained model deployment cache on all nodes where the trained model
+// is assigned.
+// A trained model deployment may have an inference cache enabled.
+// As requests are handled by each allocated node, their responses may be cached
+// on that individual node.
+// Calling this API clears the caches without restarting the deployment.
 package cleartrainedmodeldeploymentcache
 
 import (
@@ -76,7 +81,12 @@ func NewClearTrainedModelDeploymentCacheFunc(tp elastictransport.Interface) NewC
 	}
 }
 
-// Clear the cached results from a trained model deployment
+// Clears a trained model deployment cache on all nodes where the trained model
+// is assigned.
+// A trained model deployment may have an inference cache enabled.
+// As requests are handled by each allocated node, their responses may be cached
+// on that individual node.
+// Calling this API clears the caches without restarting the deployment.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/clear-trained-model-deployment-cache.html
 func New(tp elastictransport.Interface) *ClearTrainedModelDeploymentCache {

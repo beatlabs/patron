@@ -16,10 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 // Resolves the specified index expressions to return information about each
-// cluster, including the local cluster, if included.
+// cluster, including
+// the local cluster, if included.
+// Multiple patterns and remote clusters are supported.
 package resolvecluster
 
 import (
@@ -79,7 +81,9 @@ func NewResolveClusterFunc(tp elastictransport.Interface) NewResolveCluster {
 }
 
 // Resolves the specified index expressions to return information about each
-// cluster, including the local cluster, if included.
+// cluster, including
+// the local cluster, if included.
+// Multiple patterns and remote clusters are supported.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-resolve-cluster-api.html
 func New(tp elastictransport.Interface) *ResolveCluster {

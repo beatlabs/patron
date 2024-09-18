@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/07bf82537a186562d8699685e3704ea338b268ef
+// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
 
 package types
 
@@ -31,9 +31,9 @@ import (
 
 // CertificateInformation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/07bf82537a186562d8699685e3704ea338b268ef/specification/ssl/certificates/types.ts#L22-L31
+// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/ssl/certificates/types.ts#L22-L31
 type CertificateInformation struct {
-	Alias         string   `json:"alias,omitempty"`
+	Alias         *string  `json:"alias,omitempty"`
 	Expiry        DateTime `json:"expiry"`
 	Format        string   `json:"format"`
 	HasPrivateKey bool     `json:"has_private_key"`
@@ -68,7 +68,7 @@ func (s *CertificateInformation) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Alias = o
+			s.Alias = &o
 
 		case "expiry":
 			if err := dec.Decode(&s.Expiry); err != nil {

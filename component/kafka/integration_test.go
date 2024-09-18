@@ -392,10 +392,10 @@ func createTopics(broker string, topics ...string) error {
 	return brk.Close()
 }
 
-func newProducer(broker string) (sarama.SyncProducer, error) {
-	config := sarama.NewConfig()
-	config.Producer.Return.Successes = true
-	config.Producer.Return.Errors = true
+// func newProducer(broker string) (sarama.SyncProducer, error) {
+// 	config := sarama.NewConfig()
+// 	config.Producer.Return.Successes = true
+// 	config.Producer.Return.Errors = true
 
-	return sarama.NewSyncProducer([]string{broker}, config)
-}
+// 	return sarama.NewSyncProducer([]string{broker}, config)
+// }

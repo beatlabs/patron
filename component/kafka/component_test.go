@@ -175,23 +175,6 @@ func (mp *mockProcessor) GetExecs() int {
 	return mp.execs
 }
 
-func Test_mapHeader(t *testing.T) {
-	mp := mapHeader([]*sarama.RecordHeader{
-		{
-			Key:   []byte("X-HEADER-1"),
-			Value: []byte("1"),
-		},
-		{
-			Key:   []byte("X-HEADER-2"),
-			Value: []byte("2"),
-		},
-	})
-	assert.Equal(t, "1", mp["X-HEADER-1"])
-	assert.Equal(t, "2", mp["X-HEADER-2"])
-	_, ok := mp["X-HEADER-3"]
-	assert.False(t, ok)
-}
-
 type mockConsumerClaim struct {
 	ch     chan *sarama.ConsumerMessage
 	proc   *mockProcessor

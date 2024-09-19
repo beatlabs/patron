@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -145,69 +146,69 @@ func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStu
 	assert.Equal(t, expected.Status, got.Status)
 }
 
-// func TestKafkaComponent_FailAllRetries(t *testing.T) {
-// 	require.NoError(t, createTopics(broker, failAllRetriesTopic2))
-// 	// Test parameters
-// 	numOfMessagesToSend := 100
-// 	errAtIndex := 70
+func TestKafkaComponent_FailAllRetries(t *testing.T) {
+	require.NoError(t, createTopics(broker, failAllRetriesTopic2))
+	// Test parameters
+	numOfMessagesToSend := 10
+	errAtIndex := 7
 
-// 	// Set up the kafka component
-// 	actualSuccessfulMessages := make([]int, 0)
-// 	actualNumOfRuns := int32(0)
-// 	processorFunc := func(batch Batch) error {
-// 		for _, msg := range batch.Messages() {
-// 			var msgContent string
-// 			err := decodeString(msg.Message().Value, &msgContent)
-// 			require.NoError(t, err)
+	// Set up the kafka component
+	actualSuccessfulMessages := make([]int, 0)
+	actualNumOfRuns := int32(0)
+	processorFunc := func(batch Batch) error {
+		for _, msg := range batch.Messages() {
+			var msgContent string
+			err := decodeString(msg.Message().Value, &msgContent)
+			require.NoError(t, err)
 
-// 			msgIndex, err := strconv.Atoi(msgContent)
-// 			require.NoError(t, err)
+			msgIndex, err := strconv.Atoi(msgContent)
+			require.NoError(t, err)
 
-// 			if msgIndex == errAtIndex {
-// 				atomic.AddInt32(&actualNumOfRuns, 1)
-// 				return errors.New("expected error")
-// 			}
-// 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgIndex)
-// 		}
-// 		return nil
-// 	}
+			if msgIndex == errAtIndex {
+				atomic.AddInt32(&actualNumOfRuns, 1)
+				return errors.New("expected error")
+			}
+			actualSuccessfulMessages = append(actualSuccessfulMessages, msgIndex)
+		}
+		return nil
+	}
 
-// 	numOfRetries := uint(3)
-// 	batchSize := uint(1)
-// 	component := newComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
+	numOfRetries := uint(1)
+	batchSize := uint(1)
+	component := newComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
 
-// 	producer, err := newProducer(broker)
-// 	require.NoError(t, err)
+	producer, err := newProducer(broker)
+	require.NoError(t, err)
 
-// 	msgs := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
+	msgs := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
 
-// 	for i := 1; i <= numOfMessagesToSend; i++ {
-// 		msgs = append(msgs, &sarama.ProducerMessage{Topic: failAllRetriesTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
-// 	}
+	for i := 1; i <= numOfMessagesToSend; i++ {
+		msgs = append(msgs, &sarama.ProducerMessage{Topic: failAllRetriesTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
+	}
 
-// 	err = producer.SendMessages(msgs)
-// 	require.NoError(t, err)
+	err = producer.SendMessages(msgs)
+	require.NoError(t, err)
 
-// 	err = component.Run(context.Background())
-// 	require.Error(t, err)
+	err = component.Run(context.Background())
+	require.Error(t, err)
 
-// 	// Verify all messages were processed in the right order
-// 	for i := 0; i < len(actualSuccessfulMessages)-1; i++ {
-// 		if actualSuccessfulMessages[i+1] > errAtIndex {
-// 			assert.Fail(t, "message higher than expected", "i is %d and i+1 is %d", actualSuccessfulMessages[i+1],
-// 				errAtIndex)
-// 		}
+	// Verify all messages were processed in the right order
+	for i := 0; i < len(actualSuccessfulMessages)-1; i++ {
+		if actualSuccessfulMessages[i+1] > errAtIndex {
+			assert.Fail(t, "message higher than expected", "i is %d and i+1 is %d", actualSuccessfulMessages[i+1],
+				errAtIndex)
+		}
 
-// 		diff := actualSuccessfulMessages[i+1] - actualSuccessfulMessages[i]
-// 		if diff == 0 || diff == 1 {
-// 			continue
-// 		}
-// 		assert.Fail(t, "messages order is not correct", "i is %d and i+1 is %d", actualSuccessfulMessages[i],
-// 			actualSuccessfulMessages[i+1])
-// 	}
+		diff := actualSuccessfulMessages[i+1] - actualSuccessfulMessages[i]
+		if diff == 0 || diff == 1 {
+			continue
+		}
+		assert.Fail(t, "messages order is not correct", "i is %d and i+1 is %d", actualSuccessfulMessages[i],
+			actualSuccessfulMessages[i+1])
+	}
 
-// 	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
-// }
+	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
+}
 
 // func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 // 	require.NoError(t, createTopics(broker, failAndRetryTopic2))
@@ -392,10 +393,10 @@ func createTopics(broker string, topics ...string) error {
 	return brk.Close()
 }
 
-// func newProducer(broker string) (sarama.SyncProducer, error) {
-// 	config := sarama.NewConfig()
-// 	config.Producer.Return.Successes = true
-// 	config.Producer.Return.Errors = true
+func newProducer(broker string) (sarama.SyncProducer, error) {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.Return.Errors = true
 
-// 	return sarama.NewSyncProducer([]string{broker}, config)
-// }
+	return sarama.NewSyncProducer([]string{broker}, config)
+}

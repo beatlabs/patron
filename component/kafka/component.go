@@ -396,14 +396,6 @@ func getCorrelationID(hh []*sarama.RecordHeader) string {
 	return uuid.New().String()
 }
 
-func mapHeader(hh []*sarama.RecordHeader) map[string]string {
-	mp := make(map[string]string)
-	for _, h := range hh {
-		mp[string(h.Key)] = string(h.Value)
-	}
-	return mp
-}
-
 // deduplicateMessages takes a slice of Messages and de-duplicates the messages based on the Key of those messages.
 // This function assumes that messages are ordered from old to new, and relies on Kafka ordering guarantees within
 // partitions. This is the default behaviour from Kafka unless the Producer altered the partition hashing behaviour in

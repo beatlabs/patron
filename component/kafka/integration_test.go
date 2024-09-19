@@ -210,75 +210,75 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
 }
 
-// func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
-// 	require.NoError(t, createTopics(broker, failAndRetryTopic2))
-// 	// Test parameters
-// 	numOfMessagesToSend := 100
+func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
+	require.NoError(t, createTopics(broker, failAndRetryTopic2))
+	// Test parameters
+	numOfMessagesToSend := 10
 
-// 	// Set up the component
-// 	didFail := int32(0)
-// 	actualMessages := make([]int, 0)
-// 	var consumerWG sync.WaitGroup
-// 	consumerWG.Add(numOfMessagesToSend)
-// 	processorFunc := func(batch Batch) error {
-// 		for _, msg := range batch.Messages() {
-// 			var msgContent string
-// 			err := decodeString(msg.Message().Value, &msgContent)
-// 			require.NoError(t, err)
+	// Set up the component
+	didFail := int32(0)
+	actualMessages := make([]int, 0)
+	var consumerWG sync.WaitGroup
+	consumerWG.Add(numOfMessagesToSend)
+	processorFunc := func(batch Batch) error {
+		for _, msg := range batch.Messages() {
+			var msgContent string
+			err := decodeString(msg.Message().Value, &msgContent)
+			require.NoError(t, err)
 
-// 			msgIndex, err := strconv.Atoi(msgContent)
-// 			require.NoError(t, err)
+			msgIndex, err := strconv.Atoi(msgContent)
+			require.NoError(t, err)
 
-// 			if msgIndex == 50 && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
-// 				return errors.New("expected error")
-// 			}
-// 			consumerWG.Done()
-// 			actualMessages = append(actualMessages, msgIndex)
-// 		}
-// 		return nil
-// 	}
-// 	component := newComponent(t, failAndRetryTopic2, 3, 1, processorFunc)
+			if msgIndex == 5 && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
+				return errors.New("expected error")
+			}
+			consumerWG.Done()
+			actualMessages = append(actualMessages, msgIndex)
+		}
+		return nil
+	}
+	component := newComponent(t, failAndRetryTopic2, 1, 1, processorFunc)
 
-// 	// Send messages to the kafka topic
-// 	var producerWG sync.WaitGroup
-// 	producerWG.Add(1)
-// 	go func() {
-// 		producer, err := newProducer(broker)
-// 		assert.NoError(t, err)
+	// Send messages to the kafka topic
+	var producerWG sync.WaitGroup
+	producerWG.Add(1)
+	go func() {
+		producer, err := newProducer(broker)
+		assert.NoError(t, err)
 
-// 		for i := 1; i <= numOfMessagesToSend; i++ {
-// 			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
-// 			assert.NoError(t, err)
-// 		}
-// 		producerWG.Done()
-// 	}()
+		for i := 1; i <= numOfMessagesToSend; i++ {
+			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
+			assert.NoError(t, err)
+		}
+		producerWG.Done()
+	}()
 
-// 	// Run Patron with the component
-// 	patronContext, patronCancel := context.WithCancel(context.Background())
-// 	var patronWG sync.WaitGroup
-// 	patronWG.Add(1)
-// 	go func() {
-// 		assert.NoError(t, component.Run(patronContext))
-// 		patronWG.Done()
-// 	}()
+	// Run Patron with the component
+	patronContext, patronCancel := context.WithCancel(context.Background())
+	var patronWG sync.WaitGroup
+	patronWG.Add(1)
+	go func() {
+		assert.NoError(t, component.Run(patronContext))
+		patronWG.Done()
+	}()
 
-// 	// Wait for the producer & consumer to finish
-// 	producerWG.Wait()
-// 	consumerWG.Wait()
+	// Wait for the producer & consumer to finish
+	producerWG.Wait()
+	consumerWG.Wait()
 
-// 	// Shutdown Patron and wait for it to finish
-// 	patronCancel()
-// 	patronWG.Wait()
+	// Shutdown Patron and wait for it to finish
+	patronCancel()
+	patronWG.Wait()
 
-// 	// Verify all messages were processed in the right order
-// 	for i := 0; i < len(actualMessages)-1; i++ {
-// 		diff := actualMessages[i+1] - actualMessages[i]
-// 		if diff == 0 || diff == 1 {
-// 			continue
-// 		}
-// 		assert.Fail(t, "messages order is not correct", "i is %d and i+1 is %d", actualMessages[i], actualMessages[i+1])
-// 	}
-// }
+	// Verify all messages were processed in the right order
+	for i := 0; i < len(actualMessages)-1; i++ {
+		diff := actualMessages[i+1] - actualMessages[i]
+		if diff == 0 || diff == 1 {
+			continue
+		}
+		assert.Fail(t, "messages order is not correct", "i is %d and i+1 is %d", actualMessages[i], actualMessages[i+1])
+	}
+}
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 	// Test parameters

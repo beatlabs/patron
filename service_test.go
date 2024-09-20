@@ -59,53 +59,6 @@ func TestNew(t *testing.T) {
 	}
 }
 
-// func TestNewServer_FailingConditions(t *testing.T) {
-// 	tests := map[string]struct {
-// 		jaegerSamplerParam       string
-// 		jaegerBuckets            string
-// 		expectedConstructorError string
-// 	}{
-// 		"failure w/ sampler param":             {jaegerSamplerParam: "foo", expectedConstructorError: "env var for jaeger sampler param is not valid: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
-// 		"failure w/ overflowing sampler param": {jaegerSamplerParam: "8", expectedConstructorError: "cannot initialize jaeger tracer: invalid Param for probabilistic sampler; expecting value between 0 and 1, received 8"},
-// 		"failure w/ custom default buckets":    {jaegerSamplerParam: "1", jaegerBuckets: "foo", expectedConstructorError: "env var for jaeger default buckets contains invalid value: strconv.ParseFloat: parsing \"foo\": invalid syntax"},
-// 	}
-
-// 	for name, tt := range tests {
-// 		t.Run(name, func(t *testing.T) {
-// 			defer os.Clearenv()
-
-// 			if tt.jaegerSamplerParam != "" {
-// 				err := os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", tt.jaegerSamplerParam)
-// 				require.NoError(t, err)
-// 			}
-// 			if tt.jaegerBuckets != "" {
-// 				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.jaegerBuckets)
-// 				require.NoError(t, err)
-// 			}
-
-// 			svc, err := New("test", "", WithJSONLogger())
-
-// 			if tt.expectedConstructorError != "" {
-// 				require.EqualError(t, err, tt.expectedConstructorError)
-// 				require.Nil(t, svc)
-
-// 				return
-// 			}
-
-// 			require.NoError(t, err)
-// 			require.NotNil(t, svc)
-
-// 			// start running with a canceled context, on purpose
-// 			ctx, cancel := context.WithCancel(context.Background())
-// 			cancel()
-// 			err = svc.Run(ctx)
-// 			require.NoError(t, err)
-
-// 			require.Equal(t, err, context.Canceled)
-// 		})
-// 	}
-// }
-
 func Test_getLogLevel(t *testing.T) {
 	tests := map[string]struct {
 		lvl  string

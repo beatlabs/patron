@@ -17,8 +17,6 @@ import (
 	"github.com/beatlabs/patron/internal/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
 
@@ -34,18 +32,9 @@ type testMessage struct {
 func Test_SQS_Consume(t *testing.T) {
 	// Trace setup
 	t.Cleanup(func() { traceExporter.Reset() })
-
 	// Metrics setup
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		err := provider.Shutdown(context.Background())
-		if err != nil {
-			require.NoError(t, err)
-		}
-	}()
-
-	otel.SetMeterProvider(provider)
+	shutdownProvider, read := test.SetupMetrics(t)
+	defer shutdownProvider()
 
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"

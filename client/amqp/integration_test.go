@@ -4,16 +4,14 @@ package amqp
 
 import (
 	"context"
-	"log"
 	"testing"
 
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
@@ -31,16 +29,8 @@ func TestRun(t *testing.T) {
 	tracePublisher := trace.Setup("test", nil, exp)
 
 	// Setup metrics
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		err := provider.Shutdown(context.Background())
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	otel.SetMeterProvider(provider)
+	shutdownProvider, read := test.SetupMetrics(t)
+	defer shutdownProvider()
 
 	require.NoError(t, createQueue(endpoint, queue))
 

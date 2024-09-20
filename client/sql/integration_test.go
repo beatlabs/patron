@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
@@ -56,14 +56,8 @@ func TestIntegration(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
 
-	// Metrics monitor setup.
-	read := metric.NewManualReader()
-	provider := metric.NewMeterProvider(metric.WithReader(read))
-	defer func() {
-		require.NoError(t, provider.Shutdown(context.Background()))
-	}()
-
-	otel.SetMeterProvider(provider)
+	shutdownProvider, read := test.SetupMetrics(t)
+	defer shutdownProvider()
 
 	ctx := context.Background()
 

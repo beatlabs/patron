@@ -1,0 +1,14 @@
+package test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestSetupMetrics(t *testing.T) {
+	deferFunc, read := SetupMetrics(t)
+	defer deferFunc()
+	assert.NotNil(t, deferFunc)
+	assert.NotNil(t, read)
+}

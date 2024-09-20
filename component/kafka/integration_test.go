@@ -18,9 +18,7 @@ import (
 	"github.com/beatlabs/patron/internal/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
@@ -42,12 +40,8 @@ func TestKafkaComponent_Success(t *testing.T) {
 	// Setup tracing
 	t.Cleanup(func() { traceExporter.Reset() })
 
-	// Setup metrics
-	// Setup metrics
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() { require.NoError(t, provider.Shutdown(context.Background())) }()
-	otel.SetMeterProvider(provider)
+	shutdownProvider, read := test.SetupMetrics(t)
+	defer shutdownProvider()
 
 	// Test parameters
 	numOfMessagesToSend := 100

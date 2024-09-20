@@ -2,19 +2,17 @@ package es
 
 import (
 	"context"
-	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -22,16 +20,8 @@ func TestNew(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
 
-	// Setup metrics
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		err := provider.Shutdown(context.Background())
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-	otel.SetMeterProvider(provider)
+	shutdownProvider, _ := test.SetupMetrics(t)
+	defer shutdownProvider()
 
 	responseMsg := `[{"acknowledged": true, "shards_acknowledged": true, "index": "test"}]`
 	ctx, indexName := context.Background(), "test_index"

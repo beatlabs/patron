@@ -9,12 +9,11 @@ import (
 	"testing"
 
 	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"google.golang.org/grpc"
@@ -121,13 +120,8 @@ func TestSayHello(t *testing.T) {
 	tracePublisher := trace.Setup("test", nil, exp)
 
 	// Metrics monitoring set up
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		require.NoError(t, provider.Shutdown(context.Background()))
-	}()
-
-	otel.SetMeterProvider(provider)
+	shutdownProvider, read := test.SetupMetrics(t)
+	defer shutdownProvider()
 
 	client := examples.NewGreeterClient(conn)
 

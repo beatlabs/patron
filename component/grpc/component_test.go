@@ -265,9 +265,3 @@ func (s *server) SayHelloStream(req *examples.HelloRequest, srv examples.Greeter
 
 	return srv.Send(&examples.HelloReply{Message: "Hello " + req.GetFirstname()})
 }
-
-func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
-	assert.Equal(t, expected.Name, got.Name)
-	assert.Equal(t, expected.SpanKind, got.SpanKind)
-	assert.Equal(t, expected.Status, got.Status)
-}

@@ -100,8 +100,8 @@ func TestRun(t *testing.T) {
 		},
 	}
 
-	assertSpan(t, expectedSpan, spans[0])
-	assertSpan(t, expectedSpan, spans[1])
+	test.AssertSpan(t, expectedSpan, spans[0])
+	test.AssertSpan(t, expectedSpan, spans[1])
 
 	// Metrics
 	collectedMetrics := &metricdata.ResourceMetrics{}

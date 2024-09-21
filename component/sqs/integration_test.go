@@ -86,9 +86,9 @@ func Test_SQS_Consume(t *testing.T) {
 	spans := traceExporter.GetSpans()
 
 	assert.Len(t, got, 3)
-	assertSpan(t, expected, spans[0])
-	assertSpan(t, expected, spans[1])
-	assertSpan(t, expected, spans[2])
+	test.AssertSpan(t, expected, spans[0])
+	test.AssertSpan(t, expected, spans[1])
+	test.AssertSpan(t, expected, spans[2])
 
 	// Metrics
 	collectedMetrics := &metricdata.ResourceMetrics{}

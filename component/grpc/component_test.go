@@ -9,6 +9,7 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/internal/test"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -120,7 +121,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 					},
 				}
 
-				assertSpan(t, expectedSpan, spans[0])
+				test.AssertSpan(t, expectedSpan, spans[0])
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, "Hello TEST", r.GetMessage())
@@ -137,7 +138,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 					},
 				}
 
-				assertSpan(t, expectedSpan, spans[0])
+				test.AssertSpan(t, expectedSpan, spans[0])
 			}
 		})
 	}
@@ -212,7 +213,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 					},
 				}
 
-				assertSpan(t, expectedSpan, spans[0])
+				test.AssertSpan(t, expectedSpan, spans[0])
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, "Hello TEST", resp.GetMessage())
@@ -229,7 +230,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 					},
 				}
 
-				assertSpan(t, expectedSpan, spans[0])
+				test.AssertSpan(t, expectedSpan, spans[0])
 			}
 
 			// Metrics

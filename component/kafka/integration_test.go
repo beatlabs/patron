@@ -121,7 +121,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 			},
 		}
 
-		assertSpan(t, expectedSpan, span)
+		test.AssertSpan(t, expectedSpan, span)
 	}
 
 	// Metrics
@@ -132,12 +132,6 @@ func TestKafkaComponent_Success(t *testing.T) {
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.consumer.offset.diff")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.publish.count")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.message.status")
-}
-
-func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
-	assert.Equal(t, expected.Name, got.Name)
-	assert.Equal(t, expected.SpanKind, got.SpanKind)
-	assert.Equal(t, expected.Status, got.Status)
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {

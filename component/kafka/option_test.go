@@ -48,7 +48,7 @@ func TestRetries(t *testing.T) {
 	c := &Component{}
 	err := WithRetries(20)(c)
 	require.NoError(t, err)
-	assert.Equal(t, uint(20), c.retries)
+	assert.Equal(t, uint32(20), c.retries)
 }
 
 func TestRetryWait(t *testing.T) {

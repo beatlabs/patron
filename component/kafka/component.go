@@ -101,7 +101,7 @@ type Component struct {
 	batchSize                 uint
 	batchTimeout              time.Duration
 	batchMessageDeduplication bool
-	retries                   uint
+	retries                   uint32
 	retryWait                 time.Duration
 	commitSync                bool
 	sessionCallback           func(sarama.ConsumerGroupSession) error
@@ -117,8 +117,8 @@ func (c *Component) Run(ctx context.Context) error {
 func (c *Component) processing(ctx context.Context) error {
 	var componentError error
 
-	retries := int(c.retries)
-	for i := 0; i <= retries; i++ {
+	retries := c.retries
+	for i := uint32(0); i <= retries; i++ {
 		handler := newConsumerHandler(ctx, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
 			c.batchTimeout, c.commitSync, c.batchMessageDeduplication, c.sessionCallback)
 
@@ -171,7 +171,7 @@ func (c *Component) processing(ctx context.Context) error {
 				componentError = handler.err
 			}
 
-			slog.Error("failed run", slog.Int("current", i), slog.Int("retries", int(c.retries)),
+			slog.Error("failed run", slog.Uint64("current", uint64(i)), slog.Uint64("retries", uint64(c.retries)),
 				slog.Duration("wait", c.retryWait), log.ErrorAttr(componentError))
 			time.Sleep(c.retryWait)
 
@@ -200,7 +200,7 @@ type consumerHandler struct {
 	group string
 
 	// buffer
-	batchSize                 int
+	batchSize                 uint
 	ticker                    *time.Ticker
 	batchMessageDeduplication bool
 
@@ -233,7 +233,7 @@ func newConsumerHandler(ctx context.Context, name, group string, processorFunc B
 		ctx:                       ctx,
 		name:                      name,
 		group:                     group,
-		batchSize:                 int(batchSize),
+		batchSize:                 batchSize,
 		batchMessageDeduplication: batchMessageDeduplication,
 		ticker:                    time.NewTicker(batchTimeout),
 		msgBuf:                    make([]*sarama.ConsumerMessage, 0, batchSize),
@@ -377,7 +377,7 @@ func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.msgBuf = append(c.msgBuf, msg)
-	if len(c.msgBuf) >= c.batchSize {
+	if uint(len(c.msgBuf)) >= c.batchSize {
 		return c.flush(session)
 	}
 	return nil

@@ -142,7 +142,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]int, 0)
-	actualNumOfRuns := int32(0)
+	actualNumOfRuns := uint32(0)
 	processorFunc := func(batch Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
@@ -153,7 +153,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 			require.NoError(t, err)
 
 			if msgIndex == errAtIndex {
-				atomic.AddInt32(&actualNumOfRuns, 1)
+				atomic.AddUint32(&actualNumOfRuns, 1)
 				return errors.New("expected error")
 			}
 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgIndex)
@@ -161,7 +161,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 		return nil
 	}
 
-	numOfRetries := uint(1)
+	numOfRetries := uint32(1)
 	batchSize := uint(1)
 	component := newComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
 
@@ -195,7 +195,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 			actualSuccessfulMessages[i+1])
 	}
 
-	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
+	assert.Equal(t, numOfRetries+1, actualNumOfRuns)
 }
 
 func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
@@ -290,7 +290,7 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	require.Contains(t, err.Error(), "failed to create client:")
 }
 
-func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc BatchProcessorFunc) *Component {
+func newComponent(t *testing.T, name string, retries uint32, batchSize uint, processorFunc BatchProcessorFunc) *Component {
 	saramaCfg, err := DefaultConsumerSaramaConfig(name, true)
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	saramaCfg.Version = sarama.V2_6_0_0

@@ -237,7 +237,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 			collectedMetrics := &metricdata.ResourceMetrics{}
 			require.NoError(t, read.Collect(context.Background(), collectedMetrics))
 			assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-			assert.Positive(t, len(collectedMetrics.ScopeMetrics[0].Metrics))
+			assert.NotEmpty(t, collectedMetrics.ScopeMetrics[0].Metrics)
 
 			require.NoError(t, client.CloseSend())
 		})

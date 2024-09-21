@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 		topics       []string
 		p            BatchProcessorFunc
 		fs           FailStrategy
-		retries      uint
+		retries      uint32
 		retryWait    time.Duration
 		batchSize    uint
 		batchTimeout time.Duration

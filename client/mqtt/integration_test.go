@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -30,7 +29,10 @@ func TestPublish(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
 
-	shutdownProvider, read := test.SetupMetrics(t)
+	ctx, cnl := context.WithCancel(context.Background())
+	defer cnl()
+
+	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()
 
 	u, err := url.Parse(hiveMQURL)
@@ -49,9 +51,6 @@ func TestPublish(t *testing.T) {
 
 	cfg, err := DefaultConfig([]*url.URL{u}, "test-publisher")
 	require.NoError(t, err)
-
-	ctx, cnl := context.WithCancel(context.Background())
-	defer cnl()
 
 	pub, err := New(ctx, cfg)
 	require.NoError(t, err)
@@ -89,9 +88,7 @@ func TestPublish(t *testing.T) {
 	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+	_ = assertCollectMetrics(1)
 
 	<-chDone
 	require.NoError(t, cmSub.Disconnect(context.Background()))

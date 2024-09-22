@@ -17,7 +17,6 @@ import (
 	"github.com/beatlabs/patron/internal/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
 
 const (
@@ -33,7 +32,9 @@ func Test_SQS_Consume(t *testing.T) {
 	// Trace setup
 	t.Cleanup(func() { traceExporter.Reset() })
 	// Metrics setup
-	shutdownProvider, read := test.SetupMetrics(t)
+	ctx := context.Background()
+
+	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()
 
 	const queueName = "test-sqs-consume"
@@ -91,10 +92,7 @@ func Test_SQS_Consume(t *testing.T) {
 	test.AssertSpan(t, expected, spans[2])
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
+	collectedMetrics := collectMetrics(3)
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.message.age")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.message.counter")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.queue.size")

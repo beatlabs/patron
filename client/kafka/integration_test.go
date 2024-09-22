@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
@@ -59,7 +58,9 @@ func TestNewSyncProducer_Success(t *testing.T) {
 func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	t.Cleanup(func() { traceExporter.Reset() })
 
-	shutdownProvider, read := test.SetupMetrics(t)
+	ctx := context.Background()
+
+	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()
 
 	saramaCfg, err := DefaultProducerSaramaConfig("test-consumer", false)
@@ -97,9 +98,7 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+	_ = assertCollectMetrics(1)
 }
 
 func TestSyncProducer_SendMessage_Close(t *testing.T) {

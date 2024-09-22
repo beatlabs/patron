@@ -20,7 +20,9 @@ func TestNew(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
 
-	shutdownProvider, _ := test.SetupMetrics(t)
+	ctx := context.Background()
+
+	shutdownProvider, _ := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()
 
 	responseMsg := `[{"acknowledged": true, "shards_acknowledged": true, "index": "test"}]`

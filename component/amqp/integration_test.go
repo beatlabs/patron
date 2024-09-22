@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -31,10 +30,10 @@ func TestRun(t *testing.T) {
 	// Setup tracing
 	t.Cleanup(func() { traceExporter.Reset() })
 
-	shutdownProvider, read := test.SetupMetrics(t)
-	defer shutdownProvider()
-
 	ctx, cnl := context.WithCancel(context.Background())
+
+	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
 
 	pub, err := patronamqp.New(endpoint)
 	require.NoError(t, err)
@@ -104,10 +103,7 @@ func TestRun(t *testing.T) {
 	test.AssertSpan(t, expectedSpan, spans[1])
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
+	collectedMetrics := collectMetrics(3)
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.publish.duration")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.message.age")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.message.counter")

@@ -19,7 +19,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -40,12 +39,13 @@ func TestKafkaComponent_Success(t *testing.T) {
 	// Setup tracing
 	t.Cleanup(func() { traceExporter.Reset() })
 
-	shutdownProvider, read := test.SetupMetrics(t)
+	ctx := correlation.ContextWithID(context.Background(), "123")
+
+	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()
 
 	// Test parameters
 	numOfMessagesToSend := 100
-	ctx := correlation.ContextWithID(context.Background(), "123")
 
 	messages := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
 	for i := 1; i <= numOfMessagesToSend; i++ {
@@ -125,10 +125,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 	}
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
+	collectedMetrics := collectMetrics(3)
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.consumer.offset.diff")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.publish.count")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.message.status")

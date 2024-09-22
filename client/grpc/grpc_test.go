@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -120,7 +119,7 @@ func TestSayHello(t *testing.T) {
 	tracePublisher := trace.Setup("test", nil, exp)
 
 	// Metrics monitoring set up
-	shutdownProvider, read := test.SetupMetrics(t)
+	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()
 
 	client := examples.NewGreeterClient(conn)
@@ -179,10 +178,7 @@ func TestSayHello(t *testing.T) {
 			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tt.wantCode)), snaps[0].Attributes()[3])
 
 			// Metrics
-			collectedMetrics := &metricdata.ResourceMetrics{}
-			require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-			assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-			assert.NotEmpty(t, collectedMetrics.ScopeMetrics[0].Metrics)
+			_ = assertCollectMetrics(5)
 		})
 	}
 }

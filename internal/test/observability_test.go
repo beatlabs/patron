@@ -8,8 +8,8 @@ import (
 )
 
 func TestSetupMetrics(t *testing.T) {
-	deferFunc, read := SetupMetrics(context.Background(), t)
-	defer deferFunc()
-	assert.NotNil(t, deferFunc)
-	assert.NotNil(t, read)
+	shutdownFunc, collectMetrics := SetupMetrics(context.Background(), t)
+	assert.NotNil(t, shutdownFunc)
+	assert.NotNil(t, collectMetrics)
+	shutdownFunc()
 }

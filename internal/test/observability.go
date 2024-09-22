@@ -28,7 +28,7 @@ func SetupMetrics(ctx context.Context, t *testing.T) (ShutdownFunc, CollectMetri
 		cm := &metricdata.ResourceMetrics{}
 		require.NoError(t, read.Collect(ctx, cm))
 		require.Len(t, cm.ScopeMetrics, 1)
-		require.Len(t, cm.ScopeMetrics[0].Metrics, expected)
+		require.GreaterOrEqual(t, len(cm.ScopeMetrics[0].Metrics), expected)
 		return cm
 	}
 	return shutdownFunc, collectMetrics

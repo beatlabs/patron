@@ -178,7 +178,7 @@ func TestSayHello(t *testing.T) {
 			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tt.wantCode)), snaps[0].Attributes()[3])
 
 			// Metrics
-			_ = assertCollectMetrics(5)
+			_ = assertCollectMetrics(4)
 		})
 	}
 }

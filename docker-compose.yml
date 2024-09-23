@@ -1,6 +1,6 @@
 services:
   kafka:
-    image: confluentinc/cp-kafka:7.6.0
+    image: confluentinc/cp-kafka:7.7.1
     hostname: broker
     ports:
       - "9092:9092"
@@ -25,7 +25,7 @@ services:
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
   rabbitmq:
-    image: docker.io/bitnami/rabbitmq:3.12
+    image: docker.io/bitnami/rabbitmq:3.13
     ports:
       - '4369:4369'
       - '5551:5551'
@@ -41,7 +41,7 @@ services:
     volumes:
       - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
   mysql:
-    image: mysql:8
+    image: mysql:9
     restart: always
     environment:
       MYSQL_DATABASE: "patrondb"
@@ -75,7 +75,7 @@ services:
       - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
   hivemq:
-    image: hivemq/hivemq4:4.26.0
+    image: hivemq/hivemq4:4.28.5
     restart: always
     ports:
       - target: 1883
@@ -91,7 +91,7 @@ services:
       HIVEMQ_CONTROL_CENTER_PASSWORD: "123456"
       HIVEMQ_CLUSTER_TRANSPORT_TYPE: "TCP"
   mongo:
-    image: mongo:7
+    image: mongo:8
     restart: always
     ports:
       - "27017:27017"

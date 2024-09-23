@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/IBM/sarama v1.43.3
 	github.com/aws/aws-sdk-go-v2 v1.31.0
-	github.com/aws/aws-sdk-go-v2/config v1.27.35
+	github.com/aws/aws-sdk-go-v2/config v1.27.36
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.34
 	github.com/aws/aws-sdk-go-v2/service/sns v1.31.8
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.35.0

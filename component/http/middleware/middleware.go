@@ -149,7 +149,6 @@ func NewAuth(auth auth.Authenticator) Func {
 }
 
 // NewLoggingTracing creates a Func that continues a tracing span and finishes it.
-// It uses Jaeger and OpenTracing and will also log the HTTP request on debug level if configured so.
 func NewLoggingTracing(path string, statusCodeLogger StatusCodeLoggerHandler) (Func, error) {
 	if path == "" {
 		return nil, errors.New("path cannot be empty")

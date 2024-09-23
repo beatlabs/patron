@@ -37,45 +37,6 @@ func TestServer_Run_Shutdown(t *testing.T) {
 	}
 }
 
-func TestServer_SetupTracing(t *testing.T) {
-	tests := map[string]struct {
-		cp      Component
-		host    string
-		port    string
-		buckets string
-	}{
-		"success w/ empty tracing vars":     {cp: &testComponent{}},
-		"success w/ empty tracing host":     {cp: &testComponent{}, port: "6831"},
-		"success w/ empty tracing port":     {cp: &testComponent{}, host: "127.0.0.1"},
-		"success":                           {cp: &testComponent{}, host: "127.0.0.1", port: "6831"},
-		"success w/ custom default buckets": {cp: &testComponent{}, host: "127.0.0.1", port: "6831", buckets: ".1, .3"},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			defer os.Clearenv()
-
-			if tt.host != "" {
-				err := os.Setenv("PATRON_JAEGER_AGENT_HOST", tt.host)
-				require.NoError(t, err)
-			}
-			if tt.port != "" {
-				err := os.Setenv("PATRON_JAEGER_AGENT_PORT", tt.port)
-				require.NoError(t, err)
-			}
-			if tt.buckets != "" {
-				err := os.Setenv("PATRON_JAEGER_DEFAULT_BUCKETS", tt.buckets)
-				require.NoError(t, err)
-			}
-
-			svc, err := New("test", "", WithJSONLogger())
-			require.NoError(t, err)
-
-			err = svc.Run(context.Background(), tt.cp)
-			require.NoError(t, err)
-		})
-	}
-}
-
 type testComponent struct {
 	errorRunning bool
 }

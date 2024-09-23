@@ -21,11 +21,6 @@ func init() {
 		slog.Error("failed to set log level env var", log.ErrorAttr(err))
 		os.Exit(1)
 	}
-	err = os.Setenv("PATRON_JAEGER_SAMPLER_PARAM", "1.0")
-	if err != nil {
-		slog.Error("failed to set sampler env vars", log.ErrorAttr(err))
-		os.Exit(1)
-	}
 	err = os.Setenv("PATRON_HTTP_DEFAULT_PORT", examples.HTTPPort)
 	if err != nil {
 		slog.Error("failed to set default patron port env vars", log.ErrorAttr(err))

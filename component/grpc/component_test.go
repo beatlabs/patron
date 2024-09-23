@@ -13,10 +13,7 @@ import (
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -150,14 +147,11 @@ func TestComponent_Run_Unary(t *testing.T) {
 func TestComponent_Run_Stream(t *testing.T) {
 	t.Cleanup(func() { traceExporter.Reset() })
 
-	// Metrics monitoring set up
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		require.NoError(t, provider.Shutdown(context.Background()))
-	}()
+	ctx := context.Background()
 
-	otel.SetMeterProvider(provider)
+	// Metrics monitoring set up
+	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
 
 	cmp, err := New(60000, WithReflection())
 	require.NoError(t, err)
@@ -234,11 +228,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 			}
 
 			// Metrics
-			collectedMetrics := &metricdata.ResourceMetrics{}
-			require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-			assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-			assert.NotEmpty(t, collectedMetrics.ScopeMetrics[0].Metrics)
-
+			assertCollectMetrics(1)
 			require.NoError(t, client.CloseSend())
 		})
 	}

@@ -240,7 +240,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
 				slog.Debug("invalid value for header, defaulting to '0' ", slog.Any("value", keyValue))
 				value = 0
 			}
-			value, adjusted := min(value, minAge)
+			value, adjusted := minThreshold(value, minAge)
 			if adjusted {
 				wrn = append(wrn, fmt.Sprintf("max-age=%d", minAge))
 			}
@@ -260,7 +260,7 @@ func extractRequestHeaders(header string, minAge, maxFresh int64) *control {
 				slog.Debug("invalid value for header, defaulting to '0' ", slog.Any("value", keyValue))
 				value = 0
 			}
-			value, adjusted := max(value, maxFresh)
+			value, adjusted := maxThreshold(value, maxFresh)
 			if adjusted {
 				wrn = append(wrn, fmt.Sprintf("min-fresh=%d", maxFresh))
 			}
@@ -317,14 +317,14 @@ func createCacheControlHeader(ttl, lastValid int64) string {
 	return fmt.Sprintf("%s=%d", headerCacheMaxAge, ttl-lastValid)
 }
 
-func min(value, threshold int64) (int64, bool) {
+func minThreshold(value, threshold int64) (int64, bool) {
 	if value < threshold {
 		return threshold, true
 	}
 	return value, false
 }
 
-func max(value, threshold int64) (int64, bool) {
+func maxThreshold(value, threshold int64) (int64, bool) {
 	if threshold > 0 && value > threshold {
 		return threshold, true
 	}

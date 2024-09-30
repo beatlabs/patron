@@ -155,8 +155,7 @@ func TestNewLoggingTracing(t *testing.T) {
 		"valid path should succeed without error": {args: args{path: "/path", statusCodeLogger: StatusCodeLoggerHandler{}}, expectedErr: ""},
 	}
 
-	for name, test := range tests {
-		tt := test
+	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			loggingTracingMiddleware, err := NewLoggingTracing(tt.args.path, tt.args.statusCodeLogger)
 			if tt.expectedErr != "" {
@@ -287,7 +286,6 @@ func TestStripQueryString(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			s, err := stripQueryString(tt.args.path)
@@ -317,7 +315,6 @@ func TestNewCompressionMiddleware(t *testing.T) {
 	}
 
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			compressionMiddleware, err := NewCompression(tt.args.deflateLevel)
 			if tt.expectedErr != "" {
@@ -419,7 +416,6 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(fmt.Sprintf("%d - %s", tt.status, tt.expectedEncoding), func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(tt.status)
@@ -500,9 +496,9 @@ func TestNewCompressionMiddleware_Headers(t *testing.T) {
 		"not present":         {cm: middleware, statusCode: http.StatusOK, encodingExpected: identityHeader},
 	}
 
-	for encodingName, tc := range tests {
+	for encodingName, tt := range tests {
 		t.Run(fmt.Sprintf("%q: compression middleware acts according the Accept-Encoding header", encodingName), func(t *testing.T) {
-			require.NotNil(t, tc.cm)
+			require.NotNil(t, tt.cm)
 			// given
 			req1, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/alive", nil)
 			require.NoError(t, err)
@@ -512,14 +508,14 @@ func TestNewCompressionMiddleware_Headers(t *testing.T) {
 
 			// when
 			rc1 := httptest.NewRecorder()
-			tc.cm(handler).ServeHTTP(rc1, req1)
+			tt.cm(handler).ServeHTTP(rc1, req1)
 
 			// then
-			assert.Equal(t, tc.statusCode, rc1.Code)
+			assert.Equal(t, tt.statusCode, rc1.Code)
 
 			contentEncodingHeader := rc1.Header().Get("Content-Encoding")
 			assert.NotNil(t, contentEncodingHeader)
-			assert.Equal(t, tc.encodingExpected, contentEncodingHeader)
+			assert.Equal(t, tt.encodingExpected, contentEncodingHeader)
 		})
 	}
 }
@@ -584,14 +580,14 @@ func TestSelectEncoding(t *testing.T) {
 		{given: "deflate;q=0.5, gzip;q=1.5", expected: "gzip"},
 	}
 
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("encoding %q is parsed as %s ; error is expected: %t ; %s", tc.given, tc.expected, tc.isErr, tc.optionalName), func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("encoding %q is parsed as %s ; error is expected: %t ; %s", tt.given, tt.expected, tt.isErr, tt.optionalName), func(t *testing.T) {
 			// when
-			result, err := parseAcceptEncoding(tc.given)
+			result, err := parseAcceptEncoding(tt.given)
 
 			// then
-			assert.Equal(t, tc.isErr, err != nil)
-			assert.Equal(t, tc.expected, result)
+			assert.Equal(t, tt.isErr, err != nil)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -607,13 +603,13 @@ func TestSupported(t *testing.T) {
 		{algorithm: "something else", isSupported: false},
 	}
 
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("%q check results in %t", tc.algorithm, tc.isSupported), func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%q check results in %t", tt.algorithm, tt.isSupported), func(t *testing.T) {
 			// when
-			result := !notSupportedCompression(tc.algorithm)
+			result := !notSupportedCompression(tt.algorithm)
 
 			// then
-			assert.Equal(t, result, tc.isSupported)
+			assert.Equal(t, result, tt.isSupported)
 		})
 	}
 }
@@ -631,13 +627,13 @@ func TestParseWeights(t *testing.T) {
 		{priorityStr: "", expected: 1.0},
 	}
 
-	for _, tc := range tests {
-		t.Run(fmt.Sprintf("for given priority: %q, expect %f", tc.priorityStr, tc.expected), func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("for given priority: %q, expect %f", tt.priorityStr, tt.expected), func(t *testing.T) {
 			// when
-			result := parseWeight(tc.priorityStr)
+			result := parseWeight(tt.priorityStr)
 
 			// then
-			assert.Equal(t, tc.expected, result) //nolint: testifylint
+			assert.Equal(t, tt.expected, result) //nolint: testifylint
 		})
 	}
 }
@@ -667,14 +663,14 @@ func TestSelectByWeight(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			// when
-			selected, err := selectByWeight(tc.given)
+			selected, err := selectByWeight(tt.given)
 
 			// then
-			assert.Equal(t, tc.isErr, err != nil)
-			assert.Equal(t, tc.expected, selected)
+			assert.Equal(t, tt.isErr, err != nil)
+			assert.Equal(t, tt.expected, selected)
 		})
 	}
 }
@@ -710,13 +706,13 @@ func TestAddWithWeight(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			// when
-			addWithWeight(tc.weightedMap, tc.weight, tc.algorithm)
+			addWithWeight(tt.weightedMap, tt.weight, tt.algorithm)
 
 			// then
-			assert.Equal(t, tc.expected, tc.weightedMap)
+			assert.Equal(t, tt.expected, tt.weightedMap)
 		})
 	}
 }
@@ -744,13 +740,13 @@ func TestIsConnectionReset(t *testing.T) {
 		},
 	}
 
-	for name, tc := range tests {
+	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// when
-			result := isErrConnectionReset(tc.err)
+			result := isErrConnectionReset(tt.err)
 
 			// then
-			assert.Equal(t, tc.expected, result)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -819,8 +815,7 @@ func TestNewCaching(t *testing.T) {
 		"non-nil cache should succeed without error": {cache: &httpcache.RouteCache{}, expectedErr: ""},
 	}
 
-	for name, test := range tests {
-		tt := test
+	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			cachingMiddleware, err := NewCaching(tt.cache)
 			if tt.expectedErr != "" {
@@ -859,8 +854,7 @@ func TestNewAppVersion(t *testing.T) {
 		"valid name and version should succeed without error": {args: args{name: "name", version: "1.0"}, expectedErr: ""},
 	}
 
-	for name, test := range tests {
-		tt := test
+	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			appNameVersionMiddleware, err := NewAppNameVersion(tt.args.name, tt.args.version)
 			if tt.expectedErr != "" {
@@ -904,7 +898,6 @@ func Test_getOrSetCorrelationID(t *testing.T) {
 		"missing Header": {args: args{hdr: missingHeader}},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			assert.NotEmpty(t, getOrSetCorrelationID(tt.args.hdr))

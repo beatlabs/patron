@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/internal/test"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -135,7 +136,6 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, err := New(tt.args.name, tt.args.queueName, tt.args.sqsAPI, tt.args.proc, tt.args.oo...)
@@ -183,8 +183,8 @@ func TestComponent_Run_Success(t *testing.T) {
 	got := traceExporter.GetSpans()
 
 	assert.Len(t, got, 2)
-	assertSpan(t, expectedSuc, got[0])
-	assertSpan(t, expectedFail, got[1])
+	test.AssertSpan(t, expectedSuc, got[0])
+	test.AssertSpan(t, expectedFail, got[1])
 }
 
 func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
@@ -220,8 +220,8 @@ func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
 	got := traceExporter.GetSpans()
 
 	assert.Len(t, got, 2, "expected 2 spans, got %d", len(got))
-	assertSpan(t, expectedSuc, got[0])
-	assertSpan(t, expectedFail, got[1])
+	test.AssertSpan(t, expectedSuc, got[0])
+	test.AssertSpan(t, expectedFail, got[1])
 }
 
 func TestComponent_Run_Error(t *testing.T) {

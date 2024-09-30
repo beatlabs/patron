@@ -9,13 +9,11 @@ import (
 	"testing"
 
 	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -94,7 +92,6 @@ func TestDialContext(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			gotConn, err := DialContext(context.Background(), target, tt.args.opts...)
@@ -122,13 +119,8 @@ func TestSayHello(t *testing.T) {
 	tracePublisher := trace.Setup("test", nil, exp)
 
 	// Metrics monitoring set up
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		require.NoError(t, provider.Shutdown(context.Background()))
-	}()
-
-	otel.SetMeterProvider(provider)
+	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
 
 	client := examples.NewGreeterClient(conn)
 
@@ -155,23 +147,23 @@ func TestSayHello(t *testing.T) {
 		},
 	}
 
-	for n, tc := range tt {
+	for n, tt := range tt {
 		t.Run(n, func(t *testing.T) {
 			t.Cleanup(func() { exp.Reset() })
 
-			res, err := client.SayHello(ctx, tc.req)
-			if tc.wantErr {
+			res, err := client.SayHello(ctx, tt.req)
+			if tt.wantErr {
 				require.Nil(t, res)
 				require.Error(t, err)
 
 				rpcStatus, ok := status.FromError(err)
 				require.True(t, ok)
-				require.Equal(t, tc.wantCode, rpcStatus.Code())
-				require.Equal(t, tc.wantMsg, rpcStatus.Message())
+				require.Equal(t, tt.wantCode, rpcStatus.Code())
+				require.Equal(t, tt.wantMsg, rpcStatus.Message())
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, res)
-				require.Equal(t, tc.wantMsg, res.GetMessage())
+				require.Equal(t, tt.wantMsg, res.GetMessage())
 			}
 
 			require.NoError(t, tracePublisher.ForceFlush(context.Background()))
@@ -183,13 +175,10 @@ func TestSayHello(t *testing.T) {
 			assert.Equal(t, attribute.String("rpc.service", "examples.Greeter"), snaps[0].Attributes()[0])
 			assert.Equal(t, attribute.String("rpc.method", "SayHello"), snaps[0].Attributes()[1])
 			assert.Equal(t, attribute.String("rpc.system", "grpc"), snaps[0].Attributes()[2])
-			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tc.wantCode)), snaps[0].Attributes()[3])
+			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tt.wantCode)), snaps[0].Attributes()[3])
 
 			// Metrics
-			collectedMetrics := &metricdata.ResourceMetrics{}
-			require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-			assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-			assert.Positive(t, len(collectedMetrics.ScopeMetrics[0].Metrics))
+			_ = assertCollectMetrics(4)
 		})
 	}
 }

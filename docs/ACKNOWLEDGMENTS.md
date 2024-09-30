@@ -16,3 +16,4 @@ The framework makes primarily use of the following OSS projects:
 * [google.golang.org/grpc](https://google.golang.org/grpc)
 * [google.golang.org/protobuf](https://google.golang.org/protobuf)
 * [go.mongodb.org/mongo-driver](go.mongodb.org/mongo-driver)
+* [go.opentelemetry.io/otel](go.opentelemetry.io/otel)

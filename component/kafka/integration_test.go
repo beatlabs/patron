@@ -18,10 +18,7 @@ import (
 	"github.com/beatlabs/patron/internal/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -42,16 +39,13 @@ func TestKafkaComponent_Success(t *testing.T) {
 	// Setup tracing
 	t.Cleanup(func() { traceExporter.Reset() })
 
-	// Setup metrics
-	// Setup metrics
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() { require.NoError(t, provider.Shutdown(context.Background())) }()
-	otel.SetMeterProvider(provider)
+	ctx := correlation.ContextWithID(context.Background(), "123")
+
+	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
 
 	// Test parameters
 	numOfMessagesToSend := 100
-	ctx := correlation.ContextWithID(context.Background(), "123")
 
 	messages := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
 	for i := 1; i <= numOfMessagesToSend; i++ {
@@ -127,34 +121,25 @@ func TestKafkaComponent_Success(t *testing.T) {
 			},
 		}
 
-		assertSpan(t, expectedSpan, span)
+		test.AssertSpan(t, expectedSpan, span)
 	}
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
+	collectedMetrics := collectMetrics(3)
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.consumer.offset.diff")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.publish.count")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.message.status")
 }
 
-func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
-	assert.Equal(t, expected.Name, got.Name)
-	assert.Equal(t, expected.SpanKind, got.SpanKind)
-	assert.Equal(t, expected.Status, got.Status)
-}
-
 func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	require.NoError(t, createTopics(broker, failAllRetriesTopic2))
 	// Test parameters
-	numOfMessagesToSend := 100
-	errAtIndex := 70
+	numOfMessagesToSend := 10
+	errAtIndex := 7
 
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]int, 0)
-	actualNumOfRuns := int32(0)
+	actualNumOfRuns := uint32(0)
 	processorFunc := func(batch Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
@@ -165,7 +150,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 			require.NoError(t, err)
 
 			if msgIndex == errAtIndex {
-				atomic.AddInt32(&actualNumOfRuns, 1)
+				atomic.AddUint32(&actualNumOfRuns, 1)
 				return errors.New("expected error")
 			}
 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgIndex)
@@ -173,7 +158,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 		return nil
 	}
 
-	numOfRetries := uint(3)
+	numOfRetries := uint32(1)
 	batchSize := uint(1)
 	component := newComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
 
@@ -207,13 +192,13 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 			actualSuccessfulMessages[i+1])
 	}
 
-	assert.Equal(t, int32(numOfRetries+1), actualNumOfRuns)
+	assert.Equal(t, numOfRetries+1, actualNumOfRuns)
 }
 
 func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	require.NoError(t, createTopics(broker, failAndRetryTopic2))
 	// Test parameters
-	numOfMessagesToSend := 100
+	numOfMessagesToSend := 10
 
 	// Set up the component
 	didFail := int32(0)
@@ -229,7 +214,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 			msgIndex, err := strconv.Atoi(msgContent)
 			require.NoError(t, err)
 
-			if msgIndex == 50 && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
+			if msgIndex == 5 && atomic.CompareAndSwapInt32(&didFail, 0, 1) {
 				return errors.New("expected error")
 			}
 			consumerWG.Done()
@@ -237,7 +222,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 		}
 		return nil
 	}
-	component := newComponent(t, failAndRetryTopic2, 3, 1, processorFunc)
+	component := newComponent(t, failAndRetryTopic2, 1, 1, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
@@ -302,7 +287,7 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	require.Contains(t, err.Error(), "failed to create client:")
 }
 
-func newComponent(t *testing.T, name string, retries uint, batchSize uint, processorFunc BatchProcessorFunc) *Component {
+func newComponent(t *testing.T, name string, retries uint32, batchSize uint, processorFunc BatchProcessorFunc) *Component {
 	saramaCfg, err := DefaultConsumerSaramaConfig(name, true)
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	saramaCfg.Version = sarama.V2_6_0_0

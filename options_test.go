@@ -26,7 +26,6 @@ func TestLogFields(t *testing.T) {
 		"no overwrite":     {args: args{fields: attrs1}, want: logConfig{attrs: defaultAttrs}},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			svc := &Service{
 				logConfig: logConfig{

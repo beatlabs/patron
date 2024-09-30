@@ -17,9 +17,6 @@ import (
 	"github.com/beatlabs/patron/internal/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
 
 const (
@@ -34,18 +31,11 @@ type testMessage struct {
 func Test_SQS_Consume(t *testing.T) {
 	// Trace setup
 	t.Cleanup(func() { traceExporter.Reset() })
-
 	// Metrics setup
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		err := provider.Shutdown(context.Background())
-		if err != nil {
-			require.NoError(t, err)
-		}
-	}()
+	ctx := context.Background()
 
-	otel.SetMeterProvider(provider)
+	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
 
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"
@@ -97,15 +87,12 @@ func Test_SQS_Consume(t *testing.T) {
 	spans := traceExporter.GetSpans()
 
 	assert.Len(t, got, 3)
-	assertSpan(t, expected, spans[0])
-	assertSpan(t, expected, spans[1])
-	assertSpan(t, expected, spans[2])
+	test.AssertSpan(t, expected, spans[0])
+	test.AssertSpan(t, expected, spans[1])
+	test.AssertSpan(t, expected, spans[2])
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 3)
+	collectedMetrics := collectMetrics(3)
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.message.age")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.message.counter")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.queue.size")

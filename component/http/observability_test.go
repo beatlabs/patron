@@ -22,7 +22,6 @@ func TestProfilingRoutes(t *testing.T) {
 		defer server.Close()
 
 		for name, tt := range createProfilingTestCases(false) {
-			tt := tt
 			t.Run(name, func(t *testing.T) {
 				req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("%s/%s", server.URL, tt.path), nil)
 				require.NoError(t, err)
@@ -39,7 +38,6 @@ func TestProfilingRoutes(t *testing.T) {
 		defer server.Close()
 
 		for name, tt := range createProfilingTestCases(true) {
-			tt := tt
 			t.Run(name, func(t *testing.T) {
 				req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("%s/%s", server.URL, tt.path), nil)
 				require.NoError(t, err)

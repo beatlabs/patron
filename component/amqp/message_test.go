@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/beatlabs/patron/internal/test"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
@@ -74,7 +75,6 @@ func Test_message_ACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 			m := createMessage("1", tt.fields.acknowledger)
@@ -97,7 +97,7 @@ func Test_message_ACK(t *testing.T) {
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 1)
-				assertSpan(t, expected, got[0])
+				test.AssertSpan(t, expected, got[0])
 			} else {
 				require.NoError(t, err)
 
@@ -112,7 +112,7 @@ func Test_message_ACK(t *testing.T) {
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 1)
-				assertSpan(t, expected, got[0])
+				test.AssertSpan(t, expected, got[0])
 			}
 		})
 	}
@@ -137,7 +137,6 @@ func Test_message_NACK(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 			m := createMessage("1", tt.fields.acknowledger)
@@ -160,7 +159,7 @@ func Test_message_NACK(t *testing.T) {
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 1)
-				assertSpan(t, expected, got[0])
+				test.AssertSpan(t, expected, got[0])
 			} else {
 				require.NoError(t, err)
 				expected := tracetest.SpanStub{
@@ -174,7 +173,7 @@ func Test_message_NACK(t *testing.T) {
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 1)
-				assertSpan(t, expected, got[0])
+				test.AssertSpan(t, expected, got[0])
 			}
 		})
 	}
@@ -257,10 +256,4 @@ func (s stubAcknowledger) Nack(_ uint64, _ bool, _ bool) error {
 
 func (s stubAcknowledger) Reject(_ uint64, _ bool) error {
 	panic("implement me")
-}
-
-func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
-	assert.Equal(t, expected.Name, got.Name)
-	assert.Equal(t, expected.SpanKind, got.SpanKind)
-	assert.Equal(t, expected.Status, got.Status)
 }

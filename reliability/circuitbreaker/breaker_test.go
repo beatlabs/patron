@@ -27,7 +27,6 @@ func TestNew(t *testing.T) {
 		"invalid settings": {args: args{name: "test", s: invalidSetting}, wantErr: true},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -59,7 +58,6 @@ func TestCircuitBreaker_isHalfOpen(t *testing.T) {
 		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: true},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -88,7 +86,6 @@ func TestCircuitBreaker_isOpen(t *testing.T) {
 		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: true},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -117,7 +114,6 @@ func TestCircuitBreaker_isClose(t *testing.T) {
 		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

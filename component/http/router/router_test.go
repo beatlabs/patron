@@ -28,7 +28,6 @@ func TestNew(t *testing.T) {
 		"option func failed": {args: args{oo: []OptionFunc{WithAliveCheck(nil)}}, expectedErr: "alive check function is nil"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, err := New(tt.args.oo...)

@@ -48,7 +48,6 @@ func TestFromResponse(t *testing.T) {
 		"failure, empty content type":         {args: args{contentType: stringPointer(""), payload: buf}, expectedErr: "invalid content type provided: "},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

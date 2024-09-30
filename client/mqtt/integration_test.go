@@ -9,15 +9,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -31,14 +29,11 @@ func TestPublish(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
 
-	// Metrics monitoring setup
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		require.NoError(t, provider.Shutdown(context.Background()))
-	}()
+	ctx, cnl := context.WithCancel(context.Background())
+	defer cnl()
 
-	otel.SetMeterProvider(provider)
+	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
 
 	u, err := url.Parse(hiveMQURL)
 	require.NoError(t, err)
@@ -56,9 +51,6 @@ func TestPublish(t *testing.T) {
 
 	cfg, err := DefaultConfig([]*url.URL{u}, "test-publisher")
 	require.NoError(t, err)
-
-	ctx, cnl := context.WithCancel(context.Background())
-	defer cnl()
 
 	pub, err := New(ctx, cfg)
 	require.NoError(t, err)
@@ -96,9 +88,7 @@ func TestPublish(t *testing.T) {
 	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+	_ = assertCollectMetrics(1)
 
 	<-chDone
 	require.NoError(t, cmSub.Disconnect(context.Background()))

@@ -4,17 +4,14 @@ package amqp
 
 import (
 	"context"
-	"log"
 	"testing"
 
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
@@ -30,17 +27,8 @@ func TestRun(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
 
-	// Setup metrics
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		err := provider.Shutdown(context.Background())
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	otel.SetMeterProvider(provider)
+	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
 
 	require.NoError(t, createQueue(endpoint, queue))
 
@@ -70,10 +58,7 @@ func TestRun(t *testing.T) {
 	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-	assert.Len(t, collectedMetrics.ScopeMetrics[0].Metrics, 1)
+	_ = collectMetrics(1)
 
 	conn, err := amqp.Dial(endpoint)
 	require.NoError(t, err)

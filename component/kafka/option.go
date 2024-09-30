@@ -60,7 +60,7 @@ func WithCheckTopic() OptionFunc {
 // * when there are temporary connection issues
 // * a message batch fails to be processed through the user-defined processing function and the failure strategy is set to kafka.ExitStrategy
 // * any other reason for which the component needs to reconnect.
-func WithRetries(count uint) OptionFunc {
+func WithRetries(count uint32) OptionFunc {
 	return func(c *Component) error {
 		c.retries = count
 		return nil

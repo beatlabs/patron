@@ -8,13 +8,11 @@ import (
 	"testing"
 
 	"github.com/IBM/sarama"
+	"github.com/beatlabs/patron/internal/test"
 	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
@@ -60,14 +58,10 @@ func TestNewSyncProducer_Success(t *testing.T) {
 func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	t.Cleanup(func() { traceExporter.Reset() })
 
-	// Metrics monitoring set up
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		require.NoError(t, provider.Shutdown(context.Background()))
-	}()
+	ctx := context.Background()
 
-	otel.SetMeterProvider(provider)
+	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
 
 	saramaCfg, err := DefaultProducerSaramaConfig("test-consumer", false)
 	require.NoError(t, err)
@@ -104,9 +98,7 @@ func TestAsyncProducer_SendMessage_Close(t *testing.T) {
 	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
 
 	// Metrics
-	collectedMetrics := &metricdata.ResourceMetrics{}
-	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+	_ = assertCollectMetrics(1)
 }
 
 func TestSyncProducer_SendMessage_Close(t *testing.T) {

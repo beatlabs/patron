@@ -9,13 +9,11 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/internal/test"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -50,7 +48,6 @@ func TestCreate(t *testing.T) {
 		"invalid port": {args: args{port: -1}, expErr: "port is invalid: -1"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, err := New(tt.args.port,
@@ -96,7 +93,6 @@ func TestComponent_Run_Unary(t *testing.T) {
 		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 
@@ -122,7 +118,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 					},
 				}
 
-				assertSpan(t, expectedSpan, spans[0])
+				test.AssertSpan(t, expectedSpan, spans[0])
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, "Hello TEST", r.GetMessage())
@@ -139,7 +135,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 					},
 				}
 
-				assertSpan(t, expectedSpan, spans[0])
+				test.AssertSpan(t, expectedSpan, spans[0])
 			}
 		})
 	}
@@ -151,14 +147,11 @@ func TestComponent_Run_Unary(t *testing.T) {
 func TestComponent_Run_Stream(t *testing.T) {
 	t.Cleanup(func() { traceExporter.Reset() })
 
-	// Metrics monitoring set up
-	read := metricsdk.NewManualReader()
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))
-	defer func() {
-		require.NoError(t, provider.Shutdown(context.Background()))
-	}()
+	ctx := context.Background()
 
-	otel.SetMeterProvider(provider)
+	// Metrics monitoring set up
+	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
 
 	cmp, err := New(60000, WithReflection())
 	require.NoError(t, err)
@@ -187,7 +180,6 @@ func TestComponent_Run_Stream(t *testing.T) {
 		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 
@@ -215,7 +207,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 					},
 				}
 
-				assertSpan(t, expectedSpan, spans[0])
+				test.AssertSpan(t, expectedSpan, spans[0])
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, "Hello TEST", resp.GetMessage())
@@ -232,15 +224,11 @@ func TestComponent_Run_Stream(t *testing.T) {
 					},
 				}
 
-				assertSpan(t, expectedSpan, spans[0])
+				test.AssertSpan(t, expectedSpan, spans[0])
 			}
 
 			// Metrics
-			collectedMetrics := &metricdata.ResourceMetrics{}
-			require.NoError(t, read.Collect(context.Background(), collectedMetrics))
-			assert.Len(t, collectedMetrics.ScopeMetrics, 1)
-			assert.Positive(t, len(collectedMetrics.ScopeMetrics[0].Metrics))
-
+			assertCollectMetrics(1)
 			require.NoError(t, client.CloseSend())
 		})
 	}
@@ -266,10 +254,4 @@ func (s *server) SayHelloStream(req *examples.HelloRequest, srv examples.Greeter
 	}
 
 	return srv.Send(&examples.HelloReply{Message: "Hello " + req.GetFirstname()})
-}
-
-func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
-	assert.Equal(t, expected.Name, got.Name)
-	assert.Equal(t, expected.SpanKind, got.SpanKind)
-	assert.Equal(t, expected.Status, got.Status)
 }

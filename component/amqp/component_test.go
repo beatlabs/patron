@@ -71,7 +71,6 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			got, err := New(tt.args.url, tt.args.queue, tt.args.proc, tt.args.oo...)

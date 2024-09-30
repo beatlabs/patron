@@ -178,7 +178,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 			if !ok {
 				return errors.New("subscription channel closed")
 			}
-			slog.Debug("processing message", slog.Int64("tag", int64(delivery.DeliveryTag)))
+			slog.Debug("processing message", slog.Uint64("tag", delivery.DeliveryTag))
 			observeReceivedMessageStats(ctx, c.queueCfg.queue, delivery.Timestamp)
 			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
@@ -265,7 +265,7 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 func (c *Component) processBatch(ctx context.Context, msg *message, btc *batch) {
 	btc.append(msg)
 
-	if len(btc.messages) >= int(c.batchCfg.count) {
+	if uint(len(btc.messages)) >= c.batchCfg.count {
 		c.processAndResetBatch(ctx, btc)
 	}
 }

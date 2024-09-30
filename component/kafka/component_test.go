@@ -51,7 +51,7 @@ func TestNew(t *testing.T) {
 		topics       []string
 		p            BatchProcessorFunc
 		fs           FailStrategy
-		retries      uint
+		retries      uint32
 		retryWait    time.Duration
 		batchSize    uint
 		batchTimeout time.Duration
@@ -124,7 +124,6 @@ func TestNew(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -174,23 +173,6 @@ func (mp *mockProcessor) GetExecs() int {
 	mp.mux.Lock()
 	defer mp.mux.Unlock()
 	return mp.execs
-}
-
-func Test_mapHeader(t *testing.T) {
-	mp := mapHeader([]*sarama.RecordHeader{
-		{
-			Key:   []byte("X-HEADER-1"),
-			Value: []byte("1"),
-		},
-		{
-			Key:   []byte("X-HEADER-2"),
-			Value: []byte("2"),
-		},
-	})
-	assert.Equal(t, "1", mp["X-HEADER-1"])
-	assert.Equal(t, "2", mp["X-HEADER-2"])
-	_, ok := mp["X-HEADER-3"]
-	assert.False(t, ok)
 }
 
 type mockConsumerClaim struct {

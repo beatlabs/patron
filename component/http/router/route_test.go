@@ -42,7 +42,6 @@ func TestNewFileServerRoute(t *testing.T) {
 		}, expectedErr: "fallback path is empty"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			got, err := NewFileServerRoute(tt.args.path, tt.args.assetsDir, tt.args.fallbackPath)
 			if tt.expectedErr != "" {
@@ -75,7 +74,6 @@ func TestFileServerRouteHandler(t *testing.T) {
 		"index":    {args: args{path: "frontend/index"}, expectedCode: 200},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, tt.args.path, nil)
 			require.NoError(t, err)

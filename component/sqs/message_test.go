@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/beatlabs/patron/internal/test"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -70,7 +71,6 @@ func Test_message_ACK(t *testing.T) {
 		"failure": {fields: fields{sqsAPI: &stubSQSAPI{deleteMessageWithContextErr: errors.New("TEST")}}, expectedErr: "TEST"},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 
@@ -87,7 +87,7 @@ func Test_message_ACK(t *testing.T) {
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 1)
-				assertSpan(t, expected, got[0])
+				test.AssertSpan(t, expected, got[0])
 			} else {
 				require.NoError(t, err)
 
@@ -96,7 +96,7 @@ func Test_message_ACK(t *testing.T) {
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 1)
-				assertSpan(t, expected, got[0])
+				test.AssertSpan(t, expected, got[0])
 			}
 		})
 	}
@@ -116,7 +116,7 @@ func Test_message_NACK(t *testing.T) {
 	got := traceExporter.GetSpans()
 
 	assert.Len(t, got, 1)
-	assertSpan(t, expected, got[0])
+	test.AssertSpan(t, expected, got[0])
 }
 
 func Test_batch(t *testing.T) {
@@ -171,8 +171,8 @@ func Test_batch_NACK(t *testing.T) {
 	got := traceExporter.GetSpans()
 
 	assert.Len(t, got, 2)
-	assertSpan(t, expected, got[0])
-	assertSpan(t, expected, got[1])
+	test.AssertSpan(t, expected, got[0])
+	test.AssertSpan(t, expected, got[1])
 }
 
 func Test_batch_ACK(t *testing.T) {
@@ -207,7 +207,6 @@ func Test_batch_ACK(t *testing.T) {
 		// },
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 
@@ -232,8 +231,8 @@ func Test_batch_ACK(t *testing.T) {
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 2)
-				assertSpan(t, expected, got[0])
-				assertSpan(t, expected, got[1])
+				test.AssertSpan(t, expected, got[0])
+				test.AssertSpan(t, expected, got[1])
 			} else {
 				require.NoError(t, err, tt)
 				assert.Len(t, failed, 1)
@@ -245,8 +244,8 @@ func Test_batch_ACK(t *testing.T) {
 				got := traceExporter.GetSpans()
 
 				assert.Len(t, got, 2)
-				assertSpan(t, expectedSuc, got[0])
-				assertSpan(t, expectedFail, got[1])
+				test.AssertSpan(t, expectedSuc, got[0])
+				test.AssertSpan(t, expectedFail, got[1])
 			}
 		})
 	}
@@ -370,12 +369,6 @@ func (s stubSQSAPI) ReceiveMessage(_ context.Context, _ *sqs.ReceiveMessageInput
 	}
 
 	return output, nil
-}
-
-func assertSpan(t *testing.T, expected tracetest.SpanStub, got tracetest.SpanStub) {
-	assert.Equal(t, expected.Name, got.Name)
-	assert.Equal(t, expected.SpanKind, got.SpanKind)
-	assert.Equal(t, expected.Status, got.Status)
 }
 
 func createStubSpan(name, errMsg string) tracetest.SpanStub {

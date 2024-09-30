@@ -30,7 +30,6 @@ func TestFailureStrategy(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
@@ -49,7 +48,7 @@ func TestRetries(t *testing.T) {
 	c := &Component{}
 	err := WithRetries(20)(c)
 	require.NoError(t, err)
-	assert.Equal(t, uint(20), c.retries)
+	assert.Equal(t, uint32(20), c.retries)
 }
 
 func TestRetryWait(t *testing.T) {
@@ -70,7 +69,6 @@ func TestRetryWait(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
@@ -103,7 +101,6 @@ func TestBatchSize(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
@@ -136,7 +133,6 @@ func TestBatchTimeout(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}
@@ -171,7 +167,6 @@ func TestNewSessionCallback(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			c := &Component{}

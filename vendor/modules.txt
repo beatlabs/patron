@@ -5,7 +5,7 @@ filippo.io/edwards25519/field
 # github.com/IBM/sarama v1.43.3
 ## explicit; go 1.19
 github.com/IBM/sarama
-# github.com/aws/aws-sdk-go-v2 v1.31.0
+# github.com/aws/aws-sdk-go-v2 v1.32.0
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/aws
 github.com/aws/aws-sdk-go-v2/aws/defaults
@@ -98,7 +98,7 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc/types
 github.com/aws/aws-sdk-go-v2/service/sts
 github.com/aws/aws-sdk-go-v2/service/sts/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/sts/types
-# github.com/aws/smithy-go v1.21.0
+# github.com/aws/smithy-go v1.22.0
 ## explicit; go 1.21
 github.com/aws/smithy-go
 github.com/aws/smithy-go/auth

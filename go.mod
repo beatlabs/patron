@@ -16,8 +16,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/rabbitmq/amqp091-go v1.10.0
-	github.com/redis/go-redis/extra/redisotel/v9 v9.5.3
-	github.com/redis/go-redis/v9 v9.6.1
+	github.com/redis/go-redis/extra/redisotel/v9 v9.7.0
+	github.com/redis/go-redis/v9 v9.7.0
 	github.com/stretchr/testify v1.9.0
 	go.mongodb.org/mongo-driver v1.17.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.55.0
@@ -77,7 +77,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/redis/go-redis/extra/rediscmd/v9 v9.5.3 // indirect
+	github.com/redis/go-redis/extra/rediscmd/v9 v9.7.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect

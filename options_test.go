@@ -5,39 +5,46 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/beatlabs/patron/observability"
+	"github.com/beatlabs/patron/observability/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestLogFields(t *testing.T) {
-	defaultAttrs := defaultLogAttrs("test", "1.0")
 	attrs := []slog.Attr{slog.String("key", "value")}
-	attrs1 := defaultLogAttrs("name1", "version1")
+	attrs1 := []slog.Attr{slog.String("name1", "version1")}
+
+	expectedSuccess := observability.Config{LogConfig: log.Config{
+		Attributes: attrs,
+	}}
+	expectedNoOverwrite := observability.Config{LogConfig: log.Config{
+		Attributes: []slog.Attr{slog.String("name1", "version2")},
+	}}
+
 	type args struct {
 		fields []slog.Attr
 	}
 	tests := map[string]struct {
 		args        args
-		want        logConfig
+		want        observability.Config
 		expectedErr string
 	}{
 		"empty attributes": {args: args{fields: nil}, expectedErr: "attributes are empty"},
-		"success":          {args: args{fields: attrs}, want: logConfig{attrs: append(defaultAttrs, attrs...)}},
-		"no overwrite":     {args: args{fields: attrs1}, want: logConfig{attrs: defaultAttrs}},
+		"success":          {args: args{fields: attrs}, want: expectedSuccess},
+		"no overwrite":     {args: args{fields: attrs1}, want: expectedNoOverwrite},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			svc := &Service{
-				logConfig: logConfig{
-					attrs: defaultAttrs,
-				},
+				observabilityCfg: observability.Config{},
 			}
 
 			err := WithLogFields(tt.args.fields...)(svc)
 
 			if tt.expectedErr == "" {
 				require.NoError(t, err)
-				assert.Equal(t, tt.want, svc.logConfig)
+				assert.Equal(t, tt.want, svc.observabilityCfg)
 			} else {
 				require.EqualError(t, err, tt.expectedErr)
 			}

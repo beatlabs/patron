@@ -7,7 +7,6 @@ import (
 	"log/slog"
 
 	"github.com/beatlabs/patron/observability/log"
-	patronlog "github.com/beatlabs/patron/observability/log"
 	patronmetric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"go.opentelemetry.io/otel"
@@ -61,7 +60,7 @@ type Config struct {
 // It creates a resource with the given name and version, sets up the metric and trace providers,
 // and returns a Provider containing the initialized providers.
 func Setup(ctx context.Context, cfg Config) (*Provider, error) {
-	patronlog.Setup(&cfg.LogConfig)
+	log.Setup(&cfg.LogConfig)
 
 	res, err := createResource(cfg.Name, cfg.Version)
 	if err != nil {

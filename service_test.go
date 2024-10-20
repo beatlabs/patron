@@ -58,22 +58,3 @@ func TestNew(t *testing.T) {
 		})
 	}
 }
-
-func Test_getLogLevel(t *testing.T) {
-	tests := map[string]struct {
-		lvl  string
-		want slog.Level
-	}{
-		"debug":         {lvl: "debug", want: slog.LevelDebug},
-		"info":          {lvl: "info", want: slog.LevelInfo},
-		"warn":          {lvl: "warn", want: slog.LevelWarn},
-		"error":         {lvl: "error", want: slog.LevelError},
-		"invalid level": {lvl: "invalid", want: slog.LevelInfo},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Setenv("PATRON_LOG_LEVEL", tt.lvl)
-			assert.Equal(t, tt.want, getLogLevel())
-		})
-	}
-}

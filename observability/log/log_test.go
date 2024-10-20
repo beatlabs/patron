@@ -9,6 +9,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestSetup(t *testing.T) {
+	t.Run("JSON", func(t *testing.T) {
+		cfg := &Config{
+			Attributes: []slog.Attr{},
+			IsJSON:     true,
+			Level:      "debug",
+		}
+		Setup(cfg)
+		assert.NotNil(t, slog.Default())
+	})
+
+	t.Run("Text", func(t *testing.T) {
+		cfg := &Config{
+			Attributes: []slog.Attr{},
+			IsJSON:     false,
+			Level:      "debug",
+		}
+		Setup(cfg)
+		assert.NotNil(t, slog.Default())
+	})
+}
+
 func TestContext(t *testing.T) {
 	l := slog.Default()
 

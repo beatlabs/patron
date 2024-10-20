@@ -34,7 +34,7 @@ func WithLogFields(attrs ...slog.Attr) OptionFunc {
 				continue
 			}
 
-			svc.logConfig.attrs = append(svc.logConfig.attrs, attr)
+			svc.observabilityCfg.LogConfig.Attributes = append(svc.observabilityCfg.LogConfig.Attributes, attr)
 		}
 
 		return nil
@@ -44,7 +44,7 @@ func WithLogFields(attrs ...slog.Attr) OptionFunc {
 // WithJSONLogger to use Go's slog package.
 func WithJSONLogger() OptionFunc {
 	return func(svc *Service) error {
-		svc.logConfig.json = true
+		svc.observabilityCfg.LogConfig.IsJSON = true
 		return nil
 	}
 }

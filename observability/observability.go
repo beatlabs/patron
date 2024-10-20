@@ -49,11 +49,20 @@ func StatusAttribute(err error) attribute.KeyValue {
 	return SucceededAttribute
 }
 
+// Config represents the configuration for setting up traces, metrics and logs.
+type Config struct {
+	Name      string
+	Version   string
+	LogConfig log.Config
+}
+
 // Setup initializes OpenTelemetry's traces and metrics.
 // It creates a resource with the given name and version, sets up the metric and trace providers,
 // and returns a Provider containing the initialized providers.
-func Setup(ctx context.Context, name, version string) (*Provider, error) {
-	res, err := createResource(name, version)
+func Setup(ctx context.Context, cfg Config) (*Provider, error) {
+	log.Setup(&cfg.LogConfig)
+
+	res, err := createResource(cfg.Name, cfg.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +73,7 @@ func Setup(ctx context.Context, name, version string) (*Provider, error) {
 	if err != nil {
 		return nil, err
 	}
-	traceProvider, err := patrontrace.SetupGRPC(ctx, name, res)
+	traceProvider, err := patrontrace.SetupGRPC(ctx, cfg.Name, res)
 	if err != nil {
 		return nil, err
 	}

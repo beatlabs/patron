@@ -32,7 +32,7 @@ type Service struct {
 	version               string
 	termSig               chan os.Signal
 	sighupHandler         func()
-	logConfig             logConfig
+	observabilityCfg      observability.Config
 	observabilityProvider *observability.Provider
 }
 
@@ -46,7 +46,10 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 
 	var err error
 	ctx := context.Background()
-	observabilityProvider, err := observability.Setup(ctx, name, version)
+
+	cfg := observabilityConfig(name, version)
+
+	observabilityProvider, err := observability.Setup(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +61,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		sighupHandler: func() {
 			slog.Debug("sighup received: nothing setup")
 		},
-		logConfig: logConfig{
-			attrs: defaultLogAttrs(name, version),
-			json:  false,
-		},
+		observabilityCfg:      cfg,
 		observabilityProvider: observabilityProvider,
 	}
 
@@ -78,7 +78,6 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		return nil, errors.Join(optionErrors...)
 	}
 
-	setupLogging(s.logConfig)
 	s.setupOSSignal()
 
 	return s, nil
@@ -149,51 +148,31 @@ func (s *Service) waitTermination(chErr <-chan error) error {
 	}
 }
 
-type logConfig struct {
-	attrs []slog.Attr
-	json  bool
-}
-
-func getLogLevel() slog.Level {
+func observabilityConfig(name, version string) observability.Config {
+	var lvl string
 	lvl, ok := os.LookupEnv("PATRON_LOG_LEVEL")
 	if !ok {
-		return slog.LevelInfo
+		lvl = "info"
 	}
 
-	lv := slog.LevelVar{}
-	if err := lv.UnmarshalText([]byte(lvl)); err != nil {
-		return slog.LevelInfo
-	}
-
-	return lv.Level()
-}
-
-func defaultLogAttrs(name, version string) []slog.Attr {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = host
 	}
 
-	return []slog.Attr{
+	attrs := []slog.Attr{
 		slog.String(srv, name),
 		slog.String(ver, version),
 		slog.String(host, hostname),
 	}
-}
 
-func setupLogging(lc logConfig) {
-	ho := &slog.HandlerOptions{
-		AddSource: true,
-		Level:     getLogLevel(),
+	return observability.Config{
+		Name:    name,
+		Version: version,
+		LogConfig: log.Config{
+			Attributes: attrs,
+			IsJSON:     false,
+			Level:      lvl,
+		},
 	}
-
-	var hnd slog.Handler
-
-	if lc.json {
-		hnd = slog.NewJSONHandler(os.Stderr, ho)
-	} else {
-		hnd = slog.NewTextHandler(os.Stderr, ho)
-	}
-
-	slog.New(hnd.WithAttrs(lc.attrs))
 }

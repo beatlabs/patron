@@ -9,6 +9,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestSetup(t *testing.T) {
+	t.Run("JSON", func(t *testing.T) {
+		cfg := &Config{
+			Attributes: []slog.Attr{},
+			IsJSON:     true,
+			Level:      "debug",
+		}
+		Setup(cfg)
+		assert.NotNil(t, slog.Default())
+	})
+
+	t.Run("Text", func(t *testing.T) {
+		cfg := &Config{
+			Attributes: []slog.Attr{},
+			IsJSON:     false,
+			Level:      "debug",
+		}
+		Setup(cfg)
+		assert.NotNil(t, slog.Default())
+	})
+}
+
 func TestContext(t *testing.T) {
 	l := slog.Default()
 
@@ -23,22 +45,19 @@ func TestContext(t *testing.T) {
 	})
 }
 
-func TestEnabled(t *testing.T) {
-	type args struct {
-		l slog.Level
-	}
-	tests := map[string]struct {
-		args args
-		want bool
-	}{
-		"Disabled": {args{slog.LevelDebug}, false},
-		"Enabled":  {args{slog.LevelInfo}, true},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tt.want, Enabled(tt.args.l))
-		})
-	}
+func TestSetLevelAndCheckEnable(t *testing.T) {
+	Setup(&Config{
+		Attributes: []slog.Attr{},
+		IsJSON:     true,
+		Level:      "info",
+	})
+
+	assert.True(t, Enabled(slog.LevelInfo))
+	assert.False(t, Enabled(slog.LevelDebug))
+
+	SetLevel("debug")
+
+	assert.True(t, Enabled(slog.LevelDebug))
 }
 
 func TestErrorAttr(t *testing.T) {

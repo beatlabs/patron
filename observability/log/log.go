@@ -4,9 +4,57 @@ package log
 import (
 	"context"
 	"log/slog"
+	"os"
 )
 
+// Config represents the configuration for setting up the logger.
+type Config struct {
+	Attributes []slog.Attr
+	IsJSON     bool
+	Level      string
+}
+
 type ctxKey struct{}
+
+var logCfg *Config
+
+// Setup sets up the logger with the given configuration.
+func Setup(cfg *Config) {
+	logCfg = cfg
+	setDefaultLogger(cfg)
+}
+
+// SetLevel sets the logger level.
+func SetLevel(lvl string) {
+	logCfg.Level = lvl
+	setDefaultLogger(logCfg)
+}
+
+func setDefaultLogger(cfg *Config) {
+	ho := &slog.HandlerOptions{
+		AddSource: true,
+		Level:     level(cfg.Level),
+	}
+
+	var hnd slog.Handler
+
+	if cfg.IsJSON {
+		hnd = slog.NewJSONHandler(os.Stderr, ho)
+	} else {
+		hnd = slog.NewTextHandler(os.Stderr, ho)
+	}
+
+	slog.SetDefault(slog.New(hnd.WithAttrs(cfg.Attributes)))
+}
+
+func level(lvl string) slog.Level {
+	lv := slog.LevelVar{}
+	if err := lv.UnmarshalText([]byte(lvl)); err != nil {
+		return slog.LevelInfo
+	}
+
+	return lv.Level()
+}
 
 // FromContext returns the logger, if it exists in the context, or nil.
 func FromContext(ctx context.Context) *slog.Logger {

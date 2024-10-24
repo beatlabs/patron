@@ -16,7 +16,21 @@ type Config struct {
 
 type ctxKey struct{}
 
+var logCfg *Config
+
+// Setup sets up the logger with the given configuration.
 func Setup(cfg *Config) {
+	logCfg = cfg
+	setDefaultLogger(cfg)
+}
+
+// SetLevel sets the logger level.
+func SetLevel(lvl string) {
+	logCfg.Level = lvl
+	setDefaultLogger(logCfg)
+}
+
+func setDefaultLogger(cfg *Config) {
 	ho := &slog.HandlerOptions{
 		AddSource: true,
 		Level:     level(cfg.Level),
@@ -30,7 +44,7 @@ func Setup(cfg *Config) {
 		hnd = slog.NewTextHandler(os.Stderr, ho)
 	}
 
-	slog.New(hnd.WithAttrs(cfg.Attributes))
+	slog.SetDefault(slog.New(hnd.WithAttrs(cfg.Attributes)))
 }
 
 func level(lvl string) slog.Level {

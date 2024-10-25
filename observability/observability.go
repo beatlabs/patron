@@ -60,7 +60,10 @@ type Config struct {
 // It creates a resource with the given name and version, sets up the metric and trace providers,
 // and returns a Provider containing the initialized providers.
 func Setup(ctx context.Context, cfg Config) (*Provider, error) {
-	log.Setup(&cfg.LogConfig)
+	err := log.Setup(&cfg.LogConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	res, err := createResource(cfg.Name, cfg.Version)
 	if err != nil {

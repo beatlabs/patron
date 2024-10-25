@@ -16,7 +16,7 @@ func TestSetup(t *testing.T) {
 			IsJSON:     true,
 			Level:      "debug",
 		}
-		Setup(cfg)
+		assert.NoError(t, Setup(cfg))
 		assert.NotNil(t, slog.Default())
 	})
 
@@ -26,7 +26,7 @@ func TestSetup(t *testing.T) {
 			IsJSON:     false,
 			Level:      "debug",
 		}
-		Setup(cfg)
+		assert.NoError(t, Setup(cfg))
 		assert.NotNil(t, slog.Default())
 	})
 }
@@ -55,7 +55,7 @@ func TestSetLevelAndCheckEnable(t *testing.T) {
 	assert.True(t, Enabled(slog.LevelInfo))
 	assert.False(t, Enabled(slog.LevelDebug))
 
-	SetLevel("debug")
+	assert.NoError(t, SetLevel("debug"))
 
 	assert.True(t, Enabled(slog.LevelDebug))
 }

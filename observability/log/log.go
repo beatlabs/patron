@@ -19,21 +19,26 @@ type ctxKey struct{}
 var logCfg *Config
 
 // Setup sets up the logger with the given configuration.
-func Setup(cfg *Config) {
+func Setup(cfg *Config) error {
 	logCfg = cfg
-	setDefaultLogger(cfg)
+	return setDefaultLogger(cfg)
 }
 
 // SetLevel sets the logger level.
-func SetLevel(lvl string) {
+func SetLevel(lvl string) error {
 	logCfg.Level = lvl
-	setDefaultLogger(logCfg)
+	return setDefaultLogger(logCfg)
 }
 
-func setDefaultLogger(cfg *Config) {
+func setDefaultLogger(cfg *Config) error {
+	lvl, err := level(cfg.Level)
+	if err != nil {
+		return err
+	}
+
 	ho := &slog.HandlerOptions{
 		AddSource: true,
-		Level:     level(cfg.Level),
+		Level:     lvl,
 	}
 
 	var hnd slog.Handler
@@ -45,15 +50,16 @@ func setDefaultLogger(cfg *Config) {
 	}
 
 	slog.SetDefault(slog.New(hnd.WithAttrs(cfg.Attributes)))
+	return nil
 }
 
-func level(lvl string) slog.Level {
+func level(lvl string) (slog.Level, error) {
 	lv := slog.LevelVar{}
 	if err := lv.UnmarshalText([]byte(lvl)); err != nil {
-		return slog.LevelInfo
+		return slog.LevelInfo, err
 	}
 
-	return lv.Level()
+	return lv.Level(), nil
 }
 
 // FromContext returns the logger, if it exists in the context, or nil.

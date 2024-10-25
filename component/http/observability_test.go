@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/beatlabs/patron/observability/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +19,7 @@ type profilingTestCase struct {
 
 func TestProfilingRoutes(t *testing.T) {
 	t.Run("without vars", func(t *testing.T) {
-		server := createProfilingServer(false)
+		server := createServer(false)
 		defer server.Close()
 
 		for name, tt := range createProfilingTestCases(false) {
@@ -34,7 +35,7 @@ func TestProfilingRoutes(t *testing.T) {
 	})
 
 	t.Run("with vars", func(t *testing.T) {
-		server := createProfilingServer(true)
+		server := createServer(true)
 		defer server.Close()
 
 		for name, tt := range createProfilingTestCases(true) {
@@ -50,9 +51,12 @@ func TestProfilingRoutes(t *testing.T) {
 	})
 }
 
-func createProfilingServer(enableExpVar bool) *httptest.Server {
+func createServer(enableExpVar bool) *httptest.Server {
 	mux := http.NewServeMux()
 	for _, route := range ProfilingRoutes(enableExpVar) {
+		mux.HandleFunc(route.path, route.handler)
+	}
+	for _, route := range LoggingRoutes() {
 		mux.HandleFunc(route.path, route.handler)
 	}
 
@@ -79,4 +83,40 @@ func createProfilingTestCases(enableExpVar bool) map[string]profilingTestCase {
 		"mutex":        {"/debug/pprof/mutex/", 200},
 		"vars":         {"/debug/vars/", expVarWant},
 	}
+}
+
+func TestLoggingRoutes(t *testing.T) {
+	log.Setup(&log.Config{
+		IsJSON: true,
+		Level:  "info",
+	})
+	server := createServer(true)
+	defer server.Close()
+
+	t.Run("change log level to debug", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, fmt.Sprintf("%s/debug/log/debug", server.URL), nil)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		require.NoError(t, resp.Body.Close())
+	})
+
+	t.Run("wrong log level", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, fmt.Sprintf("%s/debug/log/xxx", server.URL), nil)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		require.NoError(t, resp.Body.Close())
+	})
+
+	t.Run("empty log level", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, fmt.Sprintf("%s/debug/log/", server.URL), nil)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+		require.NoError(t, resp.Body.Close())
+	})
 }

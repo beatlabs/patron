@@ -86,15 +86,15 @@ func createProfilingTestCases(enableExpVar bool) map[string]profilingTestCase {
 }
 
 func TestLoggingRoutes(t *testing.T) {
-	log.Setup(&log.Config{
+	require.NoError(t, log.Setup(&log.Config{
 		IsJSON: true,
 		Level:  "info",
-	})
+	}))
 	server := createServer(true)
 	defer server.Close()
 
 	t.Run("change log level to debug", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, fmt.Sprintf("%s/debug/log/debug", server.URL), nil)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, server.URL+"/debug/log/debug", nil)
 		require.NoError(t, err)
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
@@ -103,7 +103,7 @@ func TestLoggingRoutes(t *testing.T) {
 	})
 
 	t.Run("wrong log level", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, fmt.Sprintf("%s/debug/log/xxx", server.URL), nil)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, server.URL+"/debug/log/xxx", nil)
 		require.NoError(t, err)
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
@@ -112,7 +112,7 @@ func TestLoggingRoutes(t *testing.T) {
 	})
 
 	t.Run("empty log level", func(t *testing.T) {
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, fmt.Sprintf("%s/debug/log/", server.URL), nil)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, server.URL+"/debug/log/", nil)
 		require.NoError(t, err)
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)

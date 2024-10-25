@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSetup(t *testing.T) {
@@ -16,7 +17,7 @@ func TestSetup(t *testing.T) {
 			IsJSON:     true,
 			Level:      "debug",
 		}
-		assert.NoError(t, Setup(cfg))
+		require.NoError(t, Setup(cfg))
 		assert.NotNil(t, slog.Default())
 	})
 
@@ -26,7 +27,7 @@ func TestSetup(t *testing.T) {
 			IsJSON:     false,
 			Level:      "debug",
 		}
-		assert.NoError(t, Setup(cfg))
+		require.NoError(t, Setup(cfg))
 		assert.NotNil(t, slog.Default())
 	})
 }
@@ -46,16 +47,16 @@ func TestContext(t *testing.T) {
 }
 
 func TestSetLevelAndCheckEnable(t *testing.T) {
-	Setup(&Config{
+	require.NoError(t, Setup(&Config{
 		Attributes: []slog.Attr{},
 		IsJSON:     true,
 		Level:      "info",
-	})
+	}))
 
 	assert.True(t, Enabled(slog.LevelInfo))
 	assert.False(t, Enabled(slog.LevelDebug))
 
-	assert.NoError(t, SetLevel("debug"))
+	require.NoError(t, SetLevel("debug"))
 
 	assert.True(t, Enabled(slog.LevelDebug))
 }

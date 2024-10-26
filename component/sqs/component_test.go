@@ -22,7 +22,9 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
+	if err := os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100"); err != nil {
+		panic(err)
+	}
 
 	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
 

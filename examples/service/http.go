@@ -32,10 +32,10 @@ func createHttpRouter() (patron.Component, error) {
 		return nil, fmt.Errorf("failed to create routes: %w", err)
 	}
 
-	router, err := router.New(router.WithRoutes(rr...))
+	rt, err := router.New(router.WithRoutes(rr...))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http router: %w", err)
 	}
 
-	return patronhttp.New(router)
+	return patronhttp.New(rt)
 }

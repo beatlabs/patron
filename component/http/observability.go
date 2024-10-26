@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
+
+	"github.com/beatlabs/patron/observability/log"
 )
 
 func ProfilingRoutes(enableExpVar bool) []*Route {
@@ -46,4 +48,25 @@ func expVars(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprintf(w, "%q: %s", kv.Key, kv.Value)
 	})
 	_, _ = fmt.Fprintf(w, "\n}\n")
+}
+
+// LoggingRoutes returns a routes relates to logs.
+func LoggingRoutes() []*Route {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		lvl := r.PathValue("level")
+		if lvl == "" {
+			http.Error(w, "missing log level", http.StatusBadRequest)
+			return
+		}
+
+		err := log.SetLevel(lvl)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+
+	route, _ := NewRoute("POST /debug/log/{level}", handler)
+	return []*Route{route}
 }

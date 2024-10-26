@@ -36,6 +36,7 @@ type Service struct {
 	observabilityProvider *observability.Provider
 }
 
+// New creates a new Service instance.
 func New(name, version string, options ...OptionFunc) (*Service, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
@@ -83,6 +84,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	return s, nil
 }
 
+// Run starts the service with the provided components.
 func (s *Service) Run(ctx context.Context, components ...Component) error {
 	if len(components) == 0 || components[0] == nil {
 		return errors.New("components are empty or nil")

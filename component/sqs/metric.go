@@ -30,8 +30,8 @@ func init() {
 	messageQueueSizeGauge = patronmetric.Float64Gauge(packageName, "sqs.queue.size", "SQS message queue size.", "1")
 }
 
-func observerMessageAge(ctx context.Context, queue string, attributes map[string]string) {
-	attribute, ok := attributes[sqsAttributeSentTimestamp]
+func observerMessageAge(ctx context.Context, queue string, attrs map[string]string) {
+	attribute, ok := attrs[sqsAttributeSentTimestamp]
 	if !ok || len(strings.TrimSpace(attribute)) == 0 {
 		return
 	}

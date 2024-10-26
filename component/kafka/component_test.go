@@ -26,7 +26,9 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
+	if err := os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100"); err != nil {
+		panic(err)
+	}
 
 	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
 	os.Exit(m.Run())
@@ -39,7 +41,7 @@ func TestNew(t *testing.T) {
 	// consumer will commit every batch in a blocking operation
 	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
-	saramaCfg.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
+	saramaCfg.Consumer.Group.Rebalance.GroupStrategies = append(saramaCfg.Consumer.Group.Rebalance.GroupStrategies, sarama.NewBalanceStrategySticky())
 	saramaCfg.Net.DialTimeout = 15 * time.Second
 	saramaCfg.Version = sarama.V2_6_0_0
 

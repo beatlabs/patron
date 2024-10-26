@@ -20,7 +20,6 @@ import (
 
 const (
 	consumerComponent = "kafka-consumer"
-	subsystem         = "kafka"
 )
 
 const (

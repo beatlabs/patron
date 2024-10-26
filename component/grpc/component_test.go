@@ -28,7 +28,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
+	_ = os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
 
 	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
 

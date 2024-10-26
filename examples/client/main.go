@@ -157,7 +157,12 @@ func sendKafkaMessage(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer producer.Close()
+	defer func() {
+		err := producer.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
 
 	msg := &sarama.ProducerMessage{
 		Topic: examples.KafkaTopic,

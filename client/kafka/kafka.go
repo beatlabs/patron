@@ -116,7 +116,7 @@ func (b *Builder) Create() (*SyncProducer, error) {
 }
 
 // CreateAsync a new asynchronous producer.
-func (b Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
+func (b *Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 	if len(b.errs) > 0 {
 		return nil, nil, errors.Join(b.errs...)
 	}

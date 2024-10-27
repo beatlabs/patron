@@ -20,7 +20,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/test/bufconn"
 )
 
 type server struct {
@@ -41,7 +40,8 @@ func (s *server) SayHello(_ context.Context, req *examples.HelloRequest) (*examp
 func TestSayHello(t *testing.T) {
 	ctx := context.Background()
 
-	client, closer := testServer()
+	client, closer, err := testServer()
+	require.NoError(t, err)
 	defer closer()
 
 	// Tracing setup
@@ -103,7 +103,9 @@ func TestSayHello(t *testing.T) {
 			assert.Equal(t, attribute.String("rpc.service", "examples.Greeter"), spans[0].Attributes()[0])
 			assert.Equal(t, attribute.String("rpc.method", "SayHello"), spans[0].Attributes()[1])
 			assert.Equal(t, attribute.String("rpc.system", "grpc"), spans[0].Attributes()[2])
-			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tt.wantCode)), spans[0].Attributes()[3])
+			assert.Equal(t, attribute.String("net.sock.peer.addr", "127.0.0.1"), spans[0].Attributes()[3])
+			// assert.Equal(t, attribute.Int64("net.sock.peer.port", 0), spans[0].Attributes()[4])
+			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tt.wantCode)), spans[0].Attributes()[5])
 
 			// Metrics
 			_ = assertCollectMetrics(4)
@@ -111,9 +113,11 @@ func TestSayHello(t *testing.T) {
 	}
 }
 
-func testServer() (examples.GreeterClient, func()) {
-	buffer := 101024 * 1024
-	lis := bufconn.Listen(buffer)
+func testServer() (examples.GreeterClient, func(), error) {
+	lis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		return nil, nil, err
+	}
 
 	baseServer := grpc.NewServer()
 	examples.RegisterGreeterServer(baseServer, &server{})
@@ -123,14 +127,6 @@ func testServer() (examples.GreeterClient, func()) {
 		}
 	}()
 
-	conn, err := NewClient("123",
-		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
-			return lis.Dial()
-		}), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Printf("error connecting to server: %v", err)
-	}
-
 	closer := func() {
 		err := lis.Close()
 		if err != nil {
@@ -139,7 +135,12 @@ func testServer() (examples.GreeterClient, func()) {
 		baseServer.Stop()
 	}
 
-	client := examples.NewGreeterClient(conn)
+	conn, err := NewClient(lis.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		defer closer()
+		return nil, nil, err
+	}
 
-	return client, closer
+	client := examples.NewGreeterClient(conn)
+	return client, closer, nil
 }

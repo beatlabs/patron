@@ -28,7 +28,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
+	_ = os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100")
 
 	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
 
@@ -77,8 +77,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 		assert.NoError(t, cmp.Run(ctx))
 		chDone <- struct{}{}
 	}()
-	conn, err := grpc.DialContext(ctx, "localhost:60000", grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock())
+	conn, err := grpc.NewClient("localhost:60000", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	c := examples.NewGreeterClient(conn)
 
@@ -162,8 +161,8 @@ func TestComponent_Run_Stream(t *testing.T) {
 		assert.NoError(t, cmp.Run(ctx))
 		chDone <- struct{}{}
 	}()
-	conn, err := grpc.DialContext(ctx, "localhost:60000", grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock())
+
+	conn, err := grpc.NewClient("localhost:60000", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	c := examples.NewGreeterClient(conn)
 

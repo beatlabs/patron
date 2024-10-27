@@ -7,7 +7,7 @@ import (
 )
 
 // NewFromConfig creates a new SQS client from aws.Config with OpenTelemetry instrumentation enabled.
-func NewFromConfig(cfg aws.Config) *sqs.Client {
+func NewFromConfig(cfg aws.Config, optFns ...func(*sqs.Options)) *sqs.Client {
 	otelaws.AppendMiddlewares(&cfg.APIOptions)
-	return sqs.NewFromConfig(cfg)
+	return sqs.NewFromConfig(cfg, optFns...)
 }

@@ -31,11 +31,11 @@ func init() {
 }
 
 func observerMessageAge(ctx context.Context, queue string, attrs map[string]string) {
-	attribute, ok := attrs[sqsAttributeSentTimestamp]
-	if !ok || len(strings.TrimSpace(attribute)) == 0 {
+	attr, ok := attrs[sqsAttributeSentTimestamp]
+	if !ok || len(strings.TrimSpace(attr)) == 0 {
 		return
 	}
-	timestamp, err := strconv.ParseInt(attribute, 10, 64)
+	timestamp, err := strconv.ParseInt(attr, 10, 64)
 	if err != nil {
 		return
 	}

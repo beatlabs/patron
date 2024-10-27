@@ -280,7 +280,7 @@ func (c *Component) processAndResetBatch(ctx context.Context, btc *batch) {
 }
 
 func (c *Component) stats(ctx context.Context, sub subscription) error {
-	q, err := sub.channel.QueueInspect(c.queueCfg.queue)
+	q, err := sub.channel.QueueDeclarePassive(c.queueCfg.queue, false, false, false, false, nil)
 	if err != nil {
 		return err
 	}

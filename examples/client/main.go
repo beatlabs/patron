@@ -131,7 +131,7 @@ func sendHTTPRequest(ctx context.Context) error {
 }
 
 func sendGRPCRequest(ctx context.Context) error {
-	cc, err := patrongrpc.DialContext(ctx, examples.GRPCTarget, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	cc, err := patrongrpc.NewClient(examples.GRPCTarget, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,12 @@ func sendKafkaMessage(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer producer.Close()
+	defer func() {
+		err := producer.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
 
 	msg := &sarama.ProducerMessage{
 		Topic: examples.KafkaTopic,

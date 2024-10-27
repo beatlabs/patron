@@ -183,7 +183,7 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 			MaxNumberOfMessages: c.cfg.maxMessages,
 			WaitTimeSeconds:     c.cfg.pollWaitSeconds,
 			VisibilityTimeout:   c.cfg.visibilityTimeout,
-			AttributeNames: []types.QueueAttributeName{
+			MessageSystemAttributeNames: []types.MessageSystemAttributeName{
 				sqsAttributeSentTimestamp,
 			},
 			MessageAttributeNames: []string{

@@ -59,7 +59,6 @@ linters:
     - makezero
     - nilnil
     - reassign
-    - sloglint
     - spancheck
     - testifylint
     - wastedassign
@@ -74,16 +73,10 @@ linters:
     - dogsled
     - protogetter
     - usestdlibvars
-    - testableexamples
+    - testableexamples    
   fast: false
 
 issues:
   exclude-dirs:
     - vendor
   max-same-issues: 10
-
-  exclude-rules:
-    # Exclude some staticcheck messages
-    - linters:
-        - staticcheck
-      text: "SA1019:"

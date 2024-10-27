@@ -22,26 +22,17 @@ func TestNewFromConfig(t *testing.T) {
 
 	awsRegion := "eu-west-1"
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, _ ...interface{}) (aws.Endpoint, error) {
-		if service == sns.ServiceID && region == awsRegion {
-			return aws.Endpoint{
-				URL:           "http://localhost:4566",
-				SigningRegion: awsRegion,
-			}, nil
-		}
-		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
-
 	cfg, err := config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(awsRegion),
-		config.WithEndpointResolverWithOptions(customResolver),
 		config.WithCredentialsProvider(aws.NewCredentialsCache(
 			credentials.NewStaticCredentialsProvider("test", "test", "token"))),
 	)
 	require.NoError(t, err)
 
-	client := NewFromConfig(cfg)
+	client := NewFromConfig(cfg, func(o *sns.Options) {
+		o.Region = awsRegion
+		o.BaseEndpoint = aws.String("http://localhost:4566")
+	})
 
 	// Add your assertions here to test the behavior of the client
 

@@ -143,36 +143,18 @@ type SQSAPI interface {
 }
 
 func createSQSAPI(region, endpoint string) (*sqs.Client, error) {
-	cfg, err := createConfig(sqs.ServiceID, region, endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	api := sqs.NewFromConfig(cfg)
-
-	return api, nil
-}
-
-func createConfig(awsServiceID, awsRegion, awsEndpoint string) (aws.Config, error) {
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, _ ...interface{}) (aws.Endpoint, error) {
-		if service == awsServiceID && region == awsRegion {
-			return aws.Endpoint{
-				URL:           awsEndpoint,
-				SigningRegion: awsRegion,
-			}, nil
-		}
-		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
-
-	cfg, err := awsConfig.LoadDefaultConfig(context.TODO(),
-		awsConfig.WithRegion(awsRegion),
-		awsConfig.WithEndpointResolverWithOptions(customResolver),
+	cfg, err := awsConfig.LoadDefaultConfig(context.Background(),
+		awsConfig.WithRegion(region),
 		awsConfig.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider("test", "test", ""))),
 	)
 	if err != nil {
-		return aws.Config{}, fmt.Errorf("failed to create AWS config: %w", err)
+		return nil, fmt.Errorf("failed to create AWS config: %w", err)
 	}
 
-	return cfg, nil
+	api := sqs.NewFromConfig(cfg, func(o *sqs.Options) {
+		o.BaseEndpoint = aws.String(endpoint)
+		o.Region = region
+	})
+
+	return api, nil
 }

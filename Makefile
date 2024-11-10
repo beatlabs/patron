@@ -1,4 +1,4 @@
-LINT_IMAGE = golangci/golangci-lint:v1.59.0
+LINT_IMAGE = golangci/golangci-lint:v1.61.0
 
 default: test
 

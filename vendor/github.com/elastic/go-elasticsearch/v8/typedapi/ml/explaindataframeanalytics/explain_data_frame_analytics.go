@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Explains a data frame analytics config.
+// Explain data frame analytics config.
 // This API provides explanations for a data frame analytics config that either
 // exists already or one that has not been created yet. The following
 // explanations are provided:
@@ -87,7 +87,7 @@ func NewExplainDataFrameAnalyticsFunc(tp elastictransport.Interface) NewExplainD
 	}
 }
 
-// Explains a data frame analytics config.
+// Explain data frame analytics config.
 // This API provides explanations for a data frame analytics config that either
 // exists already or one that has not been created yet. The following
 // explanations are provided:

@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Adds a block to an index.
+// Add an index block.
+// Limits the operations allowed on an index by blocking specific operation
+// types.
 package addblock
 
 import (
@@ -82,7 +84,9 @@ func NewAddBlockFunc(tp elastictransport.Interface) NewAddBlock {
 	}
 }
 
-// Adds a block to an index.
+// Add an index block.
+// Limits the operations allowed on an index by blocking specific operation
+// types.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/index-modules-blocks.html
 func New(tp elastictransport.Interface) *AddBlock {

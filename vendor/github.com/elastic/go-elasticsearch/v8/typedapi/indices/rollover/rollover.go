@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Roll over to a new index.
 // Creates a new index for a data stream or index alias.
 package rollover
 
@@ -84,6 +85,7 @@ func NewRolloverFunc(tp elastictransport.Interface) NewRollover {
 	}
 }
 
+// Roll over to a new index.
 // Creates a new index for a data stream or index alias.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-rollover-index.html

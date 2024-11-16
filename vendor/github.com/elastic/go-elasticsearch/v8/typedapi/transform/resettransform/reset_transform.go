@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Reset a transform.
 // Resets a transform.
 // Before you can reset it, you must stop it; alternatively, use the `force`
 // query parameter.
@@ -79,6 +80,7 @@ func NewResetTransformFunc(tp elastictransport.Interface) NewResetTransform {
 	}
 }
 
+// Reset a transform.
 // Resets a transform.
 // Before you can reset it, you must stop it; alternatively, use the `force`
 // query parameter.

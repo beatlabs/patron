@@ -16,10 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Enables you to submit a request with a basic auth header to authenticate a
-// user and retrieve information about the authenticated user.
+// Authenticate a user.
+//
+// Authenticates a user and returns information about the authenticated user.
+// Include the user information in a [basic auth
+// header](https://en.wikipedia.org/wiki/Basic_access_authentication).
 // A successful call returns a JSON structure that shows user information such
 // as their username, the roles that are assigned to the user, any assigned
 // metadata, and information about the realms that authenticated and authorized
@@ -74,8 +77,11 @@ func NewAuthenticateFunc(tp elastictransport.Interface) NewAuthenticate {
 	}
 }
 
-// Enables you to submit a request with a basic auth header to authenticate a
-// user and retrieve information about the authenticated user.
+// Authenticate a user.
+//
+// Authenticates a user and returns information about the authenticated user.
+// Include the user information in a [basic auth
+// header](https://en.wikipedia.org/wiki/Basic_access_authentication).
 // A successful call returns a JSON structure that shows user information such
 // as their username, the roles that are assigned to the user, any assigned
 // metadata, and information about the realms that authenticated and authorized

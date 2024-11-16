@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Create or update a component template.
 // Creates or updates a component template.
 // Component templates are building blocks for constructing index templates that
 // specify index mappings, settings, and aliases.
@@ -103,6 +104,7 @@ func NewPutComponentTemplateFunc(tp elastictransport.Interface) NewPutComponentT
 	}
 }
 
+// Create or update a component template.
 // Creates or updates a component template.
 // Component templates are building blocks for constructing index templates that
 // specify index mappings, settings, and aliases.
@@ -350,7 +352,7 @@ func (r *PutComponentTemplate) Header(key, value string) *PutComponentTemplate {
 
 // Name Name of the component template to create.
 // Elasticsearch includes the following built-in component templates:
-// `logs-mappings`; 'logs-settings`; `metrics-mappings`;
+// `logs-mappings`; `logs-settings`; `metrics-mappings`;
 // `metrics-settings`;`synthetics-mapping`; `synthetics-settings`.
 // Elastic Agent uses these templates to configure backing indices for its data
 // streams.

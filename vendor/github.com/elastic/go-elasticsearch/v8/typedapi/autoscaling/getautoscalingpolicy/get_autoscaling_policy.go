@@ -16,10 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Retrieves an autoscaling policy. Designed for indirect use by ECE/ESS and
-// ECK. Direct use is not supported.
+// Get an autoscaling policy.
+//
+// NOTE: This feature is designed for indirect use by Elasticsearch Service,
+// Elastic Cloud Enterprise, and Elastic Cloud on Kubernetes. Direct use is not
+// supported.
 package getautoscalingpolicy
 
 import (
@@ -77,8 +80,11 @@ func NewGetAutoscalingPolicyFunc(tp elastictransport.Interface) NewGetAutoscalin
 	}
 }
 
-// Retrieves an autoscaling policy. Designed for indirect use by ECE/ESS and
-// ECK. Direct use is not supported.
+// Get an autoscaling policy.
+//
+// NOTE: This feature is designed for indirect use by Elasticsearch Service,
+// Elastic Cloud Enterprise, and Elastic Cloud on Kubernetes. Direct use is not
+// supported.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/autoscaling-get-autoscaling-capacity.html
 func New(tp elastictransport.Interface) *GetAutoscalingPolicy {

@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Retrieves usage information for data frame analytics jobs.
+// Get data frame analytics jobs usage info.
 package getdataframeanalyticsstats
 
 import (
@@ -74,7 +74,7 @@ func NewGetDataFrameAnalyticsStatsFunc(tp elastictransport.Interface) NewGetData
 	}
 }
 
-// Retrieves usage information for data frame analytics jobs.
+// Get data frame analytics jobs usage info.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/get-dfanalytics-stats.html
 func New(tp elastictransport.Interface) *GetDataFrameAnalyticsStats {

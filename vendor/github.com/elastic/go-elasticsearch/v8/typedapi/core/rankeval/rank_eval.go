@@ -16,10 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Enables you to evaluate the quality of ranked search results over a set of
-// typical search queries.
+// Evaluate ranked search results.
+//
+// Evaluate the quality of ranked search results over a set of typical search
+// queries.
 package rankeval
 
 import (
@@ -81,8 +83,10 @@ func NewRankEvalFunc(tp elastictransport.Interface) NewRankEval {
 	}
 }
 
-// Enables you to evaluate the quality of ranked search results over a set of
-// typical search queries.
+// Evaluate ranked search results.
+//
+// Evaluate the quality of ranked search results over a set of typical search
+// queries.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-rank-eval.html
 func New(tp elastictransport.Interface) *RankEval {

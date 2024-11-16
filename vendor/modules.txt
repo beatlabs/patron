@@ -32,10 +32,10 @@ github.com/aws/aws-sdk-go-v2/internal/shareddefaults
 github.com/aws/aws-sdk-go-v2/internal/strings
 github.com/aws/aws-sdk-go-v2/internal/sync/singleflight
 github.com/aws/aws-sdk-go-v2/internal/timeconv
-# github.com/aws/aws-sdk-go-v2/config v1.28.3
+# github.com/aws/aws-sdk-go-v2/config v1.28.4
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/config
-# github.com/aws/aws-sdk-go-v2/credentials v1.17.44
+# github.com/aws/aws-sdk-go-v2/credentials v1.17.45
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/credentials
 github.com/aws/aws-sdk-go-v2/credentials/ec2rolecreds
@@ -57,7 +57,7 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2
 # github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/internal/ini
-# github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.5
+# github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.0
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/service/dynamodb
 github.com/aws/aws-sdk-go-v2/service/dynamodb/internal/customizations
@@ -92,12 +92,12 @@ github.com/aws/aws-sdk-go-v2/service/sso/types
 github.com/aws/aws-sdk-go-v2/service/ssooidc
 github.com/aws/aws-sdk-go-v2/service/ssooidc/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/ssooidc/types
-# github.com/aws/aws-sdk-go-v2/service/sts v1.32.4
+# github.com/aws/aws-sdk-go-v2/service/sts v1.33.0
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/service/sts
 github.com/aws/aws-sdk-go-v2/service/sts/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/sts/types
-# github.com/aws/smithy-go v1.22.0
+# github.com/aws/smithy-go v1.22.1
 ## explicit; go 1.21
 github.com/aws/smithy-go
 github.com/aws/smithy-go/auth
@@ -144,7 +144,7 @@ github.com/eapache/go-xerial-snappy
 # github.com/eapache/queue v1.1.0
 ## explicit
 github.com/eapache/queue
-# github.com/eclipse/paho.golang v0.21.0
+# github.com/eclipse/paho.golang v0.22.0
 ## explicit; go 1.21
 github.com/eclipse/paho.golang/autopaho
 github.com/eclipse/paho.golang/autopaho/queue
@@ -159,8 +159,8 @@ github.com/eclipse/paho.golang/paho/store/memory
 ## explicit; go 1.20
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version
-# github.com/elastic/go-elasticsearch/v8 v8.15.0
-## explicit; go 1.21
+# github.com/elastic/go-elasticsearch/v8 v8.16.0
+## explicit; go 1.22
 github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi
 github.com/elastic/go-elasticsearch/v8/internal/version
@@ -394,10 +394,13 @@ github.com/elastic/go-elasticsearch/v8/typedapi/inference/delete
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/get
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/inference
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/put
+github.com/elastic/go-elasticsearch/v8/typedapi/ingest/deletegeoipdatabase
 github.com/elastic/go-elasticsearch/v8/typedapi/ingest/deletepipeline
 github.com/elastic/go-elasticsearch/v8/typedapi/ingest/geoipstats
+github.com/elastic/go-elasticsearch/v8/typedapi/ingest/getgeoipdatabase
 github.com/elastic/go-elasticsearch/v8/typedapi/ingest/getpipeline
 github.com/elastic/go-elasticsearch/v8/typedapi/ingest/processorgrok
+github.com/elastic/go-elasticsearch/v8/typedapi/ingest/putgeoipdatabase
 github.com/elastic/go-elasticsearch/v8/typedapi/ingest/putpipeline
 github.com/elastic/go-elasticsearch/v8/typedapi/ingest/simulate
 github.com/elastic/go-elasticsearch/v8/typedapi/license/delete
@@ -505,6 +508,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/queryrules/getruleset
 github.com/elastic/go-elasticsearch/v8/typedapi/queryrules/listrulesets
 github.com/elastic/go-elasticsearch/v8/typedapi/queryrules/putrule
 github.com/elastic/go-elasticsearch/v8/typedapi/queryrules/putruleset
+github.com/elastic/go-elasticsearch/v8/typedapi/queryrules/test
 github.com/elastic/go-elasticsearch/v8/typedapi/rollup/deletejob
 github.com/elastic/go-elasticsearch/v8/typedapi/rollup/getjobs
 github.com/elastic/go-elasticsearch/v8/typedapi/rollup/getrollupcaps
@@ -607,6 +611,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/snapshot/delete
 github.com/elastic/go-elasticsearch/v8/typedapi/snapshot/deleterepository
 github.com/elastic/go-elasticsearch/v8/typedapi/snapshot/get
 github.com/elastic/go-elasticsearch/v8/typedapi/snapshot/getrepository
+github.com/elastic/go-elasticsearch/v8/typedapi/snapshot/repositoryverifyintegrity
 github.com/elastic/go-elasticsearch/v8/typedapi/snapshot/restore
 github.com/elastic/go-elasticsearch/v8/typedapi/snapshot/status
 github.com/elastic/go-elasticsearch/v8/typedapi/snapshot/verifyrepository
@@ -685,7 +690,6 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/decision
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/delimitedpayloadencoding
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/deploymentallocationstate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/deploymentassignmentstate
-github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/deploymentstate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/deprecationlevel
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dfiindependencemeasure
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dfraftereffect
@@ -696,6 +700,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dynamicmapping
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/edgengramside
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/emailpriority
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/enrichpolicyphase
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/esqlformat
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/excludefrequent
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/executionphase
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/executionstatus
@@ -708,12 +713,15 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/filteringpolicy
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/filteringrulerule
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/filteringvalidationstate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/filtertype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/fingerprintdigest
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/followerindexstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/functionboostmode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/functionscoremode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/gappolicy
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geodistancetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geoexecution
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geogridtargetformat
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geogridtiletype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geoorientation
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geoshaperelation
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geostrategy
@@ -818,6 +826,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/snowballlanguage
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/sortmode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/sortorder
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/sourcefieldmode
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/sqlformat
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/statslevel
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/storagetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/stringdistance
@@ -850,6 +859,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/valuetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/versiontype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/waitforevents
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/watcherstate
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/xpackcategory
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/zerotermsquery
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/ackwatch
 github.com/elastic/go-elasticsearch/v8/typedapi/watcher/activatewatch
@@ -1186,10 +1196,10 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.8.0
 ## explicit; go 1.18
 golang.org/x/time/rate
-# google.golang.org/genproto/googleapis/api v0.0.0-20241104194629-dd2ea8efbc28
+# google.golang.org/genproto/googleapis/api v0.0.0-20241113202542-65e8d215514f
 ## explicit; go 1.21
 google.golang.org/genproto/googleapis/api/httpbody
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20241113202542-65e8d215514f
 ## explicit; go 1.21
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
@@ -1259,7 +1269,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.35.1
+# google.golang.org/protobuf v1.35.2
 ## explicit; go 1.21
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext

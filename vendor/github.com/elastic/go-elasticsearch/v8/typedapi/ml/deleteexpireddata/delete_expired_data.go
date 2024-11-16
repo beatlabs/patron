@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Deletes expired and unused machine learning data.
+// Delete expired ML data.
 // Deletes all job results, model snapshots and forecast data that have exceeded
 // their retention days period. Machine learning state documents that are not
 // associated with any job are also deleted.
@@ -87,7 +87,7 @@ func NewDeleteExpiredDataFunc(tp elastictransport.Interface) NewDeleteExpiredDat
 	}
 }
 
-// Deletes expired and unused machine learning data.
+// Delete expired ML data.
 // Deletes all job results, model snapshots and forecast data that have exceeded
 // their retention days period. Machine learning state documents that are not
 // associated with any job are also deleted.

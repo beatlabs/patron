@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 // Manually moves an index into the specified step and executes that step.
 package movetostep
@@ -362,7 +362,7 @@ func (r *MoveToStep) Pretty(pretty bool) *MoveToStep {
 // API name: current_step
 func (r *MoveToStep) CurrentStep(currentstep *types.StepKey) *MoveToStep {
 
-	r.req.CurrentStep = currentstep
+	r.req.CurrentStep = *currentstep
 
 	return r
 }
@@ -370,7 +370,7 @@ func (r *MoveToStep) CurrentStep(currentstep *types.StepKey) *MoveToStep {
 // API name: next_step
 func (r *MoveToStep) NextStep(nextstep *types.StepKey) *MoveToStep {
 
-	r.req.NextStep = nextstep
+	r.req.NextStep = *nextstep
 
 	return r
 }

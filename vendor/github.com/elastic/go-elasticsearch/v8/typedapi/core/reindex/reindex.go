@@ -16,13 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Allows to copy documents from one index to another, optionally filtering the
-// source
-// documents by a query, changing the destination index settings, or fetching
-// the
-// documents from a remote cluster.
+// Reindex documents.
+// Copies documents from a source to a destination. The source can be any
+// existing index, alias, or data stream. The destination must differ from the
+// source. For example, you cannot reindex a data stream into itself.
 package reindex
 
 import (
@@ -78,11 +77,10 @@ func NewReindexFunc(tp elastictransport.Interface) NewReindex {
 	}
 }
 
-// Allows to copy documents from one index to another, optionally filtering the
-// source
-// documents by a query, changing the destination index settings, or fetching
-// the
-// documents from a remote cluster.
+// Reindex documents.
+// Copies documents from a source to a destination. The source can be any
+// existing index, alias, or data stream. The destination must differ from the
+// source. For example, you cannot reindex a data stream into itself.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html
 func New(tp elastictransport.Interface) *Reindex {

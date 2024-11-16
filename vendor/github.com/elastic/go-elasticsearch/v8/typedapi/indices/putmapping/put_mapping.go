@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Update field mappings.
 // Adds new fields to an existing data stream or index.
 // You can also use this API to change the search settings of existing fields.
 // For data streams, these changes are applied to all backing indices by
@@ -86,6 +87,7 @@ func NewPutMappingFunc(tp elastictransport.Interface) NewPutMapping {
 	}
 }
 
+// Update field mappings.
 // Adds new fields to an existing data stream or index.
 // You can also use this API to change the search settings of existing fields.
 // For data streams, these changes are applied to all backing indices by

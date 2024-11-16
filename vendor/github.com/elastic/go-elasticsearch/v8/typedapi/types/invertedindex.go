@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
 // InvertedIndex type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/indices/field_usage_stats/IndicesFieldUsageStatsResponse.ts#L68-L76
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/indices/field_usage_stats/IndicesFieldUsageStatsResponse.ts#L68-L76
 type InvertedIndex struct {
 	Offsets         uint `json:"offsets"`
 	Payloads        uint `json:"payloads"`

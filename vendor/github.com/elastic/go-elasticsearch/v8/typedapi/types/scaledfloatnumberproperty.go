@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
@@ -35,7 +35,7 @@ import (
 
 // ScaledFloatNumberProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/mapping/core.ts#L182-L186
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/_types/mapping/core.ts#L182-L186
 type ScaledFloatNumberProperty struct {
 	Boost           *Float64                       `json:"boost,omitempty"`
 	Coerce          *bool                          `json:"coerce,omitempty"`
@@ -53,7 +53,6 @@ type ScaledFloatNumberProperty struct {
 	Properties    map[string]Property          `json:"properties,omitempty"`
 	ScalingFactor *Float64                     `json:"scaling_factor,omitempty"`
 	Script        *Script                      `json:"script,omitempty"`
-	Similarity    *string                      `json:"similarity,omitempty"`
 	Store         *bool                        `json:"store,omitempty"`
 	// TimeSeriesDimension For internal use by Elastic only. Marks the field as a time series dimension.
 	// Defaults to false.
@@ -876,18 +875,6 @@ func (s *ScaledFloatNumberProperty) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Script", err)
 			}
 
-		case "similarity":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Similarity", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Similarity = &o
-
 		case "store":
 			var tmp any
 			dec.Decode(&tmp)
@@ -950,7 +937,6 @@ func (s ScaledFloatNumberProperty) MarshalJSON() ([]byte, error) {
 		Properties:          s.Properties,
 		ScalingFactor:       s.ScalingFactor,
 		Script:              s.Script,
-		Similarity:          s.Similarity,
 		Store:               s.Store,
 		TimeSeriesDimension: s.TimeSeriesDimension,
 		TimeSeriesMetric:    s.TimeSeriesMetric,

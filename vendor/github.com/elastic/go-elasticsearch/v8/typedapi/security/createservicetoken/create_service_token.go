@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Creates a service accounts token for access without requiring basic
+// Create a service account token.
+//
+// Create a service accounts token for access without requiring basic
 // authentication.
 package createservicetoken
 
@@ -86,7 +88,9 @@ func NewCreateServiceTokenFunc(tp elastictransport.Interface) NewCreateServiceTo
 	}
 }
 
-// Creates a service accounts token for access without requiring basic
+// Create a service account token.
+//
+// Create a service accounts token for access without requiring basic
 // authentication.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-service-token.html

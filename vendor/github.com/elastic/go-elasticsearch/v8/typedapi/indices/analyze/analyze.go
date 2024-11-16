@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Performs analysis on a text string and returns the resulting tokens.
+// Get tokens from text analysis.
+// The analyze API performs
+// [analysis](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis.html)
+// on a text string and returns the resulting tokens.
 package analyze
 
 import (
@@ -79,7 +82,10 @@ func NewAnalyzeFunc(tp elastictransport.Interface) NewAnalyze {
 	}
 }
 
-// Performs analysis on a text string and returns the resulting tokens.
+// Get tokens from text analysis.
+// The analyze API performs
+// [analysis](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis.html)
+// on a text string and returns the resulting tokens.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-analyze.html
 func New(tp elastictransport.Interface) *Analyze {

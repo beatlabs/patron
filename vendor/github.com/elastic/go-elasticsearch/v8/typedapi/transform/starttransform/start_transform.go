@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Start a transform.
 // Starts a transform.
 //
 // When you start a transform, it creates the destination index if it does not
@@ -103,6 +104,7 @@ func NewStartTransformFunc(tp elastictransport.Interface) NewStartTransform {
 	}
 }
 
+// Start a transform.
 // Starts a transform.
 //
 // When you start a transform, it creates the destination index if it does not

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package get
 
@@ -26,11 +26,12 @@ import (
 
 // Response holds the response body struct for the package get
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_global/get/GetResponse.ts#L23-L34
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/_global/get/GetResponse.ts#L23-L34
 type Response struct {
 	Fields       map[string]json.RawMessage `json:"fields,omitempty"`
 	Found        bool                       `json:"found"`
 	Id_          string                     `json:"_id"`
+	Ignored_     []string                   `json:"_ignored,omitempty"`
 	Index_       string                     `json:"_index"`
 	PrimaryTerm_ *int64                     `json:"_primary_term,omitempty"`
 	Routing_     *string                    `json:"_routing,omitempty"`

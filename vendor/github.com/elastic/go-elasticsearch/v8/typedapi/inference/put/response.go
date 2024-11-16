@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package put
 
@@ -28,7 +28,7 @@ import (
 
 // Response holds the response body struct for the package put
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/inference/put/PutResponse.ts#L22-L24
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/inference/put/PutResponse.ts#L22-L24
 type Response struct {
 
 	// InferenceId The inference Id
@@ -38,7 +38,7 @@ type Response struct {
 	// ServiceSettings Settings specific to the service
 	ServiceSettings json.RawMessage `json:"service_settings"`
 	// TaskSettings Task settings specific to the service and task type
-	TaskSettings json.RawMessage `json:"task_settings"`
+	TaskSettings json.RawMessage `json:"task_settings,omitempty"`
 	// TaskType The task type
 	TaskType tasktype.TaskType `json:"task_type"`
 }

@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Create or update an alias.
 // Adds a data stream or index to an alias.
 package putalias
 
@@ -86,6 +87,7 @@ func NewPutAliasFunc(tp elastictransport.Interface) NewPutAlias {
 	}
 }
 
+// Create or update an alias.
 // Adds a data stream or index to an alias.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html

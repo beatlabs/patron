@@ -16,11 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Get transforms.
 // Returns configuration and usage information about transforms.
 //
-// IMPORTANT: cat APIs are only intended for human consumption using the Kibana
+// CAT APIs are only intended for human consumption using the Kibana
 // console or command line. They are not intended for use by applications. For
 // application consumption, use the get transform statistics API.
 package transforms
@@ -80,9 +81,10 @@ func NewTransformsFunc(tp elastictransport.Interface) NewTransforms {
 	}
 }
 
+// Get transforms.
 // Returns configuration and usage information about transforms.
 //
-// IMPORTANT: cat APIs are only intended for human consumption using the Kibana
+// CAT APIs are only intended for human consumption using the Kibana
 // console or command line. They are not intended for use by applications. For
 // application consumption, use the get transform statistics API.
 //

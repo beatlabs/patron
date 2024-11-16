@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Deletes an existing model snapshot.
+// Delete a model snapshot.
 // You cannot delete the active model snapshot. To delete that snapshot, first
 // revert to a different one. To identify the active model snapshot, refer to
 // the `model_snapshot_id` in the results from the get jobs API.
@@ -84,7 +84,7 @@ func NewDeleteModelSnapshotFunc(tp elastictransport.Interface) NewDeleteModelSna
 	}
 }
 
-// Deletes an existing model snapshot.
+// Delete a model snapshot.
 // You cannot delete the active model snapshot. To delete that snapshot, first
 // revert to a different one. To identify the active model snapshot, refer to
 // the `model_snapshot_id` in the results from the get jobs API.

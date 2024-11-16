@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 // Delete a behavioral analytics collection.
+// The associated data stream is also deleted.
 package deletebehavioralanalytics
 
 import (
@@ -77,6 +78,7 @@ func NewDeleteBehavioralAnalyticsFunc(tp elastictransport.Interface) NewDeleteBe
 }
 
 // Delete a behavioral analytics collection.
+// The associated data stream is also deleted.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-analytics-collection.html
 func New(tp elastictransport.Interface) *DeleteBehavioralAnalytics {

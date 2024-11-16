@@ -16,19 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package hotthreads
 
-import (
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-)
-
 // Response holds the response body struct for the package hotthreads
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/nodes/hot_threads/NodesHotThreadsResponse.ts#L22-L24
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/nodes/hot_threads/NodesHotThreadsResponse.ts#L20-L22
 type Response struct {
-	HotThreads []types.HotThread `json:"hot_threads"`
 }
 
 // NewResponse returns a Response

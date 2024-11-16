@@ -16,10 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Searches a vector tile for geospatial values. Returns results as a binary
-// Mapbox vector tile.
+// Search a vector tile.
+//
+// Search a vector tile for geospatial values.
 package searchmvt
 
 import (
@@ -104,8 +105,9 @@ func NewSearchMvtFunc(tp elastictransport.Interface) NewSearchMvt {
 	}
 }
 
-// Searches a vector tile for geospatial values. Returns results as a binary
-// Mapbox vector tile.
+// Search a vector tile.
+//
+// Search a vector tile for geospatial values.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-vector-tile-api.html
 func New(tp elastictransport.Interface) *SearchMvt {

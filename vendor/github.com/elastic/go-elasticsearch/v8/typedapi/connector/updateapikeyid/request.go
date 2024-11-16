@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package updateapikeyid
 
@@ -27,7 +27,7 @@ import (
 
 // Request holds the request body struct for the package updateapikeyid
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/connector/update_api_key_id/ConnectorUpdateAPIKeyIDRequest.ts#L21-L42
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/connector/update_api_key_id/ConnectorUpdateAPIKeyIDRequest.ts#L21-L47
 type Request struct {
 	ApiKeyId       *string `json:"api_key_id,omitempty"`
 	ApiKeySecretId *string `json:"api_key_secret_id,omitempty"`

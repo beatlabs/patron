@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Sends data to an anomaly detection job for analysis.
+// Send data to an anomaly detection job for analysis.
 //
 // IMPORTANT: For each job, data can be accepted from only a single connection
 // at a time.
@@ -86,7 +86,7 @@ func NewPostDataFunc(tp elastictransport.Interface) NewPostData {
 	}
 }
 
-// Sends data to an anomaly detection job for analysis.
+// Send data to an anomaly detection job for analysis.
 //
 // IMPORTANT: For each job, data can be accepted from only a single connection
 // at a time.

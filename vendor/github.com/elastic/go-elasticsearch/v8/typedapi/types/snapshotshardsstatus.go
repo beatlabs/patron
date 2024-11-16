@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
@@ -26,7 +26,7 @@ import (
 
 // SnapshotShardsStatus type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/snapshot/_types/SnapshotShardsStatus.ts#L24-L27
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/snapshot/_types/SnapshotShardsStatus.ts#L24-L27
 type SnapshotShardsStatus struct {
 	Stage shardsstatsstage.ShardsStatsStage `json:"stage"`
 	Stats ShardsStatsSummary                `json:"stats"`

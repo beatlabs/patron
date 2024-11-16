@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Close anomaly detection jobs
+// Close anomaly detection jobs.
 // A job can be opened and closed multiple times throughout its lifecycle. A
 // closed job cannot receive data or perform analysis operations, but you can
 // still explore and navigate results.
@@ -97,7 +97,7 @@ func NewCloseJobFunc(tp elastictransport.Interface) NewCloseJob {
 	}
 }
 
-// Close anomaly detection jobs
+// Close anomaly detection jobs.
 // A job can be opened and closed multiple times throughout its lifecycle. A
 // closed job cannot receive data or perform analysis operations, but you can
 // still explore and navigate results.

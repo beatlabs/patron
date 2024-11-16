@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
@@ -36,14 +36,14 @@ import (
 
 // PhoneticTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/analysis/phonetic-plugin.ts#L64-L72
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/_types/analysis/phonetic-plugin.ts#L64-L72
 type PhoneticTokenFilter struct {
 	Encoder     phoneticencoder.PhoneticEncoder     `json:"encoder"`
-	Languageset []phoneticlanguage.PhoneticLanguage `json:"languageset"`
+	Languageset []phoneticlanguage.PhoneticLanguage `json:"languageset,omitempty"`
 	MaxCodeLen  *int                                `json:"max_code_len,omitempty"`
-	NameType    phoneticnametype.PhoneticNameType   `json:"name_type"`
+	NameType    *phoneticnametype.PhoneticNameType  `json:"name_type,omitempty"`
 	Replace     *bool                               `json:"replace,omitempty"`
-	RuleType    phoneticruletype.PhoneticRuleType   `json:"rule_type"`
+	RuleType    *phoneticruletype.PhoneticRuleType  `json:"rule_type,omitempty"`
 	Type        string                              `json:"type,omitempty"`
 	Version     *string                             `json:"version,omitempty"`
 }

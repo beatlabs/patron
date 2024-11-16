@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Deletes a connector sync job.
+// Delete a connector sync job.
+//
+// Remove a connector sync job and its associated data.
+// This is a destructive action that is not recoverable.
 package syncjobdelete
 
 import (
@@ -76,7 +79,10 @@ func NewSyncJobDeleteFunc(tp elastictransport.Interface) NewSyncJobDelete {
 	}
 }
 
-// Deletes a connector sync job.
+// Delete a connector sync job.
+//
+// Remove a connector sync job and its associated data.
+// This is a destructive action that is not recoverable.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-connector-sync-job-api.html
 func New(tp elastictransport.Interface) *SyncJobDelete {

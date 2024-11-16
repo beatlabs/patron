@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Previews a transform.
+// Preview a transform.
+// Generates a preview of the results that you will get when you create a
+// transform with the same configuration.
 //
 // It returns a maximum of 100 results. The calculations are based on all the
 // current data in the source index. It also
@@ -85,7 +87,9 @@ func NewPreviewTransformFunc(tp elastictransport.Interface) NewPreviewTransform 
 	}
 }
 
-// Previews a transform.
+// Preview a transform.
+// Generates a preview of the results that you will get when you create a
+// transform with the same configuration.
 //
 // It returns a maximum of 100 results. The calculations are based on all the
 // current data in the source index. It also

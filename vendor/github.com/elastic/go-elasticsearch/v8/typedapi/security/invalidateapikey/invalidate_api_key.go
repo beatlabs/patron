@@ -16,9 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Invalidates one or more API keys.
+// Invalidate API keys.
+//
+// This API invalidates API keys created by the create API key or grant API key
+// APIs.
+// Invalidated API keys fail authentication, but they can still be viewed using
+// the get API key information and query API key information APIs, for at least
+// the configured retention period, until they are automatically deleted.
 // The `manage_api_key` privilege allows deleting any API keys.
 // The `manage_own_api_key` only allows deleting API keys that are owned by the
 // user.
@@ -26,8 +32,8 @@
 // must be issued in one of the three formats:
 // - Set the parameter `owner=true`.
 // - Or, set both `username` and `realm_name` to match the user’s identity.
-// - Or, if the request is issued by an API key, i.e. an API key invalidates
-// itself, specify its ID in the `ids` field.
+// - Or, if the request is issued by an API key, that is to say an API key
+// invalidates itself, specify its ID in the `ids` field.
 package invalidateapikey
 
 import (
@@ -82,7 +88,13 @@ func NewInvalidateApiKeyFunc(tp elastictransport.Interface) NewInvalidateApiKey 
 	}
 }
 
-// Invalidates one or more API keys.
+// Invalidate API keys.
+//
+// This API invalidates API keys created by the create API key or grant API key
+// APIs.
+// Invalidated API keys fail authentication, but they can still be viewed using
+// the get API key information and query API key information APIs, for at least
+// the configured retention period, until they are automatically deleted.
 // The `manage_api_key` privilege allows deleting any API keys.
 // The `manage_own_api_key` only allows deleting API keys that are owned by the
 // user.
@@ -90,8 +102,8 @@ func NewInvalidateApiKeyFunc(tp elastictransport.Interface) NewInvalidateApiKey 
 // must be issued in one of the three formats:
 // - Set the parameter `owner=true`.
 // - Or, set both `username` and `realm_name` to match the user’s identity.
-// - Or, if the request is issued by an API key, i.e. an API key invalidates
-// itself, specify its ID in the `ids` field.
+// - Or, if the request is issued by an API key, that is to say an API key
+// invalidates itself, specify its ID in the `ids` field.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-invalidate-api-key.html
 func New(tp elastictransport.Interface) *InvalidateApiKey {

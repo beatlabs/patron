@@ -61,7 +61,7 @@ func TestSIGHUP(t *testing.T) {
 
 		err := WithSIGHUP(nil)(svc)
 		assert.Equal(t, errors.New("provided WithSIGHUP handler was nil"), err)
-		assert.Nil(t, nil, svc.sighupHandler)
+		assert.Nil(t, svc.sighupHandler)
 	})
 
 	t.Run("non empty value for sighup handler", func(t *testing.T) {

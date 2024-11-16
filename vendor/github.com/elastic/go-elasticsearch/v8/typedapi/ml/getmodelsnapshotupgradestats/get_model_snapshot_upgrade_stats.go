@@ -16,10 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Retrieves usage information for anomaly detection job model snapshot
-// upgrades.
+// Get anomaly detection job model snapshot upgrade usage info.
 package getmodelsnapshotupgradestats
 
 import (
@@ -82,8 +81,7 @@ func NewGetModelSnapshotUpgradeStatsFunc(tp elastictransport.Interface) NewGetMo
 	}
 }
 
-// Retrieves usage information for anomaly detection job model snapshot
-// upgrades.
+// Get anomaly detection job model snapshot upgrade usage info.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-get-job-model-snapshot-upgrade-stats.html
 func New(tp elastictransport.Interface) *GetModelSnapshotUpgradeStats {

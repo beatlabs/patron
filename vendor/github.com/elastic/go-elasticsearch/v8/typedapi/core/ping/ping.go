@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Ping the cluster.
 // Returns whether the cluster is running.
 package ping
 
@@ -66,6 +67,7 @@ func NewPingFunc(tp elastictransport.Interface) NewPing {
 	}
 }
 
+// Ping the cluster.
 // Returns whether the cluster is running.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html

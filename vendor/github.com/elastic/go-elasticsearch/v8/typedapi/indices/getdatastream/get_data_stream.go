@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Get data streams.
 // Retrieves information about one or more data streams.
 package getdatastream
 
@@ -75,6 +76,7 @@ func NewGetDataStreamFunc(tp elastictransport.Interface) NewGetDataStream {
 	}
 }
 
+// Get data streams.
 // Retrieves information about one or more data streams.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/data-streams.html
@@ -320,6 +322,24 @@ func (r *GetDataStream) ExpandWildcards(expandwildcards ...expandwildcard.Expand
 // API name: include_defaults
 func (r *GetDataStream) IncludeDefaults(includedefaults bool) *GetDataStream {
 	r.values.Set("include_defaults", strconv.FormatBool(includedefaults))
+
+	return r
+}
+
+// MasterTimeout Period to wait for a connection to the master node. If no response is
+// received before the timeout expires, the request fails and returns an error.
+// API name: master_timeout
+func (r *GetDataStream) MasterTimeout(duration string) *GetDataStream {
+	r.values.Set("master_timeout", duration)
+
+	return r
+}
+
+// Verbose Whether the maximum timestamp for each data stream should be calculated and
+// returned.
+// API name: verbose
+func (r *GetDataStream) Verbose(verbose bool) *GetDataStream {
+	r.values.Set("verbose", strconv.FormatBool(verbose))
 
 	return r
 }

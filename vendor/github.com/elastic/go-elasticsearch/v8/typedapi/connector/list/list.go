@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Returns existing connectors.
+// Get all connectors.
+//
+// Get information about all connectors.
 package list
 
 import (
@@ -68,7 +70,9 @@ func NewListFunc(tp elastictransport.Interface) NewList {
 	}
 }
 
-// Returns existing connectors.
+// Get all connectors.
+//
+// Get information about all connectors.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/list-connector-api.html
 func New(tp elastictransport.Interface) *List {

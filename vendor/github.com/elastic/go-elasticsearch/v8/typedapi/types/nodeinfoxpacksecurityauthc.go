@@ -16,16 +16,16 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
 // NodeInfoXpackSecurityAuthc type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/nodes/info/types.ts#L256-L259
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/nodes/info/types.ts#L261-L264
 type NodeInfoXpackSecurityAuthc struct {
-	Realms NodeInfoXpackSecurityAuthcRealms `json:"realms"`
-	Token  NodeInfoXpackSecurityAuthcToken  `json:"token"`
+	Realms *NodeInfoXpackSecurityAuthcRealms `json:"realms,omitempty"`
+	Token  *NodeInfoXpackSecurityAuthcToken  `json:"token,omitempty"`
 }
 
 // NewNodeInfoXpackSecurityAuthc returns a NodeInfoXpackSecurityAuthc.

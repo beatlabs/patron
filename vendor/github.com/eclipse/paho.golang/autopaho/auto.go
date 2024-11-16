@@ -70,9 +70,11 @@ type ClientConfig struct {
 	CleanStartOnInitialConnection bool        //  Clean Start flag, if true, existing session information will be cleared on the first connection (it will be false for subsequent connections)
 	SessionExpiryInterval         uint32      // Session Expiry Interval in seconds (if 0 the Session ends when the Network Connection is closed)
 
-	ConnectRetryDelay time.Duration    // How long to wait between connection attempts (defaults to 10s)
-	ConnectTimeout    time.Duration    // How long to wait for the connection process to complete (defaults to 10s)
-	WebSocketCfg      *WebSocketConfig // Enables customisation of the websocket connection
+	// Deprecated: ConnectRetryDelay is deprecated and its functionality is replaced by ReconnectBackoff.
+	ConnectRetryDelay time.Duration           // How long to wait between connection attempts (defaults to 10s)
+	ReconnectBackoff  func(int) time.Duration // How long to wait after failed connection attempt N (defaults to 10s)
+	ConnectTimeout    time.Duration           // How long to wait for the connection process to complete (defaults to 10s)
+	WebSocketCfg      *WebSocketConfig        // Enables customisation of the websocket connection
 
 	Queue queue.Queue // Used to queue up publish messages (if nil an error will be returned if publish could not be transmitted)
 
@@ -99,7 +101,7 @@ type ClientConfig struct {
 	WillMessage    *paho.WillMessage
 	WillProperties *paho.WillProperties
 
-	ConnectPacketBuilder func(*paho.Connect, *url.URL) *paho.Connect // called prior to connection allowing customisation of the CONNECT packet
+	ConnectPacketBuilder func(*paho.Connect, *url.URL) (*paho.Connect, error) // called prior to connection allowing customisation of the CONNECT packet
 
 	// DisconnectPacketBuilder - called prior to disconnection allowing customisation of the DISCONNECT
 	// packet. If the function returns nil, then no DISCONNECT packet will be passed; if nil a default packet is sent.
@@ -177,8 +179,8 @@ func (cfg *ClientConfig) SetWillMessage(topic string, payload []byte, qos byte, 
 //
 // Deprecated: Set ConnectPacketBuilder directly instead. This function exists for
 // backwards compatibility only (and may be removed in the future).
-func (cfg *ClientConfig) SetConnectPacketConfigurator(fn func(*paho.Connect) *paho.Connect) bool {
-	cfg.ConnectPacketBuilder = func(pc *paho.Connect, u *url.URL) *paho.Connect {
+func (cfg *ClientConfig) SetConnectPacketConfigurator(fn func(*paho.Connect) (*paho.Connect, error)) bool {
+	cfg.ConnectPacketBuilder = func(pc *paho.Connect, u *url.URL) (*paho.Connect, error) {
 		return fn(pc)
 	}
 	return fn != nil
@@ -196,7 +198,7 @@ func (cfg *ClientConfig) SetDisConnectPacketConfigurator(fn func() *paho.Disconn
 
 // buildConnectPacket constructs a Connect packet for the paho client, based on staged configuration.
 // If the program uses SetConnectPacketConfigurator, the provided callback will be executed with the preliminary Connect packet representation.
-func (cfg *ClientConfig) buildConnectPacket(firstConnection bool, serverURL *url.URL) *paho.Connect {
+func (cfg *ClientConfig) buildConnectPacket(firstConnection bool, serverURL *url.URL) (*paho.Connect, error) {
 
 	cp := &paho.Connect{
 		KeepAlive:  cfg.KeepAlive,
@@ -228,10 +230,14 @@ func (cfg *ClientConfig) buildConnectPacket(firstConnection bool, serverURL *url
 	}
 
 	if cfg.ConnectPacketBuilder != nil {
-		cp = cfg.ConnectPacketBuilder(cp, serverURL)
+		var err error
+		cp, err = cfg.ConnectPacketBuilder(cp, serverURL)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return cp
+	return cp, nil
 }
 
 // NewConnection creates a connection manager and begins the connection process (will retry until the context is cancelled)
@@ -242,8 +248,15 @@ func NewConnection(ctx context.Context, cfg ClientConfig) (*ConnectionManager, e
 	if cfg.Errors == nil {
 		cfg.Errors = log.NOOPLogger{}
 	}
-	if cfg.ConnectRetryDelay == 0 {
-		cfg.ConnectRetryDelay = 10 * time.Second
+	if cfg.ReconnectBackoff == nil {
+		// for backwards compatibility we check for ConnectRetryDelay first
+		// before using the default constant backoff strategy (which behaves
+		// identically to the previous behaviour)
+		if cfg.ConnectRetryDelay == 0 {
+			cfg.ReconnectBackoff = NewConstantBackoff(10 * time.Second)
+		} else {
+			cfg.ReconnectBackoff = NewConstantBackoff(cfg.ConnectRetryDelay)
+		}
 	}
 	if cfg.ConnectTimeout == 0 {
 		cfg.ConnectTimeout = 10 * time.Second

@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Get mapping definitions.
 // Retrieves mapping definitions for one or more fields.
 // For data streams, the API retrieves field mappings for the stream’s backing
 // indices.
@@ -82,6 +83,7 @@ func NewGetFieldMappingFunc(tp elastictransport.Interface) NewGetFieldMapping {
 	}
 }
 
+// Get mapping definitions.
 // Retrieves mapping definitions for one or more fields.
 // For data streams, the API retrieves field mappings for the stream’s backing
 // indices.

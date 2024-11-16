@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // IndicesRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/cat/indices/types.ts#L20-L801
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/cat/indices/types.ts#L20-L808
 type IndicesRecord struct {
 	// BulkAvgSizeInBytes average size in bytes of shard bulk
 	BulkAvgSizeInBytes *string `json:"bulk.avg_size_in_bytes,omitempty"`
@@ -49,6 +49,8 @@ type IndicesRecord struct {
 	CreationDate *string `json:"creation.date,omitempty"`
 	// CreationDateString index creation date (as string)
 	CreationDateString *string `json:"creation.date.string,omitempty"`
+	// DatasetSize total size of dataset (including the cache for partially mounted indices)
+	DatasetSize *string `json:"dataset.size,omitempty"`
 	// DocsCount available docs
 	DocsCount *string `json:"docs.count,omitempty"`
 	// DocsDeleted deleted docs
@@ -429,6 +431,18 @@ func (s *IndicesRecord) UnmarshalJSON(data []byte) error {
 				o = string(tmp[:])
 			}
 			s.CreationDateString = &o
+
+		case "dataset.size":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return fmt.Errorf("%s | %w", "DatasetSize", err)
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.DatasetSize = &o
 
 		case "docs.count", "dc", "docsCount":
 			var tmp json.RawMessage

@@ -29,7 +29,7 @@ func New[k comparable, v any](size int, useCase string) (*Cache[k, v], error) {
 		return nil, err
 	}
 
-	return newFunction(chc, lruAttribute, cache.UseCaseAttribute(useCase))
+	return newFunction(chc, lruAttribute, cache.UseCaseAttribute(useCase)), nil
 }
 
 // NewWithEvict returns a new LRU cache that can hold 'size' number of keys at a time.
@@ -44,17 +44,17 @@ func NewWithEvict[k comparable, v any](size int, useCase string, onEvict func(k,
 		return nil, err
 	}
 
-	return newFunction(chc, lruEvictAttribute, cache.UseCaseAttribute(useCase))
+	return newFunction(chc, lruEvictAttribute, cache.UseCaseAttribute(useCase)), nil
 }
 
 func newFunction[k comparable, v any](chc *lru.Cache[k, v], typeAttr attribute.KeyValue,
 	useCaseAttr attribute.KeyValue,
-) (*Cache[k, v], error) {
+) *Cache[k, v] {
 	return &Cache[k, v]{
 		cache:            chc,
 		typeAttribute:    typeAttr,
 		useCaseAttribute: useCaseAttr,
-	}, nil
+	}
 }
 
 // Get executes a lookup and returns whether a key exists in the cache along with its value.

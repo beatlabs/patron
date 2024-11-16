@@ -46,7 +46,7 @@ func TestNewWithEvict(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			c, err := NewWithEvict[string, string](tt.size, "test", func(k, v string) {})
+			c, err := NewWithEvict[string, string](tt.size, "test", func(_, _ string) {})
 			if tt.wantErr {
 				assert.Nil(t, c)
 				assert.EqualError(t, err, tt.err)
@@ -59,7 +59,7 @@ func TestNewWithEvict(t *testing.T) {
 }
 
 func TestCacheOperations(t *testing.T) {
-	c, err := NewWithEvict[string, string](10, "test", func(k, v string) {})
+	c, err := NewWithEvict[string, string](10, "test", func(_, _ string) {})
 	assert.NotNil(t, c)
 	require.NoError(t, err)
 
@@ -107,7 +107,7 @@ func TestCacheOperations(t *testing.T) {
 }
 
 func BenchmarkCache(b *testing.B) {
-	c, err := NewWithEvict[int, int](b.N, "test", func(k, v int) {})
+	c, err := NewWithEvict[int, int](b.N, "test", func(_, _ int) {})
 	require.NoError(b, err)
 
 	ctx := context.Background()

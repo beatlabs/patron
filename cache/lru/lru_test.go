@@ -21,7 +21,32 @@ func TestNew(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			c, err := New(tt.size, "test")
+			c, err := New[string, string](tt.size, "test")
+			if tt.wantErr {
+				assert.Nil(t, c)
+				assert.EqualError(t, err, tt.err)
+			} else {
+				assert.NotNil(t, c)
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestNewWithEvict(t *testing.T) {
+	tests := map[string]struct {
+		err     string
+		size    int
+		wantErr bool
+	}{
+		"negative size": {size: -1, wantErr: true, err: "must provide a positive size"},
+		"zero size":     {size: 0, wantErr: true, err: "must provide a positive size"},
+		"positive size": {size: 1024, wantErr: false},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			c, err := NewWithEvict[string, string](tt.size, "test", func(k, v string) {})
 			if tt.wantErr {
 				assert.Nil(t, c)
 				assert.EqualError(t, err, tt.err)
@@ -34,7 +59,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestCacheOperations(t *testing.T) {
-	c, err := New(10, "test")
+	c, err := NewWithEvict[string, string](10, "test", func(k, v string) {})
 	assert.NotNil(t, c)
 	require.NoError(t, err)
 
@@ -79,4 +104,21 @@ func TestCacheOperations(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 0, c.cache.Len())
 	})
+}
+
+func BenchmarkCache(b *testing.B) {
+	c, err := NewWithEvict[int, int](b.N, "test", func(k, v int) {})
+	require.NoError(b, err)
+
+	ctx := context.Background()
+	for i := 0; i < b.N; i++ {
+		err = c.Set(ctx, i, i)
+		require.NoError(b, err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _, err = c.Get(ctx, i)
+		require.NoError(b, err)
+	}
 }

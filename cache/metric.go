@@ -12,10 +12,11 @@ import (
 const packageName = "cache"
 
 var (
-	cashHitAttribute  = attribute.String("cache.status", "hit")
-	cashMissAttribute = attribute.String("cache.status", "miss")
-	cacheCounter      metric.Int64Counter
-	cacheOnce         sync.Once
+	cacheHitAttribute   = attribute.String("cache.status", "hit")
+	cacheMissAttribute  = attribute.String("cache.status", "miss")
+	cacheEvictAttribute = attribute.String("cache.status", "evict")
+	cacheCounter        metric.Int64Counter
+	cacheOnce           sync.Once
 )
 
 // SetupMetricsOnce initializes the cache counter.
@@ -32,12 +33,17 @@ func UseCaseAttribute(useCase string) attribute.KeyValue {
 
 // ObserveHit increments the cache hit counter.
 func ObserveHit(ctx context.Context, attrs ...attribute.KeyValue) {
-	attrs = append(attrs, cashHitAttribute)
+	attrs = append(attrs, cacheHitAttribute)
 	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
 }
 
 // ObserveMiss increments the cache miss counter.
 func ObserveMiss(ctx context.Context, attrs ...attribute.KeyValue) {
-	attrs = append(attrs, cashMissAttribute)
+	attrs = append(attrs, cacheMissAttribute)
+	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
+}
+
+func ObserveEviction(ctx context.Context, attrs ...attribute.KeyValue) {
+	attrs = append(attrs, cacheEvictAttribute)
 	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
 }

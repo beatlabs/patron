@@ -33,7 +33,7 @@ func Test_messageWrapper(t *testing.T) {
 	assert.Equal(t, ctx, msgCtx)
 	assert.NotNil(t, consumerMessage)
 	assert.Equal(t, "topicone", consumerMessage.Topic)
-	assert.Equal(t, []byte(`{"key":"value"}`), consumerMessage.Value)
+	assert.JSONEq(t, `{"key":"value"}`, string(consumerMessage.Value))
 }
 
 func Test_NewBatch(t *testing.T) {

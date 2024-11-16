@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Returns a document.
+// Get a document by its ID.
+// Retrieves the document with the specified ID from an index.
 package get
 
 import (
@@ -83,7 +84,8 @@ func NewGetFunc(tp elastictransport.Interface) NewGet {
 	}
 }
 
-// Returns a document.
+// Get a document by its ID.
+// Retrieves the document with the specified ID from an index.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html
 func New(tp elastictransport.Interface) *Get {

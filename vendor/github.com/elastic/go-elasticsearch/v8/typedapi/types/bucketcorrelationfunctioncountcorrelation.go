@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
 // BucketCorrelationFunctionCountCorrelation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/aggregations/pipeline.ts#L144-L147
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/_types/aggregations/pipeline.ts#L155-L158
 type BucketCorrelationFunctionCountCorrelation struct {
 	// Indicator The indicator with which to correlate the configured `bucket_path` values.
 	Indicator BucketCorrelationFunctionCountCorrelationIndicator `json:"indicator"`

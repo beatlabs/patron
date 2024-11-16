@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Renders a search template as a search request body.
+// Render a search template.
+//
+// Render a search template as a search request body.
 package rendersearchtemplate
 
 import (
@@ -79,7 +81,9 @@ func NewRenderSearchTemplateFunc(tp elastictransport.Interface) NewRenderSearchT
 	}
 }
 
-// Renders a search template as a search request body.
+// Render a search template.
+//
+// Render a search template as a search request body.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/render-search-template-api.html
 func New(tp elastictransport.Interface) *RenderSearchTemplate {

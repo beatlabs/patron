@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package getinfluencers
 
@@ -29,7 +29,7 @@ import (
 
 // Request holds the request body struct for the package getinfluencers
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/ml/get_influencers/MlGetInfluencersRequest.ts#L26-L97
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/ml/get_influencers/MlGetInfluencersRequest.ts#L26-L98
 type Request struct {
 
 	// Page Configures pagination.

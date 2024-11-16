@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Creates or updates a user profile on behalf of another user.
+// Activate a user profile.
+//
+// Create or update a user profile on behalf of another user.
 package activateuserprofile
 
 import (
@@ -74,7 +76,9 @@ func NewActivateUserProfileFunc(tp elastictransport.Interface) NewActivateUserPr
 	}
 }
 
-// Creates or updates a user profile on behalf of another user.
+// Activate a user profile.
+//
+// Create or update a user profile on behalf of another user.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-activate-user-profile.html
 func New(tp elastictransport.Interface) *ActivateUserProfile {

@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Retrieves application privileges.
+// Get application privileges.
 package getprivileges
 
 import (
@@ -77,7 +77,7 @@ func NewGetPrivilegesFunc(tp elastictransport.Interface) NewGetPrivileges {
 	}
 }
 
-// Retrieves application privileges.
+// Get application privileges.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-privileges.html
 func New(tp elastictransport.Interface) *GetPrivileges {

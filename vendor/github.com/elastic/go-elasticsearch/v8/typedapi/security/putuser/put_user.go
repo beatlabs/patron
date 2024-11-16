@@ -16,10 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Adds and updates users in the native realm. These users are commonly referred
-// to as native users.
+// Create or update users.
+//
+// A password is required for adding a new user but is optional when updating an
+// existing user.
+// To change a user’s password without updating any other fields, use the change
+// password API.
 package putuser
 
 import (
@@ -83,8 +87,12 @@ func NewPutUserFunc(tp elastictransport.Interface) NewPutUser {
 	}
 }
 
-// Adds and updates users in the native realm. These users are commonly referred
-// to as native users.
+// Create or update users.
+//
+// A password is required for adding a new user but is optional when updating an
+// existing user.
+// To change a user’s password without updating any other fields, use the change
+// password API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-put-user.html
 func New(tp elastictransport.Interface) *PutUser {

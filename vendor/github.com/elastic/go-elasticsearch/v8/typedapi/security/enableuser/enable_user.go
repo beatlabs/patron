@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Enables users in the native realm.
+// Enable users.
+//
+// Enable users in the native realm.
 package enableuser
 
 import (
@@ -77,7 +79,9 @@ func NewEnableUserFunc(tp elastictransport.Interface) NewEnableUser {
 	}
 }
 
-// Enables users in the native realm.
+// Enable users.
+//
+// Enable users in the native realm.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-enable-user.html
 func New(tp elastictransport.Interface) *EnableUser {

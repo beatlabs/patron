@@ -15,13 +15,14 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.15.0: DO NOT EDIT
+// Code generated from specification version 8.16.0: DO NOT EDIT
 
 package esapi
 
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -46,12 +47,13 @@ func newCapabilitiesFunc(t Transport) Capabilities {
 //
 // This API is experimental.
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/capabilities.html.
+// See full documentation at https://github.com/elastic/elasticsearch/blob/main/rest-api-spec/src/yamlRestTest/resources/rest-api-spec/test/README.asciidoc#require-or-skip-api-capabilities.
 type Capabilities func(o ...func(*CapabilitiesRequest)) (*Response, error)
 
 // CapabilitiesRequest configures the Capabilities API request.
 type CapabilitiesRequest struct {
 	Capabilities string
+	LocalOnly    *bool
 	Method       string
 	Parameters   string
 	Path         string
@@ -95,6 +97,10 @@ func (r CapabilitiesRequest) Do(providedCtx context.Context, transport Transport
 
 	if r.Capabilities != "" {
 		params["capabilities"] = r.Capabilities
+	}
+
+	if r.LocalOnly != nil {
+		params["local_only"] = strconv.FormatBool(*r.LocalOnly)
 	}
 
 	if r.Method != "" {
@@ -191,6 +197,13 @@ func (f Capabilities) WithContext(v context.Context) func(*CapabilitiesRequest) 
 func (f Capabilities) WithCapabilities(v string) func(*CapabilitiesRequest) {
 	return func(r *CapabilitiesRequest) {
 		r.Capabilities = v
+	}
+}
+
+// WithLocalOnly - true if only the node being called should be considered.
+func (f Capabilities) WithLocalOnly(v bool) func(*CapabilitiesRequest) {
+	return func(r *CapabilitiesRequest) {
+		r.LocalOnly = &v
 	}
 }
 

@@ -16,10 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Deletes an anomaly detection job.
-//
+// Delete an anomaly detection job.
 // All job configuration, model state and results are deleted.
 // It is not currently possible to delete multiple jobs using wildcards or a
 // comma separated list. If you delete a job that has a datafeed, the request
@@ -83,8 +82,7 @@ func NewDeleteJobFunc(tp elastictransport.Interface) NewDeleteJob {
 	}
 }
 
-// Deletes an anomaly detection job.
-//
+// Delete an anomaly detection job.
 // All job configuration, model state and results are deleted.
 // It is not currently possible to delete multiple jobs using wildcards or a
 // comma separated list. If you delete a job that has a datafeed, the request

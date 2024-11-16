@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package updatefilter
 
@@ -27,7 +27,7 @@ import (
 
 // Request holds the request body struct for the package updatefilter
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/ml/update_filter/MlUpdateFilterRequest.ts#L23-L51
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/ml/update_filter/MlUpdateFilterRequest.ts#L23-L53
 type Request struct {
 
 	// AddItems The items to add to the filter.

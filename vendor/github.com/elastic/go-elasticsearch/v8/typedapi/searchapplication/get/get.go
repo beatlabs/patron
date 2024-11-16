@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Returns the details about a search application
+// Get search application details.
 package get
 
 import (
@@ -76,7 +76,7 @@ func NewGetFunc(tp elastictransport.Interface) NewGet {
 	}
 }
 
-// Returns the details about a search application
+// Get search application details.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/get-search-application.html
 func New(tp elastictransport.Interface) *Get {

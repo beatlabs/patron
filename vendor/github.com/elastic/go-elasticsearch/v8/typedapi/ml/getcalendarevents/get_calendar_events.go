@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Retrieves information about the scheduled events in calendars.
+// Get info about events in calendars.
 package getcalendarevents
 
 import (
@@ -76,7 +76,7 @@ func NewGetCalendarEventsFunc(tp elastictransport.Interface) NewGetCalendarEvent
 	}
 }
 
-// Retrieves information about the scheduled events in calendars.
+// Get info about events in calendars.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-get-calendar-event.html
 func New(tp elastictransport.Interface) *GetCalendarEvents {

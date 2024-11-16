@@ -16,14 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 // Package clusterprivilege
 package clusterprivilege
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/security/_types/Privileges.ts#L42-L199
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/security/_types/Privileges.ts#L42-L195
 type ClusterPrivilege struct {
 	Name string
 }
@@ -128,8 +128,6 @@ var (
 	Postbehavioralanalyticsevent = ClusterPrivilege{"post_behavioral_analytics_event"}
 
 	Readccr = ClusterPrivilege{"read_ccr"}
-
-	Readconnectorsecrets = ClusterPrivilege{"read_connector_secrets"}
 
 	Readfleetsecrets = ClusterPrivilege{"read_fleet_secrets"}
 
@@ -255,8 +253,6 @@ func (c *ClusterPrivilege) UnmarshalText(text []byte) error {
 		*c = Postbehavioralanalyticsevent
 	case "read_ccr":
 		*c = Readccr
-	case "read_connector_secrets":
-		*c = Readconnectorsecrets
 	case "read_fleet_secrets":
 		*c = Readfleetsecrets
 	case "read_ilm":

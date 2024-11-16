@@ -16,13 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Get component templates.
 // Returns information about component templates in a cluster.
 // Component templates are building blocks for constructing index templates that
 // specify index mappings, settings, and aliases.
-// IMPORTANT: cat APIs are only intended for human consumption using the command
-// line or Kibana console.
+//
+// CAT APIs are only intended for human consumption using the command line or
+// Kibana console.
 // They are not intended for use by applications. For application consumption,
 // use the get component template API.
 package componenttemplates
@@ -80,11 +82,13 @@ func NewComponentTemplatesFunc(tp elastictransport.Interface) NewComponentTempla
 	}
 }
 
+// Get component templates.
 // Returns information about component templates in a cluster.
 // Component templates are building blocks for constructing index templates that
 // specify index mappings, settings, and aliases.
-// IMPORTANT: cat APIs are only intended for human consumption using the command
-// line or Kibana console.
+//
+// CAT APIs are only intended for human consumption using the command line or
+// Kibana console.
 // They are not intended for use by applications. For application consumption,
 // use the get component template API.
 //

@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Checks if a document in an index exists.
+// Check a document.
+// Checks if a specified document exists.
 package exists
 
 import (
@@ -80,7 +81,8 @@ func NewExistsFunc(tp elastictransport.Interface) NewExists {
 	}
 }
 
-// Checks if a document in an index exists.
+// Check a document.
+// Checks if a specified document exists.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html
 func New(tp elastictransport.Interface) *Exists {

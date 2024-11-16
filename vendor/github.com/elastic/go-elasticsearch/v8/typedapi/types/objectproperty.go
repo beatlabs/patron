@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // ObjectProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/mapping/complex.ts#L46-L50
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/_types/mapping/complex.ts#L46-L50
 type ObjectProperty struct {
 	CopyTo      []string                       `json:"copy_to,omitempty"`
 	Dynamic     *dynamicmapping.DynamicMapping `json:"dynamic,omitempty"`
@@ -43,7 +43,6 @@ type ObjectProperty struct {
 	// Meta Metadata about the field.
 	Meta       map[string]string   `json:"meta,omitempty"`
 	Properties map[string]Property `json:"properties,omitempty"`
-	Similarity *string             `json:"similarity,omitempty"`
 	Store      *bool               `json:"store,omitempty"`
 	Subobjects *bool               `json:"subobjects,omitempty"`
 	Type       string              `json:"type,omitempty"`
@@ -761,18 +760,6 @@ func (s *ObjectProperty) UnmarshalJSON(data []byte) error {
 				}
 			}
 
-		case "similarity":
-			var tmp json.RawMessage
-			if err := dec.Decode(&tmp); err != nil {
-				return fmt.Errorf("%s | %w", "Similarity", err)
-			}
-			o := string(tmp[:])
-			o, err = strconv.Unquote(o)
-			if err != nil {
-				o = string(tmp[:])
-			}
-			s.Similarity = &o
-
 		case "store":
 			var tmp any
 			dec.Decode(&tmp)
@@ -822,7 +809,6 @@ func (s ObjectProperty) MarshalJSON() ([]byte, error) {
 		IgnoreAbove: s.IgnoreAbove,
 		Meta:        s.Meta,
 		Properties:  s.Properties,
-		Similarity:  s.Similarity,
 		Store:       s.Store,
 		Subobjects:  s.Subobjects,
 		Type:        s.Type,

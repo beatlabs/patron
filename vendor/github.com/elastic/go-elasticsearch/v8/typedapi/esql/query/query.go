@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 // Executes an ES|QL request
 package query
@@ -35,6 +35,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/esqlformat"
 )
 
 // ErrBuildPath is returned in case of missing parameters within the build of the request.
@@ -292,8 +293,8 @@ func (r *Query) Header(key, value string) *Query {
 
 // Format A short version of the Accept header, e.g. json, yaml.
 // API name: format
-func (r *Query) Format(format string) *Query {
-	r.values.Set("format", format)
+func (r *Query) Format(format esqlformat.EsqlFormat) *Query {
+	r.values.Set("format", format.String())
 
 	return r
 }
@@ -303,6 +304,17 @@ func (r *Query) Format(format string) *Query {
 // API name: delimiter
 func (r *Query) Delimiter(delimiter string) *Query {
 	r.values.Set("delimiter", delimiter)
+
+	return r
+}
+
+// DropNullColumns Should columns that are entirely `null` be removed from the `columns` and
+// `values` portion of the results?
+// Defaults to `false`. If `true` then the response will include an extra
+// section under the name `all_columns` which has the name of all columns.
+// API name: drop_null_columns
+func (r *Query) DropNullColumns(dropnullcolumns bool) *Query {
+	r.values.Set("drop_null_columns", strconv.FormatBool(dropnullcolumns))
 
 	return r
 }
@@ -384,8 +396,21 @@ func (r *Query) Locale(locale string) *Query {
 // separate list of parameters. Use question mark placeholders (?) in the query
 // string for each of the parameters.
 // API name: params
-func (r *Query) Params(params ...types.ScalarValue) *Query {
+func (r *Query) Params(params ...types.FieldValue) *Query {
 	r.req.Params = params
+
+	return r
+}
+
+// Profile If provided and `true` the response will include an extra `profile` object
+// with information on how the query was executed. This information is for human
+// debugging
+// and its format can change at any time but it can give some insight into the
+// performance
+// of each part of the query.
+// API name: profile
+func (r *Query) Profile(profile bool) *Query {
+	r.req.Profile = &profile
 
 	return r
 }
@@ -396,6 +421,16 @@ func (r *Query) Params(params ...types.ScalarValue) *Query {
 func (r *Query) Query(query string) *Query {
 
 	r.req.Query = query
+
+	return r
+}
+
+// Tables Tables to use with the LOOKUP operation. The top level key is the table
+// name and the next level key is the column name.
+// API name: tables
+func (r *Query) Tables(tables map[string]map[string]types.TableValuesContainer) *Query {
+
+	r.req.Tables = tables
 
 	return r
 }

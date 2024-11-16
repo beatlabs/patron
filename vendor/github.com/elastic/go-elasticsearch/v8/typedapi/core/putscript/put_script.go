@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Create or update a script or search template.
 // Creates or updates a stored script or search template.
 package putscript
 
@@ -84,6 +85,7 @@ func NewPutScriptFunc(tp elastictransport.Interface) NewPutScript {
 	}
 }
 
+// Create or update a script or search template.
 // Creates or updates a stored script or search template.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting.html

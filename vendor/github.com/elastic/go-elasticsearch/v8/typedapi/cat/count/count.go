@@ -16,14 +16,16 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Get a document count.
 // Provides quick access to a document count for a data stream, an index, or an
 // entire cluster.
-// NOTE: The document count only includes live documents, not deleted documents
-// which have not yet been removed by the merge process.
-// IMPORTANT: cat APIs are only intended for human consumption using the command
-// line or Kibana console.
+// The document count only includes live documents, not deleted documents which
+// have not yet been removed by the merge process.
+//
+// CAT APIs are only intended for human consumption using the command line or
+// Kibana console.
 // They are not intended for use by applications. For application consumption,
 // use the count API.
 package count
@@ -81,12 +83,14 @@ func NewCountFunc(tp elastictransport.Interface) NewCount {
 	}
 }
 
+// Get a document count.
 // Provides quick access to a document count for a data stream, an index, or an
 // entire cluster.
-// NOTE: The document count only includes live documents, not deleted documents
-// which have not yet been removed by the merge process.
-// IMPORTANT: cat APIs are only intended for human consumption using the command
-// line or Kibana console.
+// The document count only includes live documents, not deleted documents which
+// have not yet been removed by the merge process.
+//
+// CAT APIs are only intended for human consumption using the command line or
+// Kibana console.
 // They are not intended for use by applications. For application consumption,
 // use the count API.
 //

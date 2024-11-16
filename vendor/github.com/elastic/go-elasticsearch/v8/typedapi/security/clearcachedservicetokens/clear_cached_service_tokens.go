@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Evicts tokens from the service account token caches.
+// Clear service account token caches.
+//
+// Evict a subset of all entries from the service account token caches.
 package clearcachedservicetokens
 
 import (
@@ -86,7 +88,9 @@ func NewClearCachedServiceTokensFunc(tp elastictransport.Interface) NewClearCach
 	}
 }
 
-// Evicts tokens from the service account token caches.
+// Clear service account token caches.
+//
+// Evict a subset of all entries from the service account token caches.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-clear-service-token-caches.html
 func New(tp elastictransport.Interface) *ClearCachedServiceTokens {

@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Delete a document.
 // Removes a JSON document from the specified index.
 package delete
 
@@ -84,6 +85,7 @@ func NewDeleteFunc(tp elastictransport.Interface) NewDelete {
 	}
 }
 
+// Delete a document.
 // Removes a JSON document from the specified index.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html

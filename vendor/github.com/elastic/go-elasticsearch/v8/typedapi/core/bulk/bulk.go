@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Bulk index or delete documents.
 // Performs multiple indexing or delete operations in a single API call.
 // This reduces overhead and can greatly increase indexing speed.
 package bulk
@@ -81,6 +82,7 @@ func NewBulkFunc(tp elastictransport.Interface) NewBulk {
 	}
 }
 
+// Bulk index or delete documents.
 // Performs multiple indexing or delete operations in a single API call.
 // This reduces overhead and can greatly increase indexing speed.
 //

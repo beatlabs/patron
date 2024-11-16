@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Disables a user profile so it's not visible in user profile searches.
+// Disable a user profile.
+//
+// Disable user profiles so that they are not visible in user profile searches.
 package disableuserprofile
 
 import (
@@ -77,7 +79,9 @@ func NewDisableUserProfileFunc(tp elastictransport.Interface) NewDisableUserProf
 	}
 }
 
-// Disables a user profile so it's not visible in user profile searches.
+// Disable a user profile.
+//
+// Disable user profiles so that they are not visible in user profile searches.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-disable-user-profile.html
 func New(tp elastictransport.Interface) *DisableUserProfile {

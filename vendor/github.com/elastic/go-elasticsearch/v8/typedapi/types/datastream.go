@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
@@ -34,10 +34,12 @@ import (
 
 // DataStream type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/indices/_types/DataStream.ts#L39-L112
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/indices/_types/DataStream.ts#L45-L127
 type DataStream struct {
 	// AllowCustomRouting If `true`, the data stream allows custom routing on write request.
 	AllowCustomRouting *bool `json:"allow_custom_routing,omitempty"`
+	// FailureStore Information about failure store backing indices
+	FailureStore *FailureStore `json:"failure_store,omitempty"`
 	// Generation Current generation for the data stream. This number acts as a cumulative
 	// count of the stream’s rollovers, starting at 1.
 	Generation int `json:"generation"`
@@ -57,8 +59,7 @@ type DataStream struct {
 	// The last item in this array contains information about the stream’s current
 	// write index.
 	Indices []DataStreamIndex `json:"indices"`
-	// Lifecycle Contains the configuration for the data lifecycle management of this data
-	// stream.
+	// Lifecycle Contains the configuration for the data stream lifecycle of this data stream.
 	Lifecycle *DataStreamLifecycleWithRollover `json:"lifecycle,omitempty"`
 	// Meta_ Custom metadata for the stream, copied from the `_meta` object of the
 	// stream’s matching index template.
@@ -76,6 +77,10 @@ type DataStream struct {
 	// replication and the local cluster can not write into this data stream or
 	// change its mappings.
 	Replicated *bool `json:"replicated,omitempty"`
+	// RolloverOnWrite If `true`, the next write to this data stream will trigger a rollover first
+	// and the document will be indexed in the new backing index. If the rollover
+	// fails the indexing request will fail too.
+	RolloverOnWrite bool `json:"rollover_on_write"`
 	// Status Health status of the data stream.
 	// This health status is based on the state of the primary and replica shards of
 	// the stream’s backing indices.
@@ -117,6 +122,11 @@ func (s *DataStream) UnmarshalJSON(data []byte) error {
 				s.AllowCustomRouting = &value
 			case bool:
 				s.AllowCustomRouting = &v
+			}
+
+		case "failure_store":
+			if err := dec.Decode(&s.FailureStore); err != nil {
+				return fmt.Errorf("%s | %w", "FailureStore", err)
 			}
 
 		case "generation":
@@ -205,6 +215,20 @@ func (s *DataStream) UnmarshalJSON(data []byte) error {
 				s.Replicated = &value
 			case bool:
 				s.Replicated = &v
+			}
+
+		case "rollover_on_write":
+			var tmp any
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return fmt.Errorf("%s | %w", "RolloverOnWrite", err)
+				}
+				s.RolloverOnWrite = value
+			case bool:
+				s.RolloverOnWrite = v
 			}
 
 		case "status":

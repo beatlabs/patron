@@ -16,8 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Logout of SAML completely.
+//
 // Verifies the logout response sent from the SAML IdP.
 package samlcompletelogout
 
@@ -72,6 +74,8 @@ func NewSamlCompleteLogoutFunc(tp elastictransport.Interface) NewSamlCompleteLog
 	}
 }
 
+// Logout of SAML completely.
+//
 // Verifies the logout response sent from the SAML IdP.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-saml-complete-logout.html

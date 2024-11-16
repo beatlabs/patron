@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Validates a potentially expensive query without executing it.
+// Validate a query.
+// Validates a query without running it.
 package validatequery
 
 import (
@@ -81,7 +82,8 @@ func NewValidateQueryFunc(tp elastictransport.Interface) NewValidateQuery {
 	}
 }
 
-// Validates a potentially expensive query without executing it.
+// Validate a query.
+// Validates a query without running it.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-validate.html
 func New(tp elastictransport.Interface) *ValidateQuery {

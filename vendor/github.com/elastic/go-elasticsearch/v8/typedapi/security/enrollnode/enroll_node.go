@@ -16,9 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Allows a new node to join an existing cluster with security features enabled.
+// Enroll a node.
+//
+// Enroll a new node to allow it to join an existing cluster with security
+// features enabled.
 package enrollnode
 
 import (
@@ -68,7 +71,10 @@ func NewEnrollNodeFunc(tp elastictransport.Interface) NewEnrollNode {
 	}
 }
 
-// Allows a new node to join an existing cluster with security features enabled.
+// Enroll a node.
+//
+// Enroll a new node to allow it to join an existing cluster with security
+// features enabled.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-node-enrollment.html
 func New(tp elastictransport.Interface) *EnrollNode {

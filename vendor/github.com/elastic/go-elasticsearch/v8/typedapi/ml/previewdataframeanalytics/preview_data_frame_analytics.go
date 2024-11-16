@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Preview features used by data frame analytics.
 // Previews the extracted features used by a data frame analytics config.
 package previewdataframeanalytics
 
@@ -79,6 +80,7 @@ func NewPreviewDataFrameAnalyticsFunc(tp elastictransport.Interface) NewPreviewD
 	}
 }
 
+// Preview features used by data frame analytics.
 // Previews the extracted features used by a data frame analytics config.
 //
 // http://www.elastic.co/guide/en/elasticsearch/reference/current/preview-dfanalytics.html

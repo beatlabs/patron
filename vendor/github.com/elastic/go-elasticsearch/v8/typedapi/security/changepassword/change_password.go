@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
-// Changes the passwords of users in the native realm and built-in users.
+// Change passwords.
+//
+// Change the passwords of users in the native realm and built-in users.
 package changepassword
 
 import (
@@ -80,7 +82,9 @@ func NewChangePasswordFunc(tp elastictransport.Interface) NewChangePassword {
 	}
 }
 
-// Changes the passwords of users in the native realm and built-in users.
+// Change passwords.
+//
+// Change the passwords of users in the native realm and built-in users.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-change-password.html
 func New(tp elastictransport.Interface) *ChangePassword {

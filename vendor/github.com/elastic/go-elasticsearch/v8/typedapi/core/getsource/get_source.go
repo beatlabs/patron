@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Get a document's source.
 // Returns the source of a document.
 package getsource
 
@@ -82,6 +83,7 @@ func NewGetSourceFunc(tp elastictransport.Interface) NewGetSource {
 	}
 }
 
+// Get a document's source.
 // Returns the source of a document.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
 package types
 
@@ -31,9 +31,9 @@ import (
 
 // KeywordTokenizer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/19027dbdd366978ccae41842a040a636730e7c10/specification/_types/analysis/tokenizers.ts#L62-L65
+// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/_types/analysis/tokenizers.ts#L68-L74
 type KeywordTokenizer struct {
-	BufferSize int     `json:"buffer_size"`
+	BufferSize *int    `json:"buffer_size,omitempty"`
 	Type       string  `json:"type,omitempty"`
 	Version    *string `json:"version,omitempty"`
 }
@@ -63,10 +63,10 @@ func (s *KeywordTokenizer) UnmarshalJSON(data []byte) error {
 				if err != nil {
 					return fmt.Errorf("%s | %w", "BufferSize", err)
 				}
-				s.BufferSize = value
+				s.BufferSize = &value
 			case float64:
 				f := int(v)
-				s.BufferSize = f
+				s.BufferSize = &f
 			}
 
 		case "type":

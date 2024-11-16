@@ -16,15 +16,16 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Get anomaly detection jobs.
 // Returns configuration and usage information for anomaly detection jobs.
 // This API returns a maximum of 10,000 jobs.
 // If the Elasticsearch security features are enabled, you must have
 // `monitor_ml`,
 // `monitor`, `manage_ml`, or `manage` cluster privileges to use this API.
 //
-// IMPORTANT: cat APIs are only intended for human consumption using the Kibana
+// CAT APIs are only intended for human consumption using the Kibana
 // console or command line. They are not intended for use by applications. For
 // application consumption, use the get anomaly detection job statistics API.
 package mljobs
@@ -85,13 +86,14 @@ func NewMlJobsFunc(tp elastictransport.Interface) NewMlJobs {
 	}
 }
 
+// Get anomaly detection jobs.
 // Returns configuration and usage information for anomaly detection jobs.
 // This API returns a maximum of 10,000 jobs.
 // If the Elasticsearch security features are enabled, you must have
 // `monitor_ml`,
 // `monitor`, `manage_ml`, or `manage` cluster privileges to use this API.
 //
-// IMPORTANT: cat APIs are only intended for human consumption using the Kibana
+// CAT APIs are only intended for human consumption using the Kibana
 // console or command line. They are not intended for use by applications. For
 // application consumption, use the get anomaly detection job statistics API.
 //

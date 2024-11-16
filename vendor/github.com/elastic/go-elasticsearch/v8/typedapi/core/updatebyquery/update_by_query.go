@@ -16,8 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/19027dbdd366978ccae41842a040a636730e7c10
+// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
 
+// Update documents.
 // Updates documents that match the specified query.
 // If no query is specified, performs an update on every document in the data
 // stream or index without modifying the source, which is useful for picking up
@@ -88,6 +89,7 @@ func NewUpdateByQueryFunc(tp elastictransport.Interface) NewUpdateByQuery {
 	}
 }
 
+// Update documents.
 // Updates documents that match the specified query.
 // If no query is specified, performs an update on every document in the data
 // stream or index without modifying the source, which is useful for picking up
@@ -429,6 +431,14 @@ func (r *UpdateByQuery) Pipeline(pipeline string) *UpdateByQuery {
 // API name: preference
 func (r *UpdateByQuery) Preference(preference string) *UpdateByQuery {
 	r.values.Set("preference", preference)
+
+	return r
+}
+
+// Q Query in the Lucene query string syntax.
+// API name: q
+func (r *UpdateByQuery) Q(q string) *UpdateByQuery {
+	r.values.Set("q", q)
 
 	return r
 }

@@ -45,7 +45,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true # optional (default = false)
-          files: ./coverage.txt          
+          files: ./coverage.txt
 
       - name: e2e
         run:  |

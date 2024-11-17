@@ -24,14 +24,24 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.patron.yaml)")
-	viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/config/patron.yaml)")
+	if err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config")); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// rootCmd.AddCommand(cmd1)
 	// rootCmd.AddCommand(cmd2)
 }
 
 func initConfig() {
+	viper.SetConfigName("patron")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("/etc/patron/")
+	viper.AddConfigPath("$HOME/.patron")
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("./config")
+
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {

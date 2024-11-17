@@ -1,6 +1,8 @@
-package patron
+package main
 
-import "github.com/beatlabs/patron/cli/command"
+import (
+	"github.com/beatlabs/patron/cmd/patron/command"
+)
 
 func main() {
 	command.Execute()

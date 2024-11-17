@@ -8,8 +8,7 @@ on:
 jobs:
   lint:
     name: Lint and fmt check
-    runs-on:
-      group: Default
+    runs-on: self-hosted
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -24,8 +23,7 @@ jobs:
 
   build:
     name: CI on Go
-    runs-on:
-      group: Default
+    runs-on: self-hosted
     steps:
       - name: Check out source code
         uses: actions/checkout@v4

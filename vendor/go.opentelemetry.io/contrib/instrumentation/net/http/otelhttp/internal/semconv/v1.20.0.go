@@ -1,6 +1,3 @@
-// Code created by gotmpl. DO NOT MODIFY.
-// source: internal/shared/semconv/v120.0.go.tmpl
-
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
@@ -11,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"strings"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp/internal/semconvutil"
 	"go.opentelemetry.io/otel/attribute"
@@ -19,7 +17,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
 )
 
-type OldHTTPServer struct{}
+type oldHTTPServer struct{}
 
 // RequestTraceAttrs returns trace attributes for an HTTP request received by a
 // server.
@@ -37,14 +35,14 @@ type OldHTTPServer struct{}
 //
 // If the primary server name is not known, server should be an empty string.
 // The req Host will be used to determine the server instead.
-func (o OldHTTPServer) RequestTraceAttrs(server string, req *http.Request) []attribute.KeyValue {
+func (o oldHTTPServer) RequestTraceAttrs(server string, req *http.Request) []attribute.KeyValue {
 	return semconvutil.HTTPServerRequest(server, req)
 }
 
 // ResponseTraceAttrs returns trace attributes for telemetry from an HTTP response.
 //
 // If any of the fields in the ResponseTelemetry are not set the attribute will be omitted.
-func (o OldHTTPServer) ResponseTraceAttrs(resp ResponseTelemetry) []attribute.KeyValue {
+func (o oldHTTPServer) ResponseTraceAttrs(resp ResponseTelemetry) []attribute.KeyValue {
 	attributes := []attribute.KeyValue{}
 
 	if resp.ReadBytes > 0 {
@@ -69,7 +67,7 @@ func (o OldHTTPServer) ResponseTraceAttrs(resp ResponseTelemetry) []attribute.Ke
 }
 
 // Route returns the attribute for the route.
-func (o OldHTTPServer) Route(route string) attribute.KeyValue {
+func (o oldHTTPServer) Route(route string) attribute.KeyValue {
 	return semconv.HTTPRoute(route)
 }
 
@@ -86,7 +84,7 @@ const (
 	serverDuration     = "http.server.duration"      // Incoming end to end duration, milliseconds
 )
 
-func (h OldHTTPServer) createMeasures(meter metric.Meter) (metric.Int64Counter, metric.Int64Counter, metric.Float64Histogram) {
+func (h oldHTTPServer) createMeasures(meter metric.Meter) (metric.Int64Counter, metric.Int64Counter, metric.Float64Histogram) {
 	if meter == nil {
 		return noop.Int64Counter{}, noop.Int64Counter{}, noop.Float64Histogram{}
 	}
@@ -115,17 +113,17 @@ func (h OldHTTPServer) createMeasures(meter metric.Meter) (metric.Int64Counter, 
 	return requestBytesCounter, responseBytesCounter, serverLatencyMeasure
 }
 
-func (o OldHTTPServer) MetricAttributes(server string, req *http.Request, statusCode int, additionalAttributes []attribute.KeyValue) []attribute.KeyValue {
+func (o oldHTTPServer) MetricAttributes(server string, req *http.Request, statusCode int, additionalAttributes []attribute.KeyValue) []attribute.KeyValue {
 	n := len(additionalAttributes) + 3
 	var host string
 	var p int
 	if server == "" {
-		host, p = SplitHostPort(req.Host)
+		host, p = splitHostPort(req.Host)
 	} else {
 		// Prioritize the primary server name.
-		host, p = SplitHostPort(server)
+		host, p = splitHostPort(server)
 		if p < 0 {
-			_, p = SplitHostPort(req.Host)
+			_, p = splitHostPort(req.Host)
 		}
 	}
 	hostPort := requiredHTTPPort(req.TLS != nil, p)
@@ -146,7 +144,7 @@ func (o OldHTTPServer) MetricAttributes(server string, req *http.Request, status
 
 	attributes := slices.Grow(additionalAttributes, n)
 	attributes = append(attributes,
-		semconv.HTTPMethod(standardizeHTTPMethod(req.Method)),
+		standardizeHTTPMethodMetric(req.Method),
 		o.scheme(req.TLS != nil),
 		semconv.NetHostName(host))
 
@@ -166,24 +164,24 @@ func (o OldHTTPServer) MetricAttributes(server string, req *http.Request, status
 	return attributes
 }
 
-func (o OldHTTPServer) scheme(https bool) attribute.KeyValue { // nolint:revive
+func (o oldHTTPServer) scheme(https bool) attribute.KeyValue { // nolint:revive
 	if https {
 		return semconv.HTTPSchemeHTTPS
 	}
 	return semconv.HTTPSchemeHTTP
 }
 
-type OldHTTPClient struct{}
+type oldHTTPClient struct{}
 
-func (o OldHTTPClient) RequestTraceAttrs(req *http.Request) []attribute.KeyValue {
+func (o oldHTTPClient) RequestTraceAttrs(req *http.Request) []attribute.KeyValue {
 	return semconvutil.HTTPClientRequest(req)
 }
 
-func (o OldHTTPClient) ResponseTraceAttrs(resp *http.Response) []attribute.KeyValue {
+func (o oldHTTPClient) ResponseTraceAttrs(resp *http.Response) []attribute.KeyValue {
 	return semconvutil.HTTPClientResponse(resp)
 }
 
-func (o OldHTTPClient) MetricAttributes(req *http.Request, statusCode int, additionalAttributes []attribute.KeyValue) []attribute.KeyValue {
+func (o oldHTTPClient) MetricAttributes(req *http.Request, statusCode int, additionalAttributes []attribute.KeyValue) []attribute.KeyValue {
 	/* The following semantic conventions are returned if present:
 	http.method                     string
 	http.status_code             int
@@ -199,7 +197,7 @@ func (o OldHTTPClient) MetricAttributes(req *http.Request, statusCode int, addit
 	var requestHost string
 	var requestPort int
 	for _, hostport := range []string{h, req.Header.Get("Host")} {
-		requestHost, requestPort = SplitHostPort(hostport)
+		requestHost, requestPort = splitHostPort(hostport)
 		if requestHost != "" || requestPort > 0 {
 			break
 		}
@@ -216,7 +214,7 @@ func (o OldHTTPClient) MetricAttributes(req *http.Request, statusCode int, addit
 
 	attributes := slices.Grow(additionalAttributes, n)
 	attributes = append(attributes,
-		semconv.HTTPMethod(standardizeHTTPMethod(req.Method)),
+		standardizeHTTPMethodMetric(req.Method),
 		semconv.NetPeerName(requestHost),
 	)
 
@@ -237,7 +235,7 @@ const (
 	clientDuration     = "http.client.duration"      // Incoming end to end duration, milliseconds
 )
 
-func (o OldHTTPClient) createMeasures(meter metric.Meter) (metric.Int64Counter, metric.Int64Counter, metric.Float64Histogram) {
+func (o oldHTTPClient) createMeasures(meter metric.Meter) (metric.Int64Counter, metric.Int64Counter, metric.Float64Histogram) {
 	if meter == nil {
 		return noop.Int64Counter{}, noop.Int64Counter{}, noop.Float64Histogram{}
 	}
@@ -263,4 +261,14 @@ func (o OldHTTPClient) createMeasures(meter metric.Meter) (metric.Int64Counter, 
 	handleErr(err)
 
 	return requestBytesCounter, responseBytesCounter, latencyMeasure
+}
+
+func standardizeHTTPMethodMetric(method string) attribute.KeyValue {
+	method = strings.ToUpper(method)
+	switch method {
+	case http.MethodConnect, http.MethodDelete, http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodPatch, http.MethodPost, http.MethodPut, http.MethodTrace:
+	default:
+		method = "_OTHER"
+	}
+	return semconv.HTTPMethod(method)
 }

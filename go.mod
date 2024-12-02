@@ -6,7 +6,7 @@ toolchain go1.23.3
 
 require (
 	github.com/IBM/sarama v1.43.3
-	github.com/aws/aws-sdk-go-v2 v1.32.5
+	github.com/aws/aws-sdk-go-v2 v1.32.6
 	github.com/aws/aws-sdk-go-v2/config v1.28.5
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.46
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.6

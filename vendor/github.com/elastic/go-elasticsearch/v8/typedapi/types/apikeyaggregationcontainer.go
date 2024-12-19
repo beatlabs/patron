@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // ApiKeyAggregationContainer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/security/query_api_keys/types.ts#L63-L120
+// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/security/query_api_keys/types.ts#L63-L120
 type ApiKeyAggregationContainer struct {
 	// Aggregations Sub-aggregations for this aggregation.
 	// Only applies to bucket aggregations.

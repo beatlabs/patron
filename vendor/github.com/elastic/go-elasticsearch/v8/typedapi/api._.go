@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 package typedapi
 
@@ -446,6 +446,7 @@ import (
 	security_saml_service_provider_metadata "github.com/elastic/go-elasticsearch/v8/typedapi/security/samlserviceprovidermetadata"
 	security_suggest_user_profiles "github.com/elastic/go-elasticsearch/v8/typedapi/security/suggestuserprofiles"
 	security_update_api_key "github.com/elastic/go-elasticsearch/v8/typedapi/security/updateapikey"
+	security_update_cross_cluster_api_key "github.com/elastic/go-elasticsearch/v8/typedapi/security/updatecrossclusterapikey"
 	security_update_settings "github.com/elastic/go-elasticsearch/v8/typedapi/security/updatesettings"
 	security_update_user_profile_data "github.com/elastic/go-elasticsearch/v8/typedapi/security/updateuserprofiledata"
 	shutdown_delete_node "github.com/elastic/go-elasticsearch/v8/typedapi/shutdown/deletenode"
@@ -858,57 +859,144 @@ type Cat struct {
 }
 
 type Ccr struct {
-	// Deletes auto-follow patterns.
+	// Delete auto-follow patterns.
+	// Delete a collection of cross-cluster replication auto-follow patterns.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-delete-auto-follow-pattern.html
 	DeleteAutoFollowPattern ccr_delete_auto_follow_pattern.NewDeleteAutoFollowPattern
-	// Creates a new follower index configured to follow the referenced leader
-	// index.
+	// Create a follower.
+	// Create a cross-cluster replication follower index that follows a specific
+	// leader index.
+	// When the API returns, the follower index exists and cross-cluster replication
+	// starts replicating operations from the leader index to the follower index.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-put-follow.html
 	Follow ccr_follow.NewFollow
-	// Retrieves information about all follower indices, including parameters and
-	// status for each follower index
+	// Get follower information.
+	// Get information about all cross-cluster replication follower indices.
+	// For example, the results include follower index names, leader index names,
+	// replication options, and whether the follower indices are active or paused.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-get-follow-info.html
 	FollowInfo ccr_follow_info.NewFollowInfo
-	// Retrieves follower stats. return shard-level stats about the following tasks
-	// associated with each shard for the specified indices.
+	// Get follower stats.
+	// Get cross-cluster replication follower stats.
+	// The API returns shard-level stats about the "following tasks" associated with
+	// each shard for the specified indices.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-get-follow-stats.html
 	FollowStats ccr_follow_stats.NewFollowStats
-	// Removes the follower retention leases from the leader.
+	// Forget a follower.
+	// Remove the cross-cluster replication follower retention leases from the
+	// leader.
+	//
+	// A following index takes out retention leases on its leader index.
+	// These leases are used to increase the likelihood that the shards of the
+	// leader index retain the history of operations that the shards of the
+	// following index need to run replication.
+	// When a follower index is converted to a regular index by the unfollow API
+	// (either by directly calling the API or by index lifecycle management tasks),
+	// these leases are removed.
+	// However, removal of the leases can fail, for example when the remote cluster
+	// containing the leader index is unavailable.
+	// While the leases will eventually expire on their own, their extended
+	// existence can cause the leader index to hold more history than necessary and
+	// prevent index lifecycle management from performing some operations on the
+	// leader index.
+	// This API exists to enable manually removing the leases when the unfollow API
+	// is unable to do so.
+	//
+	// NOTE: This API does not stop replication by a following index. If you use
+	// this API with a follower index that is still actively following, the
+	// following index will add back retention leases on the leader.
+	// The only purpose of this API is to handle the case of failure to remove the
+	// following retention leases after the unfollow API is invoked.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-post-forget-follower.html
 	ForgetFollower ccr_forget_follower.NewForgetFollower
-	// Gets configured auto-follow patterns. Returns the specified auto-follow
-	// pattern collection.
+	// Get auto-follow patterns.
+	// Get cross-cluster replication auto-follow patterns.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-get-auto-follow-pattern.html
 	GetAutoFollowPattern ccr_get_auto_follow_pattern.NewGetAutoFollowPattern
-	// Pauses an auto-follow pattern
+	// Pause an auto-follow pattern.
+	// Pause a cross-cluster replication auto-follow pattern.
+	// When the API returns, the auto-follow pattern is inactive.
+	// New indices that are created on the remote cluster and match the auto-follow
+	// patterns are ignored.
+	//
+	// You can resume auto-following with the resume auto-follow pattern API.
+	// When it resumes, the auto-follow pattern is active again and automatically
+	// configures follower indices for newly created indices on the remote cluster
+	// that match its patterns.
+	// Remote indices that were created while the pattern was paused will also be
+	// followed, unless they have been deleted or closed in the interim.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-pause-auto-follow-pattern.html
 	PauseAutoFollowPattern ccr_pause_auto_follow_pattern.NewPauseAutoFollowPattern
-	// Pauses a follower index. The follower index will not fetch any additional
-	// operations from the leader index.
+	// Pause a follower.
+	// Pause a cross-cluster replication follower index.
+	// The follower index will not fetch any additional operations from the leader
+	// index.
+	// You can resume following with the resume follower API.
+	// You can pause and resume a follower index to change the configuration of the
+	// following task.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-post-pause-follow.html
 	PauseFollow ccr_pause_follow.NewPauseFollow
-	// Creates a new named collection of auto-follow patterns against a specified
-	// remote cluster. Newly created indices on the remote cluster matching any of
-	// the specified patterns will be automatically configured as follower indices.
+	// Create or update auto-follow patterns.
+	// Create a collection of cross-cluster replication auto-follow patterns for a
+	// remote cluster.
+	// Newly created indices on the remote cluster that match any of the patterns
+	// are automatically configured as follower indices.
+	// Indices on the remote cluster that were created before the auto-follow
+	// pattern was created will not be auto-followed even if they match the pattern.
+	//
+	// This API can also be used to update auto-follow patterns.
+	// NOTE: Follower indices that were configured automatically before updating an
+	// auto-follow pattern will remain unchanged even if they do not match against
+	// the new patterns.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-put-auto-follow-pattern.html
 	PutAutoFollowPattern ccr_put_auto_follow_pattern.NewPutAutoFollowPattern
-	// Resumes an auto-follow pattern that has been paused
+	// Resume an auto-follow pattern.
+	// Resume a cross-cluster replication auto-follow pattern that was paused.
+	// The auto-follow pattern will resume configuring following indices for newly
+	// created indices that match its patterns on the remote cluster.
+	// Remote indices created while the pattern was paused will also be followed
+	// unless they have been deleted or closed in the interim.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-resume-auto-follow-pattern.html
 	ResumeAutoFollowPattern ccr_resume_auto_follow_pattern.NewResumeAutoFollowPattern
-	// Resumes a follower index that has been paused
+	// Resume a follower.
+	// Resume a cross-cluster replication follower index that was paused.
+	// The follower index could have been paused with the pause follower API.
+	// Alternatively it could be paused due to replication that cannot be retried
+	// due to failures during following tasks.
+	// When this API returns, the follower index will resume fetching operations
+	// from the leader index.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-post-resume-follow.html
 	ResumeFollow ccr_resume_follow.NewResumeFollow
-	// Gets all stats related to cross-cluster replication.
+	// Get cross-cluster replication stats.
+	// This API returns stats about auto-following and the same shard-level stats as
+	// the get follower stats API.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-get-stats.html
 	Stats ccr_stats.NewStats
-	// Stops the following task associated with a follower index and removes index
-	// metadata and settings associated with cross-cluster replication.
+	// Unfollow an index.
+	// Convert a cross-cluster replication follower index to a regular index.
+	// The API stops the following task associated with a follower index and removes
+	// index metadata and settings associated with cross-cluster replication.
+	// The follower index must be paused and closed before you call the unfollow
+	// API.
+	//
+	// NOTE: Currently cross-cluster replication does not support converting an
+	// existing regular index to a follower index. Converting a follower index to a
+	// regular index is an irreversible operation.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-post-unfollow.html
 	Unfollow ccr_unfollow.NewUnfollow
 }
 
 type Cluster struct {
-	// Provides explanations for shard allocations in the cluster.
+	// Explain the shard allocations.
+	// Get explanations for shard allocations in the cluster.
+	// For unassigned shards, it provides an explanation for why the shard is
+	// unassigned.
+	// For assigned shards, it provides an explanation for why the shard is
+	// remaining on its current node and has not moved or rebalanced to another
+	// node.
+	// This API can be very useful when attempting to diagnose why a shard is
+	// unassigned or why a shard continues to remain on its current node when you
+	// might expect otherwise.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-allocation-explain.html
 	AllocationExplain cluster_allocation_explain.NewAllocationExplain
 	// Delete component templates.
@@ -917,7 +1005,8 @@ type Cluster struct {
 	// specify index mappings, settings, and aliases.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-component-template.html
 	DeleteComponentTemplate cluster_delete_component_template.NewDeleteComponentTemplate
-	// Clears cluster voting config exclusions.
+	// Clear cluster voting config exclusions.
+	// Remove master-eligible nodes from the voting configuration exclusion list.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/voting-config-exclusions.html
 	DeleteVotingConfigExclusions cluster_delete_voting_config_exclusions.NewDeleteVotingConfigExclusions
 	// Check component templates.
@@ -928,30 +1017,37 @@ type Cluster struct {
 	// Retrieves information about component templates.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-component-template.html
 	GetComponentTemplate cluster_get_component_template.NewGetComponentTemplate
-	// Returns cluster-wide settings.
+	// Get cluster-wide settings.
 	// By default, it returns only settings that have been explicitly defined.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-get-settings.html
 	GetSettings cluster_get_settings.NewGetSettings
-	// The cluster health API returns a simple status on the health of the cluster.
+	// Get the cluster health status.
 	// You can also use the API to get the health status of only specified data
-	// streams and indices. For data streams, the API retrieves the health status of
-	// the stream’s backing indices.
-	// The cluster health status is: green, yellow or red. On the shard level, a red
-	// status indicates that the specific shard is not allocated in the cluster,
-	// yellow means that the primary shard is allocated but replicas are not, and
-	// green means that all shards are allocated. The index level status is
-	// controlled by the worst shard status. The cluster status is controlled by the
-	// worst index status.
+	// streams and indices.
+	// For data streams, the API retrieves the health status of the stream’s backing
+	// indices.
+	//
+	// The cluster health status is: green, yellow or red.
+	// On the shard level, a red status indicates that the specific shard is not
+	// allocated in the cluster. Yellow means that the primary shard is allocated
+	// but replicas are not. Green means that all shards are allocated.
+	// The index level status is controlled by the worst shard status.
+	//
+	// One of the main benefits of the API is the ability to wait until the cluster
+	// reaches a certain high watermark health level.
+	// The cluster status is controlled by the worst index status.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html
 	Health cluster_health.NewHealth
 	// Get cluster info.
 	// Returns basic information about the cluster.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-info.html
 	Info cluster_info.NewInfo
-	// Returns cluster-level changes (such as create index, update mapping, allocate
-	// or fail shard) that have not yet been executed.
+	// Get the pending cluster tasks.
+	// Get information about cluster-level changes (such as create index, update
+	// mapping, allocate or fail shard) that have not yet taken effect.
+	//
 	// NOTE: This API returns a list of any pending updates to the cluster state.
-	// These are distinct from the tasks reported by the Task Management API which
+	// These are distinct from the tasks reported by the task management API which
 	// include periodic tasks and tasks initiated by the user, such as node stats,
 	// search queries, or create index requests.
 	// However, if a user-initiated task such as a create index command causes a
@@ -959,7 +1055,45 @@ type Cluster struct {
 	// task api and pending cluster tasks API.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-pending.html
 	PendingTasks cluster_pending_tasks.NewPendingTasks
-	// Updates the cluster voting config exclusions by node ids or node names.
+	// Update voting configuration exclusions.
+	// Update the cluster voting config exclusions by node IDs or node names.
+	// By default, if there are more than three master-eligible nodes in the cluster
+	// and you remove fewer than half of the master-eligible nodes in the cluster at
+	// once, the voting configuration automatically shrinks.
+	// If you want to shrink the voting configuration to contain fewer than three
+	// nodes or to remove half or more of the master-eligible nodes in the cluster
+	// at once, use this API to remove departing nodes from the voting configuration
+	// manually.
+	// The API adds an entry for each specified node to the cluster’s voting
+	// configuration exclusions list.
+	// It then waits until the cluster has reconfigured its voting configuration to
+	// exclude the specified nodes.
+	//
+	// Clusters should have no voting configuration exclusions in normal operation.
+	// Once the excluded nodes have stopped, clear the voting configuration
+	// exclusions with `DELETE /_cluster/voting_config_exclusions`.
+	// This API waits for the nodes to be fully removed from the cluster before it
+	// returns.
+	// If your cluster has voting configuration exclusions for nodes that you no
+	// longer intend to remove, use `DELETE
+	// /_cluster/voting_config_exclusions?wait_for_removal=false` to clear the
+	// voting configuration exclusions without waiting for the nodes to leave the
+	// cluster.
+	//
+	// A response to `POST /_cluster/voting_config_exclusions` with an HTTP status
+	// code of 200 OK guarantees that the node has been removed from the voting
+	// configuration and will not be reinstated until the voting configuration
+	// exclusions are cleared by calling `DELETE
+	// /_cluster/voting_config_exclusions`.
+	// If the call to `POST /_cluster/voting_config_exclusions` fails or returns a
+	// response with an HTTP status code other than 200 OK then the node may not
+	// have been removed from the voting configuration.
+	// In that case, you may safely retry the call.
+	//
+	// NOTE: Voting exclusions are required only when you remove at least half of
+	// the master-eligible nodes from a cluster in a short time period.
+	// They are not required when removing master-ineligible nodes or when removing
+	// fewer than half of the master-eligible nodes.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/voting-config-exclusions.html
 	PostVotingConfigExclusions cluster_post_voting_config_exclusions.NewPostVotingConfigExclusions
 	// Create or update a component template.
@@ -988,22 +1122,113 @@ type Cluster struct {
 	// opening curly bracket.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-component-template.html
 	PutComponentTemplate cluster_put_component_template.NewPutComponentTemplate
-	// Updates the cluster settings.
+	// Update the cluster settings.
+	// Configure and update dynamic settings on a running cluster.
+	// You can also configure dynamic settings locally on an unstarted or shut down
+	// node in `elasticsearch.yml`.
+	//
+	// Updates made with this API can be persistent, which apply across cluster
+	// restarts, or transient, which reset after a cluster restart.
+	// You can also reset transient or persistent settings by assigning them a null
+	// value.
+	//
+	// If you configure the same setting using multiple methods, Elasticsearch
+	// applies the settings in following order of precedence: 1) Transient setting;
+	// 2) Persistent setting; 3) `elasticsearch.yml` setting; 4) Default setting
+	// value.
+	// For example, you can apply a transient setting to override a persistent
+	// setting or `elasticsearch.yml` setting.
+	// However, a change to an `elasticsearch.yml` setting will not override a
+	// defined transient or persistent setting.
+	//
+	// TIP: In Elastic Cloud, use the user settings feature to configure all cluster
+	// settings. This method automatically rejects unsafe settings that could break
+	// your cluster.
+	// If you run Elasticsearch on your own hardware, use this API to configure
+	// dynamic cluster settings.
+	// Only use `elasticsearch.yml` for static cluster settings and node settings.
+	// The API doesn’t require a restart and ensures a setting’s value is the same
+	// on all nodes.
+	//
+	// WARNING: Transient cluster settings are no longer recommended. Use persistent
+	// cluster settings instead.
+	// If a cluster becomes unstable, transient settings can clear unexpectedly,
+	// resulting in a potentially undesired cluster configuration.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-update-settings.html
 	PutSettings cluster_put_settings.NewPutSettings
-	// The cluster remote info API allows you to retrieve all of the configured
-	// remote cluster information. It returns connection and endpoint information
-	// keyed by the configured remote cluster alias.
+	// Get remote cluster information.
+	// Get all of the configured remote cluster information.
+	// This API returns connection and endpoint information keyed by the configured
+	// remote cluster alias.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-remote-info.html
 	RemoteInfo cluster_remote_info.NewRemoteInfo
-	// Allows to manually change the allocation of individual shards in the cluster.
+	// Reroute the cluster.
+	// Manually change the allocation of individual shards in the cluster.
+	// For example, a shard can be moved from one node to another explicitly, an
+	// allocation can be canceled, and an unassigned shard can be explicitly
+	// allocated to a specific node.
+	//
+	// It is important to note that after processing any reroute commands
+	// Elasticsearch will perform rebalancing as normal (respecting the values of
+	// settings such as `cluster.routing.rebalance.enable`) in order to remain in a
+	// balanced state.
+	// For example, if the requested allocation includes moving a shard from node1
+	// to node2 then this may cause a shard to be moved from node2 back to node1 to
+	// even things out.
+	//
+	// The cluster can be set to disable allocations using the
+	// `cluster.routing.allocation.enable` setting.
+	// If allocations are disabled then the only allocations that will be performed
+	// are explicit ones given using the reroute command, and consequent allocations
+	// due to rebalancing.
+	//
+	// The cluster will attempt to allocate a shard a maximum of
+	// `index.allocation.max_retries` times in a row (defaults to `5`), before
+	// giving up and leaving the shard unallocated.
+	// This scenario can be caused by structural problems such as having an analyzer
+	// which refers to a stopwords file which doesn’t exist on all nodes.
+	//
+	// Once the problem has been corrected, allocation can be manually retried by
+	// calling the reroute API with the `?retry_failed` URI query parameter, which
+	// will attempt a single retry round for these shards.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-reroute.html
 	Reroute cluster_reroute.NewReroute
-	// Returns a comprehensive information about the state of the cluster.
+	// Get the cluster state.
+	// Get comprehensive information about the state of the cluster.
+	//
+	// The cluster state is an internal data structure which keeps track of a
+	// variety of information needed by every node, including the identity and
+	// attributes of the other nodes in the cluster; cluster-wide settings; index
+	// metadata, including the mapping and settings for each index; the location and
+	// status of every shard copy in the cluster.
+	//
+	// The elected master node ensures that every node in the cluster has a copy of
+	// the same cluster state.
+	// This API lets you retrieve a representation of this internal state for
+	// debugging or diagnostic purposes.
+	// You may need to consult the Elasticsearch source code to determine the
+	// precise meaning of the response.
+	//
+	// By default the API will route requests to the elected master node since this
+	// node is the authoritative source of cluster states.
+	// You can also retrieve the cluster state held on the node handling the API
+	// request by adding the `?local=true` query parameter.
+	//
+	// Elasticsearch may need to expend significant effort to compute a response to
+	// this API in larger clusters, and the response may comprise a very large
+	// quantity of data.
+	// If you use this API repeatedly, your cluster may become unstable.
+	//
+	// WARNING: The response is a representation of an internal data structure.
+	// Its format is not subject to the same compatibility guarantees as other more
+	// stable APIs and may change from version to version.
+	// Do not query this API using external monitoring tools.
+	// Instead, obtain the information you require using other more stable cluster
+	// APIs.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-state.html
 	State cluster_state.NewState
-	// Returns cluster statistics.
-	// It returns basic index metrics (shard numbers, store size, memory usage) and
+	// Get cluster statistics.
+	// Get basic index metrics (shard numbers, store size, memory usage) and
 	// information about the current nodes that form the cluster (number, roles, os,
 	// jvm versions, memory usage, cpu and installed plugins).
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-stats.html
@@ -1183,7 +1408,8 @@ type Core struct {
 	// longer required for search requests.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/point-in-time-api.html
 	ClosePointInTime core_close_point_in_time.NewClosePointInTime
-	// Returns number of documents matching a query.
+	// Count search results.
+	// Get the number of documents matching a query.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html
 	Count core_count.NewCount
 	// Index a document.
@@ -1260,7 +1486,36 @@ type Core struct {
 	// Returns the source of a document.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html
 	GetSource core_get_source.NewGetSource
-	// Returns the health of the cluster.
+	// Get the cluster health.
+	// Get a report with the health status of an Elasticsearch cluster.
+	// The report contains a list of indicators that compose Elasticsearch
+	// functionality.
+	//
+	// Each indicator has a health status of: green, unknown, yellow or red.
+	// The indicator will provide an explanation and metadata describing the reason
+	// for its current health status.
+	//
+	// The cluster’s status is controlled by the worst indicator status.
+	//
+	// In the event that an indicator’s status is non-green, a list of impacts may
+	// be present in the indicator result which detail the functionalities that are
+	// negatively affected by the health issue.
+	// Each impact carries with it a severity level, an area of the system that is
+	// affected, and a simple description of the impact on the system.
+	//
+	// Some health indicators can determine the root cause of a health problem and
+	// prescribe a set of steps that can be performed in order to improve the health
+	// of the system.
+	// The root cause and remediation steps are encapsulated in a diagnosis.
+	// A diagnosis contains a cause detailing a root cause analysis, an action
+	// containing a brief description of the steps to take to fix the problem, the
+	// list of affected resources (if applicable), and a detailed step-by-step
+	// troubleshooting guide to fix the diagnosed problem.
+	//
+	// NOTE: The health indicators perform root cause analysis of non-green health
+	// statuses. This can be computationally expensive when called frequently.
+	// When setting up automated polling of the API for health status, set verbose
+	// to false to disable the more expensive analysis logic.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/health-api.html
 	HealthReport core_health_report.NewHealthReport
 	// Index a document.
@@ -1356,7 +1611,7 @@ type Core struct {
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/point-in-time-api.html
 	OpenPointInTime core_open_point_in_time.NewOpenPointInTime
 	// Ping the cluster.
-	// Returns whether the cluster is running.
+	// Get information about whether the cluster is running.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html
 	Ping core_ping.NewPing
 	// Create or update a script or search template.
@@ -1524,7 +1779,8 @@ type Enrich struct {
 	// Deletes an existing enrich policy and its enrich index.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-enrich-policy-api.html
 	DeletePolicy enrich_delete_policy.NewDeletePolicy
-	// Creates the enrich index for an existing enrich policy.
+	// Run an enrich policy.
+	// Create the enrich index for an existing enrich policy.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/execute-enrich-policy-api.html
 	ExecutePolicy enrich_execute_policy.NewExecutePolicy
 	// Get an enrich policy.
@@ -1543,19 +1799,24 @@ type Enrich struct {
 }
 
 type Eql struct {
-	// Deletes an async EQL search or a stored synchronous EQL search.
+	// Delete an async EQL search.
+	// Delete an async EQL search or a stored synchronous EQL search.
 	// The API also deletes results for the search.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/eql-search-api.html
 	Delete eql_delete.NewDelete
-	// Returns the current status and available results for an async EQL search or a
+	// Get async EQL search results.
+	// Get the current status and available results for an async EQL search or a
 	// stored synchronous EQL search.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-async-eql-search-api.html
 	Get eql_get.NewGet
-	// Returns the current status for an async EQL search or a stored synchronous
-	// EQL search without returning results.
+	// Get the async EQL status.
+	// Get the current status for an async EQL search or a stored synchronous EQL
+	// search without returning results.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-async-eql-status-api.html
 	GetStatus eql_get_status.NewGetStatus
-	// Returns results matching a query expressed in Event Query Language (EQL)
+	// Get EQL search results.
+	// Returns search results for an Event Query Language (EQL) query.
+	// EQL assumes each document in a data stream or index corresponds to an event.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/eql-search-api.html
 	Search eql_search.NewSearch
 }
@@ -1564,17 +1825,58 @@ type Esql struct {
 	// Executes an ESQL request asynchronously
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/esql-async-query-api.html
 	AsyncQuery esql_async_query.NewAsyncQuery
-	// Executes an ES|QL request
+	// Run an ES|QL query.
+	// Get search results for an ES|QL (Elasticsearch query language) query.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/esql-rest.html
 	Query esql_query.NewQuery
 }
 
 type Features struct {
-	// Gets a list of features which can be included in snapshots using the
-	// feature_states field when creating a snapshot
+	// Get the features.
+	// Get a list of features that can be included in snapshots using the
+	// `feature_states` field when creating a snapshot.
+	// You can use this API to determine which feature states to include when taking
+	// a snapshot.
+	// By default, all feature states are included in a snapshot if that snapshot
+	// includes the global state, or none if it does not.
+	//
+	// A feature state includes one or more system indices necessary for a given
+	// feature to function.
+	// In order to ensure data integrity, all system indices that comprise a feature
+	// state are snapshotted and restored together.
+	//
+	// The features listed by this API are a combination of built-in features and
+	// features defined by plugins.
+	// In order for a feature state to be listed in this API and recognized as a
+	// valid feature state by the create snapshot API, the plugin that defines that
+	// feature must be installed on the master node.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-features-api.html
 	GetFeatures features_get_features.NewGetFeatures
-	// Resets the internal state of features, usually by deleting system indices
+	// Reset the features.
+	// Clear all of the state information stored in system indices by Elasticsearch
+	// features, including the security and machine learning indices.
+	//
+	// WARNING: Intended for development and testing use only. Do not reset features
+	// on a production cluster.
+	//
+	// Return a cluster to the same state as a new installation by resetting the
+	// feature state for all Elasticsearch features.
+	// This deletes all state information stored in system indices.
+	//
+	// The response code is HTTP 200 if the state is successfully reset for all
+	// features.
+	// It is HTTP 500 if the reset operation failed for any feature.
+	//
+	// Note that select features might provide a way to reset particular system
+	// indices.
+	// Using this API resets all features, both those that are built-in and
+	// implemented as plugins.
+	//
+	// To list the features that will be affected, use the get features API.
+	//
+	// IMPORTANT: The features installed on the node you submit this request to are
+	// the features that will be reset. Run on the master node if you have any
+	// doubts about which plugins are installed on individual nodes.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html
 	ResetFeatures features_reset_features.NewResetFeatures
 }
@@ -1605,56 +1907,130 @@ type Fleet struct {
 }
 
 type Graph struct {
-	// Extracts and summarizes information about the documents and terms in an
+	// Explore graph analytics.
+	// Extract and summarize information about the documents and terms in an
 	// Elasticsearch data stream or index.
+	// The easiest way to understand the behavior of this API is to use the Graph UI
+	// to explore connections.
+	// An initial request to the `_explore` API contains a seed query that
+	// identifies the documents of interest and specifies the fields that define the
+	// vertices and connections you want to include in the graph.
+	// Subsequent requests enable you to spider out from one more vertices of
+	// interest.
+	// You can exclude vertices that have already been returned.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/graph-explore-api.html
 	Explore graph_explore.NewExplore
 }
 
 type Ilm struct {
-	// Deletes the specified lifecycle policy definition. You cannot delete policies
-	// that are currently in use. If the policy is being used to manage any indices,
-	// the request fails and returns an error.
+	// Delete a lifecycle policy.
+	// You cannot delete policies that are currently in use. If the policy is being
+	// used to manage any indices, the request fails and returns an error.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-delete-lifecycle.html
 	DeleteLifecycle ilm_delete_lifecycle.NewDeleteLifecycle
-	// Retrieves information about the index’s current lifecycle state, such as the
-	// currently executing phase, action, and step. Shows when the index entered
-	// each one, the definition of the running phase, and information about any
-	// failures.
+	// Explain the lifecycle state.
+	// Get the current lifecycle status for one or more indices.
+	// For data streams, the API retrieves the current lifecycle status for the
+	// stream's backing indices.
+	//
+	// The response indicates when the index entered each lifecycle state, provides
+	// the definition of the running phase, and information about any failures.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-explain-lifecycle.html
 	ExplainLifecycle ilm_explain_lifecycle.NewExplainLifecycle
-	// Retrieves a lifecycle policy.
+	// Get lifecycle policies.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-get-lifecycle.html
 	GetLifecycle ilm_get_lifecycle.NewGetLifecycle
-	// Retrieves the current index lifecycle management (ILM) status.
+	// Get the ILM status.
+	// Get the current index lifecycle management status.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-get-status.html
 	GetStatus ilm_get_status.NewGetStatus
-	// Switches the indices, ILM policies, and legacy, composable and component
-	// templates from using custom node attributes and
-	// attribute-based allocation filters to using data tiers, and optionally
-	// deletes one legacy index template.+
+	// Migrate to data tiers routing.
+	// Switch the indices, ILM policies, and legacy, composable, and component
+	// templates from using custom node attributes and attribute-based allocation
+	// filters to using data tiers.
+	// Optionally, delete one legacy index template.
 	// Using node roles enables ILM to automatically move the indices between data
 	// tiers.
+	//
+	// Migrating away from custom node attributes routing can be manually performed.
+	// This API provides an automated way of performing three out of the four manual
+	// steps listed in the migration guide:
+	//
+	// 1. Stop setting the custom hot attribute on new indices.
+	// 1. Remove custom allocation settings from existing ILM policies.
+	// 1. Replace custom allocation settings from existing indices with the
+	// corresponding tier preference.
+	//
+	// ILM must be stopped before performing the migration.
+	// Use the stop ILM and get ILM status APIs to wait until the reported operation
+	// mode is `STOPPED`.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-migrate-to-data-tiers.html
 	MigrateToDataTiers ilm_migrate_to_data_tiers.NewMigrateToDataTiers
-	// Manually moves an index into the specified step and executes that step.
+	// Move to a lifecycle step.
+	// Manually move an index into a specific step in the lifecycle policy and run
+	// that step.
+	//
+	// WARNING: This operation can result in the loss of data. Manually moving an
+	// index into a specific step runs that step even if it has already been
+	// performed. This is a potentially destructive action and this should be
+	// considered an expert level API.
+	//
+	// You must specify both the current step and the step to be executed in the
+	// body of the request.
+	// The request will fail if the current step does not match the step currently
+	// running for the index
+	// This is to prevent the index from being moved from an unexpected step into
+	// the next step.
+	//
+	// When specifying the target (`next_step`) to which the index will be moved,
+	// either the name or both the action and name fields are optional.
+	// If only the phase is specified, the index will move to the first step of the
+	// first action in the target phase.
+	// If the phase and action are specified, the index will move to the first step
+	// of the specified action in the specified phase.
+	// Only actions specified in the ILM policy are considered valid.
+	// An index cannot move to a step that is not part of its policy.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-move-to-step.html
 	MoveToStep ilm_move_to_step.NewMoveToStep
-	// Creates a lifecycle policy. If the specified policy exists, the policy is
-	// replaced and the policy version is incremented.
+	// Create or update a lifecycle policy.
+	// If the specified policy exists, it is replaced and the policy version is
+	// incremented.
+	//
+	// NOTE: Only the latest version of the policy is stored, you cannot revert to
+	// previous versions.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-put-lifecycle.html
 	PutLifecycle ilm_put_lifecycle.NewPutLifecycle
-	// Removes the assigned lifecycle policy and stops managing the specified index
+	// Remove policies from an index.
+	// Remove the assigned lifecycle policies from an index or a data stream's
+	// backing indices.
+	// It also stops managing the indices.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-remove-policy.html
 	RemovePolicy ilm_remove_policy.NewRemovePolicy
-	// Retries executing the policy for an index that is in the ERROR step.
+	// Retry a policy.
+	// Retry running the lifecycle policy for an index that is in the ERROR step.
+	// The API sets the policy back to the step where the error occurred and runs
+	// the step.
+	// Use the explain lifecycle state API to determine whether an index is in the
+	// ERROR step.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-retry-policy.html
 	Retry ilm_retry.NewRetry
-	// Start the index lifecycle management (ILM) plugin.
+	// Start the ILM plugin.
+	// Start the index lifecycle management plugin if it is currently stopped.
+	// ILM is started automatically when the cluster is formed.
+	// Restarting ILM is necessary only when it has been stopped using the stop ILM
+	// API.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-start.html
 	Start ilm_start.NewStart
-	// Halts all lifecycle management operations and stops the index lifecycle
-	// management (ILM) plugin
+	// Stop the ILM plugin.
+	// Halt all lifecycle management operations and stop the index lifecycle
+	// management plugin.
+	// This is useful when you are performing maintenance on the cluster and need to
+	// prevent ILM from performing any actions on your indices.
+	//
+	// The API returns as soon as the stop request has been acknowledged, but the
+	// plugin might continue to run until in-progress operations complete and the
+	// plugin can be safely stopped.
+	// Use the get ILM status API to check whether ILM is running.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ilm-stop.html
 	Stop ilm_stop.NewStop
 }
@@ -1671,14 +2047,79 @@ type Indices struct {
 	// on a text string and returns the resulting tokens.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-analyze.html
 	Analyze indices_analyze.NewAnalyze
-	// Clears the caches of one or more indices.
-	// For data streams, the API clears the caches of the stream’s backing indices.
+	// Clear the cache.
+	// Clear the cache of one or more indices.
+	// For data streams, the API clears the caches of the stream's backing indices.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-clearcache.html
 	ClearCache indices_clear_cache.NewClearCache
-	// Clones an existing index.
+	// Clone an index.
+	// Clone an existing index into a new index.
+	// Each original primary shard is cloned into a new primary shard in the new
+	// index.
+	//
+	// IMPORTANT: Elasticsearch does not apply index templates to the resulting
+	// index.
+	// The API also does not copy index metadata from the original index.
+	// Index metadata includes aliases, index lifecycle management phase
+	// definitions, and cross-cluster replication (CCR) follower information.
+	// For example, if you clone a CCR follower index, the resulting clone will not
+	// be a follower index.
+	//
+	// The clone API copies most index settings from the source index to the
+	// resulting index, with the exception of `index.number_of_replicas` and
+	// `index.auto_expand_replicas`.
+	// To set the number of replicas in the resulting index, configure these
+	// settings in the clone request.
+	//
+	// Cloning works as follows:
+	//
+	// * First, it creates a new target index with the same definition as the source
+	// index.
+	// * Then it hard-links segments from the source index into the target index. If
+	// the file system does not support hard-linking, all segments are copied into
+	// the new index, which is a much more time consuming process.
+	// * Finally, it recovers the target index as though it were a closed index
+	// which had just been re-opened.
+	//
+	// IMPORTANT: Indices can only be cloned if they meet the following
+	// requirements:
+	//
+	// * The target index must not exist.
+	// * The source index must have the same number of primary shards as the target
+	// index.
+	// * The node handling the clone process must have sufficient free disk space to
+	// accommodate a second copy of the existing index.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-clone-index.html
 	Clone indices_clone.NewClone
-	// Closes an index.
+	// Close an index.
+	// A closed index is blocked for read or write operations and does not allow all
+	// operations that opened indices allow.
+	// It is not possible to index documents or to search for documents in a closed
+	// index.
+	// Closed indices do not have to maintain internal data structures for indexing
+	// or searching documents, which results in a smaller overhead on the cluster.
+	//
+	// When opening or closing an index, the master node is responsible for
+	// restarting the index shards to reflect the new state of the index.
+	// The shards will then go through the normal recovery process.
+	// The data of opened and closed indices is automatically replicated by the
+	// cluster to ensure that enough shard copies are safely kept around at all
+	// times.
+	//
+	// You can open and close multiple indices.
+	// An error is thrown if the request explicitly refers to a missing index.
+	// This behaviour can be turned off using the `ignore_unavailable=true`
+	// parameter.
+	//
+	// By default, you must explicitly name the indices you are opening or closing.
+	// To open or close indices with `_all`, `*`, or other wildcard expressions,
+	// change the` action.destructive_requires_name` setting to `false`. This
+	// setting can also be changed with the cluster update settings API.
+	//
+	// Closed indices consume a significant amount of disk-space which can cause
+	// problems in managed environments.
+	// Closing indices can be turned off with the cluster settings API by setting
+	// `cluster.indices.close.enable` to `false`.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-close.html
 	Close indices_close.NewClose
 	// Create an index.
@@ -1722,12 +2163,26 @@ type Indices struct {
 	// Deletes a legacy index template.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-delete-template-v1.html
 	DeleteTemplate indices_delete_template.NewDeleteTemplate
-	// Analyzes the disk usage of each field of an index or data stream.
+	// Analyze the index disk usage.
+	// Analyze the disk usage of each field of an index or data stream.
+	// This API might not support indices created in previous Elasticsearch
+	// versions.
+	// The result of a small index can be inaccurate as some parts of an index might
+	// not be analyzed by the API.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-disk-usage.html
 	DiskUsage indices_disk_usage.NewDiskUsage
-	// Aggregates a time series (TSDS) index and stores pre-computed statistical
+	// Downsample an index.
+	// Aggregate a time series (TSDS) index and store pre-computed statistical
 	// summaries (`min`, `max`, `sum`, `value_count` and `avg`) for each metric
 	// field grouped by a configured time interval.
+	// For example, a TSDS index that contains metrics sampled every 10 seconds can
+	// be downsampled to an hourly index.
+	// All documents within an hour interval are summarized and stored as a single
+	// document in the downsample index.
+	//
+	// NOTE: Only indices in a time series data stream are supported.
+	// Neither field nor document level security can be defined on the source index.
+	// The source index must be read only (`index.blocks.write: true`).
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-downsample-data-stream.html
 	Downsample indices_downsample.NewDownsample
 	// Check indices.
@@ -1738,7 +2193,8 @@ type Indices struct {
 	// Checks if one or more data stream or index aliases exist.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html
 	ExistsAlias indices_exists_alias.NewExistsAlias
-	// Returns information about whether a particular index template exists.
+	// Check index templates.
+	// Check whether index templates exist.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/index-templates.html
 	ExistsIndexTemplate indices_exists_index_template.NewExistsIndexTemplate
 	// Check existence of index templates.
@@ -1746,19 +2202,69 @@ type Indices struct {
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-template-exists-v1.html
 	ExistsTemplate indices_exists_template.NewExistsTemplate
 	// Get the status for a data stream lifecycle.
-	// Retrieves information about an index or data stream’s current data stream
-	// lifecycle status, such as time since index creation, time since rollover, the
-	// lifecycle configuration managing the index, or any errors encountered during
-	// lifecycle execution.
+	// Get information about an index or data stream's current data stream lifecycle
+	// status, such as time since index creation, time since rollover, the lifecycle
+	// configuration managing the index, or any errors encountered during lifecycle
+	// execution.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/data-streams-explain-lifecycle.html
 	ExplainDataLifecycle indices_explain_data_lifecycle.NewExplainDataLifecycle
-	// Returns field usage information for each shard and field of an index.
+	// Get field usage stats.
+	// Get field usage information for each shard and field of an index.
+	// Field usage statistics are automatically captured when queries are running on
+	// a cluster.
+	// A shard-level search request that accesses a given field, even if multiple
+	// times during that request, is counted as a single use.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/field-usage-stats.html
 	FieldUsageStats indices_field_usage_stats.NewFieldUsageStats
-	// Flushes one or more data streams or indices.
+	// Flush data streams or indices.
+	// Flushing a data stream or index is the process of making sure that any data
+	// that is currently only stored in the transaction log is also permanently
+	// stored in the Lucene index.
+	// When restarting, Elasticsearch replays any unflushed operations from the
+	// transaction log into the Lucene index to bring it back into the state that it
+	// was in before the restart.
+	// Elasticsearch automatically triggers flushes as needed, using heuristics that
+	// trade off the size of the unflushed transaction log against the cost of
+	// performing each flush.
+	//
+	// After each operation has been flushed it is permanently stored in the Lucene
+	// index.
+	// This may mean that there is no need to maintain an additional copy of it in
+	// the transaction log.
+	// The transaction log is made up of multiple files, called generations, and
+	// Elasticsearch will delete any generation files when they are no longer
+	// needed, freeing up disk space.
+	//
+	// It is also possible to trigger a flush on one or more indices using the flush
+	// API, although it is rare for users to need to call this API directly.
+	// If you call the flush API after indexing some documents then a successful
+	// response indicates that Elasticsearch has flushed all the documents that were
+	// indexed before the flush API was called.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-flush.html
 	Flush indices_flush.NewFlush
-	// Performs the force merge operation on one or more indices.
+	// Force a merge.
+	// Perform the force merge operation on the shards of one or more indices.
+	// For data streams, the API forces a merge on the shards of the stream's
+	// backing indices.
+	//
+	// Merging reduces the number of segments in each shard by merging some of them
+	// together and also frees up the space used by deleted documents.
+	// Merging normally happens automatically, but sometimes it is useful to trigger
+	// a merge manually.
+	//
+	// WARNING: We recommend force merging only a read-only index (meaning the index
+	// is no longer receiving writes).
+	// When documents are updated or deleted, the old version is not immediately
+	// removed but instead soft-deleted and marked with a "tombstone".
+	// These soft-deleted documents are automatically cleaned up during regular
+	// segment merges.
+	// But force merge can cause very large (greater than 5 GB) segments to be
+	// produced, which are not eligible for regular merges.
+	// So the number of soft-deleted documents can then grow rapidly, resulting in
+	// higher disk usage and worse search performance.
+	// If you regularly force merge an index receiving writes, this can also make
+	// snapshots more expensive, since the new documents can't be backed up
+	// incrementally.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-forcemerge.html
 	Forcemerge indices_forcemerge.NewForcemerge
 	// Get index information.
@@ -1829,8 +2335,25 @@ type Indices struct {
 	// For data streams, the API opens any closed backing indices.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-open-close.html
 	Open indices_open.NewOpen
-	// Promotes a data stream from a replicated data stream managed by CCR to a
-	// regular data stream
+	// Promote a data stream.
+	// Promote a data stream from a replicated data stream managed by cross-cluster
+	// replication (CCR) to a regular data stream.
+	//
+	// With CCR auto following, a data stream from a remote cluster can be
+	// replicated to the local cluster.
+	// These data streams can't be rolled over in the local cluster.
+	// These replicated data streams roll over only if the upstream data stream
+	// rolls over.
+	// In the event that the remote cluster is no longer available, the data stream
+	// in the local cluster can be promoted to a regular data stream, which allows
+	// these data streams to be rolled over in the local cluster.
+	//
+	// NOTE: When promoting a data stream, ensure the local cluster has a data
+	// stream enabled index template that matches the data stream.
+	// If this is missing, the data stream will not be able to roll over until a
+	// matching index template is created.
+	// This will affect the lifecycle management of the data stream and interfere
+	// with the data stream size and retention.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/data-streams.html
 	PromoteDataStream indices_promote_data_stream.NewPromoteDataStream
 	// Create or update an alias.
@@ -1861,12 +2384,56 @@ type Indices struct {
 	// Create or update an index template.
 	// Index templates define settings, mappings, and aliases that can be applied
 	// automatically to new indices.
+	// Elasticsearch applies templates to new indices based on an index pattern that
+	// matches the index name.
+	//
+	// IMPORTANT: This documentation is about legacy index templates, which are
+	// deprecated and will be replaced by the composable templates introduced in
+	// Elasticsearch 7.8.
+	//
+	// Composable templates always take precedence over legacy templates.
+	// If no composable template matches a new index, matching legacy templates are
+	// applied according to their order.
+	//
+	// Index templates are only applied during index creation.
+	// Changes to index templates do not affect existing indices.
+	// Settings and mappings specified in create index API requests override any
+	// settings or mappings specified in an index template.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html
 	PutTemplate indices_put_template.NewPutTemplate
-	// Returns information about ongoing and completed shard recoveries for one or
-	// more indices.
-	// For data streams, the API returns information for the stream’s backing
+	// Get index recovery information.
+	// Get information about ongoing and completed shard recoveries for one or more
 	// indices.
+	// For data streams, the API returns information for the stream's backing
+	// indices.
+	//
+	// Shard recovery is the process of initializing a shard copy, such as restoring
+	// a primary shard from a snapshot or creating a replica shard from a primary
+	// shard.
+	// When a shard recovery completes, the recovered shard is available for search
+	// and indexing.
+	//
+	// Recovery automatically occurs during the following processes:
+	//
+	// * When creating an index for the first time.
+	// * When a node rejoins the cluster and starts up any missing primary shard
+	// copies using the data that it holds in its data path.
+	// * Creation of new replica shard copies from the primary.
+	// * Relocation of a shard copy to a different node in the same cluster.
+	// * A snapshot restore operation.
+	// * A clone, shrink, or split operation.
+	//
+	// You can determine the cause of a shard recovery using the recovery or cat
+	// recovery APIs.
+	//
+	// The index recovery API reports information about completed recoveries only
+	// for shard copies that currently exist in the cluster.
+	// It only reports the last recovery for each shard copy and does not report
+	// historical information about earlier recoveries, nor does it report
+	// information about the recoveries of shard copies that no longer exist.
+	// This means that if a shard copy completes a recovery and then Elasticsearch
+	// relocates it onto a different node then the information about the original
+	// recovery will not be shown in the recovery API.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-recovery.html
 	Recovery indices_recovery.NewRecovery
 	// Refresh an index.
@@ -1876,17 +2443,61 @@ type Indices struct {
 	// indices.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-refresh.html
 	Refresh indices_refresh.NewRefresh
-	// Reloads an index's search analyzers and their resources.
+	// Reload search analyzers.
+	// Reload an index's search analyzers and their resources.
+	// For data streams, the API reloads search analyzers and resources for the
+	// stream's backing indices.
+	//
+	// IMPORTANT: After reloading the search analyzers you should clear the request
+	// cache to make sure it doesn't contain responses derived from the previous
+	// versions of the analyzer.
+	//
+	// You can use the reload search analyzers API to pick up changes to synonym
+	// files used in the `synonym_graph` or `synonym` token filter of a search
+	// analyzer.
+	// To be eligible, the token filter must have an `updateable` flag of `true` and
+	// only be used in search analyzers.
+	//
+	// NOTE: This API does not perform a reload for each shard of an index.
+	// Instead, it performs a reload for each node containing index shards.
+	// As a result, the total shard count returned by the API can differ from the
+	// number of index shards.
+	// Because reloading affects every node with an index shard, it is important to
+	// update the synonym file on every data node in the cluster--including nodes
+	// that don't contain a shard replica--before using this API.
+	// This ensures the synonym file is updated everywhere in the cluster in case
+	// shards are relocated in the future.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-reload-analyzers.html
 	ReloadSearchAnalyzers indices_reload_search_analyzers.NewReloadSearchAnalyzers
-	// Resolves the specified index expressions to return information about each
-	// cluster, including
-	// the local cluster, if included.
+	// Resolve the cluster.
+	// Resolve the specified index expressions to return information about each
+	// cluster, including the local cluster, if included.
 	// Multiple patterns and remote clusters are supported.
+	//
+	// This endpoint is useful before doing a cross-cluster search in order to
+	// determine which remote clusters should be included in a search.
+	//
+	// You use the same index expression with this endpoint as you would for
+	// cross-cluster search.
+	// Index and cluster exclusions are also supported with this endpoint.
+	//
+	// For each cluster in the index expression, information is returned about:
+	//
+	// * Whether the querying ("local") cluster is currently connected to each
+	// remote cluster in the index expression scope.
+	// * Whether each remote cluster is configured with `skip_unavailable` as `true`
+	// or `false`.
+	// * Whether there are any indices, aliases, or data streams on that cluster
+	// that match the index expression.
+	// * Whether the search is likely to have errors returned when you do the
+	// cross-cluster search (including any authorization errors if you do not have
+	// permission to query the index).
+	// * Cluster version information, including the Elasticsearch server version.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-resolve-cluster-api.html
 	ResolveCluster indices_resolve_cluster.NewResolveCluster
-	// Resolves the specified name(s) and/or index patterns for indices, aliases,
-	// and data streams.
+	// Resolve indices.
+	// Resolve the names and/or index patterns for indices, aliases, and data
+	// streams.
 	// Multiple patterns and remote clusters are supported.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-resolve-index-api.html
 	ResolveIndex indices_resolve_index.NewResolveIndex
@@ -1894,17 +2505,83 @@ type Indices struct {
 	// Creates a new index for a data stream or index alias.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-rollover-index.html
 	Rollover indices_rollover.NewRollover
-	// Returns low-level information about the Lucene segments in index shards.
-	// For data streams, the API returns information about the stream’s backing
+	// Get index segments.
+	// Get low-level information about the Lucene segments in index shards.
+	// For data streams, the API returns information about the stream's backing
 	// indices.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-segments.html
 	Segments indices_segments.NewSegments
-	// Retrieves store information about replica shards in one or more indices.
-	// For data streams, the API retrieves store information for the stream’s
+	// Get index shard stores.
+	// Get store information about replica shards in one or more indices.
+	// For data streams, the API retrieves store information for the stream's
 	// backing indices.
+	//
+	// The index shard stores API returns the following information:
+	//
+	// * The node on which each replica shard exists.
+	// * The allocation ID for each replica shard.
+	// * A unique ID for each replica shard.
+	// * Any errors encountered while opening the shard index or from an earlier
+	// failure.
+	//
+	// By default, the API returns store information only for primary shards that
+	// are unassigned or have one or more unassigned replica shards.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-shards-stores.html
 	ShardStores indices_shard_stores.NewShardStores
-	// Shrinks an existing index into a new index with fewer primary shards.
+	// Shrink an index.
+	// Shrink an index into a new index with fewer primary shards.
+	//
+	// Before you can shrink an index:
+	//
+	// * The index must be read-only.
+	// * A copy of every shard in the index must reside on the same node.
+	// * The index must have a green health status.
+	//
+	// To make shard allocation easier, we recommend you also remove the index's
+	// replica shards.
+	// You can later re-add replica shards as part of the shrink operation.
+	//
+	// The requested number of primary shards in the target index must be a factor
+	// of the number of shards in the source index.
+	// For example an index with 8 primary shards can be shrunk into 4, 2 or 1
+	// primary shards or an index with 15 primary shards can be shrunk into 5, 3 or
+	// 1.
+	// If the number of shards in the index is a prime number it can only be shrunk
+	// into a single primary shard
+	//  Before shrinking, a (primary or replica) copy of every shard in the index
+	// must be present on the same node.
+	//
+	// The current write index on a data stream cannot be shrunk. In order to shrink
+	// the current write index, the data stream must first be rolled over so that a
+	// new write index is created and then the previous write index can be shrunk.
+	//
+	// A shrink operation:
+	//
+	// * Creates a new target index with the same definition as the source index,
+	// but with a smaller number of primary shards.
+	// * Hard-links segments from the source index into the target index. If the
+	// file system does not support hard-linking, then all segments are copied into
+	// the new index, which is a much more time consuming process. Also if using
+	// multiple data paths, shards on different data paths require a full copy of
+	// segment files if they are not on the same disk since hardlinks do not work
+	// across disks.
+	// * Recovers the target index as though it were a closed index which had just
+	// been re-opened. Recovers shards to the
+	// `.routing.allocation.initial_recovery._id` index setting.
+	//
+	// IMPORTANT: Indices can only be shrunk if they satisfy the following
+	// requirements:
+	//
+	// * The target index must not exist.
+	// * The source index must have more primary shards than the target index.
+	// * The number of primary shards in the target index must be a factor of the
+	// number of primary shards in the source index. The source index must have more
+	// primary shards than the target index.
+	// * The index must not contain more than 2,147,483,519 documents in total
+	// across all shards that will be shrunk into a single shard on the target index
+	// as this is the maximum number of docs that can fit into a single shard.
+	// * The node handling the shrink process must have sufficient free disk space
+	// to accommodate a second copy of the existing index.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-shrink-index.html
 	Shrink indices_shrink.NewShrink
 	// Simulate an index.
@@ -1917,15 +2594,64 @@ type Indices struct {
 	// template.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-simulate-template.html
 	SimulateTemplate indices_simulate_template.NewSimulateTemplate
-	// Splits an existing index into a new index with more primary shards.
+	// Split an index.
+	// Split an index into a new index with more primary shards.
+	// * Before you can split an index:
+	//
+	// * The index must be read-only.
+	// * The cluster health status must be green.
+	//
+	// The number of times the index can be split (and the number of shards that
+	// each original shard can be split into) is determined by the
+	// `index.number_of_routing_shards` setting.
+	// The number of routing shards specifies the hashing space that is used
+	// internally to distribute documents across shards with consistent hashing.
+	// For instance, a 5 shard index with `number_of_routing_shards` set to 30 (5 x
+	// 2 x 3) could be split by a factor of 2 or 3.
+	//
+	// A split operation:
+	//
+	// * Creates a new target index with the same definition as the source index,
+	// but with a larger number of primary shards.
+	// * Hard-links segments from the source index into the target index. If the
+	// file system doesn't support hard-linking, all segments are copied into the
+	// new index, which is a much more time consuming process.
+	// * Hashes all documents again, after low level files are created, to delete
+	// documents that belong to a different shard.
+	// * Recovers the target index as though it were a closed index which had just
+	// been re-opened.
+	//
+	// IMPORTANT: Indices can only be split if they satisfy the following
+	// requirements:
+	//
+	// * The target index must not exist.
+	// * The source index must have fewer primary shards than the target index.
+	// * The number of primary shards in the target index must be a multiple of the
+	// number of primary shards in the source index.
+	// * The node handling the split process must have sufficient free disk space to
+	// accommodate a second copy of the existing index.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-split-index.html
 	Split indices_split.NewSplit
-	// Returns statistics for one or more indices.
-	// For data streams, the API retrieves statistics for the stream’s backing
+	// Get index statistics.
+	// For data streams, the API retrieves statistics for the stream's backing
 	// indices.
+	//
+	// By default, the returned statistics are index-level with `primaries` and
+	// `total` aggregations.
+	// `primaries` are the values for only the primary shards.
+	// `total` are the accumulated values for both primary and replica shards.
+	//
+	// To get shard-level statistics, set the `level` parameter to `shards`.
+	//
+	// NOTE: When moving to another node, the shard-level statistics for a shard are
+	// cleared.
+	// Although the shard is no longer part of the node, that node retains any
+	// node-level statistics to which the shard contributed.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-stats.html
 	Stats indices_stats.NewStats
-	// Unfreezes an index.
+	// Unfreeze an index.
+	// When a frozen index is unfrozen, the index goes through the normal recovery
+	// process and becomes writeable again.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/unfreeze-index-api.html
 	Unfreeze indices_unfreeze.NewUnfreeze
 	// Create or update an alias.
@@ -1954,72 +2680,117 @@ type Inference struct {
 }
 
 type Ingest struct {
-	// Deletes a geoip database configuration.
+	// Delete GeoIP database configurations.
+	// Delete one or more IP geolocation database configurations.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-geoip-database-api.html
 	DeleteGeoipDatabase ingest_delete_geoip_database.NewDeleteGeoipDatabase
-	// Deletes one or more existing ingest pipeline.
+	// Delete pipelines.
+	// Delete one or more ingest pipelines.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-pipeline-api.html
 	DeletePipeline ingest_delete_pipeline.NewDeletePipeline
-	// Gets download statistics for GeoIP2 databases used with the geoip processor.
+	// Get GeoIP statistics.
+	// Get download statistics for GeoIP2 databases that are used with the GeoIP
+	// processor.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/geoip-processor.html
 	GeoIpStats ingest_geo_ip_stats.NewGeoIpStats
-	// Returns information about one or more geoip database configurations.
+	// Get GeoIP database configurations.
+	// Get information about one or more IP geolocation database configurations.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-geoip-database-api.html
 	GetGeoipDatabase ingest_get_geoip_database.NewGetGeoipDatabase
-	// Returns information about one or more ingest pipelines.
+	// Get pipelines.
+	// Get information about one or more ingest pipelines.
 	// This API returns a local reference of the pipeline.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-pipeline-api.html
 	GetPipeline ingest_get_pipeline.NewGetPipeline
-	// Extracts structured fields out of a single text field within a document.
-	// You choose which field to extract matched fields from, as well as the grok
-	// pattern you expect will match.
+	// Run a grok processor.
+	// Extract structured fields out of a single text field within a document.
+	// You must choose which field to extract matched fields from, as well as the
+	// grok pattern you expect will match.
 	// A grok pattern is like a regular expression that supports aliased expressions
 	// that can be reused.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/grok-processor.html
 	ProcessorGrok ingest_processor_grok.NewProcessorGrok
-	// Returns information about one or more geoip database configurations.
+	// Create or update GeoIP database configurations.
+	// Create or update IP geolocation database configurations.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/put-geoip-database-api.html
 	PutGeoipDatabase ingest_put_geoip_database.NewPutGeoipDatabase
-	// Creates or updates an ingest pipeline.
+	// Create or update a pipeline.
 	// Changes made using this API take effect immediately.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/ingest.html
 	PutPipeline ingest_put_pipeline.NewPutPipeline
-	// Executes an ingest pipeline against a set of provided documents.
+	// Simulate a pipeline.
+	// Run an ingest pipeline against a set of provided documents.
+	// You can either specify an existing pipeline to use with the provided
+	// documents or supply a pipeline definition in the body of the request.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/simulate-pipeline-api.html
 	Simulate ingest_simulate.NewSimulate
 }
 
 type License struct {
-	// Deletes licensing information for the cluster
+	// Delete the license.
+	// When the license expires, your subscription level reverts to Basic.
+	//
+	// If the operator privileges feature is enabled, only operator users can use
+	// this API.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-license.html
 	Delete license_delete.NewDelete
 	// Get license information.
-	// Returns information about your Elastic license, including its type, its
-	// status, when it was issued, and when it expires.
-	// For more information about the different types of licenses, refer to [Elastic
-	// Stack subscriptions](https://www.elastic.co/subscriptions).
+	// Get information about your Elastic license including its type, its status,
+	// when it was issued, and when it expires.
+	//
+	// NOTE: If the master node is generating a new cluster state, the get license
+	// API may return a `404 Not Found` response.
+	// If you receive an unexpected 404 response after cluster startup, wait a short
+	// period and retry the request.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-license.html
 	Get license_get.NewGet
-	// Retrieves information about the status of the basic license.
+	// Get the basic license status.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-basic-status.html
 	GetBasicStatus license_get_basic_status.NewGetBasicStatus
-	// Retrieves information about the status of the trial license.
+	// Get the trial status.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-trial-status.html
 	GetTrialStatus license_get_trial_status.NewGetTrialStatus
-	// Updates the license for the cluster.
+	// Update the license.
+	// You can update your license at runtime without shutting down your nodes.
+	// License updates take effect immediately.
+	// If the license you are installing does not support all of the features that
+	// were available with your previous license, however, you are notified in the
+	// response.
+	// You must then re-submit the API request with the acknowledge parameter set to
+	// true.
+	//
+	// NOTE: If Elasticsearch security features are enabled and you are installing a
+	// gold or higher license, you must enable TLS on the transport networking layer
+	// before you install the license.
+	// If the operator privileges feature is enabled, only operator users can use
+	// this API.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/update-license.html
 	Post license_post.NewPost
-	// The start basic API enables you to initiate an indefinite basic license,
-	// which gives access to all the basic features. If the basic license does not
-	// support all of the features that are available with your current license,
-	// however, you are notified in the response. You must then re-submit the API
-	// request with the acknowledge parameter set to true.
-	// To check the status of your basic license, use the following API: [Get basic
-	// status](https://www.elastic.co/guide/en/elasticsearch/reference/current/get-basic-status.html).
+	// Start a basic license.
+	// Start an indefinite basic license, which gives access to all the basic
+	// features.
+	//
+	// NOTE: In order to start a basic license, you must not currently have a basic
+	// license.
+	//
+	// If the basic license does not support all of the features that are available
+	// with your current license, however, you are notified in the response.
+	// You must then re-submit the API request with the `acknowledge` parameter set
+	// to `true`.
+	//
+	// To check the status of your basic license, use the get basic license API.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/start-basic.html
 	PostStartBasic license_post_start_basic.NewPostStartBasic
-	// The start trial API enables you to start a 30-day trial, which gives access
-	// to all subscription features.
+	// Start a trial.
+	// Start a 30-day trial, which gives access to all subscription features.
+	//
+	// NOTE: You are allowed to start a trial only if your cluster has not already
+	// activated a trial for the current major product version.
+	// For example, if you have already activated a trial for v8.0, you cannot start
+	// a new trial until v9.0. You can, however, request an extended trial at
+	// https://www.elastic.co/trialextension.
+	//
+	// To check the status of your trial, use the get trial status API.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/start-trial.html
 	PostStartTrial license_post_start_trial.NewPostStartTrial
 }
@@ -2568,34 +3339,57 @@ type Monitoring struct {
 }
 
 type Nodes struct {
-	// You can use this API to clear the archived repositories metering information
-	// in the cluster.
+	// Clear the archived repositories metering.
+	// Clear the archived repositories metering information in the cluster.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/clear-repositories-metering-archive-api.html
 	ClearRepositoriesMeteringArchive nodes_clear_repositories_metering_archive.NewClearRepositoriesMeteringArchive
-	// You can use the cluster repositories metering API to retrieve repositories
-	// metering information in a cluster.
-	// This API exposes monotonically non-decreasing counters and it’s expected that
-	// clients would durably store the
-	// information needed to compute aggregations over a period of time.
-	// Additionally, the information exposed by this
-	// API is volatile, meaning that it won’t be present after node restarts.
+	// Get cluster repositories metering.
+	// Get repositories metering information for a cluster.
+	// This API exposes monotonically non-decreasing counters and it is expected
+	// that clients would durably store the information needed to compute
+	// aggregations over a period of time.
+	// Additionally, the information exposed by this API is volatile, meaning that
+	// it will not be present after node restarts.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-repositories-metering-api.html
 	GetRepositoriesMeteringInfo nodes_get_repositories_metering_info.NewGetRepositoriesMeteringInfo
-	// This API yields a breakdown of the hot threads on each selected node in the
-	// cluster.
-	// The output is plain text with a breakdown of each node’s top hot threads.
+	// Get the hot threads for nodes.
+	// Get a breakdown of the hot threads on each selected node in the cluster.
+	// The output is plain text with a breakdown of the top hot threads for each
+	// node.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-hot-threads.html
 	HotThreads nodes_hot_threads.NewHotThreads
-	// Returns cluster nodes information.
+	// Get node information.
+	// By default, the API returns all attributes and core settings for cluster
+	// nodes.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-info.html
 	Info nodes_info.NewInfo
-	// Reloads the keystore on nodes in the cluster.
+	// Reload the keystore on nodes in the cluster.
+	//
+	// Secure settings are stored in an on-disk keystore. Certain of these settings
+	// are reloadable.
+	// That is, you can change them on disk and reload them without restarting any
+	// nodes in the cluster.
+	// When you have updated reloadable secure settings in your keystore, you can
+	// use this API to reload those settings on each node.
+	//
+	// When the Elasticsearch keystore is password protected and not simply
+	// obfuscated, you must provide the password for the keystore when you reload
+	// the secure settings.
+	// Reloading the settings for the whole cluster assumes that the keystores for
+	// all nodes are protected with the same password; this method is allowed only
+	// when inter-node communications are encrypted.
+	// Alternatively, you can reload the secure settings on each node by locally
+	// accessing the API and passing the node-specific Elasticsearch keystore
+	// password.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/secure-settings.html#reloadable-secure-settings
 	ReloadSecureSettings nodes_reload_secure_settings.NewReloadSecureSettings
-	// Returns cluster nodes statistics.
+	// Get node statistics.
+	// Get statistics for nodes in a cluster.
+	// By default, all stats are returned. You can limit the returned information by
+	// using metrics.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-stats.html
 	Stats nodes_stats.NewStats
-	// Returns information on the usage of features.
+	// Get feature usage information.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-usage.html
 	Usage nodes_usage.NewUsage
 }
@@ -2617,28 +3411,35 @@ type Profiling struct {
 }
 
 type QueryRules struct {
-	// Deletes a query rule within a query ruleset.
+	// Delete a query rule.
+	// Delete a query rule within a query ruleset.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-query-rule.html
 	DeleteRule query_rules_delete_rule.NewDeleteRule
-	// Deletes a query ruleset.
+	// Delete a query ruleset.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-query-ruleset.html
 	DeleteRuleset query_rules_delete_ruleset.NewDeleteRuleset
-	// Returns the details about a query rule within a query ruleset
+	// Get a query rule.
+	// Get details about a query rule within a query ruleset.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-query-rule.html
 	GetRule query_rules_get_rule.NewGetRule
-	// Returns the details about a query ruleset
+	// Get a query ruleset.
+	// Get details about a query ruleset.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-query-ruleset.html
 	GetRuleset query_rules_get_ruleset.NewGetRuleset
-	// Returns summarized information about existing query rulesets.
+	// Get all query rulesets.
+	// Get summarized information about the query rulesets.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/list-query-rulesets.html
 	ListRulesets query_rules_list_rulesets.NewListRulesets
-	// Creates or updates a query rule within a query ruleset.
+	// Create or update a query rule.
+	// Create or update a query rule within a query ruleset.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/put-query-rule.html
 	PutRule query_rules_put_rule.NewPutRule
-	// Creates or updates a query ruleset.
+	// Create or update a query ruleset.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/put-query-ruleset.html
 	PutRuleset query_rules_put_ruleset.NewPutRuleset
-	// Creates or updates a query ruleset.
+	// Test a query ruleset.
+	// Evaluate match criteria against a query ruleset to identify the rules that
+	// would match that criteria.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/test-query-ruleset.html
 	Test query_rules_test.NewTest
 }
@@ -2805,7 +3606,35 @@ type Security struct {
 	// information when you create the API keys.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html
 	CreateApiKey security_create_api_key.NewCreateApiKey
-	// Creates a cross-cluster API key for API key based remote cluster access.
+	// Create a cross-cluster API key.
+	//
+	// Create an API key of the `cross_cluster` type for the API key based remote
+	// cluster access.
+	// A `cross_cluster` API key cannot be used to authenticate through the REST
+	// interface.
+	//
+	// IMPORTANT: To authenticate this request you must use a credential that is not
+	// an API key. Even if you use an API key that has the required privilege, the
+	// API returns an error.
+	//
+	// Cross-cluster API keys are created by the Elasticsearch API key service,
+	// which is automatically enabled.
+	//
+	// NOTE: Unlike REST API keys, a cross-cluster API key does not capture
+	// permissions of the authenticated user. The API key’s effective permission is
+	// exactly as specified with the `access` property.
+	//
+	// A successful request returns a JSON structure that contains the API key, its
+	// unique ID, and its name. If applicable, it also returns expiration
+	// information for the API key in milliseconds.
+	//
+	// By default, API keys never expire. You can specify expiration information
+	// when you create the API keys.
+	//
+	// Cross-cluster API keys can only be updated with the update cross-cluster API
+	// key API.
+	// Attempting to update them with the update REST API key API or the bulk update
+	// REST API keys API will result in an error.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-cross-cluster-api-key.html
 	CreateCrossClusterApiKey security_create_cross_cluster_api_key.NewCreateCrossClusterApiKey
 	// Create a service account token.
@@ -3128,6 +3957,12 @@ type Security struct {
 	// To update an API key, the owner user’s credentials are required.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-update-api-key.html
 	UpdateApiKey security_update_api_key.NewUpdateApiKey
+	// Update a cross-cluster API key.
+	//
+	// Update the attributes of an existing cross-cluster API key, which is used for
+	// API key based remote cluster access.
+	// https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-update-cross-cluster-api-key.html
+	UpdateCrossClusterApiKey security_update_cross_cluster_api_key.NewUpdateCrossClusterApiKey
 	// Update settings for the security system index
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-update-settings.html
 	UpdateSettings security_update_settings.NewUpdateSettings
@@ -3231,25 +4066,30 @@ type Snapshot struct {
 }
 
 type Sql struct {
-	// Clears the SQL cursor
+	// Clear an SQL search cursor.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/clear-sql-cursor-api.html
 	ClearCursor sql_clear_cursor.NewClearCursor
-	// Deletes an async SQL search or a stored synchronous SQL search. If the search
-	// is still running, the API cancels it.
+	// Delete an async SQL search.
+	// Delete an async SQL search or a stored synchronous SQL search.
+	// If the search is still running, the API cancels it.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-async-sql-search-api.html
 	DeleteAsync sql_delete_async.NewDeleteAsync
-	// Returns the current status and available results for an async SQL search or
-	// stored synchronous SQL search
+	// Get async SQL search results.
+	// Get the current status and available results for an async SQL search or
+	// stored synchronous SQL search.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-async-sql-search-api.html
 	GetAsync sql_get_async.NewGetAsync
-	// Returns the current status of an async SQL search or a stored synchronous SQL
-	// search
+	// Get the async SQL search status.
+	// Get the current status of an async SQL search or a stored synchronous SQL
+	// search.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-async-sql-search-status-api.html
 	GetAsyncStatus sql_get_async_status.NewGetAsyncStatus
-	// Executes a SQL request
+	// Get SQL search results.
+	// Run an SQL request.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/sql-search-api.html
 	Query sql_query.NewQuery
-	// Translates SQL into Elasticsearch queries
+	// Translate SQL into Elasticsearch queries.
+	// Translate an SQL search into a search API request containing Query DSL.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/sql-translate-api.html
 	Translate sql_translate.NewTranslate
 }
@@ -3290,25 +4130,32 @@ type Ssl struct {
 }
 
 type Synonyms struct {
-	// Deletes a synonym set
+	// Delete a synonym set.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-synonyms-set.html
 	DeleteSynonym synonyms_delete_synonym.NewDeleteSynonym
-	// Deletes a synonym rule in a synonym set
+	// Delete a synonym rule.
+	// Delete a synonym rule from a synonym set.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-synonym-rule.html
 	DeleteSynonymRule synonyms_delete_synonym_rule.NewDeleteSynonymRule
-	// Retrieves a synonym set
+	// Get a synonym set.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-synonyms-set.html
 	GetSynonym synonyms_get_synonym.NewGetSynonym
-	// Retrieves a synonym rule from a synonym set
+	// Get a synonym rule.
+	// Get a synonym rule from a synonym set.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/get-synonym-rule.html
 	GetSynonymRule synonyms_get_synonym_rule.NewGetSynonymRule
-	// Retrieves a summary of all defined synonym sets
+	// Get all synonym sets.
+	// Get a summary of all defined synonym sets.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/list-synonyms-sets.html
 	GetSynonymsSets synonyms_get_synonyms_sets.NewGetSynonymsSets
-	// Creates or updates a synonym set.
+	// Create or update a synonym set.
+	// Synonyms sets are limited to a maximum of 10,000 synonym rules per set.
+	// If you need to manage more synonym rules, you can create multiple synonym
+	// sets.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/put-synonyms-set.html
 	PutSynonym synonyms_put_synonym.NewPutSynonym
-	// Creates or updates a synonym rule in a synonym set
+	// Create or update a synonym rule.
+	// Create or update a synonym rule in a synonym set.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/put-synonym-rule.html
 	PutSynonymRule synonyms_put_synonym_rule.NewPutSynonymRule
 }
@@ -3613,7 +4460,8 @@ type API struct {
 	// longer required for search requests.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/point-in-time-api.html
 	ClosePointInTime core_close_point_in_time.NewClosePointInTime
-	// Returns number of documents matching a query.
+	// Count search results.
+	// Get the number of documents matching a query.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html
 	Count core_count.NewCount
 	// Index a document.
@@ -3690,7 +4538,36 @@ type API struct {
 	// Returns the source of a document.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html
 	GetSource core_get_source.NewGetSource
-	// Returns the health of the cluster.
+	// Get the cluster health.
+	// Get a report with the health status of an Elasticsearch cluster.
+	// The report contains a list of indicators that compose Elasticsearch
+	// functionality.
+	//
+	// Each indicator has a health status of: green, unknown, yellow or red.
+	// The indicator will provide an explanation and metadata describing the reason
+	// for its current health status.
+	//
+	// The cluster’s status is controlled by the worst indicator status.
+	//
+	// In the event that an indicator’s status is non-green, a list of impacts may
+	// be present in the indicator result which detail the functionalities that are
+	// negatively affected by the health issue.
+	// Each impact carries with it a severity level, an area of the system that is
+	// affected, and a simple description of the impact on the system.
+	//
+	// Some health indicators can determine the root cause of a health problem and
+	// prescribe a set of steps that can be performed in order to improve the health
+	// of the system.
+	// The root cause and remediation steps are encapsulated in a diagnosis.
+	// A diagnosis contains a cause detailing a root cause analysis, an action
+	// containing a brief description of the steps to take to fix the problem, the
+	// list of affected resources (if applicable), and a detailed step-by-step
+	// troubleshooting guide to fix the diagnosed problem.
+	//
+	// NOTE: The health indicators perform root cause analysis of non-green health
+	// statuses. This can be computationally expensive when called frequently.
+	// When setting up automated polling of the API for health status, set verbose
+	// to false to disable the more expensive analysis logic.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/health-api.html
 	HealthReport core_health_report.NewHealthReport
 	// Index a document.
@@ -3786,7 +4663,7 @@ type API struct {
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/point-in-time-api.html
 	OpenPointInTime core_open_point_in_time.NewOpenPointInTime
 	// Ping the cluster.
-	// Returns whether the cluster is running.
+	// Get information about whether the cluster is running.
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html
 	Ping core_ping.NewPing
 	// Create or update a script or search template.
@@ -4465,6 +5342,7 @@ func New(tp elastictransport.Interface) *API {
 			SamlServiceProviderMetadata: security_saml_service_provider_metadata.NewSamlServiceProviderMetadataFunc(tp),
 			SuggestUserProfiles:         security_suggest_user_profiles.NewSuggestUserProfilesFunc(tp),
 			UpdateApiKey:                security_update_api_key.NewUpdateApiKeyFunc(tp),
+			UpdateCrossClusterApiKey:    security_update_cross_cluster_api_key.NewUpdateCrossClusterApiKeyFunc(tp),
 			UpdateSettings:              security_update_settings.NewUpdateSettingsFunc(tp),
 			UpdateUserProfileData:       security_update_user_profile_data.NewUpdateUserProfileDataFunc(tp),
 		},

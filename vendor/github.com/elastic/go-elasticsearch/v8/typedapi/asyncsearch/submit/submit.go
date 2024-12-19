@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 // Run an async search.
 //
@@ -366,16 +366,6 @@ func (r *Submit) KeepOnCompletion(keeponcompletion bool) *Submit {
 	return r
 }
 
-// KeepAlive Specifies how long the async search needs to be available.
-// Ongoing async searches and any saved search results are deleted after this
-// period.
-// API name: keep_alive
-func (r *Submit) KeepAlive(duration string) *Submit {
-	r.values.Set("keep_alive", duration)
-
-	return r
-}
-
 // AllowNoIndices Whether to ignore if a wildcard indices expression resolves into no concrete
 // indices. (This includes `_all` string or when no indices have been specified)
 // API name: allow_no_indices
@@ -513,16 +503,6 @@ func (r *Submit) Preference(preference string) *Submit {
 	return r
 }
 
-// PreFilterShardSize The default value cannot be changed, which enforces the execution of a
-// pre-filter roundtrip to retrieve statistics from each shard so that the ones
-// that surely don’t hold any document matching the query get skipped.
-// API name: pre_filter_shard_size
-func (r *Submit) PreFilterShardSize(prefiltershardsize string) *Submit {
-	r.values.Set("pre_filter_shard_size", prefiltershardsize)
-
-	return r
-}
-
 // RequestCache Specify if request cache should be used for this request or not, defaults to
 // true
 // API name: request_cache
@@ -536,13 +516,6 @@ func (r *Submit) RequestCache(requestcache bool) *Submit {
 // API name: routing
 func (r *Submit) Routing(routing string) *Submit {
 	r.values.Set("routing", routing)
-
-	return r
-}
-
-// API name: scroll
-func (r *Submit) Scroll(duration string) *Submit {
-	r.values.Set("scroll", duration)
 
 	return r
 }
@@ -596,6 +569,8 @@ func (r *Submit) TypedKeys(typedkeys bool) *Submit {
 	return r
 }
 
+// RestTotalHitsAsInt Indicates whether hits.total should be rendered as an integer or an object in
+// the rest search response
 // API name: rest_total_hits_as_int
 func (r *Submit) RestTotalHitsAsInt(resttotalhitsasint bool) *Submit {
 	r.values.Set("rest_total_hits_as_int", strconv.FormatBool(resttotalhitsasint))

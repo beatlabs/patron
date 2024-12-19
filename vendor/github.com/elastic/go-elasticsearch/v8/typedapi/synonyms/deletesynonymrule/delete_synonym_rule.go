@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
-// Deletes a synonym rule in a synonym set
+// Delete a synonym rule.
+// Delete a synonym rule from a synonym set.
 package deletesynonymrule
 
 import (
@@ -81,7 +82,8 @@ func NewDeleteSynonymRuleFunc(tp elastictransport.Interface) NewDeleteSynonymRul
 	}
 }
 
-// Deletes a synonym rule in a synonym set
+// Delete a synonym rule.
+// Delete a synonym rule from a synonym set.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-synonym-rule.html
 func New(tp elastictransport.Interface) *DeleteSynonymRule {

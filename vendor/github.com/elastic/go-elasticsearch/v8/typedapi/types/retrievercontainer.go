@@ -16,18 +16,20 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 package types
 
 // RetrieverContainer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/_types/Retriever.ts#L26-L38
+// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/_types/Retriever.ts#L28-L42
 type RetrieverContainer struct {
 	// Knn A retriever that replaces the functionality  of a knn search.
 	Knn *KnnRetriever `json:"knn,omitempty"`
 	// Rrf A retriever that produces top documents from reciprocal rank fusion (RRF).
 	Rrf *RRFRetriever `json:"rrf,omitempty"`
+	// Rule A retriever that replaces the functionality of a rule query.
+	Rule *RuleRetriever `json:"rule,omitempty"`
 	// Standard A retriever that replaces the functionality of a traditional query.
 	Standard *StandardRetriever `json:"standard,omitempty"`
 	// TextSimilarityReranker A retriever that reranks the top documents based on a reranking model using

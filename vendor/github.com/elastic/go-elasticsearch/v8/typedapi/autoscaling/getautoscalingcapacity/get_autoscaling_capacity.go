@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 // Get the autoscaling capacity.
 //
@@ -316,6 +316,16 @@ func (r GetAutoscalingCapacity) IsSuccess(providedCtx context.Context) (bool, er
 // Header set a key, value pair in the GetAutoscalingCapacity headers map.
 func (r *GetAutoscalingCapacity) Header(key, value string) *GetAutoscalingCapacity {
 	r.headers.Set(key, value)
+
+	return r
+}
+
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
+// API name: master_timeout
+func (r *GetAutoscalingCapacity) MasterTimeout(duration string) *GetAutoscalingCapacity {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

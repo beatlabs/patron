@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 package types
 
 // ProcessorContainer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/ingest/_types/Processors.ts#L27-L297
+// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/ingest/_types/Processors.ts#L27-L301
 type ProcessorContainer struct {
 	// Append Appends one or more values to an existing array if the field already exists
 	// and it is an array.
@@ -116,6 +116,8 @@ type ProcessorContainer struct {
 	// language processing tasks to infer against the data that is being ingested in
 	// the pipeline.
 	Inference *InferenceProcessor `json:"inference,omitempty"`
+	// IpLocation Currently an undocumented alias for GeoIP Processor.
+	IpLocation *IpLocationProcessor `json:"ip_location,omitempty"`
 	// Join Joins each element of an array into a single string using a separator
 	// character between each element.
 	// Throws an error when the field is not an array.

@@ -159,7 +159,7 @@ github.com/eclipse/paho.golang/paho/store/memory
 ## explicit; go 1.20
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version
-# github.com/elastic/go-elasticsearch/v8 v8.16.0
+# github.com/elastic/go-elasticsearch/v8 v8.17.0
 ## explicit; go 1.22
 github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi
@@ -589,6 +589,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/security/samlprepareauthenticati
 github.com/elastic/go-elasticsearch/v8/typedapi/security/samlserviceprovidermetadata
 github.com/elastic/go-elasticsearch/v8/typedapi/security/suggestuserprofiles
 github.com/elastic/go-elasticsearch/v8/typedapi/security/updateapikey
+github.com/elastic/go-elasticsearch/v8/typedapi/security/updatecrossclusterapikey
 github.com/elastic/go-elasticsearch/v8/typedapi/security/updatesettings
 github.com/elastic/go-elasticsearch/v8/typedapi/security/updateuserprofiledata
 github.com/elastic/go-elasticsearch/v8/typedapi/shutdown/deletenode
@@ -656,6 +657,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/actionstatusoptions
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/actiontype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/allocationexplaindecision
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/apikeygranttype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/apikeytype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/appliesto
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/boundaryscanner
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/bytes
@@ -799,7 +801,9 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/queryruletype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/rangerelation
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/ratemode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/remoteclusterprivilege
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/responsecontenttype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/restrictionworkflow
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/result
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/resultposition
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/routingstate
@@ -1175,7 +1179,7 @@ golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.32.0
+# golang.org/x/net v0.33.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -1210,7 +1214,7 @@ google.golang.org/genproto/googleapis/api/httpbody
 ## explicit; go 1.21
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.69.0
+# google.golang.org/grpc v1.69.2
 ## explicit; go 1.22
 google.golang.org/grpc
 google.golang.org/grpc/attributes

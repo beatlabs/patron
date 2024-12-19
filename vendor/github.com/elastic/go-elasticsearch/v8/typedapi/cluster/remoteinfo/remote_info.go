@@ -16,11 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
-// The cluster remote info API allows you to retrieve all of the configured
-// remote cluster information. It returns connection and endpoint information
-// keyed by the configured remote cluster alias.
+// Get remote cluster information.
+// Get all of the configured remote cluster information.
+// This API returns connection and endpoint information keyed by the configured
+// remote cluster alias.
 package remoteinfo
 
 import (
@@ -70,9 +71,10 @@ func NewRemoteInfoFunc(tp elastictransport.Interface) NewRemoteInfo {
 	}
 }
 
-// The cluster remote info API allows you to retrieve all of the configured
-// remote cluster information. It returns connection and endpoint information
-// keyed by the configured remote cluster alias.
+// Get remote cluster information.
+// Get all of the configured remote cluster information.
+// This API returns connection and endpoint information keyed by the configured
+// remote cluster alias.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-remote-info.html
 func New(tp elastictransport.Interface) *RemoteInfo {

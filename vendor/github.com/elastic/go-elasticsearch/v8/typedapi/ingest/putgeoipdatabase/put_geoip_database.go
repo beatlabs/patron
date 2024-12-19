@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
-// Returns information about one or more geoip database configurations.
+// Create or update GeoIP database configurations.
+// Create or update IP geolocation database configurations.
 package putgeoipdatabase
 
 import (
@@ -81,7 +82,8 @@ func NewPutGeoipDatabaseFunc(tp elastictransport.Interface) NewPutGeoipDatabase 
 	}
 }
 
-// Returns information about one or more geoip database configurations.
+// Create or update GeoIP database configurations.
+// Create or update IP geolocation database configurations.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/put-geoip-database-api.html
 func New(tp elastictransport.Interface) *PutGeoipDatabase {

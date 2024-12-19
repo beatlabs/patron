@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 // Open a point in time.
 //
@@ -393,6 +393,17 @@ func (r *OpenPointInTime) ExpandWildcards(expandwildcards ...expandwildcard.Expa
 		tmp = append(tmp, item.String())
 	}
 	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
+
+	return r
+}
+
+// AllowPartialSearchResults If `false`, creating a point in time request when a shard is missing or
+// unavailable will throw an exception.
+// If `true`, the point in time will contain all the shards that are available
+// at the time of the request.
+// API name: allow_partial_search_results
+func (r *OpenPointInTime) AllowPartialSearchResults(allowpartialsearchresults bool) *OpenPointInTime {
+	r.values.Set("allow_partial_search_results", strconv.FormatBool(allowpartialsearchresults))
 
 	return r
 }

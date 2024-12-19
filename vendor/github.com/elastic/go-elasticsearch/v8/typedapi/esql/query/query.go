@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
-// Executes an ES|QL request
+// Run an ES|QL query.
+// Get search results for an ES|QL (Elasticsearch query language) query.
 package query
 
 import (
@@ -74,7 +75,8 @@ func NewQueryFunc(tp elastictransport.Interface) NewQuery {
 	}
 }
 
-// Executes an ES|QL request
+// Run an ES|QL query.
+// Get search results for an ES|QL (Elasticsearch query language) query.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/esql-rest.html
 func New(tp elastictransport.Interface) *Query {

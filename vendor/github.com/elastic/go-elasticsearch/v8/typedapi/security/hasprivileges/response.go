@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 package hasprivileges
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package hasprivileges
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/security/has_privileges/SecurityHasPrivilegesResponse.ts#L24-L32
+// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/security/has_privileges/SecurityHasPrivilegesResponse.ts#L24-L32
 type Response struct {
 	Application     types.ApplicationsPrivileges `json:"application"`
 	Cluster         map[string]bool              `json:"cluster"`

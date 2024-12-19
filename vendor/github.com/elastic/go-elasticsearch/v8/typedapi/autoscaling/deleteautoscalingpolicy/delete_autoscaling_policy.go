@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 // Delete an autoscaling policy.
 //
@@ -303,6 +303,25 @@ func (r *DeleteAutoscalingPolicy) Header(key, value string) *DeleteAutoscalingPo
 func (r *DeleteAutoscalingPolicy) _name(name string) *DeleteAutoscalingPolicy {
 	r.paramSet |= nameMask
 	r.name = name
+
+	return r
+}
+
+// MasterTimeout Period to wait for a connection to the master node.
+// If no response is received before the timeout expires, the request fails and
+// returns an error.
+// API name: master_timeout
+func (r *DeleteAutoscalingPolicy) MasterTimeout(duration string) *DeleteAutoscalingPolicy {
+	r.values.Set("master_timeout", duration)
+
+	return r
+}
+
+// Timeout Period to wait for a response. If no response is received before the timeout
+// expires, the request fails and returns an error.
+// API name: timeout
+func (r *DeleteAutoscalingPolicy) Timeout(duration string) *DeleteAutoscalingPolicy {
+	r.values.Set("timeout", duration)
 
 	return r
 }

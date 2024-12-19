@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 package getasync
 
@@ -28,7 +28,7 @@ import (
 
 // Response holds the response body struct for the package getasync
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/sql/get_async/SqlGetAsyncResponse.ts#L23-L60
+// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/sql/get_async/SqlGetAsyncResponse.ts#L23-L60
 type Response struct {
 
 	// Columns Column headings for the search results. Each object is a column.

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 // Get the async search status.
 //
@@ -305,6 +305,16 @@ func (r *Status) Header(key, value string) *Status {
 func (r *Status) _id(id string) *Status {
 	r.paramSet |= idMask
 	r.id = id
+
+	return r
+}
+
+// KeepAlive Specifies how long the async search needs to be available.
+// Ongoing async searches and any saved search results are deleted after this
+// period.
+// API name: keep_alive
+func (r *Status) KeepAlive(duration string) *Status {
+	r.values.Set("keep_alive", duration)
 
 	return r
 }

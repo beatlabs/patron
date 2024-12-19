@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
-// Gets all stats related to cross-cluster replication.
+// Get cross-cluster replication stats.
+// This API returns stats about auto-following and the same shard-level stats as
+// the get follower stats API.
 package stats
 
 import (
@@ -68,7 +70,9 @@ func NewStatsFunc(tp elastictransport.Interface) NewStats {
 	}
 }
 
-// Gets all stats related to cross-cluster replication.
+// Get cross-cluster replication stats.
+// This API returns stats about auto-following and the same shard-level stats as
+// the get follower stats API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-get-stats.html
 func New(tp elastictransport.Interface) *Stats {

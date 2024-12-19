@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
-// Creates or updates a query ruleset.
+// Test a query ruleset.
+// Evaluate match criteria against a query ruleset to identify the rules that
+// would match that criteria.
 package test
 
 import (
@@ -81,7 +83,9 @@ func NewTestFunc(tp elastictransport.Interface) NewTest {
 	}
 }
 
-// Creates or updates a query ruleset.
+// Test a query ruleset.
+// Evaluate match criteria against a query ruleset to identify the rules that
+// would match that criteria.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/test-query-ruleset.html
 func New(tp elastictransport.Interface) *Test {

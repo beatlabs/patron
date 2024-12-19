@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/4fcf747dfafc951e1dcf3077327e3dcee9107db3
+// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
 
 package types
 
 // ConnectorFeatures type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/4fcf747dfafc951e1dcf3077327e3dcee9107db3/specification/connector/_types/Connector.ts#L224-L229
+// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/connector/_types/Connector.ts#L224-L229
 type ConnectorFeatures struct {
 	DocumentLevelSecurity  *FeatureEnabled   `json:"document_level_security,omitempty"`
 	IncrementalSync        *FeatureEnabled   `json:"incremental_sync,omitempty"`

@@ -9,8 +9,6 @@ jobs:
   lint:
     name: Lint and fmt check
     runs-on: ubuntu-latest
-    # runs-on:
-    #   group: proxmox-ubuntu
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -26,8 +24,6 @@ jobs:
   build:
     name: CI on Go
     runs-on: ubuntu-latest
-    # runs-on:
-    #   group: proxmox-ubuntu
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -36,7 +32,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      
+
       - name: Start dependencies
         run: make deps-start
 
@@ -52,13 +48,13 @@ jobs:
           files: ./coverage.txt
 
       - name: e2e
-        run:  |
+        run: |
           go build -o service ./service/
           nohup ./service/service &
           go run client/main.go
         working-directory: ./examples
         env:
-          OTEL_EXPORTER_OTLP_INSECURE : true
+          OTEL_EXPORTER_OTLP_INSECURE: true
 
       - name: Stop dependencies
         run: make deps-stop

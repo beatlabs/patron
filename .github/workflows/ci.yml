@@ -17,10 +17,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-      
+          
       - name: Linting and fmt check
         run: make lint
 

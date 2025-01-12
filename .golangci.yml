@@ -17,6 +17,10 @@ output:
   # print linter name in the end of issue text, default is true
   print-linter-name: true
 
+issues:
+  exclude-dirs:
+    - vendor
+  max-same-issues: 10
   uniq-by-line: false
 
 linters:
@@ -73,10 +77,5 @@ linters:
     - dogsled
     - protogetter
     - usestdlibvars
-    - testableexamples    
+    - testableexamples
   fast: false
-
-issues:
-  exclude-dirs:
-    - vendor
-  max-same-issues: 10

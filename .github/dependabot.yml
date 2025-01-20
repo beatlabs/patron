@@ -9,20 +9,14 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "monthly"
   # Maintain dependencies for Go
   - package-ecosystem: "gomod" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
-      time: "09:00"
-      timezone: "Europe/Athens"
-      day: "monday"
+      interval: "monthly"
   # Maintain dependencies for Docker
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "weekly"
-      time: "09:00"
-      timezone: "Europe/Athens"
-      day: "monday"
+      interval: "monthly"

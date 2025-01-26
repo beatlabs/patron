@@ -1,3 +1,12 @@
+# v1.33.15 (2025-01-24)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+* **Dependency Update**: Upgrade to smithy-go v1.22.2.
+
+# v1.33.14 (2025-01-21)
+
+* **Documentation**: This release adds support for the topic attribute FifoThroughputScope for SNS FIFO topics. For details, see the documentation history in the Amazon Simple Notification Service Developer Guide.
+
 # v1.33.13 (2025-01-17)
 
 * **Bug Fix**: Fix bug where credentials weren't refreshed during retry loop.

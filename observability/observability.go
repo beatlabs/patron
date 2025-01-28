@@ -18,6 +18,8 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
+const statusAttribute = "status"
+
 // Provider represents the observability provider that includes the metric and trace providers.
 type Provider struct {
 	mp *metric.MeterProvider
@@ -26,9 +28,9 @@ type Provider struct {
 
 var (
 	// SucceededAttribute is the attribute key-value pair for a succeeded operation.
-	SucceededAttribute = attribute.String("status", "succeeded")
+	SucceededAttribute = attribute.String(statusAttribute, "succeeded")
 	// FailedAttribute is the attribute key-value pair for a failed operation.
-	FailedAttribute = attribute.String("status", "failed")
+	FailedAttribute = attribute.String(statusAttribute, "failed")
 )
 
 // ComponentAttribute returns the attribute key-value pair for a component.

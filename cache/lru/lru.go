@@ -9,9 +9,11 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+const cacheTypeAttrbute = "cache.type"
+
 var (
-	lruAttribute      = attribute.String("cache.type", "lru")
-	lruEvictAttribute = attribute.String("cache.type", "lru-evict")
+	lruAttribute      = attribute.String(cacheTypeAttrbute, "lru")
+	lruEvictAttribute = attribute.String(cacheTypeAttrbute, "lru-evict")
 )
 
 // Cache encapsulates a thread-safe fixed size LRU cache.

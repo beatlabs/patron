@@ -23,7 +23,8 @@ func (oe OpenError) Error() string {
 type status int
 
 const (
-	packageName = "circuit-breaker"
+	packageName     = "circuit-breaker"
+	statusAttribute = "status"
 
 	closed status = iota
 	opened
@@ -32,8 +33,8 @@ const (
 var (
 	tsFuture      = int64(math.MaxInt64)
 	errOpen       = new(OpenError)
-	openedAttr    = attribute.Int64("status", int64(opened))
-	closedAttr    = attribute.Int64("status", int64(closed))
+	openedAttr    = attribute.Int64(statusAttribute, int64(opened))
+	closedAttr    = attribute.Int64(statusAttribute, int64(closed))
 	statusCounter metric.Int64Counter
 )
 

@@ -12,16 +12,19 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-const packageName = "sqs"
+const (
+	packageName    = "sqs"
+	stateAttribute = "state"
+)
 
 var (
 	messageAgeGauge       metric.Float64Gauge
 	messageCounter        metric.Int64Counter
 	messageQueueSizeGauge metric.Float64Gauge
 
-	ackStateAttr     = attribute.String("state", string(ackMessageState))
-	nackStateAttr    = attribute.String("state", string(nackMessageState))
-	fetchedStateAttr = attribute.String("state", string(fetchedMessageState))
+	ackStateAttr     = attribute.String(stateAttribute, string(ackMessageState))
+	nackStateAttr    = attribute.String(stateAttribute, string(nackMessageState))
+	fetchedStateAttr = attribute.String(stateAttribute, string(fetchedMessageState))
 )
 
 func init() {

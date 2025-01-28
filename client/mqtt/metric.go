@@ -10,7 +10,10 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-const packageName = "mqtt"
+const (
+	packageName    = "mqtt"
+	topicAttribute = "topic"
+)
 
 var durationHistogram metric.Int64Histogram
 
@@ -19,7 +22,7 @@ func init() {
 }
 
 func topicAttr(topic string) attribute.KeyValue {
-	return attribute.String("topic", topic)
+	return attribute.String(topicAttribute, topic)
 }
 
 func observePublish(ctx context.Context, start time.Time, topic string, err error) {

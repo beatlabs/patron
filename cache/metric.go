@@ -9,12 +9,15 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-const packageName = "cache"
+const (
+	packageName          = "cache"
+	cacheStatusAttribute = "cache.status"
+)
 
 var (
-	cacheHitAttribute   = attribute.String("cache.status", "hit")
-	cacheMissAttribute  = attribute.String("cache.status", "miss")
-	cacheEvictAttribute = attribute.String("cache.status", "evict")
+	cacheHitAttribute   = attribute.String(cacheStatusAttribute, "hit")
+	cacheMissAttribute  = attribute.String(cacheStatusAttribute, "miss")
+	cacheEvictAttribute = attribute.String(cacheStatusAttribute, "evict")
 	cacheCounter        metric.Int64Counter
 	cacheOnce           sync.Once
 )

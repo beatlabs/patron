@@ -14,16 +14,17 @@ const (
 	messageProcessed = "processed"
 	messageErrored   = "errored"
 	messageSkipped   = "skipped"
+	statusAttribute  = "status"
 )
 
 var (
 	consumerErrorsGauge           metric.Int64Counter
 	topicPartitionOffsetDiffGauge metric.Float64Gauge
 	messageStatusCount            metric.Int64Counter
-	messageStatusAttr             = attribute.String("status", messageReceived)
-	messageProcessedAttr          = attribute.String("status", messageProcessed)
-	messageErroredAttr            = attribute.String("status", messageErrored)
-	messageSkippedAttr            = attribute.String("status", messageSkipped)
+	messageStatusAttr             = attribute.String(statusAttribute, messageReceived)
+	messageProcessedAttr          = attribute.String(statusAttribute, messageProcessed)
+	messageErroredAttr            = attribute.String(statusAttribute, messageErrored)
+	messageSkippedAttr            = attribute.String(statusAttribute, messageSkipped)
 )
 
 func init() {

@@ -8,17 +8,20 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-const packageName = "http-cache"
+const (
+	packageName     = "http-cache"
+	statusAttribute = "status"
+)
 
 var (
 	validationReason         = map[validationContext]string{0: "nil", ttlValidation: "expired", maxAgeValidation: "max_age", minFreshValidation: "min_fresh"}
 	cacheExpirationHistogram metric.Int64Histogram
 	cacheStatusCounter       metric.Int64Counter
-	statusAddAttr            = attribute.String("status", "add")
-	statusHitAttr            = attribute.String("status", "hit")
-	statusMissAttr           = attribute.String("status", "miss")
-	statusErrAttr            = attribute.String("status", "err")
-	statusEvictAttr          = attribute.String("status", "evict")
+	statusAddAttr            = attribute.String(statusAttribute, "add")
+	statusHitAttr            = attribute.String(statusAttribute, "hit")
+	statusMissAttr           = attribute.String(statusAttribute, "miss")
+	statusErrAttr            = attribute.String(statusAttribute, "err")
+	statusEvictAttr          = attribute.String(statusAttribute, "evict")
 )
 
 func init() {

@@ -2,7 +2,6 @@ package cache
 
 import (
 	"context"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,7 +24,7 @@ func TestSetupAndUseMetrics(t *testing.T) {
 	defer func() {
 		err := provider.Shutdown(context.Background())
 		if err != nil {
-			log.Fatal(err)
+			t.Fatal(err)
 		}
 	}()
 

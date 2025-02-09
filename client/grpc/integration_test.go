@@ -5,7 +5,6 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"testing"
 
@@ -40,7 +39,7 @@ func (s *server) SayHello(_ context.Context, req *examples.HelloRequest) (*examp
 func TestSayHello(t *testing.T) {
 	ctx := context.Background()
 
-	client, closer, err := testServer()
+	client, closer, err := testServer(t)
 	require.NoError(t, err)
 	defer closer()
 
@@ -113,7 +112,7 @@ func TestSayHello(t *testing.T) {
 	}
 }
 
-func testServer() (examples.GreeterClient, func(), error) {
+func testServer(t *testing.T) (examples.GreeterClient, func(), error) {
 	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		return nil, nil, err
@@ -123,14 +122,14 @@ func testServer() (examples.GreeterClient, func(), error) {
 	examples.RegisterGreeterServer(baseServer, &server{})
 	go func() {
 		if err := baseServer.Serve(lis); err != nil {
-			log.Printf("error serving server: %v", err)
+			t.Logf("error serving server: %v", err)
 		}
 	}()
 
 	closer := func() {
 		err := lis.Close()
 		if err != nil {
-			log.Printf("error closing listener: %v", err)
+			t.Logf("error closing listener: %v", err)
 		}
 		baseServer.Stop()
 	}

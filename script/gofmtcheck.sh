@@ -2,7 +2,7 @@
 
 # Check gofmt
 echo "==> Checking that code complies with gofmt requirements..."
-gofmt_files=$(gofmt -l $(find . -not \( -path ./.git -prune \) -not \( -path ./vendor -prune \) -name '*.go'))
+gofmt_files=$(gofmt -l $(find . -not \( -path ./.git -prune \) -not \( -path ./vendor -prune \) -not \( -path '*/vendor' -prune \) -name '*.go'))
 if [[ -n ${gofmt_files} ]]; then
     echo 'gofmt needs running on the following files:'
     echo "${gofmt_files}"

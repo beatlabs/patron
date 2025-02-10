@@ -308,7 +308,9 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 			defer c.gzipCompressor.collectBuffer(buf)
 
 			req.GetBody = func() (io.ReadCloser, error) {
-				return ioutil.NopCloser(buf), nil
+				// Copy value of buf so it's not destroyed on first read
+				r := *buf
+				return ioutil.NopCloser(&r), nil
 			}
 			req.Body, _ = req.GetBody()
 
@@ -321,6 +323,7 @@ func (c *Client) Perform(req *http.Request) (*http.Response, error) {
 				buf.ReadFrom(req.Body)
 
 				req.GetBody = func() (io.ReadCloser, error) {
+					// Copy value of buf so it's not destroyed on first read
 					r := buf
 					return ioutil.NopCloser(&r), nil
 				}

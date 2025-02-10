@@ -146,6 +146,7 @@ func (c *Client) getNodesInfo() ([]nodeInfo, error) {
 	c.setReqURL(conn.URL, req)
 	c.setReqAuth(conn.URL, req)
 	c.setReqUserAgent(req)
+	c.setReqGlobalHeader(req)
 
 	res, err := c.transport.RoundTrip(req)
 	if err != nil {

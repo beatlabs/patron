@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,9 +44,9 @@ func TestNew(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
-			gotService, gotErr := New(ctx, tt.name, "1.0",
-				WithLogFields(tt.fields...), WithJSONLogger(), WithSIGHUP(tt.sighupHandler))
+			gotService, gotErr := New(context.Background(), tt.name, "1.0",
+				WithLogFields(tt.fields...), WithJSONLogger(), WithSIGHUP(tt.sighupHandler),
+				WithShutdownTimeout(10*time.Second))
 
 			if tt.wantErr != "" {
 				require.EqualError(t, gotErr, tt.wantErr)
@@ -56,6 +57,7 @@ func TestNew(t *testing.T) {
 				assert.IsType(t, &Service{}, gotService)
 				assert.NotNil(t, gotService.termSig)
 				assert.NotNil(t, gotService.sighupHandler)
+				assert.Equal(t, 10*time.Second, gotService.shutdownTimeout)
 			}
 		})
 	}

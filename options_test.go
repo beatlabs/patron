@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"testing"
+	"time"
 
 	"github.com/beatlabs/patron/observability"
 	"github.com/beatlabs/patron/observability/log"
@@ -85,5 +86,40 @@ type testSighupAlterable struct {
 func testSighupHandle(value *testSighupAlterable) func() {
 	return func() {
 		value.value = 1
+	}
+}
+
+func TestShutdownTimeout(t *testing.T) {
+	tests := map[string]struct {
+		timeout     time.Duration
+		expectedErr string
+	}{
+		"negative timeout": {
+			timeout:     -5 * time.Second,
+			expectedErr: "shutdown timeout must be positive",
+		},
+		"zero timeout": {
+			timeout:     0,
+			expectedErr: "shutdown timeout must be positive",
+		},
+		"positive timeout": {
+			timeout:     30 * time.Second,
+			expectedErr: "",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			svc := &Service{}
+
+			err := WithShutdownTimeout(tt.timeout)(svc)
+
+			if tt.expectedErr == "" {
+				require.NoError(t, err)
+				assert.Equal(t, tt.timeout, svc.shutdownTimeout)
+			} else {
+				require.EqualError(t, err, tt.expectedErr)
+			}
+		})
 	}
 }

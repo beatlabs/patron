@@ -34,6 +34,7 @@ type Service struct {
 	sighupHandler         func()
 	observabilityCfg      observability.Config
 	observabilityProvider *observability.Provider
+	shutdownTimeout       time.Duration
 }
 
 // New creates a new Service instance.
@@ -45,8 +46,8 @@ func New(ctx context.Context, name, version string, options ...OptionFunc) (*Ser
 		version = "dev"
 	}
 
-	var err error
 	if ctx == nil {
+		slog.Warn("nil context provided, using background context")
 		ctx = context.Background()
 	}
 
@@ -66,6 +67,7 @@ func New(ctx context.Context, name, version string, options ...OptionFunc) (*Ser
 		},
 		observabilityCfg:      cfg,
 		observabilityProvider: observabilityProvider,
+		shutdownTimeout:       5 * time.Second, // default timeout
 	}
 
 	optionErrors := make([]error, 0)
@@ -88,12 +90,18 @@ func New(ctx context.Context, name, version string, options ...OptionFunc) (*Ser
 
 // Run starts the service with the provided components.
 func (s *Service) Run(ctx context.Context, components ...Component) error {
-	if len(components) == 0 || components[0] == nil {
-		return errors.New("components are empty or nil")
+	if len(components) == 0 {
+		return errors.New("no components provided")
+	}
+
+	for i, comp := range components {
+		if comp == nil {
+			return errors.New("component at index " + string(rune('0'+i)) + " is nil")
+		}
 	}
 
 	defer func() {
-		ctx, cnl := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cnl := context.WithTimeout(context.Background(), s.shutdownTimeout)
 		defer cnl()
 
 		err := s.observabilityProvider.Shutdown(ctx)
@@ -126,10 +134,18 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 	return errors.Join(ee...)
 }
 
+// setupOSSignal configures the service to handle OS signals:
+// - SIGTERM/Interrupt: Graceful shutdown of all components
+// - SIGHUP: Configuration reload (if handler configured)
+// The service will attempt to gracefully shutdown all components when a termination
+// signal is received, using the configured shutdown timeout.
 func (s *Service) setupOSSignal() {
 	signal.Notify(s.termSig, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
 }
 
+// waitTermination waits for either a termination signal or a component error.
+// Returns nil on graceful shutdown (SIGTERM/Interrupt/SIGHUP) or the first error
+// encountered from any component.
 func (s *Service) waitTermination(chErr <-chan error) error {
 	for {
 		select {

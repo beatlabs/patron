@@ -3,6 +3,7 @@ package patron
 import (
 	"errors"
 	"log/slog"
+	"time"
 )
 
 type OptionFunc func(svc *Service) error
@@ -45,6 +46,17 @@ func WithLogFields(attrs ...slog.Attr) OptionFunc {
 func WithJSONLogger() OptionFunc {
 	return func(svc *Service) error {
 		svc.observabilityCfg.LogConfig.IsJSON = true
+		return nil
+	}
+}
+
+// WithShutdownTimeout sets the shutdown timeout for the service.
+func WithShutdownTimeout(timeout time.Duration) OptionFunc {
+	return func(svc *Service) error {
+		if timeout <= 0 {
+			return errors.New("shutdown timeout must be positive")
+		}
+		svc.shutdownTimeout = timeout
 		return nil
 	}
 }

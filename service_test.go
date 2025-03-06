@@ -1,6 +1,7 @@
 package patron
 
 import (
+	"context"
 	"log/slog"
 	"testing"
 
@@ -42,7 +43,8 @@ func TestNew(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotService, gotErr := New(tt.name, "1.0",
+			ctx := context.Background()
+			gotService, gotErr := New(ctx, tt.name, "1.0",
 				WithLogFields(tt.fields...), WithJSONLogger(), WithSIGHUP(tt.sighupHandler))
 
 			if tt.wantErr != "" {

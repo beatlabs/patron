@@ -25,7 +25,7 @@ func TestServer_Run_Shutdown(t *testing.T) {
 				os.Clearenv()
 			}()
 			t.Setenv("PATRON_HTTP_DEFAULT_PORT", "50099")
-			svc, err := New("test", "", WithJSONLogger())
+			svc, err := New(context.Background(), "test", "", WithJSONLogger())
 			require.NoError(t, err)
 			err = svc.Run(context.Background(), tt.cp)
 			if tt.wantErr {

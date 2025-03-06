@@ -37,7 +37,7 @@ type Service struct {
 }
 
 // New creates a new Service instance.
-func New(name, version string, options ...OptionFunc) (*Service, error) {
+func New(ctx context.Context, name, version string, options ...OptionFunc) (*Service, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
@@ -46,7 +46,9 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	}
 
 	var err error
-	ctx := context.Background()
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
 	cfg := observabilityConfig(name, version)
 

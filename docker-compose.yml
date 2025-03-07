@@ -1,6 +1,6 @@
 services:
   kafka:
-    image: confluentinc/cp-kafka:7.7.1
+    image: confluentinc/cp-kafka:7.9.0
     hostname: broker
     ports:
       - "9092:9092"
@@ -25,7 +25,7 @@ services:
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
   rabbitmq:
-    image: docker.io/bitnami/rabbitmq:3.13
+    image: docker.io/bitnami/rabbitmq:4.0
     ports:
       - '4369:4369'
       - '5551:5551'
@@ -56,7 +56,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
   redis:
-    image: docker.io/bitnami/redis:6.2
+    image: docker.io/bitnami/redis:7.4
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
@@ -64,7 +64,7 @@ services:
     volumes:
       - "redis_data:/bitnami/redis/data"
   localstack:
-    image: localstack/localstack:3
+    image: localstack/localstack:4
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
@@ -75,7 +75,7 @@ services:
       - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
   hivemq:
-    image: hivemq/hivemq4:4.28.5
+    image: hivemq/hivemq4:4.37.0
     restart: always
     ports:
       - target: 1883

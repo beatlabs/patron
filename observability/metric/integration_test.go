@@ -21,5 +21,7 @@ func TestSetup(t *testing.T) {
 
 	assert.NotNil(t, otel.GetMeterProvider())
 
+	require.NoError(t, got.ForceFlush(ctx))
+
 	require.NoError(t, got.Shutdown(ctx))
 }

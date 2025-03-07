@@ -25,7 +25,7 @@ services:
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
   rabbitmq:
-    image: docker.io/bitnami/rabbitmq:3.13
+    image: docker.io/bitnami/rabbitmq:4.0
     ports:
       - '4369:4369'
       - '5551:5551'

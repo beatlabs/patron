@@ -75,7 +75,7 @@ services:
       - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
   hivemq:
-    image: hivemq/hivemq4:4.28.5
+    image: hivemq/hivemq4:4.37.0
     restart: always
     ports:
       - target: 1883

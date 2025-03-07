@@ -56,7 +56,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
   redis:
-    image: docker.io/bitnami/redis:6.2
+    image: docker.io/bitnami/redis:7.4
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:

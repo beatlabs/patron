@@ -17,7 +17,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-
   - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:

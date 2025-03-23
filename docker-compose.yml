@@ -1,6 +1,7 @@
 services:
   kafka:
     image: confluentinc/cp-kafka:7.9.0
+    restart: unless-stopped
     hostname: broker
     ports:
       - "9092:9092"
@@ -25,7 +26,8 @@ services:
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
   rabbitmq:
-    image: docker.io/bitnami/rabbitmq:4.0
+    image: bitnami/rabbitmq:4.0
+    restart: unless-stopped
     ports:
       - '4369:4369'
       - '5551:5551'
@@ -42,7 +44,7 @@ services:
       - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
   mysql:
     image: mysql:9
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: "patrondb"
       MYSQL_USER: "patron"
@@ -55,16 +57,18 @@ services:
       - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
-  redis:
-    image: docker.io/bitnami/redis:7.4
+  valkey:
+    image: bitnami/valkey:8.0
+    restart: unless-stopped
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+      - ALLOW_EMPTY_PASSWORD=yes      
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
-      - "redis_data:/bitnami/redis/data"
+      - 'valkey_data:/bitnami/valkey/data'
   localstack:
     image: localstack/localstack:4
+    restart: unless-stopped
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
@@ -76,7 +80,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
   hivemq:
     image: hivemq/hivemq4:4.37.0
-    restart: always
+    restart: unless-stopped
     ports:
       - target: 1883
         published: 1883
@@ -92,7 +96,7 @@ services:
       HIVEMQ_CLUSTER_TRANSPORT_TYPE: "TCP"
   mongo:
     image: mongo:8
-    restart: always
+    restart: unless-stopped
     ports:
       - "27017:27017"
     environment:
@@ -111,5 +115,5 @@ volumes:
     driver: local
   mysql_data:
     driver: local
-  redis_data:
-    driver: local  
+  valkey_data:
+    driver: local

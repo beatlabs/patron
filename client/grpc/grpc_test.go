@@ -14,7 +14,6 @@ const (
 )
 
 func TestNewClient(t *testing.T) {
-	t.Parallel()
 	type args struct {
 		opts []grpc.DialOption
 	}
@@ -34,7 +33,6 @@ func TestNewClient(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 			gotConn, err := NewClient(target, tt.args.opts...)
 			if tt.expectedErr != "" {
 				require.EqualError(t, err, tt.expectedErr)

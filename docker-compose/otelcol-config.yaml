@@ -8,10 +8,10 @@ receivers:
         endpoint: 0.0.0.0:4317
 
 exporters:
-  otlp:
-    endpoint: tempo:4317
-    tls:
-      insecure: true
+  debug:
+    verbosity: detailed
+    sampling_initial: 5
+    sampling_thereafter: 200
 
 processors:
   batch:
@@ -21,8 +21,8 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp]
+      exporters: [debug]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp]
+      exporters: [debug]

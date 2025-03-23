@@ -45,7 +45,7 @@ example-client:
 
 .PHONY: deps-start
 deps-start:
-	docker compose up -d
+	docker compose up -d --wait
 
 .PHONY: deps-stop
 deps-stop:

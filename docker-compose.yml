@@ -1,7 +1,7 @@
 services:
   kafka:
     image: confluentinc/cp-kafka:7.9.0
-    restart: unless-stopped
+    restart: always
     hostname: broker
     ports:
       - "9092:9092"
@@ -27,7 +27,7 @@ services:
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
   rabbitmq:
     image: bitnami/rabbitmq:4.0
-    restart: unless-stopped
+    restart: always
     ports:
       - '4369:4369'
       - '5551:5551'
@@ -44,7 +44,7 @@ services:
       - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
   mysql:
     image: mysql:9
-    restart: unless-stopped
+    restart: always
     environment:
       MYSQL_DATABASE: "patrondb"
       MYSQL_USER: "patron"
@@ -59,7 +59,7 @@ services:
       - mysql_data:/var/lib/mysql
   valkey:
     image: bitnami/valkey:8.0
-    restart: unless-stopped
+    restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes      
     ports:
@@ -68,7 +68,7 @@ services:
       - 'valkey_data:/bitnami/valkey/data'
   localstack:
     image: localstack/localstack:4
-    restart: unless-stopped
+    restart: always
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
@@ -80,7 +80,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
   hivemq:
     image: hivemq/hivemq4:4.37.0
-    restart: unless-stopped
+    restart: always
     ports:
       - target: 1883
         published: 1883
@@ -96,7 +96,7 @@ services:
       HIVEMQ_CLUSTER_TRANSPORT_TYPE: "TCP"
   mongo:
     image: mongo:8
-    restart: unless-stopped
+    restart: always
     ports:
       - "27017:27017"
     environment:
@@ -104,7 +104,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
   otelcol:
     image: otel/opentelemetry-collector-contrib
-    restart: unless-stopped
+    restart: always
     command: [ "--config=/etc/otelcol-config.yaml" ]
     volumes:
       - ./docker-compose/otelcol-config.yaml:/etc/otelcol-config.yaml

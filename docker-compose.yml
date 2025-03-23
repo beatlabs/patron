@@ -8,40 +8,40 @@ services:
       - "9101:9101"
     environment:
       KAFKA_NODE_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
-      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid" 
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@broker:29093"
+      KAFKA_LISTENERS: "PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
   rabbitmq:
     image: bitnami/rabbitmq:4.0
     restart: always
     ports:
-      - '4369:4369'
-      - '5551:5551'
-      - '5552:5552'
-      - '5672:5672'
-      - '25672:25672'
-      - '15672:15672'
+      - "4369:4369"
+      - "5551:5551"
+      - "5552:5552"
+      - "5672:5672"
+      - "25672:25672"
+      - "15672:15672"
     environment:
       - RABBITMQ_USERNAME=bitnami
       - RABBITMQ_PASSWORD=bitnami
       - RABBITMQ_SECURE_PASSWORD=yes
       - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=yes
     volumes:
-      - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
+      - "rabbitmq_data:/bitnami/rabbitmq/mnesia"
   mysql:
     image: mysql:9
     restart: always
@@ -61,17 +61,17 @@ services:
     image: bitnami/valkey:8.0
     restart: always
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes      
+      - ALLOW_EMPTY_PASSWORD=yes
     ports:
-      - '6379:6379'
+      - "6379:6379"
     volumes:
-      - 'valkey_data:/bitnami/valkey/data'
+      - "valkey_data:/bitnami/valkey/data"
   localstack:
     image: localstack/localstack:4
     restart: always
     ports:
-      - "127.0.0.1:4566:4566"            # LocalStack Gateway
-      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+      - "127.0.0.1:4566:4566" # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559" # external services port range
     environment:
       - DEBUG=${DEBUG-}
       - DOCKER_HOST=unix:///var/run/docker.sock
@@ -105,7 +105,7 @@ services:
   otelcol:
     image: otel/opentelemetry-collector-contrib
     restart: always
-    command: [ "--config=/etc/otelcol-config.yaml" ]
+    command: ["--config=/etc/otelcol-config.yaml"]
     volumes:
       - ./docker-compose/otelcol-config.yaml:/etc/otelcol-config.yaml
     ports:

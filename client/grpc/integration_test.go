@@ -39,7 +39,7 @@ func (s *server) SayHello(_ context.Context, req *examples.HelloRequest) (*examp
 func TestSayHello(t *testing.T) {
 	ctx := context.Background()
 
-	client, closer, err := testServer(t)
+	client, closer, err := testServerAndClient(t)
 	require.NoError(t, err)
 	defer closer()
 
@@ -112,7 +112,7 @@ func TestSayHello(t *testing.T) {
 	}
 }
 
-func testServer(t *testing.T) (examples.GreeterClient, func(), error) {
+func testServerAndClient(t *testing.T) (examples.GreeterClient, func(), error) {
 	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		return nil, nil, err
@@ -127,11 +127,11 @@ func testServer(t *testing.T) (examples.GreeterClient, func(), error) {
 	}()
 
 	closer := func() {
+		baseServer.Stop()
 		err := lis.Close()
 		if err != nil {
 			t.Logf("error closing listener: %v", err)
 		}
-		baseServer.Stop()
 	}
 
 	conn, err := NewClient(lis.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))

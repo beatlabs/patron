@@ -1,45 +1,59 @@
 services:
   kafka:
     image: confluentinc/cp-kafka:7.9.0
+    restart: always
     hostname: broker
     ports:
       - "9092:9092"
       - "9101:9101"
     environment:
       KAFKA_NODE_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
-      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid" 
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@broker:29093"
+      KAFKA_LISTENERS: "PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server=localhost:9092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
   rabbitmq:
-    image: docker.io/bitnami/rabbitmq:4.0
+    image: bitnami/rabbitmq:4.0
+    restart: always
     ports:
-      - '4369:4369'
-      - '5551:5551'
-      - '5552:5552'
-      - '5672:5672'
-      - '25672:25672'
-      - '15672:15672'
+      - "4369:4369"
+      - "5551:5551"
+      - "5552:5552"
+      - "5672:5672"
+      - "25672:25672"
+      - "15672:15672"
     environment:
       - RABBITMQ_USERNAME=bitnami
       - RABBITMQ_PASSWORD=bitnami
       - RABBITMQ_SECURE_PASSWORD=yes
       - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=yes
     volumes:
-      - 'rabbitmq_data:/bitnami/rabbitmq/mnesia'
+      - "rabbitmq_data:/bitnami/rabbitmq/mnesia"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
   mysql:
     image: mysql:9
     restart: always
@@ -55,25 +69,45 @@ services:
       - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
-  redis:
-    image: docker.io/bitnami/redis:7.4
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+  valkey:
+    image: bitnami/valkey:8.0
+    restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
       - "6379:6379"
     volumes:
-      - "redis_data:/bitnami/redis/data"
+      - "valkey_data:/bitnami/valkey/data"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
   localstack:
     image: localstack/localstack:4
+    restart: always
     ports:
-      - "127.0.0.1:4566:4566"            # LocalStack Gateway
-      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+      - "127.0.0.1:4566:4566" # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559" # external services port range
     environment:
       - DEBUG=${DEBUG-}
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
   hivemq:
     image: hivemq/hivemq4:4.37.0
     restart: always
@@ -90,6 +124,11 @@ services:
       HIVEMQ_CONTROL_CENTER_USER: "admin"
       HIVEMQ_CONTROL_CENTER_PASSWORD: "123456"
       HIVEMQ_CLUSTER_TRANSPORT_TYPE: "TCP"
+    healthcheck:
+      test: ["CMD", "tools/mqtt-cli/bin/mqtt", "pub", "-t", "healthcheck/topic", "-m", "ping", "-h", "localhost", "-p", "1883"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
   mongo:
     image: mongo:8
     restart: always
@@ -98,18 +137,24 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
   otelcol:
     image: otel/opentelemetry-collector-contrib
-    restart: unless-stopped
-    command: [ "--config=/etc/otelcol-config.yaml" ]
+    restart: always
+    command: ["--config=/etc/otelcol-config.yaml"]
     volumes:
       - ./docker-compose/otelcol-config.yaml:/etc/otelcol-config.yaml
     ports:
-      - 4317:4317
+      - 4317:4317      
 volumes:
   rabbitmq_data:
     driver: local
   mysql_data:
     driver: local
-  redis_data:
-    driver: local  
+  valkey_data:
+    driver: local

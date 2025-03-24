@@ -40,7 +40,7 @@ func main() {
 	var components []patron.Component
 
 	// Setup HTTP
-	cmp, err := createHttpRouter()
+	cmp, err := createHTTPRouter()
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)
@@ -67,7 +67,7 @@ func main() {
 	components = append(components, cmp)
 
 	// Setup SQS
-	cmp, err = createSQSConsumer()
+	cmp, err = createSQSConsumer(ctx)
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)

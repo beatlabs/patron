@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	patronamqp "github.com/beatlabs/patron/client/amqp"
 	patrongrpc "github.com/beatlabs/patron/client/grpc"
 	patronhttp "github.com/beatlabs/patron/client/http"
@@ -49,6 +51,13 @@ func main() {
 
 	flag.Parse()
 
+	prs, err := processModes(modes)
+	if err != nil {
+		fmt.Printf("failed to parse flags: %v\n", err)
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	tp, err := trace.SetupGRPC(context.Background(), "example-client", resource.Default())
 	handleError(err)
 
@@ -56,13 +65,6 @@ func main() {
 		handleError(tp.ForceFlush(context.Background()))
 		handleError(tp.Shutdown(context.Background()))
 	}()
-
-	prs, err := processModes(modes)
-	if err != nil {
-		fmt.Printf("failed to parse flags: %v\n", err)
-		flag.Usage()
-		os.Exit(1)
-	}
 
 	ctx, cnl := context.WithTimeout(context.Background(), 50000*time.Second)
 	defer cnl()
@@ -125,6 +127,7 @@ func sendHTTPRequest(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	defer rsp.Body.Close()
 
 	fmt.Printf("HTTP response received: %d\n", rsp.StatusCode)
 	return nil
@@ -198,13 +201,25 @@ func sendAMQPMessage(ctx context.Context) error {
 	return nil
 }
 
+type customResolver struct{}
+
+func (cr *customResolver) ResolveEndpoint(_ context.Context, _ sqs.EndpointParameters) (smithyendpoints.Endpoint, error) {
+	uri, err := url.Parse(examples.AWSSQSEndpoint)
+	if err != nil {
+		return smithyendpoints.Endpoint{}, err
+	}
+	return smithyendpoints.Endpoint{
+		URI: *uri,
+	}, nil
+}
+
 func sendSQSMessage(ctx context.Context) error {
-	cfg, err := examples.CreateSQSConfig()
+	cfg, err := examples.CreateSQSConfig(ctx)
 	if err != nil {
 		return err
 	}
 
-	client := patronsqs.NewFromConfig(cfg)
+	client := patronsqs.NewFromConfig(cfg, sqs.WithEndpointResolverV2(&customResolver{}))
 
 	out, err := client.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{QueueName: aws.String(examples.AWSSQSQueue)})
 	if err != nil {

@@ -1,7 +1,6 @@
 package amqp
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -11,7 +10,7 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Parallel()
-	proc := func(_ context.Context, b Batch) {
+	proc := func(b Batch) {
 		_, _ = b.ACK()
 	}
 

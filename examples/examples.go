@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -17,7 +16,7 @@ const (
 	GRPCPort   = "50002"
 	GRPCTarget = "localhost:50002"
 
-	AMQPURL          = "amqp://bitnami:bitnami@localhost:5672/"
+	AMQPURL          = "amqp://bitnami:bitnami@localhost:5672/" //nolint:gosec
 	AMQPQueue        = "patron"
 	AMQPExchangeName = "patron"
 	AMQPExchangeType = amqp.ExchangeFanout
@@ -34,21 +33,9 @@ const (
 	KafkaBroker = "localhost:9092"
 )
 
-func CreateSQSConfig() (aws.Config, error) {
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if service == sqs.ServiceID && region == AWSRegion {
-			return aws.Endpoint{
-				URL:           AWSSQSEndpoint,
-				SigningRegion: AWSRegion,
-			}, nil
-		}
-		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
-
-	return config.LoadDefaultConfig(context.TODO(),
+func CreateSQSConfig(ctx context.Context) (aws.Config, error) {
+	return config.LoadDefaultConfig(ctx,
 		config.WithRegion(AWSRegion),
-		config.WithEndpointResolverWithOptions(customResolver),
 		config.WithCredentialsProvider(aws.NewCredentialsCache(
 			credentials.NewStaticCredentialsProvider(AWSID, AWSSecret, AWSToken))),
 	)

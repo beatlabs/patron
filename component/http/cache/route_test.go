@@ -54,5 +54,5 @@ func TestResponseReadWriter_ReadAllEmpty(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Empty(t, b)
-	assert.Equal(t, "", string(b))
+	assert.Empty(t, string(b))
 }

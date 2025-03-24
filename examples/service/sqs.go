@@ -13,7 +13,7 @@ import (
 	"github.com/beatlabs/patron/observability/log"
 )
 
-func createSQSConsumer() (patron.Component, error) {
+func createSQSConsumer(ctx context.Context) (patron.Component, error) {
 	process := func(_ context.Context, btc patronsqs.Batch) {
 		for _, msg := range btc.Messages() {
 			err := msg.ACK()
@@ -25,7 +25,7 @@ func createSQSConsumer() (patron.Component, error) {
 		}
 	}
 
-	cfg, err := examples.CreateSQSConfig()
+	cfg, err := examples.CreateSQSConfig(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -38,7 +38,7 @@ const (
 )
 
 // ProcessorFunc definition of an async processor.
-type ProcessorFunc func(context.Context, Batch)
+type ProcessorFunc func(Batch)
 
 type queueConfig struct {
 	url     string
@@ -180,10 +180,10 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 			}
 			slog.Debug("processing message", slog.Uint64("tag", delivery.DeliveryTag))
 			observeReceivedMessageStats(ctx, c.queueCfg.queue, delivery.Timestamp)
-			c.processBatch(ctx, c.createMessage(ctx, delivery), btc)
+			c.processBatch(c.createMessage(ctx, delivery), btc)
 		case <-batchTimeout.C:
 			slog.Debug("batch timeout expired, sending batch")
-			c.sendBatch(ctx, btc)
+			c.sendBatch(btc)
 		case <-tickerStats.C:
 			err := c.stats(ctx, sub)
 			if err != nil {
@@ -262,20 +262,20 @@ func (c *Component) createMessage(ctx context.Context, delivery amqp.Delivery) *
 	}
 }
 
-func (c *Component) processBatch(ctx context.Context, msg *message, btc *batch) {
+func (c *Component) processBatch(msg *message, btc *batch) {
 	btc.append(msg)
 
 	if uint(len(btc.messages)) >= c.batchCfg.count {
-		c.processAndResetBatch(ctx, btc)
+		c.processAndResetBatch(btc)
 	}
 }
 
-func (c *Component) sendBatch(ctx context.Context, btc *batch) {
-	c.processAndResetBatch(ctx, btc)
+func (c *Component) sendBatch(btc *batch) {
+	c.processAndResetBatch(btc)
 }
 
-func (c *Component) processAndResetBatch(ctx context.Context, btc *batch) {
-	c.proc(ctx, btc)
+func (c *Component) processAndResetBatch(btc *batch) {
+	c.proc(btc)
 	btc.reset()
 }
 

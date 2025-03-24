@@ -38,9 +38,9 @@ func TestDefaultConfig(t *testing.T) {
 				assert.Equal(t, 1*time.Second, got.ConnectTimeout)
 				assert.NotNil(t, got.OnConnectionUp)
 				assert.NotNil(t, got.OnConnectError)
-				assert.NotNil(t, got.ClientConfig.OnServerDisconnect)
-				assert.NotNil(t, got.ClientConfig.OnClientError)
-				assert.NotNil(t, got.ClientConfig.PublishHook)
+				assert.NotNil(t, got.ClientConfig.OnServerDisconnect) //nolint:staticcheck
+				assert.NotNil(t, got.ClientConfig.OnClientError)      //nolint:staticcheck
+				assert.NotNil(t, got.ClientConfig.PublishHook)        //nolint:staticcheck
 			}
 		})
 	}

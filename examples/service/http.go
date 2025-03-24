@@ -11,7 +11,7 @@ import (
 	"github.com/beatlabs/patron/observability/log"
 )
 
-func createHttpRouter() (patron.Component, error) {
+func createHTTPRouter() (patron.Component, error) {
 	handler := func(rw http.ResponseWriter, req *http.Request) {
 		body, err := io.ReadAll(req.Body)
 		if err != nil {

@@ -49,6 +49,13 @@ func main() {
 
 	flag.Parse()
 
+	prs, err := processModes(modes)
+	if err != nil {
+		fmt.Printf("failed to parse flags: %v\n", err)
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	tp, err := trace.SetupGRPC(context.Background(), "example-client", resource.Default())
 	handleError(err)
 
@@ -56,13 +63,6 @@ func main() {
 		handleError(tp.ForceFlush(context.Background()))
 		handleError(tp.Shutdown(context.Background()))
 	}()
-
-	prs, err := processModes(modes)
-	if err != nil {
-		fmt.Printf("failed to parse flags: %v\n", err)
-		flag.Usage()
-		os.Exit(1)
-	}
 
 	ctx, cnl := context.WithTimeout(context.Background(), 50000*time.Second)
 	defer cnl()
@@ -125,6 +125,7 @@ func sendHTTPRequest(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	defer rsp.Body.Close()
 
 	fmt.Printf("HTTP response received: %d\n", rsp.StatusCode)
 	return nil
@@ -199,12 +200,12 @@ func sendAMQPMessage(ctx context.Context) error {
 }
 
 func sendSQSMessage(ctx context.Context) error {
-	cfg, err := examples.CreateSQSConfig()
+	cfg, err := examples.CreateSQSConfig(ctx)
 	if err != nil {
 		return err
 	}
 
-	client := patronsqs.NewFromConfig(cfg)
+	client := patronsqs.NewFromConfig(cfg, sqs.WithEndpointResolverV2(&examples.SQSCustomResolver{}))
 
 	out, err := client.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{QueueName: aws.String(examples.AWSSQSQueue)})
 	if err != nil {

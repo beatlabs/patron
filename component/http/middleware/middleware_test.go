@@ -338,7 +338,7 @@ func TestNewCompressionMiddleware(t *testing.T) {
 			assert.Equal(t, tt.compressionTypeHeader, actual)
 
 			cl := rc.Header().Get("Content-Length")
-			assert.Equal(t, "", cl)
+			assert.Empty(t, cl)
 		})
 	}
 }
@@ -456,7 +456,7 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 
 	ceh = rc1.Header().Get("Content-Encoding")
 	assert.NotNil(t, ceh)
-	assert.Equal(t, "", ceh)
+	assert.Empty(t, ceh)
 
 	// check if other routes remains untouched
 	req2, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/alive", nil)

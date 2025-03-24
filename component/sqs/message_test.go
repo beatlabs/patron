@@ -139,7 +139,7 @@ func Test_batch(t *testing.T) {
 		messages: []Message{msg1, msg2},
 	}
 
-	assert.EqualValues(t, btc.Messages(), messages)
+	assert.Equal(t, btc.Messages(), messages)
 }
 
 func Test_batch_NACK(t *testing.T) {

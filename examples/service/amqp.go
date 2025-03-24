@@ -17,7 +17,7 @@ func createAMQPConsumer() (patron.Component, error) {
 		return nil, err
 	}
 
-	process := func(ctx context.Context, batch patronamqp.Batch) {
+	process := func(_ context.Context, batch patronamqp.Batch) {
 		for _, msg := range batch.Messages() {
 			err := msg.ACK()
 			if err != nil {

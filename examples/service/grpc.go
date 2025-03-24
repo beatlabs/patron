@@ -31,7 +31,7 @@ func createGrpcServer() (patron.Component, error) {
 
 	cmp, err := grpc.New(port)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC component: %v", err)
+		return nil, fmt.Errorf("failed to create gRPC component: %w", err)
 	}
 
 	examples.RegisterGreeterServer(cmp.Server(), &greeterServer{})

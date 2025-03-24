@@ -2,11 +2,13 @@ package examples
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -17,7 +19,7 @@ const (
 	GRPCPort   = "50002"
 	GRPCTarget = "localhost:50002"
 
-	AMQPURL          = "amqp://bitnami:bitnami@localhost:5672/"
+	AMQPURL          = "amqp://bitnami:bitnami@localhost:5672/" //nolint:gosec
 	AMQPQueue        = "patron"
 	AMQPExchangeName = "patron"
 	AMQPExchangeType = amqp.ExchangeFanout
@@ -34,21 +36,21 @@ const (
 	KafkaBroker = "localhost:9092"
 )
 
-func CreateSQSConfig() (aws.Config, error) {
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if service == sqs.ServiceID && region == AWSRegion {
-			return aws.Endpoint{
-				URL:           AWSSQSEndpoint,
-				SigningRegion: AWSRegion,
-			}, nil
-		}
-		// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
+type SQSCustomResolver struct{}
 
-	return config.LoadDefaultConfig(context.TODO(),
+func (cr *SQSCustomResolver) ResolveEndpoint(_ context.Context, _ sqs.EndpointParameters) (smithyendpoints.Endpoint, error) {
+	uri, err := url.Parse(AWSSQSEndpoint)
+	if err != nil {
+		return smithyendpoints.Endpoint{}, err
+	}
+	return smithyendpoints.Endpoint{
+		URI: *uri,
+	}, nil
+}
+
+func CreateSQSConfig(ctx context.Context) (aws.Config, error) {
+	return config.LoadDefaultConfig(ctx,
 		config.WithRegion(AWSRegion),
-		config.WithEndpointResolverWithOptions(customResolver),
 		config.WithCredentialsProvider(aws.NewCredentialsCache(
 			credentials.NewStaticCredentialsProvider(AWSID, AWSSecret, AWSToken))),
 	)

@@ -18,10 +18,8 @@ jobs:
         with:
           go-version-file: "go.mod"
           
-      - name: Linting
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: v2.0
+      - name: Linting and fmt check
+        run: make lint
 
   build:
     name: CI on Go

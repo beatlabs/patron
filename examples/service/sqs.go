@@ -30,7 +30,7 @@ func createSQSConsumer(ctx context.Context) (patron.Component, error) {
 		return nil, err
 	}
 
-	client := patronclientsqs.NewFromConfig(cfg)
+	client := patronclientsqs.NewFromConfig(cfg, sqs.WithEndpointResolverV2(&examples.SQSCustomResolver{}))
 
 	out, err := client.CreateQueue(context.Background(), &sqs.CreateQueueInput{
 		QueueName: aws.String(examples.AWSSQSQueue),

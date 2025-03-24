@@ -2,10 +2,13 @@ package examples
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -32,6 +35,18 @@ const (
 	KafkaGroup  = "patron-group"
 	KafkaBroker = "localhost:9092"
 )
+
+type SQSCustomResolver struct{}
+
+func (cr *SQSCustomResolver) ResolveEndpoint(_ context.Context, _ sqs.EndpointParameters) (smithyendpoints.Endpoint, error) {
+	uri, err := url.Parse(AWSSQSEndpoint)
+	if err != nil {
+		return smithyendpoints.Endpoint{}, err
+	}
+	return smithyendpoints.Endpoint{
+		URI: *uri,
+	}, nil
+}
 
 func CreateSQSConfig(ctx context.Context) (aws.Config, error) {
 	return config.LoadDefaultConfig(ctx,

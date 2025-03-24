@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -14,7 +13,6 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	patronamqp "github.com/beatlabs/patron/client/amqp"
 	patrongrpc "github.com/beatlabs/patron/client/grpc"
 	patronhttp "github.com/beatlabs/patron/client/http"
@@ -201,25 +199,13 @@ func sendAMQPMessage(ctx context.Context) error {
 	return nil
 }
 
-type customResolver struct{}
-
-func (cr *customResolver) ResolveEndpoint(_ context.Context, _ sqs.EndpointParameters) (smithyendpoints.Endpoint, error) {
-	uri, err := url.Parse(examples.AWSSQSEndpoint)
-	if err != nil {
-		return smithyendpoints.Endpoint{}, err
-	}
-	return smithyendpoints.Endpoint{
-		URI: *uri,
-	}, nil
-}
-
 func sendSQSMessage(ctx context.Context) error {
 	cfg, err := examples.CreateSQSConfig(ctx)
 	if err != nil {
 		return err
 	}
 
-	client := patronsqs.NewFromConfig(cfg, sqs.WithEndpointResolverV2(&customResolver{}))
+	client := patronsqs.NewFromConfig(cfg, sqs.WithEndpointResolverV2(&examples.SQSCustomResolver{}))
 
 	out, err := client.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{QueueName: aws.String(examples.AWSSQSQueue)})
 	if err != nil {

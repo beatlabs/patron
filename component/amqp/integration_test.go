@@ -57,7 +57,7 @@ func TestRun(t *testing.T) {
 	received := make([]string, 0)
 	count := 0
 
-	procFunc := func(b Batch) {
+	procFunc := func(_ context.Context, b Batch) {
 		for _, msg := range b.Messages() {
 			received = append(received, string(msg.Body()))
 			require.NoError(t, msg.ACK())

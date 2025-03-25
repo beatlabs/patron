@@ -8,7 +8,7 @@ on:
 jobs:
   lint:
     name: Lint and fmt check
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
 
   build:
     name: CI on Go
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Check out source code
         uses: actions/checkout@v4

@@ -5,10 +5,10 @@ go 1.24.0
 require (
 	github.com/IBM/sarama v1.45.1
 	github.com/aws/aws-sdk-go-v2 v1.36.3
-	github.com/aws/aws-sdk-go-v2/config v1.29.9
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.62
+	github.com/aws/aws-sdk-go-v2/config v1.29.12
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.65
 	github.com/aws/aws-sdk-go-v2/service/sns v1.34.2
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.3
 	github.com/aws/smithy-go v1.22.3
 	github.com/eclipse/paho.golang v0.22.0
 	github.com/elastic/elastic-transport-go/v8 v8.6.1
@@ -33,8 +33,8 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.35.0
 	go.opentelemetry.io/otel/trace v1.35.0
 	golang.org/x/time v0.11.0
-	google.golang.org/grpc v1.71.0
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/grpc v1.71.1
+	google.golang.org/protobuf v1.36.6
 )
 
 require (
@@ -47,8 +47,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.25.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.29.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.25.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -85,11 +85,11 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.35.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

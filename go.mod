@@ -1,14 +1,13 @@
 module github.com/beatlabs/patron
 
 go 1.24.0
-
 require (
 	github.com/IBM/sarama v1.45.1
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.62
 	github.com/aws/aws-sdk-go-v2/service/sns v1.34.2
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.3
 	github.com/aws/smithy-go v1.22.3
 	github.com/eclipse/paho.golang v0.22.0
 	github.com/elastic/elastic-transport-go/v8 v8.6.1

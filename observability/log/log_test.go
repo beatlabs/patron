@@ -67,27 +67,18 @@ func TestErrorAttr(t *testing.T) {
 	assert.Equal(t, errAttr, ErrorAttr(err))
 }
 
-var bCtx context.Context
-
 func Benchmark_WithContext(b *testing.B) {
 	l := slog.Default()
-	b.ReportAllocs()
-	b.ResetTimer()
 
-	for n := 0; n < b.N; n++ {
-		bCtx = WithContext(context.Background(), l)
+	for b.Loop() {
+		WithContext(context.Background(), l)
 	}
 }
 
-var l *slog.Logger
-
 func Benchmark_FromContext(b *testing.B) {
-	l = slog.Default()
-	ctx := WithContext(context.Background(), l)
-	b.ReportAllocs()
-	b.ResetTimer()
+	ctx := WithContext(context.Background(), slog.Default())
 
-	for n := 0; n < b.N; n++ {
-		l = FromContext(ctx)
+	for b.Loop() {
+		FromContext(ctx)
 	}
 }

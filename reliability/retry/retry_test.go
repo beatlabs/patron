@@ -129,16 +129,11 @@ func (ma *mockAction) Execute() (string, error) {
 	return testResult, nil
 }
 
-var err error
-
 func BenchmarkRetry_Execute(b *testing.B) {
-	var r *Retry
-	r, err = New(3, 0)
-	b.ReportAllocs()
-	b.ResetTimer()
+	r, _ := New(3, 0)
 
-	for i := 0; i < b.N; i++ {
-		_, err = r.Execute(testSuccessAction)
+	for b.Loop() {
+		r.Execute(testSuccessAction) // nolint:errcheck
 	}
 }
 

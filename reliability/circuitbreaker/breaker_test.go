@@ -191,8 +191,6 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, tsFuture, cb.nextRetry)
 }
 
-var err error
-
 func BenchmarkCircuitBreaker_Execute(b *testing.B) {
 	set := Setting{
 		FailureThreshold:           uint(1),
@@ -200,13 +198,10 @@ func BenchmarkCircuitBreaker_Execute(b *testing.B) {
 		RetrySuccessThreshold:      uint(1),
 		MaxRetryExecutionThreshold: 1,
 	}
-	var cb *CircuitBreaker
-	cb, err = New("test", set)
-	b.ReportAllocs()
-	b.ResetTimer()
+	cb, _ := New("test", set)
 
-	for i := 0; i < b.N; i++ {
-		_, err = cb.Execute(testFailureAction)
+	for b.Loop() {
+		cb.Execute(testFailureAction) // nolint:errcheck
 	}
 }
 

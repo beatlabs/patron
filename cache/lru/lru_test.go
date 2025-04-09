@@ -106,19 +106,24 @@ func TestCacheOperations(t *testing.T) {
 	})
 }
 
-func BenchmarkCache(b *testing.B) {
-	c, err := NewWithEvict[int, int](b.N, "test", func(_, _ int) {})
-	require.NoError(b, err)
-
+func BenchmarkCache_Set(b *testing.B) {
+	c, _ := NewWithEvict(b.N, "test", func(_, _ int) {})
 	ctx := context.Background()
+
+	for b.Loop() {
+		c.Set(ctx, 1, 1) // nolint:errcheck
+	}
+}
+
+func BenchmarkCache_Get(b *testing.B) {
+	c, _ := NewWithEvict(b.N, "test", func(_, _ int) {})
+	ctx := context.Background()
+
 	for i := 0; i < b.N; i++ {
-		err = c.Set(ctx, i, i)
-		require.NoError(b, err)
+		c.Set(ctx, i, i) // nolint:errcheck
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _, err = c.Get(ctx, i)
-		require.NoError(b, err)
+	for b.Loop() {
+		c.Get(ctx, 1) // nolint:errcheck
 	}
 }

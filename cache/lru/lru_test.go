@@ -111,7 +111,7 @@ func BenchmarkCache_Set(b *testing.B) {
 	ctx := context.Background()
 
 	for b.Loop() {
-		c.Set(ctx, 1, 1)
+		c.Set(ctx, 1, 1) // nolint:errcheck
 	}
 }
 
@@ -120,10 +120,10 @@ func BenchmarkCache_Get(b *testing.B) {
 	ctx := context.Background()
 
 	for i := 0; i < b.N; i++ {
-		c.Set(ctx, i, i)
+		c.Set(ctx, i, i) // nolint:errcheck
 	}
 
 	for b.Loop() {
-		c.Get(ctx, 1)
+		c.Get(ctx, 1) // nolint:errcheck
 	}
 }

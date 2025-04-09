@@ -133,7 +133,7 @@ func BenchmarkRetry_Execute(b *testing.B) {
 	r, _ := New(3, 0)
 
 	for b.Loop() {
-		r.Execute(testSuccessAction)
+		r.Execute(testSuccessAction) // nolint:errcheck
 	}
 }
 

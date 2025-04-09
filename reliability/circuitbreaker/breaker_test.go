@@ -201,7 +201,7 @@ func BenchmarkCircuitBreaker_Execute(b *testing.B) {
 	cb, _ := New("test", set)
 
 	for b.Loop() {
-		cb.Execute(testFailureAction)
+		cb.Execute(testFailureAction) // nolint:errcheck
 	}
 }
 

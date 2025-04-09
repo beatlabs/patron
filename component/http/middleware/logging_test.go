@@ -55,12 +55,9 @@ func TestStatusCode(t *testing.T) {
 }
 
 func BenchmarkName(b *testing.B) {
-	h, err := NewStatusCodeLoggerHandler(complexConfig)
-	require.NoError(b, err)
-	b.ReportAllocs()
-	b.ResetTimer()
+	h, _ := NewStatusCodeLoggerHandler(complexConfig)
 
-	for i := 0; i < b.N; i++ {
-		_ = h.shouldLog(403)
+	for b.Loop() {
+		h.shouldLog(403)
 	}
 }

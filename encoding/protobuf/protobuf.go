@@ -16,7 +16,7 @@ const (
 )
 
 // Decode a reader input into a protobuf model.
-func Decode(data io.Reader, v interface{}) error {
+func Decode(data io.Reader, v any) error {
 	b, err := io.ReadAll(data)
 	if err != nil {
 		return err
@@ -25,7 +25,7 @@ func Decode(data io.Reader, v interface{}) error {
 }
 
 // DecodeRaw a byte slice input into a protobuf model.
-func DecodeRaw(data []byte, v interface{}) error {
+func DecodeRaw(data []byte, v any) error {
 	val, ok := v.(proto.Message)
 	if !ok {
 		return errors.New("failed to type assert to proto message")
@@ -34,7 +34,7 @@ func DecodeRaw(data []byte, v interface{}) error {
 }
 
 // Encode a protobuf model into a byte slice.
-func Encode(v interface{}) ([]byte, error) {
+func Encode(v any) ([]byte, error) {
 	val, ok := v.(proto.Message)
 	if !ok {
 		return nil, errors.New("failed to type assert to proto message")

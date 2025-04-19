@@ -10,7 +10,7 @@ import (
 
 func TestResponse(t *testing.T) {
 	type arg struct {
-		payload interface{}
+		payload any
 	}
 
 	args := []arg{
@@ -36,7 +36,7 @@ func TestResponse(t *testing.T) {
 	}
 }
 
-func assertForHandlerResponse(t *testing.T, payload interface{}) {
+func assertForHandlerResponse(t *testing.T, payload any) {
 	bp, err := json.Encode(payload)
 	require.NoError(t, err)
 

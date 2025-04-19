@@ -66,7 +66,7 @@ type Setting struct {
 }
 
 // Action function to execute in circuit breaker.
-type Action func() (interface{}, error)
+type Action func() (any, error)
 
 // CircuitBreaker implementation.
 type CircuitBreaker struct {
@@ -126,7 +126,7 @@ func (cb *CircuitBreaker) isClose() bool {
 }
 
 // Execute the provided action.
-func (cb *CircuitBreaker) Execute(act Action) (interface{}, error) {
+func (cb *CircuitBreaker) Execute(act Action) (any, error) {
 	if cb.isOpen() {
 		return nil, errOpen
 	}

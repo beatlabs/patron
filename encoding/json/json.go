@@ -14,16 +14,16 @@ const (
 )
 
 // Decode a reader input into a JSON model.
-func Decode(data io.Reader, v interface{}) error {
+func Decode(data io.Reader, v any) error {
 	return json.NewDecoder(data).Decode(v)
 }
 
 // DecodeRaw a byte slice input into a JSON model.
-func DecodeRaw(data []byte, v interface{}) error {
+func DecodeRaw(data []byte, v any) error {
 	return json.Unmarshal(data, v)
 }
 
 // Encode a JSON model and return a byte slice.
-func Encode(v interface{}) ([]byte, error) {
+func Encode(v any) ([]byte, error) {
 	return json.Marshal(v)
 }

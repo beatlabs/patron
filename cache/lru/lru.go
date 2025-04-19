@@ -60,7 +60,7 @@ func newFunction[k comparable, v any](chc *lru.Cache[k, v], typeAttr attribute.K
 }
 
 // Get executes a lookup and returns whether a key exists in the cache along with its value.
-func (c *Cache[k, v]) Get(ctx context.Context, key k) (interface{}, bool, error) {
+func (c *Cache[k, v]) Get(ctx context.Context, key k) (any, bool, error) {
 	value, ok := c.cache.Get(key)
 	if !ok {
 		cache.ObserveMiss(ctx, lruAttribute, c.useCaseAttribute, c.typeAttribute)

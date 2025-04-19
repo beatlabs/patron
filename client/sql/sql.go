@@ -79,7 +79,7 @@ func (c *Conn) Close(ctx context.Context) error {
 }
 
 // Exec executes a query without returning any rows.
-func (c *Conn) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (c *Conn) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	op := "conn.Exec"
 	ctx, sp := c.startSpan(ctx, op, query)
 	defer sp.End()
@@ -115,7 +115,7 @@ func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 }
 
 // Query executes a query that returns rows.
-func (c *Conn) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (c *Conn) Query(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	op := "conn.Query"
 	ctx, sp := c.startSpan(ctx, op, query)
 	defer sp.End()
@@ -130,7 +130,7 @@ func (c *Conn) Query(ctx context.Context, query string, args ...interface{}) (*s
 }
 
 // QueryRow executes a query that is expected to return at most one row.
-func (c *Conn) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (c *Conn) QueryRow(ctx context.Context, query string, args ...any) *sql.Row {
 	op := "conn.QueryRow"
 	ctx, sp := c.startSpan(ctx, op, query)
 	defer sp.End()
@@ -232,7 +232,7 @@ func (db *DB) Driver(ctx context.Context) driver.Driver {
 }
 
 // Exec executes a query without returning any rows.
-func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (db *DB) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	op := "db.Exec"
 	ctx, sp := db.startSpan(ctx, op, query)
 	defer sp.End()
@@ -273,7 +273,7 @@ func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 }
 
 // Query executes a query that returns rows.
-func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (db *DB) Query(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	op := "db.Query"
 	ctx, sp := db.startSpan(ctx, op, query)
 	defer sp.End()
@@ -288,7 +288,7 @@ func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (*sq
 }
 
 // QueryRow executes a query that is expected to return at most one row.
-func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (db *DB) QueryRow(ctx context.Context, query string, args ...any) *sql.Row {
 	op := "db.QueryRow"
 	ctx, sp := db.startSpan(ctx, op, query)
 	defer sp.End()
@@ -343,7 +343,7 @@ func (s *Stmt) Close(ctx context.Context) error {
 }
 
 // Exec executes a prepared statement.
-func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error) {
+func (s *Stmt) Exec(ctx context.Context, args ...any) (sql.Result, error) {
 	op := "stmt.Exec"
 	ctx, sp := s.startSpan(ctx, op, s.query)
 	defer sp.End()
@@ -358,7 +358,7 @@ func (s *Stmt) Exec(ctx context.Context, args ...interface{}) (sql.Result, error
 }
 
 // Query executes a prepared query statement.
-func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
+func (s *Stmt) Query(ctx context.Context, args ...any) (*sql.Rows, error) {
 	op := "stmt.Query"
 	ctx, sp := s.startSpan(ctx, op, s.query)
 	defer sp.End()
@@ -373,7 +373,7 @@ func (s *Stmt) Query(ctx context.Context, args ...interface{}) (*sql.Rows, error
 }
 
 // QueryRow executes a prepared query statement.
-func (s *Stmt) QueryRow(ctx context.Context, args ...interface{}) *sql.Row {
+func (s *Stmt) QueryRow(ctx context.Context, args ...any) *sql.Row {
 	op := "stmt.QueryRow"
 	ctx, sp := s.startSpan(ctx, op, s.query)
 	defer sp.End()
@@ -401,7 +401,7 @@ func (tx *Tx) Commit(ctx context.Context) error {
 }
 
 // Exec executes a query that doesn't return rows.
-func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (tx *Tx) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	op := "tx.Exec"
 	ctx, sp := tx.startSpan(ctx, op, query)
 	defer sp.End()
@@ -431,7 +431,7 @@ func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 }
 
 // Query executes a query that returns rows.
-func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (tx *Tx) Query(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	op := "tx.Query"
 	ctx, sp := tx.startSpan(ctx, op, query)
 	defer sp.End()
@@ -445,7 +445,7 @@ func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sq
 }
 
 // QueryRow executes a query that is expected to return at most one row.
-func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (tx *Tx) QueryRow(ctx context.Context, query string, args ...any) *sql.Row {
 	op := "tx.QueryRow"
 	ctx, sp := tx.startSpan(ctx, op, query)
 	defer sp.End()

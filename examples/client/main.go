@@ -139,7 +139,7 @@ func sendGRPCRequest(ctx context.Context) error {
 
 	client := examples.NewGreeterClient(cc)
 
-	_, err = client.SayHello(ctx, &examples.HelloRequest{Firstname: "John", Lastname: "Doe"})
+	_, err = client.SayHello(ctx, &examples.HelloRequest{FirstName: "John", LastName: "Doe"})
 	if err != nil {
 		return err
 	}

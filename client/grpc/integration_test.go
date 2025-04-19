@@ -30,10 +30,10 @@ func (s *server) SayHelloStream(_ *examples.HelloRequest, _ examples.Greeter_Say
 }
 
 func (s *server) SayHello(_ context.Context, req *examples.HelloRequest) (*examples.HelloReply, error) {
-	if req.GetFirstname() == "" {
+	if req.GetFirstName() == "" {
 		return nil, status.Error(codes.InvalidArgument, "first name cannot be empty")
 	}
-	return &examples.HelloReply{Message: fmt.Sprintf("Hello %s!", req.GetFirstname())}, nil
+	return &examples.HelloReply{Message: fmt.Sprintf("Hello %s!", req.GetFirstName())}, nil
 }
 
 func TestSayHello(t *testing.T) {
@@ -59,7 +59,7 @@ func TestSayHello(t *testing.T) {
 		wantCounter int
 	}{
 		"ok": {
-			req:         &examples.HelloRequest{Firstname: "John"},
+			req:         &examples.HelloRequest{FirstName: "John"},
 			wantErr:     false,
 			wantCode:    codes.OK,
 			wantMsg:     "Hello John!",

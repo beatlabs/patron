@@ -96,7 +96,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 
 			reqCtx := metadata.AppendToOutgoingContext(ctx, correlation.HeaderID, "123")
-			r, err := c.SayHello(reqCtx, &examples.HelloRequest{Firstname: tt.args.requestName})
+			r, err := c.SayHello(reqCtx, &examples.HelloRequest{FirstName: tt.args.requestName})
 
 			require.NoError(t, tracePublisher.ForceFlush(ctx))
 
@@ -183,7 +183,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 			t.Cleanup(func() { traceExporter.Reset() })
 
 			reqCtx := metadata.AppendToOutgoingContext(ctx, correlation.HeaderID, "123")
-			client, err := c.SayHelloStream(reqCtx, &examples.HelloRequest{Firstname: tt.args.requestName})
+			client, err := c.SayHelloStream(reqCtx, &examples.HelloRequest{FirstName: tt.args.requestName})
 			require.NoError(t, err)
 			resp, err := client.Recv()
 
@@ -241,16 +241,16 @@ type server struct {
 }
 
 func (s *server) SayHello(_ context.Context, in *examples.HelloRequest) (*examples.HelloReply, error) {
-	if in.GetFirstname() == "ERROR" {
+	if in.GetFirstName() == "ERROR" {
 		return nil, errors.New("ERROR")
 	}
-	return &examples.HelloReply{Message: "Hello " + in.GetFirstname()}, nil
+	return &examples.HelloReply{Message: "Hello " + in.GetFirstName()}, nil
 }
 
 func (s *server) SayHelloStream(req *examples.HelloRequest, srv examples.Greeter_SayHelloStreamServer) error {
-	if req.GetFirstname() == "ERROR" {
+	if req.GetFirstName() == "ERROR" {
 		return errors.New("ERROR")
 	}
 
-	return srv.Send(&examples.HelloReply{Message: "Hello " + req.GetFirstname()})
+	return srv.Send(&examples.HelloReply{Message: "Hello " + req.GetFirstName()})
 }

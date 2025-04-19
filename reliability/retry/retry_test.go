@@ -93,7 +93,7 @@ func Test_Retry_Execute(t *testing.T) {
 			require.NoError(t, err)
 
 			start := time.Now()
-			res, err := r.Execute(func() (interface{}, error) {
+			res, err := r.Execute(func() (any, error) {
 				return tt.action.Execute()
 			})
 			elapsed := time.Since(start)
@@ -137,6 +137,6 @@ func BenchmarkRetry_Execute(b *testing.B) {
 	}
 }
 
-func testSuccessAction() (interface{}, error) {
+func testSuccessAction() (any, error) {
 	return "test", nil
 }

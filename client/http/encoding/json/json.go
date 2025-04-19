@@ -16,7 +16,7 @@ import (
 )
 
 // NewRequest creates a request, encodes the body, and sets the appropriate headers.
-func NewRequest(ctx context.Context, method string, url string, payload interface{}) (*http.Request, error) {
+func NewRequest(ctx context.Context, method string, url string, payload any) (*http.Request, error) {
 	buf, err := json.Encode(payload)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func NewRequest(ctx context.Context, method string, url string, payload interfac
 }
 
 // FromResponse checks for valid headers and decodes the payload.
-func FromResponse(ctx context.Context, rsp *http.Response, payload interface{}) error {
+func FromResponse(ctx context.Context, rsp *http.Response, payload any) error {
 	err := validateContentTypeHeader(rsp)
 	if err != nil {
 		return err

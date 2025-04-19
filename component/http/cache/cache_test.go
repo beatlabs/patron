@@ -132,7 +132,7 @@ type requestParams struct {
 // responseStruct emulates the patron http response,
 // but this can be any struct in general.
 type responseStruct struct {
-	Payload interface{}
+	Payload any
 	Header  map[string]string
 }
 
@@ -1711,7 +1711,7 @@ func assertMetrics(t *testing.T, read *metricsdk.ManualReader) {
 }
 
 type testingCacheEntity struct {
-	v   interface{}
+	v   any
 	ttl int64
 	t0  int64
 }
@@ -1729,7 +1729,7 @@ func newTestingCache() *testingCache {
 	return &testingCache{cache: make(map[string]testingCacheEntity)}
 }
 
-func (t *testingCache) Get(_ context.Context, key string) (interface{}, bool, error) {
+func (t *testingCache) Get(_ context.Context, key string) (any, bool, error) {
 	t.getCount++
 	if t.getErr != nil {
 		return nil, false, t.getErr
@@ -1754,7 +1754,7 @@ func (t *testingCache) Remove(_ context.Context, key string) error {
 }
 
 // Note : this method will effectively not cache anything e.g. testingCacheEntity.t is `0`.
-func (t *testingCache) Set(_ context.Context, key string, value interface{}) error {
+func (t *testingCache) Set(_ context.Context, key string, value any) error {
 	t.setCount++
 	if t.setErr != nil {
 		return t.getErr
@@ -1765,7 +1765,7 @@ func (t *testingCache) Set(_ context.Context, key string, value interface{}) err
 	return nil
 }
 
-func (t *testingCache) SetTTL(_ context.Context, key string, value interface{}, ttl time.Duration) error {
+func (t *testingCache) SetTTL(_ context.Context, key string, value any, ttl time.Duration) error {
 	t.setCount++
 	if t.setErr != nil {
 		return t.getErr

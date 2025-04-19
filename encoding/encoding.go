@@ -19,10 +19,10 @@ const (
 )
 
 // DecodeFunc definition that supports a reader.
-type DecodeFunc func(data io.Reader, v interface{}) error
+type DecodeFunc func(data io.Reader, v any) error
 
 // DecodeRawFunc definition that supports byte slices.
-type DecodeRawFunc func(data []byte, v interface{}) error
+type DecodeRawFunc func(data []byte, v any) error
 
 // EncodeFunc definition that returns a byte slice.
-type EncodeFunc func(v interface{}) ([]byte, error)
+type EncodeFunc func(v any) ([]byte, error)

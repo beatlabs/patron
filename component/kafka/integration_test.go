@@ -301,7 +301,7 @@ func newComponent(t *testing.T, name string, retries uint32, batchSize uint, pro
 	return cmp
 }
 
-func decodeString(data []byte, v interface{}) error {
+func decodeString(data []byte, v any) error {
 	tmp := string(data)
 	p, ok := v.(*string)
 	if !ok {

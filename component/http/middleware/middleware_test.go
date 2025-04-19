@@ -41,7 +41,7 @@ func tagMiddleware(tag string) Func {
 }
 
 // Panic middleware to test recovery middleware.
-func panicMiddleware(v interface{}) Func {
+func panicMiddleware(v any) Func {
 	return func(_ http.Handler) http.Handler {
 		return http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 			panic(v)

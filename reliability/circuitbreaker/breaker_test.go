@@ -205,10 +205,10 @@ func BenchmarkCircuitBreaker_Execute(b *testing.B) {
 	}
 }
 
-func testSuccessAction() (interface{}, error) {
+func testSuccessAction() (any, error) {
 	return "test", nil
 }
 
-func testFailureAction() (interface{}, error) {
+func testFailureAction() (any, error) {
 	return "", errors.New("test error")
 }

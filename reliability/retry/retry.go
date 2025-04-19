@@ -7,7 +7,7 @@ import (
 )
 
 // Action function to execute in retry.
-type Action func() (interface{}, error)
+type Action func() (any, error)
 
 // Retry implementation with configurable attempts and optional delay.
 type Retry struct {
@@ -25,11 +25,11 @@ func New(attempts int, delay time.Duration) (*Retry, error) {
 }
 
 // Execute a specific action with retries.
-func (r Retry) Execute(act Action) (interface{}, error) {
+func (r Retry) Execute(act Action) (any, error) {
 	var err error
-	var res interface{}
+	var res any
 
-	for i := 0; i < r.attempts; i++ {
+	for range r.attempts {
 		res, err = act()
 		if err == nil {
 			return res, nil

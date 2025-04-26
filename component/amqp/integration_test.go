@@ -30,7 +30,7 @@ func TestRun(t *testing.T) {
 	// Setup tracing
 	t.Cleanup(func() { traceExporter.Reset() })
 
-	ctx, cnl := context.WithCancel(context.Background())
+	ctx, cnl := context.WithTimeout(context.Background(), 5*time.Second)
 
 	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()

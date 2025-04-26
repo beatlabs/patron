@@ -8,15 +8,15 @@ test: fmtcheck ## Run tests
 
 .PHONY: testint
 testint: fmtcheck ## Run integration tests
-	go test ./... -race -cover -tags=integration -timeout 300s
+	go test ./... -race -cover -tags=integration -timeout 60s
 
 .PHONY: testint-nocache
 testint-nocache: fmtcheck ## Run integration tests without cache
-	go test ./... -race -cover -tags=integration -timeout 300s -count=1
+	go test ./... -race -cover -tags=integration -timeout 60s -count=1
 
 .PHONY: ci
 ci: ## Run the CI pipeline
-	go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration 
+	go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration -timeout 60s
 
 .PHONY: fmt
 fmt: ## Format the code

@@ -78,7 +78,7 @@ func TestRun(t *testing.T) {
 	// }()
 
 	// got := <-chReceived
-	// cnl()
+	cnl()
 
 	// <-chDone
 
@@ -100,7 +100,8 @@ func TestRun(t *testing.T) {
 	// test.AssertSpan(t, expectedSpan, spans[0])
 	// test.AssertSpan(t, expectedSpan, spans[1])
 
-	// // Metrics
+	// Metrics
+	_ = collectMetrics(3)
 	// collectedMetrics := collectMetrics(3)
 	// test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.publish.duration")
 	// test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.message.age")

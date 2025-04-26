@@ -153,7 +153,7 @@ func (c *Component) Run(ctx context.Context) error {
 	return err
 }
 
-func closeSubscription(sub subscription) {
+func closeSubscription(sub *subscription) {
 	err := sub.close()
 	if err != nil {
 		slog.Error("failed to close amqp channel/connection", log.ErrorAttr(err))
@@ -161,7 +161,7 @@ func closeSubscription(sub subscription) {
 	slog.Debug("amqp subscription closed")
 }
 
-func (c *Component) processLoop(ctx context.Context, sub subscription) error {
+func (c *Component) processLoop(ctx context.Context, sub *subscription) error {
 	batchTimeout := time.NewTicker(c.batchCfg.timeout)
 	defer batchTimeout.Stop()
 	tickerStats := time.NewTicker(c.statsCfg.interval)
@@ -215,16 +215,16 @@ func (s *subscription) close() error {
 	return errors.Join(ee...)
 }
 
-func (c *Component) subscribe() (subscription, error) {
+func (c *Component) subscribe() (*subscription, error) {
 	conn, err := amqp.DialConfig(c.queueCfg.url, c.cfg)
 	if err != nil {
-		return subscription{}, fmt.Errorf("failed to dial @ %s: %w", c.queueCfg.url, err)
+		return nil, fmt.Errorf("failed to dial @ %s: %w", c.queueCfg.url, err)
 	}
-	sub := subscription{conn: conn}
+	sub := &subscription{conn: conn}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return subscription{}, errors.Join(conn.Close(), fmt.Errorf("failed get channel: %w", err))
+		return nil, errors.Join(conn.Close(), fmt.Errorf("failed get channel: %w", err))
 	}
 	sub.channel = ch
 
@@ -233,7 +233,7 @@ func (c *Component) subscribe() (subscription, error) {
 
 	deliveries, err := ch.Consume(c.queueCfg.queue, tag, false, false, false, false, nil)
 	if err != nil {
-		return subscription{}, errors.Join(ch.Close(), conn.Close(), fmt.Errorf("failed initialize amqp consumer: %w", err))
+		return nil, errors.Join(ch.Close(), conn.Close(), fmt.Errorf("failed initialize amqp consumer: %w", err))
 	}
 	sub.deliveries = deliveries
 
@@ -279,7 +279,7 @@ func (c *Component) processAndResetBatch(ctx context.Context, btc *batch) {
 	btc.reset()
 }
 
-func (c *Component) stats(ctx context.Context, sub subscription) error {
+func (c *Component) stats(ctx context.Context, sub *subscription) error {
 	q, err := sub.channel.QueueDeclarePassive(c.queueCfg.queue, false, false, false, false, nil)
 	if err != nil {
 		return err

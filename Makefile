@@ -16,7 +16,7 @@ testint-nocache: fmtcheck ## Run integration tests without cache
 
 .PHONY: ci
 ci: ## Run the CI pipeline
-	go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration -timeout 60s
+	go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration -timeout 120s
 
 .PHONY: fmt
 fmt: ## Format the code

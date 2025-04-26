@@ -25,8 +25,6 @@ const (
 )
 
 func TestRun(t *testing.T) {
-	t.SkipNow() // TODO: fix this test because it deadlocks.
-
 	require.NoError(t, createQueue())
 
 	// Setup tracing
@@ -54,6 +52,8 @@ func TestRun(t *testing.T) {
 
 	require.NoError(t, tracePublisher.ForceFlush(ctx))
 	traceExporter.Reset()
+
+	t.SkipNow() // TODO: fix this test because it deadlocks.
 
 	chReceived := make(chan []string)
 	received := make([]string, 0)

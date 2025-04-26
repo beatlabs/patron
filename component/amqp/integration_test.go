@@ -25,7 +25,8 @@ const (
 )
 
 func TestRun(t *testing.T) {
-	t.SkipNow()
+	t.SkipNow() // TODO: fix this test because it deadlocks.
+
 	require.NoError(t, createQueue())
 
 	// Setup tracing

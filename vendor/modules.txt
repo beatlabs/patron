@@ -155,7 +155,7 @@ github.com/eclipse/paho.golang/paho/log
 github.com/eclipse/paho.golang/paho/session
 github.com/eclipse/paho.golang/paho/session/state
 github.com/eclipse/paho.golang/paho/store/memory
-# github.com/elastic/elastic-transport-go/v8 v8.6.1
+# github.com/elastic/elastic-transport-go/v8 v8.7.0
 ## explicit; go 1.20
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version

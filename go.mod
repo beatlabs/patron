@@ -13,7 +13,7 @@ require (
 	github.com/eclipse/paho.golang v0.22.0
 	github.com/elastic/elastic-transport-go/v8 v8.6.1
 	github.com/elastic/go-elasticsearch/v8 v8.17.1
-	github.com/go-sql-driver/mysql v1.9.1
+	github.com/go-sql-driver/mysql v1.9.2
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/rabbitmq/amqp091-go v1.10.0

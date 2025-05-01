@@ -32,7 +32,7 @@ services:
       retries: 5
       start_period: 15s
   rabbitmq:
-    image: bitnami/rabbitmq:4.0
+    image: bitnami/rabbitmq:4.1
     restart: always
     ports:
       - "4369:4369"
@@ -76,7 +76,7 @@ services:
       retries: 5
       start_period: 15s
   valkey:
-    image: bitnami/valkey:8.0
+    image: bitnami/valkey:8.1
     restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
@@ -109,7 +109,7 @@ services:
       retries: 5
       start_period: 15s
   hivemq:
-    image: hivemq/hivemq4:4.38.0
+    image: hivemq/hivemq4:4.39.0
     restart: always
     ports:
       - target: 1883

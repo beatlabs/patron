@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // ChildrenAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/_types/aggregations/bucket.ts#L121-L126
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/_types/aggregations/bucket.ts#L121-L126
 type ChildrenAggregation struct {
 	// Type The child type that should be selected.
 	Type *string `json:"type,omitempty"`
@@ -66,4 +66,14 @@ func NewChildrenAggregation() *ChildrenAggregation {
 	r := &ChildrenAggregation{}
 
 	return r
+}
+
+// true
+
+type ChildrenAggregationVariant interface {
+	ChildrenAggregationCaster() *ChildrenAggregation
+}
+
+func (s *ChildrenAggregation) ChildrenAggregationCaster() *ChildrenAggregation {
+	return s
 }

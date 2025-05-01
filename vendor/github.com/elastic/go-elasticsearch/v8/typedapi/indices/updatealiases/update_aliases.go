@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Create or update an alias.
 // Adds a data stream or index to an alias.
@@ -77,7 +77,7 @@ func NewUpdateAliasesFunc(tp elastictransport.Interface) NewUpdateAliases {
 // Create or update an alias.
 // Adds a data stream or index to an alias.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html
+// https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-indices-update-aliases
 func New(tp elastictransport.Interface) *UpdateAliases {
 	r := &UpdateAliases{
 		transport: tp,
@@ -85,8 +85,6 @@ func New(tp elastictransport.Interface) *UpdateAliases {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -356,10 +354,17 @@ func (r *UpdateAliases) Pretty(pretty bool) *UpdateAliases {
 	return r
 }
 
-// Actions Actions to perform.
+// Actions to perform.
 // API name: actions
-func (r *UpdateAliases) Actions(actions ...types.IndicesAction) *UpdateAliases {
-	r.req.Actions = actions
+func (r *UpdateAliases) Actions(actions ...types.IndicesActionVariant) *UpdateAliases {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range actions {
 
+		r.req.Actions = append(r.req.Actions, *v.IndicesActionCaster())
+
+	}
 	return r
 }

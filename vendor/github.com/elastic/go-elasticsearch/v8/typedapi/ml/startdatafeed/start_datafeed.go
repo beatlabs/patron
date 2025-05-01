@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Start datafeeds.
 //
@@ -129,8 +129,6 @@ func New(tp elastictransport.Interface) *StartDatafeed {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -403,26 +401,41 @@ func (r *StartDatafeed) Pretty(pretty bool) *StartDatafeed {
 	return r
 }
 
-// End Refer to the description for the `end` query parameter.
+// Refer to the description for the `end` query parameter.
 // API name: end
-func (r *StartDatafeed) End(datetime types.DateTime) *StartDatafeed {
-	r.req.End = datetime
+func (r *StartDatafeed) End(datetime types.DateTimeVariant) *StartDatafeed {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.End = *datetime.DateTimeCaster()
 
 	return r
 }
 
-// Start Refer to the description for the `start` query parameter.
+// Refer to the description for the `start` query parameter.
 // API name: start
-func (r *StartDatafeed) Start(datetime types.DateTime) *StartDatafeed {
-	r.req.Start = datetime
+func (r *StartDatafeed) Start(datetime types.DateTimeVariant) *StartDatafeed {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.Start = *datetime.DateTimeCaster()
 
 	return r
 }
 
-// Timeout Refer to the description for the `timeout` query parameter.
+// Refer to the description for the `timeout` query parameter.
 // API name: timeout
-func (r *StartDatafeed) Timeout(duration types.Duration) *StartDatafeed {
-	r.req.Timeout = duration
+func (r *StartDatafeed) Timeout(duration types.DurationVariant) *StartDatafeed {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.Timeout = *duration.DurationCaster()
 
 	return r
 }

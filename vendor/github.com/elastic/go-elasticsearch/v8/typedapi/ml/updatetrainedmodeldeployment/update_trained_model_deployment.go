@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Update a trained model deployment.
 package updatetrainedmodeldeployment
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *UpdateTrainedModelDeployment {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -364,15 +362,38 @@ func (r *UpdateTrainedModelDeployment) Pretty(pretty bool) *UpdateTrainedModelDe
 	return r
 }
 
-// NumberOfAllocations The number of model allocations on each node where the model is deployed.
+// Adaptive allocations configuration. When enabled, the number of allocations
+// is set based on the current load.
+// If adaptive_allocations is enabled, do not set the number of allocations
+// manually.
+// API name: adaptive_allocations
+func (r *UpdateTrainedModelDeployment) AdaptiveAllocations(adaptiveallocations types.AdaptiveAllocationsSettingsVariant) *UpdateTrainedModelDeployment {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.AdaptiveAllocations = adaptiveallocations.AdaptiveAllocationsSettingsCaster()
+
+	return r
+}
+
+// The number of model allocations on each node where the model is deployed.
 // All allocations on a node share the same copy of the model in memory but use
 // a separate set of threads to evaluate the model.
 // Increasing this value generally increases the throughput.
 // If this setting is greater than the number of hardware threads
 // it will automatically be changed to a value less than the number of hardware
 // threads.
+// If adaptive_allocations is enabled, do not set this value, because it’s
+// automatically set.
 // API name: number_of_allocations
 func (r *UpdateTrainedModelDeployment) NumberOfAllocations(numberofallocations int) *UpdateTrainedModelDeployment {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.NumberOfAllocations = &numberofallocations
 
 	return r

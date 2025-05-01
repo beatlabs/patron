@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
-// Used by the monitoring features to send monitoring data.
+// Send monitoring data.
+// This API is used by the monitoring features to send monitoring data.
 package bulk
 
 import (
@@ -79,9 +80,10 @@ func NewBulkFunc(tp elastictransport.Interface) NewBulk {
 	}
 }
 
-// Used by the monitoring features to send monitoring data.
+// Send monitoring data.
+// This API is used by the monitoring features to send monitoring data.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/monitor-elasticsearch-cluster.html
+// https://www.elastic.co/docs/api/doc/elasticsearch/v8
 func New(tp elastictransport.Interface) *Bulk {
 	r := &Bulk{
 		transport: tp,

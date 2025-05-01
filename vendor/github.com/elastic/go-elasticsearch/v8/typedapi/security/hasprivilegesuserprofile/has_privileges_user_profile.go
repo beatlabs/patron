@@ -16,12 +16,18 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Check user profile privileges.
 //
 // Determine whether the users associated with the specified user profile IDs
 // have all the requested privileges.
+//
+// NOTE: The user profile feature is designed only for use by Kibana and
+// Elastic's Observability, Enterprise Search, and Elastic Security solutions.
+// Individual users and external applications should not call this API directly.
+// Elastic reserves the right to change or remove this feature in future
+// releases without prior notice.
 package hasprivilegesuserprofile
 
 import (
@@ -81,6 +87,12 @@ func NewHasPrivilegesUserProfileFunc(tp elastictransport.Interface) NewHasPrivil
 // Determine whether the users associated with the specified user profile IDs
 // have all the requested privileges.
 //
+// NOTE: The user profile feature is designed only for use by Kibana and
+// Elastic's Observability, Enterprise Search, and Elastic Security solutions.
+// Individual users and external applications should not call this API directly.
+// Elastic reserves the right to change or remove this feature in future
+// releases without prior notice.
+//
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-has-privileges-user-profile.html
 func New(tp elastictransport.Interface) *HasPrivilegesUserProfile {
 	r := &HasPrivilegesUserProfile{
@@ -89,8 +101,6 @@ func New(tp elastictransport.Interface) *HasPrivilegesUserProfile {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -344,19 +354,31 @@ func (r *HasPrivilegesUserProfile) Pretty(pretty bool) *HasPrivilegesUserProfile
 	return r
 }
 
+// An object containing all the privileges to be checked.
 // API name: privileges
-func (r *HasPrivilegesUserProfile) Privileges(privileges *types.PrivilegesCheck) *HasPrivilegesUserProfile {
+func (r *HasPrivilegesUserProfile) Privileges(privileges types.PrivilegesCheckVariant) *HasPrivilegesUserProfile {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.Privileges = *privileges
+	r.req.Privileges = *privileges.PrivilegesCheckCaster()
 
 	return r
 }
 
-// Uids A list of profile IDs. The privileges are checked for associated users of the
+// A list of profile IDs. The privileges are checked for associated users of the
 // profiles.
 // API name: uids
 func (r *HasPrivilegesUserProfile) Uids(uids ...string) *HasPrivilegesUserProfile {
-	r.req.Uids = uids
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range uids {
 
+		r.req.Uids = append(r.req.Uids, v)
+
+	}
 	return r
 }

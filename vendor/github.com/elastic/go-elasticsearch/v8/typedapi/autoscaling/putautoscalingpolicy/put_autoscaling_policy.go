@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Create or update an autoscaling policy.
 //
@@ -99,8 +99,6 @@ func New(tp elastictransport.Interface) *PutAutoscalingPolicy {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -386,18 +384,46 @@ func (r *PutAutoscalingPolicy) Pretty(pretty bool) *PutAutoscalingPolicy {
 	return r
 }
 
-// Deciders Decider settings.
+// Decider settings.
 // API name: deciders
 func (r *PutAutoscalingPolicy) Deciders(deciders map[string]json.RawMessage) *PutAutoscalingPolicy {
-
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Deciders = deciders
+	return r
+}
 
+func (r *PutAutoscalingPolicy) AddDecider(key string, value json.RawMessage) *PutAutoscalingPolicy {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	var tmp map[string]json.RawMessage
+	if r.req.Deciders == nil {
+		r.req.Deciders = make(map[string]json.RawMessage)
+	} else {
+		tmp = r.req.Deciders
+	}
+
+	tmp[key] = value
+
+	r.req.Deciders = tmp
 	return r
 }
 
 // API name: roles
 func (r *PutAutoscalingPolicy) Roles(roles ...string) *PutAutoscalingPolicy {
-	r.req.Roles = roles
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range roles {
 
+		r.req.Roles = append(r.req.Roles, v)
+
+	}
 	return r
 }

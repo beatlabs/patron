@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -31,11 +31,13 @@ import (
 
 // StepKey type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/ilm/move_to_step/types.ts#L20-L25
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/ilm/move_to_step/types.ts#L20-L31
 type StepKey struct {
+	// Action The optional action to which the index will be moved.
 	Action *string `json:"action,omitempty"`
-	Name   *string `json:"name,omitempty"`
-	Phase  string  `json:"phase"`
+	// Name The optional step name to which the index will be moved.
+	Name  *string `json:"name,omitempty"`
+	Phase string  `json:"phase"`
 }
 
 func (s *StepKey) UnmarshalJSON(data []byte) error {
@@ -99,4 +101,14 @@ func NewStepKey() *StepKey {
 	r := &StepKey{}
 
 	return r
+}
+
+// true
+
+type StepKeyVariant interface {
+	StepKeyCaster() *StepKey
+}
+
+func (s *StepKey) StepKeyCaster() *StepKey {
+	return s
 }

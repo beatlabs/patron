@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // GcsRepositorySettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/snapshot/_types/SnapshotRepository.ts#L85-L91
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/snapshot/_types/SnapshotRepository.ts#L85-L91
 type GcsRepositorySettings struct {
 	ApplicationName        *string  `json:"application_name,omitempty"`
 	BasePath               *string  `json:"base_path,omitempty"`
@@ -160,4 +160,14 @@ func NewGcsRepositorySettings() *GcsRepositorySettings {
 	r := &GcsRepositorySettings{}
 
 	return r
+}
+
+// true
+
+type GcsRepositorySettingsVariant interface {
+	GcsRepositorySettingsCaster() *GcsRepositorySettings
+}
+
+func (s *GcsRepositorySettings) GcsRepositorySettingsCaster() *GcsRepositorySettings {
+	return s
 }

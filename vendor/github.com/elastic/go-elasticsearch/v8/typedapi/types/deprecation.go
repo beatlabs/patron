@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -33,15 +33,19 @@ import (
 
 // Deprecation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/migration/deprecations/types.ts#L32-L40
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/migration/deprecations/types.ts#L32-L47
 type Deprecation struct {
+	// Details Optional details about the deprecation warning.
 	Details *string `json:"details,omitempty"`
 	// Level The level property describes the significance of the issue.
-	Level                       deprecationlevel.DeprecationLevel `json:"level"`
-	Message                     string                            `json:"message"`
-	Meta_                       map[string]json.RawMessage        `json:"_meta,omitempty"`
-	ResolveDuringRollingUpgrade bool                              `json:"resolve_during_rolling_upgrade"`
-	Url                         string                            `json:"url"`
+	Level deprecationlevel.DeprecationLevel `json:"level"`
+	// Message Descriptive information about the deprecation warning.
+	Message                     string                     `json:"message"`
+	Meta_                       map[string]json.RawMessage `json:"_meta,omitempty"`
+	ResolveDuringRollingUpgrade bool                       `json:"resolve_during_rolling_upgrade"`
+	// Url A link to the breaking change documentation, where you can find more
+	// information about this change.
+	Url string `json:"url"`
 }
 
 func (s *Deprecation) UnmarshalJSON(data []byte) error {
@@ -130,8 +134,10 @@ func (s *Deprecation) UnmarshalJSON(data []byte) error {
 // NewDeprecation returns a Deprecation.
 func NewDeprecation() *Deprecation {
 	r := &Deprecation{
-		Meta_: make(map[string]json.RawMessage, 0),
+		Meta_: make(map[string]json.RawMessage),
 	}
 
 	return r
 }
+
+// false

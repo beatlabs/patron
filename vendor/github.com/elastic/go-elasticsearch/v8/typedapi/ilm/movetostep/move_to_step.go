@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Move to a lifecycle step.
 // Manually move an index into a specific step in the lifecycle policy and run
@@ -137,8 +137,6 @@ func New(tp elastictransport.Interface) *MoveToStep {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -405,18 +403,28 @@ func (r *MoveToStep) Pretty(pretty bool) *MoveToStep {
 	return r
 }
 
+// The step that the index is expected to be in.
 // API name: current_step
-func (r *MoveToStep) CurrentStep(currentstep *types.StepKey) *MoveToStep {
+func (r *MoveToStep) CurrentStep(currentstep types.StepKeyVariant) *MoveToStep {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.CurrentStep = *currentstep
+	r.req.CurrentStep = *currentstep.StepKeyCaster()
 
 	return r
 }
 
+// The step that you want to run.
 // API name: next_step
-func (r *MoveToStep) NextStep(nextstep *types.StepKey) *MoveToStep {
+func (r *MoveToStep) NextStep(nextstep types.StepKeyVariant) *MoveToStep {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.NextStep = *nextstep
+	r.req.NextStep = *nextstep.StepKeyCaster()
 
 	return r
 }

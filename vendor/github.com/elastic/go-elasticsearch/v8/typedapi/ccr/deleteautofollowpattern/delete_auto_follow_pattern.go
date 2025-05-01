@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Delete auto-follow patterns.
+//
 // Delete a collection of cross-cluster replication auto-follow patterns.
 package deleteautofollowpattern
 
@@ -78,6 +79,7 @@ func NewDeleteAutoFollowPatternFunc(tp elastictransport.Interface) NewDeleteAuto
 }
 
 // Delete auto-follow patterns.
+//
 // Delete a collection of cross-cluster replication auto-follow patterns.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ccr-delete-auto-follow-pattern.html
@@ -292,11 +294,22 @@ func (r *DeleteAutoFollowPattern) Header(key, value string) *DeleteAutoFollowPat
 	return r
 }
 
-// Name The name of the auto follow pattern.
+// Name The auto-follow pattern collection to delete.
 // API Name: name
 func (r *DeleteAutoFollowPattern) _name(name string) *DeleteAutoFollowPattern {
 	r.paramSet |= nameMask
 	r.name = name
+
+	return r
+}
+
+// MasterTimeout The period to wait for a connection to the master node.
+// If the master node is not available before the timeout expires, the request
+// fails and returns an error.
+// It can also be set to `-1` to indicate that the request should never timeout.
+// API name: master_timeout
+func (r *DeleteAutoFollowPattern) MasterTimeout(duration string) *DeleteAutoFollowPattern {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

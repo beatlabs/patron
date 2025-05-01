@@ -16,10 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
-// Create or update GeoIP database configurations.
-// Create or update IP geolocation database configurations.
+// Create or update a GeoIP database configuration.
+//
+// Refer to the create or update IP geolocation database configuration API.
 package putgeoipdatabase
 
 import (
@@ -82,10 +83,11 @@ func NewPutGeoipDatabaseFunc(tp elastictransport.Interface) NewPutGeoipDatabase 
 	}
 }
 
-// Create or update GeoIP database configurations.
-// Create or update IP geolocation database configurations.
+// Create or update a GeoIP database configuration.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/put-geoip-database-api.html
+// Refer to the create or update IP geolocation database configuration API.
+//
+// https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-ingest-put-geoip-database
 func New(tp elastictransport.Interface) *PutGeoipDatabase {
 	r := &PutGeoipDatabase{
 		transport: tp,
@@ -93,8 +95,6 @@ func New(tp elastictransport.Interface) *PutGeoipDatabase {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -382,22 +382,31 @@ func (r *PutGeoipDatabase) Pretty(pretty bool) *PutGeoipDatabase {
 	return r
 }
 
-// Maxmind The configuration necessary to identify which IP geolocation provider to use
+// The configuration necessary to identify which IP geolocation provider to use
 // to download the database, as well as any provider-specific configuration
 // necessary for such downloading.
 // At present, the only supported provider is maxmind, and the maxmind provider
 // requires that an account_id (string) is configured.
 // API name: maxmind
-func (r *PutGeoipDatabase) Maxmind(maxmind *types.Maxmind) *PutGeoipDatabase {
+func (r *PutGeoipDatabase) Maxmind(maxmind types.MaxmindVariant) *PutGeoipDatabase {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.Maxmind = *maxmind
+	r.req.Maxmind = *maxmind.MaxmindCaster()
 
 	return r
 }
 
-// Name The provider-assigned name of the IP geolocation database to download.
+// The provider-assigned name of the IP geolocation database to download.
 // API name: name
 func (r *PutGeoipDatabase) Name(name string) *PutGeoipDatabase {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.Name = name
 
 	return r

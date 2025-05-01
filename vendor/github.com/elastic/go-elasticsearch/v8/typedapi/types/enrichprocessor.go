@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // EnrichProcessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/ingest/_types/Processors.ts#L847-L886
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/ingest/_types/Processors.ts#L847-L886
 type EnrichProcessor struct {
 	// Description Description of the processor.
 	// Useful for describing the purpose of the processor or its configuration.
@@ -227,4 +227,14 @@ func NewEnrichProcessor() *EnrichProcessor {
 	r := &EnrichProcessor{}
 
 	return r
+}
+
+// true
+
+type EnrichProcessorVariant interface {
+	EnrichProcessorCaster() *EnrichProcessor
+}
+
+func (s *EnrichProcessor) EnrichProcessorCaster() *EnrichProcessor {
+	return s
 }

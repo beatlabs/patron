@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Run an enrich policy.
 // Create the enrich index for an existing enrich policy.
@@ -299,6 +299,14 @@ func (r *ExecutePolicy) Header(key, value string) *ExecutePolicy {
 func (r *ExecutePolicy) _name(name string) *ExecutePolicy {
 	r.paramSet |= nameMask
 	r.name = name
+
+	return r
+}
+
+// MasterTimeout Period to wait for a connection to the master node.
+// API name: master_timeout
+func (r *ExecutePolicy) MasterTimeout(duration string) *ExecutePolicy {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }

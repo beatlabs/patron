@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // IndexSettingBlocks type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/indices/_types/IndexSettings.ts#L254-L260
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/indices/_types/IndexSettings.ts#L262-L268
 type IndexSettingBlocks struct {
 	Metadata            Stringifiedboolean `json:"metadata,omitempty"`
 	Read                Stringifiedboolean `json:"read,omitempty"`
@@ -89,4 +89,14 @@ func NewIndexSettingBlocks() *IndexSettingBlocks {
 	r := &IndexSettingBlocks{}
 
 	return r
+}
+
+// true
+
+type IndexSettingBlocksVariant interface {
+	IndexSettingBlocksCaster() *IndexSettingBlocks
+}
+
+func (s *IndexSettingBlocks) IndexSettingBlocksCaster() *IndexSettingBlocks {
+	return s
 }

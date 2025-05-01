@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Reroute the cluster.
 // Manually change the allocation of individual shards in the cluster.
@@ -139,8 +139,6 @@ func New(tp elastictransport.Interface) *Reroute {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -448,10 +446,17 @@ func (r *Reroute) Pretty(pretty bool) *Reroute {
 	return r
 }
 
-// Commands Defines the commands to perform.
+// Defines the commands to perform.
 // API name: commands
-func (r *Reroute) Commands(commands ...types.Command) *Reroute {
-	r.req.Commands = commands
+func (r *Reroute) Commands(commands ...types.CommandVariant) *Reroute {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range commands {
 
+		r.req.Commands = append(r.req.Commands, *v.CommandCaster())
+
+	}
 	return r
 }

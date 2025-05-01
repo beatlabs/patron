@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Get a synonym rule.
 // Get a synonym rule from a synonym set.
@@ -307,7 +307,7 @@ func (r *GetSynonymRule) Header(key, value string) *GetSynonymRule {
 	return r
 }
 
-// SetId The id of the synonym set to retrieve the synonym rule from
+// SetId The ID of the synonym set to retrieve the synonym rule from.
 // API Name: setid
 func (r *GetSynonymRule) _setid(setid string) *GetSynonymRule {
 	r.paramSet |= setidMask
@@ -316,7 +316,7 @@ func (r *GetSynonymRule) _setid(setid string) *GetSynonymRule {
 	return r
 }
 
-// RuleId The id of the synonym rule to retrieve
+// RuleId The ID of the synonym rule to retrieve.
 // API Name: ruleid
 func (r *GetSynonymRule) _ruleid(ruleid string) *GetSynonymRule {
 	r.paramSet |= ruleidMask

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // DetectorUpdate type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/ml/_types/Detector.ts#L127-L143
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/ml/_types/Detector.ts#L127-L143
 type DetectorUpdate struct {
 	// CustomRules An array of custom rule objects, which enable you to customize the way
 	// detectors operate.
@@ -105,4 +105,14 @@ func NewDetectorUpdate() *DetectorUpdate {
 	r := &DetectorUpdate{}
 
 	return r
+}
+
+// true
+
+type DetectorUpdateVariant interface {
+	DetectorUpdateCaster() *DetectorUpdate
+}
+
+func (s *DetectorUpdate) DetectorUpdateCaster() *DetectorUpdate {
+	return s
 }

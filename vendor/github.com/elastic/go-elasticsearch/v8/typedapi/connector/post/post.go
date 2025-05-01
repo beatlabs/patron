@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Create a connector.
 //
@@ -99,8 +99,6 @@ func New(tp elastictransport.Interface) *Post {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -352,6 +350,10 @@ func (r *Post) Pretty(pretty bool) *Post {
 
 // API name: description
 func (r *Post) Description(description string) *Post {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Description = &description
 
@@ -360,6 +362,11 @@ func (r *Post) Description(description string) *Post {
 
 // API name: index_name
 func (r *Post) IndexName(indexname string) *Post {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.IndexName = &indexname
 
 	return r
@@ -367,6 +374,11 @@ func (r *Post) IndexName(indexname string) *Post {
 
 // API name: is_native
 func (r *Post) IsNative(isnative bool) *Post {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.IsNative = &isnative
 
 	return r
@@ -374,6 +386,10 @@ func (r *Post) IsNative(isnative bool) *Post {
 
 // API name: language
 func (r *Post) Language(language string) *Post {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Language = &language
 
@@ -382,6 +398,10 @@ func (r *Post) Language(language string) *Post {
 
 // API name: name
 func (r *Post) Name(name string) *Post {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Name = &name
 
@@ -390,6 +410,10 @@ func (r *Post) Name(name string) *Post {
 
 // API name: service_type
 func (r *Post) ServiceType(servicetype string) *Post {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceType = &servicetype
 

@@ -16,10 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Translate SQL into Elasticsearch queries.
 // Translate an SQL search into a search API request containing Query DSL.
+// It accepts the same request body parameters as the SQL search API, excluding
+// `cursor`.
 package translate
 
 import (
@@ -76,6 +78,8 @@ func NewTranslateFunc(tp elastictransport.Interface) NewTranslate {
 
 // Translate SQL into Elasticsearch queries.
 // Translate an SQL search into a search API request containing Query DSL.
+// It accepts the same request body parameters as the SQL search API, excluding
+// `cursor`.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/sql-translate-api.html
 func New(tp elastictransport.Interface) *Translate {
@@ -85,8 +89,6 @@ func New(tp elastictransport.Interface) *Translate {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -338,35 +340,53 @@ func (r *Translate) Pretty(pretty bool) *Translate {
 	return r
 }
 
-// FetchSize The maximum number of rows (or entries) to return in one response.
+// The maximum number of rows (or entries) to return in one response.
 // API name: fetch_size
 func (r *Translate) FetchSize(fetchsize int) *Translate {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.FetchSize = &fetchsize
 
 	return r
 }
 
-// Filter Elasticsearch query DSL for additional filtering.
+// The Elasticsearch query DSL for additional filtering.
 // API name: filter
-func (r *Translate) Filter(filter *types.Query) *Translate {
+func (r *Translate) Filter(filter types.QueryVariant) *Translate {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.Filter = filter
+	r.req.Filter = filter.QueryCaster()
 
 	return r
 }
 
-// Query SQL query to run.
+// The SQL query to run.
 // API name: query
 func (r *Translate) Query(query string) *Translate {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
 	return r
 }
 
-// TimeZone ISO-8601 time zone ID for the search.
+// The ISO-8601 time zone ID for the search.
 // API name: time_zone
 func (r *Translate) TimeZone(timezone string) *Translate {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.TimeZone = &timezone
 
 	return r

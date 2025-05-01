@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Simulate a pipeline.
+//
 // Run an ingest pipeline against a set of provided documents.
 // You can either specify an existing pipeline to use with the provided
 // documents or supply a pipeline definition in the body of the request.
@@ -83,6 +84,7 @@ func NewSimulateFunc(tp elastictransport.Interface) NewSimulate {
 }
 
 // Simulate a pipeline.
+//
 // Run an ingest pipeline against a set of provided documents.
 // You can either specify an existing pipeline to use with the provided
 // documents or supply a pipeline definition in the body of the request.
@@ -95,8 +97,6 @@ func New(tp elastictransport.Interface) *Simulate {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -321,8 +321,8 @@ func (r *Simulate) Header(key, value string) *Simulate {
 	return r
 }
 
-// Id Pipeline to test.
-// If you don’t specify a `pipeline` in the request body, this parameter is
+// Id The pipeline to test.
+// If you don't specify a `pipeline` in the request body, this parameter is
 // required.
 // API Name: id
 func (r *Simulate) Id(id string) *Simulate {
@@ -385,23 +385,34 @@ func (r *Simulate) Pretty(pretty bool) *Simulate {
 	return r
 }
 
-// Docs Sample documents to test in the pipeline.
+// Sample documents to test in the pipeline.
 // API name: docs
-func (r *Simulate) Docs(docs ...types.Document) *Simulate {
-	r.req.Docs = docs
+func (r *Simulate) Docs(docs ...types.DocumentVariant) *Simulate {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range docs {
 
+		r.req.Docs = append(r.req.Docs, *v.DocumentCaster())
+
+	}
 	return r
 }
 
-// Pipeline Pipeline to test.
-// If you don’t specify the `pipeline` request path parameter, this parameter is
+// The pipeline to test.
+// If you don't specify the `pipeline` request path parameter, this parameter is
 // required.
 // If you specify both this and the request path parameter, the API only uses
 // the request path parameter.
 // API name: pipeline
-func (r *Simulate) Pipeline(pipeline *types.IngestPipeline) *Simulate {
+func (r *Simulate) Pipeline(pipeline types.IngestPipelineVariant) *Simulate {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.Pipeline = pipeline
+	r.req.Pipeline = pipeline.IngestPipelineCaster()
 
 	return r
 }

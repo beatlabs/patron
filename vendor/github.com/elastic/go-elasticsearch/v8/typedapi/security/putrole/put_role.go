@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Create or update roles.
 //
@@ -105,8 +105,6 @@ func New(tp elastictransport.Interface) *PutRole {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -383,87 +381,164 @@ func (r *PutRole) Pretty(pretty bool) *PutRole {
 	return r
 }
 
-// Applications A list of application privilege entries.
+// A list of application privilege entries.
 // API name: applications
-func (r *PutRole) Applications(applications ...types.ApplicationPrivileges) *PutRole {
-	r.req.Applications = applications
+func (r *PutRole) Applications(applications ...types.ApplicationPrivilegesVariant) *PutRole {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range applications {
 
+		r.req.Applications = append(r.req.Applications, *v.ApplicationPrivilegesCaster())
+
+	}
 	return r
 }
 
-// Cluster A list of cluster privileges. These privileges define the cluster-level
+// A list of cluster privileges. These privileges define the cluster-level
 // actions for users with this role.
 // API name: cluster
 func (r *PutRole) Cluster(clusters ...clusterprivilege.ClusterPrivilege) *PutRole {
-	r.req.Cluster = clusters
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range clusters {
 
+		r.req.Cluster = append(r.req.Cluster, v)
+
+	}
 	return r
 }
 
-// Description Optional description of the role descriptor
+// Optional description of the role descriptor
 // API name: description
 func (r *PutRole) Description(description string) *PutRole {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Description = &description
 
 	return r
 }
 
-// Global An object defining global privileges. A global privilege is a form of cluster
+// An object defining global privileges. A global privilege is a form of cluster
 // privilege that is request-aware. Support for global privileges is currently
 // limited to the management of application privileges.
 // API name: global
 func (r *PutRole) Global(global map[string]json.RawMessage) *PutRole {
-
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Global = global
-
 	return r
 }
 
-// Indices A list of indices permissions entries.
+func (r *PutRole) AddGlobal(key string, value json.RawMessage) *PutRole {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	var tmp map[string]json.RawMessage
+	if r.req.Global == nil {
+		r.req.Global = make(map[string]json.RawMessage)
+	} else {
+		tmp = r.req.Global
+	}
+
+	tmp[key] = value
+
+	r.req.Global = tmp
+	return r
+}
+
+// A list of indices permissions entries.
 // API name: indices
-func (r *PutRole) Indices(indices ...types.IndicesPrivileges) *PutRole {
-	r.req.Indices = indices
+func (r *PutRole) Indices(indices ...types.IndicesPrivilegesVariant) *PutRole {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range indices {
 
+		r.req.Indices = append(r.req.Indices, *v.IndicesPrivilegesCaster())
+
+	}
 	return r
 }
 
-// Metadata Optional metadata. Within the metadata object, keys that begin with an
+// Optional metadata. Within the metadata object, keys that begin with an
 // underscore (`_`) are reserved for system use.
 // API name: metadata
-func (r *PutRole) Metadata(metadata types.Metadata) *PutRole {
-	r.req.Metadata = metadata
+func (r *PutRole) Metadata(metadata types.MetadataVariant) *PutRole {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.Metadata = *metadata.MetadataCaster()
 
 	return r
 }
 
-// RemoteCluster A list of remote cluster permissions entries.
+// A list of remote cluster permissions entries.
 // API name: remote_cluster
-func (r *PutRole) RemoteCluster(remoteclusters ...types.RemoteClusterPrivileges) *PutRole {
-	r.req.RemoteCluster = remoteclusters
+func (r *PutRole) RemoteCluster(remoteclusters ...types.RemoteClusterPrivilegesVariant) *PutRole {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range remoteclusters {
 
+		r.req.RemoteCluster = append(r.req.RemoteCluster, *v.RemoteClusterPrivilegesCaster())
+
+	}
 	return r
 }
 
-// RemoteIndices A list of remote indices permissions entries.
+// A list of remote indices permissions entries.
+//
+// NOTE: Remote indices are effective for remote clusters configured with the
+// API key based model.
+// They have no effect for remote clusters configured with the certificate based
+// model.
 // API name: remote_indices
-func (r *PutRole) RemoteIndices(remoteindices ...types.RemoteIndicesPrivileges) *PutRole {
-	r.req.RemoteIndices = remoteindices
+func (r *PutRole) RemoteIndices(remoteindices ...types.RemoteIndicesPrivilegesVariant) *PutRole {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range remoteindices {
 
+		r.req.RemoteIndices = append(r.req.RemoteIndices, *v.RemoteIndicesPrivilegesCaster())
+
+	}
 	return r
 }
 
-// RunAs A list of users that the owners of this role can impersonate. *Note*: in
+// A list of users that the owners of this role can impersonate. *Note*: in
 // Serverless, the run-as feature is disabled. For API compatibility, you can
 // still specify an empty `run_as` field, but a non-empty list will be rejected.
 // API name: run_as
 func (r *PutRole) RunAs(runas ...string) *PutRole {
-	r.req.RunAs = runas
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range runas {
 
+		r.req.RunAs = append(r.req.RunAs, v)
+
+	}
 	return r
 }
 
-// TransientMetadata Indicates roles that might be incompatible with the current cluster license,
+// Indicates roles that might be incompatible with the current cluster license,
 // specifically roles with document and field level security. When the cluster
 // license doesn’t allow certain features for a given role, this parameter is
 // updated dynamically to list the incompatible features. If `enabled` is
@@ -471,8 +546,29 @@ func (r *PutRole) RunAs(runas ...string) *PutRole {
 // authenticate API.
 // API name: transient_metadata
 func (r *PutRole) TransientMetadata(transientmetadata map[string]json.RawMessage) *PutRole {
-
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TransientMetadata = transientmetadata
+	return r
+}
 
+func (r *PutRole) AddTransientMetadatum(key string, value json.RawMessage) *PutRole {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	var tmp map[string]json.RawMessage
+	if r.req.TransientMetadata == nil {
+		r.req.TransientMetadata = make(map[string]json.RawMessage)
+	} else {
+		tmp = r.req.TransientMetadata
+	}
+
+	tmp[key] = value
+
+	r.req.TransientMetadata = tmp
 	return r
 }

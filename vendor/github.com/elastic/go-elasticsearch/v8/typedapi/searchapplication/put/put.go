@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Create or update a search application.
 package put
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *Put {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -368,43 +366,43 @@ func (r *Put) Pretty(pretty bool) *Put {
 	return r
 }
 
-// AnalyticsCollectionName Analytics collection associated to the Search Application.
+// Analytics collection associated to the Search Application.
 // API name: analytics_collection_name
 func (r *Put) AnalyticsCollectionName(name string) *Put {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.AnalyticsCollectionName = &name
 
 	return r
 }
 
-// Indices Indices that are part of the Search Application.
+// Indices that are part of the Search Application.
 // API name: indices
 func (r *Put) Indices(indices ...string) *Put {
-	r.req.Indices = indices
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range indices {
 
+		r.req.Indices = append(r.req.Indices, v)
+
+	}
 	return r
 }
 
-// Name Search Application name.
-// API name: name
-func (r *Put) Name(name string) *Put {
-	r.req.Name = name
-
-	return r
-}
-
-// Template Search template to use on search operations.
+// Search template to use on search operations.
 // API name: template
-func (r *Put) Template(template *types.SearchApplicationTemplate) *Put {
+func (r *Put) Template(template types.SearchApplicationTemplateVariant) *Put {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.Template = template
-
-	return r
-}
-
-// UpdatedAtMillis Last time the Search Application was updated.
-// API name: updated_at_millis
-func (r *Put) UpdatedAtMillis(epochtimeunitmillis int64) *Put {
-	r.req.UpdatedAtMillis = epochtimeunitmillis
+	r.req.Template = template.SearchApplicationTemplateCaster()
 
 	return r
 }

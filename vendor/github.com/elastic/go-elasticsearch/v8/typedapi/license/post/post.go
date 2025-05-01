@@ -16,9 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Update the license.
+//
 // You can update your license at runtime without shutting down your nodes.
 // License updates take effect immediately.
 // If the license you are installing does not support all of the features that
@@ -87,6 +88,7 @@ func NewPostFunc(tp elastictransport.Interface) NewPost {
 }
 
 // Update the license.
+//
 // You can update your license at runtime without shutting down your nodes.
 // License updates take effect immediately.
 // If the license you are installing does not support all of the features that
@@ -109,8 +111,6 @@ func New(tp elastictransport.Interface) *Post {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -324,6 +324,23 @@ func (r *Post) Acknowledge(acknowledge bool) *Post {
 	return r
 }
 
+// MasterTimeout The period to wait for a connection to the master node.
+// API name: master_timeout
+func (r *Post) MasterTimeout(duration string) *Post {
+	r.values.Set("master_timeout", duration)
+
+	return r
+}
+
+// Timeout The period to wait for a response. If no response is received before the
+// timeout expires, the request fails and returns an error.
+// API name: timeout
+func (r *Post) Timeout(duration string) *Post {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -369,17 +386,28 @@ func (r *Post) Pretty(pretty bool) *Post {
 }
 
 // API name: license
-func (r *Post) License(license *types.License) *Post {
+func (r *Post) License(license types.LicenseVariant) *Post {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.License = license
+	r.req.License = license.LicenseCaster()
 
 	return r
 }
 
-// Licenses A sequence of one or more JSON documents containing the license information.
+// A sequence of one or more JSON documents containing the license information.
 // API name: licenses
-func (r *Post) Licenses(licenses ...types.License) *Post {
-	r.req.Licenses = licenses
+func (r *Post) Licenses(licenses ...types.LicenseVariant) *Post {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range licenses {
 
+		r.req.Licenses = append(r.req.Licenses, *v.LicenseCaster())
+
+	}
 	return r
 }

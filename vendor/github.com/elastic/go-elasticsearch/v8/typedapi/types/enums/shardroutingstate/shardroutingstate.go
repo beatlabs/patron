@@ -16,14 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Package shardroutingstate
 package shardroutingstate
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/indices/stats/types.ts#L169-L174
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/indices/stats/types.ts#L169-L174
 type ShardRoutingState struct {
 	Name string
 }
@@ -45,13 +45,13 @@ func (s ShardRoutingState) MarshalText() (text []byte, err error) {
 func (s *ShardRoutingState) UnmarshalText(text []byte) error {
 	switch strings.ReplaceAll(strings.ToLower(string(text)), "\"", "") {
 
-	case "UNASSIGNED":
+	case "unassigned":
 		*s = UNASSIGNED
-	case "INITIALIZING":
+	case "initializing":
 		*s = INITIALIZING
-	case "STARTED":
+	case "started":
 		*s = STARTED
-	case "RELOCATING":
+	case "relocating":
 		*s = RELOCATING
 	default:
 		*s = ShardRoutingState{string(text)}

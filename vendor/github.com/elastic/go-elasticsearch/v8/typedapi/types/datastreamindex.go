@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // DataStreamIndex type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/indices/_types/DataStream.ts#L136-L157
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/indices/_types/DataStream.ts#L136-L157
 type DataStreamIndex struct {
 	// IlmPolicy Name of the current ILM lifecycle policy configured for this backing index.
 	IlmPolicy *string `json:"ilm_policy,omitempty"`
@@ -108,3 +108,5 @@ func NewDataStreamIndex() *DataStreamIndex {
 
 	return r
 }
+
+// false

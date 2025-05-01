@@ -9,11 +9,11 @@ test: fmtcheck
 
 .PHONY: testint
 testint: fmtcheck
-	go test ./... -race -cover -tags=integration -timeout 300s
+	go test ./... -race -cover -tags=integration -timeout 30s
 
 .PHONY: testint-nocache
 testint-nocache: fmtcheck
-	go test ./... -race -cover -tags=integration -timeout 300s -count=1
+	go test ./... -race -cover -tags=integration -timeout 30s -count=1
 
 .PHONY: ci
 ci: 

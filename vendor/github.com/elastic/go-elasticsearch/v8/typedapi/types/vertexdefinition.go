@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // VertexDefinition type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/graph/_types/Vertex.ts#L30-L59
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/graph/_types/Vertex.ts#L30-L59
 type VertexDefinition struct {
 	// Exclude Prevents the specified terms from being included in the results.
 	Exclude []string `json:"exclude,omitempty"`
@@ -137,4 +137,14 @@ func NewVertexDefinition() *VertexDefinition {
 	r := &VertexDefinition{}
 
 	return r
+}
+
+// true
+
+type VertexDefinitionVariant interface {
+	VertexDefinitionCaster() *VertexDefinition
+}
+
+func (s *VertexDefinition) VertexDefinitionCaster() *VertexDefinition {
+	return s
 }

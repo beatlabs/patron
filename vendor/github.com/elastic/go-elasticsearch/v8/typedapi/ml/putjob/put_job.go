@@ -16,11 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Create an anomaly detection job.
+//
 // If you include a `datafeed_config`, you must have read index privileges on
 // the source index.
+// If you include a `datafeed_config` but do not provide a query, the datafeed
+// uses `{"match_all": {"boost": 1}}`.
 package putjob
 
 import (
@@ -85,8 +88,11 @@ func NewPutJobFunc(tp elastictransport.Interface) NewPutJob {
 }
 
 // Create an anomaly detection job.
+//
 // If you include a `datafeed_config`, you must have read index privileges on
 // the source index.
+// If you include a `datafeed_config` but do not provide a query, the datafeed
+// uses `{"match_all": {"boost": 1}}`.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-put-job.html
 func New(tp elastictransport.Interface) *PutJob {
@@ -96,8 +102,6 @@ func New(tp elastictransport.Interface) *PutJob {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -416,7 +420,7 @@ func (r *PutJob) Pretty(pretty bool) *PutJob {
 	return r
 }
 
-// AllowLazyOpen Advanced configuration option. Specifies whether this job can open when there
+// Advanced configuration option. Specifies whether this job can open when there
 // is insufficient machine learning node capacity for it to be immediately
 // assigned to a node. By default, if a machine learning node with capacity to
 // run the job cannot immediately be found, the open anomaly detection jobs API
@@ -426,110 +430,156 @@ func (r *PutJob) Pretty(pretty bool) *PutJob {
 // opening state until sufficient machine learning node capacity is available.
 // API name: allow_lazy_open
 func (r *PutJob) AllowLazyOpen(allowlazyopen bool) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.AllowLazyOpen = &allowlazyopen
 
 	return r
 }
 
-// AnalysisConfig Specifies how to analyze the data. After you create a job, you cannot change
+// Specifies how to analyze the data. After you create a job, you cannot change
 // the analysis configuration; all the properties are informational.
 // API name: analysis_config
-func (r *PutJob) AnalysisConfig(analysisconfig *types.AnalysisConfig) *PutJob {
+func (r *PutJob) AnalysisConfig(analysisconfig types.AnalysisConfigVariant) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.AnalysisConfig = *analysisconfig
+	r.req.AnalysisConfig = *analysisconfig.AnalysisConfigCaster()
 
 	return r
 }
 
-// AnalysisLimits Limits can be applied for the resources required to hold the mathematical
+// Limits can be applied for the resources required to hold the mathematical
 // models in memory. These limits are approximate and can be set per job. They
 // do not control the memory used by other processes, for example the
 // Elasticsearch Java processes.
 // API name: analysis_limits
-func (r *PutJob) AnalysisLimits(analysislimits *types.AnalysisLimits) *PutJob {
+func (r *PutJob) AnalysisLimits(analysislimits types.AnalysisLimitsVariant) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.AnalysisLimits = analysislimits
+	r.req.AnalysisLimits = analysislimits.AnalysisLimitsCaster()
 
 	return r
 }
 
-// BackgroundPersistInterval Advanced configuration option. The time between each periodic persistence of
+// Advanced configuration option. The time between each periodic persistence of
 // the model. The default value is a randomized value between 3 to 4 hours,
 // which avoids all jobs persisting at exactly the same time. The smallest
 // allowed value is 1 hour. For very large models (several GB), persistence
 // could take 10-20 minutes, so do not set the `background_persist_interval`
 // value too low.
 // API name: background_persist_interval
-func (r *PutJob) BackgroundPersistInterval(duration types.Duration) *PutJob {
-	r.req.BackgroundPersistInterval = duration
+func (r *PutJob) BackgroundPersistInterval(duration types.DurationVariant) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.BackgroundPersistInterval = *duration.DurationCaster()
 
 	return r
 }
 
-// CustomSettings Advanced configuration option. Contains custom meta data about the job.
+// Advanced configuration option. Contains custom meta data about the job.
 // API name: custom_settings
 func (r *PutJob) CustomSettings(customsettings json.RawMessage) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.CustomSettings = customsettings
 
 	return r
 }
 
-// DailyModelSnapshotRetentionAfterDays Advanced configuration option, which affects the automatic removal of old
+// Advanced configuration option, which affects the automatic removal of old
 // model snapshots for this job. It specifies a period of time (in days) after
 // which only the first snapshot per day is retained. This period is relative to
 // the timestamp of the most recent snapshot for this job. Valid values range
 // from 0 to `model_snapshot_retention_days`.
 // API name: daily_model_snapshot_retention_after_days
 func (r *PutJob) DailyModelSnapshotRetentionAfterDays(dailymodelsnapshotretentionafterdays int64) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.DailyModelSnapshotRetentionAfterDays = &dailymodelsnapshotretentionafterdays
 
 	return r
 }
 
-// DataDescription Defines the format of the input data when you send data to the job by using
+// Defines the format of the input data when you send data to the job by using
 // the post data API. Note that when configure a datafeed, these properties are
 // automatically set. When data is received via the post data API, it is not
 // stored in Elasticsearch. Only the results for anomaly detection are retained.
 // API name: data_description
-func (r *PutJob) DataDescription(datadescription *types.DataDescription) *PutJob {
+func (r *PutJob) DataDescription(datadescription types.DataDescriptionVariant) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.DataDescription = *datadescription
+	r.req.DataDescription = *datadescription.DataDescriptionCaster()
 
 	return r
 }
 
-// DatafeedConfig Defines a datafeed for the anomaly detection job. If Elasticsearch security
+// Defines a datafeed for the anomaly detection job. If Elasticsearch security
 // features are enabled, your datafeed remembers which roles the user who
 // created it had at the time of creation and runs the query using those same
 // roles. If you provide secondary authorization headers, those credentials are
 // used instead.
 // API name: datafeed_config
-func (r *PutJob) DatafeedConfig(datafeedconfig *types.DatafeedConfig) *PutJob {
+func (r *PutJob) DatafeedConfig(datafeedconfig types.DatafeedConfigVariant) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.DatafeedConfig = datafeedconfig
+	r.req.DatafeedConfig = datafeedconfig.DatafeedConfigCaster()
 
 	return r
 }
 
-// Description A description of the job.
+// A description of the job.
 // API name: description
 func (r *PutJob) Description(description string) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Description = &description
 
 	return r
 }
 
-// Groups A list of job groups. A job can belong to no groups or many.
+// A list of job groups. A job can belong to no groups or many.
 // API name: groups
 func (r *PutJob) Groups(groups ...string) *PutJob {
-	r.req.Groups = groups
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range groups {
 
+		r.req.Groups = append(r.req.Groups, v)
+
+	}
 	return r
 }
 
-// ModelPlotConfig This advanced configuration option stores model information along with the
+// This advanced configuration option stores model information along with the
 // results. It provides a more detailed view into anomaly detection. If you
 // enable model plot it can add considerable overhead to the performance of the
 // system; it is not feasible for jobs with many entities. Model plot provides a
@@ -539,47 +589,64 @@ func (r *PutJob) Groups(groups ...string) *PutJob {
 // the model plot. Model plot config can be configured when the job is created
 // or updated later. It must be disabled if performance issues are experienced.
 // API name: model_plot_config
-func (r *PutJob) ModelPlotConfig(modelplotconfig *types.ModelPlotConfig) *PutJob {
+func (r *PutJob) ModelPlotConfig(modelplotconfig types.ModelPlotConfigVariant) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.ModelPlotConfig = modelplotconfig
+	r.req.ModelPlotConfig = modelplotconfig.ModelPlotConfigCaster()
 
 	return r
 }
 
-// ModelSnapshotRetentionDays Advanced configuration option, which affects the automatic removal of old
+// Advanced configuration option, which affects the automatic removal of old
 // model snapshots for this job. It specifies the maximum period of time (in
 // days) that snapshots are retained. This period is relative to the timestamp
 // of the most recent snapshot for this job. By default, snapshots ten days
 // older than the newest snapshot are deleted.
 // API name: model_snapshot_retention_days
 func (r *PutJob) ModelSnapshotRetentionDays(modelsnapshotretentiondays int64) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ModelSnapshotRetentionDays = &modelsnapshotretentiondays
 
 	return r
 }
 
-// RenormalizationWindowDays Advanced configuration option. The period over which adjustments to the score
+// Advanced configuration option. The period over which adjustments to the score
 // are applied, as new data is seen. The default value is the longer of 30 days
 // or 100 bucket spans.
 // API name: renormalization_window_days
 func (r *PutJob) RenormalizationWindowDays(renormalizationwindowdays int64) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RenormalizationWindowDays = &renormalizationwindowdays
 
 	return r
 }
 
-// ResultsIndexName A text string that affects the name of the machine learning results index. By
+// A text string that affects the name of the machine learning results index. By
 // default, the job generates an index named `.ml-anomalies-shared`.
 // API name: results_index_name
 func (r *PutJob) ResultsIndexName(indexname string) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.ResultsIndexName = &indexname
 
 	return r
 }
 
-// ResultsRetentionDays Advanced configuration option. The period of time (in days) that results are
+// Advanced configuration option. The period of time (in days) that results are
 // retained. Age is calculated relative to the timestamp of the latest bucket
 // result. If this property has a non-null value, once per day at 00:30 (server
 // time), results that are the specified number of days older than the latest
@@ -589,6 +656,10 @@ func (r *PutJob) ResultsIndexName(indexname string) *PutJob {
 // number of days as results. Annotations added by users are retained forever.
 // API name: results_retention_days
 func (r *PutJob) ResultsRetentionDays(resultsretentiondays int64) *PutJob {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ResultsRetentionDays = &resultsretentiondays
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -29,7 +29,7 @@ import (
 
 // DateDecayFunction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/_types/query_dsl/compound.ts#L209-L209
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/_types/query_dsl/compound.ts#L209-L209
 type DateDecayFunction struct {
 	DecayFunctionBaseDateMathDuration map[string]DecayPlacementDateMathDuration `json:"-"`
 	// MultiValueMode Determines how the distance is calculated when a field used for computing the
@@ -69,8 +69,18 @@ func (s DateDecayFunction) MarshalJSON() ([]byte, error) {
 // NewDateDecayFunction returns a DateDecayFunction.
 func NewDateDecayFunction() *DateDecayFunction {
 	r := &DateDecayFunction{
-		DecayFunctionBaseDateMathDuration: make(map[string]DecayPlacementDateMathDuration, 0),
+		DecayFunctionBaseDateMathDuration: make(map[string]DecayPlacementDateMathDuration),
 	}
 
 	return r
+}
+
+// true
+
+type DateDecayFunctionVariant interface {
+	DateDecayFunctionCaster() *DateDecayFunction
+}
+
+func (s *DateDecayFunction) DateDecayFunctionCaster() *DateDecayFunction {
+	return s
 }

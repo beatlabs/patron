@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
 // Command type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/cluster/reroute/types.ts#L22-L43
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/cluster/reroute/types.ts#L22-L43
 type Command struct {
 	// AllocateEmptyPrimary Allocate an empty primary shard to a node. Accepts the index and shard for
 	// index name and shard number, and node to allocate the shard to. Using this
@@ -65,4 +65,14 @@ func NewCommand() *Command {
 	r := &Command{}
 
 	return r
+}
+
+// true
+
+type CommandVariant interface {
+	CommandCaster() *Command
+}
+
+func (s *Command) CommandCaster() *Command {
+	return s
 }

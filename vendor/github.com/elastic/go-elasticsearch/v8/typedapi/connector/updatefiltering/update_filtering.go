@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Update the connector filtering.
 //
@@ -105,8 +105,6 @@ func New(tp elastictransport.Interface) *UpdateFiltering {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -374,23 +372,41 @@ func (r *UpdateFiltering) Pretty(pretty bool) *UpdateFiltering {
 }
 
 // API name: advanced_snippet
-func (r *UpdateFiltering) AdvancedSnippet(advancedsnippet *types.FilteringAdvancedSnippet) *UpdateFiltering {
+func (r *UpdateFiltering) AdvancedSnippet(advancedsnippet types.FilteringAdvancedSnippetVariant) *UpdateFiltering {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.AdvancedSnippet = advancedsnippet
+	r.req.AdvancedSnippet = advancedsnippet.FilteringAdvancedSnippetCaster()
 
 	return r
 }
 
 // API name: filtering
-func (r *UpdateFiltering) Filtering(filterings ...types.FilteringConfig) *UpdateFiltering {
-	r.req.Filtering = filterings
+func (r *UpdateFiltering) Filtering(filterings ...types.FilteringConfigVariant) *UpdateFiltering {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range filterings {
 
+		r.req.Filtering = append(r.req.Filtering, *v.FilteringConfigCaster())
+
+	}
 	return r
 }
 
 // API name: rules
-func (r *UpdateFiltering) Rules(rules ...types.FilteringRule) *UpdateFiltering {
-	r.req.Rules = rules
+func (r *UpdateFiltering) Rules(rules ...types.FilteringRuleVariant) *UpdateFiltering {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range rules {
 
+		r.req.Rules = append(r.req.Rules, *v.FilteringRuleCaster())
+
+	}
 	return r
 }

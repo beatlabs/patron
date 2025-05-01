@@ -16,9 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
-// Starts an existing, stopped rollup job.
+// Start rollup jobs.
+// If you try to start a job that does not exist, an exception occurs.
+// If you try to start a job that is already started, nothing happens.
 package startjob
 
 import (
@@ -76,7 +78,9 @@ func NewStartJobFunc(tp elastictransport.Interface) NewStartJob {
 	}
 }
 
-// Starts an existing, stopped rollup job.
+// Start rollup jobs.
+// If you try to start a job that does not exist, an exception occurs.
+// If you try to start a job that is already started, nothing happens.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/rollup-start-job.html
 func New(tp elastictransport.Interface) *StartJob {

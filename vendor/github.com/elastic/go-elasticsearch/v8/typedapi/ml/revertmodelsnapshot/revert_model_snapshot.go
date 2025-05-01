@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Revert to a snapshot.
 // The machine learning features react quickly to anomalous input, learning new
@@ -110,8 +110,6 @@ func New(tp elastictransport.Interface) *RevertModelSnapshot {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -399,10 +397,15 @@ func (r *RevertModelSnapshot) Pretty(pretty bool) *RevertModelSnapshot {
 	return r
 }
 
-// DeleteInterveningResults Refer to the description for the `delete_intervening_results` query
+// Refer to the description for the `delete_intervening_results` query
 // parameter.
 // API name: delete_intervening_results
 func (r *RevertModelSnapshot) DeleteInterveningResults(deleteinterveningresults bool) *RevertModelSnapshot {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.DeleteInterveningResults = &deleteinterveningresults
 
 	return r

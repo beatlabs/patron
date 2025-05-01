@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.17.0: DO NOT EDIT
+// Code generated from specification version 8.18.0: DO NOT EDIT
 
 package esapi
 
@@ -36,7 +36,7 @@ func newCreateFunc(t Transport) Create {
 		}
 
 		if transport, ok := t.(Instrumented); ok {
-			r.instrument = transport.InstrumentationEnabled()
+			r.Instrument = transport.InstrumentationEnabled()
 		}
 
 		return r.Do(r.ctx, t)
@@ -59,13 +59,14 @@ type CreateRequest struct {
 
 	Body io.Reader
 
-	Pipeline            string
-	Refresh             string
-	Routing             string
-	Timeout             time.Duration
-	Version             *int
-	VersionType         string
-	WaitForActiveShards string
+	IncludeSourceOnError *bool
+	Pipeline             string
+	Refresh              string
+	Routing              string
+	Timeout              time.Duration
+	Version              *int
+	VersionType          string
+	WaitForActiveShards  string
 
 	Pretty     bool
 	Human      bool
@@ -76,7 +77,7 @@ type CreateRequest struct {
 
 	ctx context.Context
 
-	instrument Instrumentation
+	Instrument Instrumentation
 }
 
 // Do executes the request and returns response or error.
@@ -88,7 +89,7 @@ func (r CreateRequest) Do(providedCtx context.Context, transport Transport) (*Re
 		ctx    context.Context
 	)
 
-	if instrument, ok := r.instrument.(Instrumentation); ok {
+	if instrument, ok := r.Instrument.(Instrumentation); ok {
 		ctx = instrument.Start(providedCtx, "create")
 		defer instrument.Close(ctx)
 	}
@@ -102,18 +103,22 @@ func (r CreateRequest) Do(providedCtx context.Context, transport Transport) (*Re
 	path.WriteString("http://")
 	path.WriteString("/")
 	path.WriteString(r.Index)
-	if instrument, ok := r.instrument.(Instrumentation); ok {
+	if instrument, ok := r.Instrument.(Instrumentation); ok {
 		instrument.RecordPathPart(ctx, "index", r.Index)
 	}
 	path.WriteString("/")
 	path.WriteString("_create")
 	path.WriteString("/")
 	path.WriteString(r.DocumentID)
-	if instrument, ok := r.instrument.(Instrumentation); ok {
+	if instrument, ok := r.Instrument.(Instrumentation); ok {
 		instrument.RecordPathPart(ctx, "id", r.DocumentID)
 	}
 
 	params = make(map[string]string)
+
+	if r.IncludeSourceOnError != nil {
+		params["include_source_on_error"] = strconv.FormatBool(*r.IncludeSourceOnError)
+	}
 
 	if r.Pipeline != "" {
 		params["pipeline"] = r.Pipeline
@@ -161,7 +166,7 @@ func (r CreateRequest) Do(providedCtx context.Context, transport Transport) (*Re
 
 	req, err := newRequest(method, path.String(), r.Body)
 	if err != nil {
-		if instrument, ok := r.instrument.(Instrumentation); ok {
+		if instrument, ok := r.Instrument.(Instrumentation); ok {
 			instrument.RecordError(ctx, err)
 		}
 		return nil, err
@@ -195,18 +200,18 @@ func (r CreateRequest) Do(providedCtx context.Context, transport Transport) (*Re
 		req = req.WithContext(ctx)
 	}
 
-	if instrument, ok := r.instrument.(Instrumentation); ok {
+	if instrument, ok := r.Instrument.(Instrumentation); ok {
 		instrument.BeforeRequest(req, "create")
 		if reader := instrument.RecordRequestBody(ctx, "create", r.Body); reader != nil {
 			req.Body = reader
 		}
 	}
 	res, err := transport.Perform(req)
-	if instrument, ok := r.instrument.(Instrumentation); ok {
+	if instrument, ok := r.Instrument.(Instrumentation); ok {
 		instrument.AfterRequest(req, "elasticsearch", "create")
 	}
 	if err != nil {
-		if instrument, ok := r.instrument.(Instrumentation); ok {
+		if instrument, ok := r.Instrument.(Instrumentation); ok {
 			instrument.RecordError(ctx, err)
 		}
 		return nil, err
@@ -225,6 +230,13 @@ func (r CreateRequest) Do(providedCtx context.Context, transport Transport) (*Re
 func (f Create) WithContext(v context.Context) func(*CreateRequest) {
 	return func(r *CreateRequest) {
 		r.ctx = v
+	}
+}
+
+// WithIncludeSourceOnError - true or false if to include the document source in the error message in case of parsing errors. defaults to true..
+func (f Create) WithIncludeSourceOnError(v bool) func(*CreateRequest) {
+	return func(r *CreateRequest) {
+		r.IncludeSourceOnError = &v
 	}
 }
 

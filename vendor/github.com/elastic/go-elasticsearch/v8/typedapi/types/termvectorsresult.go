@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TermVectorsResult type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/_global/mtermvectors/types.ts#L96-L104
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/_global/mtermvectors/types.ts#L96-L104
 type TermVectorsResult struct {
 	Error       *ErrorCause           `json:"error,omitempty"`
 	Found       *bool                 `json:"found,omitempty"`
@@ -122,8 +122,10 @@ func (s *TermVectorsResult) UnmarshalJSON(data []byte) error {
 // NewTermVectorsResult returns a TermVectorsResult.
 func NewTermVectorsResult() *TermVectorsResult {
 	r := &TermVectorsResult{
-		TermVectors: make(map[string]TermVector, 0),
+		TermVectors: make(map[string]TermVector),
 	}
 
 	return r
 }
+
+// false

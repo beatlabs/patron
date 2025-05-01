@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TextClassificationInferenceOptions type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/ml/_types/inference.ts#L173-L183
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/ml/_types/inference.ts#L202-L214
 type TextClassificationInferenceOptions struct {
 	// ClassificationLabels Classification labels to apply other than the stored labels. Must have the
 	// same deminsions as the default configured labels
@@ -43,6 +43,7 @@ type TextClassificationInferenceOptions struct {
 	ResultsField *string `json:"results_field,omitempty"`
 	// Tokenization The tokenization options
 	Tokenization *TokenizationConfigContainer `json:"tokenization,omitempty"`
+	Vocabulary   *Vocabulary                  `json:"vocabulary,omitempty"`
 }
 
 func (s *TextClassificationInferenceOptions) UnmarshalJSON(data []byte) error {
@@ -98,6 +99,11 @@ func (s *TextClassificationInferenceOptions) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Tokenization", err)
 			}
 
+		case "vocabulary":
+			if err := dec.Decode(&s.Vocabulary); err != nil {
+				return fmt.Errorf("%s | %w", "Vocabulary", err)
+			}
+
 		}
 	}
 	return nil
@@ -108,4 +114,14 @@ func NewTextClassificationInferenceOptions() *TextClassificationInferenceOptions
 	r := &TextClassificationInferenceOptions{}
 
 	return r
+}
+
+// true
+
+type TextClassificationInferenceOptionsVariant interface {
+	TextClassificationInferenceOptionsCaster() *TextClassificationInferenceOptions
+}
+
+func (s *TextClassificationInferenceOptions) TextClassificationInferenceOptionsCaster() *TextClassificationInferenceOptions {
+	return s
 }

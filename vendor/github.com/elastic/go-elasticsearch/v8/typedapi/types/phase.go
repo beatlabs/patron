@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -30,10 +30,10 @@ import (
 
 // Phase type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/ilm/_types/Phase.ts#L26-L32
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/ilm/_types/Phase.ts#L26-L29
 type Phase struct {
 	Actions *IlmActions `json:"actions,omitempty"`
-	MinAge  *Duration   `json:"min_age,omitempty"`
+	MinAge  Duration    `json:"min_age,omitempty"`
 }
 
 func (s *Phase) UnmarshalJSON(data []byte) error {
@@ -71,4 +71,14 @@ func NewPhase() *Phase {
 	r := &Phase{}
 
 	return r
+}
+
+// true
+
+type PhaseVariant interface {
+	PhaseCaster() *Phase
+}
+
+func (s *Phase) PhaseCaster() *Phase {
+	return s
 }

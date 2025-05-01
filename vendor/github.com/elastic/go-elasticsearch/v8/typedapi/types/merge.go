@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
 // Merge type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/indices/_types/IndexSettings.ts#L332-L334
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/indices/_types/IndexSettings.ts#L346-L348
 type Merge struct {
 	Scheduler *MergeScheduler `json:"scheduler,omitempty"`
 }
@@ -32,4 +32,14 @@ func NewMerge() *Merge {
 	r := &Merge{}
 
 	return r
+}
+
+// true
+
+type MergeVariant interface {
+	MergeCaster() *Merge
+}
+
+func (s *Merge) MergeCaster() *Merge {
+	return s
 }

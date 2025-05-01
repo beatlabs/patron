@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // LatLonGeoLocation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/_types/Geo.ts#L120-L129
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/_types/Geo.ts#L120-L129
 type LatLonGeoLocation struct {
 	// Lat Latitude
 	Lat Float64 `json:"lat"`
@@ -96,4 +96,14 @@ func NewLatLonGeoLocation() *LatLonGeoLocation {
 	r := &LatLonGeoLocation{}
 
 	return r
+}
+
+// true
+
+type LatLonGeoLocationVariant interface {
+	LatLonGeoLocationCaster() *LatLonGeoLocation
+}
+
+func (s *LatLonGeoLocation) LatLonGeoLocationCaster() *LatLonGeoLocation {
+	return s
 }

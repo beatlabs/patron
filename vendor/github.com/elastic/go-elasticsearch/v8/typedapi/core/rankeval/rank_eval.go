@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Evaluate ranked search results.
 //
@@ -96,8 +96,6 @@ func New(tp elastictransport.Interface) *RankEval {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -314,8 +312,9 @@ func (r *RankEval) Header(key, value string) *RankEval {
 	return r
 }
 
-// Index Comma-separated list of data streams, indices, and index aliases used to
-// limit the request. Wildcard (`*`) expressions are supported.
+// Index A  comma-separated list of data streams, indices, and index aliases used to
+// limit the request.
+// Wildcard (`*`) expressions are supported.
 // To target all data streams and indices in a cluster, omit this parameter or
 // use `_all` or `*`.
 // API Name: index
@@ -411,19 +410,30 @@ func (r *RankEval) Pretty(pretty bool) *RankEval {
 	return r
 }
 
-// Metric Definition of the evaluation metric to calculate.
+// Definition of the evaluation metric to calculate.
 // API name: metric
-func (r *RankEval) Metric(metric *types.RankEvalMetric) *RankEval {
+func (r *RankEval) Metric(metric types.RankEvalMetricVariant) *RankEval {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
-	r.req.Metric = metric
+	r.req.Metric = metric.RankEvalMetricCaster()
 
 	return r
 }
 
-// Requests A set of typical search requests, together with their provided ratings.
+// A set of typical search requests, together with their provided ratings.
 // API name: requests
-func (r *RankEval) Requests(requests ...types.RankEvalRequestItem) *RankEval {
-	r.req.Requests = requests
+func (r *RankEval) Requests(requests ...types.RankEvalRequestItemVariant) *RankEval {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range requests {
 
+		r.req.Requests = append(r.req.Requests, *v.RankEvalRequestItemCaster())
+
+	}
 	return r
 }

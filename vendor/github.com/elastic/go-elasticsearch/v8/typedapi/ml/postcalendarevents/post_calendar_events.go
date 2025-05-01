@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Add scheduled events to the calendar.
 package postcalendarevents
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *PostCalendarEvents {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -361,12 +359,19 @@ func (r *PostCalendarEvents) Pretty(pretty bool) *PostCalendarEvents {
 	return r
 }
 
-// Events A list of one of more scheduled events. The event’s start and end times can
+// A list of one of more scheduled events. The event’s start and end times can
 // be specified as integer milliseconds since the epoch or as a string in ISO
 // 8601 format.
 // API name: events
-func (r *PostCalendarEvents) Events(events ...types.CalendarEvent) *PostCalendarEvents {
-	r.req.Events = events
+func (r *PostCalendarEvents) Events(events ...types.CalendarEventVariant) *PostCalendarEvents {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	for _, v := range events {
 
+		r.req.Events = append(r.req.Events, *v.CalendarEventCaster())
+
+	}
 	return r
 }

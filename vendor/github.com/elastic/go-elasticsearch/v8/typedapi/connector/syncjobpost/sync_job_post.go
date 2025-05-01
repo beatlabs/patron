@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Create a connector sync job.
 //
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *SyncJobPost {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -344,9 +342,14 @@ func (r *SyncJobPost) Pretty(pretty bool) *SyncJobPost {
 	return r
 }
 
-// Id The id of the associated connector
+// The id of the associated connector
 // API name: id
 func (r *SyncJobPost) Id(id string) *SyncJobPost {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.Id = id
 
 	return r
@@ -354,14 +357,20 @@ func (r *SyncJobPost) Id(id string) *SyncJobPost {
 
 // API name: job_type
 func (r *SyncJobPost) JobType(jobtype syncjobtype.SyncJobType) *SyncJobPost {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.JobType = &jobtype
-
 	return r
 }
 
 // API name: trigger_method
 func (r *SyncJobPost) TriggerMethod(triggermethod syncjobtriggermethod.SyncJobTriggerMethod) *SyncJobPost {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TriggerMethod = &triggermethod
-
 	return r
 }

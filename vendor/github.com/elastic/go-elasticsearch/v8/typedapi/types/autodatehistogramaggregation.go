@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // AutoDateHistogramAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64/specification/_types/aggregations/bucket.ts#L72-L110
+// https://github.com/elastic/elasticsearch-specification/blob/f6a370d0fba975752c644fc730f7c45610e28f36/specification/_types/aggregations/bucket.ts#L72-L110
 type AutoDateHistogramAggregation struct {
 	// Buckets The target number of buckets.
 	Buckets *int `json:"buckets,omitempty"`
@@ -154,8 +154,18 @@ func (s *AutoDateHistogramAggregation) UnmarshalJSON(data []byte) error {
 // NewAutoDateHistogramAggregation returns a AutoDateHistogramAggregation.
 func NewAutoDateHistogramAggregation() *AutoDateHistogramAggregation {
 	r := &AutoDateHistogramAggregation{
-		Params: make(map[string]json.RawMessage, 0),
+		Params: make(map[string]json.RawMessage),
 	}
 
 	return r
+}
+
+// true
+
+type AutoDateHistogramAggregationVariant interface {
+	AutoDateHistogramAggregationCaster() *AutoDateHistogramAggregation
+}
+
+func (s *AutoDateHistogramAggregation) AutoDateHistogramAggregationCaster() *AutoDateHistogramAggregation {
+	return s
 }

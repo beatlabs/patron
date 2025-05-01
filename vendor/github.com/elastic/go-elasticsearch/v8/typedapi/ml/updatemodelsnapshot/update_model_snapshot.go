@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/2f823ff6fcaa7f3f0f9b990dc90512d8901e5d64
+// https://github.com/elastic/elasticsearch-specification/tree/f6a370d0fba975752c644fc730f7c45610e28f36
 
 // Update a snapshot.
 // Updates certain properties of a snapshot.
@@ -98,8 +98,6 @@ func New(tp elastictransport.Interface) *UpdateModelSnapshot {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -385,20 +383,29 @@ func (r *UpdateModelSnapshot) Pretty(pretty bool) *UpdateModelSnapshot {
 	return r
 }
 
-// Description A description of the model snapshot.
+// A description of the model snapshot.
 // API name: description
 func (r *UpdateModelSnapshot) Description(description string) *UpdateModelSnapshot {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Description = &description
 
 	return r
 }
 
-// Retain If `true`, this snapshot will not be deleted during automatic cleanup of
+// If `true`, this snapshot will not be deleted during automatic cleanup of
 // snapshots older than `model_snapshot_retention_days`. However, this
 // snapshot will be deleted when the job is deleted.
 // API name: retain
 func (r *UpdateModelSnapshot) Retain(retain bool) *UpdateModelSnapshot {
+	// Initialize the request if it is not already initialized
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
 	r.req.Retain = &retain
 
 	return r

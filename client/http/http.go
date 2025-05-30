@@ -56,7 +56,7 @@ func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
-		rsp.Body = decompress(hdr, rsp)
+		rsp.Body, err = decompress(hdr, rsp)
 	}
 
 	return rsp, err
@@ -86,16 +86,13 @@ func opName(method, scheme, host string) string {
 	return method + " " + scheme + "://" + host
 }
 
-func decompress(hdr string, rsp *http.Response) io.ReadCloser {
-	var reader io.ReadCloser
+func decompress(hdr string, rsp *http.Response) (io.ReadCloser, error) {
 	switch hdr {
 	case "gzip":
-		reader, _ = gzip.NewReader(rsp.Body)
+		return gzip.NewReader(rsp.Body)
 	case "deflate":
-		reader = flate.NewReader(rsp.Body)
+		return flate.NewReader(rsp.Body), nil
 	default:
-		reader = rsp.Body
+		return rsp.Body, nil
 	}
-
-	return reader
 }

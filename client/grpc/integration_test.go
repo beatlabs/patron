@@ -102,8 +102,7 @@ func TestSayHello(t *testing.T) {
 			assert.Equal(t, attribute.String("rpc.service", "examples.Greeter"), spans[0].Attributes()[0])
 			assert.Equal(t, attribute.String("rpc.method", "SayHello"), spans[0].Attributes()[1])
 			assert.Equal(t, attribute.String("rpc.system", "grpc"), spans[0].Attributes()[2])
-			assert.Equal(t, attribute.String("net.sock.peer.addr", "127.0.0.1"), spans[0].Attributes()[3])
-			// assert.Equal(t, attribute.Int64("net.sock.peer.port", 0), spans[0].Attributes()[4])
+			assert.Equal(t, attribute.String("server.address", "127.0.0.1"), spans[0].Attributes()[3])
 			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tt.wantCode)), spans[0].Attributes()[5])
 
 			// Metrics

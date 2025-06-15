@@ -12,3 +12,4 @@ test_framework: testify
 - Follow Go idioms for naming, error handling, and documentation.
 - Avoid global variables except for constants or configuration.
 - Document public functions and types with clear, concise comments.
+- Use structured logging with slog.

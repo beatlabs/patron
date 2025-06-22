@@ -79,3 +79,8 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+linters-settings:
+  revive:
+    rules:
+      - name: comment-on-exported
+        disabled: false

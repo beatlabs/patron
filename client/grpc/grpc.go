@@ -7,7 +7,6 @@ import (
 )
 
 // NewClient creates a client connection to the given target.
-// a tracing and metrics unary interceptor.
 func NewClient(target string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	if len(opts) == 0 {
 		opts = make([]grpc.DialOption, 0)

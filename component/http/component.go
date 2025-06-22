@@ -1,4 +1,4 @@
-// Package http provides a ready to use HTTP component.
+// Package http provides a ready-to-use HTTP component.
 package http
 
 import (

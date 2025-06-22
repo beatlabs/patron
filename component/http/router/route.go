@@ -1,3 +1,4 @@
+// Package router provides a router for HTTP components.
 package router
 
 import (

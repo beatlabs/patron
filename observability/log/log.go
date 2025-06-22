@@ -83,6 +83,7 @@ func Enabled(l slog.Level) bool {
 	return slog.Default().Handler().Enabled(context.Background(), l)
 }
 
+// ErrorAttr returns a slog attribute for an error.
 func ErrorAttr(err error) slog.Attr {
 	return slog.Any("error", err)
 }

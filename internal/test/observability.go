@@ -11,7 +11,9 @@ import (
 )
 
 type (
+	// ShutdownFunc is a function that shuts down the metrics provider.
 	ShutdownFunc       func()
+	// CollectMetricsFunc is a function that collects metrics.
 	CollectMetricsFunc func(expected int) *metricdata.ResourceMetrics
 )
 

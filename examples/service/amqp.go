@@ -1,3 +1,4 @@
+// Package main provides a service for AMQP.
 package main
 
 import (

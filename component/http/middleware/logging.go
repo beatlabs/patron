@@ -1,3 +1,4 @@
+// Package middleware provides HTTP middlewares.
 package middleware
 
 import (
@@ -14,6 +15,7 @@ const (
 	excluded                     // '(' or ')'
 )
 
+// StatusCodeLoggerHandler is a middleware that logs the status code of a request.
 type StatusCodeLoggerHandler struct {
 	codes []statusCode
 }
@@ -33,6 +35,7 @@ func (s StatusCodeLoggerHandler) shouldLog(statusCode int) bool {
 	return false
 }
 
+// NewStatusCodeLoggerHandler creates a new status code logger handler.
 func NewStatusCodeLoggerHandler(cfg string) (StatusCodeLoggerHandler, error) {
 	cfg = strings.TrimSpace(cfg)
 	if len(cfg) == 0 {

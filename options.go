@@ -5,6 +5,7 @@ import (
 	"log/slog"
 )
 
+// OptionFunc is a function that configures a Service.
 type OptionFunc func(svc *Service) error
 
 // WithSIGHUP adds a custom handler for handling WithSIGHUP.

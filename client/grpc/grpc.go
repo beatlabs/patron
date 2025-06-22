@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// DialContext creates a client connection to the given target with a context and
+// NewClient creates a client connection to the given target.
 // a tracing and metrics unary interceptor.
 func NewClient(target string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	if len(opts) == 0 {

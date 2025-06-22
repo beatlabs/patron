@@ -1,3 +1,4 @@
+// Package sqs provides a client for AWS SQS.
 package sqs
 
 import (

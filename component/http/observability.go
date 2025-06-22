@@ -9,6 +9,7 @@ import (
 	"github.com/beatlabs/patron/observability/log"
 )
 
+// ProfilingRoutes returns the profiling routes.
 func ProfilingRoutes(enableExpVar bool) []*Route {
 	var routes []*Route
 

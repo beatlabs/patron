@@ -1,3 +1,4 @@
+// Package main provides a client for the example service.
 package main
 
 import (
@@ -5,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -21,6 +23,7 @@ import (
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
+	"github.com/beatlabs/patron/observability/log"
 	"github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -125,7 +128,12 @@ func sendHTTPRequest(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer rsp.Body.Close()
+	defer func() {
+		err := rsp.Body.Close()
+		if err != nil {
+			slog.Error("failed to close response body", log.ErrorAttr(err))
+		}
+	}()
 
 	fmt.Printf("HTTP response received: %d\n", rsp.StatusCode)
 	return nil

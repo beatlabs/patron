@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// OptionFunction defines a option for a gRPC component.
 type OptionFunction func(*Component) error
 
 // WithServerOptions allows gRPC server options to be set.

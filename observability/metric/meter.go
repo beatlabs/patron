@@ -1,4 +1,5 @@
-package observability
+// Package metric provides observability over metrics.
+package metric
 
 import (
 	"context"

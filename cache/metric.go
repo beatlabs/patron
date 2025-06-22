@@ -46,6 +46,7 @@ func ObserveMiss(ctx context.Context, attrs ...attribute.KeyValue) {
 	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
 }
 
+// ObserveEviction records the eviction of a cache item.
 func ObserveEviction(ctx context.Context, attrs ...attribute.KeyValue) {
 	attrs = append(attrs, cacheEvictAttribute)
 	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))

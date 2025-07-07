@@ -1,4 +1,4 @@
-LINT_IMAGE = golangci/golangci-lint:v2.1.1-alpine
+LINT_IMAGE = golangci/golangci-lint:v2.2.1-alpine
 
 .PHONY: default
 default: test

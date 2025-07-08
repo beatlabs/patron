@@ -1,3 +1,4 @@
+// Package sns provides a client for AWS SNS.
 package sns
 
 import (

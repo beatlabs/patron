@@ -1,3 +1,4 @@
+// Package trace provides observability over tracing.
 package trace
 
 import (

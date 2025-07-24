@@ -61,7 +61,7 @@ func TestMiddlewareChain(t *testing.T) {
 		w.WriteHeader(http.StatusAccepted)
 	})
 
-	r, err := http.NewRequest(http.MethodPost, "/test", nil)
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/test", nil)
 	require.NoError(t, err)
 
 	t1 := tagMiddleware("t1\n")
@@ -99,7 +99,7 @@ func TestMiddlewares(t *testing.T) {
 		w.WriteHeader(http.StatusAccepted)
 	})
 
-	r, err := http.NewRequest(http.MethodPost, "/test", nil)
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/test", nil)
 	require.NoError(t, err)
 
 	loggingTracingMiddleware, err := NewLoggingTracing("/index", StatusCodeLoggerHandler{})
@@ -184,7 +184,7 @@ func TestSpanLogError(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	r, err := http.NewRequest(http.MethodPost, "/test", nil)
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/test", nil)
 	require.NoError(t, err)
 
 	type args struct {

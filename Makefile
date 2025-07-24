@@ -16,8 +16,8 @@ testint-nocache: fmtcheck
 	go test ./... -race -cover -tags=integration -timeout 30s -count=1
 
 .PHONY: ci
-ci: 
-	go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration 
+ci:
+	go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration -timeout 2m 
 
 .PHONY: fmt
 fmt:

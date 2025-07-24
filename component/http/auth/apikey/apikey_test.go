@@ -1,6 +1,7 @@
 package apikey
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"testing"
@@ -48,15 +49,15 @@ func TestNew(t *testing.T) {
 }
 
 func TestAuthenticator_Authenticate(t *testing.T) {
-	reqOk, err := http.NewRequest(http.MethodPost, "/test", nil)
+	reqOk, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/test", nil)
 	require.NoError(t, err)
 	reqOk.Header.Set("Authorization", "Apikey 123456")
-	reqMissingHeader, err := http.NewRequest(http.MethodPost, "/test", nil)
+	reqMissingHeader, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/test", nil)
 	require.NoError(t, err)
-	reqMissingKey, err := http.NewRequest(http.MethodPost, "/test", nil)
+	reqMissingKey, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/test", nil)
 	require.NoError(t, err)
 	reqMissingKey.Header.Set("Authorization", "Apikey")
-	reqInvalidAuthMethod, err := http.NewRequest(http.MethodPost, "/test", nil)
+	reqInvalidAuthMethod, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/test", nil)
 	require.NoError(t, err)
 	reqInvalidAuthMethod.Header.Set("Authorization", "Bearer 123456")
 

@@ -17,14 +17,17 @@ type Route struct {
 	middlewares []patronhttp.Func
 }
 
+// Path returns the path of the route.
 func (r Route) Path() string {
 	return r.path
 }
 
+// Handler returns the handler of the route.
 func (r Route) Handler() http.HandlerFunc {
 	return r.handler
 }
 
+// Middlewares returns the middlewares of the route.
 func (r Route) Middlewares() []patronhttp.Func {
 	return r.middlewares
 }

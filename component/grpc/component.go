@@ -22,6 +22,7 @@ type Component struct {
 	srv              *grpc.Server
 }
 
+// New creates a new gRPC component.
 func New(port int, options ...OptionFunction) (*Component, error) {
 	c := new(Component)
 	if port <= 0 || port > 65535 {

@@ -27,7 +27,7 @@ func BenchmarkIndicesCreate(b *testing.B) {
 		hdr := make(http.Header)
 		hdr.Set("X-Elastic-Product", "Elasticsearch")
 		return &http.Response{
-			StatusCode: 200,
+			StatusCode: http.StatusOK,
 			Header:     hdr,
 			Body:       io.NopCloser(bytes.NewReader([]byte(`{"acknowledged": true}`))),
 			Request:    req,

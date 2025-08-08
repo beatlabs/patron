@@ -62,7 +62,11 @@ func newMetricInstrumentation(version string) elastictransport.Instrumentation {
 
 func (o *otelMetricInstrumentation) Start(ctx context.Context, name string) context.Context {
 	ctx = o.delegate.Start(ctx, name)
-	st := requestStatePool.Get().(*requestState)
+	v := requestStatePool.Get()
+	st, ok := v.(*requestState)
+	if !ok || st == nil {
+		st = &requestState{}
+	}
 	st.reset()
 	st.startTime = time.Now()
 	st.endpoint = name

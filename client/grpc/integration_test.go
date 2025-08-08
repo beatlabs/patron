@@ -112,7 +112,8 @@ func TestSayHello(t *testing.T) {
 }
 
 func testServerAndClient(t *testing.T) (examples.GreeterClient, func(), error) {
-	lis, err := net.Listen("tcp", "localhost:0")
+	listenCfg := &net.ListenConfig{}
+	lis, err := listenCfg.Listen(context.Background(), "tcp", "localhost:0")
 	if err != nil {
 		return nil, nil, err
 	}

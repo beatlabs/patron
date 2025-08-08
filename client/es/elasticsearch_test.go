@@ -32,7 +32,8 @@ func TestNew(t *testing.T) {
 		_, err := w.Write([]byte(responseMsg))
 		assert.NoError(t, err)
 	}))
-	listener, err := net.Listen("tcp", ":9200") //nolint:gosec
+	listenCfg := &net.ListenConfig{}
+	listener, err := listenCfg.Listen(context.Background(), "tcp", ":9200") //nolint:gosec
 	if err != nil {
 		t.Fatal(err)
 	}

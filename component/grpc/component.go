@@ -60,7 +60,8 @@ func (c *Component) Server() *grpc.Server {
 
 // Run the gRPC service.
 func (c *Component) Run(ctx context.Context) error {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", c.port))
+	listenCfg := &net.ListenConfig{}
+	lis, err := listenCfg.Listen(ctx, "tcp", fmt.Sprintf(":%d", c.port))
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)
 	}

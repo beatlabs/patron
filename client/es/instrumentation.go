@@ -24,11 +24,15 @@ const (
 
 var (
 	errStatusCode     = errors.New("elasticsearch request failed")
+	histogramOnce     sync.Once
 	durationHistogram metric.Int64Histogram
 )
 
-func init() {
-	durationHistogram = patronmetric.Int64Histogram(packageName, metricName, metricDescription, "ms")
+func getDurationHistogram() metric.Int64Histogram {
+	histogramOnce.Do(func() {
+		durationHistogram = patronmetric.Int64Histogram(packageName, metricName, metricDescription, "ms")
+	})
+	return durationHistogram
 }
 
 // otelMetricInstrumentation wraps the upstream OpenTelemetry instrumentation to add metrics.
@@ -81,7 +85,7 @@ func (o *otelMetricInstrumentation) Close(ctx context.Context) {
 			attribute.String(endpointAttrKey, st.endpoint),
 			observability.StatusAttribute(st.finalErr()),
 		)
-		durationHistogram.Record(ctx, time.Since(st.startTime).Milliseconds(), metric.WithAttributeSet(attrSet))
+		getDurationHistogram().Record(ctx, time.Since(st.startTime).Milliseconds(), metric.WithAttributeSet(attrSet))
 		st.reset()
 		requestStatePool.Put(st)
 	}

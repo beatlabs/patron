@@ -41,7 +41,7 @@ func BenchmarkIndicesCreate(b *testing.B) {
 	}
 
 	ctx := context.Background()
-	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}`
+	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}` //nolint:goconst
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

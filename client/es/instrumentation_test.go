@@ -27,7 +27,8 @@ func TestInstrumentation_SuccessEmitsMetric(t *testing.T) {
 	// Close should record a histogram sample
 	instr.Close(ctx)
 
-	rm := collect(1)
+	rm := collect(1) // Expect 1 metric
+
 	// Verify the metric exists
 	found := false
 	for _, sm := range rm.ScopeMetrics {
@@ -58,7 +59,7 @@ func TestInstrumentation_FailureEmitsMetric(t *testing.T) {
 	// Close should record a histogram sample even on error
 	instr.Close(ctx)
 
-	rm := collect(1)
+	rm := collect(1) // Expect 1 metric  // Don't expect any metrics initially
 	// Verify the metric exists
 	found := false
 	for _, sm := range rm.ScopeMetrics {

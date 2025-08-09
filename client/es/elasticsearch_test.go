@@ -118,7 +118,7 @@ func TestNew_FailureMetrics(t *testing.T) {
 	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
 	// Metrics: ensure our ES histogram is emitted even on failure
-	rm := collectMetrics(1)
+	rm := collectMetrics(1) // Expect 1 metric
 	found := false
 	for _, sm := range rm.ScopeMetrics {
 		for _, m := range sm.Metrics {

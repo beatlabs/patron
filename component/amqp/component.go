@@ -99,7 +99,8 @@ func New(url, queue string, proc ProcessorFunc, oo ...OptionFunc) (*Component, e
 			Heartbeat: defaultHeartbeat,
 			Locale:    defaultLocale,
 			Dial: func(network, addr string) (net.Conn, error) {
-				return net.DialTimeout(network, addr, defaultConnectionTimeout)
+				d := &net.Dialer{Timeout: defaultConnectionTimeout}
+				return d.DialContext(context.Background(), network, addr)
 			},
 		},
 		statsCfg: statsConfig{

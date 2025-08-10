@@ -116,7 +116,8 @@ func TestNew(t *testing.T) {
 }
 
 func TestComponent_ListenAndServe_DefaultRoutes_Shutdown(t *testing.T) {
-	listener, err := net.Listen("tcp", ":0") //nolint:gosec
+	listenCfg := &net.ListenConfig{}
+	listener, err := listenCfg.Listen(context.Background(), "tcp", ":0") //nolint:gosec
 	require.NoError(t, err)
 	port, ok := listener.Addr().(*net.TCPAddr)
 	assert.True(t, ok)

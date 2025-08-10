@@ -22,7 +22,7 @@ func TestNew(t *testing.T) {
 
 	ctx := context.Background()
 
-	shutdownProvider, _ := test.SetupMetrics(ctx, t)
+	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()
 
 	responseMsg := `[{"acknowledged": true, "shards_acknowledged": true, "index": "test"}]`
@@ -32,7 +32,8 @@ func TestNew(t *testing.T) {
 		_, err := w.Write([]byte(responseMsg))
 		assert.NoError(t, err)
 	}))
-	listener, err := net.Listen("tcp", ":9200") //nolint:gosec
+	listenCfg := &net.ListenConfig{}
+	listener, err := listenCfg.Listen(context.Background(), "tcp", ":9200") //nolint:gosec
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +52,7 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, client)
 
-	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}`
+	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}` //nolint: goconst
 
 	rsp, err := client.Indices.Create(
 		indexName,
@@ -64,4 +65,67 @@ func TestNew(t *testing.T) {
 	// Traces
 	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 	assert.Len(t, exp.GetSpans(), 1)
+
+	// Metrics: ensure our ES histogram is emitted
+	rm := collectMetrics(1)
+	found := false
+	for _, sm := range rm.ScopeMetrics {
+		for _, m := range sm.Metrics {
+			if m.Name == "es.request.duration" {
+				found = true
+			}
+		}
+	}
+	assert.True(t, found, "expected es.request.duration metric to be recorded")
+}
+
+func TestNew_FailureMetrics(t *testing.T) {
+	exp := tracetest.NewInMemoryExporter()
+	tracePublisher := trace.Setup("test", nil, exp)
+
+	ctx := context.Background()
+
+	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
+	defer shutdownProvider()
+
+	// ES test server returning 500
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Add("X-Elastic-Product", "Elasticsearch")
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{"error": true}`))
+	}))
+	defer ts.Close()
+
+	cfg := elasticsearch.Config{
+		Addresses: []string{ts.URL},
+	}
+
+	client, err := New(cfg, "1.0.0")
+	require.NoError(t, err)
+
+	// Make a typed API request (uses instrumentation Start/Close) that will return 500
+	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}`
+	rsp, err := client.Indices.Create(
+		"failed_index",
+		client.Indices.Create.WithBody(strings.NewReader(queryBody)),
+		client.Indices.Create.WithContext(ctx),
+	)
+	require.NoError(t, err)
+	assert.NotNil(t, rsp)
+	_ = rsp.Body.Close()
+
+	// Traces
+	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
+
+	// Metrics: ensure our ES histogram is emitted even on failure
+	rm := collectMetrics(1) // Expect 1 metric
+	found := false
+	for _, sm := range rm.ScopeMetrics {
+		for _, m := range sm.Metrics {
+			if m.Name == "es.request.duration" {
+				found = true
+			}
+		}
+	}
+	assert.True(t, found, "expected es.request.duration metric to be recorded on failure")
 }

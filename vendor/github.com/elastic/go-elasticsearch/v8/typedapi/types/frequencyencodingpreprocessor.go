@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // FrequencyEncodingPreprocessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/ml/put_trained_model/types.ts#L38-L42
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/put_trained_model/types.ts#L38-L42
 type FrequencyEncodingPreprocessor struct {
 	FeatureName  string             `json:"feature_name"`
 	Field        string             `json:"field"`
@@ -93,7 +93,7 @@ func (s *FrequencyEncodingPreprocessor) UnmarshalJSON(data []byte) error {
 // NewFrequencyEncodingPreprocessor returns a FrequencyEncodingPreprocessor.
 func NewFrequencyEncodingPreprocessor() *FrequencyEncodingPreprocessor {
 	r := &FrequencyEncodingPreprocessor{
-		FrequencyMap: make(map[string]Float64, 0),
+		FrequencyMap: make(map[string]Float64),
 	}
 
 	return r

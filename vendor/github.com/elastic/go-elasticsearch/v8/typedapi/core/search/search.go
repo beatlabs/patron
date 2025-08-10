@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Run a search.
 //
@@ -155,8 +155,6 @@ func New(tp elastictransport.Interface) *Search {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -787,6 +785,9 @@ func (r *Search) Pretty(pretty bool) *Search {
 // Aggregations Defines the aggregations that are run as part of the search request.
 // API name: aggregations
 func (r *Search) Aggregations(aggregations map[string]types.Aggregations) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Aggregations = aggregations
 
@@ -796,6 +797,9 @@ func (r *Search) Aggregations(aggregations map[string]types.Aggregations) *Searc
 // Collapse Collapses search results the values of the specified field.
 // API name: collapse
 func (r *Search) Collapse(collapse *types.FieldCollapse) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Collapse = collapse
 
@@ -807,6 +811,9 @@ func (r *Search) Collapse(collapse *types.FieldCollapse) *Search {
 // `hits.fields` property of the response.
 // API name: docvalue_fields
 func (r *Search) DocvalueFields(docvaluefields ...types.FieldAndFormat) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.DocvalueFields = docvaluefields
 
 	return r
@@ -816,6 +823,9 @@ func (r *Search) DocvalueFields(docvaluefields ...types.FieldAndFormat) *Search 
 // as part of a hit.
 // API name: explain
 func (r *Search) Explain(explain bool) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Explain = &explain
 
 	return r
@@ -824,6 +834,9 @@ func (r *Search) Explain(explain bool) *Search {
 // Ext Configuration of search extensions defined by Elasticsearch plugins.
 // API name: ext
 func (r *Search) Ext(ext map[string]json.RawMessage) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Ext = ext
 
@@ -835,6 +848,9 @@ func (r *Search) Ext(ext map[string]json.RawMessage) *Search {
 // `hits.fields` property of the response.
 // API name: fields
 func (r *Search) Fields(fields ...types.FieldAndFormat) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Fields = fields
 
 	return r
@@ -846,6 +862,9 @@ func (r *Search) Fields(fields ...types.FieldAndFormat) *Search {
 // To page through more hits, use the `search_after` parameter.
 // API name: from
 func (r *Search) From(from int) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.From = &from
 
 	return r
@@ -855,6 +874,9 @@ func (r *Search) From(from int) *Search {
 // or more fields in your search results.
 // API name: highlight
 func (r *Search) Highlight(highlight *types.Highlight) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Highlight = highlight
 
@@ -867,6 +889,9 @@ func (r *Search) Highlight(highlight *types.Highlight) *Search {
 // A boost value between `0` and `1.0` decreases the score.
 // API name: indices_boost
 func (r *Search) IndicesBoost(indicesboosts ...map[string]types.Float64) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.IndicesBoost = indicesboosts
 
 	return r
@@ -875,15 +900,22 @@ func (r *Search) IndicesBoost(indicesboosts ...map[string]types.Float64) *Search
 // Knn The approximate kNN search to run.
 // API name: knn
 func (r *Search) Knn(knns ...types.KnnSearch) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Knn = knns
 
 	return r
 }
 
 // MinScore The minimum `_score` for matching documents.
-// Documents with a lower `_score` are not included in the search results.
+// Documents with a lower `_score` are not included in search results and
+// results collected by aggregations.
 // API name: min_score
 func (r *Search) MinScore(minscore types.Float64) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.MinScore = &minscore
 
@@ -894,6 +926,9 @@ func (r *Search) MinScore(minscore types.Float64) *Search {
 // If you provide a PIT, you cannot specify an `<index>` in the request path.
 // API name: pit
 func (r *Search) Pit(pit *types.PointInTimeReference) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Pit = pit
 
@@ -905,6 +940,9 @@ func (r *Search) Pit(pit *types.PointInTimeReference) *Search {
 // A post filter has no impact on the aggregation results.
 // API name: post_filter
 func (r *Search) PostFilter(postfilter *types.Query) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.PostFilter = postfilter
 
@@ -917,6 +955,9 @@ func (r *Search) PostFilter(postfilter *types.Query) *Search {
 // execution.
 // API name: profile
 func (r *Search) Profile(profile bool) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Profile = &profile
 
 	return r
@@ -925,6 +966,9 @@ func (r *Search) Profile(profile bool) *Search {
 // Query The search definition using the Query DSL.
 // API name: query
 func (r *Search) Query(query *types.Query) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -934,6 +978,9 @@ func (r *Search) Query(query *types.Query) *Search {
 // Rank The Reciprocal Rank Fusion (RRF) to use.
 // API name: rank
 func (r *Search) Rank(rank *types.RankContainer) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Rank = rank
 
@@ -944,6 +991,9 @@ func (r *Search) Rank(rank *types.RankContainer) *Search {
 // - 500) documents returned by the `query` and `post_filter` phases.
 // API name: rescore
 func (r *Search) Rescore(rescores ...types.Rescore) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Rescore = rescores
 
 	return r
@@ -955,6 +1005,9 @@ func (r *Search) Rescore(rescores ...types.Rescore) *Search {
 // documents such as `query` and `knn`.
 // API name: retriever
 func (r *Search) Retriever(retriever *types.RetrieverContainer) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Retriever = retriever
 
@@ -965,6 +1018,9 @@ func (r *Search) Retriever(retriever *types.RetrieverContainer) *Search {
 // These fields take precedence over mapped fields with the same name.
 // API name: runtime_mappings
 func (r *Search) RuntimeMappings(runtimefields types.RuntimeFields) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RuntimeMappings = runtimefields
 
 	return r
@@ -973,6 +1029,9 @@ func (r *Search) RuntimeMappings(runtimefields types.RuntimeFields) *Search {
 // ScriptFields Retrieve a script evaluation (based on different fields) for each hit.
 // API name: script_fields
 func (r *Search) ScriptFields(scriptfields map[string]types.ScriptField) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ScriptFields = scriptfields
 
@@ -983,6 +1042,9 @@ func (r *Search) ScriptFields(scriptfields map[string]types.ScriptField) *Search
 // previous page.
 // API name: search_after
 func (r *Search) SearchAfter(sortresults ...types.FieldValue) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.SearchAfter = sortresults
 
 	return r
@@ -992,6 +1054,9 @@ func (r *Search) SearchAfter(sortresults ...types.FieldValue) *Search {
 // modification of each hit.
 // API name: seq_no_primary_term
 func (r *Search) SeqNoPrimaryTerm(seqnoprimaryterm bool) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.SeqNoPrimaryTerm = &seqnoprimaryterm
 
 	return r
@@ -1003,6 +1068,9 @@ func (r *Search) SeqNoPrimaryTerm(seqnoprimaryterm bool) *Search {
 // To page through more hits, use the `search_after` property.
 // API name: size
 func (r *Search) Size(size int) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Size = &size
 
 	return r
@@ -1012,6 +1080,9 @@ func (r *Search) Size(size int) *Search {
 // independently.
 // API name: slice
 func (r *Search) Slice(slice *types.SlicedScroll) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Slice = slice
 
@@ -1021,6 +1092,9 @@ func (r *Search) Slice(slice *types.SlicedScroll) *Search {
 // Sort A comma-separated list of <field>:<direction> pairs.
 // API name: sort
 func (r *Search) Sort(sorts ...types.SortCombinations) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Sort = sorts
 
 	return r
@@ -1034,6 +1108,9 @@ func (r *Search) Sort(sorts ...types.SortCombinations) *Search {
 // Otherwise, it defaults to `true`.
 // API name: _source
 func (r *Search) Source_(sourceconfig types.SourceConfig) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Source_ = sourceconfig
 
 	return r
@@ -1044,6 +1121,9 @@ func (r *Search) Source_(sourceconfig types.SourceConfig) *Search {
 // You can retrieve these stats using the indices stats API.
 // API name: stats
 func (r *Search) Stats(stats ...string) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Stats = stats
 
 	return r
@@ -1056,6 +1136,9 @@ func (r *Search) Stats(stats ...string) *Search {
 // in the search response.
 // API name: stored_fields
 func (r *Search) StoredFields(fields ...string) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.StoredFields = fields
 
 	return r
@@ -1065,6 +1148,9 @@ func (r *Search) StoredFields(fields ...string) *Search {
 // text.
 // API name: suggest
 func (r *Search) Suggest(suggest *types.Suggester) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Suggest = suggest
 
@@ -1084,6 +1170,9 @@ func (r *Search) Suggest(suggest *types.Suggester) *Search {
 // If set to `0` (default), the query does not terminate early.
 // API name: terminate_after
 func (r *Search) TerminateAfter(terminateafter int64) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TerminateAfter = &terminateafter
 
@@ -1096,6 +1185,9 @@ func (r *Search) TerminateAfter(terminateafter int64) *Search {
 // Defaults to no timeout.
 // API name: timeout
 func (r *Search) Timeout(timeout string) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Timeout = &timeout
 
@@ -1106,6 +1198,9 @@ func (r *Search) Timeout(timeout string) *Search {
 // used for sorting.
 // API name: track_scores
 func (r *Search) TrackScores(trackscores bool) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TrackScores = &trackscores
 
 	return r
@@ -1118,6 +1213,9 @@ func (r *Search) TrackScores(trackscores bool) *Search {
 // the query.
 // API name: track_total_hits
 func (r *Search) TrackTotalHits(trackhits types.TrackHits) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TrackTotalHits = trackhits
 
 	return r
@@ -1126,6 +1224,9 @@ func (r *Search) TrackTotalHits(trackhits types.TrackHits) *Search {
 // Version If `true`, the request returns the document version as part of a hit.
 // API name: version
 func (r *Search) Version(version bool) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Version = &version
 
 	return r

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // EmailAction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/watcher/_types/Actions.ts#L252-L252
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/watcher/_types/Actions.ts#L252-L252
 type EmailAction struct {
 	Attachments map[string]EmailAttachmentContainer `json:"attachments,omitempty"`
 	Bcc         []string                            `json:"bcc,omitempty"`
@@ -187,7 +187,7 @@ func (s *EmailAction) UnmarshalJSON(data []byte) error {
 // NewEmailAction returns a EmailAction.
 func NewEmailAction() *EmailAction {
 	r := &EmailAction{
-		Attachments: make(map[string]EmailAttachmentContainer, 0),
+		Attachments: make(map[string]EmailAttachmentContainer),
 	}
 
 	return r

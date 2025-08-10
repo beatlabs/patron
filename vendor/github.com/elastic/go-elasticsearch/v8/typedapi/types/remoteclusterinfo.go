@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // RemoteClusterInfo type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/cluster/stats/types.ts#L608-L639
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cluster/stats/types.ts#L786-L817
 type RemoteClusterInfo struct {
 	// ClusterUuid The UUID of the remote cluster.
 	ClusterUuid string `json:"cluster_uuid"`
@@ -68,7 +68,7 @@ type RemoteClusterInfo struct {
 	// shards.
 	Status healthstatus.HealthStatus `json:"status"`
 	// TransportCompress Transport compression setting used for this remote cluster.
-	TransportCompress string `json:"transport_compress"`
+	TransportCompress string `json:"transport.compress"`
 	// Version The list of Elasticsearch versions used by the nodes on the remote cluster.
 	Version []string `json:"version"`
 }
@@ -260,7 +260,7 @@ func (s *RemoteClusterInfo) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Status", err)
 			}
 
-		case "transport_compress":
+		case "transport.compress":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
 				return fmt.Errorf("%s | %w", "TransportCompress", err)

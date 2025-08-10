@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Perform inference on the service.
 //
@@ -132,8 +132,6 @@ func New(tp elastictransport.Interface) *Inference {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -440,7 +438,37 @@ func (r *Inference) Pretty(pretty bool) *Inference {
 // single string as input.
 // API name: input
 func (r *Inference) Input(inputs ...string) *Inference {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Input = inputs
+
+	return r
+}
+
+// InputType Specifies the input data type for the text embedding model. The `input_type`
+// parameter only applies to Inference Endpoints with the `text_embedding` task
+// type. Possible values include:
+// * `SEARCH`
+// * `INGEST`
+// * `CLASSIFICATION`
+// * `CLUSTERING`
+// Not all services support all values. Unsupported values will trigger a
+// validation exception.
+// Accepted values depend on the configured inference service, refer to the
+// relevant service-specific documentation for more info.
+//
+// > info
+// > The `input_type` parameter specified on the root level of the request body
+// will take precedence over the `input_type` parameter specified in
+// `task_settings`.
+// API name: input_type
+func (r *Inference) InputType(inputtype string) *Inference {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.InputType = &inputtype
 
 	return r
 }
@@ -449,6 +477,9 @@ func (r *Inference) Input(inputs ...string) *Inference {
 // It is not required for other tasks.
 // API name: query
 func (r *Inference) Query(query string) *Inference {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = &query
 
@@ -460,6 +491,9 @@ func (r *Inference) Query(query string) *Inference {
 // task settings specified when initializing the service.
 // API name: task_settings
 func (r *Inference) TaskSettings(tasksettings json.RawMessage) *Inference {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TaskSettings = tasksettings
 
 	return r

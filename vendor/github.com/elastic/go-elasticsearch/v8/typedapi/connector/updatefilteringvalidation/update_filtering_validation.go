@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update the connector draft filtering validation.
 //
@@ -95,8 +95,6 @@ func New(tp elastictransport.Interface) *UpdateFilteringValidation {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -367,6 +365,9 @@ func (r *UpdateFilteringValidation) Pretty(pretty bool) *UpdateFilteringValidati
 
 // API name: validation
 func (r *UpdateFilteringValidation) Validation(validation *types.FilteringRulesValidation) *UpdateFilteringValidation {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Validation = *validation
 

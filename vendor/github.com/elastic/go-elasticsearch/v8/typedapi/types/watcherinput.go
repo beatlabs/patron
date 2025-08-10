@@ -16,28 +16,60 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // WatcherInput type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/watcher/_types/Input.ts#L87-L95
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/watcher/_types/Input.ts#L87-L95
 type WatcherInput struct {
-	Chain  *ChainInput                `json:"chain,omitempty"`
-	Http   *HttpInput                 `json:"http,omitempty"`
-	Search *SearchInput               `json:"search,omitempty"`
-	Simple map[string]json.RawMessage `json:"simple,omitempty"`
+	AdditionalWatcherInputProperty map[string]json.RawMessage `json:"-"`
+	Chain                          *ChainInput                `json:"chain,omitempty"`
+	Http                           *HttpInput                 `json:"http,omitempty"`
+	Search                         *SearchInput               `json:"search,omitempty"`
+	Simple                         map[string]json.RawMessage `json:"simple,omitempty"`
+}
+
+// MarhsalJSON overrides marshalling for types with additional properties
+func (s WatcherInput) MarshalJSON() ([]byte, error) {
+	type opt WatcherInput
+	// We transform the struct to a map without the embedded additional properties map
+	tmp := make(map[string]any, 0)
+
+	data, err := json.Marshal(opt(s))
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &tmp)
+	if err != nil {
+		return nil, err
+	}
+
+	// We inline the additional fields from the underlying map
+	for key, value := range s.AdditionalWatcherInputProperty {
+		tmp[fmt.Sprintf("%s", key)] = value
+	}
+	delete(tmp, "AdditionalWatcherInputProperty")
+
+	data, err = json.Marshal(tmp)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 // NewWatcherInput returns a WatcherInput.
 func NewWatcherInput() *WatcherInput {
 	r := &WatcherInput{
-		Simple: make(map[string]json.RawMessage, 0),
+		AdditionalWatcherInputProperty: make(map[string]json.RawMessage),
+		Simple:                         make(map[string]json.RawMessage),
 	}
 
 	return r

@@ -16,28 +16,33 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package inference
 
 import (
+	"encoding/json"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
 // Response holds the response body struct for the package inference
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/inference/inference/InferenceResponse.ts#L22-L25
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/inference/InferenceResponse.ts#L22-L25
 type Response struct {
-	Completion         []types.CompletionResult        `json:"completion,omitempty"`
-	Rerank             []types.RankedDocument          `json:"rerank,omitempty"`
-	SparseEmbedding    []types.SparseEmbeddingResult   `json:"sparse_embedding,omitempty"`
-	TextEmbedding      []types.TextEmbeddingResult     `json:"text_embedding,omitempty"`
-	TextEmbeddingBits  []types.TextEmbeddingByteResult `json:"text_embedding_bits,omitempty"`
-	TextEmbeddingBytes []types.TextEmbeddingByteResult `json:"text_embedding_bytes,omitempty"`
+	AdditionalInferenceResultProperty map[string]json.RawMessage      `json:"-"`
+	Completion                        []types.CompletionResult        `json:"completion,omitempty"`
+	Rerank                            []types.RankedDocument          `json:"rerank,omitempty"`
+	SparseEmbedding                   []types.SparseEmbeddingResult   `json:"sparse_embedding,omitempty"`
+	TextEmbedding                     []types.TextEmbeddingResult     `json:"text_embedding,omitempty"`
+	TextEmbeddingBits                 []types.TextEmbeddingByteResult `json:"text_embedding_bits,omitempty"`
+	TextEmbeddingBytes                []types.TextEmbeddingByteResult `json:"text_embedding_bytes,omitempty"`
 }
 
 // NewResponse returns a Response
 func NewResponse() *Response {
-	r := &Response{}
+	r := &Response{
+		AdditionalInferenceResultProperty: make(map[string]json.RawMessage, 0),
+	}
 	return r
 }

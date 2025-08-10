@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // RuleRetriever type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/Retriever.ts#L153-L162
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Retriever.ts#L159-L168
 type RuleRetriever struct {
 	// Filter Query to filter the documents that can match.
 	Filter []Query `json:"filter,omitempty"`
@@ -46,7 +46,7 @@ type RuleRetriever struct {
 	// RankWindowSize This value determines the size of the individual result set.
 	RankWindowSize *int `json:"rank_window_size,omitempty"`
 	// Retriever The retriever whose results rules should be applied to.
-	Retriever *RetrieverContainer `json:"retriever,omitempty"`
+	Retriever RetrieverContainer `json:"retriever"`
 	// RulesetIds The ruleset IDs containing the rules this retriever is evaluating against.
 	RulesetIds []string `json:"ruleset_ids"`
 }

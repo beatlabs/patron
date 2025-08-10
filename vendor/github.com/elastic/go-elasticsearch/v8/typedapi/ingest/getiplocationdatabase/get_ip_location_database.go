@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Get IP geolocation database configurations.
 package getiplocationdatabase
@@ -306,17 +306,6 @@ func (r *GetIpLocationDatabase) Header(key, value string) *GetIpLocationDatabase
 func (r *GetIpLocationDatabase) Id(id string) *GetIpLocationDatabase {
 	r.paramSet |= idMask
 	r.id = id
-
-	return r
-}
-
-// MasterTimeout The period to wait for a connection to the master node.
-// If no response is received before the timeout expires, the request fails and
-// returns an error.
-// A value of `-1` indicates that the request should never time out.
-// API name: master_timeout
-func (r *GetIpLocationDatabase) MasterTimeout(duration string) *GetIpLocationDatabase {
-	r.values.Set("master_timeout", duration)
 
 	return r
 }

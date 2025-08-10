@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // SpanMultiTermQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/query_dsl/span.ts#L67-L75
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/span.ts#L67-L75
 type SpanMultiTermQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -41,7 +41,7 @@ type SpanMultiTermQuery struct {
 	Boost *float32 `json:"boost,omitempty"`
 	// Match Should be a multi term query (one of `wildcard`, `fuzzy`, `prefix`, `range`,
 	// or `regexp` query).
-	Match      *Query  `json:"match,omitempty"`
+	Match      Query   `json:"match"`
 	QueryName_ *string `json:"_name,omitempty"`
 }
 

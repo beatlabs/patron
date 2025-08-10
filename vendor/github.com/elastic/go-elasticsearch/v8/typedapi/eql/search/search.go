@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Get EQL search results.
 // Returns search results for an Event Query Language (EQL) query.
@@ -97,8 +97,6 @@ func New(tp elastictransport.Interface) *Search {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -321,6 +319,8 @@ func (r *Search) _index(index string) *Search {
 	return r
 }
 
+// AllowNoIndices Whether to ignore if a wildcard indices expression resolves into no concrete
+// indices. (This includes `_all` string or when no indices have been specified)
 // API name: allow_no_indices
 func (r *Search) AllowNoIndices(allownoindices bool) *Search {
 	r.values.Set("allow_no_indices", strconv.FormatBool(allownoindices))
@@ -328,6 +328,8 @@ func (r *Search) AllowNoIndices(allownoindices bool) *Search {
 	return r
 }
 
+// ExpandWildcards Whether to expand wildcard expression to concrete indices that are open,
+// closed or both.
 // API name: expand_wildcards
 func (r *Search) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *Search {
 	tmp := []string{}
@@ -335,6 +337,15 @@ func (r *Search) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcar
 		tmp = append(tmp, item.String())
 	}
 	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
+
+	return r
+}
+
+// CcsMinimizeRoundtrips Indicates whether network round-trips should be minimized as part of
+// cross-cluster search requests execution
+// API name: ccs_minimize_roundtrips
+func (r *Search) CcsMinimizeRoundtrips(ccsminimizeroundtrips bool) *Search {
+	r.values.Set("ccs_minimize_roundtrips", strconv.FormatBool(ccsminimizeroundtrips))
 
 	return r
 }
@@ -398,6 +409,9 @@ func (r *Search) Pretty(pretty bool) *Search {
 // allow_partial_sequence_results
 // API name: allow_partial_search_results
 func (r *Search) AllowPartialSearchResults(allowpartialsearchresults bool) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.AllowPartialSearchResults = &allowpartialsearchresults
 
 	return r
@@ -411,6 +425,9 @@ func (r *Search) AllowPartialSearchResults(allowpartialsearchresults bool) *Sear
 // empty results.
 // API name: allow_partial_sequence_results
 func (r *Search) AllowPartialSequenceResults(allowpartialsequenceresults bool) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.AllowPartialSequenceResults = &allowpartialsequenceresults
 
 	return r
@@ -418,6 +435,9 @@ func (r *Search) AllowPartialSequenceResults(allowpartialsequenceresults bool) *
 
 // API name: case_sensitive
 func (r *Search) CaseSensitive(casesensitive bool) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.CaseSensitive = &casesensitive
 
 	return r
@@ -426,6 +446,9 @@ func (r *Search) CaseSensitive(casesensitive bool) *Search {
 // EventCategoryField Field containing the event classification, such as process, file, or network.
 // API name: event_category_field
 func (r *Search) EventCategoryField(field string) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.EventCategoryField = &field
 
 	return r
@@ -434,6 +457,9 @@ func (r *Search) EventCategoryField(field string) *Search {
 // FetchSize Maximum number of events to search at a time for sequence queries.
 // API name: fetch_size
 func (r *Search) FetchSize(fetchsize uint) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.FetchSize = &fetchsize
 
@@ -444,6 +470,9 @@ func (r *Search) FetchSize(fetchsize uint) *Search {
 // matching these patterns in the fields property of each hit.
 // API name: fields
 func (r *Search) Fields(fields ...types.FieldAndFormat) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Fields = fields
 
 	return r
@@ -453,6 +482,9 @@ func (r *Search) Fields(fields ...types.FieldAndFormat) *Search {
 // runs.
 // API name: filter
 func (r *Search) Filter(filters ...types.Query) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Filter = filters
 
 	return r
@@ -460,6 +492,9 @@ func (r *Search) Filter(filters ...types.Query) *Search {
 
 // API name: keep_alive
 func (r *Search) KeepAlive(duration types.Duration) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.KeepAlive = duration
 
 	return r
@@ -467,6 +502,9 @@ func (r *Search) KeepAlive(duration types.Duration) *Search {
 
 // API name: keep_on_completion
 func (r *Search) KeepOnCompletion(keeponcompletion bool) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.KeepOnCompletion = &keeponcompletion
 
 	return r
@@ -479,6 +517,9 @@ func (r *Search) KeepOnCompletion(keeponcompletion bool) *Search {
 // `max_samples_per_key` parameter. Pipes are not supported for sample queries.
 // API name: max_samples_per_key
 func (r *Search) MaxSamplesPerKey(maxsamplesperkey int) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxSamplesPerKey = &maxsamplesperkey
 
 	return r
@@ -487,6 +528,9 @@ func (r *Search) MaxSamplesPerKey(maxsamplesperkey int) *Search {
 // Query EQL query you wish to run.
 // API name: query
 func (r *Search) Query(query string) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -495,6 +539,9 @@ func (r *Search) Query(query string) *Search {
 
 // API name: result_position
 func (r *Search) ResultPosition(resultposition resultposition.ResultPosition) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ResultPosition = &resultposition
 
 	return r
@@ -502,6 +549,9 @@ func (r *Search) ResultPosition(resultposition resultposition.ResultPosition) *S
 
 // API name: runtime_mappings
 func (r *Search) RuntimeMappings(runtimefields types.RuntimeFields) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RuntimeMappings = runtimefields
 
 	return r
@@ -511,6 +561,9 @@ func (r *Search) RuntimeMappings(runtimefields types.RuntimeFields) *Search {
 // to 10
 // API name: size
 func (r *Search) Size(size uint) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Size = &size
 
@@ -520,6 +573,9 @@ func (r *Search) Size(size uint) *Search {
 // TiebreakerField Field used to sort hits with the same timestamp in ascending order
 // API name: tiebreaker_field
 func (r *Search) TiebreakerField(field string) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TiebreakerField = &field
 
 	return r
@@ -528,6 +584,9 @@ func (r *Search) TiebreakerField(field string) *Search {
 // TimestampField Field containing event timestamp. Default "@timestamp"
 // API name: timestamp_field
 func (r *Search) TimestampField(field string) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TimestampField = &field
 
 	return r
@@ -535,6 +594,9 @@ func (r *Search) TimestampField(field string) *Search {
 
 // API name: wait_for_completion_timeout
 func (r *Search) WaitForCompletionTimeout(duration types.Duration) *Search {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.WaitForCompletionTimeout = duration
 
 	return r

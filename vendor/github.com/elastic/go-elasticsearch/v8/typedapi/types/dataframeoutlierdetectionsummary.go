@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
 // DataframeOutlierDetectionSummary type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/ml/evaluate_data_frame/types.ts#L24-L42
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/evaluate_data_frame/types.ts#L24-L42
 type DataframeOutlierDetectionSummary struct {
 	// AucRoc The AUC ROC (area under the curve of the receiver operating characteristic)
 	// score and optionally the curve.
@@ -42,9 +42,9 @@ type DataframeOutlierDetectionSummary struct {
 // NewDataframeOutlierDetectionSummary returns a DataframeOutlierDetectionSummary.
 func NewDataframeOutlierDetectionSummary() *DataframeOutlierDetectionSummary {
 	r := &DataframeOutlierDetectionSummary{
-		ConfusionMatrix: make(map[string]ConfusionMatrixThreshold, 0),
-		Precision:       make(map[string]Float64, 0),
-		Recall:          make(map[string]Float64, 0),
+		ConfusionMatrix: make(map[string]ConfusionMatrixThreshold),
+		Precision:       make(map[string]Float64),
+		Recall:          make(map[string]Float64),
 	}
 
 	return r

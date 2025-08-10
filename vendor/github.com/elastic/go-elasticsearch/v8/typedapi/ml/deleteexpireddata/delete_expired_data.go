@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Delete expired ML data.
 //
@@ -107,8 +107,6 @@ func New(tp elastictransport.Interface) *DeleteExpiredData {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -387,6 +385,9 @@ func (r *DeleteExpiredData) Pretty(pretty bool) *DeleteExpiredData {
 // behavior is no throttling.
 // API name: requests_per_second
 func (r *DeleteExpiredData) RequestsPerSecond(requestspersecond float32) *DeleteExpiredData {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RequestsPerSecond = &requestspersecond
 
@@ -396,6 +397,9 @@ func (r *DeleteExpiredData) RequestsPerSecond(requestspersecond float32) *Delete
 // Timeout How long can the underlying delete processes run until they are canceled.
 // API name: timeout
 func (r *DeleteExpiredData) Timeout(duration types.Duration) *DeleteExpiredData {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Timeout = duration
 
 	return r

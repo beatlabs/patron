@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Authenticate SAML.
 //
@@ -131,8 +131,6 @@ func New(tp elastictransport.Interface) *SamlAuthenticate {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -390,6 +388,9 @@ func (r *SamlAuthenticate) Pretty(pretty bool) *SamlAuthenticate {
 // encoded XML document.
 // API name: content
 func (r *SamlAuthenticate) Content(content string) *SamlAuthenticate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Content = content
 
@@ -400,6 +401,9 @@ func (r *SamlAuthenticate) Content(content string) *SamlAuthenticate {
 // has for the current user.
 // API name: ids
 func (r *SamlAuthenticate) Ids(ids ...string) *SamlAuthenticate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Ids = ids
 
 	return r
@@ -409,6 +413,9 @@ func (r *SamlAuthenticate) Ids(ids ...string) *SamlAuthenticate {
 // cases where many SAML realms are defined.
 // API name: realm
 func (r *SamlAuthenticate) Realm(realm string) *SamlAuthenticate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Realm = &realm
 

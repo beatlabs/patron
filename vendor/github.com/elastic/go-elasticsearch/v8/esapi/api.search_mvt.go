@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.18.0: DO NOT EDIT
+// Code generated from specification version 8.19.0: DO NOT EDIT
 
 package esapi
 
@@ -66,6 +66,7 @@ type SearchMvtRequest struct {
 
 	ExactBounds    *bool
 	Extent         *int
+	GridAgg        string
 	GridPrecision  *int
 	GridType       string
 	Size           *int
@@ -154,6 +155,10 @@ func (r SearchMvtRequest) Do(providedCtx context.Context, transport Transport) (
 
 	if r.Extent != nil {
 		params["extent"] = strconv.FormatInt(int64(*r.Extent), 10)
+	}
+
+	if r.GridAgg != "" {
+		params["grid_agg"] = r.GridAgg
 	}
 
 	if r.GridPrecision != nil {
@@ -279,6 +284,13 @@ func (f SearchMvt) WithExactBounds(v bool) func(*SearchMvtRequest) {
 func (f SearchMvt) WithExtent(v int) func(*SearchMvtRequest) {
 	return func(r *SearchMvtRequest) {
 		r.Extent = &v
+	}
+}
+
+// WithGridAgg - aggregation used to create a grid for `field`..
+func (f SearchMvt) WithGridAgg(v string) func(*SearchMvtRequest) {
+	return func(r *SearchMvtRequest) {
+		r.GridAgg = v
 	}
 }
 

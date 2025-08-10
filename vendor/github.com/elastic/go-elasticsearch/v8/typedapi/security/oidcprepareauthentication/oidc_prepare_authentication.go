@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Prepare OpenID connect authentication.
 //
@@ -109,8 +109,6 @@ func New(tp elastictransport.Interface) *OidcPrepareAuthentication {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -370,6 +368,9 @@ func (r *OidcPrepareAuthentication) Pretty(pretty bool) *OidcPrepareAuthenticati
 // One of *realm* or *iss* is required.
 // API name: iss
 func (r *OidcPrepareAuthentication) Iss(iss string) *OidcPrepareAuthentication {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Iss = &iss
 
@@ -381,6 +382,9 @@ func (r *OidcPrepareAuthentication) Iss(iss string) *OidcPrepareAuthentication {
 // This parameter is not valid when *realm* is specified.
 // API name: login_hint
 func (r *OidcPrepareAuthentication) LoginHint(loginhint string) *OidcPrepareAuthentication {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.LoginHint = &loginhint
 
@@ -393,6 +397,9 @@ func (r *OidcPrepareAuthentication) LoginHint(loginhint string) *OidcPrepareAuth
 // generate one with sufficient entropy and return it in the response.
 // API name: nonce
 func (r *OidcPrepareAuthentication) Nonce(nonce string) *OidcPrepareAuthentication {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Nonce = &nonce
 
@@ -405,6 +412,9 @@ func (r *OidcPrepareAuthentication) Nonce(nonce string) *OidcPrepareAuthenticati
 // One of *realm* or *iss* is required.
 // API name: realm
 func (r *OidcPrepareAuthentication) Realm(realm string) *OidcPrepareAuthentication {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Realm = &realm
 
@@ -417,6 +427,9 @@ func (r *OidcPrepareAuthentication) Realm(realm string) *OidcPrepareAuthenticati
 // generate one with sufficient entropy and return it in the response.
 // API name: state
 func (r *OidcPrepareAuthentication) State(state string) *OidcPrepareAuthentication {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.State = &state
 

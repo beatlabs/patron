@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Render a search template.
 //
@@ -89,8 +89,6 @@ func New(tp elastictransport.Interface) *RenderSearchTemplate {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -344,6 +342,9 @@ func (r *RenderSearchTemplate) Pretty(pretty bool) *RenderSearchTemplate {
 
 // API name: file
 func (r *RenderSearchTemplate) File(file string) *RenderSearchTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.File = &file
 
@@ -357,6 +358,9 @@ func (r *RenderSearchTemplate) File(file string) *RenderSearchTemplate {
 // uses only `<template-id>`.
 // API name: id
 func (r *RenderSearchTemplate) Id(id string) *RenderSearchTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Id = &id
 
 	return r
@@ -367,6 +371,9 @@ func (r *RenderSearchTemplate) Id(id string) *RenderSearchTemplate {
 // The value is the variable value.
 // API name: params
 func (r *RenderSearchTemplate) Params(params map[string]json.RawMessage) *RenderSearchTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Params = params
 
@@ -379,6 +386,9 @@ func (r *RenderSearchTemplate) Params(params map[string]json.RawMessage) *Render
 // If no `id` or `<templated-id>` is specified, this parameter is required.
 // API name: source
 func (r *RenderSearchTemplate) Source(source string) *RenderSearchTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Source = &source
 

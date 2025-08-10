@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update field mappings.
 // Add new fields to an existing data stream or index.
@@ -169,8 +169,6 @@ func New(tp elastictransport.Interface) *PutMapping {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -406,7 +404,6 @@ func (r *PutMapping) AllowNoIndices(allownoindices bool) *PutMapping {
 // If the request can target data streams, this argument determines whether
 // wildcard expressions match hidden data streams.
 // Supports comma-separated values, such as `open,hidden`.
-// Valid values are: `all`, `open`, `closed`, `hidden`, `none`.
 // API name: expand_wildcards
 func (r *PutMapping) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *PutMapping {
 	tmp := []string{}
@@ -503,6 +500,9 @@ func (r *PutMapping) Pretty(pretty bool) *PutMapping {
 // DateDetection Controls whether dynamic date detection is enabled.
 // API name: date_detection
 func (r *PutMapping) DateDetection(datedetection bool) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.DateDetection = &datedetection
 
 	return r
@@ -511,6 +511,9 @@ func (r *PutMapping) DateDetection(datedetection bool) *PutMapping {
 // Dynamic Controls whether new fields are added dynamically.
 // API name: dynamic
 func (r *PutMapping) Dynamic(dynamic dynamicmapping.DynamicMapping) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Dynamic = &dynamic
 
 	return r
@@ -521,6 +524,9 @@ func (r *PutMapping) Dynamic(dynamic dynamicmapping.DynamicMapping) *PutMapping 
 // a new date field is added instead of string.
 // API name: dynamic_date_formats
 func (r *PutMapping) DynamicDateFormats(dynamicdateformats ...string) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.DynamicDateFormats = dynamicdateformats
 
 	return r
@@ -529,6 +535,9 @@ func (r *PutMapping) DynamicDateFormats(dynamicdateformats ...string) *PutMappin
 // DynamicTemplates Specify dynamic templates for the mapping.
 // API name: dynamic_templates
 func (r *PutMapping) DynamicTemplates(dynamictemplates ...map[string]types.DynamicTemplate) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.DynamicTemplates = dynamictemplates
 
 	return r
@@ -537,6 +546,9 @@ func (r *PutMapping) DynamicTemplates(dynamictemplates ...map[string]types.Dynam
 // FieldNames_ Control whether field names are enabled for the index.
 // API name: _field_names
 func (r *PutMapping) FieldNames_(fieldnames_ *types.FieldNamesField) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.FieldNames_ = fieldnames_
 
@@ -548,6 +560,9 @@ func (r *PutMapping) FieldNames_(fieldnames_ *types.FieldNamesField) *PutMapping
 // application-specific metadata.
 // API name: _meta
 func (r *PutMapping) Meta_(metadata types.Metadata) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Meta_ = metadata
 
 	return r
@@ -556,6 +571,9 @@ func (r *PutMapping) Meta_(metadata types.Metadata) *PutMapping {
 // NumericDetection Automatically map strings into numeric data types for all fields.
 // API name: numeric_detection
 func (r *PutMapping) NumericDetection(numericdetection bool) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.NumericDetection = &numericdetection
 
 	return r
@@ -568,6 +586,9 @@ func (r *PutMapping) NumericDetection(numericdetection bool) *PutMapping {
 // - Mapping parameters
 // API name: properties
 func (r *PutMapping) Properties(properties map[string]types.Property) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Properties = properties
 
@@ -577,6 +598,9 @@ func (r *PutMapping) Properties(properties map[string]types.Property) *PutMappin
 // Routing_ Enable making a routing value required on indexed documents.
 // API name: _routing
 func (r *PutMapping) Routing_(routing_ *types.RoutingField) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Routing_ = routing_
 
@@ -586,6 +610,9 @@ func (r *PutMapping) Routing_(routing_ *types.RoutingField) *PutMapping {
 // Runtime Mapping of runtime fields for the index.
 // API name: runtime
 func (r *PutMapping) Runtime(runtimefields types.RuntimeFields) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Runtime = runtimefields
 
 	return r
@@ -594,6 +621,9 @@ func (r *PutMapping) Runtime(runtimefields types.RuntimeFields) *PutMapping {
 // Source_ Control whether the _source field is enabled on the index.
 // API name: _source
 func (r *PutMapping) Source_(source_ *types.SourceField) *PutMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Source_ = source_
 

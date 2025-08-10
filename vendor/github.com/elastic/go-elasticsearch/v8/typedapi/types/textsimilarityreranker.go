@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,17 +31,17 @@ import (
 
 // TextSimilarityReranker type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/Retriever.ts#L140-L151
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Retriever.ts#L146-L157
 type TextSimilarityReranker struct {
 	// Field The document field to be used for text similarity comparisons. This field
 	// should contain the text that will be evaluated against the inference_text
-	Field *string `json:"field,omitempty"`
+	Field string `json:"field"`
 	// Filter Query to filter the documents that can match.
 	Filter []Query `json:"filter,omitempty"`
 	// InferenceId Unique identifier of the inference endpoint created using the inference API.
 	InferenceId *string `json:"inference_id,omitempty"`
 	// InferenceText The text snippet used as the basis for similarity comparison
-	InferenceText *string `json:"inference_text,omitempty"`
+	InferenceText string `json:"inference_text"`
 	// MinScore Minimum _score for matching documents. Documents with a lower _score are not
 	// included in the top documents.
 	MinScore *float32 `json:"min_score,omitempty"`
@@ -52,7 +52,7 @@ type TextSimilarityReranker struct {
 	RankWindowSize *int `json:"rank_window_size,omitempty"`
 	// Retriever The nested retriever which will produce the first-level results, that will
 	// later be used for reranking.
-	Retriever *RetrieverContainer `json:"retriever,omitempty"`
+	Retriever RetrieverContainer `json:"retriever"`
 }
 
 func (s *TextSimilarityReranker) UnmarshalJSON(data []byte) error {
@@ -80,7 +80,7 @@ func (s *TextSimilarityReranker) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.Field = &o
+			s.Field = o
 
 		case "filter":
 			rawMsg := json.RawMessage{}
@@ -120,7 +120,7 @@ func (s *TextSimilarityReranker) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.InferenceText = &o
+			s.InferenceText = o
 
 		case "min_score":
 			var tmp any

@@ -16,22 +16,25 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create a Hugging Face inference endpoint.
 //
 // Create an inference endpoint to perform an inference task with the
 // `hugging_face` service.
+// Supported tasks include: `text_embedding`, `completion`, and
+// `chat_completion`.
 //
-// You must first create an inference endpoint on the Hugging Face endpoint page
-// to get an endpoint URL.
-// Select the model you want to use on the new endpoint creation page (for
-// example `intfloat/e5-small-v2`), then select the sentence embeddings task
-// under the advanced configuration section.
-// Create the endpoint and copy the URL after the endpoint initialization has
-// been finished.
+// To configure the endpoint, first visit the Hugging Face Inference Endpoints
+// page and create a new endpoint.
+// Select a model that supports the task you intend to use.
 //
-// The following models are recommended for the Hugging Face service:
+// For Elastic's `text_embedding` task:
+// The selected model must support the `Sentence Embeddings` task. On the new
+// endpoint creation page, select the `Sentence Embeddings` task under the
+// `Advanced Configuration` section.
+// After the endpoint has initialized, copy the generated endpoint URL.
+// Recommended models for `text_embedding` task:
 //
 // * `all-MiniLM-L6-v2`
 // * `all-MiniLM-L12-v2`
@@ -40,6 +43,31 @@
 // * `e5-small-v2`
 // * `multilingual-e5-base`
 // * `multilingual-e5-small`
+//
+// For Elastic's `chat_completion` and `completion` tasks:
+// The selected model must support the `Text Generation` task and expose OpenAI
+// API. HuggingFace supports both serverless and dedicated endpoints for `Text
+// Generation`. When creating dedicated endpoint select the `Text Generation`
+// task.
+// After the endpoint is initialized (for dedicated) or ready (for serverless),
+// ensure it supports the OpenAI API and includes `/v1/chat/completions` part in
+// URL. Then, copy the full endpoint URL for use.
+// Recommended models for `chat_completion` and `completion` tasks:
+//
+// * `Mistral-7B-Instruct-v0.2`
+// * `QwQ-32B`
+// * `Phi-3-mini-128k-instruct`
+//
+// For Elastic's `rerank` task:
+// The selected model must support the `sentence-ranking` task and expose OpenAI
+// API.
+// HuggingFace supports only dedicated (not serverless) endpoints for `Rerank`
+// so far.
+// After the endpoint is initialized, copy the full endpoint URL for use.
+// Tested models for `rerank` task:
+//
+// * `bge-reranker-base`
+// * `jina-reranker-v1-turbo-en-GGUF`
 package puthuggingface
 
 import (
@@ -112,16 +140,19 @@ func NewPutHuggingFaceFunc(tp elastictransport.Interface) NewPutHuggingFace {
 //
 // Create an inference endpoint to perform an inference task with the
 // `hugging_face` service.
+// Supported tasks include: `text_embedding`, `completion`, and
+// `chat_completion`.
 //
-// You must first create an inference endpoint on the Hugging Face endpoint page
-// to get an endpoint URL.
-// Select the model you want to use on the new endpoint creation page (for
-// example `intfloat/e5-small-v2`), then select the sentence embeddings task
-// under the advanced configuration section.
-// Create the endpoint and copy the URL after the endpoint initialization has
-// been finished.
+// To configure the endpoint, first visit the Hugging Face Inference Endpoints
+// page and create a new endpoint.
+// Select a model that supports the task you intend to use.
 //
-// The following models are recommended for the Hugging Face service:
+// For Elastic's `text_embedding` task:
+// The selected model must support the `Sentence Embeddings` task. On the new
+// endpoint creation page, select the `Sentence Embeddings` task under the
+// `Advanced Configuration` section.
+// After the endpoint has initialized, copy the generated endpoint URL.
+// Recommended models for `text_embedding` task:
 //
 // * `all-MiniLM-L6-v2`
 // * `all-MiniLM-L12-v2`
@@ -131,6 +162,31 @@ func NewPutHuggingFaceFunc(tp elastictransport.Interface) NewPutHuggingFace {
 // * `multilingual-e5-base`
 // * `multilingual-e5-small`
 //
+// For Elastic's `chat_completion` and `completion` tasks:
+// The selected model must support the `Text Generation` task and expose OpenAI
+// API. HuggingFace supports both serverless and dedicated endpoints for `Text
+// Generation`. When creating dedicated endpoint select the `Text Generation`
+// task.
+// After the endpoint is initialized (for dedicated) or ready (for serverless),
+// ensure it supports the OpenAI API and includes `/v1/chat/completions` part in
+// URL. Then, copy the full endpoint URL for use.
+// Recommended models for `chat_completion` and `completion` tasks:
+//
+// * `Mistral-7B-Instruct-v0.2`
+// * `QwQ-32B`
+// * `Phi-3-mini-128k-instruct`
+//
+// For Elastic's `rerank` task:
+// The selected model must support the `sentence-ranking` task and expose OpenAI
+// API.
+// HuggingFace supports only dedicated (not serverless) endpoints for `Rerank`
+// so far.
+// After the endpoint is initialized, copy the full endpoint URL for use.
+// Tested models for `rerank` task:
+//
+// * `bge-reranker-base`
+// * `jina-reranker-v1-turbo-en-GGUF`
+//
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/infer-service-hugging-face.html
 func New(tp elastictransport.Interface) *PutHuggingFace {
 	r := &PutHuggingFace{
@@ -139,8 +195,6 @@ func New(tp elastictransport.Interface) *PutHuggingFace {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -376,6 +430,15 @@ func (r *PutHuggingFace) _huggingfaceinferenceid(huggingfaceinferenceid string) 
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutHuggingFace) Timeout(duration string) *PutHuggingFace {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -423,6 +486,9 @@ func (r *PutHuggingFace) Pretty(pretty bool) *PutHuggingFace {
 // ChunkingSettings The chunking configuration object.
 // API name: chunking_settings
 func (r *PutHuggingFace) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *PutHuggingFace {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -433,6 +499,9 @@ func (r *PutHuggingFace) ChunkingSettings(chunkingsettings *types.InferenceChunk
 // `hugging_face`.
 // API name: service
 func (r *PutHuggingFace) Service(service huggingfaceservicetype.HuggingFaceServiceType) *PutHuggingFace {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -442,8 +511,24 @@ func (r *PutHuggingFace) Service(service huggingfaceservicetype.HuggingFaceServi
 // the `hugging_face` service.
 // API name: service_settings
 func (r *PutHuggingFace) ServiceSettings(servicesettings *types.HuggingFaceServiceSettings) *PutHuggingFace {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
+
+	return r
+}
+
+// TaskSettings Settings to configure the inference task.
+// These settings are specific to the task type you specified.
+// API name: task_settings
+func (r *PutHuggingFace) TaskSettings(tasksettings *types.HuggingFaceTaskSettings) *PutHuggingFace {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.TaskSettings = tasksettings
 
 	return r
 }

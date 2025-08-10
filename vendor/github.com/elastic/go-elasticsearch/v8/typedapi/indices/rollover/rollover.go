@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Roll over to a new index.
 // TIP: It is recommended to use the index lifecycle rollover action to automate
@@ -202,8 +202,6 @@ func New(tp elastictransport.Interface) *Rollover {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -550,6 +548,9 @@ func (r *Rollover) Pretty(pretty bool) *Rollover {
 // Data streams do not support this parameter.
 // API name: aliases
 func (r *Rollover) Aliases(aliases map[string]types.Alias) *Rollover {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Aliases = aliases
 
@@ -567,6 +568,9 @@ func (r *Rollover) Aliases(aliases map[string]types.Alias) *Rollover {
 // conditions are satisfied.
 // API name: conditions
 func (r *Rollover) Conditions(conditions *types.RolloverConditions) *Rollover {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Conditions = conditions
 
@@ -578,6 +582,9 @@ func (r *Rollover) Conditions(conditions *types.RolloverConditions) *Rollover {
 // mapping paramaters.
 // API name: mappings
 func (r *Rollover) Mappings(mappings *types.TypeMapping) *Rollover {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Mappings = mappings
 
@@ -588,6 +595,9 @@ func (r *Rollover) Mappings(mappings *types.TypeMapping) *Rollover {
 // Data streams do not support this parameter.
 // API name: settings
 func (r *Rollover) Settings(settings map[string]json.RawMessage) *Rollover {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Settings = settings
 

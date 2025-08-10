@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Find roles with a query.
 //
@@ -99,8 +99,6 @@ func New(tp elastictransport.Interface) *QueryRole {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -361,6 +359,9 @@ func (r *QueryRole) Pretty(pretty bool) *QueryRole {
 // To page through more hits, use the `search_after` parameter.
 // API name: from
 func (r *QueryRole) From(from int) *QueryRole {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.From = &from
 
 	return r
@@ -377,6 +378,9 @@ func (r *QueryRole) From(from int) *QueryRole {
 // `applications.resources`.
 // API name: query
 func (r *QueryRole) Query(query *types.RoleQueryContainer) *QueryRole {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -386,6 +390,9 @@ func (r *QueryRole) Query(query *types.RoleQueryContainer) *QueryRole {
 // SearchAfter The search after definition.
 // API name: search_after
 func (r *QueryRole) SearchAfter(sortresults ...types.FieldValue) *QueryRole {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.SearchAfter = sortresults
 
 	return r
@@ -398,6 +405,9 @@ func (r *QueryRole) SearchAfter(sortresults ...types.FieldValue) *QueryRole {
 // To page through more hits, use the `search_after` parameter.
 // API name: size
 func (r *QueryRole) Size(size int) *QueryRole {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Size = &size
 
 	return r
@@ -409,6 +419,9 @@ func (r *QueryRole) Size(size int) *QueryRole {
 // order.
 // API name: sort
 func (r *QueryRole) Sort(sorts ...types.SortCombinations) *QueryRole {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Sort = sorts
 
 	return r

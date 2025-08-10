@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Run a search with a search template.
 package searchtemplate
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *SearchTemplate {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -350,7 +348,6 @@ func (r *SearchTemplate) CcsMinimizeRoundtrips(ccsminimizeroundtrips bool) *Sear
 // If the request can target data streams, this argument determines whether
 // wildcard expressions match hidden data streams.
 // Supports comma-separated values, such as `open,hidden`.
-// Valid values are: `all`, `open`, `closed`, `hidden`, `none`.
 // API name: expand_wildcards
 func (r *SearchTemplate) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *SearchTemplate {
 	tmp := []string{}
@@ -482,6 +479,9 @@ func (r *SearchTemplate) Pretty(pretty bool) *SearchTemplate {
 // the query parameter.
 // API name: explain
 func (r *SearchTemplate) Explain(explain bool) *SearchTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Explain = &explain
 
 	return r
@@ -491,6 +491,9 @@ func (r *SearchTemplate) Explain(explain bool) *SearchTemplate {
 // this parameter is required.
 // API name: id
 func (r *SearchTemplate) Id(id string) *SearchTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Id = &id
 
 	return r
@@ -501,6 +504,9 @@ func (r *SearchTemplate) Id(id string) *SearchTemplate {
 // The value is the variable value.
 // API name: params
 func (r *SearchTemplate) Params(params map[string]json.RawMessage) *SearchTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Params = params
 
@@ -510,6 +516,9 @@ func (r *SearchTemplate) Params(params map[string]json.RawMessage) *SearchTempla
 // Profile If `true`, the query execution is profiled.
 // API name: profile
 func (r *SearchTemplate) Profile(profile bool) *SearchTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Profile = &profile
 
 	return r
@@ -521,6 +530,9 @@ func (r *SearchTemplate) Profile(profile bool) *SearchTemplate {
 // parameter is required.
 // API name: source
 func (r *SearchTemplate) Source(source string) *SearchTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Source = &source
 

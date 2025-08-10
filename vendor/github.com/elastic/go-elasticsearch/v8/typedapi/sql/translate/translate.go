@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Translate SQL into Elasticsearch queries.
 // Translate an SQL search into a search API request containing Query DSL.
@@ -89,8 +89,6 @@ func New(tp elastictransport.Interface) *Translate {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -345,6 +343,9 @@ func (r *Translate) Pretty(pretty bool) *Translate {
 // FetchSize The maximum number of rows (or entries) to return in one response.
 // API name: fetch_size
 func (r *Translate) FetchSize(fetchsize int) *Translate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.FetchSize = &fetchsize
 
 	return r
@@ -353,6 +354,9 @@ func (r *Translate) FetchSize(fetchsize int) *Translate {
 // Filter The Elasticsearch query DSL for additional filtering.
 // API name: filter
 func (r *Translate) Filter(filter *types.Query) *Translate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Filter = filter
 
@@ -362,6 +366,9 @@ func (r *Translate) Filter(filter *types.Query) *Translate {
 // Query The SQL query to run.
 // API name: query
 func (r *Translate) Query(query string) *Translate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -371,6 +378,9 @@ func (r *Translate) Query(query string) *Translate {
 // TimeZone The ISO-8601 time zone ID for the search.
 // API name: time_zone
 func (r *Translate) TimeZone(timezone string) *Translate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TimeZone = &timezone
 
 	return r

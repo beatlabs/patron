@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update a watch.
 // When a watch is registered, a new document that represents the watch is added
@@ -129,8 +129,6 @@ func New(tp elastictransport.Interface) *PutWatch {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -435,6 +433,9 @@ func (r *PutWatch) Pretty(pretty bool) *PutWatch {
 // Actions The list of actions that will be run if the condition matches.
 // API name: actions
 func (r *PutWatch) Actions(actions map[string]types.WatcherAction) *PutWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Actions = actions
 
@@ -444,6 +445,9 @@ func (r *PutWatch) Actions(actions map[string]types.WatcherAction) *PutWatch {
 // Condition The condition that defines if the actions should be run.
 // API name: condition
 func (r *PutWatch) Condition(condition *types.WatcherCondition) *PutWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Condition = condition
 
@@ -453,6 +457,9 @@ func (r *PutWatch) Condition(condition *types.WatcherCondition) *PutWatch {
 // Input The input that defines the input that loads the data for the watch.
 // API name: input
 func (r *PutWatch) Input(input *types.WatcherInput) *PutWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Input = input
 
@@ -462,6 +469,9 @@ func (r *PutWatch) Input(input *types.WatcherInput) *PutWatch {
 // Metadata Metadata JSON that will be copied into the history entries.
 // API name: metadata
 func (r *PutWatch) Metadata(metadata types.Metadata) *PutWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Metadata = metadata
 
 	return r
@@ -475,6 +485,9 @@ func (r *PutWatch) Metadata(metadata types.Metadata) *PutWatch {
 // specified, Watcher uses the last parameter included in the request.
 // API name: throttle_period
 func (r *PutWatch) ThrottlePeriod(duration types.Duration) *PutWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ThrottlePeriod = duration
 
 	return r
@@ -485,6 +498,9 @@ func (r *PutWatch) ThrottlePeriod(duration types.Duration) *PutWatch {
 // the last parameter included in the request.
 // API name: throttle_period_in_millis
 func (r *PutWatch) ThrottlePeriodInMillis(durationvalueunitmillis int64) *PutWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ThrottlePeriodInMillis = &durationvalueunitmillis
 
 	return r
@@ -494,6 +510,9 @@ func (r *PutWatch) ThrottlePeriodInMillis(durationvalueunitmillis int64) *PutWat
 // actions.
 // API name: transform
 func (r *PutWatch) Transform(transform *types.TransformContainer) *PutWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Transform = transform
 
@@ -503,6 +522,9 @@ func (r *PutWatch) Transform(transform *types.TransformContainer) *PutWatch {
 // Trigger The trigger that defines when the watch should run.
 // API name: trigger
 func (r *PutWatch) Trigger(trigger *types.TriggerContainer) *PutWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Trigger = trigger
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update role mappings.
 //
@@ -168,8 +168,6 @@ func New(tp elastictransport.Interface) *PutRoleMapping {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -452,6 +450,9 @@ func (r *PutRoleMapping) Pretty(pretty bool) *PutRoleMapping {
 // performed.
 // API name: enabled
 func (r *PutRoleMapping) Enabled(enabled bool) *PutRoleMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Enabled = &enabled
 
 	return r
@@ -462,6 +463,9 @@ func (r *PutRoleMapping) Enabled(enabled bool) *PutRoleMapping {
 // usage.
 // API name: metadata
 func (r *PutRoleMapping) Metadata(metadata types.Metadata) *PutRoleMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Metadata = metadata
 
 	return r
@@ -472,6 +476,9 @@ func (r *PutRoleMapping) Metadata(metadata types.Metadata) *PutRoleMapping {
 // Exactly one of `roles` or `role_templates` must be specified.
 // API name: role_templates
 func (r *PutRoleMapping) RoleTemplates(roletemplates ...types.RoleTemplate) *PutRoleMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RoleTemplates = roletemplates
 
 	return r
@@ -482,6 +489,9 @@ func (r *PutRoleMapping) RoleTemplates(roletemplates ...types.RoleTemplate) *Put
 // Exactly one of `roles` or `role_templates` must be specified.
 // API name: roles
 func (r *PutRoleMapping) Roles(roles ...string) *PutRoleMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Roles = roles
 
 	return r
@@ -491,6 +501,9 @@ func (r *PutRoleMapping) Roles(roles ...string) *PutRoleMapping {
 // A rule is a logical condition that is expressed by using a JSON DSL.
 // API name: rules
 func (r *PutRoleMapping) Rules(rules *types.RoleMappingRule) *PutRoleMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Rules = rules
 
@@ -499,6 +512,9 @@ func (r *PutRoleMapping) Rules(rules *types.RoleMappingRule) *PutRoleMapping {
 
 // API name: run_as
 func (r *PutRoleMapping) RunAs(runas ...string) *PutRoleMapping {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RunAs = runas
 
 	return r

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Reindex legacy backing indices.
 //
@@ -94,8 +94,6 @@ func New(tp elastictransport.Interface) *MigrateReindex {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -350,6 +348,9 @@ func (r *MigrateReindex) Pretty(pretty bool) *MigrateReindex {
 // Mode Reindex mode. Currently only 'upgrade' is supported.
 // API name: mode
 func (r *MigrateReindex) Mode(mode modeenum.ModeEnum) *MigrateReindex {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Mode = mode
 
 	return r
@@ -358,6 +359,9 @@ func (r *MigrateReindex) Mode(mode modeenum.ModeEnum) *MigrateReindex {
 // Source The source index or data stream (only data streams are currently supported).
 // API name: source
 func (r *MigrateReindex) Source(source *types.SourceIndex) *MigrateReindex {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Source = *source
 

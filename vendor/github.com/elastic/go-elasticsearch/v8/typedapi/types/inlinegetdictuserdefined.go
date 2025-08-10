@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // InlineGetDictUserDefined type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/common.ts#L324-L337
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/common.ts#L326-L339
 type InlineGetDictUserDefined struct {
 	Fields                   map[string]json.RawMessage `json:"fields,omitempty"`
 	Found                    bool                       `json:"found"`
@@ -162,9 +162,9 @@ func (s InlineGetDictUserDefined) MarshalJSON() ([]byte, error) {
 // NewInlineGetDictUserDefined returns a InlineGetDictUserDefined.
 func NewInlineGetDictUserDefined() *InlineGetDictUserDefined {
 	r := &InlineGetDictUserDefined{
-		Fields:                   make(map[string]json.RawMessage, 0),
-		InlineGetDictUserDefined: make(map[string]json.RawMessage, 0),
-		Source_:                  make(map[string]json.RawMessage, 0),
+		Fields:                   make(map[string]json.RawMessage),
+		InlineGetDictUserDefined: make(map[string]json.RawMessage),
+		Source_:                  make(map[string]json.RawMessage),
 	}
 
 	return r

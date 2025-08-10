@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // TrainedModelAssignment type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/ml/_types/TrainedModel.ts#L472-L489
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/TrainedModel.ts#L472-L489
 type TrainedModelAssignment struct {
 	AdaptiveAllocations *AdaptiveAllocationsSettings `json:"adaptive_allocations,omitempty"`
 	// AssignmentState The overall assignment state.
@@ -126,7 +126,7 @@ func (s *TrainedModelAssignment) UnmarshalJSON(data []byte) error {
 // NewTrainedModelAssignment returns a TrainedModelAssignment.
 func NewTrainedModelAssignment() *TrainedModelAssignment {
 	r := &TrainedModelAssignment{
-		RoutingTable: make(map[string]TrainedModelAssignmentRoutingTable, 0),
+		RoutingTable: make(map[string]TrainedModelAssignmentRoutingTable),
 	}
 
 	return r

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Run a watch.
 // This API can be used to force execution of the watch outside of its
@@ -136,8 +136,6 @@ func New(tp elastictransport.Interface) *ExecuteWatch {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -426,6 +424,9 @@ func (r *ExecuteWatch) Pretty(pretty bool) *ExecuteWatch {
 // ActionModes Determines how to handle the watch actions as part of the watch execution.
 // API name: action_modes
 func (r *ExecuteWatch) ActionModes(actionmodes map[string]actionexecutionmode.ActionExecutionMode) *ExecuteWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ActionModes = actionmodes
 
@@ -436,6 +437,9 @@ func (r *ExecuteWatch) ActionModes(actionmodes map[string]actionexecutionmode.Ac
 // its own input.
 // API name: alternative_input
 func (r *ExecuteWatch) AlternativeInput(alternativeinput map[string]json.RawMessage) *ExecuteWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.AlternativeInput = alternativeinput
 
@@ -446,6 +450,9 @@ func (r *ExecuteWatch) AlternativeInput(alternativeinput map[string]json.RawMess
 // also be specified as an HTTP parameter.
 // API name: ignore_condition
 func (r *ExecuteWatch) IgnoreCondition(ignorecondition bool) *ExecuteWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.IgnoreCondition = &ignorecondition
 
 	return r
@@ -458,6 +465,9 @@ func (r *ExecuteWatch) IgnoreCondition(ignorecondition bool) *ExecuteWatch {
 // This can also be specified as an HTTP parameter.
 // API name: record_execution
 func (r *ExecuteWatch) RecordExecution(recordexecution bool) *ExecuteWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RecordExecution = &recordexecution
 
 	return r
@@ -465,6 +475,9 @@ func (r *ExecuteWatch) RecordExecution(recordexecution bool) *ExecuteWatch {
 
 // API name: simulated_actions
 func (r *ExecuteWatch) SimulatedActions(simulatedactions *types.SimulatedActions) *ExecuteWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.SimulatedActions = simulatedactions
 
@@ -475,6 +488,9 @@ func (r *ExecuteWatch) SimulatedActions(simulatedactions *types.SimulatedActions
 // during the watch execution.
 // API name: trigger_data
 func (r *ExecuteWatch) TriggerData(triggerdata *types.ScheduleTriggerEvent) *ExecuteWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TriggerData = triggerdata
 
@@ -486,6 +502,9 @@ func (r *ExecuteWatch) TriggerData(triggerdata *types.ScheduleTriggerEvent) *Exe
 // set.
 // API name: watch
 func (r *ExecuteWatch) Watch(watch *types.Watch) *ExecuteWatch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Watch = watch
 

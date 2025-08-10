@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update a legacy index template.
 // Index templates define settings, mappings, and aliases that can be applied
@@ -153,8 +153,6 @@ func New(tp elastictransport.Interface) *PutTemplate {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -447,6 +445,9 @@ func (r *PutTemplate) Pretty(pretty bool) *PutTemplate {
 // Aliases Aliases for the index.
 // API name: aliases
 func (r *PutTemplate) Aliases(aliases map[string]types.Alias) *PutTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Aliases = aliases
 
@@ -457,6 +458,9 @@ func (r *PutTemplate) Aliases(aliases map[string]types.Alias) *PutTemplate {
 // of indices during creation.
 // API name: index_patterns
 func (r *PutTemplate) IndexPatterns(indexpatterns ...string) *PutTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.IndexPatterns = indexpatterns
 
 	return r
@@ -465,6 +469,9 @@ func (r *PutTemplate) IndexPatterns(indexpatterns ...string) *PutTemplate {
 // Mappings Mapping for fields in the index.
 // API name: mappings
 func (r *PutTemplate) Mappings(mappings *types.TypeMapping) *PutTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Mappings = mappings
 
@@ -478,6 +485,9 @@ func (r *PutTemplate) Mappings(mappings *types.TypeMapping) *PutTemplate {
 // 'order' values are merged later, overriding templates with lower values.
 // API name: order
 func (r *PutTemplate) Order(order int) *PutTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Order = &order
 
 	return r
@@ -486,6 +496,9 @@ func (r *PutTemplate) Order(order int) *PutTemplate {
 // Settings Configuration options for the index.
 // API name: settings
 func (r *PutTemplate) Settings(settings *types.IndexSettings) *PutTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Settings = settings
 
@@ -497,6 +510,9 @@ func (r *PutTemplate) Settings(settings *types.IndexSettings) *PutTemplate {
 // To unset a version, replace the template without specifying one.
 // API name: version
 func (r *PutTemplate) Version(versionnumber int64) *PutTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Version = &versionnumber
 
 	return r

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // LifecycleExplainManaged type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/ilm/explain_lifecycle/types.ts#L27-L57
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ilm/explain_lifecycle/types.ts#L27-L58
 type LifecycleExplainManaged struct {
 	Action                  *string                         `json:"action,omitempty"`
 	ActionTime              DateTime                        `json:"action_time,omitempty"`
@@ -54,6 +54,7 @@ type LifecycleExplainManaged struct {
 	PreviousStepInfo        map[string]json.RawMessage      `json:"previous_step_info,omitempty"`
 	RepositoryName          *string                         `json:"repository_name,omitempty"`
 	ShrinkIndexName         *string                         `json:"shrink_index_name,omitempty"`
+	Skip                    bool                            `json:"skip"`
 	SnapshotName            *string                         `json:"snapshot_name,omitempty"`
 	Step                    *string                         `json:"step,omitempty"`
 	StepInfo                map[string]json.RawMessage      `json:"step_info,omitempty"`
@@ -219,6 +220,20 @@ func (s *LifecycleExplainManaged) UnmarshalJSON(data []byte) error {
 			}
 			s.ShrinkIndexName = &o
 
+		case "skip":
+			var tmp any
+			dec.Decode(&tmp)
+			switch v := tmp.(type) {
+			case string:
+				value, err := strconv.ParseBool(v)
+				if err != nil {
+					return fmt.Errorf("%s | %w", "Skip", err)
+				}
+				s.Skip = value
+			case bool:
+				s.Skip = v
+			}
+
 		case "snapshot_name":
 			var tmp json.RawMessage
 			if err := dec.Decode(&tmp); err != nil {
@@ -289,6 +304,7 @@ func (s LifecycleExplainManaged) MarshalJSON() ([]byte, error) {
 		PreviousStepInfo:        s.PreviousStepInfo,
 		RepositoryName:          s.RepositoryName,
 		ShrinkIndexName:         s.ShrinkIndexName,
+		Skip:                    s.Skip,
 		SnapshotName:            s.SnapshotName,
 		Step:                    s.Step,
 		StepInfo:                s.StepInfo,
@@ -305,8 +321,8 @@ func (s LifecycleExplainManaged) MarshalJSON() ([]byte, error) {
 // NewLifecycleExplainManaged returns a LifecycleExplainManaged.
 func NewLifecycleExplainManaged() *LifecycleExplainManaged {
 	r := &LifecycleExplainManaged{
-		PreviousStepInfo: make(map[string]json.RawMessage, 0),
-		StepInfo:         make(map[string]json.RawMessage, 0),
+		PreviousStepInfo: make(map[string]json.RawMessage),
+		StepInfo:         make(map[string]json.RawMessage),
 	}
 
 	return r

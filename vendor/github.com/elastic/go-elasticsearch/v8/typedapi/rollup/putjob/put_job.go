@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create a rollup job.
 //
@@ -123,8 +123,6 @@ func New(tp elastictransport.Interface) *PutJob {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -410,6 +408,9 @@ func (r *PutJob) Pretty(pretty bool) *PutJob {
 // cron pattern is defined just like a Watcher cron schedule.
 // API name: cron
 func (r *PutJob) Cron(cron string) *PutJob {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Cron = cron
 
@@ -428,6 +429,9 @@ func (r *PutJob) Cron(cron string) *PutJob {
 // not in what order they are needed.
 // API name: groups
 func (r *PutJob) Groups(groups *types.Groupings) *PutJob {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Groups = *groups
 
@@ -436,6 +440,9 @@ func (r *PutJob) Groups(groups *types.Groupings) *PutJob {
 
 // API name: headers
 func (r *PutJob) Headers(httpheaders types.HttpHeaders) *PutJob {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Headers = httpheaders
 
 	return r
@@ -446,6 +453,9 @@ func (r *PutJob) Headers(httpheaders types.HttpHeaders) *PutJob {
 // rollup the entire index or index-pattern.
 // API name: index_pattern
 func (r *PutJob) IndexPattern(indexpattern string) *PutJob {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.IndexPattern = indexpattern
 
@@ -460,6 +470,9 @@ func (r *PutJob) IndexPattern(indexpattern string) *PutJob {
 // collected.
 // API name: metrics
 func (r *PutJob) Metrics(metrics ...types.FieldMetric) *PutJob {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Metrics = metrics
 
 	return r
@@ -473,6 +486,9 @@ func (r *PutJob) Metrics(metrics ...types.FieldMetric) *PutJob {
 // indexer.
 // API name: page_size
 func (r *PutJob) PageSize(pagesize int) *PutJob {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.PageSize = pagesize
 
 	return r
@@ -483,6 +499,9 @@ func (r *PutJob) PageSize(pagesize int) *PutJob {
 // unrelated jobs.
 // API name: rollup_index
 func (r *PutJob) RollupIndex(indexname string) *PutJob {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RollupIndex = indexname
 
 	return r
@@ -491,6 +510,9 @@ func (r *PutJob) RollupIndex(indexname string) *PutJob {
 // Timeout Time to wait for the request to complete.
 // API name: timeout
 func (r *PutJob) Timeout(duration types.Duration) *PutJob {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Timeout = duration
 
 	return r

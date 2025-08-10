@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create a behavioral analytics collection event.
 package postbehavioralanalyticsevent
@@ -30,6 +30,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -96,8 +97,6 @@ func New(tp elastictransport.Interface) *PostBehavioralAnalyticsEvent {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -288,7 +287,8 @@ func (r PostBehavioralAnalyticsEvent) Do(providedCtx context.Context) (*Response
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode < 299 {
+	if res.StatusCode < 299 || slices.Contains([]int{202, 400, 404}, res.StatusCode) {
+
 		err = json.NewDecoder(res.Body).Decode(response)
 		if err != nil {
 			if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
@@ -298,42 +298,6 @@ func (r PostBehavioralAnalyticsEvent) Do(providedCtx context.Context) (*Response
 		}
 
 		return response, nil
-	}
-
-	if res.StatusCode == 404 {
-		data, err := io.ReadAll(res.Body)
-		if err != nil {
-			if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-				instrument.RecordError(ctx, err)
-			}
-			return nil, err
-		}
-
-		errorResponse := types.NewElasticsearchError()
-		err = json.NewDecoder(gobytes.NewReader(data)).Decode(&errorResponse)
-		if err != nil {
-			if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-				instrument.RecordError(ctx, err)
-			}
-			return nil, err
-		}
-
-		if errorResponse.Status == 0 {
-			err = json.NewDecoder(gobytes.NewReader(data)).Decode(&response)
-			if err != nil {
-				if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-					instrument.RecordError(ctx, err)
-				}
-				return nil, err
-			}
-
-			return response, nil
-		}
-
-		if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-			instrument.RecordError(ctx, errorResponse)
-		}
-		return nil, errorResponse
 	}
 
 	errorResponse := types.NewElasticsearchError()

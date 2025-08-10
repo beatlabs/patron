@@ -16,9 +16,9 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
-// Perform rereanking inference on the service
+// Perform reranking inference on the service
 package rerank
 
 import (
@@ -81,7 +81,7 @@ func NewRerankFunc(tp elastictransport.Interface) NewRerank {
 	}
 }
 
-// Perform rereanking inference on the service
+// Perform reranking inference on the service
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/post-inference-api.html
 func New(tp elastictransport.Interface) *Rerank {
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *Rerank {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -375,6 +373,9 @@ func (r *Rerank) Pretty(pretty bool) *Rerank {
 // single string as input.
 // API name: input
 func (r *Rerank) Input(inputs ...string) *Rerank {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Input = inputs
 
 	return r
@@ -383,6 +384,9 @@ func (r *Rerank) Input(inputs ...string) *Rerank {
 // Query Query input.
 // API name: query
 func (r *Rerank) Query(query string) *Rerank {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -394,6 +398,9 @@ func (r *Rerank) Query(query string) *Rerank {
 // task settings specified when initializing the service.
 // API name: task_settings
 func (r *Rerank) TaskSettings(tasksettings json.RawMessage) *Rerank {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TaskSettings = tasksettings
 
 	return r

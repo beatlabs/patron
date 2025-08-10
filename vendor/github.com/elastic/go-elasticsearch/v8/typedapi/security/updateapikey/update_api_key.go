@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update an API key.
 //
@@ -155,8 +155,6 @@ func New(tp elastictransport.Interface) *UpdateApiKey {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -428,6 +426,9 @@ func (r *UpdateApiKey) Pretty(pretty bool) *UpdateApiKey {
 // This property can be omitted to leave the expiration unchanged.
 // API name: expiration
 func (r *UpdateApiKey) Expiration(duration types.Duration) *UpdateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Expiration = duration
 
 	return r
@@ -441,6 +442,9 @@ func (r *UpdateApiKey) Expiration(duration types.Duration) *UpdateApiKey {
 // with the API key.
 // API name: metadata
 func (r *UpdateApiKey) Metadata(metadata types.Metadata) *UpdateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Metadata = metadata
 
 	return r
@@ -460,6 +464,9 @@ func (r *UpdateApiKey) Metadata(metadata types.Metadata) *UpdateApiKey {
 // API keys API.
 // API name: role_descriptors
 func (r *UpdateApiKey) RoleDescriptors(roledescriptors map[string]types.RoleDescriptor) *UpdateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RoleDescriptors = roledescriptors
 

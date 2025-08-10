@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Reload the keystore on nodes in the cluster.
 //
@@ -123,8 +123,6 @@ func New(tp elastictransport.Interface) *ReloadSecureSettings {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -411,6 +409,9 @@ func (r *ReloadSecureSettings) Pretty(pretty bool) *ReloadSecureSettings {
 // SecureSettingsPassword The password for the Elasticsearch keystore.
 // API name: secure_settings_password
 func (r *ReloadSecureSettings) SecureSettingsPassword(password string) *ReloadSecureSettings {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.SecureSettingsPassword = &password
 
 	return r

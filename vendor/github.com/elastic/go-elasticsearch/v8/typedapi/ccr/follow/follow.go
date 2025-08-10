@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create a follower.
 // Create a cross-cluster replication follower index that follows a specific
@@ -99,8 +99,6 @@ func New(tp elastictransport.Interface) *Follow {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -392,6 +390,9 @@ func (r *Follow) Pretty(pretty bool) *Follow {
 // data stream for the followed index should be renamed.
 // API name: data_stream_name
 func (r *Follow) DataStreamName(datastreamname string) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.DataStreamName = &datastreamname
 
@@ -401,6 +402,9 @@ func (r *Follow) DataStreamName(datastreamname string) *Follow {
 // LeaderIndex The name of the index in the leader cluster to follow.
 // API name: leader_index
 func (r *Follow) LeaderIndex(indexname string) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.LeaderIndex = indexname
 
 	return r
@@ -409,6 +413,9 @@ func (r *Follow) LeaderIndex(indexname string) *Follow {
 // MaxOutstandingReadRequests The maximum number of outstanding reads requests from the remote cluster.
 // API name: max_outstanding_read_requests
 func (r *Follow) MaxOutstandingReadRequests(maxoutstandingreadrequests int64) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.MaxOutstandingReadRequests = &maxoutstandingreadrequests
 
@@ -418,6 +425,9 @@ func (r *Follow) MaxOutstandingReadRequests(maxoutstandingreadrequests int64) *F
 // MaxOutstandingWriteRequests The maximum number of outstanding write requests on the follower.
 // API name: max_outstanding_write_requests
 func (r *Follow) MaxOutstandingWriteRequests(maxoutstandingwriterequests int) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxOutstandingWriteRequests = &maxoutstandingwriterequests
 
 	return r
@@ -426,6 +436,9 @@ func (r *Follow) MaxOutstandingWriteRequests(maxoutstandingwriterequests int) *F
 // MaxReadRequestOperationCount The maximum number of operations to pull per read from the remote cluster.
 // API name: max_read_request_operation_count
 func (r *Follow) MaxReadRequestOperationCount(maxreadrequestoperationcount int) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxReadRequestOperationCount = &maxreadrequestoperationcount
 
 	return r
@@ -435,6 +448,9 @@ func (r *Follow) MaxReadRequestOperationCount(maxreadrequestoperationcount int) 
 // the remote cluster.
 // API name: max_read_request_size
 func (r *Follow) MaxReadRequestSize(bytesize types.ByteSize) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxReadRequestSize = bytesize
 
 	return r
@@ -445,6 +461,9 @@ func (r *Follow) MaxReadRequestSize(bytesize types.ByteSize) *Follow {
 // retrying.
 // API name: max_retry_delay
 func (r *Follow) MaxRetryDelay(duration types.Duration) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxRetryDelay = duration
 
 	return r
@@ -455,6 +474,9 @@ func (r *Follow) MaxRetryDelay(duration types.Duration) *Follow {
 // deferred until the number of queued operations goes below the limit.
 // API name: max_write_buffer_count
 func (r *Follow) MaxWriteBufferCount(maxwritebuffercount int) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxWriteBufferCount = &maxwritebuffercount
 
 	return r
@@ -465,6 +487,9 @@ func (r *Follow) MaxWriteBufferCount(maxwritebuffercount int) *Follow {
 // be deferred until the total bytes of queued operations goes below the limit.
 // API name: max_write_buffer_size
 func (r *Follow) MaxWriteBufferSize(bytesize types.ByteSize) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxWriteBufferSize = bytesize
 
 	return r
@@ -474,6 +499,9 @@ func (r *Follow) MaxWriteBufferSize(bytesize types.ByteSize) *Follow {
 // follower.
 // API name: max_write_request_operation_count
 func (r *Follow) MaxWriteRequestOperationCount(maxwriterequestoperationcount int) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxWriteRequestOperationCount = &maxwriterequestoperationcount
 
 	return r
@@ -483,6 +511,9 @@ func (r *Follow) MaxWriteRequestOperationCount(maxwriterequestoperationcount int
 // follower.
 // API name: max_write_request_size
 func (r *Follow) MaxWriteRequestSize(bytesize types.ByteSize) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxWriteRequestSize = bytesize
 
 	return r
@@ -495,6 +526,9 @@ func (r *Follow) MaxWriteRequestSize(bytesize types.ByteSize) *Follow {
 // Then the follower will immediately attempt to read from the leader again.
 // API name: read_poll_timeout
 func (r *Follow) ReadPollTimeout(duration types.Duration) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ReadPollTimeout = duration
 
 	return r
@@ -503,6 +537,9 @@ func (r *Follow) ReadPollTimeout(duration types.Duration) *Follow {
 // RemoteCluster The remote cluster containing the leader index.
 // API name: remote_cluster
 func (r *Follow) RemoteCluster(remotecluster string) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RemoteCluster = remotecluster
 
@@ -512,6 +549,9 @@ func (r *Follow) RemoteCluster(remotecluster string) *Follow {
 // Settings Settings to override from the leader index.
 // API name: settings
 func (r *Follow) Settings(settings *types.IndexSettings) *Follow {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Settings = settings
 

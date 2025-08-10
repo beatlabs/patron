@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an Anthropic inference endpoint.
 //
@@ -103,8 +103,6 @@ func New(tp elastictransport.Interface) *PutAnthropic {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -341,6 +339,15 @@ func (r *PutAnthropic) _anthropicinferenceid(anthropicinferenceid string) *PutAn
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutAnthropic) Timeout(duration string) *PutAnthropic {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -388,6 +395,9 @@ func (r *PutAnthropic) Pretty(pretty bool) *PutAnthropic {
 // ChunkingSettings The chunking configuration object.
 // API name: chunking_settings
 func (r *PutAnthropic) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *PutAnthropic {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -398,6 +408,9 @@ func (r *PutAnthropic) ChunkingSettings(chunkingsettings *types.InferenceChunkin
 // `anthropic`.
 // API name: service
 func (r *PutAnthropic) Service(service anthropicservicetype.AnthropicServiceType) *PutAnthropic {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -407,6 +420,9 @@ func (r *PutAnthropic) Service(service anthropicservicetype.AnthropicServiceType
 // the `watsonxai` service.
 // API name: service_settings
 func (r *PutAnthropic) ServiceSettings(servicesettings *types.AnthropicServiceSettings) *PutAnthropic {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
 
@@ -417,6 +433,9 @@ func (r *PutAnthropic) ServiceSettings(servicesettings *types.AnthropicServiceSe
 // These settings are specific to the task type you specified.
 // API name: task_settings
 func (r *PutAnthropic) TaskSettings(tasksettings *types.AnthropicTaskSettings) *PutAnthropic {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TaskSettings = tasksettings
 

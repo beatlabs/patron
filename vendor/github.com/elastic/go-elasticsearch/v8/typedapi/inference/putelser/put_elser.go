@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an ELSER inference endpoint.
 //
@@ -151,8 +151,6 @@ func New(tp elastictransport.Interface) *PutElser {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -388,6 +386,15 @@ func (r *PutElser) _elserinferenceid(elserinferenceid string) *PutElser {
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutElser) Timeout(duration string) *PutElser {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -435,6 +442,9 @@ func (r *PutElser) Pretty(pretty bool) *PutElser {
 // ChunkingSettings The chunking configuration object.
 // API name: chunking_settings
 func (r *PutElser) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *PutElser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -445,6 +455,9 @@ func (r *PutElser) ChunkingSettings(chunkingsettings *types.InferenceChunkingSet
 // `elser`.
 // API name: service
 func (r *PutElser) Service(service elserservicetype.ElserServiceType) *PutElser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -454,6 +467,9 @@ func (r *PutElser) Service(service elserservicetype.ElserServiceType) *PutElser 
 // the `elser` service.
 // API name: service_settings
 func (r *PutElser) ServiceSettings(servicesettings *types.ElserServiceSettings) *PutElser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
 

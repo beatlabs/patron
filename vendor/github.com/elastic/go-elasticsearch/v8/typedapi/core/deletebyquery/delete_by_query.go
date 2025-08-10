@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Delete documents.
 //
@@ -347,8 +347,6 @@ func New(tp elastictransport.Interface) *DeleteByQuery {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -901,6 +899,9 @@ func (r *DeleteByQuery) Pretty(pretty bool) *DeleteByQuery {
 // MaxDocs The maximum number of documents to delete.
 // API name: max_docs
 func (r *DeleteByQuery) MaxDocs(maxdocs int64) *DeleteByQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.MaxDocs = &maxdocs
 
@@ -910,6 +911,9 @@ func (r *DeleteByQuery) MaxDocs(maxdocs int64) *DeleteByQuery {
 // Query The documents to delete specified with Query DSL.
 // API name: query
 func (r *DeleteByQuery) Query(query *types.Query) *DeleteByQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -920,6 +924,9 @@ func (r *DeleteByQuery) Query(query *types.Query) *DeleteByQuery {
 // slices.
 // API name: slice
 func (r *DeleteByQuery) Slice(slice *types.SlicedScroll) *DeleteByQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Slice = slice
 

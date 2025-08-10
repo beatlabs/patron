@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update a query rule.
 // Create or update a query rule within a query ruleset.
@@ -113,8 +113,6 @@ func New(tp elastictransport.Interface) *PutRule {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -402,6 +400,9 @@ func (r *PutRule) Pretty(pretty bool) *PutRule {
 // The format of this action depends on the rule type.
 // API name: actions
 func (r *PutRule) Actions(actions *types.QueryRuleActions) *PutRule {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Actions = *actions
 
@@ -413,6 +414,9 @@ func (r *PutRule) Actions(actions *types.QueryRuleActions) *PutRule {
 // the rule to be applied.
 // API name: criteria
 func (r *PutRule) Criteria(criteria ...types.QueryRuleCriteria) *PutRule {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Criteria = criteria
 
 	return r
@@ -420,6 +424,9 @@ func (r *PutRule) Criteria(criteria ...types.QueryRuleCriteria) *PutRule {
 
 // API name: priority
 func (r *PutRule) Priority(priority int) *PutRule {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Priority = &priority
 
 	return r
@@ -428,6 +435,9 @@ func (r *PutRule) Priority(priority int) *PutRule {
 // Type The type of rule.
 // API name: type
 func (r *PutRule) Type(type_ queryruletype.QueryRuleType) *PutRule {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Type = type_
 
 	return r

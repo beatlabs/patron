@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an enrich policy.
 // Creates an enrich policy.
@@ -93,8 +93,6 @@ func New(tp elastictransport.Interface) *PutPolicy {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -372,6 +370,9 @@ func (r *PutPolicy) Pretty(pretty bool) *PutPolicy {
 // GeoMatch Matches enrich data to incoming documents based on a `geo_shape` query.
 // API name: geo_match
 func (r *PutPolicy) GeoMatch(geomatch *types.EnrichPolicy) *PutPolicy {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.GeoMatch = geomatch
 
@@ -381,6 +382,9 @@ func (r *PutPolicy) GeoMatch(geomatch *types.EnrichPolicy) *PutPolicy {
 // Match Matches enrich data to incoming documents based on a `term` query.
 // API name: match
 func (r *PutPolicy) Match(match *types.EnrichPolicy) *PutPolicy {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Match = match
 
@@ -391,6 +395,9 @@ func (r *PutPolicy) Match(match *types.EnrichPolicy) *PutPolicy {
 // enrich index based on a `term` query.
 // API name: range
 func (r *PutPolicy) Range(range_ *types.EnrichPolicy) *PutPolicy {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Range = range_
 

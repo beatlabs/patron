@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an inference endpoint.
 //
@@ -35,17 +35,20 @@
 // * AlibabaCloud AI Search (`completion`, `rerank`, `sparse_embedding`,
 // `text_embedding`)
 // * Amazon Bedrock (`completion`, `text_embedding`)
+// * Amazon SageMaker (`chat_completion`, `completion`, `rerank`,
+// `sparse_embedding`, `text_embedding`)
 // * Anthropic (`completion`)
 // * Azure AI Studio (`completion`, `text_embedding`)
 // * Azure OpenAI (`completion`, `text_embedding`)
 // * Cohere (`completion`, `rerank`, `text_embedding`)
+// * DeepSeek (`completion`, `chat_completion`)
 // * Elasticsearch (`rerank`, `sparse_embedding`, `text_embedding` - this
 // service is for built-in models and models uploaded through Eland)
 // * ELSER (`sparse_embedding`)
 // * Google AI Studio (`completion`, `text_embedding`)
 // * Google Vertex AI (`rerank`, `text_embedding`)
-// * Hugging Face (`text_embedding`)
-// * Mistral (`text_embedding`)
+// * Hugging Face (`chat_completion`, `completion`, `rerank`, `text_embedding`)
+// * Mistral (`chat_completion`, `completion`, `text_embedding`)
 // * OpenAI (`chat_completion`, `completion`, `text_embedding`)
 // * VoyageAI (`text_embedding`, `rerank`)
 // * Watsonx inference integration (`text_embedding`)
@@ -132,17 +135,20 @@ func NewPutFunc(tp elastictransport.Interface) NewPut {
 // * AlibabaCloud AI Search (`completion`, `rerank`, `sparse_embedding`,
 // `text_embedding`)
 // * Amazon Bedrock (`completion`, `text_embedding`)
+// * Amazon SageMaker (`chat_completion`, `completion`, `rerank`,
+// `sparse_embedding`, `text_embedding`)
 // * Anthropic (`completion`)
 // * Azure AI Studio (`completion`, `text_embedding`)
 // * Azure OpenAI (`completion`, `text_embedding`)
 // * Cohere (`completion`, `rerank`, `text_embedding`)
+// * DeepSeek (`completion`, `chat_completion`)
 // * Elasticsearch (`rerank`, `sparse_embedding`, `text_embedding` - this
 // service is for built-in models and models uploaded through Eland)
 // * ELSER (`sparse_embedding`)
 // * Google AI Studio (`completion`, `text_embedding`)
 // * Google Vertex AI (`rerank`, `text_embedding`)
-// * Hugging Face (`text_embedding`)
-// * Mistral (`text_embedding`)
+// * Hugging Face (`chat_completion`, `completion`, `rerank`, `text_embedding`)
+// * Mistral (`chat_completion`, `completion`, `text_embedding`)
 // * OpenAI (`chat_completion`, `completion`, `text_embedding`)
 // * VoyageAI (`text_embedding`, `rerank`)
 // * Watsonx inference integration (`text_embedding`)
@@ -156,8 +162,6 @@ func New(tp elastictransport.Interface) *Put {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -405,6 +409,15 @@ func (r *Put) _inferenceid(inferenceid string) *Put {
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *Put) Timeout(duration string) *Put {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -452,6 +465,9 @@ func (r *Put) Pretty(pretty bool) *Put {
 // ChunkingSettings Chunking configuration object
 // API name: chunking_settings
 func (r *Put) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *Put {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -461,6 +477,9 @@ func (r *Put) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings
 // Service The service type
 // API name: service
 func (r *Put) Service(service string) *Put {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Service = service
 
@@ -470,6 +489,9 @@ func (r *Put) Service(service string) *Put {
 // ServiceSettings Settings specific to the service
 // API name: service_settings
 func (r *Put) ServiceSettings(servicesettings json.RawMessage) *Put {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ServiceSettings = servicesettings
 
 	return r
@@ -478,6 +500,9 @@ func (r *Put) ServiceSettings(servicesettings json.RawMessage) *Put {
 // TaskSettings Task settings specific to the service and task type
 // API name: task_settings
 func (r *Put) TaskSettings(tasksettings json.RawMessage) *Put {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TaskSettings = tasksettings
 
 	return r

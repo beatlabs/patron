@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // CompletionStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/Stats.ts#L83-L93
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Stats.ts#L83-L93
 type CompletionStats struct {
 	Fields map[string]FieldSizeUsage `json:"fields,omitempty"`
 	// Size Total amount of memory used for completion across all shards assigned to
@@ -93,7 +93,7 @@ func (s *CompletionStats) UnmarshalJSON(data []byte) error {
 // NewCompletionStats returns a CompletionStats.
 func NewCompletionStats() *CompletionStats {
 	r := &CompletionStats{
-		Fields: make(map[string]FieldSizeUsage, 0),
+		Fields: make(map[string]FieldSizeUsage),
 	}
 
 	return r

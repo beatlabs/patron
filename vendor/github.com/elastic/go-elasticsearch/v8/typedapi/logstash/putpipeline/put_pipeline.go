@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update a Logstash pipeline.
 //
@@ -97,8 +97,6 @@ func New(tp elastictransport.Interface) *PutPipeline {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -315,6 +313,9 @@ func (r *PutPipeline) Pretty(pretty bool) *PutPipeline {
 // This description is not used by Elasticsearch or Logstash.
 // API name: description
 func (r *PutPipeline) Description(description string) *PutPipeline {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Description = description
 
@@ -325,6 +326,9 @@ func (r *PutPipeline) Description(description string) *PutPipeline {
 // It must be in the `yyyy-MM-dd'T'HH:mm:ss.SSSZZ` strict_date_time format.
 // API name: last_modified
 func (r *PutPipeline) LastModified(datetime types.DateTime) *PutPipeline {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.LastModified = datetime
 
 	return r
@@ -333,6 +337,9 @@ func (r *PutPipeline) LastModified(datetime types.DateTime) *PutPipeline {
 // Pipeline The configuration for the pipeline.
 // API name: pipeline
 func (r *PutPipeline) Pipeline(pipeline string) *PutPipeline {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Pipeline = pipeline
 
@@ -343,6 +350,9 @@ func (r *PutPipeline) Pipeline(pipeline string) *PutPipeline {
 // This metadata is not generated or used by Elasticsearch or Logstash.
 // API name: pipeline_metadata
 func (r *PutPipeline) PipelineMetadata(pipelinemetadata *types.PipelineMetadata) *PutPipeline {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.PipelineMetadata = *pipelinemetadata
 
@@ -353,6 +363,9 @@ func (r *PutPipeline) PipelineMetadata(pipelinemetadata *types.PipelineMetadata)
 // It supports only flat keys in dot notation.
 // API name: pipeline_settings
 func (r *PutPipeline) PipelineSettings(pipelinesettings *types.PipelineSettings) *PutPipeline {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.PipelineSettings = *pipelinesettings
 
@@ -362,6 +375,9 @@ func (r *PutPipeline) PipelineSettings(pipelinesettings *types.PipelineSettings)
 // Username The user who last updated the pipeline.
 // API name: username
 func (r *PutPipeline) Username(username string) *PutPipeline {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Username = username
 

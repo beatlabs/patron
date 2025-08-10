@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -30,8 +30,18 @@ import (
 
 // SemanticTextProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/mapping/core.ts#L219-L235
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/mapping/core.ts#L239-L268
 type SemanticTextProperty struct {
+	// ChunkingSettings Settings for chunking text into smaller passages. If specified, these will
+	// override the
+	// chunking settings sent in the inference endpoint associated with
+	// inference_id. If chunking settings are updated,
+	// they will not be applied to existing documents until they are reindexed.
+	ChunkingSettings *ChunkingSettings `json:"chunking_settings,omitempty"`
+	// IndexOptions Settings for index_options that override any defaults used by semantic_text,
+	// for example
+	// specific quantization settings.
+	IndexOptions *SemanticTextIndexOptions `json:"index_options,omitempty"`
 	// InferenceId Inference endpoint that will be used to generate embeddings for the field.
 	// This parameter cannot be updated. Use the Create inference API to create the
 	// endpoint.
@@ -62,6 +72,16 @@ func (s *SemanticTextProperty) UnmarshalJSON(data []byte) error {
 		}
 
 		switch t {
+
+		case "chunking_settings":
+			if err := dec.Decode(&s.ChunkingSettings); err != nil {
+				return fmt.Errorf("%s | %w", "ChunkingSettings", err)
+			}
+
+		case "index_options":
+			if err := dec.Decode(&s.IndexOptions); err != nil {
+				return fmt.Errorf("%s | %w", "IndexOptions", err)
+			}
 
 		case "inference_id":
 			if err := dec.Decode(&s.InferenceId); err != nil {
@@ -95,6 +115,8 @@ func (s *SemanticTextProperty) UnmarshalJSON(data []byte) error {
 func (s SemanticTextProperty) MarshalJSON() ([]byte, error) {
 	type innerSemanticTextProperty SemanticTextProperty
 	tmp := innerSemanticTextProperty{
+		ChunkingSettings:  s.ChunkingSettings,
+		IndexOptions:      s.IndexOptions,
 		InferenceId:       s.InferenceId,
 		Meta:              s.Meta,
 		SearchInferenceId: s.SearchInferenceId,
@@ -109,7 +131,7 @@ func (s SemanticTextProperty) MarshalJSON() ([]byte, error) {
 // NewSemanticTextProperty returns a SemanticTextProperty.
 func NewSemanticTextProperty() *SemanticTextProperty {
 	r := &SemanticTextProperty{
-		Meta: make(map[string]string, 0),
+		Meta: make(map[string]string),
 	}
 
 	return r

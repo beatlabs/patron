@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Find API keys with a query.
 //
@@ -105,8 +105,6 @@ func New(tp elastictransport.Interface) *QueryApiKeys {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -406,6 +404,9 @@ func (r *QueryApiKeys) Pretty(pretty bool) *QueryApiKeys {
 // works with.
 // API name: aggregations
 func (r *QueryApiKeys) Aggregations(aggregations map[string]types.ApiKeyAggregationContainer) *QueryApiKeys {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Aggregations = aggregations
 
@@ -419,6 +420,9 @@ func (r *QueryApiKeys) Aggregations(aggregations map[string]types.ApiKeyAggregat
 // To page through more hits, use the `search_after` parameter.
 // API name: from
 func (r *QueryApiKeys) From(from int) *QueryApiKeys {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.From = &from
 
 	return r
@@ -442,6 +446,9 @@ func (r *QueryApiKeys) From(from int) *QueryApiKeys {
 // Such a match query is hence equivalent to a `term` query.
 // API name: query
 func (r *QueryApiKeys) Query(query *types.ApiKeyQueryContainer) *QueryApiKeys {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -451,6 +458,9 @@ func (r *QueryApiKeys) Query(query *types.ApiKeyQueryContainer) *QueryApiKeys {
 // SearchAfter The search after definition.
 // API name: search_after
 func (r *QueryApiKeys) SearchAfter(sortresults ...types.FieldValue) *QueryApiKeys {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.SearchAfter = sortresults
 
 	return r
@@ -465,6 +475,9 @@ func (r *QueryApiKeys) SearchAfter(sortresults ...types.FieldValue) *QueryApiKey
 // To page through more hits, use the `search_after` parameter.
 // API name: size
 func (r *QueryApiKeys) Size(size int) *QueryApiKeys {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Size = &size
 
 	return r
@@ -476,6 +489,9 @@ func (r *QueryApiKeys) Size(size int) *QueryApiKeys {
 // order.
 // API name: sort
 func (r *QueryApiKeys) Sort(sorts ...types.SortCombinations) *QueryApiKeys {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Sort = sorts
 
 	return r

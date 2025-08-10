@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Invalidate API keys.
 //
@@ -127,8 +127,6 @@ func New(tp elastictransport.Interface) *InvalidateApiKey {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -382,6 +380,9 @@ func (r *InvalidateApiKey) Pretty(pretty bool) *InvalidateApiKey {
 
 // API name: id
 func (r *InvalidateApiKey) Id(id string) *InvalidateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Id = &id
 
 	return r
@@ -392,6 +393,9 @@ func (r *InvalidateApiKey) Id(id string) *InvalidateApiKey {
 // `username`.
 // API name: ids
 func (r *InvalidateApiKey) Ids(ids ...string) *InvalidateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Ids = ids
 
 	return r
@@ -401,6 +405,9 @@ func (r *InvalidateApiKey) Ids(ids ...string) *InvalidateApiKey {
 // This parameter cannot be used with any of `ids`, `realm_name` or `username`.
 // API name: name
 func (r *InvalidateApiKey) Name(name string) *InvalidateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Name = &name
 
 	return r
@@ -415,6 +422,9 @@ func (r *InvalidateApiKey) Name(name string) *InvalidateApiKey {
 // specified if `owner` is `false`.
 // API name: owner
 func (r *InvalidateApiKey) Owner(owner bool) *InvalidateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Owner = &owner
 
 	return r
@@ -425,6 +435,9 @@ func (r *InvalidateApiKey) Owner(owner bool) *InvalidateApiKey {
 // flag is set to `true`.
 // API name: realm_name
 func (r *InvalidateApiKey) RealmName(realmname string) *InvalidateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RealmName = &realmname
 
@@ -436,6 +449,9 @@ func (r *InvalidateApiKey) RealmName(realmname string) *InvalidateApiKey {
 // flag is set to `true`.
 // API name: username
 func (r *InvalidateApiKey) Username(username string) *InvalidateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Username = &username
 
 	return r

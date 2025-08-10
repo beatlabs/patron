@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Prepare a node to be shut down.
 //
@@ -139,8 +139,6 @@ func New(tp elastictransport.Interface) *PutNode {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -439,6 +437,9 @@ func (r *PutNode) Pretty(pretty bool) *PutNode {
 // delay, the longer of the two is used.
 // API name: allocation_delay
 func (r *PutNode) AllocationDelay(allocationdelay string) *PutNode {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.AllocationDelay = &allocationdelay
 
@@ -450,6 +451,9 @@ func (r *PutNode) AllocationDelay(allocationdelay string) *PutNode {
 // affect the shut down process.
 // API name: reason
 func (r *PutNode) Reason(reason string) *PutNode {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Reason = reason
 
@@ -464,6 +468,9 @@ func (r *PutNode) Reason(reason string) *PutNode {
 // watermarks or user attribute filtering rules.
 // API name: target_node_name
 func (r *PutNode) TargetNodeName(targetnodename string) *PutNode {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TargetNodeName = &targetnodename
 
@@ -484,6 +491,9 @@ func (r *PutNode) TargetNodeName(targetnodename string) *PutNode {
 // unassigned shards, and shrink may fail until the replacement is complete.
 // API name: type
 func (r *PutNode) Type(type_ type_.Type) *PutNode {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Type = type_
 
 	return r

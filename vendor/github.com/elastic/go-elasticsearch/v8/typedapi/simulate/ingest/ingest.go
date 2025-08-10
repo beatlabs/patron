@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Simulate data ingestion.
 // Run ingest pipelines against a set of provided documents, optionally with
@@ -155,8 +155,6 @@ func New(tp elastictransport.Interface) *Ingest {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -446,6 +444,9 @@ func (r *Ingest) Pretty(pretty bool) *Ingest {
 // objects.
 // API name: component_template_substitutions
 func (r *Ingest) ComponentTemplateSubstitutions(componenttemplatesubstitutions map[string]types.ComponentTemplateNode) *Ingest {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ComponentTemplateSubstitutions = componenttemplatesubstitutions
 
@@ -455,6 +456,9 @@ func (r *Ingest) ComponentTemplateSubstitutions(componenttemplatesubstitutions m
 // Docs Sample documents to test in the pipeline.
 // API name: docs
 func (r *Ingest) Docs(docs ...types.Document) *Ingest {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Docs = docs
 
 	return r
@@ -464,6 +468,9 @@ func (r *Ingest) Docs(docs ...types.Document) *Ingest {
 // objects.
 // API name: index_template_substitutions
 func (r *Ingest) IndexTemplateSubstitutions(indextemplatesubstitutions map[string]types.IndexTemplate) *Ingest {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.IndexTemplateSubstitutions = indextemplatesubstitutions
 
@@ -472,6 +479,9 @@ func (r *Ingest) IndexTemplateSubstitutions(indextemplatesubstitutions map[strin
 
 // API name: mapping_addition
 func (r *Ingest) MappingAddition(mappingaddition *types.TypeMapping) *Ingest {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.MappingAddition = mappingaddition
 
@@ -485,6 +495,9 @@ func (r *Ingest) MappingAddition(mappingaddition *types.TypeMapping) *Ingest {
 // the request path parameter.
 // API name: pipeline_substitutions
 func (r *Ingest) PipelineSubstitutions(pipelinesubstitutions map[string]types.IngestPipeline) *Ingest {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.PipelineSubstitutions = pipelinesubstitutions
 

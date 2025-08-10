@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // StoredScript type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/Scripting.ts#L47-L59
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Scripting.ts#L47-L59
 type StoredScript struct {
 	// Lang The language the script is written in.
 	// For serach templates, use `mustache`.
@@ -92,7 +92,7 @@ func (s *StoredScript) UnmarshalJSON(data []byte) error {
 // NewStoredScript returns a StoredScript.
 func NewStoredScript() *StoredScript {
 	r := &StoredScript{
-		Options: make(map[string]string, 0),
+		Options: make(map[string]string),
 	}
 
 	return r

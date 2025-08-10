@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package getdatafeedstats
 
@@ -26,7 +26,7 @@ import (
 
 // Response holds the response body struct for the package getdatafeedstats
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/ml/get_datafeed_stats/MlGetDatafeedStatsResponse.ts#L23-L28
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/get_datafeed_stats/MlGetDatafeedStatsResponse.ts#L23-L28
 type Response struct {
 	Count     int64                 `json:"count"`
 	Datafeeds []types.DatafeedStats `json:"datafeeds"`

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Logout of SAML.
 //
@@ -111,8 +111,6 @@ func New(tp elastictransport.Interface) *SamlLogout {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -372,6 +370,9 @@ func (r *SamlLogout) Pretty(pretty bool) *SamlLogout {
 // refreshing the original access token.
 // API name: refresh_token
 func (r *SamlLogout) RefreshToken(refreshtoken string) *SamlLogout {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RefreshToken = &refreshtoken
 
@@ -384,6 +385,9 @@ func (r *SamlLogout) RefreshToken(refreshtoken string) *SamlLogout {
 // original one by using a `refresh_token`.
 // API name: token
 func (r *SamlLogout) Token(token string) *SamlLogout {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Token = token
 

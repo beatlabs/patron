@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Set the connector sync job stats.
 // Stats include: `deleted_document_count`, `indexed_document_count`,
@@ -111,8 +111,6 @@ func New(tp elastictransport.Interface) *SyncJobUpdateStats {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -384,6 +382,9 @@ func (r *SyncJobUpdateStats) Pretty(pretty bool) *SyncJobUpdateStats {
 // DeletedDocumentCount The number of documents the sync job deleted.
 // API name: deleted_document_count
 func (r *SyncJobUpdateStats) DeletedDocumentCount(deleteddocumentcount int64) *SyncJobUpdateStats {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.DeletedDocumentCount = deleteddocumentcount
 
@@ -393,6 +394,9 @@ func (r *SyncJobUpdateStats) DeletedDocumentCount(deleteddocumentcount int64) *S
 // IndexedDocumentCount The number of documents the sync job indexed.
 // API name: indexed_document_count
 func (r *SyncJobUpdateStats) IndexedDocumentCount(indexeddocumentcount int64) *SyncJobUpdateStats {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.IndexedDocumentCount = indexeddocumentcount
 
@@ -402,6 +406,9 @@ func (r *SyncJobUpdateStats) IndexedDocumentCount(indexeddocumentcount int64) *S
 // IndexedDocumentVolume The total size of the data (in MiB) the sync job indexed.
 // API name: indexed_document_volume
 func (r *SyncJobUpdateStats) IndexedDocumentVolume(indexeddocumentvolume int64) *SyncJobUpdateStats {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.IndexedDocumentVolume = indexeddocumentvolume
 
@@ -411,6 +418,9 @@ func (r *SyncJobUpdateStats) IndexedDocumentVolume(indexeddocumentvolume int64) 
 // LastSeen The timestamp to use in the `last_seen` property for the connector sync job.
 // API name: last_seen
 func (r *SyncJobUpdateStats) LastSeen(duration types.Duration) *SyncJobUpdateStats {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.LastSeen = duration
 
 	return r
@@ -419,6 +429,9 @@ func (r *SyncJobUpdateStats) LastSeen(duration types.Duration) *SyncJobUpdateSta
 // Metadata The connector-specific metadata.
 // API name: metadata
 func (r *SyncJobUpdateStats) Metadata(metadata types.Metadata) *SyncJobUpdateStats {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Metadata = metadata
 
 	return r
@@ -428,6 +441,9 @@ func (r *SyncJobUpdateStats) Metadata(metadata types.Metadata) *SyncJobUpdateSta
 // finished.
 // API name: total_document_count
 func (r *SyncJobUpdateStats) TotalDocumentCount(totaldocumentcount int) *SyncJobUpdateStats {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TotalDocumentCount = &totaldocumentcount
 
 	return r

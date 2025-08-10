@@ -32,7 +32,7 @@ func TestRun(t *testing.T) {
 
 	ctx, cnl := context.WithCancel(context.Background())
 
-	shutdownProvider, collectMetrics := test.SetupMetrics(ctx, t)
+	shutdownProvider, collectMetrics := test.SetupMetrics(context.Background(), t)
 	defer shutdownProvider()
 
 	pub, err := patronamqp.New(endpoint)

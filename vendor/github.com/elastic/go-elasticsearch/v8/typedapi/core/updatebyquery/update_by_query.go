@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update documents.
 // Updates documents that match the specified query.
@@ -367,8 +367,6 @@ func New(tp elastictransport.Interface) *UpdateByQuery {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -649,7 +647,6 @@ func (r *UpdateByQuery) Df(df string) *UpdateByQuery {
 // If the request can target data streams, this argument determines whether
 // wildcard expressions match hidden data streams.
 // It supports comma-separated values, such as `open,hidden`.
-// Valid values are: `all`, `open`, `closed`, `hidden`, `none`.
 // API name: expand_wildcards
 func (r *UpdateByQuery) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *UpdateByQuery {
 	tmp := []string{}
@@ -940,6 +937,9 @@ func (r *UpdateByQuery) Pretty(pretty bool) *UpdateByQuery {
 // or `proceed`.
 // API name: conflicts
 func (r *UpdateByQuery) Conflicts(conflicts conflicts.Conflicts) *UpdateByQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Conflicts = &conflicts
 
 	return r
@@ -948,6 +948,9 @@ func (r *UpdateByQuery) Conflicts(conflicts conflicts.Conflicts) *UpdateByQuery 
 // MaxDocs The maximum number of documents to update.
 // API name: max_docs
 func (r *UpdateByQuery) MaxDocs(maxdocs int64) *UpdateByQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.MaxDocs = &maxdocs
 
@@ -957,6 +960,9 @@ func (r *UpdateByQuery) MaxDocs(maxdocs int64) *UpdateByQuery {
 // Query The documents to update using the Query DSL.
 // API name: query
 func (r *UpdateByQuery) Query(query *types.Query) *UpdateByQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -966,6 +972,9 @@ func (r *UpdateByQuery) Query(query *types.Query) *UpdateByQuery {
 // Script The script to run to update the document source or metadata when updating.
 // API name: script
 func (r *UpdateByQuery) Script(script *types.Script) *UpdateByQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Script = script
 
@@ -976,6 +985,9 @@ func (r *UpdateByQuery) Script(script *types.Script) *UpdateByQuery {
 // slices.
 // API name: slice
 func (r *UpdateByQuery) Slice(slice *types.SlicedScroll) *UpdateByQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Slice = slice
 

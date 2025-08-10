@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Get multiple term vectors.
 //
@@ -116,8 +116,6 @@ func New(tp elastictransport.Interface) *Mtermvectors {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -483,6 +481,9 @@ func (r *Mtermvectors) Pretty(pretty bool) *Mtermvectors {
 // Docs An array of existing or artificial documents.
 // API name: docs
 func (r *Mtermvectors) Docs(docs ...types.MTermVectorsOperation) *Mtermvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Docs = docs
 
 	return r
@@ -492,6 +493,9 @@ func (r *Mtermvectors) Docs(docs ...types.MTermVectorsOperation) *Mtermvectors {
 // index.
 // API name: ids
 func (r *Mtermvectors) Ids(ids ...string) *Mtermvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Ids = ids
 
 	return r

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an OpenAI inference endpoint.
 //
@@ -103,8 +103,6 @@ func New(tp elastictransport.Interface) *PutOpenai {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -342,6 +340,15 @@ func (r *PutOpenai) _openaiinferenceid(openaiinferenceid string) *PutOpenai {
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutOpenai) Timeout(duration string) *PutOpenai {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -389,6 +396,9 @@ func (r *PutOpenai) Pretty(pretty bool) *PutOpenai {
 // ChunkingSettings The chunking configuration object.
 // API name: chunking_settings
 func (r *PutOpenai) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *PutOpenai {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -399,6 +409,9 @@ func (r *PutOpenai) ChunkingSettings(chunkingsettings *types.InferenceChunkingSe
 // `openai`.
 // API name: service
 func (r *PutOpenai) Service(service openaiservicetype.OpenAIServiceType) *PutOpenai {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -408,6 +421,9 @@ func (r *PutOpenai) Service(service openaiservicetype.OpenAIServiceType) *PutOpe
 // the `openai` service.
 // API name: service_settings
 func (r *PutOpenai) ServiceSettings(servicesettings *types.OpenAIServiceSettings) *PutOpenai {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
 
@@ -418,6 +434,9 @@ func (r *PutOpenai) ServiceSettings(servicesettings *types.OpenAIServiceSettings
 // These settings are specific to the task type you specified.
 // API name: task_settings
 func (r *PutOpenai) TaskSettings(tasksettings *types.OpenAITaskSettings) *PutOpenai {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TaskSettings = tasksettings
 

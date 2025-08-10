@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update data stream lifecycles.
 // Update the data stream lifecycle of the specified data streams.
@@ -94,8 +94,6 @@ func New(tp elastictransport.Interface) *PutDataLifecycle {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -322,7 +320,6 @@ func (r *PutDataLifecycle) _name(name string) *PutDataLifecycle {
 
 // ExpandWildcards Type of data stream that wildcard patterns can match.
 // Supports comma-separated values, such as `open,hidden`.
-// Valid values are: `all`, `hidden`, `open`, `closed`, `none`.
 // API name: expand_wildcards
 func (r *PutDataLifecycle) ExpandWildcards(expandwildcards ...expandwildcard.ExpandWildcard) *PutDataLifecycle {
 	tmp := []string{}
@@ -404,6 +401,9 @@ func (r *PutDataLifecycle) Pretty(pretty bool) *PutDataLifecycle {
 // When empty, every document in this data stream will be stored indefinitely.
 // API name: data_retention
 func (r *PutDataLifecycle) DataRetention(duration types.Duration) *PutDataLifecycle {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.DataRetention = duration
 
 	return r
@@ -413,6 +413,9 @@ func (r *PutDataLifecycle) DataRetention(duration types.Duration) *PutDataLifecy
 // rollover.
 // API name: downsampling
 func (r *PutDataLifecycle) Downsampling(downsampling *types.DataStreamLifecycleDownsampling) *PutDataLifecycle {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Downsampling = downsampling
 
@@ -424,6 +427,9 @@ func (r *PutDataLifecycle) Downsampling(downsampling *types.DataStreamLifecycleD
 // that's disabled (enabled: `false`) will have no effect on the data stream.
 // API name: enabled
 func (r *PutDataLifecycle) Enabled(enabled bool) *PutDataLifecycle {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Enabled = &enabled
 
 	return r

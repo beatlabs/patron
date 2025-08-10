@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Open anomaly detection jobs.
 //
@@ -105,8 +105,6 @@ func New(tp elastictransport.Interface) *OpenJob {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -378,6 +376,9 @@ func (r *OpenJob) Pretty(pretty bool) *OpenJob {
 // Timeout Refer to the description for the `timeout` query parameter.
 // API name: timeout
 func (r *OpenJob) Timeout(duration types.Duration) *OpenJob {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Timeout = duration
 
 	return r

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Run an async ES|QL query.
 // Asynchronously run an ES|QL (Elasticsearch query language) query, monitor its
@@ -94,8 +94,6 @@ func New(tp elastictransport.Interface) *AsyncQuery {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -303,6 +301,19 @@ func (r *AsyncQuery) Header(key, value string) *AsyncQuery {
 	return r
 }
 
+// AllowPartialResults If `true`, partial results will be returned if there are shard failures, but
+// the query can continue to execute on other clusters and shards.
+// If `false`, the query will fail if there are any failures.
+//
+// To override the default behavior, you can set the
+// `esql.query.allow_partial_results` cluster setting to `false`.
+// API name: allow_partial_results
+func (r *AsyncQuery) AllowPartialResults(allowpartialresults bool) *AsyncQuery {
+	r.values.Set("allow_partial_results", strconv.FormatBool(allowpartialresults))
+
+	return r
+}
+
 // Delimiter The character to use between values within a CSV row.
 // It is valid only for the CSV format.
 // API name: delimiter
@@ -323,35 +334,19 @@ func (r *AsyncQuery) DropNullColumns(dropnullcolumns bool) *AsyncQuery {
 	return r
 }
 
-// Format A short version of the Accept header, for example `json` or `yaml`.
+// Format A short version of the Accept header, e.g. json, yaml.
+//
+// `csv`, `tsv`, and `txt` formats will return results in a tabular format,
+// excluding other metadata fields from the response.
+//
+// For async requests, nothing will be returned if the async query doesn't
+// finish within the timeout.
+// The query ID and running status are available in the
+// `X-Elasticsearch-Async-Id` and `X-Elasticsearch-Async-Is-Running` HTTP
+// headers of the response, respectively.
 // API name: format
 func (r *AsyncQuery) Format(format esqlformat.EsqlFormat) *AsyncQuery {
 	r.values.Set("format", format.String())
-
-	return r
-}
-
-// KeepAlive The period for which the query and its results are stored in the cluster.
-// The default period is five days.
-// When this period expires, the query and its results are deleted, even if the
-// query is still ongoing.
-// If the `keep_on_completion` parameter is false, Elasticsearch only stores
-// async queries that do not complete within the period set by the
-// `wait_for_completion_timeout` parameter, regardless of this value.
-// API name: keep_alive
-func (r *AsyncQuery) KeepAlive(duration string) *AsyncQuery {
-	r.values.Set("keep_alive", duration)
-
-	return r
-}
-
-// KeepOnCompletion Indicates whether the query and its results are stored in the cluster.
-// If false, the query and its results are stored in the cluster only if the
-// request does not complete during the period set by the
-// `wait_for_completion_timeout` parameter.
-// API name: keep_on_completion
-func (r *AsyncQuery) KeepOnCompletion(keeponcompletion bool) *AsyncQuery {
-	r.values.Set("keep_on_completion", strconv.FormatBool(keeponcompletion))
 
 	return r
 }
@@ -406,6 +401,9 @@ func (r *AsyncQuery) Pretty(pretty bool) *AsyncQuery {
 // all the values of a certain column in the results.
 // API name: columnar
 func (r *AsyncQuery) Columnar(columnar bool) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Columnar = &columnar
 
 	return r
@@ -415,6 +413,9 @@ func (r *AsyncQuery) Columnar(columnar bool) *AsyncQuery {
 // documents that an ES|QL query runs on.
 // API name: filter
 func (r *AsyncQuery) Filter(filter *types.Query) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Filter = filter
 
@@ -428,13 +429,50 @@ func (r *AsyncQuery) Filter(filter *types.Query) *AsyncQuery {
 // count.
 // API name: include_ccs_metadata
 func (r *AsyncQuery) IncludeCcsMetadata(includeccsmetadata bool) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.IncludeCcsMetadata = &includeccsmetadata
+
+	return r
+}
+
+// KeepAlive The period for which the query and its results are stored in the cluster.
+// The default period is five days.
+// When this period expires, the query and its results are deleted, even if the
+// query is still ongoing.
+// If the `keep_on_completion` parameter is false, Elasticsearch only stores
+// async queries that do not complete within the period set by the
+// `wait_for_completion_timeout` parameter, regardless of this value.
+// API name: keep_alive
+func (r *AsyncQuery) KeepAlive(duration types.Duration) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	r.req.KeepAlive = duration
+
+	return r
+}
+
+// KeepOnCompletion Indicates whether the query and its results are stored in the cluster.
+// If false, the query and its results are stored in the cluster only if the
+// request does not complete during the period set by the
+// `wait_for_completion_timeout` parameter.
+// API name: keep_on_completion
+func (r *AsyncQuery) KeepOnCompletion(keeponcompletion bool) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	r.req.KeepOnCompletion = &keeponcompletion
 
 	return r
 }
 
 // API name: locale
 func (r *AsyncQuery) Locale(locale string) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Locale = &locale
 
@@ -446,6 +484,9 @@ func (r *AsyncQuery) Locale(locale string) *AsyncQuery {
 // string for each of the parameters.
 // API name: params
 func (r *AsyncQuery) Params(params ...types.FieldValue) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Params = params
 
 	return r
@@ -459,6 +500,9 @@ func (r *AsyncQuery) Params(params ...types.FieldValue) *AsyncQuery {
 // of each part of the query.
 // API name: profile
 func (r *AsyncQuery) Profile(profile bool) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Profile = &profile
 
 	return r
@@ -468,6 +512,9 @@ func (r *AsyncQuery) Profile(profile bool) *AsyncQuery {
 // runs it, and returns the results.
 // API name: query
 func (r *AsyncQuery) Query(query string) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -478,6 +525,9 @@ func (r *AsyncQuery) Query(query string) *AsyncQuery {
 // name and the next level key is the column name.
 // API name: tables
 func (r *AsyncQuery) Tables(tables map[string]map[string]types.TableValuesContainer) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Tables = tables
 
@@ -491,6 +541,9 @@ func (r *AsyncQuery) Tables(tables map[string]map[string]types.TableValuesContai
 // results.
 // API name: wait_for_completion_timeout
 func (r *AsyncQuery) WaitForCompletionTimeout(duration types.Duration) *AsyncQuery {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.WaitForCompletionTimeout = duration
 
 	return r

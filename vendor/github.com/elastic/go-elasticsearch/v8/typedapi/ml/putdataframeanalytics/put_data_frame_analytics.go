@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create a data frame analytics job.
 // This API creates a data frame analytics job that performs an analysis on the
@@ -113,8 +113,6 @@ func New(tp elastictransport.Interface) *PutDataFrameAnalytics {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -395,6 +393,9 @@ func (r *PutDataFrameAnalytics) Pretty(pretty bool) *PutDataFrameAnalytics {
 // `xpack.ml.max_lazy_ml_nodes` setting.
 // API name: allow_lazy_start
 func (r *PutDataFrameAnalytics) AllowLazyStart(allowlazystart bool) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.AllowLazyStart = &allowlazystart
 
 	return r
@@ -405,6 +406,9 @@ func (r *PutDataFrameAnalytics) AllowLazyStart(allowlazystart bool) *PutDataFram
 // detection, or regression.
 // API name: analysis
 func (r *PutDataFrameAnalytics) Analysis(analysis *types.DataframeAnalysisContainer) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Analysis = *analysis
 
@@ -441,6 +445,9 @@ func (r *PutDataFrameAnalytics) Analysis(analysis *types.DataframeAnalysisContai
 // model the values as `0-14 = 0`, `15-24 = 1`, `25-34 = 2`, and so on.
 // API name: analyzed_fields
 func (r *PutDataFrameAnalytics) AnalyzedFields(analyzedfields *types.DataframeAnalysisAnalyzedFields) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.AnalyzedFields = analyzedfields
 
@@ -450,6 +457,9 @@ func (r *PutDataFrameAnalytics) AnalyzedFields(analyzedfields *types.DataframeAn
 // Description A description of the job.
 // API name: description
 func (r *PutDataFrameAnalytics) Description(description string) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Description = &description
 
@@ -459,6 +469,9 @@ func (r *PutDataFrameAnalytics) Description(description string) *PutDataFrameAna
 // Dest The destination configuration.
 // API name: dest
 func (r *PutDataFrameAnalytics) Dest(dest *types.DataframeAnalyticsDestination) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Dest = *dest
 
@@ -467,6 +480,9 @@ func (r *PutDataFrameAnalytics) Dest(dest *types.DataframeAnalyticsDestination) 
 
 // API name: headers
 func (r *PutDataFrameAnalytics) Headers(httpheaders types.HttpHeaders) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Headers = httpheaders
 
 	return r
@@ -478,6 +494,9 @@ func (r *PutDataFrameAnalytics) Headers(httpheaders types.HttpHeaders) *PutDataF
 // for operational functionality other than the analysis itself.
 // API name: max_num_threads
 func (r *PutDataFrameAnalytics) MaxNumThreads(maxnumthreads int) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxNumThreads = &maxnumthreads
 
 	return r
@@ -485,6 +504,9 @@ func (r *PutDataFrameAnalytics) MaxNumThreads(maxnumthreads int) *PutDataFrameAn
 
 // API name: _meta
 func (r *PutDataFrameAnalytics) Meta_(metadata types.Metadata) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Meta_ = metadata
 
 	return r
@@ -497,6 +519,9 @@ func (r *PutDataFrameAnalytics) Meta_(metadata types.Metadata) *PutDataFrameAnal
 // greater than that setting.
 // API name: model_memory_limit
 func (r *PutDataFrameAnalytics) ModelMemoryLimit(modelmemorylimit string) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ModelMemoryLimit = &modelmemorylimit
 
@@ -506,6 +531,9 @@ func (r *PutDataFrameAnalytics) ModelMemoryLimit(modelmemorylimit string) *PutDa
 // Source The configuration of how to source the analysis data.
 // API name: source
 func (r *PutDataFrameAnalytics) Source(source *types.DataframeAnalyticsSource) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Source = *source
 
@@ -514,6 +542,9 @@ func (r *PutDataFrameAnalytics) Source(source *types.DataframeAnalyticsSource) *
 
 // API name: version
 func (r *PutDataFrameAnalytics) Version(versionstring string) *PutDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Version = &versionstring
 
 	return r

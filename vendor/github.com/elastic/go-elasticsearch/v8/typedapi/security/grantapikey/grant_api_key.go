@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Grant an API key.
 //
@@ -67,6 +67,7 @@ import (
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/apikeygranttype"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 )
 
 // ErrBuildPath is returned in case of missing parameters within the build of the request.
@@ -146,8 +147,6 @@ func New(tp elastictransport.Interface) *GrantApiKey {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -357,6 +356,18 @@ func (r *GrantApiKey) Header(key, value string) *GrantApiKey {
 	return r
 }
 
+// Refresh If 'true', Elasticsearch refreshes the affected shards to make this operation
+// visible to search.
+// If 'wait_for', it waits for a refresh to make this operation visible to
+// search.
+// If 'false', nothing is done with refreshes.
+// API name: refresh
+func (r *GrantApiKey) Refresh(refresh refresh.Refresh) *GrantApiKey {
+	r.values.Set("refresh", refresh.String())
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -406,6 +417,9 @@ func (r *GrantApiKey) Pretty(pretty bool) *GrantApiKey {
 // It is not valid with other grant types.
 // API name: access_token
 func (r *GrantApiKey) AccessToken(accesstoken string) *GrantApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.AccessToken = &accesstoken
 
@@ -415,6 +429,9 @@ func (r *GrantApiKey) AccessToken(accesstoken string) *GrantApiKey {
 // ApiKey The API key.
 // API name: api_key
 func (r *GrantApiKey) ApiKey(apikey *types.GrantApiKey) *GrantApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ApiKey = *apikey
 
@@ -424,6 +441,9 @@ func (r *GrantApiKey) ApiKey(apikey *types.GrantApiKey) *GrantApiKey {
 // GrantType The type of grant. Supported grant types are: `access_token`, `password`.
 // API name: grant_type
 func (r *GrantApiKey) GrantType(granttype apikeygranttype.ApiKeyGrantType) *GrantApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.GrantType = granttype
 
 	return r
@@ -434,6 +454,9 @@ func (r *GrantApiKey) GrantType(granttype apikeygranttype.ApiKeyGrantType) *Gran
 // It is not valid with other grant types.
 // API name: password
 func (r *GrantApiKey) Password(password string) *GrantApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Password = &password
 
 	return r
@@ -442,6 +465,9 @@ func (r *GrantApiKey) Password(password string) *GrantApiKey {
 // RunAs The name of the user to be impersonated.
 // API name: run_as
 func (r *GrantApiKey) RunAs(username string) *GrantApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RunAs = &username
 
 	return r
@@ -452,6 +478,9 @@ func (r *GrantApiKey) RunAs(username string) *GrantApiKey {
 // It is not valid with other grant types.
 // API name: username
 func (r *GrantApiKey) Username(username string) *GrantApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Username = &username
 
 	return r

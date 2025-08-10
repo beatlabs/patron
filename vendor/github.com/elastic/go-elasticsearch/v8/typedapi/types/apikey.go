@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // ApiKey type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/security/_types/ApiKey.ts#L27-L113
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/_types/ApiKey.ts#L27-L113
 type ApiKey struct {
 	// Access The access granted to cross-cluster API keys.
 	// The access is composed of permissions for cross cluster search and cross
@@ -220,7 +220,7 @@ func (s *ApiKey) UnmarshalJSON(data []byte) error {
 // NewApiKey returns a ApiKey.
 func NewApiKey() *ApiKey {
 	r := &ApiKey{
-		RoleDescriptors: make(map[string]RoleDescriptor, 0),
+		RoleDescriptors: make(map[string]RoleDescriptor),
 	}
 
 	return r

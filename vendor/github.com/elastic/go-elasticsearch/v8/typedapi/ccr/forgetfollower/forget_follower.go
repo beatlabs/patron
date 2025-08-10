@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Forget a follower.
 // Remove the cross-cluster replication follower retention leases from the
@@ -139,8 +139,6 @@ func New(tp elastictransport.Interface) *ForgetFollower {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -419,6 +417,9 @@ func (r *ForgetFollower) Pretty(pretty bool) *ForgetFollower {
 
 // API name: follower_cluster
 func (r *ForgetFollower) FollowerCluster(followercluster string) *ForgetFollower {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.FollowerCluster = &followercluster
 
@@ -427,6 +428,9 @@ func (r *ForgetFollower) FollowerCluster(followercluster string) *ForgetFollower
 
 // API name: follower_index
 func (r *ForgetFollower) FollowerIndex(indexname string) *ForgetFollower {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.FollowerIndex = &indexname
 
 	return r
@@ -434,6 +438,9 @@ func (r *ForgetFollower) FollowerIndex(indexname string) *ForgetFollower {
 
 // API name: follower_index_uuid
 func (r *ForgetFollower) FollowerIndexUuid(uuid string) *ForgetFollower {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.FollowerIndexUuid = &uuid
 
 	return r
@@ -441,6 +448,9 @@ func (r *ForgetFollower) FollowerIndexUuid(uuid string) *ForgetFollower {
 
 // API name: leader_remote_cluster
 func (r *ForgetFollower) LeaderRemoteCluster(leaderremotecluster string) *ForgetFollower {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.LeaderRemoteCluster = &leaderremotecluster
 

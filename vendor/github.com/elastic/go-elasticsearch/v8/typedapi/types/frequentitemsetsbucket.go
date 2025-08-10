@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -32,7 +32,7 @@ import (
 
 // FrequentItemSetsBucket type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/aggregations/Aggregate.ts#L725-L728
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/Aggregate.ts#L727-L730
 type FrequentItemSetsBucket struct {
 	Aggregations map[string]Aggregate `json:"-"`
 	DocCount     int64                `json:"doc_count"`
@@ -651,8 +651,8 @@ func (s FrequentItemSetsBucket) MarshalJSON() ([]byte, error) {
 // NewFrequentItemSetsBucket returns a FrequentItemSetsBucket.
 func NewFrequentItemSetsBucket() *FrequentItemSetsBucket {
 	r := &FrequentItemSetsBucket{
-		Aggregations: make(map[string]Aggregate, 0),
-		Key:          make(map[string][]string, 0),
+		Aggregations: make(map[string]Aggregate),
+		Key:          make(map[string][]string),
 	}
 
 	return r

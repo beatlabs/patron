@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,8 +31,9 @@ import (
 
 // IntervalsQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/query_dsl/fulltext.ts#L283-L317
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/fulltext.ts#L283-L317
 type IntervalsQuery struct {
+	AdditionalIntervalsQueryProperty map[string]json.RawMessage `json:"-"`
 	// AllOf Returns matches that span a combination of other rules.
 	AllOf *IntervalsAllOf `json:"all_of,omitempty"`
 	// AnyOf Returns intervals produced by any of its sub-rules.
@@ -140,14 +141,58 @@ func (s *IntervalsQuery) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Wildcard", err)
 			}
 
+		default:
+
+			if key, ok := t.(string); ok {
+				if s.AdditionalIntervalsQueryProperty == nil {
+					s.AdditionalIntervalsQueryProperty = make(map[string]json.RawMessage, 0)
+				}
+				raw := new(json.RawMessage)
+				if err := dec.Decode(&raw); err != nil {
+					return fmt.Errorf("%s | %w", "AdditionalIntervalsQueryProperty", err)
+				}
+				s.AdditionalIntervalsQueryProperty[key] = *raw
+			}
+
 		}
 	}
 	return nil
 }
 
+// MarhsalJSON overrides marshalling for types with additional properties
+func (s IntervalsQuery) MarshalJSON() ([]byte, error) {
+	type opt IntervalsQuery
+	// We transform the struct to a map without the embedded additional properties map
+	tmp := make(map[string]any, 0)
+
+	data, err := json.Marshal(opt(s))
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &tmp)
+	if err != nil {
+		return nil, err
+	}
+
+	// We inline the additional fields from the underlying map
+	for key, value := range s.AdditionalIntervalsQueryProperty {
+		tmp[fmt.Sprintf("%s", key)] = value
+	}
+	delete(tmp, "AdditionalIntervalsQueryProperty")
+
+	data, err = json.Marshal(tmp)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
 // NewIntervalsQuery returns a IntervalsQuery.
 func NewIntervalsQuery() *IntervalsQuery {
-	r := &IntervalsQuery{}
+	r := &IntervalsQuery{
+		AdditionalIntervalsQueryProperty: make(map[string]json.RawMessage),
+	}
 
 	return r
 }

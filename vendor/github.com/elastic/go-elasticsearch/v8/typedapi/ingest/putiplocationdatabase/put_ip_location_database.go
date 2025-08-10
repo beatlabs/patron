@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update an IP geolocation database configuration.
 package putiplocationdatabase
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *PutIpLocationDatabase {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -385,8 +383,22 @@ func (r *PutIpLocationDatabase) Pretty(pretty bool) *PutIpLocationDatabase {
 	return r
 }
 
+// API name: AdditionalDatabaseConfigurationProperty
+func (r *PutIpLocationDatabase) AdditionalDatabaseConfigurationProperty(additionaldatabaseconfigurationproperty map[string]json.RawMessage) *PutIpLocationDatabase {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.AdditionalDatabaseConfigurationProperty = additionaldatabaseconfigurationproperty
+
+	return r
+}
+
 // API name: ipinfo
 func (r *PutIpLocationDatabase) Ipinfo(ipinfo *types.Ipinfo) *PutIpLocationDatabase {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Ipinfo = ipinfo
 
@@ -395,6 +407,9 @@ func (r *PutIpLocationDatabase) Ipinfo(ipinfo *types.Ipinfo) *PutIpLocationDatab
 
 // API name: maxmind
 func (r *PutIpLocationDatabase) Maxmind(maxmind *types.Maxmind) *PutIpLocationDatabase {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Maxmind = maxmind
 
@@ -404,6 +419,9 @@ func (r *PutIpLocationDatabase) Maxmind(maxmind *types.Maxmind) *PutIpLocationDa
 // Name The provider-assigned name of the IP geolocation database to download.
 // API name: name
 func (r *PutIpLocationDatabase) Name(name string) *PutIpLocationDatabase {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Name = name
 
 	return r

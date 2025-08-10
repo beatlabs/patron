@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Get term vector information.
 //
@@ -201,8 +201,6 @@ func New(tp elastictransport.Interface) *Termvectors {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -518,6 +516,9 @@ func (r *Termvectors) Pretty(pretty bool) *Termvectors {
 // if a structure is provided, the client will defer a json serialization
 // prior to sending the payload to Elasticsearch.
 func (r *Termvectors) Doc(doc any) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	switch casted := doc.(type) {
 	case json.RawMessage:
 		r.req.Doc = casted
@@ -544,6 +545,9 @@ func (r *Termvectors) Doc(doc any) *Termvectors {
 // each term in this field).
 // API name: field_statistics
 func (r *Termvectors) FieldStatistics(fieldstatistics bool) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.FieldStatistics = &fieldstatistics
 
 	return r
@@ -554,6 +558,9 @@ func (r *Termvectors) FieldStatistics(fieldstatistics bool) *Termvectors {
 // the `completion_fields` or `fielddata_fields` parameters.
 // API name: fields
 func (r *Termvectors) Fields(fields ...string) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Fields = fields
 
 	return r
@@ -566,6 +573,9 @@ func (r *Termvectors) Fields(fields ...string) *Termvectors {
 // This Query.
 // API name: filter
 func (r *Termvectors) Filter(filter *types.TermVectorsFilter) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Filter = filter
 
@@ -575,6 +585,9 @@ func (r *Termvectors) Filter(filter *types.TermVectorsFilter) *Termvectors {
 // Offsets If `true`, the response includes term offsets.
 // API name: offsets
 func (r *Termvectors) Offsets(offsets bool) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Offsets = &offsets
 
 	return r
@@ -583,6 +596,9 @@ func (r *Termvectors) Offsets(offsets bool) *Termvectors {
 // Payloads If `true`, the response includes term payloads.
 // API name: payloads
 func (r *Termvectors) Payloads(payloads bool) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Payloads = &payloads
 
 	return r
@@ -595,6 +611,9 @@ func (r *Termvectors) Payloads(payloads bool) *Termvectors {
 // term vectors will be regenerated.
 // API name: per_field_analyzer
 func (r *Termvectors) PerFieldAnalyzer(perfieldanalyzer map[string]string) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.PerFieldAnalyzer = perfieldanalyzer
 
@@ -604,6 +623,9 @@ func (r *Termvectors) PerFieldAnalyzer(perfieldanalyzer map[string]string) *Term
 // Positions If `true`, the response includes term positions.
 // API name: positions
 func (r *Termvectors) Positions(positions bool) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Positions = &positions
 
 	return r
@@ -612,6 +634,9 @@ func (r *Termvectors) Positions(positions bool) *Termvectors {
 // Routing A custom value that is used to route operations to a specific shard.
 // API name: routing
 func (r *Termvectors) Routing(routing string) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Routing = &routing
 
 	return r
@@ -627,6 +652,9 @@ func (r *Termvectors) Routing(routing string) *Termvectors {
 // serious performance impact.
 // API name: term_statistics
 func (r *Termvectors) TermStatistics(termstatistics bool) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TermStatistics = &termstatistics
 
 	return r
@@ -635,6 +663,9 @@ func (r *Termvectors) TermStatistics(termstatistics bool) *Termvectors {
 // Version If `true`, returns the document version as part of a hit.
 // API name: version
 func (r *Termvectors) Version(versionnumber int64) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Version = &versionnumber
 
 	return r
@@ -643,6 +674,9 @@ func (r *Termvectors) Version(versionnumber int64) *Termvectors {
 // VersionType The version type.
 // API name: version_type
 func (r *Termvectors) VersionType(versiontype versiontype.VersionType) *Termvectors {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.VersionType = &versiontype
 
 	return r

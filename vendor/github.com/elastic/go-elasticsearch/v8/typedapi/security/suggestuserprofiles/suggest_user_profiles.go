@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Suggest a user profile.
 //
@@ -99,8 +99,6 @@ func New(tp elastictransport.Interface) *SuggestUserProfiles {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -364,6 +362,9 @@ func (r *SuggestUserProfiles) Pretty(pretty bool) *SuggestUserProfiles {
 // body field.
 // API name: data
 func (r *SuggestUserProfiles) Data(data ...string) *SuggestUserProfiles {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Data = data
 
 	return r
@@ -375,6 +376,9 @@ func (r *SuggestUserProfiles) Data(data ...string) *SuggestUserProfiles {
 // the profile matches the `name` field query.
 // API name: hint
 func (r *SuggestUserProfiles) Hint(hint *types.Hint) *SuggestUserProfiles {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Hint = hint
 
@@ -385,6 +389,9 @@ func (r *SuggestUserProfiles) Hint(hint *types.Hint) *SuggestUserProfiles {
 // Name-related fields are the user's `username`, `full_name`, and `email`.
 // API name: name
 func (r *SuggestUserProfiles) Name(name string) *SuggestUserProfiles {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Name = &name
 
@@ -394,6 +401,9 @@ func (r *SuggestUserProfiles) Name(name string) *SuggestUserProfiles {
 // Size The number of profiles to return.
 // API name: size
 func (r *SuggestUserProfiles) Size(size int64) *SuggestUserProfiles {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Size = &size
 

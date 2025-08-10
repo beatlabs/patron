@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Test a Grok pattern.
 // Test a Grok pattern on one or more lines of text.
@@ -89,8 +89,6 @@ func New(tp elastictransport.Interface) *TestGrokPattern {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -356,6 +354,9 @@ func (r *TestGrokPattern) Pretty(pretty bool) *TestGrokPattern {
 // GrokPattern The Grok pattern to run on the text.
 // API name: grok_pattern
 func (r *TestGrokPattern) GrokPattern(grokpattern string) *TestGrokPattern {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.GrokPattern = grokpattern
 
 	return r
@@ -364,6 +365,9 @@ func (r *TestGrokPattern) GrokPattern(grokpattern string) *TestGrokPattern {
 // Text The lines of text to run the Grok pattern on.
 // API name: text
 func (r *TestGrokPattern) Text(texts ...string) *TestGrokPattern {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Text = texts
 
 	return r

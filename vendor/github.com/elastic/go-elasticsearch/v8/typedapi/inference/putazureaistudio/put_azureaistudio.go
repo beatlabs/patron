@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an Azure AI studio inference endpoint.
 //
@@ -103,8 +103,6 @@ func New(tp elastictransport.Interface) *PutAzureaistudio {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -340,6 +338,15 @@ func (r *PutAzureaistudio) _azureaistudioinferenceid(azureaistudioinferenceid st
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutAzureaistudio) Timeout(duration string) *PutAzureaistudio {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -387,6 +394,9 @@ func (r *PutAzureaistudio) Pretty(pretty bool) *PutAzureaistudio {
 // ChunkingSettings The chunking configuration object.
 // API name: chunking_settings
 func (r *PutAzureaistudio) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *PutAzureaistudio {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -397,6 +407,9 @@ func (r *PutAzureaistudio) ChunkingSettings(chunkingsettings *types.InferenceChu
 // `azureaistudio`.
 // API name: service
 func (r *PutAzureaistudio) Service(service azureaistudioservicetype.AzureAiStudioServiceType) *PutAzureaistudio {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -406,6 +419,9 @@ func (r *PutAzureaistudio) Service(service azureaistudioservicetype.AzureAiStudi
 // the `openai` service.
 // API name: service_settings
 func (r *PutAzureaistudio) ServiceSettings(servicesettings *types.AzureAiStudioServiceSettings) *PutAzureaistudio {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
 
@@ -416,6 +432,9 @@ func (r *PutAzureaistudio) ServiceSettings(servicesettings *types.AzureAiStudioS
 // These settings are specific to the task type you specified.
 // API name: task_settings
 func (r *PutAzureaistudio) TaskSettings(tasksettings *types.AzureAiStudioTaskSettings) *PutAzureaistudio {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TaskSettings = tasksettings
 

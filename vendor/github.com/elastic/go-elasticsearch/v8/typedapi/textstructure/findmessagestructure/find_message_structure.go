@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Find the structure of text messages.
 // Find the structure of a list of text messages.
@@ -141,8 +141,6 @@ func New(tp elastictransport.Interface) *FindMessageStructure {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -593,6 +591,9 @@ func (r *FindMessageStructure) Pretty(pretty bool) *FindMessageStructure {
 // Messages The list of messages you want to analyze.
 // API name: messages
 func (r *FindMessageStructure) Messages(messages ...string) *FindMessageStructure {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Messages = messages
 
 	return r

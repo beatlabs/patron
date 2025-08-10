@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an Amazon Bedrock inference endpoint.
 //
@@ -119,8 +119,6 @@ func New(tp elastictransport.Interface) *PutAmazonbedrock {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -356,6 +354,15 @@ func (r *PutAmazonbedrock) _amazonbedrockinferenceid(amazonbedrockinferenceid st
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutAmazonbedrock) Timeout(duration string) *PutAmazonbedrock {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -403,6 +410,9 @@ func (r *PutAmazonbedrock) Pretty(pretty bool) *PutAmazonbedrock {
 // ChunkingSettings The chunking configuration object.
 // API name: chunking_settings
 func (r *PutAmazonbedrock) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *PutAmazonbedrock {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -413,6 +423,9 @@ func (r *PutAmazonbedrock) ChunkingSettings(chunkingsettings *types.InferenceChu
 // `amazonbedrock`.
 // API name: service
 func (r *PutAmazonbedrock) Service(service amazonbedrockservicetype.AmazonBedrockServiceType) *PutAmazonbedrock {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -422,6 +435,9 @@ func (r *PutAmazonbedrock) Service(service amazonbedrockservicetype.AmazonBedroc
 // the `amazonbedrock` service.
 // API name: service_settings
 func (r *PutAmazonbedrock) ServiceSettings(servicesettings *types.AmazonBedrockServiceSettings) *PutAmazonbedrock {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
 
@@ -432,6 +448,9 @@ func (r *PutAmazonbedrock) ServiceSettings(servicesettings *types.AmazonBedrockS
 // These settings are specific to the task type you specified.
 // API name: task_settings
 func (r *PutAmazonbedrock) TaskSettings(tasksettings *types.AmazonBedrockTaskSettings) *PutAmazonbedrock {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TaskSettings = tasksettings
 

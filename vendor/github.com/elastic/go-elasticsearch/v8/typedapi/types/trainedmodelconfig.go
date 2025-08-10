@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // TrainedModelConfig type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/ml/_types/TrainedModel.ts#L203-L240
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/TrainedModel.ts#L203-L240
 type TrainedModelConfig struct {
 	CompressedDefinition *string `json:"compressed_definition,omitempty"`
 	// CreateTime The time when the trained model was created.
@@ -275,7 +275,7 @@ func (s *TrainedModelConfig) UnmarshalJSON(data []byte) error {
 // NewTrainedModelConfig returns a TrainedModelConfig.
 func NewTrainedModelConfig() *TrainedModelConfig {
 	r := &TrainedModelConfig{
-		DefaultFieldMap: make(map[string]string, 0),
+		DefaultFieldMap: make(map[string]string),
 	}
 
 	return r

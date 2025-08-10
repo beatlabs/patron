@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update the connector configuration.
 //
@@ -95,8 +95,6 @@ func New(tp elastictransport.Interface) *UpdateConfiguration {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -365,6 +363,9 @@ func (r *UpdateConfiguration) Pretty(pretty bool) *UpdateConfiguration {
 
 // API name: configuration
 func (r *UpdateConfiguration) Configuration(connectorconfiguration types.ConnectorConfiguration) *UpdateConfiguration {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Configuration = connectorconfiguration
 
 	return r
@@ -372,6 +373,9 @@ func (r *UpdateConfiguration) Configuration(connectorconfiguration types.Connect
 
 // API name: values
 func (r *UpdateConfiguration) Values(values map[string]json.RawMessage) *UpdateConfiguration {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Values = values
 

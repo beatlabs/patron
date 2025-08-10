@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Perform completion inference on the service
 package completion
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *Completion {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -371,6 +369,9 @@ func (r *Completion) Pretty(pretty bool) *Completion {
 // Either a string or an array of strings.
 // API name: input
 func (r *Completion) Input(inputs ...string) *Completion {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Input = inputs
 
 	return r
@@ -379,6 +380,9 @@ func (r *Completion) Input(inputs ...string) *Completion {
 // TaskSettings Optional task settings
 // API name: task_settings
 func (r *Completion) TaskSettings(tasksettings json.RawMessage) *Completion {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TaskSettings = tasksettings
 
 	return r

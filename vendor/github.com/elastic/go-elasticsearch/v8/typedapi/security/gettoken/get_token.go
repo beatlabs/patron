@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Get a token.
 //
@@ -128,8 +128,6 @@ func New(tp elastictransport.Interface) *GetToken {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -388,6 +386,9 @@ func (r *GetToken) Pretty(pretty bool) *GetToken {
 // `refresh_token`.
 // API name: grant_type
 func (r *GetToken) GrantType(granttype accesstokengranttype.AccessTokenGrantType) *GetToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.GrantType = &granttype
 
 	return r
@@ -398,6 +399,9 @@ func (r *GetToken) GrantType(granttype accesstokengranttype.AccessTokenGrantType
 // This parameter is not valid with any other supported grant type.
 // API name: kerberos_ticket
 func (r *GetToken) KerberosTicket(kerberosticket string) *GetToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.KerberosTicket = &kerberosticket
 
@@ -409,6 +413,9 @@ func (r *GetToken) KerberosTicket(kerberosticket string) *GetToken {
 // This parameter is not valid with any other supported grant type.
 // API name: password
 func (r *GetToken) Password(password string) *GetToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Password = &password
 
 	return r
@@ -420,6 +427,9 @@ func (r *GetToken) Password(password string) *GetToken {
 // This parameter is not valid with any other supported grant type.
 // API name: refresh_token
 func (r *GetToken) RefreshToken(refreshtoken string) *GetToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RefreshToken = &refreshtoken
 
@@ -431,6 +441,9 @@ func (r *GetToken) RefreshToken(refreshtoken string) *GetToken {
 // sent with the request.
 // API name: scope
 func (r *GetToken) Scope(scope string) *GetToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Scope = &scope
 
@@ -442,6 +455,9 @@ func (r *GetToken) Scope(scope string) *GetToken {
 // This parameter is not valid with any other supported grant type.
 // API name: username
 func (r *GetToken) Username(username string) *GetToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Username = &username
 
 	return r

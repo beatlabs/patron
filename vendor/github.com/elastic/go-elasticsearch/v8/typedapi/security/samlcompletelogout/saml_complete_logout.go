@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Logout of SAML completely.
 //
@@ -116,8 +116,6 @@ func New(tp elastictransport.Interface) *SamlCompleteLogout {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -322,6 +320,9 @@ func (r *SamlCompleteLogout) Pretty(pretty bool) *SamlCompleteLogout {
 // logout response.
 // API name: content
 func (r *SamlCompleteLogout) Content(content string) *SamlCompleteLogout {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Content = &content
 
@@ -332,6 +333,9 @@ func (r *SamlCompleteLogout) Content(content string) *SamlCompleteLogout {
 // has for the current user.
 // API name: ids
 func (r *SamlCompleteLogout) Ids(ids ...string) *SamlCompleteLogout {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Ids = ids
 
 	return r
@@ -341,6 +345,9 @@ func (r *SamlCompleteLogout) Ids(ids ...string) *SamlCompleteLogout {
 // this field must be set to the query string of the redirect URI.
 // API name: query_string
 func (r *SamlCompleteLogout) QueryString(querystring string) *SamlCompleteLogout {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.QueryString = &querystring
 
@@ -351,6 +358,9 @@ func (r *SamlCompleteLogout) QueryString(querystring string) *SamlCompleteLogout
 // used to verify the logout response.
 // API name: realm
 func (r *SamlCompleteLogout) Realm(realm string) *SamlCompleteLogout {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Realm = realm
 

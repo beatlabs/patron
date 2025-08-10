@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update a document in an index.
 //
@@ -493,8 +493,6 @@ func New(tp elastictransport.Interface) *Index {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -878,6 +876,15 @@ func (r *Index) WaitForActiveShards(waitforactiveshards string) *Index {
 // API name: require_alias
 func (r *Index) RequireAlias(requirealias bool) *Index {
 	r.values.Set("require_alias", strconv.FormatBool(requirealias))
+
+	return r
+}
+
+// RequireDataStream If `true`, the request's actions must target a data stream (existing or to be
+// created).
+// API name: require_data_stream
+func (r *Index) RequireDataStream(requiredatastream bool) *Index {
+	r.values.Set("require_data_stream", strconv.FormatBool(requiredatastream))
 
 	return r
 }

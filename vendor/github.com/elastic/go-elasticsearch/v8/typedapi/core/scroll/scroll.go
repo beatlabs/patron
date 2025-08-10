@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Run a scrolling search.
 //
@@ -135,8 +135,6 @@ func New(tp elastictransport.Interface) *Scroll {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -400,6 +398,9 @@ func (r *Scroll) Pretty(pretty bool) *Scroll {
 // Scroll The period to retain the search context for scrolling.
 // API name: scroll
 func (r *Scroll) Scroll(duration types.Duration) *Scroll {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Scroll = duration
 
 	return r
@@ -408,6 +409,9 @@ func (r *Scroll) Scroll(duration types.Duration) *Scroll {
 // ScrollId The scroll ID of the search.
 // API name: scroll_id
 func (r *Scroll) ScrollId(scrollid string) *Scroll {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ScrollId = scrollid
 
 	return r

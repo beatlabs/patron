@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,12 +31,13 @@ import (
 
 // PatternReplaceTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/analysis/token_filters.ts#L382-L390
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/analysis/token_filters.ts#L382-L391
 type PatternReplaceTokenFilter struct {
 	// All If `true`, all substrings matching the pattern parameter’s regular expression
 	// are replaced. If `false`, the filter replaces only the first matching
 	// substring in each token. Defaults to `true`.
-	All *bool `json:"all,omitempty"`
+	All   *bool   `json:"all,omitempty"`
+	Flags *string `json:"flags,omitempty"`
 	// Pattern Regular expression, written in Java’s regular expression syntax. The filter
 	// replaces token substrings matching this pattern with the substring in the
 	// `replacement` parameter.
@@ -75,6 +76,18 @@ func (s *PatternReplaceTokenFilter) UnmarshalJSON(data []byte) error {
 			case bool:
 				s.All = &v
 			}
+
+		case "flags":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return fmt.Errorf("%s | %w", "Flags", err)
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Flags = &o
 
 		case "pattern":
 			var tmp json.RawMessage
@@ -120,6 +133,7 @@ func (s PatternReplaceTokenFilter) MarshalJSON() ([]byte, error) {
 	type innerPatternReplaceTokenFilter PatternReplaceTokenFilter
 	tmp := innerPatternReplaceTokenFilter{
 		All:         s.All,
+		Flags:       s.Flags,
 		Pattern:     s.Pattern,
 		Replacement: s.Replacement,
 		Type:        s.Type,

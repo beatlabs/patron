@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Query watches.
 // Get all registered watches in a paginated manner and optionally filter
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *QueryWatches {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -350,6 +348,9 @@ func (r *QueryWatches) Pretty(pretty bool) *QueryWatches {
 // It must be non-negative.
 // API name: from
 func (r *QueryWatches) From(from int) *QueryWatches {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.From = &from
 
 	return r
@@ -358,6 +359,9 @@ func (r *QueryWatches) From(from int) *QueryWatches {
 // Query A query that filters the watches to be returned.
 // API name: query
 func (r *QueryWatches) Query(query *types.Query) *QueryWatches {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -368,6 +372,9 @@ func (r *QueryWatches) Query(query *types.Query) *QueryWatches {
 // page.
 // API name: search_after
 func (r *QueryWatches) SearchAfter(sortresults ...types.FieldValue) *QueryWatches {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.SearchAfter = sortresults
 
 	return r
@@ -377,6 +384,9 @@ func (r *QueryWatches) SearchAfter(sortresults ...types.FieldValue) *QueryWatche
 // It must be non-negative.
 // API name: size
 func (r *QueryWatches) Size(size int) *QueryWatches {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Size = &size
 
 	return r
@@ -385,6 +395,9 @@ func (r *QueryWatches) Size(size int) *QueryWatches {
 // Sort One or more fields used to sort the search results.
 // API name: sort
 func (r *QueryWatches) Sort(sorts ...types.SortCombinations) *QueryWatches {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Sort = sorts
 
 	return r

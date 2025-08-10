@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update users.
 //
@@ -104,8 +104,6 @@ func New(tp elastictransport.Interface) *PutUser {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -390,6 +388,9 @@ func (r *PutUser) Pretty(pretty bool) *PutUser {
 // Email The email of the user.
 // API name: email
 func (r *PutUser) Email(email string) *PutUser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Email = &email
 
 	return r
@@ -398,6 +399,9 @@ func (r *PutUser) Email(email string) *PutUser {
 // Enabled Specifies whether the user is enabled.
 // API name: enabled
 func (r *PutUser) Enabled(enabled bool) *PutUser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Enabled = &enabled
 
 	return r
@@ -406,6 +410,9 @@ func (r *PutUser) Enabled(enabled bool) *PutUser {
 // FullName The full name of the user.
 // API name: full_name
 func (r *PutUser) FullName(fullname string) *PutUser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.FullName = &fullname
 
 	return r
@@ -414,6 +421,9 @@ func (r *PutUser) FullName(fullname string) *PutUser {
 // Metadata Arbitrary metadata that you want to associate with the user.
 // API name: metadata
 func (r *PutUser) Metadata(metadata types.Metadata) *PutUser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Metadata = metadata
 
 	return r
@@ -427,6 +437,9 @@ func (r *PutUser) Metadata(metadata types.Metadata) *PutUser {
 // user's password
 // API name: password
 func (r *PutUser) Password(password string) *PutUser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Password = &password
 
 	return r
@@ -444,6 +457,9 @@ func (r *PutUser) Password(password string) *PutUser {
 // the same request.
 // API name: password_hash
 func (r *PutUser) PasswordHash(passwordhash string) *PutUser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.PasswordHash = &passwordhash
 
@@ -455,6 +471,9 @@ func (r *PutUser) PasswordHash(passwordhash string) *PutUser {
 // To create a user without any roles, specify an empty list (`[]`).
 // API name: roles
 func (r *PutUser) Roles(roles ...string) *PutUser {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Roles = roles
 
 	return r

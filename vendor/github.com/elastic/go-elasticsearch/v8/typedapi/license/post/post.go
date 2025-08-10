@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update the license.
 //
@@ -111,8 +111,6 @@ func New(tp elastictransport.Interface) *Post {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -389,6 +387,9 @@ func (r *Post) Pretty(pretty bool) *Post {
 
 // API name: license
 func (r *Post) License(license *types.License) *Post {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.License = license
 
@@ -398,6 +399,9 @@ func (r *Post) License(license *types.License) *Post {
 // Licenses A sequence of one or more JSON documents containing the license information.
 // API name: licenses
 func (r *Post) Licenses(licenses ...types.License) *Post {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Licenses = licenses
 
 	return r

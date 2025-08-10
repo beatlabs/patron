@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update a trained model deployment.
 package updatetrainedmodeldeployment
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *UpdateTrainedModelDeployment {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -370,6 +368,9 @@ func (r *UpdateTrainedModelDeployment) Pretty(pretty bool) *UpdateTrainedModelDe
 // manually.
 // API name: adaptive_allocations
 func (r *UpdateTrainedModelDeployment) AdaptiveAllocations(adaptiveallocations *types.AdaptiveAllocationsSettings) *UpdateTrainedModelDeployment {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.AdaptiveAllocations = adaptiveallocations
 
@@ -387,6 +388,9 @@ func (r *UpdateTrainedModelDeployment) AdaptiveAllocations(adaptiveallocations *
 // automatically set.
 // API name: number_of_allocations
 func (r *UpdateTrainedModelDeployment) NumberOfAllocations(numberofallocations int) *UpdateTrainedModelDeployment {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.NumberOfAllocations = &numberofallocations
 
 	return r

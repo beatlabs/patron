@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // InferenceProcessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/ingest/_types/Processors.ts#L1027-L1059
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Processors.ts#L1027-L1059
 type InferenceProcessor struct {
 	// Description Description of the processor.
 	// Useful for describing the purpose of the processor or its configuration.
@@ -198,7 +198,7 @@ func (s *InferenceProcessor) UnmarshalJSON(data []byte) error {
 // NewInferenceProcessor returns a InferenceProcessor.
 func NewInferenceProcessor() *InferenceProcessor {
 	r := &InferenceProcessor{
-		FieldMap: make(map[string]json.RawMessage, 0),
+		FieldMap: make(map[string]json.RawMessage),
 	}
 
 	return r

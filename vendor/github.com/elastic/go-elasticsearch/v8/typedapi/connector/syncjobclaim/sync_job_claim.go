@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Claim a connector sync job.
 // This action updates the job status to `in_progress` and sets the `last_seen`
@@ -115,8 +115,6 @@ func New(tp elastictransport.Interface) *SyncJobClaim {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -394,6 +392,9 @@ func (r *SyncJobClaim) Pretty(pretty bool) *SyncJobClaim {
 // if a structure is provided, the client will defer a json serialization
 // prior to sending the payload to Elasticsearch.
 func (r *SyncJobClaim) SyncCursor(synccursor any) *SyncJobClaim {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	switch casted := synccursor.(type) {
 	case json.RawMessage:
 		r.req.SyncCursor = casted
@@ -414,6 +415,9 @@ func (r *SyncJobClaim) SyncCursor(synccursor any) *SyncJobClaim {
 // WorkerHostname The host name of the current system that will run the job.
 // API name: worker_hostname
 func (r *SyncJobClaim) WorkerHostname(workerhostname string) *SyncJobClaim {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.WorkerHostname = workerhostname
 

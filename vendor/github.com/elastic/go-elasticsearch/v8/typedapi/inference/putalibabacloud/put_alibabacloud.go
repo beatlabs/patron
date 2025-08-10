@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an AlibabaCloud AI Search inference endpoint.
 //
@@ -103,8 +103,6 @@ func New(tp elastictransport.Interface) *PutAlibabacloud {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -340,6 +338,15 @@ func (r *PutAlibabacloud) _alibabacloudinferenceid(alibabacloudinferenceid strin
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutAlibabacloud) Timeout(duration string) *PutAlibabacloud {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -387,6 +394,9 @@ func (r *PutAlibabacloud) Pretty(pretty bool) *PutAlibabacloud {
 // ChunkingSettings The chunking configuration object.
 // API name: chunking_settings
 func (r *PutAlibabacloud) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *PutAlibabacloud {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -397,6 +407,9 @@ func (r *PutAlibabacloud) ChunkingSettings(chunkingsettings *types.InferenceChun
 // `alibabacloud-ai-search`.
 // API name: service
 func (r *PutAlibabacloud) Service(service alibabacloudservicetype.AlibabaCloudServiceType) *PutAlibabacloud {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -406,6 +419,9 @@ func (r *PutAlibabacloud) Service(service alibabacloudservicetype.AlibabaCloudSe
 // the `alibabacloud-ai-search` service.
 // API name: service_settings
 func (r *PutAlibabacloud) ServiceSettings(servicesettings *types.AlibabaCloudServiceSettings) *PutAlibabacloud {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
 
@@ -416,6 +432,9 @@ func (r *PutAlibabacloud) ServiceSettings(servicesettings *types.AlibabaCloudSer
 // These settings are specific to the task type you specified.
 // API name: task_settings
 func (r *PutAlibabacloud) TaskSettings(tasksettings *types.AlibabaCloudTaskSettings) *PutAlibabacloud {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TaskSettings = tasksettings
 

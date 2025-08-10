@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -34,7 +34,7 @@ import (
 
 // CohereServiceSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/inference/_types/CommonTypes.ts#L645-L686
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/_types/CommonTypes.ts#L788-L831
 type CohereServiceSettings struct {
 	// ApiKey A valid API key for your Cohere account.
 	// You can find or create your Cohere API keys on the Cohere API key settings
@@ -48,6 +48,10 @@ type CohereServiceSettings struct {
 	// recreate it with the same name and the updated API key.
 	ApiKey string `json:"api_key"`
 	// EmbeddingType For a `text_embedding` task, the types of embeddings you want to get back.
+	// Use `binary` for binary embeddings, which are encoded as bytes with signed
+	// int8 precision.
+	// Use `bit` for binary embeddings, which are encoded as bytes with signed int8
+	// precision (this is a synonym of `binary`).
 	// Use `byte` for signed int8 embeddings (this is a synonym of `int8`).
 	// Use `float` for the default float embeddings.
 	// Use `int8` for signed int8 embeddings.

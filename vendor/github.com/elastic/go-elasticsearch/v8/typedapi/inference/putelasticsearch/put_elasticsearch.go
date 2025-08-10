@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an Elasticsearch inference endpoint.
 //
@@ -151,8 +151,6 @@ func New(tp elastictransport.Interface) *PutElasticsearch {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -389,6 +387,15 @@ func (r *PutElasticsearch) _elasticsearchinferenceid(elasticsearchinferenceid st
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutElasticsearch) Timeout(duration string) *PutElasticsearch {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -436,6 +443,9 @@ func (r *PutElasticsearch) Pretty(pretty bool) *PutElasticsearch {
 // ChunkingSettings The chunking configuration object.
 // API name: chunking_settings
 func (r *PutElasticsearch) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *PutElasticsearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -446,6 +456,9 @@ func (r *PutElasticsearch) ChunkingSettings(chunkingsettings *types.InferenceChu
 // `elasticsearch`.
 // API name: service
 func (r *PutElasticsearch) Service(service elasticsearchservicetype.ElasticsearchServiceType) *PutElasticsearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -455,6 +468,9 @@ func (r *PutElasticsearch) Service(service elasticsearchservicetype.Elasticsearc
 // the `elasticsearch` service.
 // API name: service_settings
 func (r *PutElasticsearch) ServiceSettings(servicesettings *types.ElasticsearchServiceSettings) *PutElasticsearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
 
@@ -465,6 +481,9 @@ func (r *PutElasticsearch) ServiceSettings(servicesettings *types.ElasticsearchS
 // These settings are specific to the task type you specified.
 // API name: task_settings
 func (r *PutElasticsearch) TaskSettings(tasksettings *types.ElasticsearchTaskSettings) *PutElasticsearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TaskSettings = tasksettings
 

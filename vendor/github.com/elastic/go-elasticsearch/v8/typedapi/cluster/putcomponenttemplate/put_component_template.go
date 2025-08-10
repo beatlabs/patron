@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update a component template.
 // Component templates are building blocks for constructing index templates that
@@ -147,8 +147,6 @@ func New(tp elastictransport.Interface) *PutComponentTemplate {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -388,6 +386,14 @@ func (r *PutComponentTemplate) Create(create bool) *PutComponentTemplate {
 	return r
 }
 
+// Cause User defined reason for create the component template.
+// API name: cause
+func (r *PutComponentTemplate) Cause(cause string) *PutComponentTemplate {
+	r.values.Set("cause", cause)
+
+	return r
+}
+
 // MasterTimeout Period to wait for a connection to the master node.
 // If no response is received before the timeout expires, the request fails and
 // returns an error.
@@ -448,6 +454,9 @@ func (r *PutComponentTemplate) Pretty(pretty bool) *PutComponentTemplate {
 // warning.
 // API name: deprecated
 func (r *PutComponentTemplate) Deprecated(deprecated bool) *PutComponentTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Deprecated = &deprecated
 
 	return r
@@ -461,6 +470,9 @@ func (r *PutComponentTemplate) Deprecated(deprecated bool) *PutComponentTemplate
 // To unset `_meta`, replace the template without specifying this information.
 // API name: _meta
 func (r *PutComponentTemplate) Meta_(metadata types.Metadata) *PutComponentTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Meta_ = metadata
 
 	return r
@@ -470,6 +482,9 @@ func (r *PutComponentTemplate) Meta_(metadata types.Metadata) *PutComponentTempl
 // configuration.
 // API name: template
 func (r *PutComponentTemplate) Template(template *types.IndexState) *PutComponentTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Template = *template
 
@@ -481,6 +496,9 @@ func (r *PutComponentTemplate) Template(template *types.IndexState) *PutComponen
 // To unset a version, replace the template without specifying a version.
 // API name: version
 func (r *PutComponentTemplate) Version(versionnumber int64) *PutComponentTemplate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Version = &versionnumber
 
 	return r

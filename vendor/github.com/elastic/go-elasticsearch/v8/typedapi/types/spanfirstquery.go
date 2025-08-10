@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // SpanFirstQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/query_dsl/span.ts#L49-L61
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/span.ts#L49-L61
 type SpanFirstQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
 	// the query.
@@ -42,8 +42,8 @@ type SpanFirstQuery struct {
 	// End Controls the maximum end position permitted in a match.
 	End int `json:"end"`
 	// Match Can be any other span type query.
-	Match      *SpanQuery `json:"match,omitempty"`
-	QueryName_ *string    `json:"_name,omitempty"`
+	Match      SpanQuery `json:"match"`
+	QueryName_ *string   `json:"_name,omitempty"`
 }
 
 func (s *SpanFirstQuery) UnmarshalJSON(data []byte) error {

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Search rolled-up data.
 // The rollup search endpoint is needed because, internally, rolled-up documents
@@ -181,8 +181,6 @@ func New(tp elastictransport.Interface) *RollupSearch {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -482,6 +480,9 @@ func (r *RollupSearch) Pretty(pretty bool) *RollupSearch {
 // Aggregations Specifies aggregations.
 // API name: aggregations
 func (r *RollupSearch) Aggregations(aggregations map[string]types.Aggregations) *RollupSearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Aggregations = aggregations
 
@@ -491,6 +492,9 @@ func (r *RollupSearch) Aggregations(aggregations map[string]types.Aggregations) 
 // Query Specifies a DSL query that is subject to some limitations.
 // API name: query
 func (r *RollupSearch) Query(query *types.Query) *RollupSearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -500,6 +504,9 @@ func (r *RollupSearch) Query(query *types.Query) *RollupSearch {
 // Size Must be zero if set, as rollups work on pre-aggregated data.
 // API name: size
 func (r *RollupSearch) Size(size int) *RollupSearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Size = &size
 
 	return r

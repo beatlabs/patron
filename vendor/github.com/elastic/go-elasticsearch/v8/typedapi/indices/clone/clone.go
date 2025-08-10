@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Clone an index.
 // Clone an existing index into a new index.
@@ -236,8 +236,6 @@ func New(tp elastictransport.Interface) *Clone {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -551,6 +549,9 @@ func (r *Clone) Pretty(pretty bool) *Clone {
 // Aliases Aliases for the resulting index.
 // API name: aliases
 func (r *Clone) Aliases(aliases map[string]types.Alias) *Clone {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Aliases = aliases
 
@@ -560,6 +561,9 @@ func (r *Clone) Aliases(aliases map[string]types.Alias) *Clone {
 // Settings Configuration options for the target index.
 // API name: settings
 func (r *Clone) Settings(settings map[string]json.RawMessage) *Clone {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Settings = settings
 

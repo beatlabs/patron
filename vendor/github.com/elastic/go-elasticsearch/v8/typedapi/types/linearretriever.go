@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -27,20 +27,25 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/scorenormalizer"
 )
 
 // LinearRetriever type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/Retriever.ts#L68-L72
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Retriever.ts#L68-L75
 type LinearRetriever struct {
+	Fields []string `json:"fields,omitempty"`
 	// Filter Query to filter the documents that can match.
 	Filter []Query `json:"filter,omitempty"`
 	// MinScore Minimum _score for matching documents. Documents with a lower _score are not
 	// included in the top documents.
 	MinScore *float32 `json:"min_score,omitempty"`
 	// Name_ Retriever name.
-	Name_          *string `json:"_name,omitempty"`
-	RankWindowSize int     `json:"rank_window_size"`
+	Name_          *string                          `json:"_name,omitempty"`
+	Normalizer     *scorenormalizer.ScoreNormalizer `json:"normalizer,omitempty"`
+	Query          *string                          `json:"query,omitempty"`
+	RankWindowSize *int                             `json:"rank_window_size,omitempty"`
 	// Retrievers Inner retrievers.
 	Retrievers []InnerRetriever `json:"retrievers,omitempty"`
 }
@@ -59,6 +64,11 @@ func (s *LinearRetriever) UnmarshalJSON(data []byte) error {
 		}
 
 		switch t {
+
+		case "fields":
+			if err := dec.Decode(&s.Fields); err != nil {
+				return fmt.Errorf("%s | %w", "Fields", err)
+			}
 
 		case "filter":
 			rawMsg := json.RawMessage{}
@@ -104,6 +114,23 @@ func (s *LinearRetriever) UnmarshalJSON(data []byte) error {
 			}
 			s.Name_ = &o
 
+		case "normalizer":
+			if err := dec.Decode(&s.Normalizer); err != nil {
+				return fmt.Errorf("%s | %w", "Normalizer", err)
+			}
+
+		case "query":
+			var tmp json.RawMessage
+			if err := dec.Decode(&tmp); err != nil {
+				return fmt.Errorf("%s | %w", "Query", err)
+			}
+			o := string(tmp[:])
+			o, err = strconv.Unquote(o)
+			if err != nil {
+				o = string(tmp[:])
+			}
+			s.Query = &o
+
 		case "rank_window_size":
 
 			var tmp any
@@ -114,10 +141,10 @@ func (s *LinearRetriever) UnmarshalJSON(data []byte) error {
 				if err != nil {
 					return fmt.Errorf("%s | %w", "RankWindowSize", err)
 				}
-				s.RankWindowSize = value
+				s.RankWindowSize = &value
 			case float64:
 				f := int(v)
-				s.RankWindowSize = f
+				s.RankWindowSize = &f
 			}
 
 		case "retrievers":

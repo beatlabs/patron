@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create an API key.
 //
@@ -122,8 +122,6 @@ func New(tp elastictransport.Interface) *CreateApiKey {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -389,6 +387,9 @@ func (r *CreateApiKey) Pretty(pretty bool) *CreateApiKey {
 // By default, API keys never expire.
 // API name: expiration
 func (r *CreateApiKey) Expiration(duration types.Duration) *CreateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Expiration = duration
 
 	return r
@@ -399,6 +400,9 @@ func (r *CreateApiKey) Expiration(duration types.Duration) *CreateApiKey {
 // are reserved for system usage.
 // API name: metadata
 func (r *CreateApiKey) Metadata(metadata types.Metadata) *CreateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Metadata = metadata
 
 	return r
@@ -407,6 +411,9 @@ func (r *CreateApiKey) Metadata(metadata types.Metadata) *CreateApiKey {
 // Name A name for the API key.
 // API name: name
 func (r *CreateApiKey) Name(name string) *CreateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Name = &name
 
 	return r
@@ -431,6 +438,9 @@ func (r *CreateApiKey) Name(name string) *CreateApiKey {
 // authority to call Elasticsearch APIs.
 // API name: role_descriptors
 func (r *CreateApiKey) RoleDescriptors(roledescriptors map[string]types.RoleDescriptor) *CreateApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RoleDescriptors = roledescriptors
 

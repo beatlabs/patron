@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create a datafeed.
 // Datafeeds retrieve data from Elasticsearch for analysis by an anomaly
@@ -128,8 +128,6 @@ func New(tp elastictransport.Interface) *PutDatafeed {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -445,6 +443,9 @@ func (r *PutDatafeed) Pretty(pretty bool) *PutDatafeed {
 // cardinality data.
 // API name: aggregations
 func (r *PutDatafeed) Aggregations(aggregations map[string]types.Aggregations) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Aggregations = aggregations
 
@@ -460,6 +461,9 @@ func (r *PutDatafeed) Aggregations(aggregations map[string]types.Aggregations) *
 // it is an advanced configuration option.
 // API name: chunking_config
 func (r *PutDatafeed) ChunkingConfig(chunkingconfig *types.ChunkingConfig) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingConfig = chunkingconfig
 
@@ -477,6 +481,9 @@ func (r *PutDatafeed) ChunkingConfig(chunkingconfig *types.ChunkingConfig) *PutD
 // This check runs only on real-time datafeeds.
 // API name: delayed_data_check_config
 func (r *PutDatafeed) DelayedDataCheckConfig(delayeddatacheckconfig *types.DelayedDataCheckConfig) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.DelayedDataCheckConfig = delayeddatacheckconfig
 
@@ -495,6 +502,9 @@ func (r *PutDatafeed) DelayedDataCheckConfig(delayeddatacheckconfig *types.Delay
 // histogram aggregation.
 // API name: frequency
 func (r *PutDatafeed) Frequency(duration types.Duration) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Frequency = duration
 
 	return r
@@ -502,16 +512,23 @@ func (r *PutDatafeed) Frequency(duration types.Duration) *PutDatafeed {
 
 // API name: headers
 func (r *PutDatafeed) Headers(httpheaders types.HttpHeaders) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Headers = httpheaders
 
 	return r
 }
 
 // Indices An array of index names. Wildcards are supported. If any of the indices are
-// in remote clusters, the machine
-// learning nodes must have the `remote_cluster_client` role.
+// in remote clusters, the master
+// nodes and the machine learning nodes must have the `remote_cluster_client`
+// role.
 // API name: indices
 func (r *PutDatafeed) Indices(indices ...string) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Indices = indices
 
 	return r
@@ -520,6 +537,9 @@ func (r *PutDatafeed) Indices(indices ...string) *PutDatafeed {
 // IndicesOptions Specifies index expansion options that are used during search
 // API name: indices_options
 func (r *PutDatafeed) IndicesOptions(indicesoptions *types.IndicesOptions) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.IndicesOptions = indicesoptions
 
@@ -529,6 +549,9 @@ func (r *PutDatafeed) IndicesOptions(indicesoptions *types.IndicesOptions) *PutD
 // JobId Identifier for the anomaly detection job.
 // API name: job_id
 func (r *PutDatafeed) JobId(id string) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.JobId = &id
 
 	return r
@@ -544,6 +567,9 @@ func (r *PutDatafeed) JobId(id string) *PutDatafeed {
 // default, it is not set.
 // API name: max_empty_searches
 func (r *PutDatafeed) MaxEmptySearches(maxemptysearches int) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.MaxEmptySearches = &maxemptysearches
 
 	return r
@@ -556,6 +582,9 @@ func (r *PutDatafeed) MaxEmptySearches(maxemptysearches int) *PutDatafeed {
 // object is passed verbatim to Elasticsearch.
 // API name: query
 func (r *PutDatafeed) Query(query *types.Query) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -571,6 +600,9 @@ func (r *PutDatafeed) Query(query *types.Query) *PutDatafeed {
 // when there are multiple jobs running on the same node.
 // API name: query_delay
 func (r *PutDatafeed) QueryDelay(duration types.Duration) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.QueryDelay = duration
 
 	return r
@@ -579,6 +611,9 @@ func (r *PutDatafeed) QueryDelay(duration types.Duration) *PutDatafeed {
 // RuntimeMappings Specifies runtime fields for the datafeed search.
 // API name: runtime_mappings
 func (r *PutDatafeed) RuntimeMappings(runtimefields types.RuntimeFields) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RuntimeMappings = runtimefields
 
 	return r
@@ -590,6 +625,9 @@ func (r *PutDatafeed) RuntimeMappings(runtimefields types.RuntimeFields) *PutDat
 // these script fields.
 // API name: script_fields
 func (r *PutDatafeed) ScriptFields(scriptfields map[string]types.ScriptField) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ScriptFields = scriptfields
 
@@ -602,6 +640,9 @@ func (r *PutDatafeed) ScriptFields(scriptfields map[string]types.ScriptField) *P
 // by default.
 // API name: scroll_size
 func (r *PutDatafeed) ScrollSize(scrollsize int) *PutDatafeed {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ScrollSize = &scrollsize
 
 	return r

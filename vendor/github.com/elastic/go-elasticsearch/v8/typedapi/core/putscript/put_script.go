@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update a script or search template.
 // Creates or updates a stored script or search template.
@@ -96,8 +96,6 @@ func New(tp elastictransport.Interface) *PutScript {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -416,6 +414,9 @@ func (r *PutScript) Pretty(pretty bool) *PutScript {
 // Script The script or search template, its parameters, and its language.
 // API name: script
 func (r *PutScript) Script(script *types.StoredScript) *PutScript {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Script = *script
 

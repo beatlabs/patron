@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update user profile data.
 //
@@ -140,8 +140,6 @@ func New(tp elastictransport.Interface) *UpdateUserProfileData {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -446,6 +444,9 @@ func (r *UpdateUserProfileData) Pretty(pretty bool) *UpdateUserProfileData {
 // profile API.
 // API name: data
 func (r *UpdateUserProfileData) Data(data map[string]json.RawMessage) *UpdateUserProfileData {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Data = data
 
@@ -458,6 +459,9 @@ func (r *UpdateUserProfileData) Data(data map[string]json.RawMessage) *UpdateUse
 // (`_`) or contain a period (`.`).
 // API name: labels
 func (r *UpdateUserProfileData) Labels(labels map[string]json.RawMessage) *UpdateUserProfileData {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Labels = labels
 

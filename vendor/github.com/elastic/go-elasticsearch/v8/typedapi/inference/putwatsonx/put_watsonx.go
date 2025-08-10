@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create a Watsonx inference endpoint.
 //
@@ -111,8 +111,6 @@ func New(tp elastictransport.Interface) *PutWatsonx {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -349,6 +347,15 @@ func (r *PutWatsonx) _watsonxinferenceid(watsonxinferenceid string) *PutWatsonx 
 	return r
 }
 
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutWatsonx) Timeout(duration string) *PutWatsonx {
+	r.values.Set("timeout", duration)
+
+	return r
+}
+
 // ErrorTrace When set to `true` Elasticsearch will include the full stack trace of errors
 // when they occur.
 // API name: error_trace
@@ -397,6 +404,9 @@ func (r *PutWatsonx) Pretty(pretty bool) *PutWatsonx {
 // `watsonxai`.
 // API name: service
 func (r *PutWatsonx) Service(service watsonxservicetype.WatsonxServiceType) *PutWatsonx {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -406,6 +416,9 @@ func (r *PutWatsonx) Service(service watsonxservicetype.WatsonxServiceType) *Put
 // the `watsonxai` service.
 // API name: service_settings
 func (r *PutWatsonx) ServiceSettings(servicesettings *types.WatsonxServiceSettings) *PutWatsonx {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
 

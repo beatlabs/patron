@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -33,10 +33,10 @@ import (
 
 // InnerRetriever type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/Retriever.ts#L82-L86
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Retriever.ts#L85-L89
 type InnerRetriever struct {
 	Normalizer scorenormalizer.ScoreNormalizer `json:"normalizer"`
-	Retriever  *RetrieverContainer             `json:"retriever,omitempty"`
+	Retriever  RetrieverContainer              `json:"retriever"`
 	Weight     float32                         `json:"weight"`
 }
 

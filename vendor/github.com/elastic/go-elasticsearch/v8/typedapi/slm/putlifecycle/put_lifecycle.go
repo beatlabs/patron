@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create or update a policy.
 // Create or update a snapshot lifecycle policy.
@@ -97,8 +97,6 @@ func New(tp elastictransport.Interface) *PutLifecycle {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -391,6 +389,9 @@ func (r *PutLifecycle) Pretty(pretty bool) *PutLifecycle {
 // Config Configuration for each snapshot created by the policy.
 // API name: config
 func (r *PutLifecycle) Config(config *types.Configuration) *PutLifecycle {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Config = config
 
@@ -402,6 +403,9 @@ func (r *PutLifecycle) Config(config *types.Configuration) *PutLifecycle {
 // appended to each snapshot name.
 // API name: name
 func (r *PutLifecycle) Name(name string) *PutLifecycle {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Name = &name
 
 	return r
@@ -412,6 +416,9 @@ func (r *PutLifecycle) Name(name string) *PutLifecycle {
 // the snapshot repository API.
 // API name: repository
 func (r *PutLifecycle) Repository(repository string) *PutLifecycle {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Repository = &repository
 
@@ -421,6 +428,9 @@ func (r *PutLifecycle) Repository(repository string) *PutLifecycle {
 // Retention Retention rules used to retain and delete snapshots created by the policy.
 // API name: retention
 func (r *PutLifecycle) Retention(retention *types.Retention) *PutLifecycle {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Retention = retention
 
@@ -431,6 +441,9 @@ func (r *PutLifecycle) Retention(retention *types.Retention) *PutLifecycle {
 // applies schedule changes immediately.
 // API name: schedule
 func (r *PutLifecycle) Schedule(cronexpression string) *PutLifecycle {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Schedule = &cronexpression
 
 	return r

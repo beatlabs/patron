@@ -16,15 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Perform chat completion inference
 //
 // The chat completion inference API enables real-time responses for chat
 // completion tasks by delivering answers incrementally, reducing response times
 // during computation.
-// It only works with the `chat_completion` task type for `openai`, `elastic`
-// and `googlevertexai` inference services.
+// It only works with the `chat_completion` task type for `openai` and `elastic`
+// inference services.
 //
 // NOTE: The `chat_completion` task type is only available within the _stream
 // API and only supports streaming.
@@ -32,8 +32,8 @@
 // their response structure and capabilities.
 // The Chat completion inference API provides more comprehensive customization
 // options through more fields and function calling support.
-// If you use the `openai` service or the `elastic` service, use the Chat
-// completion inference API.
+// If you use the `openai`, `hugging_face` or the `elastic` service, use the
+// Chat completion inference API.
 package chatcompletionunified
 
 import (
@@ -101,8 +101,8 @@ func NewChatCompletionUnifiedFunc(tp elastictransport.Interface) NewChatCompleti
 // The chat completion inference API enables real-time responses for chat
 // completion tasks by delivering answers incrementally, reducing response times
 // during computation.
-// It only works with the `chat_completion` task type for `openai`, `elastic`
-// and `googlevertexai` inference services.
+// It only works with the `chat_completion` task type for `openai` and `elastic`
+// inference services.
 //
 // NOTE: The `chat_completion` task type is only available within the _stream
 // API and only supports streaming.
@@ -110,8 +110,8 @@ func NewChatCompletionUnifiedFunc(tp elastictransport.Interface) NewChatCompleti
 // their response structure and capabilities.
 // The Chat completion inference API provides more comprehensive customization
 // options through more fields and function calling support.
-// If you use the `openai` service or the `elastic` service, use the Chat
-// completion inference API.
+// If you use the `openai`, `hugging_face` or the `elastic` service, use the
+// Chat completion inference API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/chat-completion-inference-api.html
 func New(tp elastictransport.Interface) *ChatCompletionUnified {
@@ -121,8 +121,6 @@ func New(tp elastictransport.Interface) *ChatCompletionUnified {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -403,6 +401,9 @@ func (r *ChatCompletionUnified) Pretty(pretty bool) *ChatCompletionUnified {
 // completion request.
 // API name: max_completion_tokens
 func (r *ChatCompletionUnified) MaxCompletionTokens(maxcompletiontokens int64) *ChatCompletionUnified {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.MaxCompletionTokens = &maxcompletiontokens
 
@@ -416,6 +417,9 @@ func (r *ChatCompletionUnified) MaxCompletionTokens(maxcompletiontokens int64) *
 // the messages array is built up throughout a conversation.
 // API name: messages
 func (r *ChatCompletionUnified) Messages(messages ...types.Message) *ChatCompletionUnified {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Messages = messages
 
 	return r
@@ -424,6 +428,9 @@ func (r *ChatCompletionUnified) Messages(messages ...types.Message) *ChatComplet
 // Model The ID of the model to use.
 // API name: model
 func (r *ChatCompletionUnified) Model(model string) *ChatCompletionUnified {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Model = &model
 
@@ -434,6 +441,9 @@ func (r *ChatCompletionUnified) Model(model string) *ChatCompletionUnified {
 // additional tokens.
 // API name: stop
 func (r *ChatCompletionUnified) Stop(stops ...string) *ChatCompletionUnified {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Stop = stops
 
 	return r
@@ -442,6 +452,9 @@ func (r *ChatCompletionUnified) Stop(stops ...string) *ChatCompletionUnified {
 // Temperature The sampling temperature to use.
 // API name: temperature
 func (r *ChatCompletionUnified) Temperature(temperature float32) *ChatCompletionUnified {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Temperature = &temperature
 
@@ -468,6 +481,9 @@ func (r *ChatCompletionUnified) Temperature(temperature float32) *ChatCompletion
 // ```
 // API name: tool_choice
 func (r *ChatCompletionUnified) ToolChoice(completiontooltype types.CompletionToolType) *ChatCompletionUnified {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ToolChoice = completiontooltype
 
 	return r
@@ -503,6 +519,9 @@ func (r *ChatCompletionUnified) ToolChoice(completiontooltype types.CompletionTo
 // ```
 // API name: tools
 func (r *ChatCompletionUnified) Tools(tools ...types.CompletionTool) *ChatCompletionUnified {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Tools = tools
 
 	return r
@@ -511,6 +530,9 @@ func (r *ChatCompletionUnified) Tools(tools ...types.CompletionTool) *ChatComple
 // TopP Nucleus sampling, an alternative to sampling with temperature.
 // API name: top_p
 func (r *ChatCompletionUnified) TopP(topp float32) *ChatCompletionUnified {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.TopP = &topp
 

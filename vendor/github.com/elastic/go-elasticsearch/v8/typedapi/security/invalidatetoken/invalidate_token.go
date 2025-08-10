@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Invalidate a token.
 //
@@ -117,8 +117,6 @@ func New(tp elastictransport.Interface) *InvalidateToken {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -376,6 +374,9 @@ func (r *InvalidateToken) Pretty(pretty bool) *InvalidateToken {
 // This parameter cannot be used with either `refresh_token` or `token`.
 // API name: realm_name
 func (r *InvalidateToken) RealmName(name string) *InvalidateToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RealmName = &name
 
 	return r
@@ -386,6 +387,9 @@ func (r *InvalidateToken) RealmName(name string) *InvalidateToken {
 // `username` are used.
 // API name: refresh_token
 func (r *InvalidateToken) RefreshToken(refreshtoken string) *InvalidateToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RefreshToken = &refreshtoken
 
@@ -397,6 +401,9 @@ func (r *InvalidateToken) RefreshToken(refreshtoken string) *InvalidateToken {
 // `username` are used.
 // API name: token
 func (r *InvalidateToken) Token(token string) *InvalidateToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Token = &token
 
@@ -407,6 +414,9 @@ func (r *InvalidateToken) Token(token string) *InvalidateToken {
 // This parameter cannot be used with either `refresh_token` or `token`.
 // API name: username
 func (r *InvalidateToken) Username(username string) *InvalidateToken {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Username = &username
 
 	return r

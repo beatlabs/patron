@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Check user profile privileges.
 //
@@ -101,8 +101,6 @@ func New(tp elastictransport.Interface) *HasPrivilegesUserProfile {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -359,6 +357,9 @@ func (r *HasPrivilegesUserProfile) Pretty(pretty bool) *HasPrivilegesUserProfile
 // Privileges An object containing all the privileges to be checked.
 // API name: privileges
 func (r *HasPrivilegesUserProfile) Privileges(privileges *types.PrivilegesCheck) *HasPrivilegesUserProfile {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Privileges = *privileges
 
@@ -369,6 +370,9 @@ func (r *HasPrivilegesUserProfile) Privileges(privileges *types.PrivilegesCheck)
 // profiles.
 // API name: uids
 func (r *HasPrivilegesUserProfile) Uids(uids ...string) *HasPrivilegesUserProfile {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Uids = uids
 
 	return r

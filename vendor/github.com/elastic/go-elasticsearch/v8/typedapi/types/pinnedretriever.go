@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // PinnedRetriever type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/Retriever.ts#L74-L80
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Retriever.ts#L77-L83
 type PinnedRetriever struct {
 	Docs []SpecifiedDocument `json:"docs,omitempty"`
 	// Filter Query to filter the documents that can match.
@@ -42,9 +42,9 @@ type PinnedRetriever struct {
 	MinScore *float32 `json:"min_score,omitempty"`
 	// Name_ Retriever name.
 	Name_          *string `json:"_name,omitempty"`
-	RankWindowSize int     `json:"rank_window_size"`
+	RankWindowSize *int    `json:"rank_window_size,omitempty"`
 	// Retriever Inner retriever.
-	Retriever *RetrieverContainer `json:"retriever,omitempty"`
+	Retriever RetrieverContainer `json:"retriever"`
 }
 
 func (s *PinnedRetriever) UnmarshalJSON(data []byte) error {
@@ -126,10 +126,10 @@ func (s *PinnedRetriever) UnmarshalJSON(data []byte) error {
 				if err != nil {
 					return fmt.Errorf("%s | %w", "RankWindowSize", err)
 				}
-				s.RankWindowSize = value
+				s.RankWindowSize = &value
 			case float64:
 				f := int(v)
-				s.RankWindowSize = f
+				s.RankWindowSize = &f
 			}
 
 		case "retriever":

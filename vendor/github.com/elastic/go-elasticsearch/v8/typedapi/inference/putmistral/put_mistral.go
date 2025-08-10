@@ -16,11 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Create a Mistral inference endpoint.
 //
-// Creates an inference endpoint to perform an inference task with the `mistral`
+// Create an inference endpoint to perform an inference task with the `mistral`
 // service.
 package putmistral
 
@@ -92,10 +92,10 @@ func NewPutMistralFunc(tp elastictransport.Interface) NewPutMistral {
 
 // Create a Mistral inference endpoint.
 //
-// Creates an inference endpoint to perform an inference task with the `mistral`
+// Create an inference endpoint to perform an inference task with the `mistral`
 // service.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/{brnach}/infer-service-mistral.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/current/infer-service-mistral.html
 func New(tp elastictransport.Interface) *PutMistral {
 	r := &PutMistral{
 		transport: tp,
@@ -103,8 +103,6 @@ func New(tp elastictransport.Interface) *PutMistral {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -322,8 +320,7 @@ func (r *PutMistral) Header(key, value string) *PutMistral {
 	return r
 }
 
-// TaskType The task type.
-// The only valid task type for the model to perform is `text_embedding`.
+// TaskType The type of the inference task that the model will perform.
 // API Name: tasktype
 func (r *PutMistral) _tasktype(tasktype string) *PutMistral {
 	r.paramSet |= tasktypeMask
@@ -337,6 +334,15 @@ func (r *PutMistral) _tasktype(tasktype string) *PutMistral {
 func (r *PutMistral) _mistralinferenceid(mistralinferenceid string) *PutMistral {
 	r.paramSet |= mistralinferenceidMask
 	r.mistralinferenceid = mistralinferenceid
+
+	return r
+}
+
+// Timeout Specifies the amount of time to wait for the inference endpoint to be
+// created.
+// API name: timeout
+func (r *PutMistral) Timeout(duration string) *PutMistral {
+	r.values.Set("timeout", duration)
 
 	return r
 }
@@ -388,6 +394,9 @@ func (r *PutMistral) Pretty(pretty bool) *PutMistral {
 // ChunkingSettings The chunking configuration object.
 // API name: chunking_settings
 func (r *PutMistral) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *PutMistral {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -398,6 +407,9 @@ func (r *PutMistral) ChunkingSettings(chunkingsettings *types.InferenceChunkingS
 // `mistral`.
 // API name: service
 func (r *PutMistral) Service(service mistralservicetype.MistralServiceType) *PutMistral {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Service = service
 
 	return r
@@ -407,6 +419,9 @@ func (r *PutMistral) Service(service mistralservicetype.MistralServiceType) *Put
 // the `mistral` service.
 // API name: service_settings
 func (r *PutMistral) ServiceSettings(servicesettings *types.MistralServiceSettings) *PutMistral {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ServiceSettings = *servicesettings
 

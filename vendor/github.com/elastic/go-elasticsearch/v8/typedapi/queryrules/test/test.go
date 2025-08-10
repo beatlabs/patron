@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Test a query ruleset.
 // Evaluate match criteria against a query ruleset to identify the rules that
@@ -95,8 +95,6 @@ func New(tp elastictransport.Interface) *Test {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -368,6 +366,9 @@ func (r *Test) Pretty(pretty bool) *Test {
 // of the rule.
 // API name: match_criteria
 func (r *Test) MatchCriteria(matchcriteria map[string]json.RawMessage) *Test {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.MatchCriteria = matchcriteria
 

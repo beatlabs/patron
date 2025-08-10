@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.18.0: DO NOT EDIT
+// Code generated from specification version 8.19.0: DO NOT EDIT
 
 package esapi
 
@@ -53,9 +53,10 @@ type EsqlAsyncQuery func(body io.Reader, o ...func(*EsqlAsyncQueryRequest)) (*Re
 type EsqlAsyncQueryRequest struct {
 	Body io.Reader
 
-	Delimiter       string
-	DropNullColumns *bool
-	Format          string
+	AllowPartialResults *bool
+	Delimiter           string
+	DropNullColumns     *bool
+	Format              string
 
 	Pretty     bool
 	Human      bool
@@ -93,6 +94,10 @@ func (r EsqlAsyncQueryRequest) Do(providedCtx context.Context, transport Transpo
 	path.WriteString("/_query/async")
 
 	params = make(map[string]string)
+
+	if r.AllowPartialResults != nil {
+		params["allow_partial_results"] = strconv.FormatBool(*r.AllowPartialResults)
+	}
 
 	if r.Delimiter != "" {
 		params["delimiter"] = r.Delimiter
@@ -188,6 +193,13 @@ func (r EsqlAsyncQueryRequest) Do(providedCtx context.Context, transport Transpo
 func (f EsqlAsyncQuery) WithContext(v context.Context) func(*EsqlAsyncQueryRequest) {
 	return func(r *EsqlAsyncQueryRequest) {
 		r.ctx = v
+	}
+}
+
+// WithAllowPartialResults - if `true`, partial results will be returned if there are shard failures, butthe query can continue to execute on other clusters and shards.if `false`, the entire query will fail if there areany failures..
+func (f EsqlAsyncQuery) WithAllowPartialResults(v bool) func(*EsqlAsyncQueryRequest) {
+	return func(r *EsqlAsyncQueryRequest) {
+		r.AllowPartialResults = &v
 	}
 }
 

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// Code generated from specification version 8.18.0: DO NOT EDIT
+// Code generated from specification version 8.19.0: DO NOT EDIT
 
 package esapi
 
@@ -117,10 +117,6 @@ func (r SearchableSnapshotsClearCacheRequest) Do(providedCtx context.Context, tr
 
 	if r.IgnoreUnavailable != nil {
 		params["ignore_unavailable"] = strconv.FormatBool(*r.IgnoreUnavailable)
-	}
-
-	if len(r.Index) > 0 {
-		params["index"] = strings.Join(r.Index, ",")
 	}
 
 	if r.Pretty {

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Reindex documents.
 //
@@ -644,8 +644,6 @@ func New(tp elastictransport.Interface) *Reindex {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -986,6 +984,9 @@ func (r *Reindex) Pretty(pretty bool) *Reindex {
 // Conflicts Indicates whether to continue reindexing even when there are conflicts.
 // API name: conflicts
 func (r *Reindex) Conflicts(conflicts conflicts.Conflicts) *Reindex {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Conflicts = &conflicts
 
 	return r
@@ -994,6 +995,9 @@ func (r *Reindex) Conflicts(conflicts conflicts.Conflicts) *Reindex {
 // Dest The destination you are copying to.
 // API name: dest
 func (r *Reindex) Dest(dest *types.ReindexDestination) *Reindex {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Dest = *dest
 
@@ -1011,6 +1015,9 @@ func (r *Reindex) Dest(dest *types.ReindexDestination) *Reindex {
 // through every document in the source query.
 // API name: max_docs
 func (r *Reindex) MaxDocs(maxdocs int64) *Reindex {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.MaxDocs = &maxdocs
 
@@ -1020,6 +1027,9 @@ func (r *Reindex) MaxDocs(maxdocs int64) *Reindex {
 // Script The script to run to update the document source or metadata when reindexing.
 // API name: script
 func (r *Reindex) Script(script *types.Script) *Reindex {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Script = script
 
@@ -1028,6 +1038,9 @@ func (r *Reindex) Script(script *types.Script) *Reindex {
 
 // API name: size
 func (r *Reindex) Size(size int64) *Reindex {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Size = &size
 
@@ -1037,6 +1050,9 @@ func (r *Reindex) Size(size int64) *Reindex {
 // Source The source you are copying from.
 // API name: source
 func (r *Reindex) Source(source *types.ReindexSource) *Reindex {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Source = *source
 

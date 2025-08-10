@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
 // CCSStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/cluster/stats/types.ts#L591-L606
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cluster/stats/types.ts#L769-L784
 type CCSStats struct {
 	// Clusters Contains remote cluster settings and metrics collected from them.
 	// The keys are cluster names, and the values are per-cluster data.
@@ -37,7 +37,7 @@ type CCSStats struct {
 // NewCCSStats returns a CCSStats.
 func NewCCSStats() *CCSStats {
 	r := &CCSStats{
-		Clusters: make(map[string]RemoteClusterInfo, 0),
+		Clusters: make(map[string]RemoteClusterInfo),
 	}
 
 	return r

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Run a knn search.
 //
@@ -141,8 +141,6 @@ func New(tp elastictransport.Interface) *KnnSearch {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -421,6 +419,9 @@ func (r *KnnSearch) Pretty(pretty bool) *KnnSearch {
 // It accepts wildcard (`*`) patterns.
 // API name: docvalue_fields
 func (r *KnnSearch) DocvalueFields(docvaluefields ...types.FieldAndFormat) *KnnSearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.DocvalueFields = docvaluefields
 
 	return r
@@ -431,6 +432,9 @@ func (r *KnnSearch) DocvalueFields(docvaluefields ...types.FieldAndFormat) *KnnS
 // It accepts wildcard (`*`) patterns.
 // API name: fields
 func (r *KnnSearch) Fields(fields ...string) *KnnSearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Fields = fields
 
 	return r
@@ -444,6 +448,9 @@ func (r *KnnSearch) Fields(fields ...string) *KnnSearch {
 // match.
 // API name: filter
 func (r *KnnSearch) Filter(filters ...types.Query) *KnnSearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Filter = filters
 
 	return r
@@ -452,6 +459,9 @@ func (r *KnnSearch) Filter(filters ...types.Query) *KnnSearch {
 // Knn The kNN query to run.
 // API name: knn
 func (r *KnnSearch) Knn(knn *types.CoreKnnQuery) *KnnSearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Knn = *knn
 
@@ -462,6 +472,9 @@ func (r *KnnSearch) Knn(knn *types.CoreKnnQuery) *KnnSearch {
 // fields are returned in the `hits._source` property of the search response.
 // API name: _source
 func (r *KnnSearch) Source_(sourceconfig types.SourceConfig) *KnnSearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Source_ = sourceconfig
 
 	return r
@@ -476,6 +489,9 @@ func (r *KnnSearch) Source_(sourceconfig types.SourceConfig) *KnnSearch {
 // and stored fields in the search response.
 // API name: stored_fields
 func (r *KnnSearch) StoredFields(fields ...string) *KnnSearch {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.StoredFields = fields
 
 	return r

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package search
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package search
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_global/search/SearchRequest.ts#L54-L590
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/SearchRequest.ts#L54-L590
 type Request struct {
 
 	// Aggregations Defines the aggregations that are run as part of the search request.
@@ -69,7 +69,8 @@ type Request struct {
 	// Knn The approximate kNN search to run.
 	Knn []types.KnnSearch `json:"knn,omitempty"`
 	// MinScore The minimum `_score` for matching documents.
-	// Documents with a lower `_score` are not included in the search results.
+	// Documents with a lower `_score` are not included in search results and
+	// results collected by aggregations.
 	MinScore *types.Float64 `json:"min_score,omitempty"`
 	// Pit Limit the search to a point in time (PIT).
 	// If you provide a PIT, you cannot specify an `<index>` in the request path.
@@ -448,7 +449,7 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 
 				switch t {
 
-				case "excludes", "includes":
+				case "exclude_vectors", "excludes", "includes":
 					o := types.NewSourceFilter()
 					localDec := json.NewDecoder(bytes.NewReader(message))
 					if err := localDec.Decode(&o); err != nil {

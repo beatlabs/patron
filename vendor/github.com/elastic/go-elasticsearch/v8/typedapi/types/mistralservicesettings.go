@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // MistralServiceSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/inference/_types/CommonTypes.ts#L1049-L1076
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/_types/CommonTypes.ts#L1515-L1542
 type MistralServiceSettings struct {
 	// ApiKey A valid API key of your Mistral account.
 	// You can find your Mistral API keys or you can create a new one on the API
@@ -47,8 +47,7 @@ type MistralServiceSettings struct {
 	// MaxInputTokens The maximum number of tokens per input before chunking occurs.
 	MaxInputTokens *int `json:"max_input_tokens,omitempty"`
 	// Model The name of the model to use for the inference task.
-	// Refer to the Mistral models documentation for the list of available text
-	// embedding models.
+	// Refer to the Mistral models documentation for the list of available models.
 	Model string `json:"model"`
 	// RateLimit This setting helps to minimize the number of rate limit errors returned from
 	// the Mistral API.

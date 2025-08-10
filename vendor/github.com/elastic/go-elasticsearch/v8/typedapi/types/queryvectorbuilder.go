@@ -16,20 +16,57 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // QueryVectorBuilder type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/Knn.ts#L89-L92
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Knn.ts#L89-L92
 type QueryVectorBuilder struct {
-	TextEmbedding *TextEmbedding `json:"text_embedding,omitempty"`
+	AdditionalQueryVectorBuilderProperty map[string]json.RawMessage `json:"-"`
+	TextEmbedding                        *TextEmbedding             `json:"text_embedding,omitempty"`
+}
+
+// MarhsalJSON overrides marshalling for types with additional properties
+func (s QueryVectorBuilder) MarshalJSON() ([]byte, error) {
+	type opt QueryVectorBuilder
+	// We transform the struct to a map without the embedded additional properties map
+	tmp := make(map[string]any, 0)
+
+	data, err := json.Marshal(opt(s))
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &tmp)
+	if err != nil {
+		return nil, err
+	}
+
+	// We inline the additional fields from the underlying map
+	for key, value := range s.AdditionalQueryVectorBuilderProperty {
+		tmp[fmt.Sprintf("%s", key)] = value
+	}
+	delete(tmp, "AdditionalQueryVectorBuilderProperty")
+
+	data, err = json.Marshal(tmp)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 // NewQueryVectorBuilder returns a QueryVectorBuilder.
 func NewQueryVectorBuilder() *QueryVectorBuilder {
-	r := &QueryVectorBuilder{}
+	r := &QueryVectorBuilder{
+		AdditionalQueryVectorBuilderProperty: make(map[string]json.RawMessage),
+	}
 
 	return r
 }

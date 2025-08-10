@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update security index settings.
 //
@@ -109,8 +109,6 @@ func New(tp elastictransport.Interface) *UpdateSettings {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -386,6 +384,9 @@ func (r *UpdateSettings) Pretty(pretty bool) *UpdateSettings {
 // realm users and roles configured with the API.
 // API name: security
 func (r *UpdateSettings) Security(security *types.SecuritySettings) *UpdateSettings {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Security = security
 
@@ -395,6 +396,9 @@ func (r *UpdateSettings) Security(security *types.SecuritySettings) *UpdateSetti
 // SecurityProfile Settings for the index used to store profile information.
 // API name: security-profile
 func (r *UpdateSettings) SecurityProfile(securityprofile *types.SecuritySettings) *UpdateSettings {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.SecurityProfile = securityprofile
 
@@ -404,6 +408,9 @@ func (r *UpdateSettings) SecurityProfile(securityprofile *types.SecuritySettings
 // SecurityTokens Settings for the index used to store tokens.
 // API name: security-tokens
 func (r *UpdateSettings) SecurityTokens(securitytokens *types.SecuritySettings) *UpdateSettings {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.SecurityTokens = securitytokens
 

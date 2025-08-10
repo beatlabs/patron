@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update an inference endpoint.
 //
@@ -122,8 +122,6 @@ func New(tp elastictransport.Interface) *Update {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -421,6 +419,9 @@ func (r *Update) Pretty(pretty bool) *Update {
 // ChunkingSettings Chunking configuration object
 // API name: chunking_settings
 func (r *Update) ChunkingSettings(chunkingsettings *types.InferenceChunkingSettings) *Update {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ChunkingSettings = chunkingsettings
 
@@ -430,6 +431,9 @@ func (r *Update) ChunkingSettings(chunkingsettings *types.InferenceChunkingSetti
 // Service The service type
 // API name: service
 func (r *Update) Service(service string) *Update {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Service = service
 
@@ -439,6 +443,9 @@ func (r *Update) Service(service string) *Update {
 // ServiceSettings Settings specific to the service
 // API name: service_settings
 func (r *Update) ServiceSettings(servicesettings json.RawMessage) *Update {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ServiceSettings = servicesettings
 
 	return r
@@ -447,6 +454,9 @@ func (r *Update) ServiceSettings(servicesettings json.RawMessage) *Update {
 // TaskSettings Task settings specific to the service and task type
 // API name: task_settings
 func (r *Update) TaskSettings(tasksettings json.RawMessage) *Update {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TaskSettings = tasksettings
 
 	return r

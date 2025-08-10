@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Preview features used by data frame analytics.
 // Preview the extracted features used by a data frame analytics config.
@@ -91,8 +91,6 @@ func New(tp elastictransport.Interface) *PreviewDataFrameAnalytics {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -379,6 +377,9 @@ func (r *PreviewDataFrameAnalytics) Pretty(pretty bool) *PreviewDataFrameAnalyti
 // this API.
 // API name: config
 func (r *PreviewDataFrameAnalytics) Config(config *types.DataframePreviewConfig) *PreviewDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Config = config
 

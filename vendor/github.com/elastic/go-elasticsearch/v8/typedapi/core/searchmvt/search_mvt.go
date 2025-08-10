@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Search a vector tile.
 //
@@ -449,8 +449,6 @@ func New(tp elastictransport.Interface) *SearchMvt {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -796,6 +794,9 @@ func (r *SearchMvt) Pretty(pretty bool) *SearchMvt {
 // reserved for internal aggregations.
 // API name: aggs
 func (r *SearchMvt) Aggs(aggs map[string]types.Aggregations) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Aggs = aggs
 
@@ -808,6 +809,9 @@ func (r *SearchMvt) Aggs(aggs map[string]types.Aggregations) *SearchMvt {
 // tile.
 // API name: buffer
 func (r *SearchMvt) Buffer(buffer int) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Buffer = &buffer
 
 	return r
@@ -821,6 +825,9 @@ func (r *SearchMvt) Buffer(buffer int) *SearchMvt {
 // bounding box may be larger than the vector tile.
 // API name: exact_bounds
 func (r *SearchMvt) ExactBounds(exactbounds bool) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.ExactBounds = &exactbounds
 
 	return r
@@ -830,6 +837,9 @@ func (r *SearchMvt) ExactBounds(exactbounds bool) *SearchMvt {
 // equal sides.
 // API name: extent
 func (r *SearchMvt) Extent(extent int) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Extent = &extent
 
 	return r
@@ -841,6 +851,9 @@ func (r *SearchMvt) Extent(extent int) *SearchMvt {
 // values may return inconsistent results.
 // API name: fields
 func (r *SearchMvt) Fields(fields ...string) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Fields = fields
 
 	return r
@@ -849,6 +862,9 @@ func (r *SearchMvt) Fields(fields ...string) *SearchMvt {
 // GridAgg The aggregation used to create a grid for the `field`.
 // API name: grid_agg
 func (r *SearchMvt) GridAgg(gridagg gridaggregationtype.GridAggregationType) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.GridAgg = &gridagg
 
 	return r
@@ -861,6 +877,9 @@ func (r *SearchMvt) GridAgg(gridagg gridaggregationtype.GridAggregationType) *Se
 // don't include the aggs layer.
 // API name: grid_precision
 func (r *SearchMvt) GridPrecision(gridprecision int) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.GridPrecision = &gridprecision
 
 	return r
@@ -875,6 +894,9 @@ func (r *SearchMvt) GridPrecision(gridprecision int) *SearchMvt {
 // of the cell.
 // API name: grid_type
 func (r *SearchMvt) GridType(gridtype gridtype.GridType) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.GridType = &gridtype
 
 	return r
@@ -883,6 +905,9 @@ func (r *SearchMvt) GridType(gridtype gridtype.GridType) *SearchMvt {
 // Query The query DSL used to filter documents for the search.
 // API name: query
 func (r *SearchMvt) Query(query *types.Query) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 
@@ -893,6 +918,9 @@ func (r *SearchMvt) Query(query *types.Query) *SearchMvt {
 // precedence over mapped fields with the same name.
 // API name: runtime_mappings
 func (r *SearchMvt) RuntimeMappings(runtimefields types.RuntimeFields) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RuntimeMappings = runtimefields
 
 	return r
@@ -902,6 +930,9 @@ func (r *SearchMvt) RuntimeMappings(runtimefields types.RuntimeFields) *SearchMv
 // If 0, results don't include the hits layer.
 // API name: size
 func (r *SearchMvt) Size(size int) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Size = &size
 
 	return r
@@ -913,6 +944,9 @@ func (r *SearchMvt) Size(size int) *SearchMvt {
 // from longest to shortest.
 // API name: sort
 func (r *SearchMvt) Sort(sorts ...types.SortCombinations) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Sort = sorts
 
 	return r
@@ -925,6 +959,9 @@ func (r *SearchMvt) Sort(sorts ...types.SortCombinations) *SearchMvt {
 // not include the total number of hits matching the query.
 // API name: track_total_hits
 func (r *SearchMvt) TrackTotalHits(trackhits types.TrackHits) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.TrackTotalHits = trackhits
 
 	return r
@@ -949,6 +986,9 @@ func (r *SearchMvt) TrackTotalHits(trackhits types.TrackHits) *SearchMvt {
 // `_mvt_label_position`.
 // API name: with_labels
 func (r *SearchMvt) WithLabels(withlabels bool) *SearchMvt {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.WithLabels = &withlabels
 
 	return r

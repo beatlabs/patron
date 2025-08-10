@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -26,7 +26,7 @@ import (
 
 // DataframeEvaluationClassificationMetrics type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/ml/_types/DataframeEvaluation.ts#L73-L78
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/DataframeEvaluation.ts#L73-L78
 type DataframeEvaluationClassificationMetrics struct {
 	// Accuracy Accuracy of predictions (per-class and overall).
 	Accuracy map[string]json.RawMessage `json:"accuracy,omitempty"`
@@ -45,10 +45,10 @@ type DataframeEvaluationClassificationMetrics struct {
 // NewDataframeEvaluationClassificationMetrics returns a DataframeEvaluationClassificationMetrics.
 func NewDataframeEvaluationClassificationMetrics() *DataframeEvaluationClassificationMetrics {
 	r := &DataframeEvaluationClassificationMetrics{
-		Accuracy:                  make(map[string]json.RawMessage, 0),
-		MulticlassConfusionMatrix: make(map[string]json.RawMessage, 0),
-		Precision:                 make(map[string]json.RawMessage, 0),
-		Recall:                    make(map[string]json.RawMessage, 0),
+		Accuracy:                  make(map[string]json.RawMessage),
+		MulticlassConfusionMatrix: make(map[string]json.RawMessage),
+		Precision:                 make(map[string]json.RawMessage),
+		Recall:                    make(map[string]json.RawMessage),
 	}
 
 	return r

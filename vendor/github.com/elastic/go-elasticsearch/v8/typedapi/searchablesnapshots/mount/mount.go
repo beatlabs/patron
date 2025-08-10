@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Mount a snapshot.
 // Mount a snapshot as a searchable snapshot index.
@@ -104,8 +104,6 @@ func New(tp elastictransport.Interface) *Mount {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -418,6 +416,9 @@ func (r *Mount) Pretty(pretty bool) *Mount {
 // mounted.
 // API name: ignore_index_settings
 func (r *Mount) IgnoreIndexSettings(ignoreindexsettings ...string) *Mount {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.IgnoreIndexSettings = ignoreindexsettings
 
 	return r
@@ -428,6 +429,9 @@ func (r *Mount) IgnoreIndexSettings(ignoreindexsettings ...string) *Mount {
 // new index.
 // API name: index
 func (r *Mount) Index(indexname string) *Mount {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Index = indexname
 
 	return r
@@ -436,6 +440,9 @@ func (r *Mount) Index(indexname string) *Mount {
 // IndexSettings The settings that should be added to the index when it is mounted.
 // API name: index_settings
 func (r *Mount) IndexSettings(indexsettings map[string]json.RawMessage) *Mount {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.IndexSettings = indexsettings
 
@@ -445,6 +452,9 @@ func (r *Mount) IndexSettings(indexsettings map[string]json.RawMessage) *Mount {
 // RenamedIndex The name of the index that will be created.
 // API name: renamed_index
 func (r *Mount) RenamedIndex(indexname string) *Mount {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RenamedIndex = &indexname
 
 	return r

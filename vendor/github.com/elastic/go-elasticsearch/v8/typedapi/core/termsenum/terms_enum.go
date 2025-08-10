@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Get terms in an index.
 //
@@ -111,8 +111,6 @@ func New(tp elastictransport.Interface) *TermsEnum {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -384,6 +382,9 @@ func (r *TermsEnum) Pretty(pretty bool) *TermsEnum {
 // without case sensitivity.
 // API name: case_insensitive
 func (r *TermsEnum) CaseInsensitive(caseinsensitive bool) *TermsEnum {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.CaseInsensitive = &caseinsensitive
 
 	return r
@@ -393,6 +394,9 @@ func (r *TermsEnum) CaseInsensitive(caseinsensitive bool) *TermsEnum {
 // in the field are considered.
 // API name: field
 func (r *TermsEnum) Field(field string) *TermsEnum {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Field = field
 
 	return r
@@ -401,6 +405,9 @@ func (r *TermsEnum) Field(field string) *TermsEnum {
 // IndexFilter Filter an index shard if the provided query rewrites to `match_none`.
 // API name: index_filter
 func (r *TermsEnum) IndexFilter(indexfilter *types.Query) *TermsEnum {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.IndexFilter = indexfilter
 
@@ -412,6 +419,9 @@ func (r *TermsEnum) IndexFilter(indexfilter *types.Query) *TermsEnum {
 // passed as the `search_after` parameter for a subsequent request.
 // API name: search_after
 func (r *TermsEnum) SearchAfter(searchafter string) *TermsEnum {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.SearchAfter = &searchafter
 
@@ -421,6 +431,9 @@ func (r *TermsEnum) SearchAfter(searchafter string) *TermsEnum {
 // Size The number of matching terms to return.
 // API name: size
 func (r *TermsEnum) Size(size int) *TermsEnum {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Size = &size
 
 	return r
@@ -434,6 +447,9 @@ func (r *TermsEnum) Size(size int) *TermsEnum {
 // which is Lucene's term byte-length limit of 32766.
 // API name: string
 func (r *TermsEnum) String(string string) *TermsEnum {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.String = &string
 
@@ -445,6 +461,9 @@ func (r *TermsEnum) String(string string) *TermsEnum {
 // and the results may be partial or empty.
 // API name: timeout
 func (r *TermsEnum) Timeout(duration types.Duration) *TermsEnum {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Timeout = duration
 
 	return r

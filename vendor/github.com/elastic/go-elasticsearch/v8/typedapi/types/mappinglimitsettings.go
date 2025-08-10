@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,13 +31,13 @@ import (
 
 // MappingLimitSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/indices/_types/IndexSettings.ts#L425-L439
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/_types/IndexSettings.ts#L425-L439
 type MappingLimitSettings struct {
 	Coerce          *bool                                `json:"coerce,omitempty"`
 	Depth           *MappingLimitSettingsDepth           `json:"depth,omitempty"`
 	DimensionFields *MappingLimitSettingsDimensionFields `json:"dimension_fields,omitempty"`
 	FieldNameLength *MappingLimitSettingsFieldNameLength `json:"field_name_length,omitempty"`
-	IgnoreMalformed string                               `json:"ignore_malformed,omitempty"`
+	IgnoreMalformed *string                              `json:"ignore_malformed,omitempty"`
 	NestedFields    *MappingLimitSettingsNestedFields    `json:"nested_fields,omitempty"`
 	NestedObjects   *MappingLimitSettingsNestedObjects   `json:"nested_objects,omitempty"`
 	Source          *MappingLimitSettingsSourceFields    `json:"source,omitempty"`
@@ -98,7 +98,7 @@ func (s *MappingLimitSettings) UnmarshalJSON(data []byte) error {
 			if err != nil {
 				o = string(tmp[:])
 			}
-			s.IgnoreMalformed = o
+			s.IgnoreMalformed = &o
 
 		case "nested_fields":
 			if err := dec.Decode(&s.NestedFields); err != nil {

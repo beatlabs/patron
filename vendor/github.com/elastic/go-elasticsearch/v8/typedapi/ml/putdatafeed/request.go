@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package putdatafeed
 
@@ -33,7 +33,7 @@ import (
 
 // Request holds the request body struct for the package putdatafeed
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/ml/put_datafeed/MlPutDatafeedRequest.ts#L37-L184
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/put_datafeed/MlPutDatafeedRequest.ts#L37-L184
 type Request struct {
 
 	// Aggregations If set, the datafeed performs aggregation searches.
@@ -71,8 +71,9 @@ type Request struct {
 	Frequency types.Duration    `json:"frequency,omitempty"`
 	Headers   types.HttpHeaders `json:"headers,omitempty"`
 	// Indices An array of index names. Wildcards are supported. If any of the indices are
-	// in remote clusters, the machine
-	// learning nodes must have the `remote_cluster_client` role.
+	// in remote clusters, the master
+	// nodes and the machine learning nodes must have the `remote_cluster_client`
+	// role.
 	Indices []string `json:"indices,omitempty"`
 	// IndicesOptions Specifies index expansion options that are used during search
 	IndicesOptions *types.IndicesOptions `json:"indices_options,omitempty"`

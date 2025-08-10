@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Count search results.
 // Get the number of documents matching a query.
@@ -119,8 +119,6 @@ func New(tp elastictransport.Interface) *Count {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -544,6 +542,9 @@ func (r *Count) Pretty(pretty bool) *Count {
 // with the `q` query string parameter.
 // API name: query
 func (r *Count) Query(query *types.Query) *Count {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Query = query
 

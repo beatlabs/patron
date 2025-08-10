@@ -16,27 +16,34 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
 // TokenFilterDefinition holds the union for the following types:
 //
 //	ApostropheTokenFilter
+//	ArabicStemTokenFilter
 //	ArabicNormalizationTokenFilter
 //	AsciiFoldingTokenFilter
+//	BengaliNormalizationTokenFilter
+//	BrazilianStemTokenFilter
 //	CjkBigramTokenFilter
 //	CjkWidthTokenFilter
 //	ClassicTokenFilter
 //	CommonGramsTokenFilter
 //	ConditionTokenFilter
+//	CzechStemTokenFilter
 //	DecimalDigitTokenFilter
 //	DelimitedPayloadTokenFilter
+//	DutchStemTokenFilter
 //	EdgeNGramTokenFilter
 //	ElisionTokenFilter
 //	FingerprintTokenFilter
 //	FlattenGraphTokenFilter
+//	FrenchStemTokenFilter
 //	GermanNormalizationTokenFilter
+//	GermanStemTokenFilter
 //	HindiNormalizationTokenFilter
 //	HunspellTokenFilter
 //	HyphenationDecompounderTokenFilter
@@ -56,10 +63,12 @@ package types
 //	PatternCaptureTokenFilter
 //	PatternReplaceTokenFilter
 //	PersianNormalizationTokenFilter
+//	PersianStemTokenFilter
 //	PorterStemTokenFilter
 //	PredicateTokenFilter
 //	RemoveDuplicatesTokenFilter
 //	ReverseTokenFilter
+//	RussianStemTokenFilter
 //	ScandinavianFoldingTokenFilter
 //	ScandinavianNormalizationTokenFilter
 //	SerbianNormalizationTokenFilter
@@ -88,5 +97,5 @@ package types
 //	PhoneticTokenFilter
 //	DictionaryDecompounderTokenFilter
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/_types/analysis/token_filters.ts#L545-L614
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/analysis/token_filters.ts#L582-L660
 type TokenFilterDefinition any

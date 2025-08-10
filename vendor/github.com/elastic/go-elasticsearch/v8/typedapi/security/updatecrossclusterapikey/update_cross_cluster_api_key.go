@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Update a cross-cluster API key.
 //
@@ -139,8 +139,6 @@ func New(tp elastictransport.Interface) *UpdateCrossClusterApiKey {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -417,6 +415,9 @@ func (r *UpdateCrossClusterApiKey) Pretty(pretty bool) *UpdateCrossClusterApiKey
 // assigned access.
 // API name: access
 func (r *UpdateCrossClusterApiKey) Access(access *types.Access) *UpdateCrossClusterApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Access = *access
 
@@ -428,6 +429,9 @@ func (r *UpdateCrossClusterApiKey) Access(access *types.Access) *UpdateCrossClus
 // value unchanged.
 // API name: expiration
 func (r *UpdateCrossClusterApiKey) Expiration(duration types.Duration) *UpdateCrossClusterApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Expiration = duration
 
 	return r
@@ -441,6 +445,9 @@ func (r *UpdateCrossClusterApiKey) Expiration(duration types.Duration) *UpdateCr
 // associated with the API key.
 // API name: metadata
 func (r *UpdateCrossClusterApiKey) Metadata(metadata types.Metadata) *UpdateCrossClusterApiKey {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Metadata = metadata
 
 	return r

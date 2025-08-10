@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Run a script.
 //
@@ -108,8 +108,6 @@ func New(tp elastictransport.Interface) *ScriptsPainlessExecute {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -367,6 +365,9 @@ func (r *ScriptsPainlessExecute) Pretty(pretty bool) *ScriptsPainlessExecute {
 // NOTE: Result ordering in the field contexts is not guaranteed.
 // API name: context
 func (r *ScriptsPainlessExecute) Context(context painlesscontext.PainlessContext) *ScriptsPainlessExecute {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Context = &context
 
 	return r
@@ -377,6 +378,9 @@ func (r *ScriptsPainlessExecute) Context(context painlesscontext.PainlessContext
 // which is the default if no value is provided for `context`.
 // API name: context_setup
 func (r *ScriptsPainlessExecute) ContextSetup(contextsetup *types.PainlessContextSetup) *ScriptsPainlessExecute {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.ContextSetup = contextsetup
 
@@ -386,6 +390,9 @@ func (r *ScriptsPainlessExecute) ContextSetup(contextsetup *types.PainlessContex
 // Script The Painless script to run.
 // API name: script
 func (r *ScriptsPainlessExecute) Script(script *types.Script) *ScriptsPainlessExecute {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Script = script
 

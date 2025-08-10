@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Prepare SAML authentication.
 //
@@ -127,8 +127,6 @@ func New(tp elastictransport.Interface) *SamlPrepareAuthentication {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -388,6 +386,9 @@ func (r *SamlPrepareAuthentication) Pretty(pretty bool) *SamlPrepareAuthenticati
 // either this parameter or the `realm` parameter.
 // API name: acs
 func (r *SamlPrepareAuthentication) Acs(acs string) *SamlPrepareAuthentication {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Acs = &acs
 
@@ -399,6 +400,9 @@ func (r *SamlPrepareAuthentication) Acs(acs string) *SamlPrepareAuthentication {
 // You must specify either this parameter or the `acs` parameter.
 // API name: realm
 func (r *SamlPrepareAuthentication) Realm(realm string) *SamlPrepareAuthentication {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Realm = &realm
 
@@ -411,6 +415,9 @@ func (r *SamlPrepareAuthentication) Realm(realm string) *SamlPrepareAuthenticati
 // signature computation.
 // API name: relay_state
 func (r *SamlPrepareAuthentication) RelayState(relaystate string) *SamlPrepareAuthentication {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RelayState = &relaystate
 

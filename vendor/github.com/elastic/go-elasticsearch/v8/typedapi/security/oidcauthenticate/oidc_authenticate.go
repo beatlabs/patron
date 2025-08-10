@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Authenticate OpenID Connect.
 //
@@ -103,8 +103,6 @@ func New(tp elastictransport.Interface) *OidcAuthenticate {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -364,6 +362,9 @@ func (r *OidcAuthenticate) Pretty(pretty bool) *OidcAuthenticate {
 // and included in the response to that call.
 // API name: nonce
 func (r *OidcAuthenticate) Nonce(nonce string) *OidcAuthenticate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Nonce = nonce
 
@@ -374,6 +375,9 @@ func (r *OidcAuthenticate) Nonce(nonce string) *OidcAuthenticate {
 // This property is useful in cases where multiple realms are defined.
 // API name: realm
 func (r *OidcAuthenticate) Realm(realm string) *OidcAuthenticate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.Realm = &realm
 
@@ -387,6 +391,9 @@ func (r *OidcAuthenticate) Realm(realm string) *OidcAuthenticate {
 // Connect Provider.
 // API name: redirect_uri
 func (r *OidcAuthenticate) RedirectUri(redirecturi string) *OidcAuthenticate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.RedirectUri = redirecturi
 
@@ -399,6 +406,9 @@ func (r *OidcAuthenticate) RedirectUri(redirecturi string) *OidcAuthenticate {
 // and included in the response to that call.
 // API name: state
 func (r *OidcAuthenticate) State(state string) *OidcAuthenticate {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.State = state
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // CCSUsageStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/cluster/stats/types.ts#L641-L666
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cluster/stats/types.ts#L819-L844
 type CCSUsageStats struct {
 	// Clients Statistics about the clients that executed cross-cluster search requests. The
 	// keys are the names of the clients, and the values are the number of requests
@@ -226,10 +226,10 @@ func (s *CCSUsageStats) UnmarshalJSON(data []byte) error {
 // NewCCSUsageStats returns a CCSUsageStats.
 func NewCCSUsageStats() *CCSUsageStats {
 	r := &CCSUsageStats{
-		Clients:        make(map[string]int, 0),
-		Clusters:       make(map[string]CCSUsageClusterStats, 0),
-		FailureReasons: make(map[string]int, 0),
-		Features:       make(map[string]int, 0),
+		Clients:        make(map[string]int),
+		Clusters:       make(map[string]CCSUsageClusterStats),
+		FailureReasons: make(map[string]int),
+		Features:       make(map[string]int),
 	}
 
 	return r

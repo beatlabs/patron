@@ -159,7 +159,7 @@ github.com/eclipse/paho.golang/paho/store/memory
 ## explicit; go 1.20
 github.com/elastic/elastic-transport-go/v8/elastictransport
 github.com/elastic/elastic-transport-go/v8/elastictransport/version
-# github.com/elastic/go-elasticsearch/v8 v8.18.1
+# github.com/elastic/go-elasticsearch/v8 v8.19.0
 ## explicit; go 1.21
 github.com/elastic/go-elasticsearch/v8
 github.com/elastic/go-elasticsearch/v8/esapi
@@ -411,10 +411,13 @@ github.com/elastic/go-elasticsearch/v8/typedapi/inference/inference
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/put
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/putalibabacloud
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/putamazonbedrock
+github.com/elastic/go-elasticsearch/v8/typedapi/inference/putamazonsagemaker
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/putanthropic
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/putazureaistudio
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/putazureopenai
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/putcohere
+github.com/elastic/go-elasticsearch/v8/typedapi/inference/putcustom
+github.com/elastic/go-elasticsearch/v8/typedapi/inference/putdeepseek
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/putelasticsearch
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/putelser
 github.com/elastic/go-elasticsearch/v8/typedapi/inference/putgoogleaistudio
@@ -667,6 +670,9 @@ github.com/elastic/go-elasticsearch/v8/typedapi/sql/getasyncstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/sql/query
 github.com/elastic/go-elasticsearch/v8/typedapi/sql/translate
 github.com/elastic/go-elasticsearch/v8/typedapi/ssl/certificates
+github.com/elastic/go-elasticsearch/v8/typedapi/streams/logsdisable
+github.com/elastic/go-elasticsearch/v8/typedapi/streams/logsenable
+github.com/elastic/go-elasticsearch/v8/typedapi/streams/status
 github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/deletesynonym
 github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/deletesynonymrule
 github.com/elastic/go-elasticsearch/v8/typedapi/synonyms/getsynonym
@@ -702,6 +708,8 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/actiontype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/alibabacloudservicetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/allocationexplaindecision
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/amazonbedrockservicetype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/amazonsagemakerapi
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/amazonsagemakerservicetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/anthropicservicetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/apikeygranttype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/apikeytype
@@ -717,6 +725,11 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catdatafeedcolumn
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catdfacolumn
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/categorizationstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catnodecolumn
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catrecoverycolumn
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catsegmentscolumn
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catshardcolumn
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catsnapshotscolumn
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catthreadpoolcolumn
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/cattrainedmodelscolumn
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/cattransformcolumn
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/childscoremode
@@ -740,11 +753,13 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/connectionscheme
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/connectorfieldtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/connectorstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/converttype
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/customservicetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dataattachmentformat
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/datafeedstate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dataframestate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/day
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/decision
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/deepseekservicetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/delimitedpayloadencoding
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/densevectorelementtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/densevectorindexoptionstype
@@ -764,6 +779,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/elasticsearchservice
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/elserservicetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/emailpriority
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/enrichpolicyphase
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/esqlclusterstatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/esqlformat
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/excludefrequent
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/executionphase
@@ -789,6 +805,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geoexecution
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geogridtargetformat
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geogridtiletype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geoorientation
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geopointmetrictype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geoshaperelation
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geostrategy
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/geovalidationmethod
@@ -874,6 +891,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/quantifier
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/queryrulecriteriatype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/queryruletype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/rangerelation
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/rankvectorelementtype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/ratemode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/remoteclusterprivilege
@@ -896,6 +914,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/segmentsortorder
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shapetype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardroutingstate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardsstatsstage
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardstate
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardstoreallocation
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shardstorestatus
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/shutdownstatus
@@ -922,10 +941,13 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/syntheticsourcekeepe
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktype
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypealibabacloudai
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypeamazonbedrock
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypeamazonsagemaker
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypeanthropic
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypeazureaistudio
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypeazureopenai
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypecohere
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypecustom
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypedeepseek
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypeelasticsearch
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypeelser
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypegoogleaistudio
@@ -936,6 +958,7 @@ github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypemistral
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypeopenai
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypevoyageai
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tasktypewatsonx
+github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/tdigestexecutionhint
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/templateformat
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/termsaggregationcollectmode
 github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/termsaggregationexecutionhint

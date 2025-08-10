@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 // Get the field capabilities.
 //
@@ -106,8 +106,6 @@ func New(tp elastictransport.Interface) *FieldCaps {
 		headers:   make(http.Header),
 
 		buf: gobytes.NewBuffer(nil),
-
-		req: NewRequest(),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -457,6 +455,9 @@ func (r *FieldCaps) Pretty(pretty bool) *FieldCaps {
 // supported.
 // API name: fields
 func (r *FieldCaps) Fields(fields ...string) *FieldCaps {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.Fields = fields
 
 	return r
@@ -474,6 +475,9 @@ func (r *FieldCaps) Fields(fields ...string) *FieldCaps {
 // an index even if the provided filter matches no document.
 // API name: index_filter
 func (r *FieldCaps) IndexFilter(indexfilter *types.Query) *FieldCaps {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 
 	r.req.IndexFilter = indexfilter
 
@@ -486,6 +490,9 @@ func (r *FieldCaps) IndexFilter(indexfilter *types.Query) *FieldCaps {
 // defined with the same name in the index mappings.
 // API name: runtime_mappings
 func (r *FieldCaps) RuntimeMappings(runtimefields types.RuntimeFields) *FieldCaps {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
 	r.req.RuntimeMappings = runtimefields
 
 	return r

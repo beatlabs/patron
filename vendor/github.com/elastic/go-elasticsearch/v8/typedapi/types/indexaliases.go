@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/3a94b6715915b1e9311724a2614c643368eece90
+// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
 
 package types
 
 // IndexAliases type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/3a94b6715915b1e9311724a2614c643368eece90/specification/indices/get_alias/IndicesGetAliasResponse.ts#L37-L39
+// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/get_alias/_types/response.ts#L24-L26
 type IndexAliases struct {
 	Aliases map[string]AliasDefinition `json:"aliases"`
 }
@@ -30,7 +30,7 @@ type IndexAliases struct {
 // NewIndexAliases returns a IndexAliases.
 func NewIndexAliases() *IndexAliases {
 	r := &IndexAliases{
-		Aliases: make(map[string]AliasDefinition, 0),
+		Aliases: make(map[string]AliasDefinition),
 	}
 
 	return r

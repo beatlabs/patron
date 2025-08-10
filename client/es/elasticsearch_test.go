@@ -52,7 +52,7 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, client)
 
-	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}`
+	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}` //nolint: goconst
 
 	rsp, err := client.Indices.Create(
 		indexName,

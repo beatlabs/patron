@@ -31,12 +31,6 @@ func init() {
 	tracePublisher = trace.Setup("test", nil, traceExporter)
 }
 
-// setupTracing sets up tracing exporter for integration tests.
-func setupTracing() {
-	traceExporter = tracetest.NewInMemoryExporter()
-	tracePublisher = trace.Setup("test", nil, traceExporter)
-}
-
 func TestNewAsyncProducer_Success(t *testing.T) {
 	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
 	require.NoError(t, err)

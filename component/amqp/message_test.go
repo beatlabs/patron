@@ -15,6 +15,7 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/goleak"
 )
 
 const (
@@ -33,7 +34,13 @@ func TestMain(m *testing.M) {
 
 	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
 
-	os.Exit(m.Run())
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
+		goleak.IgnoreTopFunction("github.com/rabbitmq/amqp091-go.(*Connection).reader"),
+		goleak.IgnoreTopFunction("github.com/rabbitmq/amqp091-go.(*Connection).heartbeater"),
+		goleak.IgnoreTopFunction("github.com/rabbitmq/amqp091-go.(*reader).ReadFrame"),
+		goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
+	)
 }
 
 func Test_message(t *testing.T) {

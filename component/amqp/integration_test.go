@@ -83,6 +83,8 @@ func TestRun(t *testing.T) {
 	cnl()
 
 	<-chDone
+	// give AMQP connection goroutines a moment to exit cleanly
+	time.Sleep(150 * time.Millisecond)
 
 	assert.ElementsMatch(t, sent, got)
 
@@ -114,11 +116,15 @@ func createQueue() error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	channel, err := conn.Channel()
 	if err != nil {
 		return err
 	}
+	defer func() { _ = channel.Close() }()
 
 	_, err = channel.QueueDeclare(rabbitMQQueue, true, false, false, false, nil)
 	if err != nil {

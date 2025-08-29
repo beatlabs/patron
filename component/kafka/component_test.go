@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.uber.org/goleak"
 )
 
 var (
@@ -31,7 +32,21 @@ func TestMain(m *testing.M) {
 	}
 
 	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
-	os.Exit(m.Run())
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*client).backgroundMetadataUpdater"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*Broker).responseReceiver"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).dispatcher"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).retryHandler"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*brokerProducer).run"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*topicProducer).dispatch"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*partitionProducer).dispatch"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleSuccesses"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleErrors"),
+		goleak.IgnoreTopFunction("github.com/rcrowley/go-metrics.(*meterArbiter).tick"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func1"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func2"),
+	)
 }
 
 func TestNew(t *testing.T) {

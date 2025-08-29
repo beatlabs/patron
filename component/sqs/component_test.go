@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.uber.org/goleak"
 )
 
 var (
@@ -28,7 +29,9 @@ func TestMain(m *testing.M) {
 
 	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
 
-	os.Exit(m.Run())
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
+	)
 }
 
 func TestNew(t *testing.T) {

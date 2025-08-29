@@ -4,6 +4,7 @@ package amqp
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/beatlabs/patron/internal/test"
@@ -13,7 +14,21 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	if err := os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100"); err != nil {
+		panic(err)
+	}
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
+		goleak.IgnoreTopFunction("github.com/rabbitmq/amqp091-go.(*Connection).reader"),
+		goleak.IgnoreTopFunction("github.com/rabbitmq/amqp091-go.(*Connection).heartbeater"),
+		goleak.IgnoreTopFunction("github.com/rabbitmq/amqp091-go.(*reader).ReadFrame"),
+		goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
+	)
+}
 
 const (
 	endpoint = "amqp://bitnami:bitnami@localhost:5672/" //nolint:gosec
@@ -86,11 +101,13 @@ func createQueue(endpoint, queue string) error {
 	if err != nil {
 		return err
 	}
+	defer func() { _ = conn.Close() }()
 
 	channel, err := conn.Channel()
 	if err != nil {
 		return err
 	}
+	defer func() { _ = channel.Close() }()
 
 	_, err = channel.QueueDelete(queue, false, false, false)
 	if err != nil {

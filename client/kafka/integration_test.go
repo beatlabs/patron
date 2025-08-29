@@ -4,7 +4,6 @@ package kafka
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/IBM/sarama"
@@ -27,13 +26,15 @@ var (
 	traceExporter  *tracetest.InMemoryExporter
 )
 
-func TestMain(m *testing.M) {
+func init() {
 	traceExporter = tracetest.NewInMemoryExporter()
 	tracePublisher = trace.Setup("test", nil, traceExporter)
+}
 
-	code := m.Run()
-
-	os.Exit(code)
+// setupTracing sets up tracing exporter for integration tests.
+func setupTracing() {
+	traceExporter = tracetest.NewInMemoryExporter()
+	tracePublisher = trace.Setup("test", nil, traceExporter)
 }
 
 func TestNewAsyncProducer_Success(t *testing.T) {

@@ -103,17 +103,6 @@ func createSubscriber(t *testing.T, u *url.URL, router paho.Router) (*autopaho.C
 		KeepAlive:         30,
 		ConnectRetryDelay: 5 * time.Second,
 		ConnectTimeout:    1 * time.Second,
-		OnConnectionUp: func(cm *autopaho.ConnectionManager, _ *paho.Connack) {
-			_, err := cm.Subscribe(context.Background(), &paho.Subscribe{
-				Subscriptions: []paho.SubscribeOptions{
-					{
-						Topic: testTopic,
-						QoS:   1,
-					},
-				},
-			})
-			require.NoError(t, err)
-		},
 		ClientConfig: paho.ClientConfig{
 			ClientID: "test-subscriber",
 			Router:   router,
@@ -129,6 +118,17 @@ func createSubscriber(t *testing.T, u *url.URL, router paho.Router) (*autopaho.C
 	if err != nil {
 		return nil, err
 	}
+
+	// Ensure subscription is installed before returning to the test to avoid race with publisher.
+	_, err = cm.Subscribe(context.Background(), &paho.Subscribe{
+		Subscriptions: []paho.SubscribeOptions{
+			{
+				Topic: testTopic,
+				QoS:   1,
+			},
+		},
+	})
+	require.NoError(t, err)
 
 	return cm, nil
 }

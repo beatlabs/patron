@@ -2,7 +2,7 @@
 mode: agent
 ---
 
-- Create a branch to work on. -->
+- Create a branch to work on.
 - Upgrade all Go modules with the following commands. Make sure to match the `go.opentelemetry.io/otel/semconv` package version in the code if the otel packages change.
 ```bash
 go get -u ./... && go mod tidy && go mod vendor

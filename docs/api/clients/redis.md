@@ -8,7 +8,7 @@ Thin wrapper around go-redis/v9 with redisotel tracing and common options.
 ## Usage
 
 ```go
-cli, err := redis.New(ctx, &redis.Options{Addr: "localhost:6379"})
+cli, err := redis.New(&redis.Options{Addr: "localhost:6379"})
 err = cli.Ping(ctx).Err()
 ```
 

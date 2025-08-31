@@ -8,7 +8,7 @@ Wrapper around `database/sql` adding OpenTelemetry spans and query duration metr
 
 ```go
 // Open with driver name and DSN
-DB, err := patronsql.Open(ctx, "mysql", dsn)
+DB, err := patronsql.Open("mysql", dsn)
 // Wrap an existing *sql.DB
 DB := patronsql.FromDB(existingDB)
 ```
@@ -18,7 +18,7 @@ The returned `*patronsql.DB` mirrors `*sql.DB` API and propagates context to sta
 ```go
 ctx := context.Background()
 var n int
-err := DB.QueryRowContext(ctx, "SELECT 1").Scan(&n)
+err := DB.QueryRow(ctx, "SELECT 1").Scan(&n)
 ```
 
 - Metrics: query duration histogram labeled with driver, success/error.

@@ -1,28 +1,37 @@
 /*
-Package patron framework
+Package patron
 
-Patron is a framework for creating microservices.
+Patron is a Go microservice framework. The entrypoint is the Service, which
+orchestrates one or more Components implementing Run(context.Context) error.
 
-Patron is french for template or pattern, but it means also boss which we found out later (no pun intended).
+Defaults and lifecycle
 
-The entry point of the framework is the Service.
-The Service uses WithComponents to handle the processing of sync and async requests.
-The Service can set up as many components as it wants, even multiple HTTP components provided the port does not collide.
-The Service starts by default an HTTP component which hosts the debug, alive, ready and metric endpoints.
-Any other endpoints will be added to the default HTTP Component as Routes.
-The Service set's up by default logging with slog, tracing and metrics with OpenTelemetry.
+  - A default HTTP component is started to host management endpoints:
+    /debug, /alive, /ready, /metrics. Additional routes can be added.
+  - Observability (structured logging via slog, OpenTelemetry traces and metrics)
+    is set up on Service construction and shut down when the Service stops.
 
-Patron provides abstractions for the following functionality of the framework:
+Programming model
 
-  - Service, which orchestrates everything
-  - components and processors, which provide an abstraction of adding processing functionality to the Service
-  - asynchronous message processing (RabbitMQ, Kafka)
-  - synchronous processing (HTTP)
-  - metrics and tracing
-  - logging
-  - configuration management
+  - Components: long-running units with a Run(ctx) error method. The Service
+    runs each component in a goroutine and aggregates errors.
+  - Synchronous components: HTTP, gRPC.
+  - Asynchronous components: AMQP (RabbitMQ), Kafka, AWS SQS.
 
-Patron provides same defaults for making the usage as simple as possible.
-For more details please check out the GitHub repository https://github.com/beatlabs/patron.
+Key packages
+
+  - component/http, component/grpc, component/kafka, component/amqp, component/sqs
+  - client/* packages for instrumented clients (HTTP, gRPC, Kafka, AMQP, SQS,
+    Elasticsearch, MongoDB, MQTT, Redis, SNS, SQL)
+
+Usage sketch
+
+	svc, err := patron.New("example", "v1.0.0")
+	if err != nil { // handle error }
+	// Build components (e.g., HTTP router, Kafka consumer, etc.) and run:
+	// err = svc.Run(ctx, httpComponent, kafkaComponent)
+
+Patron provides sane defaults and follows Go idioms. See the repository for
+examples and detailed API docs: https://github.com/beatlabs/patron.
 */
 package patron

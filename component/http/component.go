@@ -1,4 +1,4 @@
-// Package v2 provides a ready to use HTTP component.
+// Package http provides a ready-to-use HTTP component.
 package http
 
 import (
@@ -65,6 +65,7 @@ func writeTimeout() (time.Duration, error) {
 }
 
 // Component implementation of an HTTP router.
+// Component implements an HTTP server with sane defaults and graceful shutdown.
 type Component struct {
 	port                int
 	readTimeout         time.Duration
@@ -78,6 +79,7 @@ type Component struct {
 }
 
 // New creates an HTTP component configurable by functional options.
+// New creates an HTTP Component configurable by functional options.
 func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 	if handler == nil {
 		return nil, errors.New("handler is nil")
@@ -118,6 +120,7 @@ func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 }
 
 // Run starts the HTTP server and returns only if listening and/or serving failed, or if the context was canceled.
+// Run starts the HTTP server and blocks until the context is canceled or the server fails.
 func (c *Component) Run(ctx context.Context) error {
 	c.mu.Lock()
 	chFail := make(chan error)

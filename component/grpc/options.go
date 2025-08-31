@@ -6,9 +6,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+// OptionFunction configures the gRPC Component.
 type OptionFunction func(*Component) error
 
-// WithServerOptions allows gRPC server options to be set.
+// WithServerOptions applies grpc.ServerOption values to the server.
 func WithServerOptions(options ...grpc.ServerOption) OptionFunction {
 	return func(component *Component) error {
 		if len(options) == 0 {
@@ -20,8 +21,7 @@ func WithServerOptions(options ...grpc.ServerOption) OptionFunction {
 	}
 }
 
-// WithReflection opt-in for gRPC reflection.
-// WithReflection could be considered a security risk if services are exposed to public internet.
+// WithReflection enables server reflection. Be cautious when exposing to the public internet.
 func WithReflection() OptionFunction {
 	return func(component *Component) error {
 		component.enableReflection = true

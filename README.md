@@ -34,6 +34,8 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 - Components
   - [AMQP component](docs/api/components/amqp.md)
   - [gRPC component](docs/api/components/grpc.md)
+  - [SQS component](docs/api/components/sqs.md)
 - Clients
   - [AMQP client](docs/api/clients/amqp.md)
   - [gRPC client](docs/api/clients/grpc.md)
+  - [SQS client](docs/api/clients/sqs.md)

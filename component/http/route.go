@@ -8,9 +8,11 @@ import (
 )
 
 // RouteOptionFunc definition for configuring the route in a functional way.
+// RouteOptionFunc configures a Route in a functional way.
 type RouteOptionFunc func(route *Route) error
 
 // Route definition of an HTTP route.
+// Route describes an HTTP route with optional middleware.
 type Route struct {
 	path        string
 	handler     http.HandlerFunc
@@ -34,6 +36,7 @@ func (r Route) String() string {
 }
 
 // NewRoute creates a new raw route with functional configuration.
+// NewRoute creates a new route with functional configuration.
 func NewRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
 	if path == "" {
 		return nil, errors.New("path is empty")
@@ -59,12 +62,14 @@ func NewRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Ro
 }
 
 // Routes definition.
+// Routes aggregates route creation results and errors.
 type Routes struct {
 	routes []*Route
 	ee     []error
 }
 
 // Append route.
+// Append adds a route or records an error.
 func (r *Routes) Append(route *Route, err error) {
 	if err != nil {
 		r.ee = append(r.ee, err)
@@ -78,6 +83,7 @@ func (r *Routes) Append(route *Route, err error) {
 }
 
 // Result of the route aggregation.
+// Result returns the accumulated routes and a joined error, if any.
 func (r *Routes) Result() ([]*Route, error) {
 	return r.routes, errors.Join(r.ee...)
 }

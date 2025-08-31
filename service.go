@@ -20,13 +20,14 @@ const (
 	host = "host"
 )
 
-// Component interface for implementing Service components.
+// Component represents a long-running unit started by the Service.
+// Implementations should return when the context is canceled.
 type Component interface {
 	Run(ctx context.Context) error
 }
 
-// Service is responsible for managing and setting up everything.
-// The Service will start by default an HTTP component in order to host management endpoint.
+// Service manages application lifecycle and observability setup.
+// It starts a default HTTP component for management endpoints.
 type Service struct {
 	name                  string
 	version               string
@@ -36,7 +37,7 @@ type Service struct {
 	observabilityProvider *observability.Provider
 }
 
-// New creates a new Service instance.
+// New creates a new Service instance with sane defaults and optional configuration.
 func New(name, version string, options ...OptionFunc) (*Service, error) {
 	if name == "" {
 		return nil, errors.New("name is required")
@@ -84,7 +85,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	return s, nil
 }
 
-// Run starts the service with the provided components.
+// Run starts the provided components and blocks until termination or a component error.
 func (s *Service) Run(ctx context.Context, components ...Component) error {
 	if len(components) == 0 || components[0] == nil {
 		return errors.New("components are empty or nil")

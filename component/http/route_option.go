@@ -12,7 +12,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-// WithRateLimiting option for setting a route rate limiter.
+// WithRateLimiting adds a token-bucket rate limiter to the route.
 func WithRateLimiting(limit float64, burst int) (RouteOptionFunc, error) {
 	if limit < 0 {
 		return nil, errors.New("invalid limit")
@@ -32,7 +32,7 @@ func WithRateLimiting(limit float64, burst int) (RouteOptionFunc, error) {
 	}, nil
 }
 
-// WithMiddlewares option for setting the route optionFuncs.
+// WithMiddlewares appends middlewares to the route.
 func WithMiddlewares(mm ...patronhttp.Func) RouteOptionFunc {
 	return func(r *Route) error {
 		if len(mm) == 0 {
@@ -43,7 +43,7 @@ func WithMiddlewares(mm ...patronhttp.Func) RouteOptionFunc {
 	}
 }
 
-// WithAuth option for setting the route auth.
+// WithAuth enforces authentication using the provided authenticator.
 func WithAuth(auth auth.Authenticator) RouteOptionFunc {
 	return func(r *Route) error {
 		if auth == nil {
@@ -54,7 +54,7 @@ func WithAuth(auth auth.Authenticator) RouteOptionFunc {
 	}
 }
 
-// WithCache option for setting the route cache.
+// WithCache enables response caching for GET routes using the provided TTL cache.
 func WithCache(cache cache.TTLCache, ageBounds httpcache.Age) RouteOptionFunc {
 	return func(r *Route) error {
 		if !strings.HasPrefix(r.path, http.MethodGet) {

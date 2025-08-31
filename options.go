@@ -5,9 +5,10 @@ import (
 	"log/slog"
 )
 
+// OptionFunc configures the Service.
 type OptionFunc func(svc *Service) error
 
-// WithSIGHUP adds a custom handler for handling WithSIGHUP.
+// WithSIGHUP registers a handler invoked when SIGHUP is received.
 func WithSIGHUP(handler func()) OptionFunc {
 	return func(svc *Service) error {
 		if handler == nil {
@@ -21,7 +22,7 @@ func WithSIGHUP(handler func()) OptionFunc {
 	}
 }
 
-// WithLogFields options to pass in additional log fields.
+// WithLogFields adds structured logging attributes to the default logger.
 func WithLogFields(attrs ...slog.Attr) OptionFunc {
 	return func(svc *Service) error {
 		if len(attrs) == 0 {
@@ -41,7 +42,7 @@ func WithLogFields(attrs ...slog.Attr) OptionFunc {
 	}
 }
 
-// WithJSONLogger to use Go's slog package.
+// WithJSONLogger enables JSON output for slog.
 func WithJSONLogger() OptionFunc {
 	return func(svc *Service) error {
 		svc.observabilityCfg.LogConfig.IsJSON = true

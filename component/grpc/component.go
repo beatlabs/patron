@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-// Component of a gRPC service.
+// Component hosts a gRPC server with health and optional reflection.
 type Component struct {
 	port             int
 	serverOptions    []grpc.ServerOption
@@ -22,6 +22,7 @@ type Component struct {
 	srv              *grpc.Server
 }
 
+// New creates a gRPC Component on the given port with functional options.
 func New(port int, options ...OptionFunction) (*Component, error) {
 	c := new(Component)
 	if port <= 0 || port > 65535 {
@@ -53,12 +54,12 @@ func New(port int, options ...OptionFunction) (*Component, error) {
 	return c, nil
 }
 
-// Server returns the gRPC sever.
+// Server returns the underlying gRPC server.
 func (c *Component) Server() *grpc.Server {
 	return c.srv
 }
 
-// Run the gRPC service.
+// Run starts serving and blocks until the context is canceled or serving fails.
 func (c *Component) Run(ctx context.Context) error {
 	listenCfg := &net.ListenConfig{}
 	lis, err := listenCfg.Listen(ctx, "tcp", fmt.Sprintf(":%d", c.port))

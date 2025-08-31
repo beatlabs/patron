@@ -28,3 +28,10 @@ The entry point of the framework is the `Service`. The `Service` uses `Component
 - [Code of Conduct](docs/CodeOfConduct.md)
 - [Contribution Guidelines](docs/ContributionGuidelines.md)
 - [Acknowledgments](docs/ACKNOWLEDGMENTS.md)
+
+## API docs
+
+- Components
+  - [gRPC component](docs/api/components/grpc.md)
+- Clients
+  - [gRPC client](docs/api/clients/grpc.md)

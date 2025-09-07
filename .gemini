@@ -1,25 +1,32 @@
 # Project Information for Gemini Agent
 
-## Project Type
-Go microservice framework.
+## Project Overview
+- **Project Name:** Patron
+- **Project Type:** Go microservice framework.
+- **Go Version:** 1.24.0
+- **Key Packages:**
+    - `client`: Contains clients for various services like Kafka, AMQP, etc.
+    - `component`: Contains components for building services (e.g., HTTP, gRPC).
+    - `reliability`: Contains reliability patterns like circuit breakers and retries.
+    - `encoding`: Provides encoding and decoding functionalities.
 
-## Build and Test Commands
+## Build and Test
 - `make test`: Runs unit tests.
 - `make testint`: Runs integration tests.
-- `make ci`: Runs CI tests (now with a 2-minute timeout).
-- `make lint`: Runs the linter (`golangci-lint`).
+- `make ci`: Runs all tests and generates a `coverage.txt` file.
+- `make lint`: Runs the linter.
 - `make deps-start`: Starts Docker Compose dependencies.
 - `make deps-stop`: Stops Docker Compose dependencies.
 
 ## Linter
-`golangci-lint` is used for linting.
+- **Linter:** `golangci-lint`
+- **Version:** `v2.2.1-alpine` (from `Makefile`)
+- **Configuration:** `.golangci.yml`
 
 ## Dependencies
-Docker Compose is used to manage various service dependencies (Kafka, RabbitMQ, Mongo, MySQL, etc.).
+- Docker Compose is used to manage various service dependencies (Kafka, RabbitMQ, Mongo, MySQL, etc.). See `docker-compose.yml`.
 
-## Recent Agent Actions
-- Fixed `noctx` linter issues in `client/http/http_test.go`, `component/http/auth/apikey/apikey_test.go`, and `component/http/middleware/middleware_test.go`.
-- Updated the `ci` target in `Makefile` to include a 2-minute timeout for `go test` commands.
-- Created and merged pull request #902.
-- Force-merged pull request #902 using `--admin` flag.
-- Executed `git gone` alias to clean up merged branches.
+## Agent Notes & Scratchpad
+- Fixed `noctx` linter issues.
+- Updated the `ci` target in `Makefile` to include a 2-minute timeout.
+- Merged pull request #902.

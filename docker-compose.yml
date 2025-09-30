@@ -32,7 +32,7 @@ services:
       retries: 5
       start_period: 15s
   rabbitmq:
-    image: bitnami/rabbitmq:4.1
+    image: rabbitmq:4.0-management
     restart: always
     ports:
       - "4369:4369"
@@ -42,12 +42,10 @@ services:
       - "25672:25672"
       - "15672:15672"
     environment:
-      - RABBITMQ_USERNAME=bitnami
-      - RABBITMQ_PASSWORD=bitnami
-      - RABBITMQ_SECURE_PASSWORD=yes
-      - RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS=yes
+      - RABBITMQ_DEFAULT_USER=bitnami
+      - RABBITMQ_DEFAULT_PASS=bitnami
     volumes:
-      - "rabbitmq_data:/bitnami/rabbitmq/mnesia"
+      - "rabbitmq_data:/var/lib/rabbitmq"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
       interval: 10s
@@ -76,16 +74,15 @@ services:
       retries: 5
       start_period: 15s
   valkey:
-    image: bitnami/valkey:8.1
+    image: valkey/valkey:8.0
     restart: always
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+    command: ["valkey-server", "--bind", "0.0.0.0"]
     ports:
       - "6379:6379"
     volumes:
-      - "valkey_data:/bitnami/valkey/data"
+      - "valkey_data:/data"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5

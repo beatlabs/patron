@@ -32,7 +32,7 @@ services:
       retries: 5
       start_period: 15s
   rabbitmq:
-    image: rabbitmq:4.0-management
+    image: rabbitmq:4.1-management
     restart: always
     ports:
       - "4369:4369"
@@ -74,7 +74,7 @@ services:
       retries: 5
       start_period: 15s
   valkey:
-    image: valkey/valkey:8.0
+    image: valkey/valkey:8.1
     restart: always
     command: ["valkey-server", "--bind", "0.0.0.0"]
     ports:

@@ -5,7 +5,7 @@ filippo.io/edwards25519/field
 # github.com/IBM/sarama v1.46.0
 ## explicit; go 1.23.0
 github.com/IBM/sarama
-# github.com/aws/aws-sdk-go-v2 v1.38.3
+# github.com/aws/aws-sdk-go-v2 v1.39.2
 ## explicit; go 1.22
 github.com/aws/aws-sdk-go-v2/aws
 github.com/aws/aws-sdk-go-v2/aws/defaults

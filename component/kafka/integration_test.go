@@ -290,7 +290,7 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 func newComponent(t *testing.T, name string, retries uint32, batchSize uint, processorFunc BatchProcessorFunc) *Component {
 	saramaCfg, err := DefaultConsumerSaramaConfig(name, true)
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
-	saramaCfg.Version = sarama.V2_6_0_0
+	saramaCfg.Version = sarama.V3_8_0_0
 	require.NoError(t, err)
 
 	cmp, err := New(name, name+groupSuffix, []string{broker}, []string{name}, processorFunc,
@@ -312,70 +312,40 @@ func decodeString(data []byte, v any) error {
 }
 
 func createTopics(broker string, topics ...string) error {
-	brk := sarama.NewBroker(broker)
+	config := sarama.NewConfig()
+	config.Version = sarama.V3_8_0_0
 
-	err := brk.Open(sarama.NewConfig())
+	// Use the modern Admin client instead of the low-level Broker API
+	admin, err := sarama.NewClusterAdmin([]string{broker}, config)
 	if err != nil {
 		return err
 	}
+	defer admin.Close()
 
-	// check if the connection was OK
-	connected, err := brk.Connected()
-	if err != nil {
-		return err
-	}
-	if !connected {
-		return errors.New("not connected")
-	}
-	deleteReq := &sarama.DeleteTopicsRequest{
-		Topics:  topics,
-		Timeout: time.Second * 15,
-	}
-
-	deleteResp, err := brk.DeleteTopics(deleteReq)
-	if err != nil {
-		return err
-	}
-
-	for k, v := range deleteResp.TopicErrorCodes {
-		if v == sarama.ErrNoError || v == sarama.ErrUnknownTopicOrPartition {
-			continue
+	// Delete topics first (ignore errors if they don't exist)
+	for _, topic := range topics {
+		err = admin.DeleteTopic(topic)
+		if err != nil && !errors.Is(err, sarama.ErrUnknownTopicOrPartition) {
+			fmt.Printf("Warning: failed to delete topic %s: %v\n", topic, err)
 		}
-		fmt.Println(k)
-		fmt.Println(v)
 	}
 
 	time.Sleep(100 * time.Millisecond)
 
-	topicDetail := &sarama.TopicDetail{}
-	topicDetail.NumPartitions = int32(1)
-	topicDetail.ReplicationFactor = int16(1)
-	topicDetail.ConfigEntries = make(map[string]*string)
-
-	topicDetails := make(map[string]*sarama.TopicDetail, len(topics))
+	// Create topics
+	topicDetail := &sarama.TopicDetail{
+		NumPartitions:     1,
+		ReplicationFactor: 1,
+	}
 
 	for _, topic := range topics {
-		topicDetails[topic] = topicDetail
-	}
-
-	request := sarama.CreateTopicsRequest{
-		Timeout:      time.Second * 15,
-		TopicDetails: topicDetails,
-	}
-
-	response, err := brk.CreateTopics(&request)
-	if err != nil {
-		return err
-	}
-
-	for _, val := range response.TopicErrors {
-		if val.Err == sarama.ErrTopicAlreadyExists || val.Err == sarama.ErrNoError {
-			continue
+		err = admin.CreateTopic(topic, topicDetail, false)
+		if err != nil && !errors.Is(err, sarama.ErrTopicAlreadyExists) {
+			return err
 		}
-		return errors.New(val.Error())
 	}
 
-	return brk.Close()
+	return nil
 }
 
 func newProducer(broker string) (sarama.SyncProducer, error) {

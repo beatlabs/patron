@@ -5,7 +5,7 @@ filippo.io/edwards25519/field
 # github.com/IBM/sarama v1.46.0
 ## explicit; go 1.23.0
 github.com/IBM/sarama
-# github.com/aws/aws-sdk-go-v2 v1.38.3
+# github.com/aws/aws-sdk-go-v2 v1.39.2
 ## explicit; go 1.22
 github.com/aws/aws-sdk-go-v2/aws
 github.com/aws/aws-sdk-go-v2/aws/defaults
@@ -144,8 +144,8 @@ github.com/eapache/go-xerial-snappy
 # github.com/eapache/queue v1.1.0
 ## explicit
 github.com/eapache/queue
-# github.com/eclipse/paho.golang v0.22.0
-## explicit; go 1.21
+# github.com/eclipse/paho.golang v0.23.0
+## explicit; go 1.24.0
 github.com/eclipse/paho.golang/autopaho
 github.com/eclipse/paho.golang/autopaho/queue
 github.com/eclipse/paho.golang/autopaho/queue/memory
@@ -1228,7 +1228,6 @@ go.opentelemetry.io/otel/propagation
 go.opentelemetry.io/otel/semconv/v1.21.0
 go.opentelemetry.io/otel/semconv/v1.24.0
 go.opentelemetry.io/otel/semconv/v1.26.0
-go.opentelemetry.io/otel/semconv/v1.34.0
 go.opentelemetry.io/otel/semconv/v1.37.0
 go.opentelemetry.io/otel/semconv/v1.37.0/httpconv
 go.opentelemetry.io/otel/semconv/v1.37.0/otelconv
@@ -1321,8 +1320,8 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/time v0.12.0
-## explicit; go 1.23.0
+# golang.org/x/time v0.13.0
+## explicit; go 1.24.0
 golang.org/x/time/rate
 # google.golang.org/genproto/googleapis/api v0.0.0-20250826171959-ef028d996bc1
 ## explicit; go 1.24.0
@@ -1400,7 +1399,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.36.8
+# google.golang.org/protobuf v1.36.9
 ## explicit; go 1.23
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext

@@ -4,13 +4,13 @@ go 1.24.0
 
 require (
 	github.com/IBM/sarama v1.46.0
-	github.com/aws/aws-sdk-go-v2 v1.38.3
+	github.com/aws/aws-sdk-go-v2 v1.39.2
 	github.com/aws/aws-sdk-go-v2/config v1.31.6
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.10
 	github.com/aws/aws-sdk-go-v2/service/sns v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.3
 	github.com/aws/smithy-go v1.23.0
-	github.com/eclipse/paho.golang v0.22.0
+	github.com/eclipse/paho.golang v0.23.0
 	github.com/elastic/elastic-transport-go/v8 v8.7.0
 	github.com/elastic/go-elasticsearch/v8 v8.19.0
 	github.com/go-sql-driver/mysql v1.9.3
@@ -32,9 +32,9 @@ require (
 	go.opentelemetry.io/otel/sdk v1.38.0
 	go.opentelemetry.io/otel/sdk/metric v1.38.0
 	go.opentelemetry.io/otel/trace v1.38.0
-	golang.org/x/time v0.12.0
+	golang.org/x/time v0.13.0
 	google.golang.org/grpc v1.75.0
-	google.golang.org/protobuf v1.36.8
+	google.golang.org/protobuf v1.36.9
 )
 
 require (

@@ -314,7 +314,7 @@ func decodeString(data []byte, v any) error {
 func createTopics(broker string, topics ...string) error {
 	config := sarama.NewConfig()
 	config.Version = sarama.V3_8_0_0
-	
+
 	// Use the modern Admin client instead of the low-level Broker API
 	admin, err := sarama.NewClusterAdmin([]string{broker}, config)
 	if err != nil {
@@ -337,7 +337,7 @@ func createTopics(broker string, topics ...string) error {
 		NumPartitions:     1,
 		ReplicationFactor: 1,
 	}
-	
+
 	for _, topic := range topics {
 		err = admin.CreateTopic(topic, topicDetail, false)
 		if err != nil && !errors.Is(err, sarama.ErrTopicAlreadyExists) {

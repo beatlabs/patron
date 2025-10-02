@@ -36,6 +36,9 @@ type Pinger interface {
 	// PacketSent is called when a packet is sent to the server.
 	PacketSent()
 
+	// PacketReceived is called when a packet (possibly a PINGRESP) is received from the server
+	PacketReceived()
+
 	// PingResp is called when a PINGRESP is received from the server.
 	PingResp()
 
@@ -46,8 +49,9 @@ type Pinger interface {
 
 // DefaultPinger is the default implementation of Pinger.
 type DefaultPinger struct {
-	lastPacketSent   time.Time
-	lastPingResponse time.Time
+	lastPacketSent     time.Time
+	lastPacketReceived time.Time
+	lastPingResponse   time.Time
 
 	debug log.Logger
 
@@ -99,7 +103,16 @@ func (p *DefaultPinger) Run(ctx context.Context, conn net.Conn, keepAlive uint16
 		case t := <-timer.C:
 			p.mu.Lock()
 			lastPingResponse := p.lastPingResponse
-			pingDue := p.lastPacketSent.Add(interval)
+			// The MQTT Spec only requires that a ping be sent if no control packets have been SENT within the keepalive
+			// period (MQTT-3.1.2-20). Only sending PING in that one case can cause issues if the only activity is
+			// outgoing messages, a half-open connection should result in a TCP timeout but this can take a long time
+			//(issue #288). To address this we PING if we have not both sent, and received, packets within keepAlive.
+			var pingDue time.Time
+			if p.lastPacketSent.Before(p.lastPacketReceived) {
+				pingDue = p.lastPacketSent.Add(interval)
+			} else {
+				pingDue = p.lastPacketReceived.Add(interval)
+			}
 			p.mu.Unlock()
 
 			if !lastPingSent.IsZero() && lastPingSent.After(lastPingResponse) {
@@ -134,6 +147,12 @@ func (p *DefaultPinger) PacketSent() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.lastPacketSent = time.Now()
+}
+
+func (p *DefaultPinger) PacketReceived() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.lastPacketReceived = time.Now()
 }
 
 func (p *DefaultPinger) PingResp() {

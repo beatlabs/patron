@@ -144,8 +144,8 @@ github.com/eapache/go-xerial-snappy
 # github.com/eapache/queue v1.1.0
 ## explicit
 github.com/eapache/queue
-# github.com/eclipse/paho.golang v0.22.0
-## explicit; go 1.21
+# github.com/eclipse/paho.golang v0.23.0
+## explicit; go 1.24.0
 github.com/eclipse/paho.golang/autopaho
 github.com/eclipse/paho.golang/autopaho/queue
 github.com/eclipse/paho.golang/autopaho/queue/memory

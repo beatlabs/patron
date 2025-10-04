@@ -40,6 +40,12 @@ func TestMain(m *testing.M) {
 		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).retryHandler"),
 		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleSuccesses"),
 		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleErrors"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*topicProducer).dispatch"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*partitionProducer).dispatch"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*brokerProducer).run"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func1"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func2"),
+		goleak.IgnoreTopFunction("github.com/beatlabs/patron/client/kafka.(*AsyncProducer).propagateError"),
 	)
 }
 

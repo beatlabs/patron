@@ -66,7 +66,7 @@ func TestRun(t *testing.T) {
 	require.NoError(t, err)
 	defer func() {
 		if pub != nil {
-			pub.Close()
+			_ = pub.Close() // Ignore close errors in cleanup
 		}
 	}()
 	defer cnl()

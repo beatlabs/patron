@@ -4,7 +4,6 @@ package kafka
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/IBM/sarama"

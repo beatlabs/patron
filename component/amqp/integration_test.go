@@ -4,12 +4,14 @@ package amqp
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
 	patronamqp "github.com/beatlabs/patron/client/amqp"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/test"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,6 +20,11 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/goleak"
+)
+
+var (
+	tracePublisher *tracesdk.TracerProvider
+	traceExporter  = tracetest.NewInMemoryExporter()
 )
 
 func TestMain(m *testing.M) {
@@ -29,6 +36,14 @@ func TestMain(m *testing.M) {
 		goleak.IgnoreTopFunction("github.com/rabbitmq/amqp091-go.(*Connection).heartbeater"),
 		goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
 	)
+}
+
+func init() {
+	if err := os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100"); err != nil {
+		panic(err)
+	}
+
+	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
 }
 
 const (

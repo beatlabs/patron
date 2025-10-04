@@ -1,3 +1,5 @@
+//go:build !integration
+
 package kafka
 
 import (
@@ -18,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.uber.org/goleak"
 )
 
 var (
@@ -26,12 +29,20 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"),
+		goleak.IgnoreTopFunction("google.golang.org/grpc/internal/grpcsync.(*CallbackSerializer).run"),
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/metric.(*PeriodicReader).run"),
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
+	)
+}
+
+func init() {
 	if err := os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100"); err != nil {
 		panic(err)
 	}
 
 	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
-	os.Exit(m.Run())
 }
 
 func TestNew(t *testing.T) {

@@ -1,3 +1,5 @@
+//go:build !integration
+
 package amqp
 
 import (
@@ -15,6 +17,7 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/goleak"
 )
 
 const (
@@ -27,13 +30,20 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"),
+		goleak.IgnoreTopFunction("google.golang.org/grpc/internal/grpcsync.(*CallbackSerializer).run"),
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/metric.(*PeriodicReader).run"),
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
+	)
+}
+
+func init() {
 	if err := os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100"); err != nil {
 		panic(err)
 	}
 
 	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
-
-	os.Exit(m.Run())
 }
 
 func Test_message(t *testing.T) {

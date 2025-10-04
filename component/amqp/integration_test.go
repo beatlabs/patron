@@ -64,6 +64,8 @@ func TestRun(t *testing.T) {
 
 	pub, err := patronamqp.New(endpoint)
 	require.NoError(t, err)
+	defer pub.Close()
+	defer cnl()
 
 	sent := []string{"one", "two"}
 

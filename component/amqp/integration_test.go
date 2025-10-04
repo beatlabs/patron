@@ -33,7 +33,6 @@ func TestMain(m *testing.M) {
 		goleak.IgnoreTopFunction("google.golang.org/grpc/internal/grpcsync.(*CallbackSerializer).run"),
 		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/metric.(*PeriodicReader).run"),
 		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
-		goleak.IgnoreTopFunction("github.com/rabbitmq/amqp091-go.(*Connection).heartbeater"),
 		goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
 	)
 }
@@ -147,11 +146,13 @@ func createQueue() error {
 	if err != nil {
 		return err
 	}
+	defer func() { _ = conn.Close() }()
 
 	channel, err := conn.Channel()
 	if err != nil {
 		return err
 	}
+	defer func() { _ = channel.Close() }()
 
 	_, err = channel.QueueDeclare(rabbitMQQueue, true, false, false, false, nil)
 	if err != nil {

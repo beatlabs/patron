@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -16,13 +17,49 @@ import (
 	kafkaclient "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/test"
+	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/codes"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/goleak"
 )
+
+var (
+	tracePublisher *tracesdk.TracerProvider
+	traceExporter  = tracetest.NewInMemoryExporter()
+)
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"),
+		goleak.IgnoreTopFunction("google.golang.org/grpc/internal/grpcsync.(*CallbackSerializer).run"),
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/metric.(*PeriodicReader).run"),
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*Broker).responseReceiver"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*client).backgroundMetadataUpdater"),
+		goleak.IgnoreTopFunction("github.com/rcrowley/go-metrics.(*meterArbiter).tick"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).dispatcher"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).retryHandler"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleSuccesses"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleErrors"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*topicProducer).dispatch"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*partitionProducer).dispatch"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*brokerProducer).run"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func1"),
+		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func2"),
+	)
+}
+
+func init() {
+	if err := os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "100"); err != nil {
+		panic(err)
+	}
+
+	tracePublisher = patrontrace.Setup("test", nil, traceExporter)
+}
 
 const (
 	successTopic1        = "successTopic1"

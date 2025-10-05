@@ -55,11 +55,16 @@ func New(url string, oo ...OptionFunc) (*Publisher, error) {
 
 	if pub.cfg == nil {
 		conn, err = amqp.Dial(url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open connection: %w", err)
+		}
+		pub.connection = conn
 	} else {
 		pub.connection, err = amqp.DialConfig(url, *pub.cfg)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to open connection: %w", err)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open connection: %w", err)
+		}
+		conn = pub.connection
 	}
 
 	pub.channel, err = conn.Channel()

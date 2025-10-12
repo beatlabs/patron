@@ -32,7 +32,7 @@ services:
       retries: 5
       start_period: 15s
   rabbitmq:
-    image: rabbitmq:4.1.4-management
+    image: rabbitmq:4-management
     restart: always
     ports:
       - "4369:4369"
@@ -53,7 +53,7 @@ services:
       retries: 5
       start_period: 15s
   mysql:
-    image: mysql:8.0.43
+    image: mysql:9
     restart: always
     environment:
       MYSQL_DATABASE: "patrondb"
@@ -88,7 +88,7 @@ services:
       retries: 5
       start_period: 15s
   localstack:
-    image: localstack/localstack:4.9.2
+    image: localstack/localstack:4
     restart: always
     ports:
       - "127.0.0.1:4566:4566" # LocalStack Gateway
@@ -127,7 +127,7 @@ services:
       timeout: 10s
       retries: 3
   mongo:
-    image: mongo:8.0.15
+    image: mongo:8
     restart: always
     ports:
       - "27017:27017"

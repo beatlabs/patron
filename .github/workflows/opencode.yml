@@ -17,10 +17,10 @@ jobs:
       id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Run opencode
-        uses: sst/opencode/github@latest
+        uses: sst/opencode/github@83afcb9c427a1b7df7081f0b8e2f8ef2edd3601a # latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

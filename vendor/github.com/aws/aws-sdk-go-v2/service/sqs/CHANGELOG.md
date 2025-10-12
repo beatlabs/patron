@@ -1,3 +1,23 @@
+# v1.42.8 (2025-09-26)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.42.7 (2025-09-23)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.42.6 (2025-09-19)
+
+* **Documentation**: Update invalid character handling documentation for SQS SendMessage API
+
+# v1.42.5 (2025-09-10)
+
+* No change notes available for this release.
+
+# v1.42.4 (2025-09-08)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.42.3 (2025-08-29)
 
 * **Dependency Update**: Updated to the latest SDK module versions

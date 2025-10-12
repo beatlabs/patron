@@ -1,6 +1,6 @@
 services:
   kafka:
-    image: confluentinc/cp-kafka:8.0.1
+    image: confluentinc/cp-kafka:latest
     restart: always
     hostname: broker
     ports:
@@ -32,7 +32,7 @@ services:
       retries: 5
       start_period: 15s
   rabbitmq:
-    image: rabbitmq:4.1-management
+    image: rabbitmq:4-management
     restart: always
     ports:
       - "4369:4369"
@@ -53,7 +53,7 @@ services:
       retries: 5
       start_period: 15s
   mysql:
-    image: mysql:9
+    image: mysql:latest
     restart: always
     environment:
       MYSQL_DATABASE: "patrondb"
@@ -74,7 +74,7 @@ services:
       retries: 5
       start_period: 15s
   valkey:
-    image: valkey/valkey:8.1
+    image: valkey/valkey:latest
     restart: always
     command: ["valkey-server", "--bind", "0.0.0.0"]
     ports:
@@ -88,7 +88,7 @@ services:
       retries: 5
       start_period: 15s
   localstack:
-    image: localstack/localstack:4
+    image: localstack/localstack:latest
     restart: always
     ports:
       - "127.0.0.1:4566:4566" # LocalStack Gateway
@@ -106,7 +106,7 @@ services:
       retries: 5
       start_period: 15s
   hivemq:
-    image: hivemq/hivemq4:4.45.0
+    image: hivemq/hivemq4:latest
     restart: always
     ports:
       - target: 1883
@@ -127,7 +127,7 @@ services:
       timeout: 10s
       retries: 3
   mongo:
-    image: mongo:8
+    image: mongo:latest
     restart: always
     ports:
       - "27017:27017"
@@ -141,7 +141,7 @@ services:
       retries: 5
       start_period: 15s
   otelcol:
-    image: otel/opentelemetry-collector-contrib
+    image: otel/opentelemetry-collector-contrib:latest
     restart: always
     command: ["--config=/etc/otelcol-config.yaml"]
     volumes:

@@ -25,8 +25,15 @@ var (
 )
 
 func init() {
-	cacheExpirationHistogram = patronmetric.Int64Histogram(packageName, "http.cache.expiration", "HTTP cache expiration.", "s")
-	cacheStatusCounter = patronmetric.Int64Counter(packageName, "http.cache.status", "HTTP cache status.", "1")
+	var err error
+	cacheExpirationHistogram, err = patronmetric.Int64Histogram(packageName, "http.cache.expiration", "HTTP cache expiration.", "s")
+	if err != nil {
+		panic(err)
+	}
+	cacheStatusCounter, err = patronmetric.Int64Counter(packageName, "http.cache.status", "HTTP cache status.", "1")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func observeCacheAdd(path string) {

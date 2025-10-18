@@ -23,7 +23,11 @@ const packageName = "kafka"
 var publishCount metric.Int64Counter
 
 func init() {
-	publishCount = patronmetric.Int64Counter(packageName, "kafka.publish.count", "Kafka message count.", "1")
+	var err error
+	publishCount, err = patronmetric.Int64Counter(packageName, "kafka.publish.count", "Kafka message count.", "1")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func publishCountAdd(ctx context.Context, attrs ...attribute.KeyValue) {

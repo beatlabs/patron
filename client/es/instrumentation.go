@@ -25,7 +25,11 @@ const (
 var errStatusCode = errors.New("elasticsearch request failed")
 
 func getDurationHistogram() metric.Int64Histogram {
-	return patronmetric.Int64Histogram(packageName, metricName, metricDescription, "ms")
+	hist, err := patronmetric.Int64Histogram(packageName, metricName, metricDescription, "ms")
+	if err != nil {
+		panic(err)
+	}
+	return hist
 }
 
 // otelMetricInstrumentation wraps the upstream OpenTelemetry instrumentation to add metrics.

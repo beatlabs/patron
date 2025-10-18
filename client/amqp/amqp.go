@@ -24,8 +24,12 @@ const packageName = "amqp"
 var publishDurationMetrics metric.Float64Histogram
 
 func init() {
-	publishDurationMetrics = patronmetric.Float64Histogram(packageName, "amqp.publish.duration",
+	var err error
+	publishDurationMetrics, err = patronmetric.Float64Histogram(packageName, "amqp.publish.duration",
 		"AMQP publish duration.", "ms")
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Publisher defines a RabbitMQ publisher with tracing instrumentation.

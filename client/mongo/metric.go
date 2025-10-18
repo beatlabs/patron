@@ -15,7 +15,11 @@ const packageName = "mongo"
 var durationHistogram metric.Int64Histogram
 
 func init() {
-	durationHistogram = patronmetric.Int64Histogram(packageName, "mongo.duration", "Mongo command duration.", "ms")
+	var err error
+	durationHistogram, err = patronmetric.Int64Histogram(packageName, "mongo.duration", "Mongo command duration.", "ms")
+	if err != nil {
+		panic(err)
+	}
 }
 
 type observabilityMonitor struct {

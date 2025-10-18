@@ -39,7 +39,11 @@ var (
 )
 
 func init() {
-	statusCounter = patronmetric.Int64Counter(packageName, "circuit-breaker.status", "Circuit breaker status counter.", "1")
+	var err error
+	statusCounter, err = patronmetric.Int64Counter(packageName, "circuit-breaker.status", "Circuit breaker status counter.", "1")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func breakerCounterInc(name string, st status) {

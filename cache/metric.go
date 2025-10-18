@@ -25,7 +25,11 @@ var (
 // SetupMetricsOnce initializes the cache counter.
 func SetupMetricsOnce() {
 	cacheOnce.Do(func() {
-		cacheCounter = patronmetric.Int64Counter(packageName, "cache.counter", "Number of cache calls.", "1")
+		var err error
+		cacheCounter, err = patronmetric.Int64Counter(packageName, "cache.counter", "Number of cache calls.", "1")
+		if err != nil {
+			panic(err)
+		}
 	})
 }
 

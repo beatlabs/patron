@@ -18,7 +18,11 @@ const (
 var durationHistogram metric.Int64Histogram
 
 func init() {
-	durationHistogram = patronmetric.Int64Histogram(packageName, "mqtt.publish.duration", "MQTT publish duration.", "ms")
+	var err error
+	durationHistogram, err = patronmetric.Int64Histogram(packageName, "mqtt.publish.duration", "MQTT publish duration.", "ms")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func topicAttr(topic string) attribute.KeyValue {

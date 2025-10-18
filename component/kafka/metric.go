@@ -28,9 +28,19 @@ var (
 )
 
 func init() {
-	consumerErrorsGauge = patronmetric.Int64Counter(packageName, "kafka.consumer.errors", "Kafka consumer error counter.", "s")
-	topicPartitionOffsetDiffGauge = patronmetric.Float64Gauge(packageName, "kafka.consumer.offset.diff", "Kafka topic partition diff gauge.", "1")
-	messageStatusCount = patronmetric.Int64Counter(packageName, "kafka.message.status", "Kafka message status counter.", "1")
+	var err error
+	consumerErrorsGauge, err = patronmetric.Int64Counter(packageName, "kafka.consumer.errors", "Kafka consumer error counter.", "s")
+	if err != nil {
+		panic(err)
+	}
+	topicPartitionOffsetDiffGauge, err = patronmetric.Float64Gauge(packageName, "kafka.consumer.offset.diff", "Kafka topic partition diff gauge.", "1")
+	if err != nil {
+		panic(err)
+	}
+	messageStatusCount, err = patronmetric.Int64Counter(packageName, "kafka.message.status", "Kafka message status counter.", "1")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func consumerErrorsInc(ctx context.Context, name string) {

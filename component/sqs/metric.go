@@ -28,9 +28,19 @@ var (
 )
 
 func init() {
-	messageAgeGauge = patronmetric.Float64Gauge(packageName, "sqs.message.age", "SQS message age.", "s")
-	messageCounter = patronmetric.Int64Counter(packageName, "sqs.message.counter", "SQS message counter.", "1")
-	messageQueueSizeGauge = patronmetric.Float64Gauge(packageName, "sqs.queue.size", "SQS message queue size.", "1")
+	var err error
+	messageAgeGauge, err = patronmetric.Float64Gauge(packageName, "sqs.message.age", "SQS message age.", "s")
+	if err != nil {
+		panic(err)
+	}
+	messageCounter, err = patronmetric.Int64Counter(packageName, "sqs.message.counter", "SQS message counter.", "1")
+	if err != nil {
+		panic(err)
+	}
+	messageQueueSizeGauge, err = patronmetric.Float64Gauge(packageName, "sqs.queue.size", "SQS message queue size.", "1")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func observerMessageAge(ctx context.Context, queue string, attrs map[string]string) {

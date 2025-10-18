@@ -26,9 +26,19 @@ var (
 )
 
 func init() {
-	messageAgeGauge = patronmetric.Float64Gauge(packageName, "amqp.message.age", "AMQP message age.", "s")
-	messageCounter = patronmetric.Int64Counter(packageName, "amqp.message.counter", "AMQP message counter.", "1")
-	messageQueueSizeGauge = patronmetric.Int64Gauge(packageName, "amqp.queue.size", "AMQP message queue size.", "1")
+	var err error
+	messageAgeGauge, err = patronmetric.Float64Gauge(packageName, "amqp.message.age", "AMQP message age.", "s")
+	if err != nil {
+		panic(err)
+	}
+	messageCounter, err = patronmetric.Int64Counter(packageName, "amqp.message.counter", "AMQP message counter.", "1")
+	if err != nil {
+		panic(err)
+	}
+	messageQueueSizeGauge, err = patronmetric.Int64Gauge(packageName, "amqp.queue.size", "AMQP message queue size.", "1")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func observeMessageCountInc(ctx context.Context, queue string, state messageState, err error) {

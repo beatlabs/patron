@@ -275,12 +275,11 @@ type stubSQSAPI struct {
 	deleteMessageWithContextErr      error
 	deleteMessageBatchWithContextErr error
 	getQueueAttributesWithContextErr error
-	// nolint
-	getQueueUrlWithContextErr error
-	succeededMessage          Message
-	failedMessage             Message
-	messageSent               map[string]struct{}
-	queueURL                  string
+	getQueueUrlWithContextErr        error
+	succeededMessage                 Message
+	failedMessage                    Message
+	messageSent                      map[string]struct{}
+	queueURL                         string
 }
 
 func newStubSQSAPI() *stubSQSAPI {
@@ -328,7 +327,6 @@ func (s stubSQSAPI) GetQueueAttributes(_ context.Context, _ *sqs.GetQueueAttribu
 	}, nil
 }
 
-// nolint
 func (s stubSQSAPI) GetQueueUrl(_ context.Context, _ *sqs.GetQueueUrlInput, _ ...func(*sqs.Options)) (*sqs.GetQueueUrlOutput, error) {
 	if s.getQueueUrlWithContextErr != nil {
 		return nil, s.getQueueUrlWithContextErr

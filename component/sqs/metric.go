@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/beatlabs/patron/observability"
@@ -18,22 +19,59 @@ const (
 )
 
 var (
-	messageAgeGauge       metric.Float64Gauge
-	messageCounter        metric.Int64Counter
-	messageQueueSizeGauge metric.Float64Gauge
-
 	ackStateAttr     = attribute.String(stateAttribute, string(ackMessageState))
 	nackStateAttr    = attribute.String(stateAttribute, string(nackMessageState))
 	fetchedStateAttr = attribute.String(stateAttribute, string(fetchedMessageState))
 )
 
-func init() {
-	messageAgeGauge = patronmetric.Float64Gauge(packageName, "sqs.message.age", "SQS message age.", "s")
-	messageCounter = patronmetric.Int64Counter(packageName, "sqs.message.counter", "SQS message counter.", "1")
-	messageQueueSizeGauge = patronmetric.Float64Gauge(packageName, "sqs.queue.size", "SQS message queue size.", "1")
+type sqsMetrics struct {
+	messageAgeGauge       metric.Float64Gauge
+	messageCounter        metric.Int64Counter
+	messageQueueSizeGauge metric.Float64Gauge
+}
+
+var (
+	metricsInstance *sqsMetrics
+	metricsOnce     sync.Once
+	errMetrics      error
+)
+
+func setupMetricsOnce() (*sqsMetrics, error) {
+	metricsOnce.Do(func() {
+		messageAgeGauge, err := patronmetric.Float64Gauge(packageName, "sqs.message.age", "SQS message age.", "s")
+		if err != nil {
+			errMetrics = err
+			return
+		}
+
+		messageCounter, err := patronmetric.Int64Counter(packageName, "sqs.message.counter", "SQS message counter.", "1")
+		if err != nil {
+			errMetrics = err
+			return
+		}
+
+		messageQueueSizeGauge, err := patronmetric.Float64Gauge(packageName, "sqs.queue.size", "SQS message queue size.", "1")
+		if err != nil {
+			errMetrics = err
+			return
+		}
+
+		metricsInstance = &sqsMetrics{
+			messageAgeGauge:       messageAgeGauge,
+			messageCounter:        messageCounter,
+			messageQueueSizeGauge: messageQueueSizeGauge,
+		}
+	})
+
+	return metricsInstance, errMetrics
 }
 
 func observerMessageAge(ctx context.Context, queue string, attrs map[string]string) {
+	m, _ := setupMetricsOnce()
+	if m == nil {
+		return
+	}
+
 	attr, ok := attrs[sqsAttributeSentTimestamp]
 	if !ok || len(strings.TrimSpace(attr)) == 0 {
 		return
@@ -42,11 +80,16 @@ func observerMessageAge(ctx context.Context, queue string, attrs map[string]stri
 	if err != nil {
 		return
 	}
-	messageAgeGauge.Record(ctx, time.Now().UTC().Sub(time.Unix(timestamp, 0)).Seconds(),
+	m.messageAgeGauge.Record(ctx, time.Now().UTC().Sub(time.Unix(timestamp, 0)).Seconds(),
 		metric.WithAttributes(queueAttributes(queue)))
 }
 
 func observeMessageCount(ctx context.Context, queue string, state messageState, err error, count int) {
+	m, _ := setupMetricsOnce()
+	if m == nil {
+		return
+	}
+
 	var stateAttr attribute.KeyValue
 	switch state {
 	case ackMessageState:
@@ -57,12 +100,17 @@ func observeMessageCount(ctx context.Context, queue string, state messageState, 
 		stateAttr = fetchedStateAttr
 	}
 
-	messageCounter.Add(ctx, int64(count), metric.WithAttributes(queueAttributes(queue), stateAttr,
+	m.messageCounter.Add(ctx, int64(count), metric.WithAttributes(queueAttributes(queue), stateAttr,
 		observability.StatusAttribute(err)))
 }
 
 func observeQueueSize(ctx context.Context, queue, state string, size float64) {
-	messageQueueSizeGauge.Record(ctx, size,
+	m, _ := setupMetricsOnce()
+	if m == nil {
+		return
+	}
+
+	m.messageQueueSizeGauge.Record(ctx, size,
 		metric.WithAttributes(queueAttributes(queue), attribute.String("state", state)))
 }
 

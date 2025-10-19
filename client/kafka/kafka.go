@@ -20,18 +20,13 @@ import (
 
 const packageName = "kafka"
 
-var publishCount metric.Int64Counter
-
-func init() {
-	publishCount = patronmetric.Int64Counter(packageName, "kafka.publish.count", "Kafka message count.", "1")
-}
-
-func publishCountAdd(ctx context.Context, attrs ...attribute.KeyValue) {
-	publishCount.Add(ctx, 1, metric.WithAttributes(attrs...))
-}
-
 type baseProducer struct {
-	prodClient sarama.Client
+	prodClient   sarama.Client
+	publishCount metric.Int64Counter
+}
+
+func (p *baseProducer) publishCountAdd(ctx context.Context, attrs ...attribute.KeyValue) {
+	p.publishCount.Add(ctx, 1, metric.WithAttributes(attrs...))
 }
 
 // ActiveBrokers returns a list of active brokers' addresses.
@@ -112,6 +107,11 @@ func (b *Builder) Create() (*SyncProducer, error) {
 		return nil, fmt.Errorf("failed to create sync producer: %w", err)
 	}
 
+	p.publishCount, err = patronmetric.Int64Counter(packageName, "kafka.publish.count", "Kafka message count.", "1")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create publish counter: %w", err)
+	}
+
 	return &p, nil
 }
 
@@ -136,6 +136,12 @@ func (b *Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create async producer: %w", err)
 	}
+
+	ap.publishCount, err = patronmetric.Int64Counter(packageName, "kafka.publish.count", "Kafka message count.", "1")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create publish counter: %w", err)
+	}
+
 	chErr := make(chan error)
 	go ap.propagateError(chErr)
 

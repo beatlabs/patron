@@ -24,13 +24,10 @@ const (
 
 var errStatusCode = errors.New("elasticsearch request failed")
 
-func getDurationHistogram() metric.Int64Histogram {
-	return patronmetric.Int64Histogram(packageName, metricName, metricDescription, "ms")
-}
-
 // otelMetricInstrumentation wraps the upstream OpenTelemetry instrumentation to add metrics.
 type otelMetricInstrumentation struct {
-	delegate elastictransport.Instrumentation
+	delegate          elastictransport.Instrumentation
+	durationHistogram metric.Int64Histogram
 }
 
 type stateKey struct{}
@@ -51,10 +48,15 @@ func (st *requestState) reset() {
 
 // newMetricInstrumentation creates an instrumentation that records OTEL metrics
 // and delegates tracing to the upstream implementation.
-func newMetricInstrumentation(version string) elastictransport.Instrumentation {
-	return &otelMetricInstrumentation{
-		delegate: elastictransport.NewOtelInstrumentation(nil, false, version),
+func newMetricInstrumentation(version string) (elastictransport.Instrumentation, error) {
+	durationHistogram, err := patronmetric.Int64Histogram(packageName, metricName, metricDescription, "ms")
+	if err != nil {
+		return nil, err
 	}
+	return &otelMetricInstrumentation{
+		delegate:          elastictransport.NewOtelInstrumentation(nil, false, version),
+		durationHistogram: durationHistogram,
+	}, nil
 }
 
 func (o *otelMetricInstrumentation) Start(ctx context.Context, name string) context.Context {
@@ -78,7 +80,7 @@ func (o *otelMetricInstrumentation) Close(ctx context.Context) {
 			attribute.String(endpointAttrKey, st.endpoint),
 			observability.StatusAttribute(st.finalErr()),
 		)
-		getDurationHistogram().Record(ctx, time.Since(st.startTime).Milliseconds(), metric.WithAttributeSet(attrSet))
+		o.durationHistogram.Record(ctx, time.Since(st.startTime).Milliseconds(), metric.WithAttributeSet(attrSet))
 		st.reset()
 		requestStatePool.Put(st)
 	}

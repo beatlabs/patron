@@ -11,8 +11,12 @@ import (
 
 // Connect with integrated observability via MongoDB's event package.
 func Connect(ctx context.Context, oo ...*options.ClientOptions) (*mongo.Client, error) {
+	monitor, err := newObservabilityMonitor(otelmongo.NewMonitor())
+	if err != nil {
+		return nil, err
+	}
 	clientOption := options.Client()
-	clientOption.SetMonitor(newObservabilityMonitor(otelmongo.NewMonitor()))
+	clientOption.SetMonitor(monitor)
 
 	return mongo.Connect(ctx, append(oo, clientOption)...)
 }

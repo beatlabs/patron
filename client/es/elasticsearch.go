@@ -8,7 +8,11 @@ import (
 // New creates a new elasticsearch client with tracing capabilities.
 func New(cfg elasticsearch.Config, version string) (*elasticsearch.Client, error) {
 	// Enable tracing via upstream OTEL instrumentation and record metrics via our wrapper
-	cfg.Instrumentation = newMetricInstrumentation(version)
+	instr, err := newMetricInstrumentation(version)
+	if err != nil {
+		return nil, err
+	}
+	cfg.Instrumentation = instr
 
 	return elasticsearch.NewClient(cfg)
 }

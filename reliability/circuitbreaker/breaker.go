@@ -31,18 +31,13 @@ const (
 )
 
 var (
-	tsFuture      = int64(math.MaxInt64)
-	errOpen       = new(OpenError)
-	openedAttr    = attribute.Int64(statusAttribute, int64(opened))
-	closedAttr    = attribute.Int64(statusAttribute, int64(closed))
-	statusCounter metric.Int64Counter
+	tsFuture   = int64(math.MaxInt64)
+	errOpen    = new(OpenError)
+	openedAttr = attribute.Int64(statusAttribute, int64(opened))
+	closedAttr = attribute.Int64(statusAttribute, int64(closed))
 )
 
-func init() {
-	statusCounter = patronmetric.Int64Counter(packageName, "circuit-breaker.status", "Circuit breaker status counter.", "1")
-}
-
-func breakerCounterInc(name string, st status) {
+func (cb *CircuitBreaker) breakerCounterInc(ctx context.Context, st status) {
 	stateAttr := closedAttr
 	switch st {
 	case opened:
@@ -50,7 +45,7 @@ func breakerCounterInc(name string, st status) {
 	case closed:
 		stateAttr = closedAttr
 	}
-	statusCounter.Add(context.Background(), 1, metric.WithAttributes(stateAttr, attribute.String("name", name)))
+	cb.statusCounter.Add(ctx, 1, metric.WithAttributes(stateAttr, attribute.String("name", cb.name)))
 }
 
 // Setting definition.
@@ -70,8 +65,9 @@ type Action func() (any, error)
 
 // CircuitBreaker implementation.
 type CircuitBreaker struct {
-	name string
-	set  Setting
+	name          string
+	set           Setting
+	statusCounter metric.Int64Counter
 	sync.RWMutex
 	status     status
 	executions uint
@@ -90,14 +86,20 @@ func New(name string, s Setting) (*CircuitBreaker, error) {
 		return nil, errors.New("max retry has to be greater than the retry threshold")
 	}
 
+	counter, err := patronmetric.Int64Counter(packageName, "circuit-breaker.status", "Circuit breaker status counter.", "1")
+	if err != nil {
+		return nil, err
+	}
+
 	return &CircuitBreaker{
-		name:       name,
-		set:        s,
-		status:     closed,
-		executions: 0,
-		failures:   0,
-		retries:    0,
-		nextRetry:  tsFuture,
+		name:          name,
+		set:           s,
+		statusCounter: counter,
+		status:        closed,
+		executions:    0,
+		failures:      0,
+		retries:       0,
+		nextRetry:     tsFuture,
 	}, nil
 }
 
@@ -126,22 +128,22 @@ func (cb *CircuitBreaker) isClose() bool {
 }
 
 // Execute the provided action.
-func (cb *CircuitBreaker) Execute(act Action) (any, error) {
+func (cb *CircuitBreaker) Execute(ctx context.Context, act Action) (any, error) {
 	if cb.isOpen() {
 		return nil, errOpen
 	}
 
 	resp, err := act()
 	if err != nil {
-		cb.incFailure()
+		cb.incFailure(ctx)
 		return nil, err
 	}
-	cb.incSuccess()
+	cb.incSuccess(ctx)
 
 	return resp, err
 }
 
-func (cb *CircuitBreaker) incFailure() {
+func (cb *CircuitBreaker) incFailure(ctx context.Context) {
 	// allow closed and half open to transition to open
 	if cb.isOpen() {
 		return
@@ -152,7 +154,7 @@ func (cb *CircuitBreaker) incFailure() {
 	cb.failures++
 
 	if cb.status == closed && cb.failures >= cb.set.FailureThreshold {
-		cb.transitionToOpen()
+		cb.transitionToOpen(ctx)
 		return
 	}
 
@@ -162,10 +164,10 @@ func (cb *CircuitBreaker) incFailure() {
 		return
 	}
 
-	cb.transitionToOpen()
+	cb.transitionToOpen(ctx)
 }
 
-func (cb *CircuitBreaker) incSuccess() {
+func (cb *CircuitBreaker) incSuccess(ctx context.Context) {
 	// allow only half open in order to transition to closed
 	if !cb.isHalfOpen() {
 		return
@@ -179,23 +181,23 @@ func (cb *CircuitBreaker) incSuccess() {
 	if cb.retries < cb.set.RetrySuccessThreshold {
 		return
 	}
-	cb.transitionToClose()
+	cb.transitionToClose(ctx)
 }
 
-func (cb *CircuitBreaker) transitionToOpen() {
+func (cb *CircuitBreaker) transitionToOpen(ctx context.Context) {
 	cb.status = opened
 	cb.failures = 0
 	cb.executions = 0
 	cb.retries = 0
 	cb.nextRetry = time.Now().Add(cb.set.RetryTimeout).UnixNano()
-	breakerCounterInc(cb.name, cb.status)
+	cb.breakerCounterInc(ctx, cb.status)
 }
 
-func (cb *CircuitBreaker) transitionToClose() {
+func (cb *CircuitBreaker) transitionToClose(ctx context.Context) {
 	cb.status = closed
 	cb.failures = 0
 	cb.executions = 0
 	cb.retries = 0
 	cb.nextRetry = tsFuture
-	breakerCounterInc(cb.name, cb.status)
+	cb.breakerCounterInc(ctx, cb.status)
 }

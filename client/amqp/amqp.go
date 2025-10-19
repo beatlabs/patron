@@ -21,18 +21,12 @@ import (
 
 const packageName = "amqp"
 
-var publishDurationMetrics metric.Float64Histogram
-
-func init() {
-	publishDurationMetrics = patronmetric.Float64Histogram(packageName, "amqp.publish.duration",
-		"AMQP publish duration.", "ms")
-}
-
 // Publisher defines a RabbitMQ publisher with tracing instrumentation.
 type Publisher struct {
-	cfg        *amqp.Config
-	connection *amqp.Connection
-	channel    *amqp.Channel
+	cfg                    *amqp.Config
+	connection             *amqp.Connection
+	channel                *amqp.Channel
+	publishDurationMetrics metric.Float64Histogram
 }
 
 // New constructor.
@@ -43,6 +37,13 @@ func New(url string, oo ...OptionFunc) (*Publisher, error) {
 
 	var err error
 	pub := &Publisher{}
+
+	publishDurationMetrics, err := patronmetric.Float64Histogram(packageName, "amqp.publish.duration",
+		"AMQP publish duration.", "ms")
+	if err != nil {
+		return nil, err
+	}
+	pub.publishDurationMetrics = publishDurationMetrics
 
 	for _, option := range oo {
 		err = option(pub)
@@ -83,7 +84,7 @@ func (tc *Publisher) Publish(ctx context.Context, exchange, key string, mandator
 	start := time.Now()
 	err := tc.channel.PublishWithContext(ctx, exchange, key, mandatory, immediate, msg)
 
-	observePublish(ctx, start, exchange, err)
+	tc.observePublish(ctx, start, exchange, err)
 	if err != nil {
 		sp.RecordError(err)
 		sp.SetStatus(codes.Error, "error publishing message")
@@ -113,8 +114,8 @@ func (tc *Publisher) Close() error {
 	return errors.Join(tc.channel.Close(), tc.connection.Close())
 }
 
-func observePublish(ctx context.Context, start time.Time, exchange string, err error) {
-	publishDurationMetrics.Record(ctx, time.Since(start).Seconds(),
+func (tc *Publisher) observePublish(ctx context.Context, start time.Time, exchange string, err error) {
+	tc.publishDurationMetrics.Record(ctx, time.Since(start).Seconds(),
 		metric.WithAttributes(attribute.String("exchange", exchange), observability.StatusAttribute(err)))
 }
 

@@ -1,6 +1,7 @@
 package circuitbreaker
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -127,13 +128,14 @@ func TestCircuitBreaker_isClose(t *testing.T) {
 }
 
 func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
+	ctx := context.Background()
 	retryTimeout := 5 * time.Millisecond
 	waitRetryTimeout := 7 * time.Millisecond
 
 	set := Setting{FailureThreshold: uint(1), RetryTimeout: retryTimeout, RetrySuccessThreshold: 2, MaxRetryExecutionThreshold: 2}
 	cb, err := New("test", set)
 	require.NoError(t, err)
-	_, err = cb.Execute(testSuccessAction)
+	_, err = cb.Execute(ctx, testSuccessAction)
 	require.NoError(t, err)
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
@@ -141,7 +143,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.True(t, cb.isClose())
 	assert.Equal(t, tsFuture, cb.nextRetry)
 	// will transition to open
-	_, err = cb.Execute(testFailureAction)
+	_, err = cb.Execute(ctx, testFailureAction)
 	require.EqualError(t, err, "test error")
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
@@ -149,7 +151,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.True(t, cb.isOpen())
 	assert.Less(t, cb.nextRetry, tsFuture)
 	// open, returns err immediately
-	_, err = cb.Execute(testSuccessAction)
+	_, err = cb.Execute(ctx, testSuccessAction)
 	require.EqualError(t, err, "circuit is open")
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
@@ -158,7 +160,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Less(t, cb.nextRetry, tsFuture)
 	// should be half open now and will stay in there
 	time.Sleep(waitRetryTimeout)
-	_, err = cb.Execute(testFailureAction)
+	_, err = cb.Execute(ctx, testFailureAction)
 	require.EqualError(t, err, "test error")
 	assert.Equal(t, uint(1), cb.failures)
 	assert.Equal(t, uint(1), cb.executions)
@@ -166,7 +168,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.True(t, cb.isHalfOpen())
 	assert.Less(t, cb.nextRetry, tsFuture)
 	// should be half open now and will transition to open
-	_, err = cb.Execute(testFailureAction)
+	_, err = cb.Execute(ctx, testFailureAction)
 	require.EqualError(t, err, "test error")
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
@@ -175,14 +177,14 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Less(t, cb.nextRetry, tsFuture)
 	// should be half open now and will transition to close
 	time.Sleep(waitRetryTimeout)
-	_, err = cb.Execute(testSuccessAction)
+	_, err = cb.Execute(ctx, testSuccessAction)
 	require.NoError(t, err)
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(1), cb.executions)
 	assert.Equal(t, uint(1), cb.retries)
 	assert.True(t, cb.isHalfOpen())
 	assert.Less(t, cb.nextRetry, tsFuture)
-	_, err = cb.Execute(testSuccessAction)
+	_, err = cb.Execute(ctx, testSuccessAction)
 	require.NoError(t, err)
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
@@ -192,6 +194,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 }
 
 func BenchmarkCircuitBreaker_Execute(b *testing.B) {
+	ctx := context.Background()
 	set := Setting{
 		FailureThreshold:           uint(1),
 		RetryTimeout:               1 * time.Second,
@@ -201,7 +204,7 @@ func BenchmarkCircuitBreaker_Execute(b *testing.B) {
 	cb, _ := New("test", set)
 
 	for b.Loop() {
-		cb.Execute(testFailureAction) // nolint:errcheck
+		cb.Execute(ctx, testFailureAction) // nolint:errcheck
 	}
 }
 

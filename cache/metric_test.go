@@ -17,7 +17,7 @@ func TestUseCaseAttribute(t *testing.T) {
 }
 
 func TestSetupAndUseMetrics(t *testing.T) {
-	SetupMetricsOnce()
+	require.NoError(t, SetupMetricsOnce())
 
 	read := metricsdk.NewManualReader()
 	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(read))

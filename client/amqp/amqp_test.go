@@ -3,7 +3,6 @@ package amqp
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/beatlabs/patron/correlation"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
@@ -280,34 +279,6 @@ func TestPublisher_Structure(t *testing.T) {
 		assert.NotNil(t, pub)
 		// cfg, connection, and channel are unexported fields
 		// We verify the structure is correct
-	})
-}
-
-func TestObservePublish(t *testing.T) {
-	t.Parallel()
-
-	t.Run("does not panic on success", func(t *testing.T) {
-		t.Parallel()
-
-		ctx := context.Background()
-		exchange := "test-exchange"
-		start := time.Now()
-
-		assert.NotPanics(t, func() {
-			observePublish(ctx, start, exchange, nil)
-		})
-	})
-
-	t.Run("does not panic on error", func(t *testing.T) {
-		t.Parallel()
-
-		ctx := context.Background()
-		exchange := "test-exchange"
-		start := time.Now()
-
-		assert.NotPanics(t, func() {
-			observePublish(ctx, start, exchange, assert.AnError)
-		})
 	})
 }
 

@@ -25,7 +25,10 @@ type Cache struct {
 
 // New creates a cache returns a new Redis client that will be used as the cache store.
 func New(opt *redis.Options, useCase string) (*Cache, error) {
-	cache.SetupMetricsOnce()
+	err := cache.SetupMetricsOnce()
+	if err != nil {
+		return nil, err
+	}
 	redisDB, err := patronredis.New(opt)
 	if err != nil {
 		return nil, err

@@ -18,21 +18,22 @@ import (
 
 const packageName = "sql"
 
-var durationHistogram metric.Int64Histogram
-
-func init() {
-	durationHistogram = patronmetric.Int64Histogram(packageName, "sql.cmd.duration", "SQL command duration.", "ms")
-}
-
 type connInfo struct {
-	userAttr     attribute.KeyValue
-	instanceAttr attribute.KeyValue
-	dbNameAttr   attribute.KeyValue
+	userAttr          attribute.KeyValue
+	instanceAttr      attribute.KeyValue
+	dbNameAttr        attribute.KeyValue
+	durationHistogram metric.Int64Histogram
 }
 
 func (c *connInfo) startSpan(ctx context.Context, opName, stmt string) (context.Context, trace.Span) {
 	return patrontrace.StartSpan(ctx, opName, trace.WithSpanKind(trace.SpanKindClient),
 		trace.WithAttributes(c.userAttr, c.instanceAttr, c.dbNameAttr, attribute.String("db.statement", stmt)))
+}
+
+func (c *connInfo) observeDuration(ctx context.Context, start time.Time, op string, err error) {
+	c.durationHistogram.Record(ctx, time.Since(start).Milliseconds(),
+		metric.WithAttributes(observability.ClientAttribute("sql"), operationAttr(op),
+			observability.StatusAttribute(err)))
 }
 
 // Conn represents a single database connection.
@@ -59,12 +60,12 @@ func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 
 	start := time.Now()
 	tx, err := c.conn.BeginTx(ctx, opts)
-	observeDuration(ctx, start, op, err)
+	c.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Tx{tx: tx}, nil
+	return &Tx{tx: tx, connInfo: c.connInfo}, nil
 }
 
 // Close returns the connection to the connection pool.
@@ -74,7 +75,7 @@ func (c *Conn) Close(ctx context.Context) error {
 	defer sp.End()
 	start := time.Now()
 	err := c.conn.Close()
-	observeDuration(ctx, start, op, err)
+	c.observeDuration(ctx, start, op, err)
 	return err
 }
 
@@ -85,7 +86,7 @@ func (c *Conn) Exec(ctx context.Context, query string, args ...any) (sql.Result,
 	defer sp.End()
 	start := time.Now()
 	res, err := c.conn.ExecContext(ctx, query, args...)
-	observeDuration(ctx, start, op, err)
+	c.observeDuration(ctx, start, op, err)
 	return res, err
 }
 
@@ -96,7 +97,7 @@ func (c *Conn) Ping(ctx context.Context) error {
 	defer sp.End()
 	start := time.Now()
 	err := c.conn.PingContext(ctx)
-	observeDuration(ctx, start, op, err)
+	c.observeDuration(ctx, start, op, err)
 	return err
 }
 
@@ -107,11 +108,11 @@ func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	defer sp.End()
 	start := time.Now()
 	stmt, err := c.conn.PrepareContext(ctx, query)
-	observeDuration(ctx, start, op, err)
+	c.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
-	return &Stmt{stmt: stmt}, nil
+	return &Stmt{stmt: stmt, connInfo: c.connInfo, query: query}, nil
 }
 
 // Query executes a query that returns rows.
@@ -121,7 +122,7 @@ func (c *Conn) Query(ctx context.Context, query string, args ...any) (*sql.Rows,
 	defer sp.End()
 	start := time.Now()
 	rows, err := c.conn.QueryContext(ctx, query, args...) // nolint:sqlclosecheck
-	observeDuration(ctx, start, op, err)
+	c.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +137,7 @@ func (c *Conn) QueryRow(ctx context.Context, query string, args ...any) *sql.Row
 	defer sp.End()
 	start := time.Now()
 	row := c.conn.QueryRowContext(ctx, query, args...)
-	observeDuration(ctx, start, op, nil)
+	c.observeDuration(ctx, start, op, nil)
 	return row
 }
 
@@ -153,25 +154,38 @@ func Open(driverName, dataSourceName string) (*DB, error) {
 		return nil, err
 	}
 	info := parseDSN(dataSourceName)
+	durationHistogram, err := patronmetric.Int64Histogram(packageName, "sql.cmd.duration", "SQL command duration.", "ms")
+	if err != nil {
+		return nil, err
+	}
 	connInfo := connInfo{
-		userAttr:     attribute.String("db.user", info.User),
-		instanceAttr: attribute.String("db.instance", info.Address),
-		dbNameAttr:   attribute.String("db.name", info.DBName),
+		userAttr:          attribute.String("db.user", info.User),
+		instanceAttr:      attribute.String("db.instance", info.Address),
+		dbNameAttr:        attribute.String("db.name", info.DBName),
+		durationHistogram: durationHistogram,
 	}
 
 	return &DB{connInfo: connInfo, db: db}, nil
 }
 
 // OpenDB opens a database.
-func OpenDB(c driver.Connector) *DB {
+func OpenDB(c driver.Connector) (*DB, error) {
 	db := sql.OpenDB(c)
-	return &DB{db: db}
+	durationHistogram, err := patronmetric.Int64Histogram(packageName, "sql.cmd.duration", "SQL command duration.", "ms")
+	if err != nil {
+		return nil, err
+	}
+	return &DB{db: db, connInfo: connInfo{durationHistogram: durationHistogram}}, nil
 }
 
 // FromDB wraps an opened db. This allows to support libraries that provide
 // *sql.DB like sqlmock.
-func FromDB(db *sql.DB) *DB {
-	return &DB{db: db}
+func FromDB(db *sql.DB) (*DB, error) {
+	durationHistogram, err := patronmetric.Int64Histogram(packageName, "sql.cmd.duration", "SQL command duration.", "ms")
+	if err != nil {
+		return nil, err
+	}
+	return &DB{db: db, connInfo: connInfo{durationHistogram: durationHistogram}}, nil
 }
 
 // DB returns the underlying db. This is useful for SQL code that does not
@@ -187,7 +201,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	defer sp.End()
 	start := time.Now()
 	tx, err := db.db.BeginTx(ctx, opts)
-	observeDuration(ctx, start, op, err)
+	db.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +215,7 @@ func (db *DB) Close(ctx context.Context) error {
 	defer sp.End()
 	start := time.Now()
 	err := db.db.Close()
-	observeDuration(ctx, start, op, err)
+	db.observeDuration(ctx, start, op, err)
 	return err
 }
 
@@ -212,7 +226,7 @@ func (db *DB) Conn(ctx context.Context) (*Conn, error) {
 	defer sp.End()
 	start := time.Now()
 	conn, err := db.db.Conn(ctx)
-	observeDuration(ctx, start, op, err)
+	db.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +241,7 @@ func (db *DB) Driver(ctx context.Context) driver.Driver {
 	defer sp.End()
 	start := time.Now()
 	drv := db.db.Driver()
-	observeDuration(ctx, start, op, nil)
+	db.observeDuration(ctx, start, op, nil)
 	return drv
 }
 
@@ -238,7 +252,7 @@ func (db *DB) Exec(ctx context.Context, query string, args ...any) (sql.Result, 
 	defer sp.End()
 	start := time.Now()
 	res, err := db.db.ExecContext(ctx, query, args...)
-	observeDuration(ctx, start, op, err)
+	db.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +267,7 @@ func (db *DB) Ping(ctx context.Context) error {
 	defer sp.End()
 	start := time.Now()
 	err := db.db.PingContext(ctx)
-	observeDuration(ctx, start, op, err)
+	db.observeDuration(ctx, start, op, err)
 	return err
 }
 
@@ -264,7 +278,7 @@ func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	defer sp.End()
 	start := time.Now()
 	stmt, err := db.db.PrepareContext(ctx, query)
-	observeDuration(ctx, start, op, err)
+	db.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +293,7 @@ func (db *DB) Query(ctx context.Context, query string, args ...any) (*sql.Rows, 
 	defer sp.End()
 	start := time.Now()
 	rows, err := db.db.QueryContext(ctx, query, args...) // nolint:sqlclosecheck
-	observeDuration(ctx, start, op, err)
+	db.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +308,7 @@ func (db *DB) QueryRow(ctx context.Context, query string, args ...any) *sql.Row 
 	defer sp.End()
 	start := time.Now()
 	row := db.db.QueryRowContext(ctx, query, args...)
-	observeDuration(ctx, start, op, nil)
+	db.observeDuration(ctx, start, op, nil)
 	return row
 }
 
@@ -320,7 +334,7 @@ func (db *DB) Stats(ctx context.Context) sql.DBStats {
 	defer sp.End()
 	start := time.Now()
 	stats := db.db.Stats()
-	observeDuration(ctx, start, op, nil)
+	db.observeDuration(ctx, start, op, nil)
 	return stats
 }
 
@@ -338,7 +352,7 @@ func (s *Stmt) Close(ctx context.Context) error {
 	defer sp.End()
 	start := time.Now()
 	err := s.stmt.Close()
-	observeDuration(ctx, start, op, err)
+	s.observeDuration(ctx, start, op, err)
 	return err
 }
 
@@ -349,7 +363,7 @@ func (s *Stmt) Exec(ctx context.Context, args ...any) (sql.Result, error) {
 	defer sp.End()
 	start := time.Now()
 	res, err := s.stmt.ExecContext(ctx, args...)
-	observeDuration(ctx, start, op, err)
+	s.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +378,7 @@ func (s *Stmt) Query(ctx context.Context, args ...any) (*sql.Rows, error) {
 	defer sp.End()
 	start := time.Now()
 	rows, err := s.stmt.QueryContext(ctx, args...) // nolint:sqlclosecheck
-	observeDuration(ctx, start, op, err)
+	s.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -379,7 +393,7 @@ func (s *Stmt) QueryRow(ctx context.Context, args ...any) *sql.Row {
 	defer sp.End()
 	start := time.Now()
 	row := s.stmt.QueryRowContext(ctx, args...)
-	observeDuration(ctx, start, op, nil)
+	s.observeDuration(ctx, start, op, nil)
 	return row
 }
 
@@ -396,7 +410,7 @@ func (tx *Tx) Commit(ctx context.Context) error {
 	defer sp.End()
 	start := time.Now()
 	err := tx.tx.Commit()
-	observeDuration(ctx, start, op, err)
+	tx.observeDuration(ctx, start, op, err)
 	return err
 }
 
@@ -407,7 +421,7 @@ func (tx *Tx) Exec(ctx context.Context, query string, args ...any) (sql.Result, 
 	defer sp.End()
 	start := time.Now()
 	res, err := tx.tx.ExecContext(ctx, query, args...)
-	observeDuration(ctx, start, op, err)
+	tx.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -422,12 +436,12 @@ func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	defer sp.End()
 	start := time.Now()
 	stmt, err := tx.tx.PrepareContext(ctx, query)
-	observeDuration(ctx, start, op, err)
+	tx.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Stmt{stmt: stmt}, nil
+	return &Stmt{stmt: stmt, connInfo: tx.connInfo, query: query}, nil
 }
 
 // Query executes a query that returns rows.
@@ -437,7 +451,7 @@ func (tx *Tx) Query(ctx context.Context, query string, args ...any) (*sql.Rows, 
 	defer sp.End()
 	start := time.Now()
 	rows, err := tx.tx.QueryContext(ctx, query, args...) // nolint:sqlclosecheck
-	observeDuration(ctx, start, op, err)
+	tx.observeDuration(ctx, start, op, err)
 	if err != nil {
 		return nil, err
 	}
@@ -451,7 +465,7 @@ func (tx *Tx) QueryRow(ctx context.Context, query string, args ...any) *sql.Row 
 	defer sp.End()
 	start := time.Now()
 	row := tx.tx.QueryRowContext(ctx, query, args...)
-	observeDuration(ctx, start, op, nil)
+	tx.observeDuration(ctx, start, op, nil)
 	return row
 }
 
@@ -462,7 +476,7 @@ func (tx *Tx) Rollback(ctx context.Context) error {
 	defer sp.End()
 	start := time.Now()
 	err := tx.tx.Rollback()
-	observeDuration(ctx, start, op, err)
+	tx.observeDuration(ctx, start, op, err)
 	return err
 }
 
@@ -473,7 +487,7 @@ func (tx *Tx) Stmt(ctx context.Context, stmt *Stmt) *Stmt {
 	defer sp.End()
 	start := time.Now()
 	st := &Stmt{stmt: tx.tx.StmtContext(ctx, stmt.stmt), connInfo: tx.connInfo, query: stmt.query}
-	observeDuration(ctx, start, op, nil)
+	tx.observeDuration(ctx, start, op, nil)
 	return st
 }
 
@@ -505,12 +519,6 @@ func parseDSN(dsn string) DSNInfo {
 	}
 
 	return res
-}
-
-func observeDuration(ctx context.Context, start time.Time, op string, err error) {
-	durationHistogram.Record(ctx, time.Since(start).Milliseconds(),
-		metric.WithAttributes(observability.ClientAttribute("sql"), operationAttr(op),
-			observability.StatusAttribute(err)))
 }
 
 func operationAttr(op string) attribute.KeyValue {

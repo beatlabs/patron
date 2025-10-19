@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseDSN(t *testing.T) {
@@ -38,7 +39,8 @@ func TestParseDSN(t *testing.T) {
 
 func TestFromDB(t *testing.T) {
 	want := &sql.DB{}
-	db := FromDB(want)
+	db, err := FromDB(want)
+	require.NoError(t, err)
 	got := db.DB()
 	assert.Equal(t, want, got)
 }

@@ -32,13 +32,13 @@ func (p *SyncProducer) Send(ctx context.Context, msg *sarama.ProducerMessage) (i
 
 	partition, offset, err := p.syncProd.SendMessage(msg)
 	if err != nil {
-		publishCountAdd(ctx, deliveryTypeSyncAttr, observability.FailedAttribute, topicAttribute(msg.Topic))
+		p.publishCountAdd(ctx, deliveryTypeSyncAttr, observability.FailedAttribute, topicAttribute(msg.Topic))
 		sp.RecordError(err)
 		sp.SetStatus(codes.Error, "error sending message")
 		return -1, -1, err
 	}
 
-	publishCountAdd(ctx, deliveryTypeSyncAttr, observability.SucceededAttribute, topicAttribute(msg.Topic))
+	p.publishCountAdd(ctx, deliveryTypeSyncAttr, observability.SucceededAttribute, topicAttribute(msg.Topic))
 	sp.SetStatus(codes.Ok, "message sent")
 	return partition, offset, nil
 }
@@ -57,13 +57,13 @@ func (p *SyncProducer) SendBatch(ctx context.Context, messages []*sarama.Produce
 	}
 
 	if err := p.syncProd.SendMessages(messages); err != nil {
-		statusCountBatchAdd(ctx, observability.FailedAttribute, messages)
+		p.statusCountBatchAdd(ctx, observability.FailedAttribute, messages)
 		sp.RecordError(err)
 		sp.SetStatus(codes.Error, "error sending batch")
 		return err
 	}
 
-	statusCountBatchAdd(ctx, observability.SucceededAttribute, messages)
+	p.statusCountBatchAdd(ctx, observability.SucceededAttribute, messages)
 	sp.SetStatus(codes.Ok, "batch sent")
 	return nil
 }
@@ -81,8 +81,8 @@ func (p *SyncProducer) Close() error {
 	return nil
 }
 
-func statusCountBatchAdd(ctx context.Context, statusAttr attribute.KeyValue, messages []*sarama.ProducerMessage) {
+func (p *SyncProducer) statusCountBatchAdd(ctx context.Context, statusAttr attribute.KeyValue, messages []*sarama.ProducerMessage) {
 	for _, msg := range messages {
-		publishCountAdd(ctx, deliveryTypeSyncAttr, statusAttr, topicAttribute(msg.Topic))
+		p.publishCountAdd(ctx, deliveryTypeSyncAttr, statusAttr, topicAttribute(msg.Topic))
 	}
 }

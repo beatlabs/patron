@@ -12,11 +12,13 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/observability"
 	"github.com/beatlabs/patron/observability/log"
+	patronmetric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -57,7 +59,8 @@ func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfi
 
 // Publisher definition.
 type Publisher struct {
-	cm *autopaho.ConnectionManager
+	cm                *autopaho.ConnectionManager
+	durationHistogram metric.Int64Histogram
 }
 
 // New creates a publisher.
@@ -67,7 +70,12 @@ func New(ctx context.Context, cfg autopaho.ClientConfig) (*Publisher, error) {
 		return nil, fmt.Errorf("failed to create connection manager: %w", err)
 	}
 
-	return &Publisher{cm: cm}, nil
+	durationHistogram, err := patronmetric.Int64Histogram("mqtt", "mqtt.publish.duration", "MQTT publish duration.", "ms")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Publisher{cm: cm, durationHistogram: durationHistogram}, nil
 }
 
 // Publish provides a instrumented publishing of a message.
@@ -81,7 +89,7 @@ func (p *Publisher) Publish(ctx context.Context, pub *paho.Publish) (*paho.Publi
 
 	err := p.cm.AwaitConnection(ctx)
 	if err != nil {
-		observePublish(ctx, start, pub.Topic, err)
+		p.observePublish(ctx, start, pub.Topic, err)
 		return nil, fmt.Errorf("connection is not up: %w", err)
 	}
 
@@ -89,11 +97,11 @@ func (p *Publisher) Publish(ctx context.Context, pub *paho.Publish) (*paho.Publi
 
 	rsp, err := p.cm.Publish(ctx, pub)
 	if err != nil {
-		observePublish(ctx, start, pub.Topic, err)
+		p.observePublish(ctx, start, pub.Topic, err)
 		return nil, fmt.Errorf("failed to publish message: %w", err)
 	}
 
-	observePublish(ctx, start, pub.Topic, nil)
+	p.observePublish(ctx, start, pub.Topic, nil)
 	return rsp, nil
 }
 

@@ -20,7 +20,8 @@ func TestObservabilityMonitor_Started(t *testing.T) {
 		},
 	}
 
-	monitor := newObservabilityMonitor(traceMonitor)
+	monitor, err := newObservabilityMonitor(traceMonitor)
+	require.NoError(t, err)
 	ctx := context.Background()
 
 	evt := &event.CommandStartedEvent{
@@ -43,7 +44,8 @@ func TestObservabilityMonitor_Succeeded(t *testing.T) {
 		},
 	}
 
-	monitor := newObservabilityMonitor(traceMonitor)
+	monitor, err := newObservabilityMonitor(traceMonitor)
+	require.NoError(t, err)
 	ctx := context.Background()
 
 	evt := &event.CommandSucceededEvent{
@@ -67,7 +69,8 @@ func TestObservabilityMonitor_Failed(t *testing.T) {
 		},
 	}
 
-	monitor := newObservabilityMonitor(traceMonitor)
+	monitor, err := newObservabilityMonitor(traceMonitor)
+	require.NoError(t, err)
 	ctx := context.Background()
 
 	evt := &event.CommandFailedEvent{
@@ -146,7 +149,8 @@ func TestObservabilityMonitor_Integration(t *testing.T) {
 			},
 		}
 
-		monitor := newObservabilityMonitor(traceMonitor)
+		monitor, err := newObservabilityMonitor(traceMonitor)
+		require.NoError(t, err)
 		ctx := context.Background()
 
 		// Simulate a command lifecycle
@@ -182,7 +186,8 @@ func TestObservabilityMonitor_Integration(t *testing.T) {
 			},
 		}
 
-		monitor := newObservabilityMonitor(traceMonitor)
+		monitor, err := newObservabilityMonitor(traceMonitor)
+		require.NoError(t, err)
 		ctx := context.Background()
 
 		// Simulate a failed command

@@ -23,10 +23,12 @@ var (
 )
 
 // SetupMetricsOnce initializes the cache counter.
-func SetupMetricsOnce() {
+func SetupMetricsOnce() error {
+	var err error
 	cacheOnce.Do(func() {
-		cacheCounter = patronmetric.Int64Counter(packageName, "cache.counter", "Number of cache calls.", "1")
+		cacheCounter, err = patronmetric.Int64Counter(packageName, "cache.counter", "Number of cache calls.", "1")
 	})
+	return err
 }
 
 // UseCaseAttribute returns an attribute.KeyValue with the use case.

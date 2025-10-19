@@ -12,25 +12,25 @@ import (
 
 const packageName = "mongo"
 
-var durationHistogram metric.Int64Histogram
-
-func init() {
-	durationHistogram = patronmetric.Int64Histogram(packageName, "mongo.duration", "Mongo command duration.", "ms")
-}
-
 type observabilityMonitor struct {
-	traceMonitor *event.CommandMonitor
+	traceMonitor      *event.CommandMonitor
+	durationHistogram metric.Int64Histogram
 }
 
-func newObservabilityMonitor(traceMonitor *event.CommandMonitor) *event.CommandMonitor {
+func newObservabilityMonitor(traceMonitor *event.CommandMonitor) (*event.CommandMonitor, error) {
+	durationHistogram, err := patronmetric.Int64Histogram(packageName, "mongo.duration", "Mongo command duration.", "ms")
+	if err != nil {
+		return nil, err
+	}
 	m := &observabilityMonitor{
-		traceMonitor: traceMonitor,
+		traceMonitor:      traceMonitor,
+		durationHistogram: durationHistogram,
 	}
 	return &event.CommandMonitor{
 		Started:   m.Started,
 		Succeeded: m.Succeeded,
 		Failed:    m.Failed,
-	}
+	}, nil
 }
 
 func (m *observabilityMonitor) Started(ctx context.Context, evt *event.CommandStartedEvent) {
@@ -38,14 +38,14 @@ func (m *observabilityMonitor) Started(ctx context.Context, evt *event.CommandSt
 }
 
 func (m *observabilityMonitor) Succeeded(ctx context.Context, evt *event.CommandSucceededEvent) {
-	durationHistogram.Record(ctx, evt.Duration.Milliseconds(),
+	m.durationHistogram.Record(ctx, evt.Duration.Milliseconds(),
 		metric.WithAttributes(observability.ClientAttribute("mongo"), observability.SucceededAttribute,
 			commandAttr(evt.CommandName)))
 	m.traceMonitor.Succeeded(ctx, evt)
 }
 
 func (m *observabilityMonitor) Failed(ctx context.Context, evt *event.CommandFailedEvent) {
-	durationHistogram.Record(ctx, evt.Duration.Milliseconds(),
+	m.durationHistogram.Record(ctx, evt.Duration.Milliseconds(),
 		metric.WithAttributes(observability.ClientAttribute("mongo"), observability.FailedAttribute,
 			commandAttr(evt.CommandName)))
 	m.traceMonitor.Failed(ctx, evt)

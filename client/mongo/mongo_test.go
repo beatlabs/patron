@@ -121,7 +121,8 @@ func TestNewObservabilityMonitor(t *testing.T) {
 			},
 		}
 
-		monitor := newObservabilityMonitor(traceMonitor)
+		monitor, err := newObservabilityMonitor(traceMonitor)
+		require.NoError(t, err)
 
 		require.NotNil(t, monitor)
 		assert.NotNil(t, monitor.Started)

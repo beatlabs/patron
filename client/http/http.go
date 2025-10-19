@@ -70,7 +70,7 @@ func (tc *TracedClient) do(req *http.Request) (*http.Response, error) {
 		return tc.cl.Do(req)
 	}
 
-	r, err := tc.cb.Execute(func() (any, error) {
+	r, err := tc.cb.Execute(req.Context(), func() (any, error) {
 		return tc.cl.Do(req) // nolint:bodyclose
 	})
 	if err != nil {

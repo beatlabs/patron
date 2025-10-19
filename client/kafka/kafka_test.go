@@ -234,34 +234,6 @@ func TestProducerMessageCarrier_Keys(t *testing.T) {
 	})
 }
 
-func TestPublishCountAdd(t *testing.T) {
-	t.Parallel()
-
-	t.Run("does not panic with valid context", func(t *testing.T) {
-		t.Parallel()
-
-		ctx := context.Background()
-		attr := topicAttribute("test-topic")
-
-		assert.NotPanics(t, func() {
-			publishCountAdd(ctx, attr)
-		})
-	})
-
-	t.Run("does not panic with cancelled context", func(t *testing.T) {
-		t.Parallel()
-
-		ctx, cancel := context.WithCancel(context.Background())
-		cancel()
-
-		attr := topicAttribute("test-topic")
-
-		assert.NotPanics(t, func() {
-			publishCountAdd(ctx, attr)
-		})
-	})
-}
-
 func TestBaseProducer_ActiveBrokers(t *testing.T) {
 	t.Parallel()
 

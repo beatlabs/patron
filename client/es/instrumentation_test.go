@@ -15,7 +15,10 @@ func TestInstrumentation_SuccessEmitsMetric(t *testing.T) {
 	shutdown, collect := test.SetupMetrics(ctx, t)
 	defer shutdown()
 
-	instr := newMetricInstrumentation("1.0.0")
+	instr, err := newMetricInstrumentation("1.0.0")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Start a request span/context
 	ctx = instr.Start(ctx, "indices.create")
@@ -48,7 +51,10 @@ func TestInstrumentation_FailureEmitsMetric(t *testing.T) {
 	shutdown, collect := test.SetupMetrics(ctx, t)
 	defer shutdown()
 
-	instr := newMetricInstrumentation("1.0.0")
+	instr, err := newMetricInstrumentation("1.0.0")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Start a request span/context
 	ctx = instr.Start(ctx, "indices.create")

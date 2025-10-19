@@ -25,7 +25,10 @@ type Cache[k comparable, v any] struct {
 
 // New returns a new LRU cache that can hold 'size' number of keys at a time.
 func New[k comparable, v any](size int, useCase string) (*Cache[k, v], error) {
-	cache.SetupMetricsOnce()
+	err := cache.SetupMetricsOnce()
+	if err != nil {
+		return nil, err
+	}
 	chc, err := lru.New[k, v](size)
 	if err != nil {
 		return nil, err
@@ -36,7 +39,10 @@ func New[k comparable, v any](size int, useCase string) (*Cache[k, v], error) {
 
 // NewWithEvict returns a new LRU cache that can hold 'size' number of keys at a time.
 func NewWithEvict[k comparable, v any](size int, useCase string, onEvict func(k, v)) (*Cache[k, v], error) {
-	cache.SetupMetricsOnce()
+	err := cache.SetupMetricsOnce()
+	if err != nil {
+		return nil, err
+	}
 
 	chc, err := lru.NewWithEvict[k, v](size, func(key k, value v) {
 		onEvict(key, value)

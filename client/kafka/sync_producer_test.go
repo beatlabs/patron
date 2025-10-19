@@ -37,68 +37,6 @@ func TestSyncProducer_SendBatch_Validation(t *testing.T) {
 	})
 }
 
-func TestStatusCountBatchAdd(t *testing.T) {
-	t.Parallel()
-
-	t.Run("processes empty batch", func(t *testing.T) {
-		t.Parallel()
-
-		ctx := context.Background()
-		messages := []*sarama.ProducerMessage{}
-
-		// Should not panic
-		assert.NotPanics(t, func() {
-			statusCountBatchAdd(ctx, topicAttribute("test"), messages)
-		})
-	})
-
-	t.Run("processes single message", func(t *testing.T) {
-		t.Parallel()
-
-		ctx := context.Background()
-		messages := []*sarama.ProducerMessage{
-			{Topic: "test-topic"},
-		}
-
-		// Should not panic
-		assert.NotPanics(t, func() {
-			statusCountBatchAdd(ctx, topicAttribute("test-topic"), messages)
-		})
-	})
-
-	t.Run("processes multiple messages", func(t *testing.T) {
-		t.Parallel()
-
-		ctx := context.Background()
-		messages := []*sarama.ProducerMessage{
-			{Topic: "topic1"},
-			{Topic: "topic2"},
-			{Topic: "topic3"},
-		}
-
-		// Should not panic
-		assert.NotPanics(t, func() {
-			statusCountBatchAdd(ctx, topicAttribute("batch"), messages)
-		})
-	})
-
-	t.Run("handles cancelled context", func(t *testing.T) {
-		t.Parallel()
-
-		ctx, cancel := context.WithCancel(context.Background())
-		cancel()
-
-		messages := []*sarama.ProducerMessage{
-			{Topic: "test-topic"},
-		}
-
-		// Should not panic even with cancelled context
-		assert.NotPanics(t, func() {
-			statusCountBatchAdd(ctx, topicAttribute("test"), messages)
-		})
-	})
-}
-
 func TestDeliveryTypeConstants(t *testing.T) {
 	t.Parallel()
 

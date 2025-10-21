@@ -9,6 +9,7 @@
   - By file: `go test ./path/to/pkg -run ^TestName$ -v -race ./path/to/pkg/file_test.go` (Go filters by package; prefer -run). With integration tags: add `-tags=integration`.
 - Useful env/deps: start external deps for integrations via `make deps-start` (docker compose); stop via `make deps-stop`. Example apps: `make example-service`, `make example-client` (OTEL_EXPORTER_OTLP_INSECURE=true).
 - CI: `.github/workflows/ci.yml` runs lint, format check, tests with integration tags, and e2e example tests. Codecov integration enabled.
+- Testing: all test files has the `_test.go` suffix. Specifically the integration tests have also the `integration_test.go` suffix.
 
 ## Lint configuration
 

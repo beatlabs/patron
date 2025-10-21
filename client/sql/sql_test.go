@@ -49,16 +49,16 @@ func TestFromDB(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
-// Mock driver for testing
+// Mock driver for testing.
 type mockDriver struct{}
 
-func (m mockDriver) Open(name string) (driver.Conn, error) {
+func (m mockDriver) Open(_ string) (driver.Conn, error) {
 	return &mockConn{}, nil
 }
 
 type mockConn struct{}
 
-func (m *mockConn) Prepare(query string) (driver.Stmt, error) {
+func (m *mockConn) Prepare(_ string) (driver.Stmt, error) {
 	return &mockStmt{}, nil
 }
 
@@ -80,11 +80,11 @@ func (m *mockStmt) NumInput() int {
 	return 0
 }
 
-func (m *mockStmt) Exec(args []driver.Value) (driver.Result, error) {
+func (m *mockStmt) Exec(_ []driver.Value) (driver.Result, error) {
 	return &mockResult{}, nil
 }
 
-func (m *mockStmt) Query(args []driver.Value) (driver.Rows, error) {
+func (m *mockStmt) Query(_ []driver.Value) (driver.Rows, error) {
 	return &mockRows{}, nil
 }
 
@@ -111,7 +111,7 @@ func (m *mockRows) Close() error {
 	return nil
 }
 
-func (m *mockRows) Next(dest []driver.Value) error {
+func (m *mockRows) Next(_ []driver.Value) error {
 	return errors.New("no more rows")
 }
 
@@ -177,13 +177,13 @@ func TestOpenDB(t *testing.T) {
 	_ = db.db.Close()
 }
 
-// dsnConnector implements driver.Connector for testing
+// dsnConnector implements driver.Connector for testing.
 type dsnConnector struct {
 	dsn    string
 	driver driver.Driver
 }
 
-func (t dsnConnector) Connect(ctx context.Context) (driver.Conn, error) {
+func (t dsnConnector) Connect(_ context.Context) (driver.Conn, error) {
 	return t.driver.Open(t.dsn)
 }
 
@@ -244,7 +244,7 @@ func TestOperationAttr(t *testing.T) {
 	assert.Equal(t, op, attr.Value.AsString())
 }
 
-func TestObserveDuration(t *testing.T) {
+func TestObserveDuration(_ *testing.T) {
 	ctx := context.Background()
 	start := time.Now()
 	op := "test.operation"
@@ -311,7 +311,7 @@ func TestOpen_InvalidDriver(t *testing.T) {
 	db, err := Open("nonexistent-driver", "invalid-dsn")
 
 	// Should return error for unknown driver
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, db)
 }
 

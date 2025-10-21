@@ -36,7 +36,7 @@ func TestNewMeterProvider(t *testing.T) {
 		// In unit test environment without OTLP collector, this may fail
 		// but we test that the function handles errors appropriately
 		if err != nil {
-			assert.Error(t, err)
+			require.Error(t, err)
 			assert.Nil(t, mp)
 		} else {
 			assert.NotNil(t, mp)
@@ -122,17 +122,17 @@ func TestMetricFunctionsWithAttributes(t *testing.T) {
 
 	ctx := context.Background()
 
-	t.Run("histogram with attributes", func(t *testing.T) {
+	t.Run("histogram with attributes", func(_ *testing.T) {
 		histogram := Float64Histogram("test", "test.histogram.attrs", "Test", "ms")
 		histogram.Record(ctx, 123.45, metric.WithAttributes())
 	})
 
-	t.Run("counter with attributes", func(t *testing.T) {
+	t.Run("counter with attributes", func(_ *testing.T) {
 		counter := Int64Counter("test", "test.counter.attrs", "Test", "1")
 		counter.Add(ctx, 10, metric.WithAttributes())
 	})
 
-	t.Run("gauge with attributes", func(t *testing.T) {
+	t.Run("gauge with attributes", func(_ *testing.T) {
 		gauge := Float64Gauge("test", "test.gauge.attrs", "Test", "units")
 		gauge.Record(ctx, 50.0, metric.WithAttributes())
 	})
@@ -205,7 +205,7 @@ func TestSetup_WithCustomResource(t *testing.T) {
 
 	if err != nil {
 		// Expected in test environment without OTLP collector
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, mp)
 	} else {
 		assert.NotNil(t, mp)

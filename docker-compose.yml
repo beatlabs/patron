@@ -1,6 +1,6 @@
 services:
   kafka:
-    image: confluentinc/cp-kafka:8.0.2
+    image: confluentinc/cp-kafka:8.1.0
     restart: always
     hostname: broker
     ports:

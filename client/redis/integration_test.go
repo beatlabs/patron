@@ -32,5 +32,5 @@ func TestClient(t *testing.T) {
 
 	require.NoError(t, tracePublisher.ForceFlush(ctx))
 
-	assert.Len(t, exp.GetSpans(), 4)
+	assert.Len(t, exp.GetSpans(), 5)
 }

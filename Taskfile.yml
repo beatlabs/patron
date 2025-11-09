@@ -3,7 +3,7 @@
 version: "3"
 
 vars:
-  LINT_IMAGE: golangci/golangci-lint:v2.2.1-alpine
+  LINT_IMAGE: golangci/golangci-lint:v2.6.1-alpine
   OTEL_INSECURE: "true"
   TEST_TIMEOUT: 60s
   INTEGRATION_TIMEOUT: 30s

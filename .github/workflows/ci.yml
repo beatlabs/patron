@@ -17,6 +17,10 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
+          cache: true
+          cache-dependency-path: |
+            go.sum
+            vendor/modules.txt
 
       - name: Install Task
         uses: arduino/setup-task@v2
@@ -26,8 +30,16 @@ jobs:
       - name: Validate Taskfile
         run: task validate
 
-      - name: Linting and fmt check
-        run: task lint
+      - name: Check formatting
+        run: task fmtcheck
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.6.1
+          args: --build-tags=integration -v
+        env:
+          GOFLAGS: -mod=vendor
 
   build:
     name: CI on Go
@@ -40,6 +52,10 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
+          cache: true
+          cache-dependency-path: |
+            go.sum
+            vendor/modules.txt
 
       - name: Install Task
         uses: arduino/setup-task@v2

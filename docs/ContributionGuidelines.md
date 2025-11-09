@@ -24,4 +24,4 @@ PR's should have the following requirements:
 - Coding style (go fmt)
 - Linting we use [golangci-lint](https://github.com/golangci/golangci-lint)
 
-The Make file contains the appropriate command in order to verify all the above.
+The Taskfile contains the appropriate commands in order to verify all the above. Use `task --list` to see all available tasks.

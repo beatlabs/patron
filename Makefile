@@ -1,57 +1,31 @@
-LINT_IMAGE = golangci/golangci-lint:v2.2.1-alpine
+# DEPRECATED: This Makefile has been replaced by Taskfile.yml
+# 
+# Please install Task: https://taskfile.dev/installation/
+# Then use `task` instead of `make`
+#
+# Quick command mapping:
+# - make          → task (or task test)
+# - make test     → task test
+# - make testint  → task testint
+# - make fmt      → task fmt
+# - make fmtcheck → task fmtcheck
+# - make lint     → task lint
+# - make deeplint → task deeplint
+# - make deps-start → task deps-start
+# - make deps-stop  → task deps-stop
+# - make example-service → task example-service
+# - make example-client  → task example-client
+# - make ci       → task ci
+#
+# List all available tasks: task --list
 
-.PHONY: default
-default: test
+.PHONY: help
+help:
+	@echo "DEPRECATED: This Makefile has been replaced by Taskfile.yml"
+	@echo ""
+	@echo "Please install Task: https://taskfile.dev/installation/"
+	@echo "Then use 'task' instead of 'make'"
+	@echo ""
+	@echo "List all available tasks: task --list"
 
-.PHONY: test
-test: fmtcheck
-	go test ./... -cover -race -timeout 60s
-
-.PHONY: testint
-testint: fmtcheck
-	go test ./... -race -cover -tags=integration -timeout 30s
-
-.PHONY: testint-nocache
-testint-nocache: fmtcheck
-	go test ./... -race -cover -tags=integration -timeout 30s -count=1
-
-.PHONY: ci
-ci:
-	go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration -timeout 2m 
-
-.PHONY: fmt
-fmt:
-	go fmt ./...
-
-.PHONY: fmtcheck
-fmtcheck:
-	@sh -c "'$(CURDIR)/script/gofmtcheck.sh'"
-
-.PHONY: lint
-lint: fmtcheck
-	docker run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app $(LINT_IMAGE) golangci-lint -v run
-
-.PHONY: deeplint
-deeplint: fmtcheck
-	docker run --env=GOFLAGS=-mod=vendor --rm -v $(CURDIR):/app -w /app $(LINT_IMAGE) golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
-
-.PHONY: example-service
-example-service:
-	OTEL_EXPORTER_OTLP_INSECURE="true" go run examples/service/*.go
-
-.PHONY: example-client
-example-client:
-	OTEL_EXPORTER_OTLP_INSECURE="true" go run examples/client/main.go
-
-.PHONY: deps-start
-deps-start:
-	docker compose up -d --wait
-
-.PHONY: deps-stop
-deps-stop:
-	docker compose down
-
-# disallow any parallelism (-j) for Make. This is necessary since some
-# commands during the build process create temporary files that collide
-# under parallel conditions.
-.NOTPARALLEL:
+.DEFAULT_GOAL := help

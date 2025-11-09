@@ -41,8 +41,8 @@ jobs:
         env:
           GOFLAGS: -mod=vendor
 
-  build:
-    name: CI on Go
+  integration-tests:
+    name: Integration Tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out source code
@@ -68,7 +68,7 @@ jobs:
       - name: Start dependencies
         run: task deps-start
         env:
-          COMPOSE_PROJECT_NAME: patron-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          COMPOSE_PROJECT_NAME: patron-integration-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Running CI
         run: |
@@ -80,7 +80,42 @@ jobs:
           fail_ci_if_error: true # optional (default = false)
           files: ./coverage.txt
 
-      - name: e2e
+      - name: Stop dependencies
+        run: task deps-stop
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: patron-integration-${{ github.run_id }}-${{ github.run_attempt }}
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+          cache: true
+          cache-dependency-path: |
+            go.sum
+            vendor/modules.txt
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+
+      - name: Validate Taskfile
+        run: task validate
+
+      - name: Start dependencies
+        run: task deps-start
+        env:
+          COMPOSE_PROJECT_NAME: patron-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Run e2e tests
         run: |
           go build -o service ./service/
           nohup ./service/service &
@@ -93,4 +128,4 @@ jobs:
         run: task deps-stop
         if: always()
         env:
-          COMPOSE_PROJECT_NAME: patron-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          COMPOSE_PROJECT_NAME: patron-e2e-${{ github.run_id }}-${{ github.run_attempt }}

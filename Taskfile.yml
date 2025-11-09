@@ -1,0 +1,105 @@
+# https://taskfile.dev
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+vars:
+  LINT_IMAGE: golangci/golangci-lint:v2.2.1-alpine
+  OTEL_INSECURE: "true"
+  TEST_TIMEOUT: 60s
+  INTEGRATION_TIMEOUT: 30s
+  CI_TIMEOUT: 2m
+
+tasks:
+  validate:
+    desc: "Validate Taskfile.yml syntax and schema"
+    cmds:
+      - task --list > /dev/null && echo "✅ Taskfile.yml is valid"
+    silent: true
+
+  default:
+    desc: "Run tests (default task)"
+    cmds:
+      - task: test
+
+  test:
+    desc: "Run unit tests with race detection and coverage"
+    deps:
+      - fmtcheck
+    cmds:
+      - go test ./... -cover -race -timeout {{.TEST_TIMEOUT}}
+
+  testint:
+    desc: "Run integration tests with race detection and coverage"
+    deps:
+      - fmtcheck
+    cmds:
+      - go test ./... -race -cover -tags=integration -timeout {{.INTEGRATION_TIMEOUT}}
+
+  testint-nocache:
+    desc: "Run integration tests without cache"
+    deps:
+      - fmtcheck
+    cmds:
+      - go test ./... -race -cover -tags=integration -timeout {{.INTEGRATION_TIMEOUT}} -count=1
+
+  ci:
+    desc: "Run CI tests with coverage report"
+    cmds:
+      - go test `go list ./... | grep -v -e 'examples' -e 'encoding/protobuf/test'` -race -cover -coverprofile=coverage.txt -covermode=atomic -tags=integration -timeout {{.CI_TIMEOUT}}
+
+  fmt:
+    desc: "Format code with go fmt"
+    cmds:
+      - go fmt ./...
+
+  fmtcheck:
+    desc: "Check code formatting compliance"
+    cmds:
+      - sh -c "{{.CURDIR}}/script/gofmtcheck.sh"
+    vars:
+      CURDIR:
+        sh: pwd
+
+  lint:
+    desc: "Run linter with golangci-lint in Docker"
+    deps:
+      - fmtcheck
+    cmds:
+      - docker run --env=GOFLAGS=-mod=vendor --rm -v {{.CURDIR}}:/app -w /app {{.LINT_IMAGE}} golangci-lint -v run
+    vars:
+      CURDIR:
+        sh: pwd
+
+  deeplint:
+    desc: "Run comprehensive linting with all rules enabled"
+    deps:
+      - fmtcheck
+    cmds:
+      - docker run --env=GOFLAGS=-mod=vendor --rm -v {{.CURDIR}}:/app -w /app {{.LINT_IMAGE}} golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
+    vars:
+      CURDIR:
+        sh: pwd
+
+  example-service:
+    desc: "Run example service with OTEL configuration"
+    cmds:
+      - go run examples/service/*.go
+    env:
+      OTEL_EXPORTER_OTLP_INSECURE: "{{.OTEL_INSECURE}}"
+
+  example-client:
+    desc: "Run example client with OTEL configuration"
+    cmds:
+      - go run examples/client/main.go
+    env:
+      OTEL_EXPORTER_OTLP_INSECURE: "{{.OTEL_INSECURE}}"
+
+  deps-start:
+    desc: "Start Docker Compose dependencies"
+    cmds:
+      - docker compose up -d --wait
+
+  deps-stop:
+    desc: "Stop Docker Compose dependencies"
+    cmds:
+      - docker compose down

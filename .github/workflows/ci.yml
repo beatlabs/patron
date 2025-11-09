@@ -67,6 +67,8 @@ jobs:
 
       - name: Start dependencies
         run: task deps-start
+        env:
+          COMPOSE_PROJECT_NAME: patron-ci-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Running CI
         run: |
@@ -89,3 +91,7 @@ jobs:
 
       - name: Stop dependencies
         run: task deps-stop
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: patron-ci-${{ github.run_id }}-${{ github.run_attempt }}
+

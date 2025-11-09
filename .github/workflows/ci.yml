@@ -30,8 +30,16 @@ jobs:
       - name: Validate Taskfile
         run: task validate
 
-      - name: Linting and fmt check
-        run: task lint
+      - name: Check formatting
+        run: task fmtcheck
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v2.2.1
+          args: --build-tags integration -v run
+        env:
+          GOFLAGS: -mod=vendor
 
   build:
     name: CI on Go

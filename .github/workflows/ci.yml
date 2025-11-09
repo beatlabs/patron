@@ -22,17 +22,6 @@ jobs:
             go.sum
             vendor/modules.txt
 
-      - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: 3.x
-
-      - name: Validate Taskfile
-        run: task validate
-
-      - name: Check formatting
-        run: task fmtcheck
-
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:

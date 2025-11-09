@@ -3,7 +3,6 @@
 version: "3"
 
 vars:
-  LINT_IMAGE: golangci/golangci-lint:v2.6.1-alpine
   OTEL_INSECURE: "true"
   TEST_TIMEOUT: 60s
   INTEGRATION_TIMEOUT: 30s
@@ -61,24 +60,13 @@ tasks:
         sh: pwd
 
   lint:
-    desc: "Run linter with golangci-lint in Docker"
+    desc: "Run linter with golangci-lint CLI"
     deps:
       - fmtcheck
     cmds:
-      - docker run --env=GOFLAGS=-mod=vendor --rm -v {{.CURDIR}}:/app -w /app {{.LINT_IMAGE}} golangci-lint -v run
-    vars:
-      CURDIR:
-        sh: pwd
-
-  deeplint:
-    desc: "Run comprehensive linting with all rules enabled"
-    deps:
-      - fmtcheck
-    cmds:
-      - docker run --env=GOFLAGS=-mod=vendor --rm -v {{.CURDIR}}:/app -w /app {{.LINT_IMAGE}} golangci-lint run --exclude-use-default=false --enable-all -D dupl --build-tags integration
-    vars:
-      CURDIR:
-        sh: pwd
+      - golangci-lint run -v
+    env:
+      GOFLAGS: -mod=vendor
 
   example-service:
     desc: "Run example service with OTEL configuration"

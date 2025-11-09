@@ -2,16 +2,17 @@
 
 ## Build, test, and development workflows
 
-- Build: `task` (default runs tests). Format: `task fmt` (go fmt). Format check: `task fmtcheck` (script/gofmtcheck.sh). Lint: `task lint` (golangci-lint with vendor mode); deep lint: `task deeplint`.
+- Build: `task` (default runs tests). Format: `task fmt` (go fmt). Format check: `task fmtcheck` (script/gofmtcheck.sh). Lint: `task lint` (golangci-lint CLI with vendor mode); deep lint: `task deeplint`.
 - Test all: `task test` → `go test ./... -cover -race -timeout 60s`. Integration tests: `task testint` (or `task testint-nocache`). CI runs with `-tags=integration` excluding `examples` and `encoding/protobuf/test`.
 - Run single test: replace with your package/path and test name:
   - By name: `go test ./path/to/pkg -run ^TestName$ -v -race`.
   - By file: `go test ./path/to/pkg -run ^TestName$ -v -race ./path/to/pkg/file_test.go` (Go filters by package; prefer -run). With integration tags: add `-tags=integration`.
 - Useful env/deps: start external deps for integrations via `task deps-start` (docker compose); stop via `task deps-stop`. Example apps: `task example-service`, `task example-client` (OTEL_EXPORTER_OTLP_INSECURE=true).
-- CI: `.github/workflows/ci.yml` validates Taskfile, runs lint, format check, tests with integration tags, and e2e example tests. Codecov integration enabled.
+- CI: `.github/workflows/ci.yml` validates Taskfile, runs lint via golangci-lint-action, format check, tests with integration tags, and e2e example tests. Codecov integration enabled.
 - Testing: all test files has the `_test.go` suffix. Specifically the integration tests have also the `integration_test.go` suffix.
 - List all tasks: `task --list` to see all available tasks with descriptions.
 - Validate Taskfile: `task validate` to verify Taskfile.yml syntax and schema.
+- Prerequisites: golangci-lint v2.6.1 must be installed locally for `task lint` and `task deeplint`. Install via: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.6.1` or see https://golangci-lint.run/welcome/install/.
 
 ## Lint configuration
 

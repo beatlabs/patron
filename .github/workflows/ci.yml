@@ -34,10 +34,10 @@ jobs:
         run: task fmtcheck
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
           version: v2.6.1
-          args: --build-tags integration -v run
+          args: --build-tags=integration -v
         env:
           GOFLAGS: -mod=vendor
 

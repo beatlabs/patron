@@ -4,12 +4,12 @@ go 1.24.0
 
 require (
 	github.com/IBM/sarama v1.46.3
-	github.com/aws/aws-sdk-go-v2 v1.39.5
+	github.com/aws/aws-sdk-go-v2 v1.40.0
 	github.com/aws/aws-sdk-go-v2/config v1.31.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.20
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.12
-	github.com/aws/smithy-go v1.23.1
+	github.com/aws/smithy-go v1.23.2
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/elastic/elastic-transport-go/v8 v8.7.0
 	github.com/elastic/go-elasticsearch/v8 v8.19.0

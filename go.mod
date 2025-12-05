@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.12
 	github.com/aws/smithy-go v1.24.0
 	github.com/eclipse/paho.golang v0.23.0
-	github.com/elastic/elastic-transport-go/v8 v8.7.0
+	github.com/elastic/elastic-transport-go/v8 v8.8.0
 	github.com/elastic/go-elasticsearch/v8 v8.19.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/google/uuid v1.6.0

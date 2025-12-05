@@ -18,18 +18,27 @@
 package elastictransport
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
 	"net/url"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
 var (
 	defaultResurrectTimeoutInitial      = 60 * time.Second
 	defaultResurrectTimeoutFactorCutoff = 5
+
+	// zero-allocation interface assertions
+	_ ConnectionPool          = (*singleConnectionPool)(nil)
+	_ ConnectionPool          = (*statusConnectionPool)(nil)
+	_ UpdatableConnectionPool = (*statusConnectionPool)(nil)
+	_ CloseableConnectionPool = (*statusConnectionPool)(nil)
+	_ Selector                = (*roundRobinSelector)(nil)
 )
 
 // Selector defines the interface for selecting connections from the pool.
@@ -47,6 +56,11 @@ type ConnectionPool interface {
 
 type UpdatableConnectionPool interface {
 	Update([]*Connection) error // Update injects newly found nodes in the cluster.
+}
+
+// CloseableConnectionPool defines the interface for the connection pool that can be closed.
+type CloseableConnectionPool interface {
+	Close(context.Context) error
 }
 
 // Connection represents a connection to a node.
@@ -87,6 +101,10 @@ type statusConnectionPool struct {
 	selector Selector
 
 	metrics *metrics
+
+	resurrectWaitGroup sync.WaitGroup
+	closeC             chan struct{}
+	closeDone          uint32
 }
 
 type roundRobinSelector struct {
@@ -103,7 +121,7 @@ func NewConnectionPool(conns []*Connection, selector Selector) (ConnectionPool, 
 	if selector == nil {
 		selector = &roundRobinSelector{curr: -1}
 	}
-	return &statusConnectionPool{live: conns, selector: selector}, nil
+	return &statusConnectionPool{live: conns, selector: selector, closeC: make(chan struct{})}, nil
 }
 
 // Next returns the connection from pool.
@@ -124,6 +142,9 @@ func (cp *singleConnectionPool) connections() []*Connection { return []*Connecti
 
 // Next returns a connection from pool, or an error.
 func (cp *statusConnectionPool) Next() (*Connection, error) {
+	if cp.isClosed() {
+		return nil, errors.New("connection pool is closed")
+	}
 	cp.Lock()
 	defer cp.Unlock()
 
@@ -295,6 +316,44 @@ func (cp *statusConnectionPool) URLs() []*url.URL {
 	return urls
 }
 
+// Close closes the connection pool. After which it is no longer possible to use the pool.
+// It will wait until all pending resurrection routines have successfully been cancelled.
+// Close should only be called once, otherwise it will return an error.
+func (cp *statusConnectionPool) Close(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	if atomic.CompareAndSwapUint32(&cp.closeDone, 0, 1) {
+		close(cp.closeC)
+
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			cp.resurrectWaitGroup.Wait()
+		}()
+
+		select {
+		case <-done:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	} else {
+		return errors.New("connection pool is already closed")
+	}
+
+}
+
+func (cp *statusConnectionPool) isClosed() bool {
+	select {
+	case <-cp.closeC:
+		return true
+	default:
+		return false
+	}
+}
+
 func (cp *statusConnectionPool) connections() []*Connection {
 	var conns []*Connection
 	conns = append(conns, cp.live...)
@@ -338,22 +397,32 @@ func (cp *statusConnectionPool) scheduleResurrect(c *Connection) {
 		debugLogger.Logf("Resurrect %s (failures=%d, factor=%1.1f, timeout=%s) in %s\n", c.URL, c.Failures, factor, timeout, c.DeadSince.Add(timeout).Sub(time.Now().UTC()).Truncate(time.Second))
 	}
 
-	time.AfterFunc(timeout, func() {
-		cp.Lock()
-		defer cp.Unlock()
+	cp.resurrectWaitGroup.Add(1)
+	go func() {
+		defer cp.resurrectWaitGroup.Done()
+		timer := time.NewTimer(timeout)
+		defer timer.Stop()
 
-		c.Lock()
-		defer c.Unlock()
+		select {
+		case <-timer.C:
+			cp.Lock()
+			defer cp.Unlock()
 
-		if !c.IsDead {
-			if debugLogger != nil {
-				debugLogger.Logf("Already resurrected %s\n", c.URL)
+			c.Lock()
+			defer c.Unlock()
+
+			if !c.IsDead {
+				if debugLogger != nil {
+					debugLogger.Logf("Already resurrected %s\n", c.URL)
+				}
+				return
 			}
+
+			cp.resurrect(c, true)
+		case <-cp.closeC:
 			return
 		}
-
-		cp.resurrect(c, true)
-	})
+	}()
 }
 
 // Select returns the connection in a round-robin fashion.

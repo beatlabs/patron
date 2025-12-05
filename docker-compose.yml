@@ -165,7 +165,7 @@ services:
       retries: 5
       start_period: 15s
   otelcol:
-    image: otel/opentelemetry-collector-contrib:0.138.0
+    image: otel/opentelemetry-collector-contrib:0.140.0
     restart: always
     command: ["--config=/etc/otelcol-config.yaml"]
     volumes:

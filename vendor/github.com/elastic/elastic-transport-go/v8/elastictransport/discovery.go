@@ -50,15 +50,29 @@ type nodeInfo struct {
 }
 
 // DiscoverNodes reloads the client connections by fetching information from the cluster.
+//
+// Deprecated: Use DiscoverNodesContext instead
 func (c *Client) DiscoverNodes() error {
+	return c.DiscoverNodesContext(context.TODO())
+}
+
+// DiscoverNodesContext reloads the client connections by fetching information from the cluster.
+func (c *Client) DiscoverNodesContext(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if c.isClosed() {
+		return ErrClosed
+	}
+
 	var conns []*Connection
 
-	nodes, err := c.getNodesInfo()
+	nodes, err := c.getNodesInfo(ctx)
 	if err != nil {
 		if debugLogger != nil {
 			debugLogger.Logf("Error getting nodes info: %s\n", err)
 		}
-		return fmt.Errorf("discovery: get nodes: %s", err)
+		return fmt.Errorf("discovery: get nodes: %w", err)
 	}
 
 	for _, node := range nodes {
@@ -125,20 +139,16 @@ func (c *Client) DiscoverNodes() error {
 	return nil
 }
 
-func (c *Client) getNodesInfo() ([]nodeInfo, error) {
+func (c *Client) getNodesInfo(ctx context.Context) ([]nodeInfo, error) {
 	var (
 		out    []nodeInfo
 		scheme = c.urls[0].Scheme
 	)
 
-	var ctx context.Context
 	var cancel context.CancelFunc
-
 	if c.discoverNodeTimeout != nil {
-		ctx, cancel = context.WithTimeout(context.Background(), *c.discoverNodeTimeout)
+		ctx, cancel = context.WithTimeout(ctx, *c.discoverNodeTimeout)
 		defer cancel()
-	} else {
-		ctx = context.Background() // Use default context if no timeout is set
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "GET", "/_nodes/http", nil)
@@ -159,7 +169,7 @@ func (c *Client) getNodesInfo() ([]nodeInfo, error) {
 	c.setReqUserAgent(req)
 	c.setReqGlobalHeader(req)
 
-	res, err := c.transport.RoundTrip(req)
+	res, err := c.roundTrip(req)
 	if err != nil {
 		return out, err
 	}
@@ -214,14 +224,31 @@ func (c *Client) getNodeURL(node nodeInfo, scheme string) *url.URL {
 }
 
 func (c *Client) scheduleDiscoverNodes(d time.Duration) {
-	go c.DiscoverNodes()
+	c.discoverWaitGroup.Add(1)
+	go func() {
+		defer c.discoverWaitGroup.Done()
+		ticker := time.NewTicker(d)
+		defer ticker.Stop()
+		ctx, cancel := context.WithCancel(context.Background())
+		wg := sync.WaitGroup{}
 
-	c.Lock()
-	defer c.Unlock()
-	if c.discoverNodesTimer != nil {
-		c.discoverNodesTimer.Stop()
-	}
-	c.discoverNodesTimer = time.AfterFunc(c.discoverNodesInterval, func() {
-		c.scheduleDiscoverNodes(c.discoverNodesInterval)
-	})
+		for {
+			select {
+			case <-c.closeC:
+				cancel()
+				wg.Wait()
+				return
+			case <-ticker.C:
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					ctx, cancel := context.WithTimeout(ctx, d)
+					defer cancel()
+					if err := c.DiscoverNodesContext(ctx); err != nil {
+						// TODO: handle error
+					}
+				}()
+			}
+		}
+	}()
 }

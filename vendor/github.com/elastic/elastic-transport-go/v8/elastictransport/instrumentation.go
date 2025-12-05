@@ -20,13 +20,14 @@ package elastictransport
 import (
 	"bytes"
 	"context"
+	"io"
+	"net/http"
+	"strconv"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-	"io"
-	"net/http"
-	"strconv"
 )
 
 const schemaUrl = "https://opentelemetry.io/schemas/1.21.0"

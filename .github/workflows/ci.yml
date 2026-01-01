@@ -107,7 +107,7 @@ jobs:
       - name: Run e2e tests
         run: |
           go build -o service ./service/
-          nohup ./service/service &
+          nohup ./service &
           go run client/main.go
         working-directory: ./examples
         env:

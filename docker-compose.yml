@@ -117,7 +117,7 @@ services:
       retries: 5
       start_period: 15s
   hivemq:
-    image: hivemq/hivemq4:4.47.1
+    image: hivemq/hivemq4:4.48.0
     restart: always
     ports:
       - target: 1883
@@ -165,7 +165,7 @@ services:
       retries: 5
       start_period: 15s
   otelcol:
-    image: otel/opentelemetry-collector-contrib:0.142.0
+    image: otel/opentelemetry-collector-contrib:0.144.0
     restart: always
     command: ["--config=/etc/otelcol-config.yaml"]
     volumes:

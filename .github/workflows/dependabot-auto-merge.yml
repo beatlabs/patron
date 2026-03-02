@@ -1,7 +1,12 @@
 name: Dependabot Auto-Merge
 on:
   pull_request:
-  workflow_dispatch: # This adds the manual button
+  # This adds the "Run workflow" button and allows the CLI to pass a PR number
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Pull Request Number to approve"
+        required: false
 
 permissions:
   pull-requests: write

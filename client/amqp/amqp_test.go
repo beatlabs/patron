@@ -257,7 +257,7 @@ func TestProducerMessageCarrier_Set(t *testing.T) {
 func TestProducerMessageCarrier_Keys(t *testing.T) {
 	t.Parallel()
 
-	t.Run("returns nil", func(t *testing.T) {
+	t.Run("returns nil for empty headers", func(t *testing.T) {
 		t.Parallel()
 
 		msg := &amqp.Publishing{}
@@ -265,7 +265,24 @@ func TestProducerMessageCarrier_Keys(t *testing.T) {
 
 		keys := carrier.Keys()
 
-		assert.Nil(t, keys)
+		assert.Empty(t, keys)
+	})
+
+	t.Run("returns all header keys", func(t *testing.T) {
+		t.Parallel()
+
+		msg := &amqp.Publishing{
+			Headers: amqp.Table{
+				"key1": "val1",
+				"key2": "val2",
+			},
+		}
+		carrier := producerMessageCarrier{msg: msg}
+
+		keys := carrier.Keys()
+
+		assert.Len(t, keys, 2)
+		assert.ElementsMatch(t, []string{"key1", "key2"}, keys)
 	})
 }
 

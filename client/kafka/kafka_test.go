@@ -222,7 +222,7 @@ func TestProducerMessageCarrier_Set(t *testing.T) {
 func TestProducerMessageCarrier_Keys(t *testing.T) {
 	t.Parallel()
 
-	t.Run("returns nil", func(t *testing.T) {
+	t.Run("returns nil for empty headers", func(t *testing.T) {
 		t.Parallel()
 
 		msg := &sarama.ProducerMessage{}
@@ -230,7 +230,23 @@ func TestProducerMessageCarrier_Keys(t *testing.T) {
 
 		keys := carrier.Keys()
 
-		assert.Nil(t, keys)
+		assert.Empty(t, keys)
+	})
+
+	t.Run("returns all header keys", func(t *testing.T) {
+		t.Parallel()
+
+		msg := &sarama.ProducerMessage{
+			Headers: []sarama.RecordHeader{
+				{Key: []byte("key1"), Value: []byte("val1")},
+				{Key: []byte("key2"), Value: []byte("val2")},
+			},
+		}
+		carrier := producerMessageCarrier{msg: msg}
+
+		keys := carrier.Keys()
+
+		assert.Equal(t, []string{"key1", "key2"}, keys)
 	})
 }
 

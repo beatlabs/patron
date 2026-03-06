@@ -401,14 +401,6 @@ func Test_deduplicateMessages(t *testing.T) {
 			nil,
 			&sarama.ConsumerMessage{Key: []byte(key), Value: []byte(val)})
 	}
-	find := func(collection []Message, key string) Message {
-		for _, m := range collection {
-			if string(m.Message().Key) == key {
-				return m
-			}
-		}
-		return nil
-	}
 
 	// Given
 	original := []Message{
@@ -422,6 +414,10 @@ func Test_deduplicateMessages(t *testing.T) {
 	cleaned := deduplicateMessages(original)
 
 	assert.Len(t, cleaned, 2)
-	assert.Equal(t, []byte("v1.3"), find(cleaned, "k1").Message().Value)
-	assert.Equal(t, []byte("v2.2"), find(cleaned, "k2").Message().Value)
+	// Verify ordering is preserved based on the position of the winning (last) message:
+	// k2's last occurrence is at index 3, k1's last occurrence is at index 4
+	assert.Equal(t, []byte("k2"), cleaned[0].Message().Key)
+	assert.Equal(t, []byte("v2.2"), cleaned[0].Message().Value)
+	assert.Equal(t, []byte("k1"), cleaned[1].Message().Key)
+	assert.Equal(t, []byte("v1.3"), cleaned[1].Message().Value)
 }

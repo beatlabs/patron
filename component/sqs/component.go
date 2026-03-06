@@ -325,5 +325,9 @@ func (c consumerMessageCarrier) Set(key, val string) {
 
 // Keys returns a slice of all key identifiers in the carrier.
 func (c consumerMessageCarrier) Keys() []string {
-	return nil
+	keys := make([]string, 0, len(c.msg.Attributes))
+	for key := range c.msg.Attributes {
+		keys = append(keys, key)
+	}
+	return keys
 }

@@ -37,7 +37,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var components []patron.Component
+	components := make([]patron.Component, 0, 5)
 
 	// Setup HTTP
 	cmp, err := createHTTPRouter()

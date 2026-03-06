@@ -100,7 +100,6 @@ func NewRecovery() Func {
 					default:
 						err = errors.New("unknown panic")
 					}
-					_ = err
 					slog.Error("recovering from a failure", log.ErrorAttr(err), slog.String("stack", string(debug.Stack())))
 					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				}

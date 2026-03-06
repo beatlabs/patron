@@ -29,25 +29,25 @@ func init() {
 	cacheStatusCounter = patronmetric.Int64Counter(packageName, "http.cache.status", "HTTP cache status.", "1")
 }
 
-func observeCacheAdd(path string) {
-	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusAddAttr))
+func observeCacheAdd(ctx context.Context, path string) {
+	cacheStatusCounter.Add(ctx, 1, metric.WithAttributes(routeAttr(path), statusAddAttr))
 }
 
-func observeCacheMiss(path string) {
-	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusMissAttr))
+func observeCacheMiss(ctx context.Context, path string) {
+	cacheStatusCounter.Add(ctx, 1, metric.WithAttributes(routeAttr(path), statusMissAttr))
 }
 
-func observeCacheHit(path string) {
-	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusHitAttr))
+func observeCacheHit(ctx context.Context, path string) {
+	cacheStatusCounter.Add(ctx, 1, metric.WithAttributes(routeAttr(path), statusHitAttr))
 }
 
-func observeCacheErr(path string) {
-	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusErrAttr))
+func observeCacheErr(ctx context.Context, path string) {
+	cacheStatusCounter.Add(ctx, 1, metric.WithAttributes(routeAttr(path), statusErrAttr))
 }
 
-func observeCacheEvict(path string, validationContext validationContext, age int64) {
-	cacheExpirationHistogram.Record(context.Background(), age, metric.WithAttributes(routeAttr(path)))
-	cacheStatusCounter.Add(context.Background(), 1, metric.WithAttributes(routeAttr(path), statusEvictAttr,
+func observeCacheEvict(ctx context.Context, path string, validationContext validationContext, age int64) {
+	cacheExpirationHistogram.Record(ctx, age, metric.WithAttributes(routeAttr(path)))
+	cacheStatusCounter.Add(ctx, 1, metric.WithAttributes(routeAttr(path), statusEvictAttr,
 		reasonAttr(validationReason[validationContext])))
 }
 

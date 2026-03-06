@@ -42,7 +42,7 @@ func init() {
 	statusCounter = patronmetric.Int64Counter(packageName, "circuit-breaker.status", "Circuit breaker status counter.", "1")
 }
 
-func breakerCounterInc(name string, st status) {
+func breakerCounterInc(ctx context.Context, name string, st status) {
 	stateAttr := closedAttr
 	switch st {
 	case opened:
@@ -50,7 +50,7 @@ func breakerCounterInc(name string, st status) {
 	case closed:
 		stateAttr = closedAttr
 	}
-	statusCounter.Add(context.Background(), 1, metric.WithAttributes(stateAttr, attribute.String("name", name)))
+	statusCounter.Add(ctx, 1, metric.WithAttributes(stateAttr, attribute.String("name", name)))
 }
 
 // Setting definition.
@@ -126,22 +126,22 @@ func (cb *CircuitBreaker) isClose() bool {
 }
 
 // Execute the provided action.
-func (cb *CircuitBreaker) Execute(act Action) (any, error) {
+func (cb *CircuitBreaker) Execute(ctx context.Context, act Action) (any, error) {
 	if cb.isOpen() {
 		return nil, errOpen
 	}
 
 	resp, err := act()
 	if err != nil {
-		cb.incFailure()
+		cb.incFailure(ctx)
 		return nil, err
 	}
-	cb.incSuccess()
+	cb.incSuccess(ctx)
 
 	return resp, err
 }
 
-func (cb *CircuitBreaker) incFailure() {
+func (cb *CircuitBreaker) incFailure(ctx context.Context) {
 	// allow closed and half open to transition to open
 	if cb.isOpen() {
 		return
@@ -152,7 +152,7 @@ func (cb *CircuitBreaker) incFailure() {
 	cb.failures++
 
 	if cb.status == closed && cb.failures >= cb.set.FailureThreshold {
-		cb.transitionToOpen()
+		cb.transitionToOpen(ctx)
 		return
 	}
 
@@ -162,10 +162,10 @@ func (cb *CircuitBreaker) incFailure() {
 		return
 	}
 
-	cb.transitionToOpen()
+	cb.transitionToOpen(ctx)
 }
 
-func (cb *CircuitBreaker) incSuccess() {
+func (cb *CircuitBreaker) incSuccess(ctx context.Context) {
 	// allow only half open in order to transition to closed
 	if !cb.isHalfOpen() {
 		return
@@ -179,23 +179,23 @@ func (cb *CircuitBreaker) incSuccess() {
 	if cb.retries < cb.set.RetrySuccessThreshold {
 		return
 	}
-	cb.transitionToClose()
+	cb.transitionToClose(ctx)
 }
 
-func (cb *CircuitBreaker) transitionToOpen() {
+func (cb *CircuitBreaker) transitionToOpen(ctx context.Context) {
 	cb.status = opened
 	cb.failures = 0
 	cb.executions = 0
 	cb.retries = 0
 	cb.nextRetry = time.Now().Add(cb.set.RetryTimeout).UnixNano()
-	breakerCounterInc(cb.name, cb.status)
+	breakerCounterInc(ctx, cb.name, cb.status)
 }
 
-func (cb *CircuitBreaker) transitionToClose() {
+func (cb *CircuitBreaker) transitionToClose(ctx context.Context) {
 	cb.status = closed
 	cb.failures = 0
 	cb.executions = 0
 	cb.retries = 0
 	cb.nextRetry = tsFuture
-	breakerCounterInc(cb.name, cb.status)
+	breakerCounterInc(ctx, cb.name, cb.status)
 }

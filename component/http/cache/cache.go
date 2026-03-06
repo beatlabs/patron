@@ -110,13 +110,13 @@ func getResponse(ctx context.Context, cfg *control, path, key string, now int64,
 
 	rsp := get(ctx, key, rc)
 	if rsp == nil {
-		observeCacheMiss(path)
+		observeCacheMiss(ctx, path)
 		response := exec(now, key)
 		return response
 	}
 	if rsp.Err != nil {
 		slog.Error("failure during cache interaction", log.ErrorAttr(rsp.Err))
-		observeCacheErr(path)
+		observeCacheErr(ctx, path)
 		return exec(now, key)
 	}
 	// if the object has expired
@@ -126,15 +126,15 @@ func getResponse(ctx context.Context, cfg *control, path, key string, now int64,
 		// serve the last cached value, with a Warning Header
 		if cfg.forceCache || tmpRsp.Err != nil {
 			rsp.Warning = "last-valid"
-			observeCacheHit(path)
+			observeCacheHit(ctx, path)
 		} else {
 			rsp = tmpRsp
-			observeCacheEvict(path, cx, now-rsp.LastValid)
+			observeCacheEvict(ctx, path, cx, now-rsp.LastValid)
 		}
 	} else {
 		// add any Warning generated while parsing the headers
 		rsp.Warning = cfg.warning
-		observeCacheHit(path)
+		observeCacheHit(ctx, path)
 	}
 
 	return rsp
@@ -193,15 +193,15 @@ func save(ctx context.Context, path, key string, rsp *response, cache cache.TTLC
 		bytes, err := rsp.encode()
 		if err != nil {
 			slog.Error("could not encode response", slog.String("key", key), log.ErrorAttr(err))
-			observeCacheErr(path)
+			observeCacheErr(ctx, path)
 			return
 		}
 		if err := cache.SetTTL(ctx, key, bytes, maxAge); err != nil {
 			slog.Error("could not cache response", slog.String("key", key), log.ErrorAttr(err))
-			observeCacheErr(path)
+			observeCacheErr(ctx, path)
 			return
 		}
-		observeCacheAdd(path)
+		observeCacheAdd(ctx, path)
 	}
 }
 

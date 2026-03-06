@@ -18,6 +18,12 @@ import (
 
 const packageName = "sql"
 
+var dsnPattern = regexp.MustCompile(
+	`^(?P<driver>.*:\/\/)?(?:(?P<username>.*?)(?::(.*))?@)?` +
+		`(?:(?P<protocol>[^\(]*)(?:\((?P<address>[^\)]*)\))?)?` +
+		`\/(?P<dbname>.*?)` +
+		`(?:\?(?P<params>[^\?]*))?$`)
+
 var durationHistogram metric.Int64Histogram
 
 func init() {
@@ -479,12 +485,6 @@ func (tx *Tx) Stmt(ctx context.Context, stmt *Stmt) *Stmt {
 
 func parseDSN(dsn string) DSNInfo {
 	res := DSNInfo{}
-
-	dsnPattern := regexp.MustCompile(
-		`^(?P<driver>.*:\/\/)?(?:(?P<username>.*?)(?::(.*))?@)?` + // [driver://][user[:password]@]
-			`(?:(?P<protocol>[^\(]*)(?:\((?P<address>[^\)]*)\))?)?` + // [net[(addr)]]
-			`\/(?P<dbname>.*?)` + // /dbname
-			`(?:\?(?P<params>[^\?]*))?$`) // [?param1=value1&paramN=valueN]
 
 	matches := dsnPattern.FindStringSubmatch(dsn)
 	fields := dsnPattern.SubexpNames()

@@ -23,7 +23,7 @@ type Component struct {
 }
 
 // New creates a gRPC Component on the given port with functional options.
-func New(port int, options ...OptionFunction) (*Component, error) {
+func New(port int, options ...OptionFunc) (*Component, error) {
 	c := new(Component)
 	if port <= 0 || port > 65535 {
 		return nil, fmt.Errorf("port is invalid: %d", port)

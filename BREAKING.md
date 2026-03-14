@@ -1,5 +1,19 @@
 # Breaking Changes Migration Guide
 
+## v0.77.0
+
+### Rename `OptionFunction` to `OptionFunc` in `component/grpc`
+
+The `OptionFunction` type in `component/grpc` has been renamed to `OptionFunc` for consistency with all other component and client packages.
+
+```go
+// Before
+var opt patrongrpc.OptionFunction
+
+// After
+var opt patrongrpc.OptionFunc
+```
+
 ## v0.76.0
 
 ### Introduction of an addition `error` return variable in http middleware and router helper functions

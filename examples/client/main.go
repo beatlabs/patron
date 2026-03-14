@@ -71,6 +71,8 @@ func main() {
 	ctx, sp := trace.StartSpan(ctx, "example-client")
 	defer sp.End()
 
+	handleError(waitForService(ctx))
+
 	for _, process := range prs {
 		err = process(ctx)
 		handleError(err)
@@ -109,6 +111,30 @@ func processModes(modes string) ([]process, error) {
 	}
 
 	return prs, nil
+}
+
+func waitForService(ctx context.Context) error {
+	aliveURL := examples.HTTPURL + "/alive"
+	for {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, aliveURL, nil)
+		if err != nil {
+			return err
+		}
+
+		rsp, err := http.DefaultClient.Do(req)
+		if err == nil {
+			rsp.Body.Close()
+			if rsp.StatusCode == http.StatusOK {
+				return nil
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
 }
 
 func sendHTTPRequest(ctx context.Context) error {

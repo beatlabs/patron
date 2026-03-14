@@ -227,14 +227,31 @@ func TestProducerMessageCarrier_Set(t *testing.T) {
 func TestProducerMessageCarrier_Keys(t *testing.T) {
 	t.Parallel()
 
-	t.Run("returns nil", func(t *testing.T) {
+	t.Run("returns nil for empty properties", func(t *testing.T) {
 		t.Parallel()
 
 		pub := &paho.Publish{}
 		carrier := producerMessageCarrier{pub: pub}
 		keys := carrier.Keys()
 
-		assert.Nil(t, keys)
+		assert.Empty(t, keys)
+	})
+
+	t.Run("returns all user property keys", func(t *testing.T) {
+		t.Parallel()
+
+		pub := &paho.Publish{
+			Properties: &paho.PublishProperties{
+				User: paho.UserProperties{
+					{Key: "key1", Value: "val1"},
+					{Key: "key2", Value: "val2"},
+				},
+			},
+		}
+		carrier := producerMessageCarrier{pub: pub}
+		keys := carrier.Keys()
+
+		assert.Equal(t, []string{"key1", "key2"}, keys)
 	})
 }
 

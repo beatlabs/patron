@@ -185,5 +185,9 @@ func (c producerMessageCarrier) Set(key, val string) {
 
 // Keys returns a slice of all key identifiers in the carrier.
 func (c producerMessageCarrier) Keys() []string {
-	return nil
+	keys := make([]string, 0, len(c.msg.Headers))
+	for _, header := range c.msg.Headers {
+		keys = append(keys, string(header.Key))
+	}
+	return keys
 }

@@ -400,14 +400,16 @@ func getCorrelationID(hh []*sarama.RecordHeader) string {
 // partitions. This is the default behaviour from Kafka unless the Producer altered the partition hashing behaviour in
 // a nondeterministic way.
 func deduplicateMessages(messages []Message) []Message {
-	m := map[string]Message{}
+	latest := map[string]Message{}
 	for _, message := range messages {
-		m[string(message.Message().Key)] = message
+		latest[string(message.Message().Key)] = message
 	}
 
-	deduplicated := make([]Message, 0, len(m))
-	for _, message := range m {
-		deduplicated = append(deduplicated, message)
+	deduplicated := make([]Message, 0, len(latest))
+	for _, message := range messages {
+		if latest[string(message.Message().Key)] == message {
+			deduplicated = append(deduplicated, message)
+		}
 	}
 
 	return deduplicated
@@ -440,5 +442,9 @@ func (c consumerMessageCarrier) Set(key, val string) {
 
 // Keys returns a slice of all key identifiers in the carrier.
 func (c consumerMessageCarrier) Keys() []string {
-	return nil
+	keys := make([]string, 0, len(c.msg.Headers))
+	for _, header := range c.msg.Headers {
+		keys = append(keys, string(header.Key))
+	}
+	return keys
 }

@@ -3,7 +3,15 @@
 Instrumented producers for Kafka using Sarama, with OpenTelemetry tracing, correlation propagation, and metrics.
 
 - Package: `github.com/beatlabs/patron/client/kafka`
-- Producers: synchronous (SyncProducer) and asynchronous (AsyncProducer)
+- Producers: synchronous (`SyncProducer`) and asynchronous (`AsyncProducer`)
+
+## Default Sarama config
+
+```go
+cfg, err := clientkafka.DefaultProducerSaramaConfig("my-producer", true /* idempotent */)
+// Sets ClientID = "<hostname>-my-producer", RequiredAcks = WaitForAll.
+// When idempotent is true: Net.MaxOpenRequests = 1, Producer.Idempotent = true.
+```
 
 ## Sync producer example
 
@@ -18,6 +26,16 @@ msg := &sarama.ProducerMessage{Topic: "orders", Value: sarama.StringEncoder("pay
 partition, offset, err := prod.Send(ctx, msg)
 ```
 
+### Batch send
+
+```go
+messages := []*sarama.ProducerMessage{
+  {Topic: "orders", Value: sarama.StringEncoder("one")},
+  {Topic: "orders", Value: sarama.StringEncoder("two")},
+}
+err := prod.SendBatch(ctx, messages)
+```
+
 ## Async producer example
 
 ```go
@@ -30,5 +48,12 @@ defer prod.Close()
 
 _ = prod.Send(ctx, &sarama.ProducerMessage{Topic: "orders", Value: sarama.StringEncoder("payload")})
 ```
+
+## Common methods
+
+Both `SyncProducer` and `AsyncProducer` expose:
+
+- `ActiveBrokers() []string` — returns addresses of active brokers.
+- `Close() error` — shuts down the producer and flushes buffered messages. Must be called before the producer goes out of scope to avoid leaking memory.
 
 See `client/kafka` package and `examples/client/main.go` for more details.

@@ -66,7 +66,7 @@ func (m *message) Span() trace.Span {
 	return m.sp
 }
 
-// Batch interface for multiple AWS SQS messages.
+// Batch interface for multiple Kafka messages.
 type Batch interface {
 	// Messages of the batch.
 	Messages() []Message

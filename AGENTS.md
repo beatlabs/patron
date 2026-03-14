@@ -1,29 +1,28 @@
 # AGENTS
 
+<!-- last verified: 2026-03-14 -->
+
 ## Build, test, and development workflows
 
-- Build: `task` (default runs tests). Format: `task fmt` (go fmt). Format check: `task fmtcheck` (script/gofmtcheck.sh). Lint: `task lint` (golangci-lint CLI with vendor mode); deep lint: `task deeplint`.
-- Test all: `task test` → `go test ./... -cover -race -timeout 60s`. Integration tests: `task testint` (or `task testint-nocache`). CI runs with `-tags=integration` excluding `examples` and `encoding/protobuf/test`.
+- Build: `task` (default runs tests). Format: `task fmt` (go fmt). Format check: `task fmtcheck` (script/gofmtcheck.sh). Lint: `task lint` (golangci-lint CLI with vendor mode).
+- Test all: `task test` → `go test ./... -cover -race -timeout 60s`. Integration tests: `task testint` (timeout 30s) or `task testint-nocache`. CI task: `task ci` (timeout 2m, excludes `examples` and `encoding/protobuf/test`, outputs coverage to `coverage.txt`).
 - Run single test: replace with your package/path and test name:
   - By name: `go test ./path/to/pkg -run ^TestName$ -v -race`.
   - By file: `go test ./path/to/pkg -run ^TestName$ -v -race ./path/to/pkg/file_test.go` (Go filters by package; prefer -run). With integration tags: add `-tags=integration`.
 - Useful env/deps: start external deps for integrations via `task deps-start` (docker compose); stop via `task deps-stop`. Example apps: `task example-service`, `task example-client` (OTEL_EXPORTER_OTLP_INSECURE=true).
-- CI: `.github/workflows/ci.yml` validates Taskfile, runs lint via golangci-lint-action, format check, tests with integration tags, and e2e example tests. Codecov integration enabled.
-- Testing: all test files has the `_test.go` suffix. Specifically the integration tests have also the `integration_test.go` suffix.
+- CI: `.github/workflows/ci.yml` runs lint via golangci-lint-action (v2.6.1), format check, integration tests with `task ci`, e2e example tests, and Codecov. Taskfile validation runs in integration and e2e jobs. A separate CodeQL workflow runs static analysis on PRs.
+- Testing: all test files have the `_test.go` suffix. Specifically the integration tests have also the `integration_test.go` suffix.
 - List all tasks: `task --list` to see all available tasks with descriptions.
 - Validate Taskfile: `task validate` to verify Taskfile.yml syntax and schema.
-- Prerequisites: golangci-lint v2.6.1 must be installed locally for `task lint` and `task deeplint`. Install via: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.6.1` or see https://golangci-lint.run/welcome/install/.
+- Prerequisites: golangci-lint must be installed locally for `task lint`. CI pins v2.6.1; local versions may differ. Install via: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest` or see https://golangci-lint.run/welcome/install/.
 
 ## Lint configuration
 
-- Lint config (.golangci.yml): enables errcheck, errorlint, revive, staticcheck, govet, gosec, sqlclosecheck, rowserrcheck, exhaustive, prealloc, whitespace, sloglint, spancheck, testifylint, and more. Build tag `integration` enabled; vendor mode on; tests linted. Formatters: gofmt, gofumpt, goimports.
-
-## Copilot instructions
-
-- Copilot rules (.github/copilot-instructions.md): default_language go; test framework testify; use context.Context first param for blocking/request-scoped; wrap errors with fmt.Errorf or errors.Join; follow Go idioms; avoid globals (except const/config); document exported symbols; use structured logging with slog.
+- Lint config (`.golangci.yml`): see the file for the full list of enabled linters and formatters. Build tag `integration` enabled; vendor mode on; tests linted. Formatters: gofmt, gofumpt, goimports.
 
 ## Code style and conventions
 
+- Language: Go. Test framework: testify. Use `context.Context` as first param for blocking/request-scoped functions. Wrap errors with `fmt.Errorf` or `errors.Join`. Follow Go idioms. Avoid globals (except const/config). Document exported symbols. Use structured logging with slog.
 - Imports: standard → third-party → module-local; managed by goimports/gofumpt. No unused imports. Keep vendor modules pinned.
 - Formatting: enforce gofmt; CI fails on deviations (use `task fmt`); prefer gofumpt-compatible style. Keep lines simple; avoid long one-liners.
 - Types and naming: exported identifiers use PascalCase with doc comments; unexported use lowerCamelCase; interfaces named with -er when it makes sense; avoid stutter. Use context.Context as first param when calls may block or are request-scoped.
@@ -54,7 +53,7 @@
 - Logging: use `observability/log` for slog helpers; default attrs include service/version/host.
 - Tracing: use `observability/trace` helpers and OTel SDK; create resource with semconv attributes.
 - Metrics: use `observability/metric` helpers for OTel metrics.
-- Semconv: currently using `go.opentelemetry.io/otel/semconv/v1.37.0` (see `observability/observability.go`); update import path when OTel is upgraded.
+- Semconv: currently using `go.opentelemetry.io/otel/semconv/v1.39.0` (see `observability/observability.go`); update import path when OTel is upgraded.
 
 ## Packages and utilities
 
@@ -75,11 +74,10 @@
 ## Contribution workflow
 
 - Issues: use `.github/ISSUE_TEMPLATE.md`; describe problem and solution.
-- PRs: use `.github/PULL_REQUEST_TEMPLATE.md`; reference issue; sign commits (see `SIGNYOURWORK.md`); ensure tests pass; high coverage required.
+- PRs: use `.github/PULL_REQUEST_TEMPLATE.md`; reference issue; sign commits (see `docs/SIGNYOURWORK.md`); ensure tests pass; high coverage required.
 - Breaking changes: document in `BREAKING.md` with migration guide.
 - Keep changes formatted and lint-clean; add tests with testify; follow `docs/ContributionGuidelines.md`; CI must pass.
 
 ## Upgrade workflow
 
-- See `.github/prompts/upgrade.prompt.md` for automated upgrade flow: create branch, upgrade modules/Docker images, test, commit, create PR, merge after CI success.
 - After OTel upgrades: update `semconv` imports to matching version; run `go mod tidy && go mod vendor`.

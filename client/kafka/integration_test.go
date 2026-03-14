@@ -91,6 +91,23 @@ func TestProducer_Send_Close(t *testing.T) {
 	p.Close()
 }
 
+func TestProducer_Send_Failure(t *testing.T) {
+	p, err := New(brokers, kgo.RequiredAcks(kgo.AllISRAcks()))
+	require.NoError(t, err)
+	assert.NotNil(t, p)
+	defer p.Close()
+
+	p.client.Close()
+
+	msg := &kgo.Record{
+		Topic: clientTopic,
+		Value: []byte("TEST"),
+	}
+	produced, err := p.Send(context.Background(), msg)
+	require.Error(t, err)
+	assert.Empty(t, produced)
+}
+
 func TestProducer_SendBatch_Close(t *testing.T) {
 	require.NoError(t, createTopics(brokers[0], clientTopic))
 

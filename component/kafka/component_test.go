@@ -274,24 +274,133 @@ func TestConsumerHandler_Flush(t *testing.T) {
 	}
 }
 
-func Test_getCorrelationID(t *testing.T) {
-	corID := uuid.New().String()
-	got := getCorrelationID([]kgo.RecordHeader{
-		{
-			Key:   correlation.HeaderID,
-			Value: []byte(corID),
-		},
-	})
-	assert.Equal(t, corID, got)
+func TestConsumerHandler_FlushWithCommitSync(t *testing.T) {
+	ctx := context.Background()
+	tracer := kotel.NewTracer()
+	proc := &mockProcessor{errReturn: false}
 
-	emptyCorID := ""
-	got = getCorrelationID([]kgo.RecordHeader{
-		{
-			Key:   correlation.HeaderID,
-			Value: []byte(emptyCorID),
-		},
+	handler := newConsumerHandler(ctx, "test", "grp", tracer, proc.Process, ExitStrategy, 10,
+		10*time.Millisecond, true, false)
+
+	handler.recBuf = append(handler.recBuf, &kgo.Record{
+		Topic: "TEST_TOPIC", Partition: 0, Key: []byte("key"), Value: []byte("value"), Offset: 0,
 	})
-	assert.NotEqual(t, emptyCorID, got)
+
+	// Passing nil client with commitSync=true causes CommitRecords to panic,
+	// proving the commitSync code path is reached after successful processing.
+	assert.Panics(t, func() {
+		_ = handler.flush(nil)
+	})
+	assert.Equal(t, 1, proc.GetExecs())
+}
+
+func TestConsumerHandler_BatchTimeoutFlush(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	tracer := kotel.NewTracer()
+	proc := &mockProcessor{errReturn: false}
+
+	handler := newConsumerHandler(ctx, "test", "grp", tracer, proc.Process, ExitStrategy, 100,
+		1*time.Millisecond, false, false)
+
+	handler.recBuf = append(handler.recBuf, &kgo.Record{
+		Topic: "TEST_TOPIC", Partition: 0, Key: []byte("key"), Value: []byte("value"), Offset: 0,
+	})
+
+	time.Sleep(5 * time.Millisecond)
+
+	select {
+	case <-handler.ticker.C:
+		handler.mu.Lock()
+		err := handler.flush(nil)
+		handler.mu.Unlock()
+		require.NoError(t, err)
+	case <-time.After(50 * time.Millisecond):
+		t.Fatal("ticker did not fire within expected time")
+	}
+
+	assert.Equal(t, 1, proc.GetExecs())
+	assert.Empty(t, handler.recBuf)
+
+	cancel()
+	handler.ticker.Stop()
+}
+
+func TestExecuteFailureStrategy_Unknown(t *testing.T) {
+	ctx := context.Background()
+	tracer := kotel.NewTracer()
+	proc := &mockProcessor{errReturn: false}
+
+	handler := newConsumerHandler(ctx, "test", "grp", tracer, proc.Process, FailStrategy(99), 1,
+		10*time.Millisecond, false, false)
+
+	_, sp := tracer.WithProcessSpan(&kgo.Record{Topic: "test"})
+	messages := []Message{
+		NewMessage(ctx, sp, &kgo.Record{Topic: "test", Key: []byte("key"), Value: []byte("value")}),
+	}
+
+	err := handler.executeFailureStrategy(messages, errors.New("processing error"))
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown failure strategy")
+}
+
+func TestConsumerErrorsInc(t *testing.T) {
+	t.Parallel()
+
+	assert.NotPanics(t, func() {
+		consumerErrorsInc(context.Background(), "test-consumer")
+	})
+}
+
+func Test_getCorrelationID(t *testing.T) {
+	t.Parallel()
+
+	t.Run("header found with value", func(t *testing.T) {
+		t.Parallel()
+
+		corID := uuid.New().String()
+		got := getCorrelationID([]kgo.RecordHeader{
+			{
+				Key:   correlation.HeaderID,
+				Value: []byte(corID),
+			},
+		})
+		assert.Equal(t, corID, got)
+	})
+
+	t.Run("header found with empty value", func(t *testing.T) {
+		t.Parallel()
+
+		got := getCorrelationID([]kgo.RecordHeader{
+			{
+				Key:   correlation.HeaderID,
+				Value: []byte(""),
+			},
+		})
+		assert.NotEmpty(t, got)
+		_, err := uuid.Parse(got)
+		assert.NoError(t, err)
+	})
+
+	t.Run("header missing entirely", func(t *testing.T) {
+		t.Parallel()
+
+		got := getCorrelationID([]kgo.RecordHeader{
+			{Key: "some-other-header", Value: []byte("value")},
+		})
+		assert.NotEmpty(t, got)
+		_, err := uuid.Parse(got)
+		assert.NoError(t, err)
+	})
+
+	t.Run("empty headers slice", func(t *testing.T) {
+		t.Parallel()
+
+		got := getCorrelationID(nil)
+		assert.NotEmpty(t, got)
+		_, err := uuid.Parse(got)
+		assert.NoError(t, err)
+	})
 }
 
 func Test_deduplicateMessages(t *testing.T) {

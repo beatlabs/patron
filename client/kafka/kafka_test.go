@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/stretchr/testify/assert"
@@ -13,23 +14,53 @@ import (
 func TestNew(t *testing.T) {
 	t.Parallel()
 
-	tests := map[string]struct {
-		brokers     []string
-		expectedErr string
-	}{
-		"nil brokers":   {brokers: nil, expectedErr: "brokers are empty or have an empty value"},
-		"empty brokers": {brokers: []string{}, expectedErr: "brokers are empty or have an empty value"},
-		"empty value":   {brokers: []string{""}, expectedErr: "brokers are empty or have an empty value"},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+	t.Run("nil brokers", func(t *testing.T) {
+		t.Parallel()
+		got, err := New(nil)
+		require.EqualError(t, err, "brokers are empty or have an empty value")
+		require.Nil(t, got)
+	})
 
-			got, err := New(tt.brokers)
+	t.Run("empty brokers", func(t *testing.T) {
+		t.Parallel()
+		got, err := New([]string{})
+		require.EqualError(t, err, "brokers are empty or have an empty value")
+		require.Nil(t, got)
+	})
 
-			require.EqualError(t, err, tt.expectedErr)
-			require.Nil(t, got)
-		})
+	t.Run("empty value", func(t *testing.T) {
+		t.Parallel()
+		got, err := New([]string{""})
+		require.EqualError(t, err, "brokers are empty or have an empty value")
+		require.Nil(t, got)
+	})
+
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+		got, err := New([]string{"localhost:9092"})
+		require.NoError(t, err)
+		require.NotNil(t, got)
+		got.Close()
+	})
+}
+
+func TestSendAsync_Failure(t *testing.T) {
+	t.Parallel()
+
+	p, err := New([]string{"localhost:19092"})
+	require.NoError(t, err)
+	p.client.Close()
+
+	chErr := make(chan error, 1)
+	rec := &kgo.Record{Topic: "test-topic", Value: []byte("test")}
+	p.SendAsync(context.Background(), rec, chErr)
+
+	select {
+	case err := <-chErr:
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to send message")
+	case <-time.After(5 * time.Second):
+		t.Fatal("expected error on chErr but timed out")
 	}
 }
 

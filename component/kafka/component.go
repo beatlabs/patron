@@ -20,10 +20,6 @@ import (
 )
 
 const (
-	consumerComponent = "kafka-consumer"
-)
-
-const (
 	defaultRetries         = 3
 	defaultRetryWait       = 10 * time.Second
 	defaultBatchSize       = 1
@@ -115,12 +111,12 @@ func (c *Component) processing(ctx context.Context) error {
 
 	retries := c.retries
 	for i := uint32(0); i <= retries; i++ {
-		handler := newConsumerHandler(ctx, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
-			c.batchTimeout, c.commitSync, c.batchMessageDeduplication)
-
-		tracer := kotel.NewTracer(kotel.TracerProvider(otel.GetTracerProvider()))
+		tracer := kotel.NewTracer(kotel.TracerProvider(otel.GetTracerProvider()), kotel.ConsumerGroup(c.group))
 		meter := kotel.NewMeter(kotel.MeterProvider(otel.GetMeterProvider()))
 		kotelService := kotel.NewKotel(kotel.WithTracer(tracer), kotel.WithMeter(meter))
+
+		handler := newConsumerHandler(ctx, c.name, c.group, tracer, c.proc, c.failStrategy, c.batchSize,
+			c.batchTimeout, c.commitSync, c.batchMessageDeduplication)
 
 		opts := []kgo.Opt{
 			kgo.SeedBrokers(c.brokers...),
@@ -201,6 +197,9 @@ type consumerHandler struct {
 	name  string
 	group string
 
+	// kotel tracer for creating process spans
+	kotelTracer *kotel.Tracer
+
 	// buffer
 	batchSize                 uint
 	ticker                    *time.Ticker
@@ -226,13 +225,15 @@ type consumerHandler struct {
 	processedMessages bool
 }
 
-func newConsumerHandler(ctx context.Context, name, group string, processorFunc BatchProcessorFunc,
-	fs FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync, batchMessageDeduplication bool,
+func newConsumerHandler(ctx context.Context, name, group string, kotelTracer *kotel.Tracer,
+	processorFunc BatchProcessorFunc, fs FailStrategy, batchSize uint, batchTimeout time.Duration,
+	commitSync, batchMessageDeduplication bool,
 ) *consumerHandler {
 	return &consumerHandler{
 		ctx:                       ctx,
 		name:                      name,
 		group:                     group,
+		kotelTracer:               kotelTracer,
 		batchSize:                 batchSize,
 		batchMessageDeduplication: batchMessageDeduplication,
 		ticker:                    time.NewTicker(batchTimeout),
@@ -400,9 +401,10 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 func (c *consumerHandler) getContextWithCorrelation(rec *kgo.Record) (context.Context, trace.Span) {
 	corID := getCorrelationID(rec.Headers)
 
-	// Use rec.Context which already has trace context extracted by kotel's OnFetchRecordBuffered hook.
-	ctx, sp := patrontrace.StartSpan(rec.Context, patrontrace.ComponentOpName(consumerComponent, rec.Topic),
-		trace.WithSpanKind(trace.SpanKindConsumer))
+	// Use kotel's WithProcessSpan which creates a "{topic} process" span with
+	// rich semantic convention attributes. The rec.Context already has trace
+	// context extracted by kotel's OnFetchRecordBuffered hook.
+	ctx, sp := c.kotelTracer.WithProcessSpan(rec)
 
 	ctx = correlation.ContextWithID(ctx, corID)
 	ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))

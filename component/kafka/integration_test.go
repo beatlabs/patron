@@ -137,7 +137,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 
 	allSpans := traceExporter.GetSpans()
 
-	patronSpanName := "kafka-consumer " + successTopic1
+	patronSpanName := successTopic1 + " process"
 	var patronSpans []tracetest.SpanStub
 	for _, span := range allSpans {
 		if span.Name == patronSpanName {

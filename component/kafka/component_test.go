@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/plugin/kotel"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.uber.org/goleak"
@@ -255,7 +256,8 @@ func TestConsumerHandler_Flush(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			handler := newConsumerHandler(ctx, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
+			tracer := kotel.NewTracer()
+			handler := newConsumerHandler(ctx, tt.name, "grp", tracer, tt.proc.Process, tt.failStrategy, tt.batchSize,
 				10*time.Millisecond, false, tt.batchMessageDeduplication)
 
 			handler.recBuf = append(handler.recBuf, tt.records...)

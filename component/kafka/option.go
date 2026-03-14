@@ -1,12 +1,13 @@
 package kafka
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"time"
 
-	"github.com/IBM/sarama"
+	"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
 // OptionFunc definition for configuring the component in a functional way.
@@ -30,24 +31,41 @@ func WithFailureStrategy(fs FailStrategy) OptionFunc {
 // WithCheckTopic checks whether the component-configured topics exist in the broker.
 func WithCheckTopic() OptionFunc {
 	return func(c *Component) error {
-		saramaConf := sarama.NewConfig()
-		client, err := sarama.NewClient(c.brokers, saramaConf)
+		cl, err := kgo.NewClient(kgo.SeedBrokers(c.brokers...))
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}
-		defer func() { _ = client.Close() }()
-		brokerTopics, err := client.Topics()
-		if err != nil {
-			return fmt.Errorf("failed to get topics from broker: %w", err)
+		defer cl.Close()
+
+		req := kmsg.NewPtrMetadataRequest()
+		for _, topic := range c.topics {
+			t := topic
+			rt := kmsg.NewMetadataRequestTopic()
+			rt.Topic = &t
+			req.Topics = append(req.Topics, rt)
 		}
 
-		topicsSet := make(map[string]struct{}, len(brokerTopics))
-		for _, topic := range brokerTopics {
-			topicsSet[topic] = struct{}{}
+		shards := cl.RequestSharded(context.Background(), req)
+		existingTopics := make(map[string]struct{}, len(c.topics))
+		for _, shard := range shards {
+			if shard.Err != nil {
+				return fmt.Errorf("failed to get topics from broker: %w", shard.Err)
+			}
+
+			resp, ok := shard.Resp.(*kmsg.MetadataResponse)
+			if !ok {
+				continue
+			}
+
+			for _, topic := range resp.Topics {
+				if topic.Topic != nil && topic.ErrorCode == 0 {
+					existingTopics[*topic.Topic] = struct{}{}
+				}
+			}
 		}
 
 		for _, topic := range c.topics {
-			if _, ok := topicsSet[topic]; !ok {
+			if _, ok := existingTopics[topic]; !ok {
 				return fmt.Errorf("topic %s does not exist in broker", topic)
 			}
 		}
@@ -115,17 +133,13 @@ func WithBatchMessageDeduplication() OptionFunc {
 // WithCommitSync instructs the consumer to commit offsets in a blocking operation after processing every batch of messages.
 func WithCommitSync() OptionFunc {
 	return func(c *Component) error {
-		if c.saramaConfig != nil && c.saramaConfig.Consumer.Offsets.AutoCommit.Enable {
-			// redundant commits warning
-			slog.Warn("consumer is set to commit offsets after processing each batch and auto-commit is enabled")
-		}
 		c.commitSync = true
 		return nil
 	}
 }
 
 // WithNewSessionCallback adds a callback when a new consumer group session is created (e.g., rebalancing).
-func WithNewSessionCallback(sessionCallback func(sarama.ConsumerGroupSession) error) OptionFunc {
+func WithNewSessionCallback(sessionCallback func() error) OptionFunc {
 	return func(c *Component) error {
 		if sessionCallback == nil {
 			return errors.New("nil session callback")

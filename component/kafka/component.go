@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/plugin/kotel"
+	"github.com/twmb/franz-go/plugin/kslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -123,6 +124,7 @@ func (c *Component) processing(ctx context.Context) error {
 			kgo.ConsumerGroup(c.group),
 			kgo.ConsumeTopics(c.topics...),
 			kgo.WithHooks(kotelService.Hooks()...),
+			kgo.WithLogger(kslog.New(slog.Default())),
 		}
 
 		if c.commitSync {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
@@ -11,6 +12,7 @@ import (
 	patronmetric "github.com/beatlabs/patron/observability/metric"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/plugin/kotel"
+	"github.com/twmb/franz-go/plugin/kslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -53,8 +55,8 @@ func New(brokers []string, opts ...kgo.Opt) (*Producer, error) {
 	meter := kotel.NewMeter(kotel.MeterProvider(otel.GetMeterProvider()))
 	kotelService := kotel.NewKotel(kotel.WithTracer(tracer), kotel.WithMeter(meter))
 
-	allOpts := make([]kgo.Opt, 0, 2+len(opts))
-	allOpts = append(allOpts, kgo.SeedBrokers(brokers...), kgo.WithHooks(kotelService.Hooks()...))
+	allOpts := make([]kgo.Opt, 0, 3+len(opts))
+	allOpts = append(allOpts, kgo.SeedBrokers(brokers...), kgo.WithHooks(kotelService.Hooks()...), kgo.WithLogger(kslog.New(slog.Default())))
 	allOpts = append(allOpts, opts...)
 
 	cl, err := kgo.NewClient(allOpts...)

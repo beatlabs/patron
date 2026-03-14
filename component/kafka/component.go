@@ -407,8 +407,7 @@ func deduplicateMessages(messages []Message) []Message {
 
 	deduplicated := make([]Message, 0, len(latest))
 	for _, message := range messages {
-		key := string(message.Message().Key)
-		if latest[key] == message {
+		if latest[string(message.Message().Key)] == message {
 			deduplicated = append(deduplicated, message)
 		}
 	}

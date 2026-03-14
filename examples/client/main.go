@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	patronamqp "github.com/beatlabs/patron/client/amqp"
@@ -18,11 +17,13 @@ import (
 	patronhttp "github.com/beatlabs/patron/client/http"
 	patronkafka "github.com/beatlabs/patron/client/kafka"
 	patronsqs "github.com/beatlabs/patron/client/sqs"
-	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/encoding/protobuf"
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/twmb/franz-go/pkg/kadm"
+	"github.com/twmb/franz-go/pkg/kerr"
+	"github.com/twmb/franz-go/pkg/kgo"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -149,33 +150,50 @@ func sendGRPCRequest(ctx context.Context) error {
 }
 
 func sendKafkaMessage(ctx context.Context) error {
-	cfg, err := kafka.DefaultConsumerSaramaConfig("patron-producer", true)
+	if err := ensureTopicExists(ctx, examples.KafkaBroker, examples.KafkaTopic); err != nil {
+		return fmt.Errorf("failed to ensure topic exists: %w", err)
+	}
+
+	producer, err := patronkafka.New([]string{examples.KafkaBroker}, kgo.RequiredAcks(kgo.AllISRAcks()))
 	if err != nil {
 		return err
 	}
+	defer producer.Close()
 
-	producer, err := patronkafka.New([]string{examples.KafkaBroker}, cfg).Create()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err := producer.Close()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}()
-
-	msg := &sarama.ProducerMessage{
+	msg := &kgo.Record{
 		Topic: examples.KafkaTopic,
-		Value: sarama.StringEncoder("example message"),
+		Value: []byte("example message"),
 	}
 
-	_, _, err = producer.Send(ctx, msg)
+	_, err = producer.Send(ctx, msg)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("kafka message sent")
+	return nil
+}
+
+func ensureTopicExists(ctx context.Context, broker, topic string) error {
+	cl, err := kgo.NewClient(kgo.SeedBrokers(broker))
+	if err != nil {
+		return err
+	}
+	defer cl.Close()
+
+	adm := kadm.NewClient(cl)
+
+	resp, err := adm.CreateTopics(ctx, 1, 1, nil, topic)
+	if err != nil {
+		return err
+	}
+
+	for _, r := range resp {
+		if r.Err != nil && !errors.Is(r.Err, kerr.TopicAlreadyExists) {
+			return fmt.Errorf("failed to create topic %s: %w", r.Topic, r.Err)
+		}
+	}
+
 	return nil
 }
 

@@ -4,23 +4,30 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
-	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/observability"
 	patronmetric "github.com/beatlabs/patron/observability/metric"
-	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/plugin/kotel"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/trace"
 )
 
-const packageName = "kafka"
+const (
+	packageName       = "kafka"
+	deliveryTypeSync  = "sync"
+	deliveryTypeAsync = "async"
+)
 
-var publishCount metric.Int64Counter
+var (
+	publishCount metric.Int64Counter
+
+	deliveryTypeSyncAttr  = attribute.String("delivery", deliveryTypeSync)
+	deliveryTypeAsyncAttr = attribute.String("delivery", deliveryTypeAsync)
+)
 
 func init() {
 	publishCount = patronmetric.Int64Counter(packageName, "kafka.publish.count", "Kafka message count.", "1")
@@ -30,164 +37,94 @@ func publishCountAdd(ctx context.Context, attrs ...attribute.KeyValue) {
 	publishCount.Add(ctx, 1, metric.WithAttributes(attrs...))
 }
 
-type baseProducer struct {
-	prodClient sarama.Client
+// Producer is a Kafka producer that supports both synchronous and asynchronous message sending.
+type Producer struct {
+	client *kgo.Client
 }
 
-// ActiveBrokers returns a list of active brokers' addresses.
-func (p *baseProducer) ActiveBrokers() []string {
-	brokers := p.prodClient.Brokers()
-	activeBrokerAddresses := make([]string, len(brokers))
-	for i, b := range brokers {
-		activeBrokerAddresses[i] = b.Addr()
-	}
-	return activeBrokerAddresses
-}
-
-// Builder definition for creating sync and async producers.
-type Builder struct {
-	brokers []string
-	cfg     *sarama.Config
-	errs    []error
-}
-
-// New initiates the AsyncProducer/SyncProducer builder chain with the specified Sarama configuration.
-func New(brokers []string, saramaConfig *sarama.Config) *Builder {
-	var ee []error
+// New creates a new Kafka producer with the specified brokers and franz-go options.
+// Kotel hooks for OpenTelemetry tracing and metrics are automatically configured.
+func New(brokers []string, opts ...kgo.Opt) (*Producer, error) {
 	if validation.IsStringSliceEmpty(brokers) {
-		ee = append(ee, errors.New("brokers are empty or have an empty value"))
-	}
-	if saramaConfig == nil {
-		ee = append(ee, errors.New("no Sarama configuration specified"))
+		return nil, errors.New("brokers are empty or have an empty value")
 	}
 
-	return &Builder{
-		brokers: brokers,
-		errs:    ee,
-		cfg:     saramaConfig,
+	tracer := kotel.NewTracer(kotel.TracerProvider(otel.GetTracerProvider()))
+	meter := kotel.NewMeter(kotel.MeterProvider(otel.GetMeterProvider()))
+	kotelService := kotel.NewKotel(kotel.WithTracer(tracer), kotel.WithMeter(meter))
+
+	allOpts := make([]kgo.Opt, 0, 2+len(opts))
+	allOpts = append(allOpts, kgo.SeedBrokers(brokers...), kgo.WithHooks(kotelService.Hooks()...))
+	allOpts = append(allOpts, opts...)
+
+	cl, err := kgo.NewClient(allOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create producer: %w", err)
 	}
+
+	return &Producer{client: cl}, nil
 }
 
-// DefaultProducerSaramaConfig creates a default Sarama configuration with idempotency enabled.
-// See also:
-// * https://pkg.go.dev/github.com/Shopify/sarama#RequiredAcks
-// * https://pkg.go.dev/github.com/Shopify/sarama#Config
-func DefaultProducerSaramaConfig(name string, idempotent bool) (*sarama.Config, error) {
-	host, err := os.Hostname()
-	if err != nil {
-		return nil, errors.New("failed to get hostname")
+// Send sends one or more messages synchronously. It returns the produced records
+// (with Partition and Offset populated) and an aggregated error for any failures.
+func (p *Producer) Send(ctx context.Context, records ...*kgo.Record) ([]*kgo.Record, error) {
+	if len(records) == 0 {
+		return nil, errors.New("records are empty or nil")
 	}
 
-	cfg := sarama.NewConfig()
-	cfg.ClientID = fmt.Sprintf("%s-%s", host, name)
-
-	if idempotent {
-		cfg.Net.MaxOpenRequests = 1
-		cfg.Producer.Idempotent = true
+	for _, rec := range records {
+		injectCorrelationHeader(ctx, rec)
 	}
-	cfg.Producer.RequiredAcks = sarama.WaitForAll
 
-	return cfg, nil
+	results := p.client.ProduceSync(ctx, records...)
+
+	produced := make([]*kgo.Record, 0, len(results))
+	var errs []error
+
+	for _, r := range results {
+		if r.Err != nil {
+			errs = append(errs, r.Err)
+			publishCountAdd(ctx, deliveryTypeSyncAttr, observability.FailedAttribute, topicAttribute(r.Record.Topic))
+		} else {
+			produced = append(produced, r.Record)
+			publishCountAdd(ctx, deliveryTypeSyncAttr, observability.SucceededAttribute, topicAttribute(r.Record.Topic))
+		}
+	}
+
+	if len(errs) > 0 {
+		return produced, errors.Join(errs...)
+	}
+
+	return produced, nil
 }
 
-// Create a new synchronous producer.
-func (b *Builder) Create() (*SyncProducer, error) {
-	if len(b.errs) > 0 {
-		return nil, errors.Join(b.errs...)
-	}
+// SendAsync sends a message asynchronously. Any producer errors are sent to the provided error channel.
+func (p *Producer) SendAsync(ctx context.Context, rec *kgo.Record, chErr chan<- error) {
+	injectCorrelationHeader(ctx, rec)
 
-	// required for any SyncProducer; 'Errors' is already true by default for both async/sync producers
-	b.cfg.Producer.Return.Successes = true
-
-	p := SyncProducer{}
-
-	var err error
-	p.prodClient, err = sarama.NewClient(b.brokers, b.cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create producer client: %w", err)
-	}
-
-	p.syncProd, err = sarama.NewSyncProducerFromClient(p.prodClient)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create sync producer: %w", err)
-	}
-
-	return &p, nil
+	p.client.Produce(ctx, rec, func(r *kgo.Record, err error) {
+		if err != nil {
+			publishCountAdd(context.Background(), deliveryTypeAsyncAttr, observability.FailedAttribute, topicAttribute(r.Topic))
+			chErr <- fmt.Errorf("failed to send message: %w", err)
+			return
+		}
+		publishCountAdd(context.Background(), deliveryTypeAsyncAttr, observability.SucceededAttribute, topicAttribute(r.Topic))
+	})
 }
 
-// CreateAsync a new asynchronous producer.
-func (b *Builder) CreateAsync() (*AsyncProducer, <-chan error, error) {
-	if len(b.errs) > 0 {
-		return nil, nil, errors.Join(b.errs...)
-	}
-
-	ap := &AsyncProducer{
-		baseProducer: baseProducer{},
-		asyncProd:    nil,
-	}
-
-	var err error
-	ap.prodClient, err = sarama.NewClient(b.brokers, b.cfg)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create producer client: %w", err)
-	}
-
-	ap.asyncProd, err = sarama.NewAsyncProducerFromClient(ap.prodClient)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create async producer: %w", err)
-	}
-	chErr := make(chan error)
-	go ap.propagateError(chErr)
-
-	return ap, chErr, nil
+// Close flushes any buffered records and then shuts down the producer.
+func (p *Producer) Close() {
+	p.client.Flush(context.Background())
+	p.client.Close()
 }
 
-func startSpan(ctx context.Context, action, delivery, topic string) (context.Context, trace.Span) {
-	attrs := []attribute.KeyValue{
-		attribute.String("delivery", delivery),
-		observability.ClientAttribute("kafka"),
-	}
-
-	if topic != "" {
-		attrs = append(attrs, attribute.String("topic", topic))
-	}
-
-	return patrontrace.StartSpan(ctx, action, trace.WithSpanKind(trace.SpanKindProducer),
-		trace.WithAttributes(attrs...))
-}
-
-func injectTracingAndCorrelationHeaders(ctx context.Context, msg *sarama.ProducerMessage) {
-	msg.Headers = append(msg.Headers, sarama.RecordHeader{
-		Key:   []byte(correlation.HeaderID),
+func injectCorrelationHeader(ctx context.Context, rec *kgo.Record) {
+	rec.Headers = append(rec.Headers, kgo.RecordHeader{
+		Key:   correlation.HeaderID,
 		Value: []byte(correlation.IDFromContext(ctx)),
 	})
-
-	otel.GetTextMapPropagator().Inject(ctx, producerMessageCarrier{msg})
 }
 
 func topicAttribute(topic string) attribute.KeyValue {
 	return attribute.String("topic", topic)
-}
-
-type producerMessageCarrier struct {
-	msg *sarama.ProducerMessage
-}
-
-// Get retrieves a single value for a given key.
-func (c producerMessageCarrier) Get(_ string) string {
-	return ""
-}
-
-// Set sets a header.
-func (c producerMessageCarrier) Set(key, val string) {
-	c.msg.Headers = append(c.msg.Headers, sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
-}
-
-// Keys returns a slice of all key identifiers in the carrier.
-func (c producerMessageCarrier) Keys() []string {
-	keys := make([]string, 0, len(c.msg.Headers))
-	for _, header := range c.msg.Headers {
-		keys = append(keys, string(header.Key))
-	}
-	return keys
 }

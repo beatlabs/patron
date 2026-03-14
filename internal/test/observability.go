@@ -28,9 +28,19 @@ func SetupMetrics(ctx context.Context, t *testing.T) (ShutdownFunc, CollectMetri
 	collectMetrics := func(expected int) *metricdata.ResourceMetrics {
 		cm := &metricdata.ResourceMetrics{}
 		require.NoError(t, read.Collect(ctx, cm))
-		require.Len(t, cm.ScopeMetrics, 1)
-		require.GreaterOrEqual(t, len(cm.ScopeMetrics[0].Metrics), expected)
+		require.GreaterOrEqual(t, len(cm.ScopeMetrics), 1)
+		require.GreaterOrEqual(t, len(AllMetrics(cm)), expected)
 		return cm
 	}
 	return shutdownFunc, collectMetrics
+}
+
+// AllMetrics returns a flattened slice of all metrics across all scopes
+// in the given ResourceMetrics.
+func AllMetrics(rm *metricdata.ResourceMetrics) []metricdata.Metrics {
+	var all []metricdata.Metrics
+	for _, sm := range rm.ScopeMetrics {
+		all = append(all, sm.Metrics...)
+	}
+	return all
 }

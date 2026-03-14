@@ -21,6 +21,8 @@ import (
 	"github.com/beatlabs/patron/examples"
 	"github.com/beatlabs/patron/observability/trace"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/twmb/franz-go/pkg/kadm"
+	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"google.golang.org/grpc"
@@ -148,6 +150,10 @@ func sendGRPCRequest(ctx context.Context) error {
 }
 
 func sendKafkaMessage(ctx context.Context) error {
+	if err := ensureTopicExists(ctx, examples.KafkaBroker, examples.KafkaTopic); err != nil {
+		return fmt.Errorf("failed to ensure topic exists: %w", err)
+	}
+
 	producer, err := patronkafka.New([]string{examples.KafkaBroker}, kgo.RequiredAcks(kgo.AllISRAcks()))
 	if err != nil {
 		return err
@@ -165,6 +171,29 @@ func sendKafkaMessage(ctx context.Context) error {
 	}
 
 	fmt.Println("kafka message sent")
+	return nil
+}
+
+func ensureTopicExists(ctx context.Context, broker, topic string) error {
+	cl, err := kgo.NewClient(kgo.SeedBrokers(broker))
+	if err != nil {
+		return err
+	}
+	defer cl.Close()
+
+	adm := kadm.NewClient(cl)
+
+	resp, err := adm.CreateTopics(ctx, 1, 1, nil, topic)
+	if err != nil {
+		return err
+	}
+
+	for _, r := range resp {
+		if r.Err != nil && !errors.Is(r.Err, kerr.TopicAlreadyExists) {
+			return fmt.Errorf("failed to create topic %s: %w", r.Topic, r.Err)
+		}
+	}
+
 	return nil
 }
 

@@ -10,14 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/encoding"
-	"github.com/beatlabs/patron/encoding/json"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/twmb/franz-go/pkg/kgo"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.uber.org/goleak"
@@ -48,13 +46,7 @@ func init() {
 func TestNew(t *testing.T) {
 	t.Parallel()
 
-	saramaCfg := sarama.NewConfig()
-	// consumer will commit every batch in a blocking operation
-	saramaCfg.Consumer.Offsets.AutoCommit.Enable = false
-	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
-	saramaCfg.Consumer.Group.Rebalance.GroupStrategies = append(saramaCfg.Consumer.Group.Rebalance.GroupStrategies, sarama.NewBalanceStrategySticky())
-	saramaCfg.Net.DialTimeout = 15 * time.Second
-	saramaCfg.Version = sarama.V2_6_0_0
+	opts := []kgo.Opt{}
 
 	proc := mockProcessor{}
 	type args struct {
@@ -68,7 +60,7 @@ func TestNew(t *testing.T) {
 		retryWait    time.Duration
 		batchSize    uint
 		batchTimeout time.Duration
-		saramaCfg    *sarama.Config
+		opts         []kgo.Opt
 	}
 	tests := []struct {
 		name    string
@@ -77,62 +69,52 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name:    "success",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, retryWait: 2, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, retryWait: 2 * time.Second, batchTimeout: time.Second, fs: ExitStrategy, opts: opts},
 			wantErr: false,
 		},
 		{
-			name:    "failed, no sarama config",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, retryWait: 2, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: nil},
-			wantErr: true,
-		},
-		{
 			name:    "failed, missing name",
-			args:    args{name: "", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, opts: opts},
 			wantErr: true,
 		},
 		{
 			name:    "failed, missing group",
-			args:    args{name: "name", group: "", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, opts: opts},
 			wantErr: true,
 		},
 		{
 			name:    "failed, no brokers",
-			args:    args{name: "name", group: "grp", brokers: []string{}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, opts: opts},
 			wantErr: true,
 		},
 		{
 			name:    "failed, no topics",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{""}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{""}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: ExitStrategy, opts: opts},
 			wantErr: true,
 		},
 		{
 			name:    "failed, missing processor func",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, batchSize: 1, batchTimeout: time.Second, p: nil, fs: ExitStrategy, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, batchSize: 1, batchTimeout: time.Second, p: nil, fs: ExitStrategy, opts: opts},
 			wantErr: true,
 		},
 		{
 			name:    "failed, invalid fail strategy",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: 2, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, fs: 2, opts: opts},
 			wantErr: true,
 		},
 		{
 			name:    "failed, invalid retry timeout",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, retryWait: -2, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: time.Second, retryWait: -2, opts: opts},
 			wantErr: true,
 		},
 		{
 			name:    "failed, invalid batch size",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 0, batchTimeout: time.Second, retryWait: 2, saramaCfg: saramaCfg},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 0, batchTimeout: time.Second, retryWait: 2, opts: opts},
 			wantErr: true,
 		},
 		{
 			name:    "failed, invalid batch timeout",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: -2, retryWait: 2, saramaCfg: saramaCfg},
-			wantErr: true,
-		},
-		{
-			name:    "failed, no sarama configuration",
-			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 10, batchTimeout: time.Second, retryWait: 2, saramaCfg: nil},
+			args:    args{name: "name", group: "grp", brokers: []string{"localhost:9092"}, topics: []string{"topicone"}, p: proc.Process, batchSize: 1, batchTimeout: -2, retryWait: 2, opts: opts},
 			wantErr: true,
 		},
 	}
@@ -146,7 +128,7 @@ func TestNew(t *testing.T) {
 				tt.args.brokers,
 				tt.args.topics,
 				tt.args.p,
-				tt.args.saramaCfg,
+				tt.args.opts,
 				WithFailureStrategy(tt.args.fs),
 				WithRetries(tt.args.retries),
 				WithRetryWait(tt.args.retryWait),
@@ -188,44 +170,10 @@ func (mp *mockProcessor) GetExecs() int {
 	return mp.execs
 }
 
-type mockConsumerClaim struct {
-	ch     chan *sarama.ConsumerMessage
-	proc   *mockProcessor
-	mu     sync.RWMutex
-	closed bool
-}
-
-func (m *mockConsumerClaim) Messages() <-chan *sarama.ConsumerMessage {
-	m.mu.Lock()
-	if m.proc.GetExecs() > len(m.ch) && !m.closed {
-		close(m.ch)
-		m.closed = true
-	}
-	m.mu.Unlock()
-	return m.ch
-}
-func (m *mockConsumerClaim) Topic() string              { return "" }
-func (m *mockConsumerClaim) Partition() int32           { return 0 }
-func (m *mockConsumerClaim) InitialOffset() int64       { return 0 }
-func (m *mockConsumerClaim) HighWaterMarkOffset() int64 { return 1 }
-
-type mockConsumerSession struct{}
-
-func (m *mockConsumerSession) Claims() map[string][]int32 { return nil }
-func (m *mockConsumerSession) MemberID() string           { return "" }
-func (m *mockConsumerSession) GenerationID() int32        { return 0 }
-func (m *mockConsumerSession) MarkOffset(string, int32, int64, string) {
-}
-func (m *mockConsumerSession) Commit() {}
-func (m *mockConsumerSession) ResetOffset(string, int32, int64, string) {
-}
-func (m *mockConsumerSession) MarkMessage(*sarama.ConsumerMessage, string) {}
-func (m *mockConsumerSession) Context() context.Context                    { return context.Background() }
-
-func TestHandler_ConsumeClaim(t *testing.T) {
+func TestConsumerHandler_Flush(t *testing.T) {
 	tests := []struct {
 		name                      string
-		msgs                      []*sarama.ConsumerMessage
+		records                   []*kgo.Record
 		proc                      *mockProcessor
 		failStrategy              FailStrategy
 		batchSize                 uint
@@ -234,103 +182,85 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 		expectedProcessExecutions int
 	}{
 		{
-			name: "success",
-			msgs: saramaConsumerMessages(json.Type),
-			proc: &mockProcessor{
-				errReturn: false,
-			},
-			failStrategy: ExitStrategy,
-			batchSize:    1,
-			expectError:  false,
+			name:                      "empty buffer",
+			records:                   nil,
+			proc:                      &mockProcessor{errReturn: false},
+			failStrategy:              ExitStrategy,
+			batchSize:                 1,
+			expectError:               false,
+			expectedProcessExecutions: 0,
 		},
 		{
-			name: "success-batched",
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("1", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte(json.Type),
-				}),
-				saramaConsumerMessage("2", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte(json.Type),
-				}),
-				saramaConsumerMessage("3", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte(json.Type),
-				}),
+			name: "success single message",
+			records: []*kgo.Record{
+				{Topic: "TEST_TOPIC", Partition: 0, Key: []byte("key"), Value: []byte("value"), Offset: 0},
 			},
-			proc: &mockProcessor{
-				errReturn: false,
-			},
-			failStrategy: ExitStrategy,
-			batchSize:    10,
-			expectError:  false,
+			proc:                      &mockProcessor{errReturn: false},
+			failStrategy:              ExitStrategy,
+			batchSize:                 1,
+			expectError:               false,
+			expectedProcessExecutions: 1,
 		},
 		{
-			name: "failure",
-			msgs: saramaConsumerMessages("mock"),
-			proc: &mockProcessor{
-				errReturn: true,
+			name: "success batch",
+			records: []*kgo.Record{
+				{Topic: "TEST_TOPIC", Partition: 0, Key: []byte("1"), Value: []byte("v1"), Offset: 0},
+				{Topic: "TEST_TOPIC", Partition: 0, Key: []byte("2"), Value: []byte("v2"), Offset: 1},
+				{Topic: "TEST_TOPIC", Partition: 0, Key: []byte("3"), Value: []byte("v3"), Offset: 2},
 			},
-			failStrategy: ExitStrategy,
-			batchSize:    1,
-			expectError:  true,
+			proc:                      &mockProcessor{errReturn: false},
+			failStrategy:              ExitStrategy,
+			batchSize:                 10,
+			expectError:               false,
+			expectedProcessExecutions: 3,
 		},
 		{
-			name: "failure-skip",
-			msgs: saramaConsumerMessages("mock"),
-			proc: &mockProcessor{
-				errReturn: true,
+			name: "failure exit strategy",
+			records: []*kgo.Record{
+				{Topic: "TEST_TOPIC", Partition: 0, Key: []byte("key"), Value: []byte("value"), Offset: 0},
 			},
-			failStrategy: SkipStrategy,
-			batchSize:    1,
-			expectError:  false,
+			proc:                      &mockProcessor{errReturn: true},
+			failStrategy:              ExitStrategy,
+			batchSize:                 1,
+			expectError:               true,
+			expectedProcessExecutions: 1,
+		},
+		{
+			name: "failure skip strategy",
+			records: []*kgo.Record{
+				{Topic: "TEST_TOPIC", Partition: 0, Key: []byte("key"), Value: []byte("value"), Offset: 0},
+			},
+			proc:                      &mockProcessor{errReturn: true},
+			failStrategy:              SkipStrategy,
+			batchSize:                 1,
+			expectError:               false,
+			expectedProcessExecutions: 1,
 		},
 		{
 			name: "deduplicates messages",
-			msgs: []*sarama.ConsumerMessage{
-				saramaConsumerMessage("1", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte(json.Type),
-				}),
-				saramaConsumerMessage("2", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte(json.Type),
-				}),
-				saramaConsumerMessage("3", &sarama.RecordHeader{
-					Key:   []byte(encoding.ContentTypeHeader),
-					Value: []byte(json.Type),
-				}),
+			records: []*kgo.Record{
+				{Topic: "TEST_TOPIC", Key: []byte("1"), Value: []byte("v1.1")},
+				{Topic: "TEST_TOPIC", Key: []byte("1"), Value: []byte("v1.2")},
+				{Topic: "TEST_TOPIC", Key: []byte("2"), Value: []byte("v2.1")},
 			},
-			proc: &mockProcessor{
-				errReturn: false,
-			},
+			proc:                      &mockProcessor{errReturn: false},
 			failStrategy:              SkipStrategy,
 			batchSize:                 10,
 			batchMessageDeduplication: true,
 			expectError:               false,
-			expectedProcessExecutions: 1,
+			expectedProcessExecutions: 2,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.expectedProcessExecutions == 0 {
-				tt.expectedProcessExecutions = len(tt.msgs)
-			}
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			h := newConsumerHandler(ctx, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
-				10*time.Millisecond, true, tt.batchMessageDeduplication, nil)
+			ctx := context.Background()
+			handler := newConsumerHandler(ctx, tt.name, "grp", tt.proc.Process, tt.failStrategy, tt.batchSize,
+				10*time.Millisecond, false, tt.batchMessageDeduplication)
 
-			ch := make(chan *sarama.ConsumerMessage, len(tt.msgs))
-			for _, m := range tt.msgs {
-				ch <- m
-			}
-			session := &mockConsumerSession{}
-			_ = h.Setup(session)
-			err := h.ConsumeClaim(session, &mockConsumerClaim{ch: ch, proc: tt.proc})
-			_ = h.Cleanup(session)
+			handler.recBuf = append(handler.recBuf, tt.records...)
+
+			err := handler.flush(nil)
 
 			if tt.expectError {
 				require.Error(t, err)
@@ -342,52 +272,20 @@ func TestHandler_ConsumeClaim(t *testing.T) {
 	}
 }
 
-func saramaConsumerMessages(ct string) []*sarama.ConsumerMessage {
-	return []*sarama.ConsumerMessage{
-		saramaConsumerMessage("value", &sarama.RecordHeader{
-			Key:   []byte(encoding.ContentTypeHeader),
-			Value: []byte(ct),
-		}),
-	}
-}
-
-func saramaConsumerMessage(value string, header *sarama.RecordHeader) *sarama.ConsumerMessage {
-	return versionedConsumerMessage(value, header, 0)
-}
-
-func versionedConsumerMessage(value string, header *sarama.RecordHeader, version uint8) *sarama.ConsumerMessage {
-	bytes := []byte(value)
-
-	if version > 0 {
-		bytes = append([]byte{version}, bytes...)
-	}
-
-	return &sarama.ConsumerMessage{
-		Topic:          "TEST_TOPIC",
-		Partition:      0,
-		Key:            []byte("key"),
-		Value:          bytes,
-		Offset:         0,
-		Timestamp:      time.Now(),
-		BlockTimestamp: time.Now(),
-		Headers:        []*sarama.RecordHeader{header},
-	}
-}
-
 func Test_getCorrelationID(t *testing.T) {
 	corID := uuid.New().String()
-	got := getCorrelationID([]*sarama.RecordHeader{
+	got := getCorrelationID([]kgo.RecordHeader{
 		{
-			Key:   []byte(correlation.HeaderID),
+			Key:   correlation.HeaderID,
 			Value: []byte(corID),
 		},
 	})
 	assert.Equal(t, corID, got)
 
 	emptyCorID := ""
-	got = getCorrelationID([]*sarama.RecordHeader{
+	got = getCorrelationID([]kgo.RecordHeader{
 		{
-			Key:   []byte(correlation.HeaderID),
+			Key:   correlation.HeaderID,
 			Value: []byte(emptyCorID),
 		},
 	})
@@ -399,7 +297,7 @@ func Test_deduplicateMessages(t *testing.T) {
 		return NewMessage(
 			context.Background(),
 			nil,
-			&sarama.ConsumerMessage{Key: []byte(key), Value: []byte(val)})
+			&kgo.Record{Key: []byte(key), Value: []byte(val)})
 	}
 
 	// Given
@@ -416,8 +314,8 @@ func Test_deduplicateMessages(t *testing.T) {
 	assert.Len(t, cleaned, 2)
 	// Verify ordering is preserved based on the position of the winning (last) message:
 	// k2's last occurrence is at index 3, k1's last occurrence is at index 4
-	assert.Equal(t, []byte("k2"), cleaned[0].Message().Key)
-	assert.Equal(t, []byte("v2.2"), cleaned[0].Message().Value)
-	assert.Equal(t, []byte("k1"), cleaned[1].Message().Key)
-	assert.Equal(t, []byte("v1.3"), cleaned[1].Message().Value)
+	assert.Equal(t, []byte("k2"), cleaned[0].Record().Key)
+	assert.Equal(t, []byte("v2.2"), cleaned[0].Record().Value)
+	assert.Equal(t, []byte("k1"), cleaned[1].Record().Key)
+	assert.Equal(t, []byte("v1.3"), cleaned[1].Record().Value)
 }

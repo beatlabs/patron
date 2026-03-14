@@ -13,13 +13,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/IBM/sarama"
 	kafkaclient "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/test"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/twmb/franz-go/pkg/kadm"
+	"github.com/twmb/franz-go/pkg/kgo"
 	"go.opentelemetry.io/otel/codes"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
@@ -38,18 +40,8 @@ func TestMain(m *testing.M) {
 		goleak.IgnoreTopFunction("google.golang.org/grpc/internal/grpcsync.(*CallbackSerializer).run"),
 		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/metric.(*PeriodicReader).run"),
 		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*Broker).responseReceiver"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*client).backgroundMetadataUpdater"),
-		goleak.IgnoreTopFunction("github.com/rcrowley/go-metrics.(*meterArbiter).tick"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).dispatcher"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).retryHandler"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleSuccesses"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleErrors"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*topicProducer).dispatch"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*partitionProducer).dispatch"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*brokerProducer).run"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func1"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func2"),
+		goleak.IgnoreTopFunction("github.com/twmb/franz-go/pkg/kgo.(*Client).updateMetadataLoop"),
+		goleak.IgnoreTopFunction("github.com/twmb/franz-go/pkg/kgo.(*Client).reapConnectionsLoop"),
 	)
 }
 
@@ -67,8 +59,11 @@ const (
 	failAllRetriesTopic2 = "failAllRetriesTopic2"
 	failAndRetryTopic2   = "failAndRetryTopic2"
 	broker               = "127.0.0.1:9092"
-	groupSuffix          = "-group"
 )
+
+func uniqueGroup(topic string) string {
+	return topic + "-group-" + uuid.New().String()
+}
 
 func TestKafkaComponent_Success(t *testing.T) {
 	require.NoError(t, createTopics(broker, successTopic1))
@@ -84,19 +79,14 @@ func TestKafkaComponent_Success(t *testing.T) {
 	// Test parameters
 	numOfMessagesToSend := 100
 
-	messages := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
+	messages := make([]*kgo.Record, 0, numOfMessagesToSend)
 	for i := 1; i <= numOfMessagesToSend; i++ {
-		messages = append(messages, &sarama.ProducerMessage{
-			Topic:   successTopic1,
-			Value:   sarama.StringEncoder(strconv.Itoa(i)),
-			Headers: make([]sarama.RecordHeader, 0),
-		})
+		messages = append(messages, &kgo.Record{Topic: successTopic1, Value: []byte(strconv.Itoa(i))})
 	}
-	cfg, err := kafkaclient.DefaultProducerSaramaConfig("test-client", true)
+	client, err := kafkaclient.New([]string{broker}, kgo.RequiredAcks(kgo.AllISRAcks()))
 	require.NoError(t, err)
-	client, err := kafkaclient.New([]string{broker}, cfg).Create()
+	_, err = client.Send(ctx, messages...)
 	require.NoError(t, err)
-	require.NoError(t, client.SendBatch(ctx, messages))
 
 	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 	traceExporter.Reset()
@@ -108,14 +98,14 @@ func TestKafkaComponent_Success(t *testing.T) {
 	processorFunc := func(batch Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
-			err := decodeString(msg.Message().Value, &msgContent)
+			err := decodeString(msg.Record().Value, &msgContent)
 			require.NoError(t, err)
 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgContent)
 			consumerWG.Done()
 		}
 		return nil
 	}
-	component := newComponent(t, successTopic1, 3, 10, processorFunc)
+	component := newComponent(t, successTopic1, uniqueGroup(successTopic1), 3, 10, processorFunc)
 
 	// Run Patron with the kafka component
 	patronContext, patronCancel := context.WithCancel(context.Background())
@@ -145,13 +135,21 @@ func TestKafkaComponent_Success(t *testing.T) {
 
 	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
 
-	spans := traceExporter.GetSpans()
+	allSpans := traceExporter.GetSpans()
 
-	assert.Len(t, spans, 100)
+	patronSpanName := "kafka-consumer " + successTopic1
+	var patronSpans []tracetest.SpanStub
+	for _, span := range allSpans {
+		if span.Name == patronSpanName {
+			patronSpans = append(patronSpans, span)
+		}
+	}
 
-	for _, span := range spans {
+	assert.Len(t, patronSpans, 100)
+
+	for _, span := range patronSpans {
 		expectedSpan := tracetest.SpanStub{
-			Name:     "kafka-consumer successTopic1",
+			Name:     patronSpanName,
 			SpanKind: trace.SpanKindConsumer,
 			Status: tracesdk.Status{
 				Code: codes.Ok,
@@ -163,9 +161,10 @@ func TestKafkaComponent_Success(t *testing.T) {
 
 	// Metrics
 	collectedMetrics := collectMetrics(3)
-	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.consumer.offset.diff")
-	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.publish.count")
-	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "kafka.message.status")
+	allMetrics := test.AllMetrics(collectedMetrics)
+	test.AssertMetric(t, allMetrics, "kafka.consumer.offset.diff")
+	test.AssertMetric(t, allMetrics, "kafka.publish.count")
+	test.AssertMetric(t, allMetrics, "kafka.message.status")
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {
@@ -180,7 +179,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	processorFunc := func(batch Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
-			err := decodeString(msg.Message().Value, &msgContent)
+			err := decodeString(msg.Record().Value, &msgContent)
 			require.NoError(t, err)
 
 			msgIndex, err := strconv.Atoi(msgContent)
@@ -197,18 +196,19 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 
 	numOfRetries := uint32(1)
 	batchSize := uint(1)
-	component := newComponent(t, failAllRetriesTopic2, numOfRetries, batchSize, processorFunc)
+	component := newComponent(t, failAllRetriesTopic2, uniqueGroup(failAllRetriesTopic2), numOfRetries, batchSize, processorFunc)
 
-	producer, err := newProducer(broker)
+	producer, err := kafkaclient.New([]string{broker}, kgo.DisableIdempotentWrite())
 	require.NoError(t, err)
+	defer producer.Close()
 
-	msgs := make([]*sarama.ProducerMessage, 0, numOfMessagesToSend)
+	msgs := make([]*kgo.Record, 0, numOfMessagesToSend)
 
 	for i := 1; i <= numOfMessagesToSend; i++ {
-		msgs = append(msgs, &sarama.ProducerMessage{Topic: failAllRetriesTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
+		msgs = append(msgs, &kgo.Record{Topic: failAllRetriesTopic2, Value: []byte(strconv.Itoa(i))})
 	}
 
-	err = producer.SendMessages(msgs)
+	_, err = producer.Send(context.Background(), msgs...)
 	require.NoError(t, err)
 
 	err = component.Run(context.Background())
@@ -245,7 +245,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	processorFunc := func(batch Batch) error {
 		for _, msg := range batch.Messages() {
 			var msgContent string
-			err := decodeString(msg.Message().Value, &msgContent)
+			err := decodeString(msg.Record().Value, &msgContent)
 			require.NoError(t, err)
 
 			msgIndex, err := strconv.Atoi(msgContent)
@@ -259,17 +259,18 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 		}
 		return nil
 	}
-	component := newComponent(t, failAndRetryTopic2, 1, 1, processorFunc)
+	component := newComponent(t, failAndRetryTopic2, uniqueGroup(failAndRetryTopic2), 1, 1, processorFunc)
 
 	// Send messages to the kafka topic
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := newProducer(broker)
+		producer, err := kafkaclient.New([]string{broker}, kgo.DisableIdempotentWrite())
 		assert.NoError(t, err)
+		defer producer.Close()
 
 		for i := 1; i <= numOfMessagesToSend; i++ {
-			_, _, err := producer.SendMessage(&sarama.ProducerMessage{Topic: failAndRetryTopic2, Value: sarama.StringEncoder(strconv.Itoa(i))})
+			_, err := producer.Send(context.Background(), &kgo.Record{Topic: failAndRetryTopic2, Value: []byte(strconv.Itoa(i))})
 			assert.NoError(t, err)
 		}
 		producerWG.Done()
@@ -308,8 +309,8 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 		return nil
 	}
 	invalidTopicName := "invalid-topic-name"
-	_, err := New(invalidTopicName, invalidTopicName+groupSuffix, []string{broker},
-		[]string{invalidTopicName}, processorFunc, sarama.NewConfig(), WithCheckTopic())
+	_, err := New(invalidTopicName, uniqueGroup(invalidTopicName), []string{broker},
+		[]string{invalidTopicName}, processorFunc, nil, WithCheckTopic())
 	require.EqualError(t, err, "topic invalid-topic-name does not exist in broker")
 }
 
@@ -318,20 +319,19 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	processorFunc := func(_ Batch) error {
 		return nil
 	}
-	_, err := New(successTopic2, successTopic2+groupSuffix, []string{"127.0.0.1:9999"},
-		[]string{successTopic2}, processorFunc, sarama.NewConfig(), WithCheckTopic())
+	_, err := New(successTopic2, uniqueGroup(successTopic2), []string{"127.0.0.1:9999"},
+		[]string{successTopic2}, processorFunc, nil, WithCheckTopic())
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "failed to create client:")
+	require.Contains(t, err.Error(), "failed to get topics from broker:")
 }
 
-func newComponent(t *testing.T, name string, retries uint32, batchSize uint, processorFunc BatchProcessorFunc) *Component {
-	saramaCfg, err := DefaultConsumerSaramaConfig(name, true)
-	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetOldest
-	saramaCfg.Version = sarama.V3_8_0_0
+func newComponent(t *testing.T, name, group string, retries uint32, batchSize uint, processorFunc BatchProcessorFunc) *Component {
+	opts, err := DefaultConsumerConfig(name, true)
 	require.NoError(t, err)
+	opts = append(opts, kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()))
 
-	cmp, err := New(name, name+groupSuffix, []string{broker}, []string{name}, processorFunc,
-		saramaCfg, WithFailureStrategy(ExitStrategy), WithBatchSize(batchSize), WithBatchTimeout(100*time.Millisecond),
+	cmp, err := New(name, group, []string{broker}, []string{name}, processorFunc,
+		opts, WithFailureStrategy(ExitStrategy), WithBatchSize(batchSize), WithBatchTimeout(100*time.Millisecond),
 		WithRetries(retries), WithRetryWait(200*time.Millisecond), WithCommitSync(), WithCheckTopic())
 	require.NoError(t, err)
 
@@ -349,46 +349,32 @@ func decodeString(data []byte, v any) error {
 }
 
 func createTopics(broker string, topics ...string) error {
-	config := sarama.NewConfig()
-	config.Version = sarama.V3_8_0_0
-
-	// Use the modern Admin client instead of the low-level Broker API
-	admin, err := sarama.NewClusterAdmin([]string{broker}, config)
+	cl, err := kgo.NewClient(kgo.SeedBrokers(broker))
 	if err != nil {
 		return err
 	}
-	defer admin.Close()
+	defer cl.Close()
 
-	// Delete topics first (ignore errors if they don't exist)
+	adm := kadm.NewClient(cl)
+
 	for _, topic := range topics {
-		err = admin.DeleteTopic(topic)
-		if err != nil && !errors.Is(err, sarama.ErrUnknownTopicOrPartition) {
+		_, err := adm.DeleteTopics(context.Background(), topic)
+		if err != nil {
 			fmt.Printf("Warning: failed to delete topic %s: %v\n", topic, err)
 		}
 	}
 
 	time.Sleep(100 * time.Millisecond)
 
-	// Create topics
-	topicDetail := &sarama.TopicDetail{
-		NumPartitions:     1,
-		ReplicationFactor: 1,
+	resp, err := adm.CreateTopics(context.Background(), 1, 1, nil, topics...)
+	if err != nil {
+		return err
 	}
-
-	for _, topic := range topics {
-		err = admin.CreateTopic(topic, topicDetail, false)
-		if err != nil && !errors.Is(err, sarama.ErrTopicAlreadyExists) {
-			return err
+	for _, topic := range resp {
+		if topic.Err != nil {
+			return fmt.Errorf("failed to create topic %s: %w", topic.Topic, topic.Err)
 		}
 	}
 
 	return nil
-}
-
-func newProducer(broker string) (sarama.SyncProducer, error) {
-	config := sarama.NewConfig()
-	config.Producer.Return.Successes = true
-	config.Producer.Return.Errors = true
-
-	return sarama.NewSyncProducer([]string{broker}, config)
 }

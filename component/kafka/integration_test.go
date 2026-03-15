@@ -95,10 +95,10 @@ func TestKafkaComponent_Success(t *testing.T) {
 	actualSuccessfulMessages := make([]string, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(batch Batch) error {
-		for _, msg := range batch.Messages() {
+	processorFunc := func(_ context.Context, records []*kgo.Record) error {
+		for _, rec := range records {
 			var msgContent string
-			err := decodeString(msg.Record().Value, &msgContent)
+			err := decodeString(rec.Value, &msgContent)
 			require.NoError(t, err)
 			actualSuccessfulMessages = append(actualSuccessfulMessages, msgContent)
 			consumerWG.Done()
@@ -176,10 +176,10 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	// Set up the kafka component
 	actualSuccessfulMessages := make([]int, 0)
 	actualNumOfRuns := uint32(0)
-	processorFunc := func(batch Batch) error {
-		for _, msg := range batch.Messages() {
+	processorFunc := func(_ context.Context, records []*kgo.Record) error {
+		for _, rec := range records {
 			var msgContent string
-			err := decodeString(msg.Record().Value, &msgContent)
+			err := decodeString(rec.Value, &msgContent)
 			require.NoError(t, err)
 
 			msgIndex, err := strconv.Atoi(msgContent)
@@ -242,10 +242,10 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	actualMessages := make([]int, 0)
 	var consumerWG sync.WaitGroup
 	consumerWG.Add(numOfMessagesToSend)
-	processorFunc := func(batch Batch) error {
-		for _, msg := range batch.Messages() {
+	processorFunc := func(_ context.Context, records []*kgo.Record) error {
+		for _, rec := range records {
 			var msgContent string
-			err := decodeString(msg.Record().Value, &msgContent)
+			err := decodeString(rec.Value, &msgContent)
 			require.NoError(t, err)
 
 			msgIndex, err := strconv.Atoi(msgContent)
@@ -305,7 +305,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 	// Test parameters
-	processorFunc := func(_ Batch) error {
+	processorFunc := func(_ context.Context, _ []*kgo.Record) error {
 		return nil
 	}
 	invalidTopicName := "invalid-topic-name"
@@ -316,7 +316,7 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingTopic(t *testing.T) {
 
 func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	// Test parameters
-	processorFunc := func(_ Batch) error {
+	processorFunc := func(_ context.Context, _ []*kgo.Record) error {
 		return nil
 	}
 	_, err := New(successTopic2, uniqueGroup(successTopic2), []string{"127.0.0.1:9999"},
@@ -325,14 +325,16 @@ func TestGroupConsume_CheckTopicFailsDueToNonExistingBroker(t *testing.T) {
 	require.Contains(t, err.Error(), "failed to get topics from broker:")
 }
 
-func newComponent(t *testing.T, name, group string, retries uint32, batchSize uint, processorFunc BatchProcessorFunc) *Component {
-	opts, err := DefaultConsumerConfig(name, true)
-	require.NoError(t, err)
-	opts = append(opts, kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()))
+func newComponent(t *testing.T, name, group string, retries uint32, batchSize uint, processorFunc ProcessorFunc) *Component {
+	t.Helper()
+
+	opts := []kgo.Opt{
+		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
+	}
 
 	cmp, err := New(name, group, []string{broker}, []string{name}, processorFunc,
 		opts, WithFailureStrategy(ExitStrategy), WithBatchSize(batchSize), WithBatchTimeout(100*time.Millisecond),
-		WithRetries(retries), WithRetryWait(200*time.Millisecond), WithCommitSync(), WithCheckTopic())
+		WithRetries(retries), WithRetryWait(200*time.Millisecond), WithManualCommit(), WithCheckTopic())
 	require.NoError(t, err)
 
 	return cmp

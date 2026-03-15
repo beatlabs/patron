@@ -187,3 +187,10 @@ func TestBatchMessageDeduplication(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, c.batchMessageDeduplication)
 }
+
+func TestManualCommit(t *testing.T) {
+	c := &Component{}
+	err := WithManualCommit()(c)
+	require.NoError(t, err)
+	assert.True(t, c.manualCommit)
+}

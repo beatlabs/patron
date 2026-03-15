@@ -1,3 +1,4 @@
+// Package kafka provides a consumer component for processing Kafka messages using franz-go.
 package kafka
 
 import (
@@ -20,6 +21,26 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// FailStrategy type definition.
+type FailStrategy int
+
+const (
+	// ExitStrategy does not commit failed message offsets and exits the application.
+	ExitStrategy FailStrategy = iota
+	// SkipStrategy commits the offset of messages that failed processing, and continues processing.
+	SkipStrategy
+)
+
+// ProcessorFunc definition of a batch processor function.
+// The ctx parameter carries lifecycle signals (shutdown, deadlines).
+// Each record's own Context (rec.Context) carries per-record trace/log/correlation context.
+type ProcessorFunc func(ctx context.Context, records []*kgo.Record) error
+
+type recordSpan struct {
+	record *kgo.Record
+	span   trace.Span
+}
+
 const (
 	defaultRetries         = 3
 	defaultRetryWait       = 10 * time.Second
@@ -31,8 +52,9 @@ const (
 // New initializes a new kafka consumer component with support for functional configuration.
 // The default failure strategy is the ExitStrategy.
 // The default batch size is 1 and the batch timeout is 100ms.
-// The default number of retries is 0 and the retry wait is 0.
-func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, opts []kgo.Opt, oo ...OptionFunc) (*Component, error) {
+// The default number of retries is 3 and the retry wait is 10s.
+// The default commit strategy uses AutoCommitMarks with MarkCommitRecords after successful processing.
+func New(name, group string, brokers, topics []string, proc ProcessorFunc, opts []kgo.Opt, oo ...OptionFunc) (*Component, error) {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
@@ -89,14 +111,14 @@ type Component struct {
 	topics                    []string
 	brokers                   []string
 	opts                      []kgo.Opt
-	proc                      BatchProcessorFunc
+	proc                      ProcessorFunc
 	failStrategy              FailStrategy
 	batchSize                 uint
 	batchTimeout              time.Duration
 	batchMessageDeduplication bool
 	retries                   uint32
 	retryWait                 time.Duration
-	commitSync                bool
+	manualCommit              bool
 	sessionCallback           func() error
 }
 
@@ -117,7 +139,7 @@ func (c *Component) processing(ctx context.Context) error {
 		kotelService := kotel.NewKotel(kotel.WithTracer(tracer), kotel.WithMeter(meter))
 
 		handler := newConsumerHandler(ctx, c.name, c.group, tracer, c.proc, c.failStrategy, c.batchSize,
-			c.batchTimeout, c.commitSync, c.batchMessageDeduplication)
+			c.batchTimeout, c.manualCommit, c.batchMessageDeduplication)
 
 		opts := []kgo.Opt{
 			kgo.SeedBrokers(c.brokers...),
@@ -127,8 +149,10 @@ func (c *Component) processing(ctx context.Context) error {
 			kgo.WithLogger(kslog.New(slog.Default())),
 		}
 
-		if c.commitSync {
-			opts = append(opts, kgo.DisableAutoCommit())
+		if c.manualCommit {
+			opts = append(opts, kgo.DisableAutoCommit(), kgo.BlockRebalanceOnPoll())
+		} else {
+			opts = append(opts, kgo.AutoCommitMarks())
 		}
 
 		if c.sessionCallback != nil {
@@ -208,13 +232,13 @@ type consumerHandler struct {
 	batchMessageDeduplication bool
 
 	// callback
-	proc BatchProcessorFunc
+	proc ProcessorFunc
 
 	// failures strategy
 	failStrategy FailStrategy
 
-	// committing after every batch
-	commitSync bool
+	// committing manually after every batch
+	manualCommit bool
 
 	// lock to protect buffer operation
 	mu     sync.RWMutex
@@ -228,8 +252,8 @@ type consumerHandler struct {
 }
 
 func newConsumerHandler(ctx context.Context, name, group string, kotelTracer *kotel.Tracer,
-	processorFunc BatchProcessorFunc, fs FailStrategy, batchSize uint, batchTimeout time.Duration,
-	commitSync, batchMessageDeduplication bool,
+	processorFunc ProcessorFunc, fs FailStrategy, batchSize uint, batchTimeout time.Duration,
+	manualCommit, batchMessageDeduplication bool,
 ) *consumerHandler {
 	return &consumerHandler{
 		ctx:                       ctx,
@@ -243,7 +267,7 @@ func newConsumerHandler(ctx context.Context, name, group string, kotelTracer *ko
 		mu:                        sync.RWMutex{},
 		proc:                      processorFunc,
 		failStrategy:              fs,
-		commitSync:                commitSync,
+		manualCommit:              manualCommit,
 	}
 }
 
@@ -326,45 +350,50 @@ func (c *consumerHandler) flush(cl *kgo.Client) error {
 		return nil
 	}
 
-	messages := make([]Message, 0, len(c.recBuf))
+	recordSpans := make([]recordSpan, 0, len(c.recBuf))
 	for _, rec := range c.recBuf {
 		ctx, sp := c.getContextWithCorrelation(rec)
 		messageStatusCountInc(ctx, messageProcessed, c.group, rec.Topic)
-		messages = append(messages, NewMessage(ctx, sp, rec))
+		rec.Context = ctx
+		recordSpans = append(recordSpans, recordSpan{record: rec, span: sp})
 	}
 
+	records := c.recBuf
 	if c.batchMessageDeduplication {
-		messages = deduplicateMessages(messages)
+		records = deduplicateRecords(records)
 	}
 
-	btc := NewBatch(messages)
-	err := c.proc(btc)
+	err := c.proc(c.ctx, records)
 	if err != nil {
 		if errors.Is(c.ctx.Err(), context.Canceled) {
+			c.allowRebalance(cl)
 			return fmt.Errorf("context was cancelled after processing error: %w", err)
 		}
 
-		err = c.executeFailureStrategy(messages, err)
+		err = c.executeFailureStrategy(recordSpans, err)
 		if err != nil {
+			c.allowRebalance(cl)
 			return err
 		}
 	}
 
 	c.processedMessages = true
-	for _, m := range messages {
-		patrontrace.SetSpanSuccess(m.Span())
-		m.Span().End()
+	for _, rs := range recordSpans {
+		patrontrace.SetSpanSuccess(rs.span)
+		rs.span.End()
 	}
 
-	if c.commitSync {
-		records := make([]*kgo.Record, 0, len(messages))
-		for _, m := range messages {
-			records = append(records, m.Record())
-		}
+	if cl != nil {
+		if c.manualCommit {
+			err = cl.CommitRecords(context.Background(), records...)
+			if err != nil {
+				cl.AllowRebalance()
+				return fmt.Errorf("failed to commit records: %w", err)
+			}
 
-		err = cl.CommitRecords(context.Background(), records...)
-		if err != nil {
-			return fmt.Errorf("failed to commit records: %w", err)
+			cl.AllowRebalance()
+		} else {
+			cl.MarkCommitRecords(records...)
 		}
 	}
 
@@ -373,23 +402,23 @@ func (c *consumerHandler) flush(cl *kgo.Client) error {
 	return nil
 }
 
-func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) error {
+func (c *consumerHandler) executeFailureStrategy(recordSpans []recordSpan, err error) error {
 	switch c.failStrategy {
 	case ExitStrategy:
-		for _, m := range messages {
-			patrontrace.SetSpanError(m.Span(), "executing exit strategy", err)
-			m.Span().End()
-			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Record().Topic)
+		for _, rs := range recordSpans {
+			patrontrace.SetSpanError(rs.span, "executing exit strategy", err)
+			rs.span.End()
+			messageStatusCountInc(rs.record.Context, messageErrored, c.group, rs.record.Topic)
 		}
 		slog.Error("could not process message(s)")
 		c.err = err
 		return err
 	case SkipStrategy:
-		for _, m := range messages {
-			patrontrace.SetSpanError(m.Span(), "executing skip strategy", err)
-			m.Span().End()
-			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Record().Topic)
-			messageStatusCountInc(m.Context(), messageSkipped, c.group, m.Record().Topic)
+		for _, rs := range recordSpans {
+			patrontrace.SetSpanError(rs.span, "executing skip strategy", err)
+			rs.span.End()
+			messageStatusCountInc(rs.record.Context, messageErrored, c.group, rs.record.Topic)
+			messageStatusCountInc(rs.record.Context, messageSkipped, c.group, rs.record.Topic)
 		}
 		slog.Error("could not process message(s) so skipping with error", log.ErrorAttr(err))
 	default:
@@ -411,6 +440,12 @@ func (c *consumerHandler) getContextWithCorrelation(rec *kgo.Record) (context.Co
 	ctx = correlation.ContextWithID(ctx, corID)
 	ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
 	return ctx, sp
+}
+
+func (c *consumerHandler) allowRebalance(cl *kgo.Client) {
+	if c.manualCommit && cl != nil {
+		cl.AllowRebalance()
+	}
 }
 
 func (c *consumerHandler) setErr(err error) {
@@ -441,20 +476,20 @@ func getCorrelationID(hh []kgo.RecordHeader) string {
 	return uuid.New().String()
 }
 
-// deduplicateMessages takes a slice of Messages and de-duplicates the messages based on the Key of those messages.
-// This function assumes that messages are ordered from old to new, and relies on Kafka ordering guarantees within
+// deduplicateRecords takes a slice of records and de-duplicates based on the Key of those records.
+// This function assumes that records are ordered from old to new, and relies on Kafka ordering guarantees within
 // partitions. This is the default behaviour from Kafka unless the Producer altered the partition hashing behaviour in
 // a nondeterministic way.
-func deduplicateMessages(messages []Message) []Message {
-	latest := map[string]Message{}
-	for _, message := range messages {
-		latest[string(message.Record().Key)] = message
+func deduplicateRecords(records []*kgo.Record) []*kgo.Record {
+	latest := make(map[string]*kgo.Record, len(records))
+	for _, rec := range records {
+		latest[string(rec.Key)] = rec
 	}
 
-	deduplicated := make([]Message, 0, len(latest))
-	for _, message := range messages {
-		if latest[string(message.Record().Key)] == message {
-			deduplicated = append(deduplicated, message)
+	deduplicated := make([]*kgo.Record, 0, len(latest))
+	for _, rec := range records {
+		if latest[string(rec.Key)] == rec {
+			deduplicated = append(deduplicated, rec)
 		}
 	}
 

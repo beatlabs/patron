@@ -12,15 +12,12 @@
 - Testing: all test files has the `_test.go` suffix. Specifically the integration tests have also the `integration_test.go` suffix.
 - List all tasks: `task --list` to see all available tasks with descriptions.
 - Validate Taskfile: `task validate` to verify Taskfile.yml syntax and schema.
-- Prerequisites: golangci-lint v2.6.1 must be installed locally for `task lint` and `task deeplint`. Install via: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.6.1` or see https://golangci-lint.run/welcome/install/.
+- Prerequisites: golangci-lint v2.11.3 must be installed locally for `task lint` and `task deeplint`. Install via: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.11.3` or see https://golangci-lint.run/welcome/install/.
+- Git worktrees: use `wt` to create worktrees for parallel development. Usage: `wt <branch-name>` to create a new worktree for the given branch.
 
 ## Lint configuration
 
 - Lint config (.golangci.yml): enables errcheck, errorlint, revive, staticcheck, govet, gosec, sqlclosecheck, rowserrcheck, exhaustive, prealloc, whitespace, sloglint, spancheck, testifylint, and more. Build tag `integration` enabled; vendor mode on; tests linted. Formatters: gofmt, gofumpt, goimports.
-
-## Copilot instructions
-
-- Copilot rules (.github/copilot-instructions.md): default_language go; test framework testify; use context.Context first param for blocking/request-scoped; wrap errors with fmt.Errorf or errors.Join; follow Go idioms; avoid globals (except const/config); document exported symbols; use structured logging with slog.
 
 ## Code style and conventions
 
@@ -54,7 +51,7 @@
 - Logging: use `observability/log` for slog helpers; default attrs include service/version/host.
 - Tracing: use `observability/trace` helpers and OTel SDK; create resource with semconv attributes.
 - Metrics: use `observability/metric` helpers for OTel metrics.
-- Semconv: currently using `go.opentelemetry.io/otel/semconv/v1.37.0` (see `observability/observability.go`); update import path when OTel is upgraded.
+- Semconv: currently using `go.opentelemetry.io/otel/semconv/v1.39.0` (see `observability/observability.go`); update import path when OTel is upgraded.
 
 ## Packages and utilities
 

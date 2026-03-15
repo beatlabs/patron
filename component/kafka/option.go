@@ -130,10 +130,11 @@ func WithBatchMessageDeduplication() OptionFunc {
 	}
 }
 
-// WithCommitSync instructs the consumer to commit offsets in a blocking operation after processing every batch of messages.
-func WithCommitSync() OptionFunc {
+// WithManualCommit instructs the consumer to disable autocommit, block rebalances during processing,
+// and commit offsets explicitly after each successfully processed batch.
+func WithManualCommit() OptionFunc {
 	return func(c *Component) error {
-		c.commitSync = true
+		c.manualCommit = true
 		return nil
 	}
 }

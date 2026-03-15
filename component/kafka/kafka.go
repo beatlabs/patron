@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/IBM/sarama"
+	"github.com/twmb/franz-go/pkg/kgo"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -29,25 +29,25 @@ type Message interface {
 	// Context will contain the context to be used for processing.
 	// Each context will have a logger setup which can be used to create a logger from context.
 	Context() context.Context
-	// Message will contain the raw Kafka message.
-	Message() *sarama.ConsumerMessage
+	// Record will contain the raw Kafka record.
+	Record() *kgo.Record
 	// Span contains the tracing span of this message.
 	Span() trace.Span
 }
 
 // NewMessage initializes a new message which is an implementation of the kafka Message interface.
-func NewMessage(ctx context.Context, sp trace.Span, msg *sarama.ConsumerMessage) Message {
+func NewMessage(ctx context.Context, sp trace.Span, rec *kgo.Record) Message {
 	return &message{
 		ctx: ctx,
 		sp:  sp,
-		msg: msg,
+		rec: rec,
 	}
 }
 
 type message struct {
 	ctx context.Context
 	sp  trace.Span
-	msg *sarama.ConsumerMessage
+	rec *kgo.Record
 }
 
 // Context will contain the context to be used for processing.
@@ -56,9 +56,9 @@ func (m *message) Context() context.Context {
 	return m.ctx
 }
 
-// Message will contain the raw Kafka message.
-func (m *message) Message() *sarama.ConsumerMessage {
-	return m.msg
+// Record will contain the raw Kafka record.
+func (m *message) Record() *kgo.Record {
+	return m.rec
 }
 
 // Span contains the tracing span of this message.
@@ -88,22 +88,20 @@ func (b batch) Messages() []Message {
 	return b.messages
 }
 
-// DefaultConsumerSaramaConfig function creates a Sarama configuration with a client ID derived from host name and consumer name.
-func DefaultConsumerSaramaConfig(name string, readCommitted bool) (*sarama.Config, error) {
+// DefaultConsumerConfig creates default franz-go options for a consumer with a client ID derived from hostname and consumer name.
+func DefaultConsumerConfig(name string, readCommitted bool) ([]kgo.Opt, error) {
 	host, err := os.Hostname()
 	if err != nil {
 		return nil, errors.New("failed to get hostname")
 	}
 
-	config := sarama.NewConfig()
-	config.ClientID = fmt.Sprintf("%s-%s", host, name)
-	config.Consumer.Return.Errors = true
-	if readCommitted {
-		// from Kafka documentation:
-		// Transactions were introduced in Kafka 0.11.0 wherein applications can write to multiple topics and partitions atomically. In order for this to work, consumers reading from these partitions should be configured to only read committed data. This can be achieved by setting the isolation.level=read_committed in the consumer's configuration.
-		// In read_committed mode, the consumer will read only those transactional messages which have been successfully committed. It will continue to read non-transactional messages as before. There is no client-side buffering in read_committed mode. Instead, the end offset of a partition for a read_committed consumer would be the offset of the first message in the partition belonging to an open transaction. This offset is known as the 'Last Stable Offset'(LSO).
-		config.Consumer.IsolationLevel = sarama.ReadCommitted
+	opts := []kgo.Opt{
+		kgo.ClientID(fmt.Sprintf("%s-%s", host, name)),
 	}
 
-	return config, nil
+	if readCommitted {
+		opts = append(opts, kgo.FetchIsolationLevel(kgo.ReadCommitted()))
+	}
+
+	return opts, nil
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron"
 	"github.com/beatlabs/patron/component/kafka"
 	"github.com/beatlabs/patron/examples"
@@ -11,22 +10,20 @@ import (
 )
 
 func createKafkaConsumer() (patron.Component, error) {
-	cfg, err := kafka.DefaultConsumerSaramaConfig("kafka-consumer", true)
+	opts, err := kafka.DefaultConsumerConfig("kafka-consumer", true)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg.Version = sarama.V2_6_0_0
-
 	process := func(batch kafka.Batch) error {
 		for _, msg := range batch.Messages() {
-			log.FromContext(msg.Context()).Info("kafka message received", "msg", string(msg.Message().Value))
+			log.FromContext(msg.Context()).Info("kafka message received", "msg", string(msg.Record().Value))
 			continue
 		}
 		return nil
 	}
 
-	return kafka.New(name, examples.KafkaGroup, []string{examples.KafkaBroker}, []string{examples.KafkaTopic}, process, cfg,
+	return kafka.New(name, examples.KafkaGroup, []string{examples.KafkaBroker}, []string{examples.KafkaTopic}, process, opts,
 		kafka.WithFailureStrategy(kafka.SkipStrategy), kafka.WithBatchSize(1), kafka.WithBatchTimeout(1*time.Second),
 		kafka.WithRetries(10), kafka.WithRetryWait(3*time.Second), kafka.WithCommitSync())
 }

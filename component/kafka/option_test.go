@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -150,14 +149,14 @@ func TestBatchTimeout(t *testing.T) {
 func TestNewSessionCallback(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		sessionCallback func(sarama.ConsumerGroupSession) error
+		sessionCallback func() error
 	}
 	tests := map[string]struct {
 		args        args
 		expectedErr string
 	}{
 		"success": {
-			args: args{sessionCallback: func(_ sarama.ConsumerGroupSession) error {
+			args: args{sessionCallback: func() error {
 				return nil
 			}},
 		},

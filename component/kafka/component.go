@@ -8,18 +8,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/observability/log"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/google/uuid"
+	"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/twmb/franz-go/plugin/kotel"
+	"github.com/twmb/franz-go/plugin/kslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-)
-
-const (
-	consumerComponent = "kafka-consumer"
 )
 
 const (
@@ -30,11 +28,11 @@ const (
 	defaultFailureStrategy = ExitStrategy
 )
 
-// New initializes a new  kafka consumer component with support for functional configuration.
+// New initializes a new kafka consumer component with support for functional configuration.
 // The default failure strategy is the ExitStrategy.
 // The default batch size is 1 and the batch timeout is 100ms.
-// The default number of retries is 3 and the retry wait is 10s.
-func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, saramaCfg *sarama.Config, oo ...OptionFunc) (*Component, error) {
+// The default number of retries is 0 and the retry wait is 0.
+func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, opts []kgo.Opt, oo ...OptionFunc) (*Component, error) {
 	var errs []error
 	if name == "" {
 		errs = append(errs, errors.New("name is required"))
@@ -42,10 +40,6 @@ func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, 
 
 	if group == "" {
 		errs = append(errs, errors.New("consumer group is required"))
-	}
-
-	if saramaCfg == nil {
-		return nil, errors.New("no Sarama configuration specified")
 	}
 
 	if validation.IsStringSliceEmpty(brokers) {
@@ -75,7 +69,7 @@ func New(name, group string, brokers, topics []string, proc BatchProcessorFunc, 
 		batchSize:    defaultBatchSize,
 		batchTimeout: defaultBatchTimeout,
 		failStrategy: defaultFailureStrategy,
-		saramaConfig: saramaCfg,
+		opts:         opts,
 	}
 
 	for _, optionFunc := range oo {
@@ -94,7 +88,7 @@ type Component struct {
 	group                     string
 	topics                    []string
 	brokers                   []string
-	saramaConfig              *sarama.Config
+	opts                      []kgo.Opt
 	proc                      BatchProcessorFunc
 	failStrategy              FailStrategy
 	batchSize                 uint
@@ -103,7 +97,7 @@ type Component struct {
 	retries                   uint32
 	retryWait                 time.Duration
 	commitSync                bool
-	sessionCallback           func(sarama.ConsumerGroupSession) error
+	sessionCallback           func() error
 }
 
 // Run starts the consumer processing loop to process messages from Kafka.
@@ -118,44 +112,57 @@ func (c *Component) processing(ctx context.Context) error {
 
 	retries := c.retries
 	for i := uint32(0); i <= retries; i++ {
-		handler := newConsumerHandler(ctx, c.name, c.group, c.proc, c.failStrategy, c.batchSize,
-			c.batchTimeout, c.commitSync, c.batchMessageDeduplication, c.sessionCallback)
+		tracer := kotel.NewTracer(kotel.TracerProvider(otel.GetTracerProvider()), kotel.ConsumerGroup(c.group))
+		meter := kotel.NewMeter(kotel.MeterProvider(otel.GetMeterProvider()))
+		kotelService := kotel.NewKotel(kotel.WithTracer(tracer), kotel.WithMeter(meter))
 
-		client, err := sarama.NewConsumerGroup(c.brokers, c.group, c.saramaConfig)
-		componentError = err
-		if err != nil {
-			slog.Error("error creating consumer group client for kafka component", log.ErrorAttr(err))
+		handler := newConsumerHandler(ctx, c.name, c.group, tracer, c.proc, c.failStrategy, c.batchSize,
+			c.batchTimeout, c.commitSync, c.batchMessageDeduplication)
+
+		opts := []kgo.Opt{
+			kgo.SeedBrokers(c.brokers...),
+			kgo.ConsumerGroup(c.group),
+			kgo.ConsumeTopics(c.topics...),
+			kgo.WithHooks(kotelService.Hooks()...),
+			kgo.WithLogger(kslog.New(slog.Default())),
 		}
 
-		if client != nil {
+		if c.commitSync {
+			opts = append(opts, kgo.DisableAutoCommit())
+		}
+
+		if c.sessionCallback != nil {
+			opts = append(opts, kgo.OnPartitionsAssigned(func(context.Context, *kgo.Client, map[string][]int32) {
+				err := c.sessionCallback()
+				if err != nil {
+					slog.Error("error executing session callback", log.ErrorAttr(err))
+					handler.setErr(err)
+				}
+			}))
+		}
+
+		opts = append(opts, c.opts...)
+
+		cl, err := kgo.NewClient(opts...)
+		componentError = err
+		if err != nil {
+			slog.Error("error creating kafka consumer client", log.ErrorAttr(err))
+		}
+
+		if cl != nil {
 			slog.Debug("consuming messages", slog.Any("topics", c.topics), slog.String("group", c.group))
 
-			for {
-				// check if context was cancelled or deadline exceeded, signaling that the consumer should stop
-				if ctx.Err() != nil {
-					slog.Info("kafka component terminating: context cancelled or deadline exceeded", slog.String("name", c.name))
-					return componentError
-				}
-
-				// `Consume` should be called inside an infinite loop, when a
-				// server-side rebalance happens, the consumer session will need to be
-				// recreated to get the new claims
-				err := client.Consume(ctx, c.topics, handler)
-				componentError = err
-				if err != nil {
-					slog.Error("failure from kafka consumer", log.ErrorAttr(err))
-					break
-				}
-
-				if handler.err != nil {
-					break
-				}
-			}
-
-			err = client.Close()
+			err = handler.consume(ctx, cl)
+			componentError = err
 			if err != nil {
-				slog.Error("error closing kafka consumer", log.ErrorAttr(err))
+				slog.Error("failure from kafka consumer", log.ErrorAttr(err))
 			}
+
+			if handler.getErr() != nil && componentError == nil {
+				componentError = handler.getErr()
+			}
+
+			cl.Close()
 		}
 
 		consumerErrorsInc(ctx, c.name)
@@ -165,9 +172,8 @@ func (c *Component) processing(ctx context.Context) error {
 				i = 0
 			}
 
-			// if no component error has already been set, it is probably a handler error
 			if componentError == nil {
-				componentError = handler.err
+				componentError = handler.getErr()
 			}
 
 			slog.Error("failed run", slog.Uint64("current", uint64(i)), slog.Uint64("retries", uint64(c.retries)),
@@ -175,28 +181,26 @@ func (c *Component) processing(ctx context.Context) error {
 			time.Sleep(c.retryWait)
 
 			if i < retries {
-				// set the component error to nil to ready for the next iteration
 				componentError = nil
 			}
 		}
 
-		// If there is no component error which is a result of not being able to initialize the consumer
-		// then the handler errored while processing a message. This faulty message is then the reason
-		// behind the component failure.
-		if i == retries && componentError == nil {
-			componentError = fmt.Errorf("message processing failure exhausted %d retries: %w", i, handler.err)
+		if i == retries && componentError == nil && handler.getErr() != nil {
+			componentError = fmt.Errorf("message processing failure exhausted %d retries: %w", i, handler.getErr())
 		}
 	}
 
 	return componentError
 }
 
-// Consumer represents a Sarama consumer group consumer.
 type consumerHandler struct {
 	ctx context.Context
 
 	name  string
 	group string
+
+	// kotel tracer for creating process spans
+	kotelTracer *kotel.Tracer
 
 	// buffer
 	batchSize                 uint
@@ -214,105 +218,133 @@ type consumerHandler struct {
 
 	// lock to protect buffer operation
 	mu     sync.RWMutex
-	msgBuf []*sarama.ConsumerMessage
+	recBuf []*kgo.Record
 
 	// processing error
 	err error
 
 	// whether the handler has processed any messages
 	processedMessages bool
-	sessionCallback   func(sarama.ConsumerGroupSession) error
 }
 
-func newConsumerHandler(ctx context.Context, name, group string, processorFunc BatchProcessorFunc,
-	fs FailStrategy, batchSize uint, batchTimeout time.Duration, commitSync, batchMessageDeduplication bool,
-	sessionCallback func(sarama.ConsumerGroupSession) error,
+func newConsumerHandler(ctx context.Context, name, group string, kotelTracer *kotel.Tracer,
+	processorFunc BatchProcessorFunc, fs FailStrategy, batchSize uint, batchTimeout time.Duration,
+	commitSync, batchMessageDeduplication bool,
 ) *consumerHandler {
 	return &consumerHandler{
 		ctx:                       ctx,
 		name:                      name,
 		group:                     group,
+		kotelTracer:               kotelTracer,
 		batchSize:                 batchSize,
 		batchMessageDeduplication: batchMessageDeduplication,
 		ticker:                    time.NewTicker(batchTimeout),
-		msgBuf:                    make([]*sarama.ConsumerMessage, 0, batchSize),
+		recBuf:                    make([]*kgo.Record, 0, batchSize),
 		mu:                        sync.RWMutex{},
 		proc:                      processorFunc,
 		failStrategy:              fs,
 		commitSync:                commitSync,
-		sessionCallback:           sessionCallback,
 	}
 }
 
-// Setup is run at the beginning of a new session, before ConsumeClaim.
-func (c *consumerHandler) Setup(cgs sarama.ConsumerGroupSession) error {
-	if c.sessionCallback == nil {
-		return nil
-	}
-	return c.sessionCallback(cgs)
-}
+func (c *consumerHandler) consume(ctx context.Context, cl *kgo.Client) error {
+	defer c.ticker.Stop()
 
-// Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited.
-func (c *consumerHandler) Cleanup(sarama.ConsumerGroupSession) error {
-	return nil
-}
-
-// ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
-func (c *consumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for {
-		select {
-		case msg, ok := <-claim.Messages():
-			if ok {
-				slog.Debug("message claimed", slog.String("value", string(msg.Value)),
-					slog.Time("timestamp", msg.Timestamp), slog.String("topic", msg.Topic))
-				topicPartitionOffsetDiffGaugeSet(c.ctx, c.group, msg.Topic, msg.Partition, claim.HighWaterMarkOffset(), msg.Offset)
-				messageStatusCountInc(c.ctx, messageReceived, c.group, msg.Topic)
-				err := c.insertMessage(session, msg)
-				if err != nil {
-					return err
-				}
-			} else {
-				slog.Debug("messages channel closed")
-				return nil
+		if ctx.Err() != nil {
+			if !errors.Is(ctx.Err(), context.Canceled) {
+				slog.Info("closing consumer", log.ErrorAttr(ctx.Err()))
 			}
-		case <-c.ticker.C:
+
 			c.mu.Lock()
-			err := c.flush(session)
+			err := c.flush(cl)
 			c.mu.Unlock()
 			if err != nil {
 				return err
 			}
-		case <-c.ctx.Done():
-			if !errors.Is(c.ctx.Err(), context.Canceled) {
-				slog.Info("closing consumer", log.ErrorAttr(c.ctx.Err()))
-			}
+
 			return nil
+		}
+
+		fetches := cl.PollFetches(ctx)
+		if fetches.IsClientClosed() {
+			return nil
+		}
+
+		for _, fetchErr := range fetches.Errors() {
+			if !errors.Is(fetchErr.Err, context.Canceled) {
+				slog.Error("fetch error", slog.String("topic", fetchErr.Topic),
+					slog.Int("partition", int(fetchErr.Partition)), log.ErrorAttr(fetchErr.Err))
+			}
+		}
+
+		fetches.EachPartition(func(ftp kgo.FetchTopicPartition) {
+			for _, rec := range ftp.Records {
+				slog.Debug("message claimed", slog.String("value", string(rec.Value)),
+					slog.Time("timestamp", rec.Timestamp), slog.String("topic", rec.Topic))
+				topicPartitionOffsetDiffGaugeSet(c.ctx, c.group, rec.Topic, rec.Partition, ftp.HighWatermark, rec.Offset)
+				messageStatusCountInc(c.ctx, messageReceived, c.group, rec.Topic)
+
+				c.mu.Lock()
+				if c.err != nil {
+					c.mu.Unlock()
+					return
+				}
+
+				c.recBuf = append(c.recBuf, rec)
+				if uint(len(c.recBuf)) >= c.batchSize {
+					err := c.flush(cl)
+					if err != nil {
+						c.err = err
+						c.mu.Unlock()
+						return
+					}
+				}
+				c.mu.Unlock()
+			}
+		})
+
+		if c.getErr() != nil {
+			return c.getErr()
+		}
+
+		select {
+		case <-c.ticker.C:
+			c.mu.Lock()
+			err := c.flush(cl)
+			c.mu.Unlock()
+			if err != nil {
+				return err
+			}
+		default:
 		}
 	}
 }
 
-func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
-	if len(c.msgBuf) == 0 {
+func (c *consumerHandler) flush(cl *kgo.Client) error {
+	if len(c.recBuf) == 0 {
 		return nil
 	}
 
-	messages := make([]Message, 0, len(c.msgBuf))
-	for _, msg := range c.msgBuf {
-		ctx, sp := c.getContextWithCorrelation(msg)
-		messageStatusCountInc(ctx, messageProcessed, c.group, msg.Topic)
-		messages = append(messages, NewMessage(ctx, sp, msg))
+	messages := make([]Message, 0, len(c.recBuf))
+	for _, rec := range c.recBuf {
+		ctx, sp := c.getContextWithCorrelation(rec)
+		messageStatusCountInc(ctx, messageProcessed, c.group, rec.Topic)
+		messages = append(messages, NewMessage(ctx, sp, rec))
 	}
 
 	if c.batchMessageDeduplication {
 		messages = deduplicateMessages(messages)
 	}
+
 	btc := NewBatch(messages)
 	err := c.proc(btc)
 	if err != nil {
 		if errors.Is(c.ctx.Err(), context.Canceled) {
 			return fmt.Errorf("context was cancelled after processing error: %w", err)
 		}
-		err := c.executeFailureStrategy(messages, err)
+
+		err = c.executeFailureStrategy(messages, err)
 		if err != nil {
 			return err
 		}
@@ -322,14 +354,21 @@ func (c *consumerHandler) flush(session sarama.ConsumerGroupSession) error {
 	for _, m := range messages {
 		patrontrace.SetSpanSuccess(m.Span())
 		m.Span().End()
-		session.MarkMessage(m.Message(), "")
 	}
 
 	if c.commitSync {
-		session.Commit()
+		records := make([]*kgo.Record, 0, len(messages))
+		for _, m := range messages {
+			records = append(records, m.Record())
+		}
+
+		err = cl.CommitRecords(context.Background(), records...)
+		if err != nil {
+			return fmt.Errorf("failed to commit records: %w", err)
+		}
 	}
 
-	c.msgBuf = c.msgBuf[:0]
+	c.recBuf = c.recBuf[:0]
 
 	return nil
 }
@@ -340,7 +379,7 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 		for _, m := range messages {
 			patrontrace.SetSpanError(m.Span(), "executing exit strategy", err)
 			m.Span().End()
-			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Message().Topic)
+			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Record().Topic)
 		}
 		slog.Error("could not process message(s)")
 		c.err = err
@@ -349,48 +388,55 @@ func (c *consumerHandler) executeFailureStrategy(messages []Message, err error) 
 		for _, m := range messages {
 			patrontrace.SetSpanError(m.Span(), "executing skip strategy", err)
 			m.Span().End()
-			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Message().Topic)
-			messageStatusCountInc(m.Context(), messageSkipped, c.group, m.Message().Topic)
+			messageStatusCountInc(m.Context(), messageErrored, c.group, m.Record().Topic)
+			messageStatusCountInc(m.Context(), messageSkipped, c.group, m.Record().Topic)
 		}
 		slog.Error("could not process message(s) so skipping with error", log.ErrorAttr(err))
 	default:
 		slog.Error("unknown failure strategy executed")
 		return fmt.Errorf("unknown failure strategy: %v", c.failStrategy)
 	}
+
 	return nil
 }
 
-func (c *consumerHandler) getContextWithCorrelation(msg *sarama.ConsumerMessage) (context.Context, trace.Span) {
-	corID := getCorrelationID(msg.Headers)
-	ctx := otel.GetTextMapPropagator().Extract(context.Background(), &consumerMessageCarrier{msg: msg})
+func (c *consumerHandler) getContextWithCorrelation(rec *kgo.Record) (context.Context, trace.Span) {
+	corID := getCorrelationID(rec.Headers)
 
-	ctx, sp := patrontrace.StartSpan(ctx, patrontrace.ComponentOpName(consumerComponent, msg.Topic),
-		trace.WithSpanKind(trace.SpanKindConsumer))
+	// Use kotel's WithProcessSpan which creates a "{topic} process" span with
+	// rich semantic convention attributes. The rec.Context already has trace
+	// context extracted by kotel's OnFetchRecordBuffered hook.
+	ctx, sp := c.kotelTracer.WithProcessSpan(rec)
 
 	ctx = correlation.ContextWithID(ctx, corID)
 	ctx = log.WithContext(ctx, slog.With(slog.String(correlation.ID, corID)))
 	return ctx, sp
 }
 
-func (c *consumerHandler) insertMessage(session sarama.ConsumerGroupSession, msg *sarama.ConsumerMessage) error {
+func (c *consumerHandler) setErr(err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.msgBuf = append(c.msgBuf, msg)
-	if uint(len(c.msgBuf)) >= c.batchSize {
-		return c.flush(session)
+	if c.err == nil {
+		c.err = err
 	}
-	return nil
 }
 
-func getCorrelationID(hh []*sarama.RecordHeader) string {
+func (c *consumerHandler) getErr() error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.err
+}
+
+func getCorrelationID(hh []kgo.RecordHeader) string {
 	for _, h := range hh {
-		if string(h.Key) == correlation.HeaderID {
+		if h.Key == correlation.HeaderID {
 			if len(h.Value) > 0 {
 				return string(h.Value)
 			}
 			break
 		}
 	}
+
 	slog.Debug("correlation header not found, creating new correlation UUID")
 	return uuid.New().String()
 }
@@ -402,49 +448,15 @@ func getCorrelationID(hh []*sarama.RecordHeader) string {
 func deduplicateMessages(messages []Message) []Message {
 	latest := map[string]Message{}
 	for _, message := range messages {
-		latest[string(message.Message().Key)] = message
+		latest[string(message.Record().Key)] = message
 	}
 
 	deduplicated := make([]Message, 0, len(latest))
 	for _, message := range messages {
-		if latest[string(message.Message().Key)] == message {
+		if latest[string(message.Record().Key)] == message {
 			deduplicated = append(deduplicated, message)
 		}
 	}
 
 	return deduplicated
-}
-
-type consumerMessageCarrier struct {
-	msg *sarama.ConsumerMessage
-}
-
-// Get retrieves a single value for a given key.
-func (c consumerMessageCarrier) Get(key string) string {
-	for _, header := range c.msg.Headers {
-		if string(header.Key) == key {
-			return string(header.Value)
-		}
-	}
-	return ""
-}
-
-// Set sets a header.
-func (c consumerMessageCarrier) Set(key, val string) {
-	for _, header := range c.msg.Headers {
-		if string(header.Key) == key {
-			header.Value = []byte(val)
-			return
-		}
-	}
-	c.msg.Headers = append(c.msg.Headers, &sarama.RecordHeader{Key: []byte(key), Value: []byte(val)})
-}
-
-// Keys returns a slice of all key identifiers in the carrier.
-func (c consumerMessageCarrier) Keys() []string {
-	keys := make([]string, 0, len(c.msg.Headers))
-	for _, header := range c.msg.Headers {
-		keys = append(keys, string(header.Key))
-	}
-	return keys
 }

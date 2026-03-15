@@ -4,16 +4,16 @@ package kafka
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
+	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/beatlabs/patron/internal/test"
-	"github.com/beatlabs/patron/observability/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel/attribute"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"github.com/twmb/franz-go/pkg/kadm"
+	"github.com/twmb/franz-go/pkg/kgo"
 	"go.uber.org/goleak"
 )
 
@@ -21,11 +21,7 @@ const (
 	clientTopic = "clientTopic"
 )
 
-var (
-	brokers        = []string{"127.0.0.1:9092"}
-	tracePublisher *sdktrace.TracerProvider
-	traceExporter  *tracetest.InMemoryExporter
-)
+var brokers = []string{"127.0.0.1:9092"}
 
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m,
@@ -33,189 +29,130 @@ func TestMain(m *testing.M) {
 		goleak.IgnoreTopFunction("google.golang.org/grpc/internal/grpcsync.(*CallbackSerializer).run"),
 		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/metric.(*PeriodicReader).run"),
 		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*Broker).responseReceiver"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*client).backgroundMetadataUpdater"),
-		goleak.IgnoreTopFunction("github.com/rcrowley/go-metrics.(*meterArbiter).tick"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).dispatcher"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).retryHandler"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleSuccesses"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*syncProducer).handleErrors"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*topicProducer).dispatch"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*partitionProducer).dispatch"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*brokerProducer).run"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func1"),
-		goleak.IgnoreTopFunction("github.com/IBM/sarama.(*asyncProducer).newBrokerProducer.func2"),
-		goleak.IgnoreTopFunction("github.com/beatlabs/patron/client/kafka.(*AsyncProducer).propagateError"),
 	)
 }
 
-func init() {
-	traceExporter = tracetest.NewInMemoryExporter()
-	tracePublisher = trace.Setup("test", nil, traceExporter)
-}
-
-func TestNewAsyncProducer_Success(t *testing.T) {
-	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
+func TestNewProducer_Success(t *testing.T) {
+	host, err := os.Hostname()
 	require.NoError(t, err)
 
-	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
-	require.NoError(t, err)
-	assert.NotNil(t, ap)
-	assert.NotNil(t, chErr)
-}
-
-func TestNewSyncProducer_Success(t *testing.T) {
-	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
-	require.NoError(t, err)
-
-	p, err := New(brokers, saramaCfg).Create()
+	p, err := New(brokers, kgo.ClientID(fmt.Sprintf("%s-%s", host, "test-producer")), kgo.RequiredAcks(kgo.AllISRAcks()))
 	require.NoError(t, err)
 	assert.NotNil(t, p)
+	p.Close()
 }
 
-func TestAsyncProducer_SendMessage_Close(t *testing.T) {
-	t.Cleanup(func() { traceExporter.Reset() })
+func TestProducer_SendAsync_Close(t *testing.T) {
+	require.NoError(t, createTopics(brokers[0], clientTopic))
 
 	ctx := context.Background()
 
 	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()
 
-	saramaCfg, err := DefaultProducerSaramaConfig("test-consumer", false)
+	p, err := New(brokers, kgo.DisableIdempotentWrite())
 	require.NoError(t, err)
-
-	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
-	require.NoError(t, err)
-	assert.NotNil(t, ap)
-	assert.NotNil(t, chErr)
-	msg := &sarama.ProducerMessage{
+	assert.NotNil(t, p)
+	msg := &kgo.Record{
 		Topic:   clientTopic,
-		Value:   sarama.StringEncoder("TEST"),
-		Headers: []sarama.RecordHeader{{Key: []byte("123"), Value: []byte("123")}},
+		Value:   []byte("TEST"),
+		Headers: []kgo.RecordHeader{{Key: "123", Value: []byte("123")}},
 	}
-	err = ap.Send(context.Background(), msg)
-	require.NoError(t, err)
-	require.NoError(t, ap.Close())
+	chErr := make(chan error, 1)
+	p.SendAsync(context.Background(), msg, chErr)
+	p.Close()
 
-	// Tracing
-	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
-
-	expected := tracetest.SpanStub{
-		Name: "send",
-		Attributes: []attribute.KeyValue{
-			attribute.String("delivery", "async"),
-			attribute.String("client", "kafka"),
-			attribute.String("topic", "clientTopic"),
-		},
+	select {
+	case err := <-chErr:
+		require.NoError(t, err)
+	default:
 	}
 
-	snaps := traceExporter.GetSpans().Snapshots()
-
-	assert.Len(t, snaps, 1)
-	assert.Equal(t, expected.Name, snaps[0].Name())
-	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
-
-	// Metrics
+	// Metrics — kotel handles tracing; we only assert our custom publish count metric.
 	_ = assertCollectMetrics(1)
 }
 
-func TestSyncProducer_SendMessage_Close(t *testing.T) {
-	t.Cleanup(func() {
-		traceExporter.Reset()
-	})
-	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
-	require.NoError(t, err)
+func TestProducer_Send_Close(t *testing.T) {
+	require.NoError(t, createTopics(brokers[0], clientTopic))
 
-	p, err := New(brokers, saramaCfg).Create()
+	p, err := New(brokers, kgo.RequiredAcks(kgo.AllISRAcks()))
 	require.NoError(t, err)
 	assert.NotNil(t, p)
-	msg := &sarama.ProducerMessage{
+
+	msg := &kgo.Record{
 		Topic: clientTopic,
-		Value: sarama.StringEncoder("TEST"),
+		Value: []byte("TEST"),
 	}
-	partition, offset, err := p.Send(context.Background(), msg)
+	produced, err := p.Send(context.Background(), msg)
 	require.NoError(t, err)
-	assert.GreaterOrEqual(t, partition, int32(0))
-	assert.GreaterOrEqual(t, offset, int64(0))
-	require.NoError(t, p.Close())
-
-	// Tracing
-	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
-
-	expected := tracetest.SpanStub{
-		Name: "send",
-		Attributes: []attribute.KeyValue{
-			attribute.String("delivery", "sync"),
-			attribute.String("client", "kafka"),
-			attribute.String("topic", "clientTopic"),
-		},
-	}
-
-	snaps := traceExporter.GetSpans().Snapshots()
-
-	assert.Len(t, snaps, 1)
-	assert.Equal(t, expected.Name, snaps[0].Name())
-	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
+	require.Len(t, produced, 1)
+	assert.GreaterOrEqual(t, produced[0].Partition, int32(0))
+	assert.GreaterOrEqual(t, produced[0].Offset, int64(0))
+	p.Close()
 }
 
-func TestSyncProducer_SendMessages_Close(t *testing.T) {
-	t.Cleanup(func() {
-		traceExporter.Reset()
-	})
-	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
-	require.NoError(t, err)
-
-	p, err := New(brokers, saramaCfg).Create()
+func TestProducer_Send_Failure(t *testing.T) {
+	p, err := New(brokers, kgo.RequiredAcks(kgo.AllISRAcks()))
 	require.NoError(t, err)
 	assert.NotNil(t, p)
-	msg1 := &sarama.ProducerMessage{
+	defer p.Close()
+
+	p.client.Close()
+
+	msg := &kgo.Record{
 		Topic: clientTopic,
-		Value: sarama.StringEncoder("TEST1"),
+		Value: []byte("TEST"),
 	}
-	msg2 := &sarama.ProducerMessage{
-		Topic: clientTopic,
-		Value: sarama.StringEncoder("TEST2"),
-	}
-	err = p.SendBatch(context.Background(), []*sarama.ProducerMessage{msg1, msg2})
-	require.NoError(t, err)
-	require.NoError(t, p.Close())
-	// Tracing
-	require.NoError(t, tracePublisher.ForceFlush(context.Background()))
-
-	expected := tracetest.SpanStub{
-		Name: "send-batch",
-		Attributes: []attribute.KeyValue{
-			attribute.String("delivery", "sync"),
-			attribute.String("client", "kafka"),
-		},
-	}
-
-	snaps := traceExporter.GetSpans().Snapshots()
-
-	assert.Len(t, snaps, 1)
-	assert.Equal(t, expected.Name, snaps[0].Name())
-	assert.Equal(t, expected.Attributes, snaps[0].Attributes())
+	produced, err := p.Send(context.Background(), msg)
+	require.Error(t, err)
+	assert.Empty(t, produced)
 }
 
-func TestAsyncProducerActiveBrokers(t *testing.T) {
-	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
-	require.NoError(t, err)
+func TestProducer_SendBatch_Close(t *testing.T) {
+	require.NoError(t, createTopics(brokers[0], clientTopic))
 
-	ap, chErr, err := New(brokers, saramaCfg).CreateAsync()
+	p, err := New(brokers, kgo.RequiredAcks(kgo.AllISRAcks()))
 	require.NoError(t, err)
-	assert.NotNil(t, ap)
-	assert.NotNil(t, chErr)
-	assert.NotEmpty(t, ap.ActiveBrokers())
-	require.NoError(t, ap.Close())
+	assert.NotNil(t, p)
+
+	msg1 := &kgo.Record{
+		Topic: clientTopic,
+		Value: []byte("TEST1"),
+	}
+	msg2 := &kgo.Record{
+		Topic: clientTopic,
+		Value: []byte("TEST2"),
+	}
+	produced, err := p.Send(context.Background(), msg1, msg2)
+	require.NoError(t, err)
+	require.Len(t, produced, 2)
+	p.Close()
 }
 
-func TestSyncProducerActiveBrokers(t *testing.T) {
-	saramaCfg, err := DefaultProducerSaramaConfig("test-producer", true)
-	require.NoError(t, err)
+func createTopics(broker string, topics ...string) error {
+	cl, err := kgo.NewClient(kgo.SeedBrokers(broker))
+	if err != nil {
+		return err
+	}
+	defer cl.Close()
 
-	ap, err := New(brokers, saramaCfg).Create()
-	require.NoError(t, err)
-	assert.NotNil(t, ap)
-	assert.NotEmpty(t, ap.ActiveBrokers())
-	require.NoError(t, ap.Close())
+	adm := kadm.NewClient(cl)
+
+	for _, topic := range topics {
+		_, _ = adm.DeleteTopics(context.Background(), topic)
+	}
+
+	time.Sleep(100 * time.Millisecond)
+
+	resp, err := adm.CreateTopics(context.Background(), 1, 1, nil, topics...)
+	if err != nil {
+		return err
+	}
+	for _, topic := range resp {
+		if topic.Err != nil {
+			return fmt.Errorf("failed to create topic %s: %w", topic.Topic, topic.Err)
+		}
+	}
+
+	return nil
 }

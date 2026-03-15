@@ -2,9 +2,6 @@
 ## explicit; go 1.20
 filippo.io/edwards25519
 filippo.io/edwards25519/field
-# github.com/IBM/sarama v1.46.3
-## explicit; go 1.24.0
-github.com/IBM/sarama
 # github.com/aws/aws-sdk-go-v2 v1.41.2
 ## explicit; go 1.23
 github.com/aws/aws-sdk-go-v2/aws
@@ -141,15 +138,6 @@ github.com/davecgh/go-spew/spew
 # github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f
 ## explicit
 github.com/dgryski/go-rendezvous
-# github.com/eapache/go-resiliency v1.7.0
-## explicit; go 1.13
-github.com/eapache/go-resiliency/breaker
-# github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3
-## explicit; go 1.17
-github.com/eapache/go-xerial-snappy
-# github.com/eapache/queue v1.1.0
-## explicit
-github.com/eapache/queue
 # github.com/eclipse/paho.golang v0.23.0
 ## explicit; go 1.24.0
 github.com/eclipse/paho.golang/autopaho
@@ -1033,70 +1021,21 @@ github.com/gorilla/websocket
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/httprule
 github.com/grpc-ecosystem/grpc-gateway/v2/runtime
 github.com/grpc-ecosystem/grpc-gateway/v2/utilities
-# github.com/hashicorp/go-uuid v1.0.3
-## explicit
-github.com/hashicorp/go-uuid
 # github.com/hashicorp/golang-lru/v2 v2.0.7
 ## explicit; go 1.18
 github.com/hashicorp/golang-lru/v2
 github.com/hashicorp/golang-lru/v2/internal
 github.com/hashicorp/golang-lru/v2/simplelru
-# github.com/jcmturner/aescts/v2 v2.0.0
-## explicit; go 1.13
-github.com/jcmturner/aescts/v2
-# github.com/jcmturner/dnsutils/v2 v2.0.0
-## explicit; go 1.13
-github.com/jcmturner/dnsutils/v2
-# github.com/jcmturner/gofork v1.7.6
-## explicit; go 1.7
-github.com/jcmturner/gofork/encoding/asn1
-github.com/jcmturner/gofork/x/crypto/pbkdf2
-# github.com/jcmturner/gokrb5/v8 v8.4.4
-## explicit; go 1.16
-github.com/jcmturner/gokrb5/v8/asn1tools
-github.com/jcmturner/gokrb5/v8/client
-github.com/jcmturner/gokrb5/v8/config
-github.com/jcmturner/gokrb5/v8/credentials
-github.com/jcmturner/gokrb5/v8/crypto
-github.com/jcmturner/gokrb5/v8/crypto/common
-github.com/jcmturner/gokrb5/v8/crypto/etype
-github.com/jcmturner/gokrb5/v8/crypto/rfc3961
-github.com/jcmturner/gokrb5/v8/crypto/rfc3962
-github.com/jcmturner/gokrb5/v8/crypto/rfc4757
-github.com/jcmturner/gokrb5/v8/crypto/rfc8009
-github.com/jcmturner/gokrb5/v8/gssapi
-github.com/jcmturner/gokrb5/v8/iana
-github.com/jcmturner/gokrb5/v8/iana/addrtype
-github.com/jcmturner/gokrb5/v8/iana/adtype
-github.com/jcmturner/gokrb5/v8/iana/asnAppTag
-github.com/jcmturner/gokrb5/v8/iana/chksumtype
-github.com/jcmturner/gokrb5/v8/iana/errorcode
-github.com/jcmturner/gokrb5/v8/iana/etypeID
-github.com/jcmturner/gokrb5/v8/iana/flags
-github.com/jcmturner/gokrb5/v8/iana/keyusage
-github.com/jcmturner/gokrb5/v8/iana/msgtype
-github.com/jcmturner/gokrb5/v8/iana/nametype
-github.com/jcmturner/gokrb5/v8/iana/patype
-github.com/jcmturner/gokrb5/v8/kadmin
-github.com/jcmturner/gokrb5/v8/keytab
-github.com/jcmturner/gokrb5/v8/krberror
-github.com/jcmturner/gokrb5/v8/messages
-github.com/jcmturner/gokrb5/v8/pac
-github.com/jcmturner/gokrb5/v8/types
-# github.com/jcmturner/rpc/v2 v2.0.3
-## explicit; go 1.13
-github.com/jcmturner/rpc/v2/mstypes
-github.com/jcmturner/rpc/v2/ndr
-# github.com/klauspost/compress v1.18.3
+# github.com/klauspost/compress v1.18.4
 ## explicit; go 1.23
 github.com/klauspost/compress
-github.com/klauspost/compress/flate
 github.com/klauspost/compress/fse
-github.com/klauspost/compress/gzip
 github.com/klauspost/compress/huff0
 github.com/klauspost/compress/internal/cpuinfo
 github.com/klauspost/compress/internal/le
+github.com/klauspost/compress/internal/race
 github.com/klauspost/compress/internal/snapref
+github.com/klauspost/compress/s2
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/montanaflynn/stats v0.7.1
@@ -1115,9 +1054,6 @@ github.com/pmezard/go-difflib/difflib
 # github.com/rabbitmq/amqp091-go v1.10.0
 ## explicit; go 1.20
 github.com/rabbitmq/amqp091-go
-# github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9
-## explicit
-github.com/rcrowley/go-metrics
 # github.com/redis/go-redis/extra/rediscmd/v9 v9.18.0
 ## explicit; go 1.21
 github.com/redis/go-redis/extra/rediscmd/v9
@@ -1147,6 +1083,27 @@ github.com/redis/go-redis/v9/push
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/require
+# github.com/twmb/franz-go v1.20.7
+## explicit; go 1.24.0
+github.com/twmb/franz-go/pkg/kbin
+github.com/twmb/franz-go/pkg/kerr
+github.com/twmb/franz-go/pkg/kgo
+github.com/twmb/franz-go/pkg/kgo/internal/sticky
+github.com/twmb/franz-go/pkg/kversion
+github.com/twmb/franz-go/pkg/sasl
+# github.com/twmb/franz-go/pkg/kadm v1.17.2
+## explicit; go 1.24.0
+github.com/twmb/franz-go/pkg/kadm
+# github.com/twmb/franz-go/pkg/kmsg v1.12.0
+## explicit; go 1.24.0
+github.com/twmb/franz-go/pkg/kmsg
+github.com/twmb/franz-go/pkg/kmsg/internal/kbin
+# github.com/twmb/franz-go/plugin/kotel v1.6.0
+## explicit; go 1.22.0
+github.com/twmb/franz-go/plugin/kotel
+# github.com/twmb/franz-go/plugin/kslog v1.0.0
+## explicit; go 1.21.0
+github.com/twmb/franz-go/plugin/kslog
 # github.com/xdg-go/pbkdf2 v1.0.0
 ## explicit; go 1.9
 github.com/xdg-go/pbkdf2
@@ -1239,6 +1196,7 @@ go.opentelemetry.io/otel/codes
 go.opentelemetry.io/otel/internal/baggage
 go.opentelemetry.io/otel/internal/global
 go.opentelemetry.io/otel/propagation
+go.opentelemetry.io/otel/semconv/v1.18.0
 go.opentelemetry.io/otel/semconv/v1.21.0
 go.opentelemetry.io/otel/semconv/v1.24.0
 go.opentelemetry.io/otel/semconv/v1.37.0
@@ -1313,9 +1271,8 @@ go.uber.org/atomic
 ## explicit; go 1.20
 go.uber.org/goleak
 go.uber.org/goleak/internal/stack
-# golang.org/x/crypto v0.47.0
+# golang.org/x/crypto v0.48.0
 ## explicit; go 1.24.0
-golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
@@ -1334,12 +1291,12 @@ golang.org/x/net/trace
 ## explicit; go 1.24.0
 golang.org/x/sync/errgroup
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.40.0
+# golang.org/x/sys v0.41.0
 ## explicit; go 1.24.0
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
-# golang.org/x/text v0.33.0
+# golang.org/x/text v0.34.0
 ## explicit; go 1.24.0
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform

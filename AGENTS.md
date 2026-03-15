@@ -12,7 +12,7 @@
 - Testing: all test files has the `_test.go` suffix. Specifically the integration tests have also the `integration_test.go` suffix.
 - List all tasks: `task --list` to see all available tasks with descriptions.
 - Validate Taskfile: `task validate` to verify Taskfile.yml syntax and schema.
-- Prerequisites: golangci-lint v2.11.3 must be installed locally for `task lint` and `task deeplint`. Install via: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.11.3` or see https://golangci-lint.run/welcome/install/.
+- Prerequisites: golangci-lint v2.6.1 must be installed locally for `task lint` and `task deeplint`. Install via: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.6.1` or see https://golangci-lint.run/welcome/install/.
 - Git worktrees: use `wt` to create worktrees for parallel development. Usage: `wt <branch-name>` to create a new worktree for the given branch.
 
 ## Lint configuration

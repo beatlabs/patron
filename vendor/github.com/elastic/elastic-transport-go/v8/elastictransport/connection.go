@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"math"
 	"net/url"
+	"slices"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -38,6 +39,12 @@ var (
 	_ ConnectionPool          = (*statusConnectionPool)(nil)
 	_ UpdatableConnectionPool = (*statusConnectionPool)(nil)
 	_ CloseableConnectionPool = (*statusConnectionPool)(nil)
+	_ ConnectionPool          = (*synchronizedPool)(nil)
+	_ CloseableConnectionPool = (*synchronizedPool)(nil)
+	_ connectionable          = (*synchronizedPool)(nil)
+	_ ConnectionPool          = (*synchronizedUpdatablePool)(nil)
+	_ CloseableConnectionPool = (*synchronizedUpdatablePool)(nil)
+	_ UpdatableConnectionPool = (*synchronizedUpdatablePool)(nil)
 	_ Selector                = (*roundRobinSelector)(nil)
 )
 
@@ -58,9 +65,105 @@ type UpdatableConnectionPool interface {
 	Update([]*Connection) error // Update injects newly found nodes in the cluster.
 }
 
+// ConcurrentSafeConnectionPool marks a custom pool as safe for concurrent use
+// by the transport. Pools returned by ConnectionPoolFunc that implement this
+// interface are not wrapped by synchronizedPool.
+type ConcurrentSafeConnectionPool interface {
+	ConnectionPool
+	ConcurrentSafe()
+}
+
 // CloseableConnectionPool defines the interface for the connection pool that can be closed.
 type CloseableConnectionPool interface {
 	Close(context.Context) error
+}
+
+// synchronizedPool wraps a ConnectionPool with a mutex to serialize all method
+// calls. Used to wrap user-provided pools from ConnectionPoolFunc that may not
+// be safe for concurrent use.
+//
+// Use newSynchronizedPool to construct; it returns a synchronizedUpdatablePool
+// when the inner pool implements UpdatableConnectionPool.
+type synchronizedPool struct {
+	mu   sync.Mutex
+	pool ConnectionPool
+}
+
+// synchronizedUpdatablePool extends synchronizedPool for inner pools that
+// support in-place updates. Discovery will prefer Update() over full pool
+// replacement when this interface is present.
+type synchronizedUpdatablePool struct {
+	synchronizedPool
+}
+
+// newSynchronizedPool wraps pool in a synchronized adapter by default.
+// ConcurrentSafeConnectionPool implementations are returned as-is.
+// If pool implements UpdatableConnectionPool the returned value will too, so
+// discovery can update the pool in place rather than replacing it.
+func newSynchronizedPool(pool ConnectionPool) ConnectionPool {
+	if _, ok := pool.(ConcurrentSafeConnectionPool); ok {
+		return pool
+	}
+
+	if _, ok := pool.(UpdatableConnectionPool); ok {
+		return &synchronizedUpdatablePool{synchronizedPool{pool: pool}}
+	}
+	return &synchronizedPool{pool: pool}
+}
+
+func (sp *synchronizedPool) Next() (*Connection, error) {
+	sp.mu.Lock()
+	defer sp.mu.Unlock()
+	return sp.pool.Next()
+}
+
+func (sp *synchronizedPool) OnSuccess(c *Connection) error {
+	sp.mu.Lock()
+	defer sp.mu.Unlock()
+	return sp.pool.OnSuccess(c)
+}
+
+func (sp *synchronizedPool) OnFailure(c *Connection) error {
+	sp.mu.Lock()
+	defer sp.mu.Unlock()
+	return sp.pool.OnFailure(c)
+}
+
+func (sp *synchronizedPool) URLs() []*url.URL {
+	sp.mu.Lock()
+	defer sp.mu.Unlock()
+	return sp.pool.URLs()
+}
+
+func (sp *synchronizedPool) Close(ctx context.Context) error {
+	sp.mu.Lock()
+	cp, ok := sp.pool.(CloseableConnectionPool)
+	sp.mu.Unlock()
+	if !ok {
+		return nil
+	}
+	// Avoid holding the wrapper lock during close; in-flight callbacks also take
+	// this lock and may need to complete before the inner pool can fully close.
+	return cp.Close(ctx)
+}
+
+func (sp *synchronizedPool) connections() []*Connection {
+	sp.mu.Lock()
+	defer sp.mu.Unlock()
+	if cp, ok := sp.pool.(connectionable); ok {
+		return cp.connections()
+	}
+	return nil
+}
+
+func (sp *synchronizedUpdatablePool) Update(conns []*Connection) error {
+	sp.mu.Lock()
+	defer sp.mu.Unlock()
+	up, ok := sp.pool.(UpdatableConnectionPool)
+	if !ok {
+		return fmt.Errorf("inner pool %T does not implement UpdatableConnectionPool", sp.pool)
+	}
+	return up.Update(conns)
 }
 
 // Connection represents a connection to a node.
@@ -108,9 +211,11 @@ type statusConnectionPool struct {
 }
 
 type roundRobinSelector struct {
-	sync.Mutex
+	curr uint64 // Atomic counter for next connection index
+}
 
-	curr int // Index of the current connection
+func newRoundRobinSelector() *roundRobinSelector {
+	return &roundRobinSelector{curr: math.MaxUint64}
 }
 
 // NewConnectionPool creates and returns a default connection pool.
@@ -119,9 +224,9 @@ func NewConnectionPool(conns []*Connection, selector Selector) (ConnectionPool, 
 		return &singleConnectionPool{connection: conns[0]}, nil
 	}
 	if selector == nil {
-		selector = &roundRobinSelector{curr: -1}
+		selector = newRoundRobinSelector()
 	}
-	return &statusConnectionPool{live: conns, selector: selector, closeC: make(chan struct{})}, nil
+	return &statusConnectionPool{live: slices.Clone(conns), selector: selector, closeC: make(chan struct{})}, nil
 }
 
 // Next returns the connection from pool.
@@ -154,10 +259,13 @@ func (cp *statusConnectionPool) Next() (*Connection, error) {
 	} else if len(cp.dead) > 0 {
 		// No live connection is available, resurrect one of the dead ones.
 		c := cp.dead[len(cp.dead)-1]
-		cp.dead = cp.dead[:len(cp.dead)-1]
+		cp.dead = slices.Delete(cp.dead, len(cp.dead)-1, len(cp.dead))
 		c.Lock()
 		defer c.Unlock()
-		cp.resurrect(c, false)
+		err := cp.resurrect(c, false)
+		if err != nil {
+			return nil, err
+		}
 		return c, nil
 	}
 	return nil, errors.New("no connection available")
@@ -196,14 +304,14 @@ func (cp *statusConnectionPool) OnFailure(c *Connection) error {
 
 	if c.IsDead {
 		if debugLogger != nil {
-			debugLogger.Logf("Already removed %s\n", c.URL)
+			_ = debugLogger.Logf("Already removed %s\n", c.URL)
 		}
 		c.Unlock()
 		return nil
 	}
 
 	if debugLogger != nil {
-		debugLogger.Logf("Removing %s...\n", c.URL)
+		_ = debugLogger.Logf("Removing %s...\n", c.URL)
 	}
 	c.markAsDead()
 	cp.scheduleResurrect(c)
@@ -230,16 +338,16 @@ func (cp *statusConnectionPool) OnFailure(c *Connection) error {
 		return res
 	})
 
-	// Remove item; https://github.com/golang/go/wiki/SliceTricks
-	copy(cp.live[index:], cp.live[index+1:])
-	cp.live = cp.live[:len(cp.live)-1]
+	cp.live = slices.Delete(cp.live, index, index+1)
 
 	return nil
 }
 
 // Update merges the existing live and dead connections with the latest nodes discovered from the cluster.
-// ConnectionPool must be locked before calling.
 func (cp *statusConnectionPool) Update(connections []*Connection) error {
+	cp.Lock()
+	defer cp.Unlock()
+
 	if len(connections) == 0 {
 		return errors.New("no connections provided, connection pool left untouched")
 	}
@@ -255,9 +363,7 @@ func (cp *statusConnectionPool) Update(connections []*Connection) error {
 		}
 
 		if !found {
-			// Remove item; https://github.com/golang/go/wiki/SliceTricks
-			copy(cp.live[i:], cp.live[i+1:])
-			cp.live = cp.live[:len(cp.live)-1]
+			cp.live = slices.Delete(cp.live, i, i+1)
 			i--
 		}
 	}
@@ -273,8 +379,7 @@ func (cp *statusConnectionPool) Update(connections []*Connection) error {
 		}
 
 		if !found {
-			copy(cp.dead[i:], cp.dead[i+1:])
-			cp.dead = cp.dead[:len(cp.dead)-1]
+			cp.dead = slices.Delete(cp.dead, i, i+1)
 			i--
 		}
 	}
@@ -355,7 +460,9 @@ func (cp *statusConnectionPool) isClosed() bool {
 }
 
 func (cp *statusConnectionPool) connections() []*Connection {
-	var conns []*Connection
+	cp.Lock()
+	defer cp.Unlock()
+	conns := make([]*Connection, 0, len(cp.live)+len(cp.dead))
 	conns = append(conns, cp.live...)
 	conns = append(conns, cp.dead...)
 	return conns
@@ -366,7 +473,7 @@ func (cp *statusConnectionPool) connections() []*Connection {
 // The calling code is responsible for locking.
 func (cp *statusConnectionPool) resurrect(c *Connection, removeDead bool) error {
 	if debugLogger != nil {
-		debugLogger.Logf("Resurrecting %s\n", c.URL)
+		_ = debugLogger.Logf("Resurrecting %s\n", c.URL)
 	}
 
 	c.markAsLive()
@@ -380,9 +487,7 @@ func (cp *statusConnectionPool) resurrect(c *Connection, removeDead bool) error 
 			}
 		}
 		if index >= 0 {
-			// Remove item; https://github.com/golang/go/wiki/SliceTricks
-			copy(cp.dead[index:], cp.dead[index+1:])
-			cp.dead = cp.dead[:len(cp.dead)-1]
+			cp.dead = slices.Delete(cp.dead, index, index+1)
 		}
 	}
 
@@ -394,7 +499,7 @@ func (cp *statusConnectionPool) scheduleResurrect(c *Connection) {
 	factor := math.Min(float64(c.Failures-1), float64(defaultResurrectTimeoutFactorCutoff))
 	timeout := time.Duration(defaultResurrectTimeoutInitial.Seconds() * math.Exp2(factor) * float64(time.Second))
 	if debugLogger != nil {
-		debugLogger.Logf("Resurrect %s (failures=%d, factor=%1.1f, timeout=%s) in %s\n", c.URL, c.Failures, factor, timeout, c.DeadSince.Add(timeout).Sub(time.Now().UTC()).Truncate(time.Second))
+		_ = debugLogger.Logf("Resurrect %s (failures=%d, factor=%1.1f, timeout=%s) in %s\n", c.URL, c.Failures, factor, timeout, c.DeadSince.Add(timeout).Sub(time.Now().UTC()).Truncate(time.Second))
 	}
 
 	cp.resurrectWaitGroup.Add(1)
@@ -413,12 +518,15 @@ func (cp *statusConnectionPool) scheduleResurrect(c *Connection) {
 
 			if !c.IsDead {
 				if debugLogger != nil {
-					debugLogger.Logf("Already resurrected %s\n", c.URL)
+					_ = debugLogger.Logf("Already resurrected %s\n", c.URL)
 				}
 				return
 			}
 
-			cp.resurrect(c, true)
+			err := cp.resurrect(c, true)
+			if err != nil {
+				return
+			}
 		case <-cp.closeC:
 			return
 		}
@@ -427,11 +535,8 @@ func (cp *statusConnectionPool) scheduleResurrect(c *Connection) {
 
 // Select returns the connection in a round-robin fashion.
 func (s *roundRobinSelector) Select(conns []*Connection) (*Connection, error) {
-	s.Lock()
-	defer s.Unlock()
-
-	s.curr = (s.curr + 1) % len(conns)
-	return conns[s.curr], nil
+	index := atomic.AddUint64(&s.curr, 1) % uint64(len(conns))
+	return conns[int(index)], nil
 }
 
 // markAsDead marks the connection as dead.

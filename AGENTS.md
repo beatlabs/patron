@@ -1,82 +1,197 @@
 # AGENTS
 
+**Generated:** 2026-04-02 | **Commit:** cea3379a2 | **Branch:** master
+
+## Overview
+
+Go microservice framework (`github.com/beatlabs/patron`, Go 1.24). Component-based architecture: `Service` orchestrates lifecycle + observability; `Component` implementations handle sync/async processing; `client/` wraps external services. 153 source files, ~21K LOC.
+
+## Structure
+
+```
+patron/
+├── service.go, options.go, doc.go    # Service entry point + functional options
+├── component/                        # Server-side processing (see component/http/AGENTS.md)
+│   ├── http/                         # HTTP server (routes, middleware, cache, auth, router)
+│   ├── kafka/                        # Kafka consumer (franz-go)
+│   ├── amqp/                         # RabbitMQ consumer (amqp091-go)
+│   ├── grpc/                         # gRPC server
+│   └── sqs/                          # AWS SQS consumer
+├── client/                           # Client wrappers (see client/AGENTS.md)
+│   ├── http/, grpc/, kafka/, amqp/   # Protocol clients
+│   ├── sqs/, sns/                    # AWS clients (SDK v2)
+│   ├── sql/, redis/, mongo/, es/     # Data store clients
+│   └── mqtt/                         # MQTT publisher
+├── observability/                    # OTel setup (see observability/AGENTS.md)
+│   ├── log/                          # slog helpers
+│   ├── trace/                        # Tracing helpers
+│   └── metric/                       # Metrics helpers
+├── cache/                            # Cache interfaces + impls (see cache/AGENTS.md)
+├── reliability/                      # Circuit breaker + retry (see reliability/AGENTS.md)
+├── correlation/                      # X-Correlation-Id propagation
+├── encoding/                         # JSON + protobuf codecs
+├── examples/                         # Service + client examples (e2e tested in CI)
+├── internal/                         # Test helpers + validation utils
+└── docs/                             # API docs per component/client
+```
+
+## Where to look
+
+| Task | Location | Notes |
+|------|----------|-------|
+| Add new component | `component/<protocol>/` | Implement `Component` interface (`Run(ctx) error`) |
+| Add new client | `client/<service>/` | Follow functional options pattern, add OTel instrumentation |
+| HTTP routes/middleware | `component/http/` | See `component/http/AGENTS.md` |
+| Observability changes | `observability/` | See `observability/AGENTS.md` |
+| Cache implementations | `cache/` | See `cache/AGENTS.md` |
+| Reliability patterns | `reliability/` | See `reliability/AGENTS.md` |
+| Breaking changes | `BREAKING.md` | Document migration path |
+| CI pipeline | `.github/workflows/ci.yml` | Lint → format check → integration tests → e2e |
+
+## Code map
+
+| Symbol | Type | Location | Role |
+|--------|------|----------|------|
+| `Service` | struct | `service.go:31` | Orchestrates components + observability lifecycle |
+| `Component` | interface | `service.go:25` | `Run(context.Context) error` — all components implement this |
+| `New` | func | `service.go:41` | `patron.New(name, version, opts...)` — creates Service |
+| `OptionFunc` | func | `options.go:9` | Functional option pattern for Service config |
+| `WithSIGHUP` | func | `options.go:12` | Register SIGHUP handler |
+| `WithLogFields` | func | `options.go:26` | Add default log fields |
+| `WithJSONLogger` | func | `options.go:46` | Switch to JSON log output |
+
+## Commands
+
+```bash
+task                  # Run tests (default)
+task test             # go test ./... -cover -race -timeout 60s
+task testint          # Integration tests (-tags=integration), needs `task deps-start`
+task lint             # golangci-lint (requires v2.6.1 installed)
+task deeplint         # Deep lint analysis
+task fmt              # go fmt
+task fmtcheck         # Check formatting (CI uses this)
+task deps-start       # Docker Compose up (Kafka, RabbitMQ, MySQL, etc.)
+task deps-stop        # Docker Compose down
+task example-service  # Run example service
+task example-client   # Run example client
+task validate         # Validate Taskfile.yml
+task --list           # List all available tasks
+```
+
 ## Build, test, and development workflows
 
-- Build: `task` (default runs tests). Format: `task fmt` (go fmt). Format check: `task fmtcheck` (script/gofmtcheck.sh). Lint: `task lint` (golangci-lint CLI with vendor mode); deep lint: `task deeplint`.
-- Test all: `task test` → `go test ./... -cover -race -timeout 60s`. Integration tests: `task testint` (or `task testint-nocache`). CI runs with `-tags=integration` excluding `examples` and `encoding/protobuf/test`.
-- Run single test: replace with your package/path and test name:
-  - By name: `go test ./path/to/pkg -run ^TestName$ -v -race`.
-  - By file: `go test ./path/to/pkg -run ^TestName$ -v -race ./path/to/pkg/file_test.go` (Go filters by package; prefer -run). With integration tags: add `-tags=integration`.
-- Useful env/deps: start external deps for integrations via `task deps-start` (docker compose); stop via `task deps-stop`. Example apps: `task example-service`, `task example-client` (OTEL_EXPORTER_OTLP_INSECURE=true).
-- CI: `.github/workflows/ci.yml` validates Taskfile, runs lint via golangci-lint-action, format check, tests with integration tags, and e2e example tests. Codecov integration enabled.
-- Testing: all test files has the `_test.go` suffix. Specifically the integration tests have also the `integration_test.go` suffix.
-- List all tasks: `task --list` to see all available tasks with descriptions.
-- Validate Taskfile: `task validate` to verify Taskfile.yml syntax and schema.
-- Prerequisites: golangci-lint v2.6.1 must be installed locally for `task lint` and `task deeplint`. Install via: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.6.1` or see https://golangci-lint.run/welcome/install/.
-- Git worktrees: use `wt` to create worktrees for parallel development. Usage: `wt <branch-name>` to create a new worktree for the given branch.
+- Single test: `go test ./path/to/pkg -run ^TestName$ -v -race`. Integration: add `-tags=integration`.
+- Test files: `*_test.go` (unit), `*_integration_test.go` (integration with `//go:build integration`).
+- goleak in `TestMain` for goroutine leak detection; testify `assert`/`require` for assertions.
+- CI: `.github/workflows/ci.yml` — validates Taskfile, lint, format check, integration tests (excludes `examples` and `encoding/protobuf/test`), e2e example tests. Codecov enabled.
+- Prerequisites: golangci-lint v2.6.1. Install: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.6.1`.
+- Git worktrees: `wt <branch-name>` for parallel development.
 
 ## Lint configuration
 
-- Lint config (.golangci.yml): enables errcheck, errorlint, revive, staticcheck, govet, gosec, sqlclosecheck, rowserrcheck, exhaustive, prealloc, whitespace, sloglint, spancheck, testifylint, and more. Build tag `integration` enabled; vendor mode on; tests linted. Formatters: gofmt, gofumpt, goimports.
+- `.golangci.yml`: errcheck, errorlint, revive, staticcheck, govet, gosec, sqlclosecheck, rowserrcheck, exhaustive, prealloc, whitespace, sloglint, spancheck, testifylint, and more. Build tag `integration`; vendor mode; tests linted. Formatters: gofmt, gofumpt, goimports.
 
 ## Code style and conventions
 
-- Imports: standard → third-party → module-local; managed by goimports/gofumpt. No unused imports. Keep vendor modules pinned.
-- Formatting: enforce gofmt; CI fails on deviations (use `task fmt`); prefer gofumpt-compatible style. Keep lines simple; avoid long one-liners.
-- Types and naming: exported identifiers use PascalCase with doc comments; unexported use lowerCamelCase; interfaces named with -er when it makes sense; avoid stutter. Use context.Context as first param when calls may block or are request-scoped.
-- Errors: return sentinel or wrapped errors; never panic in library code; prefer `%w` with fmt.Errorf; use errors.Join when aggregating; check and handle errors (errcheck). Avoid swallowing errors; use errorlint patterns; compare errors with errors.Is/As.
-- Logging/observability: use slog via observability/log; include context-aware logging; use OpenTelemetry for tracing/metrics; avoid global mutable state.
-- Concurrency: prefer contexts, timeouts; avoid goroutine leaks; close resources (sqlclosecheck/rowserrcheck enforced). Guard shared state; avoid data races (tests run with -race).
-- Testing: use testify (assert/require); mark integration tests with `//go:build integration`; use goleak for goroutine leak detection in TestMain.
+- **Imports**: standard → third-party → module-local (goimports manages).
+- **Naming**: PascalCase exported (with doc comments), lowerCamelCase unexported, `-er` interfaces, no stutter.
+- **Errors**: sentinel or wrapped (`%w`); `errors.Join` for aggregation; `errors.Is`/`As` for comparison; never panic in library code; never swallow errors.
+- **Context**: `context.Context` as first param for blocking/request-scoped calls.
+- **Concurrency**: contexts + timeouts; no goroutine leaks; close resources; guard shared state; `-race` enforced.
+- **Functional options**: `OptionFunc` pattern for all constructors — `New(required, opts...)`.
 
-## Architecture and framework structure
+## Anti-patterns (this project)
 
-- Entry point: `Service` type in `service.go` orchestrates lifecycle, observability setup, and component execution.
-- Components: implement `Run(context.Context) error`; service runs them in goroutines and aggregates errors with `errors.Join`.
-- Default HTTP component: automatically started on service creation; exposes `/debug`, `/alive`, `/ready`, `/metrics` endpoints (see `component/http/check.go`).
-- Routes: declared using `"GET /path"` pattern with `http.HandlerFunc`; created via `http.NewRoute(path, handler, options...)`.
-- Middleware: type `middleware.Func func(next http.Handler) http.Handler`; applied via route options or router-level config.
-- Router: `component/http/router` package provides router creation with `New(options...)` returning `*http.ServeMux`; supports custom alive/ready checks, profiling, middleware, routes.
-- Service instantiation: functional options pattern via `patron.New(name, version, options...)` (since v0.74.0); see `options.go` for available options.
-
-## Components and clients
-
-- Async components: Kafka (`component/kafka`), RabbitMQ (`component/amqp`), AWS SQS (`component/sqs`).
-- Sync components: HTTP (`component/http`), gRPC (`component/grpc`).
-- Clients: HTTP (`client/http`), gRPC (`client/grpc`), Kafka (`client/kafka`), RabbitMQ (`client/amqp`), AWS SQS/SNS (`client/sqs`, `client/sns`), Redis (`client/redis`), MongoDB (`client/mongo`), SQL (`client/sql`), Elasticsearch (`client/es`), MQTT (`client/mqtt`).
-
-## Observability setup
-
-- Observability: setup via `observability.Setup` in `Service.New`; shutdown in `Service.Run` defer.
-- Logging: use `observability/log` for slog helpers; default attrs include service/version/host.
-- Tracing: use `observability/trace` helpers and OTel SDK; create resource with semconv attributes.
-- Metrics: use `observability/metric` helpers for OTel metrics.
-- Semconv: currently using `go.opentelemetry.io/otel/semconv/v1.39.0` (see `observability/observability.go`); update import path when OTel is upgraded.
-
-## Packages and utilities
-
-- Cache: `cache/` package provides `Cache` and `TTLCache` interfaces; implementations include LRU (`cache/lru`) and Redis (`cache/redis`). Context passed as first param (since v0.75.0).
-- Reliability: circuit breaker (`reliability/circuitbreaker`) and retry (`reliability/retry`) patterns with OTel metrics integration.
-- Correlation: correlation ID propagation via `correlation/` package; header `X-Correlation-Id`.
-- Encoding: JSON and protobuf encoders in `encoding/` package.
+- **Never** panic in library code — return errors.
+- **Never** use global mutable state — pass via context or constructor.
+- **Never** swallow errors — errcheck linter enforced.
+- **Never** skip `context.Context` as first param in blocking calls.
+- **Never** leave goroutines unmanaged — goleak in TestMain catches leaks.
+- **Never** use builder pattern — replaced by functional options in v0.74.0.
 
 ## Environment variables
 
-- `PATRON_HTTP_DEFAULT_PORT`: override default HTTP port (default: 50000).
-- `PATRON_HTTP_READ_TIMEOUT`: HTTP read timeout.
-- `PATRON_HTTP_WRITE_TIMEOUT`: HTTP write timeout.
-- `PATRON_HTTP_STATUS_ERROR_LOGGING`: enable/disable HTTP error logging.
-- `PATRON_LOG_LEVEL`: set log level (debug, info, warn, error).
-- `OTEL_EXPORTER_OTLP_INSECURE`: set to "true" for insecure OTLP exporter (used in examples/tests).
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `PATRON_HTTP_DEFAULT_PORT` | HTTP server port | 50000 |
+| `PATRON_HTTP_READ_TIMEOUT` | HTTP read timeout | — |
+| `PATRON_HTTP_WRITE_TIMEOUT` | HTTP write timeout | — |
+| `PATRON_HTTP_STATUS_ERROR_LOGGING` | Enable HTTP error logging | — |
+| `PATRON_LOG_LEVEL` | Log level (debug/info/warn/error) | — |
+| `OTEL_EXPORTER_OTLP_INSECURE` | Insecure OTLP exporter | false |
 
 ## Contribution workflow
 
-- Issues: use `.github/ISSUE_TEMPLATE.md`; describe problem and solution.
-- PRs: use `.github/PULL_REQUEST_TEMPLATE.md`; reference issue; sign commits (see `SIGNYOURWORK.md`); ensure tests pass; high coverage required.
+- Issues: `.github/ISSUE_TEMPLATE.md`. PRs: `.github/PULL_REQUEST_TEMPLATE.md`.
+- Sign commits (`SIGNYOURWORK.md`); high test coverage; lint-clean; CI must pass.
 - Breaking changes: document in `BREAKING.md` with migration guide.
-- Keep changes formatted and lint-clean; add tests with testify; follow `docs/ContributionGuidelines.md`; CI must pass.
+- OTel upgrades: update `semconv` import path to matching version; `go mod tidy && go mod vendor`.
 
-## Upgrade workflow
+## Subdirectory knowledge
 
-- See `.github/prompts/upgrade.prompt.md` for automated upgrade flow: create branch, upgrade modules/Docker images, test, commit, create PR, merge after CI success.
-- After OTel upgrades: update `semconv` imports to matching version; run `go mod tidy && go mod vendor`.
+| Path | AGENTS.md | Focus |
+|------|-----------|-------|
+| `component/http/` | ✅ | Routes, middleware, cache, auth, router |
+| `client/` | ✅ | Client conventions, options, instrumentation |
+| `observability/` | ✅ | OTel setup, logging, tracing, metrics |
+| `cache/` | ✅ | Cache interfaces, LRU, Redis |
+| `reliability/` | ✅ | Circuit breaker, retry |
+
+# context-mode — MANDATORY routing rules
+
+You have context-mode MCP tools available. These rules are NOT optional — they protect your context window from flooding. A single unrouted command can dump 56 KB into context and waste the entire session.
+
+## BLOCKED commands — do NOT attempt these
+
+### curl / wget — BLOCKED
+Any shell command containing `curl` or `wget` will be intercepted and blocked by the context-mode plugin. Do NOT retry.
+Instead use:
+- `context-mode_ctx_fetch_and_index(url, source)` to fetch and index web pages
+- `context-mode_ctx_execute(language: "javascript", code: "const r = await fetch(...)")` to run HTTP calls in sandbox
+
+### Inline HTTP — BLOCKED
+Any shell command containing `fetch('http`, `requests.get(`, `requests.post(`, `http.get(`, or `http.request(` will be intercepted and blocked. Do NOT retry with shell.
+Instead use:
+- `context-mode_ctx_execute(language, code)` to run HTTP calls in sandbox — only stdout enters context
+
+### Direct web fetching — BLOCKED
+Do NOT use any direct URL fetching tool. Use the sandbox equivalent.
+Instead use:
+- `context-mode_ctx_fetch_and_index(url, source)` then `context-mode_ctx_search(queries)` to query the indexed content
+
+## REDIRECTED tools — use sandbox equivalents
+
+### Shell (>20 lines output)
+Shell is ONLY for: `git`, `mkdir`, `rm`, `mv`, `cd`, `ls`, `npm install`, `pip install`, and other short-output commands.
+For everything else, use:
+- `context-mode_ctx_batch_execute(commands, queries)` — run multiple commands + search in ONE call
+- `context-mode_ctx_execute(language: "shell", code: "...")` — run in sandbox, only stdout enters context
+
+### File reading (for analysis)
+If you are reading a file to **edit** it → reading is correct (edit needs content in context).
+If you are reading to **analyze, explore, or summarize** → use `context-mode_ctx_execute_file(path, language, code)` instead. Only your printed summary enters context.
+
+### grep / search (large results)
+Search results can flood context. Use `context-mode_ctx_execute(language: "shell", code: "grep ...")` to run searches in sandbox. Only your printed summary enters context.
+
+## Tool selection hierarchy
+
+1. **GATHER**: `context-mode_ctx_batch_execute(commands, queries)` — Primary tool. Runs all commands, auto-indexes output, returns search results. ONE call replaces 30+ individual calls.
+2. **FOLLOW-UP**: `context-mode_ctx_search(queries: ["q1", "q2", ...])` — Query indexed content. Pass ALL questions as array in ONE call.
+3. **PROCESSING**: `context-mode_ctx_execute(language, code)` | `context-mode_ctx_execute_file(path, language, code)` — Sandbox execution. Only stdout enters context.
+4. **WEB**: `context-mode_ctx_fetch_and_index(url, source)` then `context-mode_ctx_search(queries)` — Fetch, chunk, index, query. Raw HTML never enters context.
+5. **INDEX**: `context-mode_ctx_index(content, source)` — Store content in FTS5 knowledge base for later search.
+
+## Output constraints
+
+- Keep responses under 500 words.
+- Write artifacts (code, configs, PRDs) to FILES — never return them as inline text. Return only: file path + 1-line description.
+- When indexing content, use descriptive source labels so others can `search(source: "label")` later.
+
+## ctx commands
+
+| Command | Action |
+|---------|--------|
+| `ctx stats` | Call the `stats` MCP tool and display the full output verbatim |
+| `ctx doctor` | Call the `doctor` MCP tool, run the returned shell command, display as checklist |
+| `ctx upgrade` | Call the `upgrade` MCP tool, run the returned shell command, display as checklist |

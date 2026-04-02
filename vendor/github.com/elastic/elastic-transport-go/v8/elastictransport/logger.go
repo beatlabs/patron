@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -34,7 +33,6 @@ import (
 var debugLogger DebuggingLogger
 
 // Logger defines an interface for logging request and response.
-//
 type Logger interface {
 	// LogRoundTrip should not modify the request or response, except for consuming and closing the body.
 	// Implementations have to check for nil values in request and response.
@@ -46,14 +44,12 @@ type Logger interface {
 }
 
 // DebuggingLogger defines the interface for a debugging logger.
-//
 type DebuggingLogger interface {
 	Log(a ...interface{}) error
 	Logf(format string, a ...interface{}) error
 }
 
 // TextLogger prints the log message in plain text.
-//
 type TextLogger struct {
 	Output             io.Writer
 	EnableRequestBody  bool
@@ -61,7 +57,6 @@ type TextLogger struct {
 }
 
 // ColorLogger prints the log message in a terminal-optimized plain text.
-//
 type ColorLogger struct {
 	Output             io.Writer
 	EnableRequestBody  bool
@@ -69,7 +64,6 @@ type ColorLogger struct {
 }
 
 // CurlLogger prints the log message as a runnable curl command.
-//
 type CurlLogger struct {
 	Output             io.Writer
 	EnableRequestBody  bool
@@ -77,7 +71,6 @@ type CurlLogger struct {
 }
 
 // JSONLogger prints the log message as JSON.
-//
 type JSONLogger struct {
 	Output             io.Writer
 	EnableRequestBody  bool
@@ -85,15 +78,13 @@ type JSONLogger struct {
 }
 
 // debuggingLogger prints debug messages as plain text.
-//
 type debuggingLogger struct {
 	Output io.Writer
 }
 
 // LogRoundTrip prints the information about request and response.
-//
 func (l *TextLogger) LogRoundTrip(req *http.Request, res *http.Response, err error, start time.Time, dur time.Duration) error {
-	fmt.Fprintf(l.Output, "%s %s %s [status:%d request:%s]\n",
+	_, _ = fmt.Fprintf(l.Output, "%s %s %s [status:%d request:%s]\n",
 		start.Format(time.RFC3339),
 		req.Method,
 		req.URL.String(),
@@ -104,20 +95,20 @@ func (l *TextLogger) LogRoundTrip(req *http.Request, res *http.Response, err err
 		var buf bytes.Buffer
 		if req.GetBody != nil {
 			b, _ := req.GetBody()
-			buf.ReadFrom(b)
+			_, _ = buf.ReadFrom(b)
 		} else {
-			buf.ReadFrom(req.Body)
+			_, _ = buf.ReadFrom(req.Body)
 		}
 		logBodyAsText(l.Output, &buf, ">")
 	}
 	if l.ResponseBodyEnabled() && res != nil && res.Body != nil && res.Body != http.NoBody {
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		var buf bytes.Buffer
-		buf.ReadFrom(res.Body)
+		_, _ = buf.ReadFrom(res.Body)
 		logBodyAsText(l.Output, &buf, "<")
 	}
 	if err != nil {
-		fmt.Fprintf(l.Output, "! ERROR: %v\n", err)
+		_, _ = fmt.Fprintf(l.Output, "! ERROR: %v\n", err)
 	}
 	return nil
 }
@@ -129,7 +120,6 @@ func (l *TextLogger) RequestBodyEnabled() bool { return l.EnableRequestBody }
 func (l *TextLogger) ResponseBodyEnabled() bool { return l.EnableResponseBody }
 
 // LogRoundTrip prints the information about request and response.
-//
 func (l *ColorLogger) LogRoundTrip(req *http.Request, res *http.Response, err error, start time.Time, dur time.Duration) error {
 	query, _ := url.QueryUnescape(req.URL.RawQuery)
 	if query != "" {
@@ -154,7 +144,7 @@ func (l *ColorLogger) LogRoundTrip(req *http.Request, res *http.Response, err er
 		color = "\x1b[31;4m"
 	}
 
-	fmt.Fprintf(l.Output, "%6s \x1b[1;4m%s://%s%s\x1b[0m%s %s%s\x1b[0m \x1b[2m%s\x1b[0m\n",
+	_, _ = fmt.Fprintf(l.Output, "%6s \x1b[1;4m%s://%s%s\x1b[0m%s %s%s\x1b[0m \x1b[2m%s\x1b[0m\n",
 		req.Method,
 		req.URL.Scheme,
 		req.URL.Host,
@@ -169,30 +159,30 @@ func (l *ColorLogger) LogRoundTrip(req *http.Request, res *http.Response, err er
 		var buf bytes.Buffer
 		if req.GetBody != nil {
 			b, _ := req.GetBody()
-			buf.ReadFrom(b)
+			_, _ = buf.ReadFrom(b)
 		} else {
-			buf.ReadFrom(req.Body)
+			_, _ = buf.ReadFrom(req.Body)
 		}
-		fmt.Fprint(l.Output, "\x1b[2m")
+		_, _ = fmt.Fprint(l.Output, "\x1b[2m")
 		logBodyAsText(l.Output, &buf, "       »")
-		fmt.Fprint(l.Output, "\x1b[0m")
+		_, _ = fmt.Fprint(l.Output, "\x1b[0m")
 	}
 
 	if l.ResponseBodyEnabled() && res != nil && res.Body != nil && res.Body != http.NoBody {
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		var buf bytes.Buffer
-		buf.ReadFrom(res.Body)
-		fmt.Fprint(l.Output, "\x1b[2m")
+		_, _ = buf.ReadFrom(res.Body)
+		_, _ = fmt.Fprint(l.Output, "\x1b[2m")
 		logBodyAsText(l.Output, &buf, "       «")
-		fmt.Fprint(l.Output, "\x1b[0m")
+		_, _ = fmt.Fprint(l.Output, "\x1b[0m")
 	}
 
 	if err != nil {
-		fmt.Fprintf(l.Output, "\x1b[31;1m» ERROR \x1b[31m%v\x1b[0m\n", err)
+		_, _ = fmt.Fprintf(l.Output, "\x1b[31;1m» ERROR \x1b[31m%v\x1b[0m\n", err)
 	}
 
 	if l.RequestBodyEnabled() || l.ResponseBodyEnabled() {
-		fmt.Fprintf(l.Output, "\x1b[2m%s\x1b[0m\n", strings.Repeat("─", 80))
+		_, _ = fmt.Fprintf(l.Output, "\x1b[2m%s\x1b[0m\n", strings.Repeat("─", 80))
 	}
 	return nil
 }
@@ -204,7 +194,6 @@ func (l *ColorLogger) RequestBodyEnabled() bool { return l.EnableRequestBody }
 func (l *ColorLogger) ResponseBodyEnabled() bool { return l.EnableResponseBody }
 
 // LogRoundTrip prints the information about request and response.
-//
 func (l *CurlLogger) LogRoundTrip(req *http.Request, res *http.Response, err error, start time.Time, dur time.Duration) error {
 	var b bytes.Buffer
 
@@ -226,7 +215,7 @@ func (l *CurlLogger) LogRoundTrip(req *http.Request, res *http.Response, err err
 	if req.Method == "HEAD" {
 		b.WriteString(" --head")
 	} else {
-		fmt.Fprintf(&b, " -X %s", req.Method)
+		_, _ = fmt.Fprintf(&b, " -X %s", req.Method)
 	}
 
 	if len(req.Header) > 0 {
@@ -235,57 +224,56 @@ func (l *CurlLogger) LogRoundTrip(req *http.Request, res *http.Response, err err
 				continue
 			}
 			v := strings.Join(vv, ",")
-			b.WriteString(fmt.Sprintf(" -H '%s: %s'", k, v))
+			fmt.Fprintf(&b, " -H '%s: %s'", k, v)
 		}
 	}
 
 	b.WriteString(" '")
-	b.WriteString(req.URL.Scheme)
+	b.WriteString(req.URL.Scheme) //nolint:staticcheck
 	b.WriteString("://")
-	b.WriteString(req.URL.Host)
-	b.WriteString(req.URL.Path)
+	b.WriteString(req.URL.Host) //nolint:staticcheck
+	b.WriteString(req.URL.Path) //nolint:staticcheck
 	b.WriteString("?pretty")
 	if query != "" {
-		fmt.Fprintf(&b, "&%s", query)
+		_, _ = fmt.Fprintf(&b, "&%s", query)
 	}
 	b.WriteString("'")
 
-	if req != nil && req.Body != nil && req.Body != http.NoBody {
+	if req.Body != nil && req.Body != http.NoBody {
 		var buf bytes.Buffer
 		if req.GetBody != nil {
 			b, _ := req.GetBody()
-			buf.ReadFrom(b)
+			_, _ = buf.ReadFrom(b)
 		} else {
-			buf.ReadFrom(req.Body)
+			_, _ = buf.ReadFrom(req.Body)
 		}
 
 		b.Grow(buf.Len())
 		b.WriteString(" -d \\\n'")
-		json.Indent(&b, buf.Bytes(), "", " ")
+		_ = json.Indent(&b, buf.Bytes(), "", " ")
 		b.WriteString("'")
 	}
 
 	b.WriteRune('\n')
 
-	var status string
-	status = res.Status
+	var status = res.Status
 
-	fmt.Fprintf(&b, "# => %s [%s] %s\n", start.UTC().Format(time.RFC3339), status, dur.Truncate(time.Millisecond))
-	if l.ResponseBodyEnabled() && res != nil && res.Body != nil && res.Body != http.NoBody {
+	_, _ = fmt.Fprintf(&b, "# => %s [%s] %s\n", start.UTC().Format(time.RFC3339), status, dur.Truncate(time.Millisecond))
+	if l.ResponseBodyEnabled() && res.Body != nil && res.Body != http.NoBody {
 		var buf bytes.Buffer
-		buf.ReadFrom(res.Body)
+		_, _ = buf.ReadFrom(res.Body)
 
 		b.Grow(buf.Len())
 		b.WriteString("# ")
-		json.Indent(&b, buf.Bytes(), "# ", " ")
+		_ = json.Indent(&b, buf.Bytes(), "# ", " ")
 	}
 
 	b.WriteString("\n")
-	if l.ResponseBodyEnabled() && res != nil && res.Body != nil && res.Body != http.NoBody {
+	if l.ResponseBodyEnabled() && res.Body != nil && res.Body != http.NoBody {
 		b.WriteString("\n")
 	}
 
-	b.WriteTo(l.Output)
+	_, _ = b.WriteTo(l.Output)
 
 	return nil
 }
@@ -297,7 +285,6 @@ func (l *CurlLogger) RequestBodyEnabled() bool { return l.EnableRequestBody }
 func (l *CurlLogger) ResponseBodyEnabled() bool { return l.EnableResponseBody }
 
 // LogRoundTrip prints the information about request and response.
-//
 func (l *JSONLogger) LogRoundTrip(req *http.Request, res *http.Response, err error, start time.Time, dur time.Duration) error {
 	// https://github.com/elastic/ecs/blob/master/schemas/http.yml
 	//
@@ -362,9 +349,9 @@ func (l *JSONLogger) LogRoundTrip(req *http.Request, res *http.Response, err err
 		var buf bytes.Buffer
 		if req.GetBody != nil {
 			b, _ := req.GetBody()
-			buf.ReadFrom(b)
+			_, _ = buf.ReadFrom(b)
 		} else {
-			buf.ReadFrom(req.Body)
+			_, _ = buf.ReadFrom(req.Body)
 		}
 
 		b.Grow(buf.Len() + 8)
@@ -377,9 +364,9 @@ func (l *JSONLogger) LogRoundTrip(req *http.Request, res *http.Response, err err
 	b.WriteString(`"status_code":`)
 	appendInt(int64(resStatusCode(res)))
 	if l.ResponseBodyEnabled() && res != nil && res.Body != nil && res.Body != http.NoBody {
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		var buf bytes.Buffer
-		buf.ReadFrom(res.Body)
+		_, _ = buf.ReadFrom(res.Body)
 
 		b.Grow(buf.Len() + 8)
 		b.WriteString(`,"body":`)
@@ -395,7 +382,7 @@ func (l *JSONLogger) LogRoundTrip(req *http.Request, res *http.Response, err err
 	}
 	b.WriteRune('}')
 	b.WriteRune('\n')
-	b.WriteTo(l.Output)
+	_, _ = b.WriteTo(l.Output)
 
 	return nil
 }
@@ -407,14 +394,12 @@ func (l *JSONLogger) RequestBodyEnabled() bool { return l.EnableRequestBody }
 func (l *JSONLogger) ResponseBodyEnabled() bool { return l.EnableResponseBody }
 
 // Log prints the arguments to output in default format.
-//
 func (l *debuggingLogger) Log(a ...interface{}) error {
 	_, err := fmt.Fprint(l.Output, a...)
 	return err
 }
 
 // Logf prints formats the arguments and prints them to output.
-//
 func (l *debuggingLogger) Logf(format string, a ...interface{}) error {
 	_, err := fmt.Fprintf(l.Output, format, a...)
 	return err
@@ -425,7 +410,7 @@ func logBodyAsText(dst io.Writer, body io.Reader, prefix string) {
 	for scanner.Scan() {
 		s := scanner.Text()
 		if s != "" {
-			fmt.Fprintf(dst, "%s %s\n", prefix, s)
+			_, _ = fmt.Fprintf(dst, "%s %s\n", prefix, s)
 		}
 	}
 }
@@ -438,11 +423,11 @@ func duplicateBody(body io.ReadCloser) (io.ReadCloser, io.ReadCloser, error) {
 	)
 	_, err := b1.ReadFrom(tr)
 	if err != nil {
-		return ioutil.NopCloser(io.MultiReader(&b1, errorReader{err: err})), ioutil.NopCloser(io.MultiReader(&b2, errorReader{err: err})), err
+		return io.NopCloser(io.MultiReader(&b1, errorReader{err: err})), io.NopCloser(io.MultiReader(&b2, errorReader{err: err})), err
 	}
-	defer func() { body.Close() }()
+	defer func() { _ = body.Close() }()
 
-	return ioutil.NopCloser(&b1), ioutil.NopCloser(&b2), nil
+	return io.NopCloser(&b1), io.NopCloser(&b2), nil
 }
 
 func resStatusCode(res *http.Response) int {

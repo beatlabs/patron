@@ -20,8 +20,10 @@ package elastictransport
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"sort"
@@ -70,7 +72,7 @@ func (c *Client) DiscoverNodesContext(ctx context.Context) error {
 	nodes, err := c.getNodesInfo(ctx)
 	if err != nil {
 		if debugLogger != nil {
-			debugLogger.Logf("Error getting nodes info: %s\n", err)
+			_ = debugLogger.Logf("Error getting nodes info: %s\n", err)
 		}
 		return fmt.Errorf("discovery: get nodes: %w", err)
 	}
@@ -92,7 +94,7 @@ func (c *Client) DiscoverNodesContext(ctx context.Context) error {
 			if isMasterOnlyNode {
 				skip = "; [SKIP]"
 			}
-			debugLogger.Logf("Discovered node [%s]; %s; roles=%s%s\n", node.Name, node.URL, node.Roles, skip)
+			_ = debugLogger.Logf("Discovered node [%s]; %s; roles=%s%s\n", node.Name, node.URL, node.Roles, skip)
 		}
 
 		// Skip master only nodes
@@ -110,29 +112,30 @@ func (c *Client) DiscoverNodesContext(ctx context.Context) error {
 		})
 	}
 
-	c.Lock()
-	defer c.Unlock()
+	c.poolMu.Lock()
+	defer c.poolMu.Unlock()
 
-	if lockable, ok := c.pool.(sync.Locker); ok {
-		lockable.Lock()
-		defer lockable.Unlock()
+	if c.isClosed() {
+		return ErrClosed
+	}
+
+	if len(conns) == 0 {
+		if debugLogger != nil {
+			_ = debugLogger.Logf("No eligible nodes discovered; pool left untouched\n")
+		}
+		return nil
+	}
+
+	if p, ok := c.pool.(UpdatableConnectionPool); ok {
+		return p.Update(conns)
 	}
 
 	if c.poolFunc != nil {
-		c.pool = c.poolFunc(conns, c.selector)
+		c.pool = newSynchronizedPool(c.poolFunc(conns, c.selector))
 	} else {
-		if p, ok := c.pool.(UpdatableConnectionPool); ok {
-			err = p.Update(conns)
-			if err != nil {
-				if debugLogger != nil {
-					debugLogger.Logf("Error updating pool: %s\n", err)
-				}
-			}
-		} else {
-			c.pool, err = NewConnectionPool(conns, c.selector)
-			if err != nil {
-				return err
-			}
+		c.pool, err = NewConnectionPool(conns, c.selector)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -140,6 +143,10 @@ func (c *Client) DiscoverNodesContext(ctx context.Context) error {
 }
 
 func (c *Client) getNodesInfo(ctx context.Context) ([]nodeInfo, error) {
+	if len(c.urls) == 0 {
+		return nil, errors.New("no URLs configured")
+	}
+
 	var (
 		out    []nodeInfo
 		scheme = c.urls[0].Scheme
@@ -156,9 +163,8 @@ func (c *Client) getNodesInfo(ctx context.Context) ([]nodeInfo, error) {
 		return out, err
 	}
 
-	c.Lock()
-	conn, err := c.pool.Next()
-	c.Unlock()
+	pool := c.snapshotPool()
+	conn, err := pool.Next()
 	// TODO(karmi): If no connection is returned, fallback to original URLs
 	if err != nil {
 		return out, err
@@ -173,10 +179,17 @@ func (c *Client) getNodesInfo(ctx context.Context) ([]nodeInfo, error) {
 	if err != nil {
 		return out, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			if debugLogger != nil {
+				_ = debugLogger.Logf("Error closing response body: %s\n", err)
+			}
+		}
+	}(res.Body)
 
 	if res.StatusCode > 200 {
-		body, _ := ioutil.ReadAll(res.Body)
+		body, _ := io.ReadAll(res.Body)
 		return out, fmt.Errorf("server error: %s: %s", res.Status, body)
 	}
 
@@ -200,27 +213,28 @@ func (c *Client) getNodesInfo(ctx context.Context) ([]nodeInfo, error) {
 }
 
 func (c *Client) getNodeURL(node nodeInfo, scheme string) *url.URL {
-	var (
-		host string
-		port string
+	addr := node.HTTP.PublishAddress
+	var host string
 
-		addrs = strings.Split(node.HTTP.PublishAddress, "/")
-		ports = strings.Split(node.HTTP.PublishAddress, ":")
-	)
-
-	if len(addrs) > 1 {
-		host = addrs[0]
-	} else {
-		host = strings.Split(addrs[0], ":")[0]
+	// Elasticsearch publish_address may use "hostname/address:port" format.
+	if idx := strings.IndexByte(addr, '/'); idx >= 0 {
+		host = addr[:idx]
+		addr = addr[idx+1:]
 	}
-	port = ports[len(ports)-1]
 
-	u := &url.URL{
+	addrHost, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return &url.URL{Scheme: scheme, Host: addr}
+	}
+
+	if host == "" {
+		host = addrHost
+	}
+
+	return &url.URL{
 		Scheme: scheme,
-		Host:   host + ":" + port,
+		Host:   net.JoinHostPort(host, port),
 	}
-
-	return u
 }
 
 func (c *Client) scheduleDiscoverNodes(d time.Duration) {
@@ -245,7 +259,9 @@ func (c *Client) scheduleDiscoverNodes(d time.Duration) {
 					ctx, cancel := context.WithTimeout(ctx, d)
 					defer cancel()
 					if err := c.DiscoverNodesContext(ctx); err != nil {
-						// TODO: handle error
+						if debugLogger != nil {
+							_ = debugLogger.Logf("Error discovering nodes: %s\n", err)
+						}
 					}
 				}()
 			}

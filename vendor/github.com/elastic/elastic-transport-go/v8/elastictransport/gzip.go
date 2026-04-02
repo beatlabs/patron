@@ -25,6 +25,11 @@ import (
 	"sync"
 )
 
+type reusablePool interface {
+	Get() any
+	Put(any)
+}
+
 type gzipCompressor interface {
 	// compress compresses the given io.ReadCloser and returns the gzip compressed data as a bytes.Buffer.
 	compress(io.ReadCloser) (*bytes.Buffer, error)
@@ -66,7 +71,7 @@ func (sg *simpleGzipCompressor) collectBuffer(buf *bytes.Buffer) {
 
 type pooledGzipCompressor struct {
 	gzipWriterPool   *sync.Pool
-	bufferPool       *sync.Pool
+	bufferPool       reusablePool
 	compressionLevel int
 }
 
@@ -102,21 +107,22 @@ func newPooledGzipCompressor(compressionLevel int) gzipCompressor {
 
 func (pg *pooledGzipCompressor) compress(rc io.ReadCloser) (*bytes.Buffer, error) {
 	writer := pg.gzipWriterPool.Get().(*gzipWriter)
-	defer pg.gzipWriterPool.Put(writer)
-
 	if writer.err != nil {
 		return nil, fmt.Errorf("failed setting up up compress request body (level %d): %s",
 			pg.compressionLevel, writer.err)
 	}
+	defer pg.gzipWriterPool.Put(writer)
 
 	buf := pg.bufferPool.Get().(*bytes.Buffer)
 	buf.Reset()
 	writer.writer.Reset(buf)
 
 	if _, err := io.Copy(writer.writer, rc); err != nil {
+		pg.bufferPool.Put(buf)
 		return nil, fmt.Errorf("failed to compress request body: %s", err)
 	}
 	if err := writer.writer.Close(); err != nil {
+		pg.bufferPool.Put(buf)
 		return nil, fmt.Errorf("failed to compress request body (during close): %s", err)
 	}
 	return buf, nil

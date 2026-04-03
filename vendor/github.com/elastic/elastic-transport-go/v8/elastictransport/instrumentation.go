@@ -142,14 +142,14 @@ func (i ElasticsearchOpenTelemetry) shouldRecordRequestBody(endpoint string) boo
 // RecordRequestBody add the db.statement attributes only for search endpoints.
 // Returns a new reader if the query has been recorded, nil otherwise.
 func (i ElasticsearchOpenTelemetry) RecordRequestBody(ctx context.Context, endpoint string, query io.Reader) io.ReadCloser {
-	if i.shouldRecordRequestBody(endpoint) == false {
+	if !i.shouldRecordRequestBody(endpoint) {
 		return nil
 	}
 
 	span := trace.SpanFromContext(ctx)
 	if span.IsRecording() {
 		buf := bytes.Buffer{}
-		buf.ReadFrom(query)
+		_, _ = buf.ReadFrom(query)
 		span.SetAttributes(attribute.String(attrDbStatement, buf.String()))
 		getBody := func() (io.ReadCloser, error) {
 			reader := buf

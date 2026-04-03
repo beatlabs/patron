@@ -23,23 +23,21 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
 // Measurable defines the interface for transports supporting metrics.
-//
 type Measurable interface {
 	Metrics() (Metrics, error)
 }
 
 // connectionable defines the interface for transports returning a list of connections.
-//
 type connectionable interface {
 	connections() []*Connection
 }
 
 // Metrics represents the transport metrics.
-//
 type Metrics struct {
 	Requests  int         `json:"requests"`
 	Failures  int         `json:"failures"`
@@ -49,7 +47,6 @@ type Metrics struct {
 }
 
 // ConnectionMetric represents metric information for a connection.
-//
 type ConnectionMetric struct {
 	URL       string     `json:"url"`
 	Failures  int        `json:"failures,omitempty"`
@@ -64,39 +61,34 @@ type ConnectionMetric struct {
 }
 
 // metrics represents the inner state of metrics.
-//
 type metrics struct {
 	sync.RWMutex
 
-	requests  int
-	failures  int
+	requests  atomic.Uint64
+	failures  atomic.Uint64
 	responses map[int]int
-
-	connections []*Connection
 }
 
 // Metrics returns the transport metrics.
-//
 func (c *Client) Metrics() (Metrics, error) {
 	if c.metrics == nil {
 		return Metrics{}, errors.New("transport metrics not enabled")
 	}
-	c.metrics.RLock()
-	defer c.metrics.RUnlock()
 
-	if lockable, ok := c.pool.(sync.Locker); ok {
-		lockable.Lock()
-		defer lockable.Unlock()
+	c.poolMu.RLock()
+	defer c.poolMu.RUnlock()
+
+	responses := make(map[int]int)
+	c.metrics.RLock()
+	for code, num := range c.metrics.responses {
+		responses[code] = num
 	}
+	c.metrics.RUnlock()
 
 	m := Metrics{
-		Requests:  c.metrics.requests,
-		Failures:  c.metrics.failures,
-		Responses: make(map[int]int, len(c.metrics.responses)),
-	}
-
-	for code, num := range c.metrics.responses {
-		m.Responses[code] = num
+		Requests:  int(c.metrics.requests.Load()),
+		Failures:  int(c.metrics.failures.Load()),
+		Responses: responses,
 	}
 
 	if pool, ok := c.pool.(connectionable); ok {
@@ -134,7 +126,6 @@ func (c *Client) Metrics() (Metrics, error) {
 }
 
 // String returns the metrics as a string.
-//
 func (m Metrics) String() string {
 	var (
 		i int
@@ -170,7 +161,6 @@ func (m Metrics) String() string {
 		if i+1 < len(m.Connections) {
 			b.WriteString(", ")
 		}
-		i++
 	}
 	b.WriteString("]")
 
@@ -179,19 +169,18 @@ func (m Metrics) String() string {
 }
 
 // String returns the connection information as a string.
-//
 func (cm ConnectionMetric) String() string {
 	var b strings.Builder
 	b.WriteString("{")
 	b.WriteString(cm.URL)
 	if cm.IsDead {
-		fmt.Fprintf(&b, " dead=%v", cm.IsDead)
+		_, _ = fmt.Fprintf(&b, " dead=%v", cm.IsDead)
 	}
 	if cm.Failures > 0 {
-		fmt.Fprintf(&b, " failures=%d", cm.Failures)
+		_, _ = fmt.Fprintf(&b, " failures=%d", cm.Failures)
 	}
 	if cm.DeadSince != nil {
-		fmt.Fprintf(&b, " dead_since=%s", cm.DeadSince.Local().Format(time.Stamp))
+		_, _ = fmt.Fprintf(&b, " dead_since=%s", cm.DeadSince.Local().Format(time.Stamp))
 	}
 	b.WriteString("}")
 	return b.String()

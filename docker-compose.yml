@@ -98,24 +98,19 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
-  localstack:
-    image: localstack/localstack:4.14.0
+  moto:
+    image: motoserver/moto:5.1.2
     restart: always
     ports:
-      - "127.0.0.1:4566:4566" # LocalStack Gateway
-      - "127.0.0.1:4510-4559:4510-4559" # external services port range
+      - "127.0.0.1:4566:5000"
     environment:
-      - DEBUG=${DEBUG-}
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    volumes:
-      - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - MOTO_PORT=5000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/moto-api/"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 10s
   hivemq:
     image: hivemq/hivemq4:4.50.0
     restart: always

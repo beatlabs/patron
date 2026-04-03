@@ -52,25 +52,28 @@ func TestSayHello(t *testing.T) {
 	defer shutdownProvider()
 
 	tt := map[string]struct {
-		req         *examples.HelloRequest
-		wantErr     bool
-		wantCode    codes.Code
-		wantMsg     string
-		wantCounter int
+		req            *examples.HelloRequest
+		wantErr        bool
+		wantCode       codes.Code
+		wantMsg        string
+		wantCounter    int
+		wantStatusCode string
 	}{
 		"ok": {
-			req:         &examples.HelloRequest{FirstName: "John"},
-			wantErr:     false,
-			wantCode:    codes.OK,
-			wantMsg:     "Hello John!",
-			wantCounter: 1,
+			req:            &examples.HelloRequest{FirstName: "John"},
+			wantErr:        false,
+			wantCode:       codes.OK,
+			wantMsg:        "Hello John!",
+			wantCounter:    1,
+			wantStatusCode: "OK",
 		},
 		"invalid": {
-			req:         &examples.HelloRequest{},
-			wantErr:     true,
-			wantCode:    codes.InvalidArgument,
-			wantMsg:     "first name cannot be empty",
-			wantCounter: 1,
+			req:            &examples.HelloRequest{},
+			wantErr:        true,
+			wantCode:       codes.InvalidArgument,
+			wantMsg:        "first name cannot be empty",
+			wantCounter:    1,
+			wantStatusCode: "INVALID_ARGUMENT",
 		},
 	}
 
@@ -99,14 +102,13 @@ func TestSayHello(t *testing.T) {
 
 			assert.Len(t, spans, 1)
 			assert.Equal(t, "examples.Greeter/SayHello", spans[0].Name())
-			assert.Equal(t, attribute.String("rpc.service", "examples.Greeter"), spans[0].Attributes()[0])
-			assert.Equal(t, attribute.String("rpc.method", "SayHello"), spans[0].Attributes()[1])
-			assert.Equal(t, attribute.String("rpc.system", "grpc"), spans[0].Attributes()[2])
-			assert.Equal(t, attribute.String("server.address", "127.0.0.1"), spans[0].Attributes()[3])
-			assert.Equal(t, attribute.Int64("rpc.grpc.status_code", int64(tt.wantCode)), spans[0].Attributes()[5])
+			assert.Equal(t, attribute.String("rpc.method", "examples.Greeter/SayHello"), spans[0].Attributes()[0])
+			assert.Equal(t, attribute.String("rpc.system.name", "grpc"), spans[0].Attributes()[1])
+			assert.Equal(t, attribute.String("server.address", "127.0.0.1"), spans[0].Attributes()[2])
+			assert.Equal(t, attribute.String("rpc.response.status_code", tt.wantStatusCode), spans[0].Attributes()[4])
 
 			// Metrics
-			_ = assertCollectMetrics(4)
+			_ = assertCollectMetrics(1)
 		})
 	}
 }

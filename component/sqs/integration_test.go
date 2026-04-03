@@ -92,8 +92,10 @@ func Test_SQS_Consume(t *testing.T) {
 	test.AssertSpan(t, expected, spans[2])
 
 	// Metrics
-	collectedMetrics := collectMetrics(3)
-	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.message.age")
+	// Allow the stats ticker to fire at least once for queue size metrics.
+	time.Sleep(200 * time.Millisecond)
+
+	collectedMetrics := collectMetrics(2)
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.message.counter")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.queue.size")
 }

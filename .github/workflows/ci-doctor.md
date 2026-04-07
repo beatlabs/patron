@@ -20,7 +20,10 @@ permissions:
   issues: read         # To search and analyze issues
   pull-requests: read  # To analyze pull request context
 
-network: defaults
+network:
+  allowed:
+    - defaults
+    - "*.tavily.com"
 
 engine:
   id: copilot
@@ -44,9 +47,16 @@ safe-outputs:
 tools:
   cache-memory: true
   web-fetch:
-  web-search:
   github:
     toolsets: [default, actions]  # default: context, repos, issues, pull_requests; actions: workflow logs and artifacts
+
+mcp-servers:
+  tavily:
+    command: npx
+    args: ["-y", "@tavily/mcp"]
+    env:
+      TAVILY_API_KEY: "${{ secrets.TAVILY_API_KEY }}"
+    allowed: ["search", "search_news"]
 
 timeout-minutes: 20
 

@@ -27,6 +27,9 @@ safe-outputs:
     reviewers: [copilot]
     draft: false
     auto-merge: true
+    allowed-files:
+      - "AGENTS.md"
+      - "**/AGENTS.md"
 
 tools:
   cache-memory: true

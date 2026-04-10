@@ -1,0 +1,15 @@
+name: ARC Runner Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-arc:
+    runs-on: beatlabs-runner
+    steps:
+      - name: Verify runner
+        run: |
+          echo "Running on: $(hostname)"
+          echo "Runner name: $RUNNER_NAME"
+          echo "Runner OS: $RUNNER_OS"
+          uname -a

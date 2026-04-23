@@ -1,9 +1,15 @@
 ---
 description: Analyze auto-fix labeled issues and create targeted fix PRs.
 on:
-  label_command:
-    label: "auto-fix"
-tools: github[issues, pull_requests, repos], bash, edit, cache-memory
+  issues:
+    types: [labeled]
+tools:
+  github:
+    toolsets: [issues, pull_requests, repos]
+  bash:
+    - "*"
+  edit:
+  cache-memory: true
 imports:
   - shared/mood.md
   - shared/go-ci.md
@@ -11,17 +17,15 @@ engine: copilot
 strict: true
 timeout-minutes: 20
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  contents: read
+  pull-requests: read
+  issues: read
 safe-outputs:
   create-pull-request:
     title-prefix: "[auto-fix]"
     labels: ["automated", "needs-review"]
     max: 1
-    skip-if-match: "\\[auto-fix\\].*open"
   add-comment:
-    title-prefix: "[auto-fix]"
     max: 2
   update-issue:
     max: 1

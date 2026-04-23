@@ -6,7 +6,8 @@ on:
     branches: [main]
 
 tools:
-  github: [pull_requests, repos]
+  github:
+    toolsets: [pull_requests, repos]
   bash: true
 
 imports:
@@ -24,7 +25,6 @@ permissions:
 
 safe-outputs:
   add-comment:
-    title-prefix: "[breaking-change]"
     max: 1
   add-labels:
     max: 2

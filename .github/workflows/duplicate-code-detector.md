@@ -13,10 +13,11 @@ safe-outputs:
     labels: ["P3-low", "enhancement"]
     max: 3
     close-older-issues: true
-    skip-if-match: "\\[duplication\\].*open"
 tools:
-  - github[issues, repos]
-  - bash
+  github:
+    toolsets: [issues, repos]
+  bash:
+    - "*"
 imports:
   - shared/mood.md
   - shared/go-ci.md

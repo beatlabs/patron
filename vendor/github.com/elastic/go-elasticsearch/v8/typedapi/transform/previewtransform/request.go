@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package previewtransform
 
@@ -33,24 +33,22 @@ import (
 
 // Request holds the request body struct for the package previewtransform
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/transform/preview_transform/PreviewTransformRequest.ts#L33-L119
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/transform/preview_transform/PreviewTransformRequest.ts#L33-L121
 type Request struct {
-
 	// Description Free text description of the transform.
 	Description *string `json:"description,omitempty"`
 	// Dest The destination for the transform.
 	Dest *types.TransformDestination `json:"dest,omitempty"`
 	// Frequency The interval between checks for changes in the source indices when the
-	// transform is running continuously. Also determines the retry interval in
-	// the event of transient failures while the transform is searching or
-	// indexing. The minimum value is 1s and the maximum is 1h.
+	// transform is running continuously. Also determines the retry interval in the
+	// event of transient failures while the transform is searching or indexing. The
+	// minimum value is 1s and the maximum is 1h.
 	Frequency types.Duration `json:"frequency,omitempty"`
-	// Latest The latest method transforms the data by finding the latest document for
-	// each unique key.
+	// Latest The latest method transforms the data by finding the latest document for each
+	// unique key.
 	Latest *types.Latest `json:"latest,omitempty"`
-	// Pivot The pivot method transforms the data by aggregating and grouping it.
-	// These objects define the group by fields and the aggregation to reduce
-	// the data.
+	// Pivot The pivot method transforms the data by aggregating and grouping it. These
+	// objects define the group by fields and the aggregation to reduce the data.
 	Pivot *types.Pivot `json:"pivot,omitempty"`
 	// RetentionPolicy Defines a retention policy for the transform. Data that meets the defined
 	// criteria is deleted from the destination index.

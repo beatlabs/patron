@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,19 +31,18 @@ import (
 
 // TrainedModelInferenceStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/TrainedModel.ts#L127-L147
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/TrainedModel.ts#L127-L147
 type TrainedModelInferenceStats struct {
 	// CacheMissCount The number of times the model was loaded for inference and was not retrieved
-	// from the cache.
-	// If this number is close to the `inference_count`, the cache is not being
-	// appropriately used.
-	// This can be solved by increasing the cache size or its time-to-live (TTL).
-	// Refer to general machine learning settings for the appropriate settings.
+	// from the cache. If this number is close to the `inference_count`, the cache
+	// is not being appropriately used. This can be solved by increasing the cache
+	// size or its time-to-live (TTL). Refer to general machine learning settings
+	// for the appropriate settings.
 	CacheMissCount int `json:"cache_miss_count"`
 	// FailureCount The number of failures when using the model for inference.
 	FailureCount int `json:"failure_count"`
-	// InferenceCount The total number of times the model has been called for inference.
-	// This is across all inference contexts, including all pipelines.
+	// InferenceCount The total number of times the model has been called for inference. This is
+	// across all inference contexts, including all pipelines.
 	InferenceCount int `json:"inference_count"`
 	// MissingAllFieldsCount The number of inference calls where all the training features for the model
 	// were missing.

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,28 +31,26 @@ import (
 
 // ReadBlobDetails type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/snapshot/repository_analyze/SnapshotAnalyzeRepositoryResponse.ts#L204-L248
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/snapshot/repository_analyze/SnapshotAnalyzeRepositoryResponse.ts#L204-L248
 type ReadBlobDetails struct {
 	// BeforeWriteComplete Indicates whether the read operation may have started before the write
 	// operation was complete.
 	BeforeWriteComplete *bool `json:"before_write_complete,omitempty"`
-	// Elapsed The length of time spent reading the blob.
-	// If the blob was not found, this detail is omitted.
+	// Elapsed The length of time spent reading the blob. If the blob was not found, this
+	// detail is omitted.
 	Elapsed Duration `json:"elapsed,omitempty"`
-	// ElapsedNanos The length of time spent reading the blob, in nanoseconds.
-	// If the blob was not found, this detail is omitted.
+	// ElapsedNanos The length of time spent reading the blob, in nanoseconds. If the blob was
+	// not found, this detail is omitted.
 	ElapsedNanos *int64 `json:"elapsed_nanos,omitempty"`
 	// FirstByteTime The length of time waiting for the first byte of the read operation to be
-	// received.
-	// If the blob was not found, this detail is omitted.
+	// received. If the blob was not found, this detail is omitted.
 	FirstByteTime Duration `json:"first_byte_time,omitempty"`
 	// FirstByteTimeNanos The length of time waiting for the first byte of the read operation to be
-	// received, in nanoseconds.
-	// If the blob was not found, this detail is omitted.
+	// received, in nanoseconds. If the blob was not found, this detail is omitted.
 	FirstByteTimeNanos int64 `json:"first_byte_time_nanos"`
-	// Found Indicates whether the blob was found by the read operation.
-	// If the read was started before the write completed or the write was ended
-	// before completion, it might be false.
+	// Found Indicates whether the blob was found by the read operation. If the read was
+	// started before the write completed or the write was ended before completion,
+	// it might be false.
 	Found bool `json:"found"`
 	// Node The node that performed the read operation.
 	Node SnapshotNodeInfo `json:"node"`
@@ -62,8 +60,7 @@ type ReadBlobDetails struct {
 	Throttled Duration `json:"throttled,omitempty"`
 	// ThrottledNanos The length of time spent waiting due to the `max_restore_bytes_per_sec` or
 	// `indices.recovery.max_bytes_per_sec` throttles during the read of the blob,
-	// in nanoseconds.
-	// If the blob was not found, this detail is omitted.
+	// in nanoseconds. If the blob was not found, this detail is omitted.
 	ThrottledNanos *int64 `json:"throttled_nanos,omitempty"`
 }
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,37 +31,33 @@ import (
 
 // DateProcessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Processors.ts#L769-L802
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ingest/_types/Processors.ts#L776-L809
 type DateProcessor struct {
-	// Description Description of the processor.
-	// Useful for describing the purpose of the processor or its configuration.
+	// Description Description of the processor. Useful for describing the purpose of the
+	// processor or its configuration.
 	Description *string `json:"description,omitempty"`
 	// Field The field to get the date from.
 	Field string `json:"field"`
-	// Formats An array of the expected date formats.
-	// Can be a java time pattern or one of the following formats: ISO8601, UNIX,
-	// UNIX_MS, or TAI64N.
+	// Formats An array of the expected date formats. Can be a java time pattern or one of
+	// the following formats: ISO8601, UNIX, UNIX_MS, or TAI64N.
 	Formats []string `json:"formats"`
 	// If Conditionally execute the processor.
 	If *string `json:"if,omitempty"`
 	// IgnoreFailure Ignore failures for the processor.
 	IgnoreFailure *bool `json:"ignore_failure,omitempty"`
 	// Locale The locale to use when parsing the date, relevant when parsing month names or
-	// week days.
-	// Supports template snippets.
+	// week days. Supports template snippets.
 	Locale *string `json:"locale,omitempty"`
 	// OnFailure Handle failures for the processor.
 	OnFailure []ProcessorContainer `json:"on_failure,omitempty"`
-	// OutputFormat The format to use when writing the date to target_field. Must be a valid
-	// java time pattern.
+	// OutputFormat The format to use when writing the date to target_field. Must be a valid java
+	// time pattern.
 	OutputFormat *string `json:"output_format,omitempty"`
-	// Tag Identifier for the processor.
-	// Useful for debugging and metrics.
+	// Tag Identifier for the processor. Useful for debugging and metrics.
 	Tag *string `json:"tag,omitempty"`
 	// TargetField The field that will hold the parsed date.
 	TargetField *string `json:"target_field,omitempty"`
-	// Timezone The timezone to use when parsing the date.
-	// Supports template snippets.
+	// Timezone The timezone to use when parsing the date. Supports template snippets.
 	Timezone *string `json:"timezone,omitempty"`
 }
 

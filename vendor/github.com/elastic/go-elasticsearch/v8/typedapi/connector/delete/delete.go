@@ -16,15 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Delete a connector.
 //
-// Removes a connector and associated sync jobs.
-// This is a destructive action that is not recoverable.
-// NOTE: This action doesn’t delete any API keys, ingest pipelines, or data
-// indices associated with the connector.
-// These need to be removed manually.
+// Removes a connector and associated sync jobs. This is a destructive action
+// that is not recoverable. NOTE: This action doesn’t delete any API keys,
+// ingest pipelines, or data indices associated with the connector. These need
+// to be removed manually.
 package delete
 
 import (
@@ -84,11 +83,10 @@ func NewDeleteFunc(tp elastictransport.Interface) NewDelete {
 
 // Delete a connector.
 //
-// Removes a connector and associated sync jobs.
-// This is a destructive action that is not recoverable.
-// NOTE: This action doesn’t delete any API keys, ingest pipelines, or data
-// indices associated with the connector.
-// These need to be removed manually.
+// Removes a connector and associated sync jobs. This is a destructive action
+// that is not recoverable. NOTE: This action doesn’t delete any API keys,
+// ingest pipelines, or data indices associated with the connector. These need
+// to be removed manually.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-connector-api.html
 func New(tp elastictransport.Interface) *Delete {
@@ -163,7 +161,7 @@ func (r Delete) Perform(providedCtx context.Context) (*http.Response, error) {
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "connector.delete")
+			ctx = instrument.Start(providedCtx, "connector.delete")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -309,8 +307,7 @@ func (r *Delete) _connectorid(connectorid string) *Delete {
 	return r
 }
 
-// DeleteSyncJobs A flag indicating if associated sync jobs should be also removed. Defaults to
-// false.
+// DeleteSyncJobs A flag indicating if associated sync jobs should be also removed.
 // API name: delete_sync_jobs
 func (r *Delete) DeleteSyncJobs(deletesyncjobs bool) *Delete {
 	r.values.Set("delete_sync_jobs", strconv.FormatBool(deletesyncjobs))
@@ -341,11 +338,9 @@ func (r *Delete) FilterPath(filterpaths ...string) *Delete {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *Delete) Human(human bool) *Delete {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -353,8 +348,8 @@ func (r *Delete) Human(human bool) *Delete {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *Delete) Pretty(pretty bool) *Delete {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Update the connector is_native flag.
 package updatenative
@@ -83,7 +83,7 @@ func NewUpdateNativeFunc(tp elastictransport.Interface) NewUpdateNative {
 
 // Update the connector is_native flag.
 //
-// https://www.elastic.co/guide/en/elasticsearch/reference/current/update-connector-native-api.html
+// https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-connector-update-native
 func New(tp elastictransport.Interface) *UpdateNative {
 	r := &UpdateNative{
 		transport: tp,
@@ -206,7 +206,7 @@ func (r UpdateNative) Perform(providedCtx context.Context) (*http.Response, erro
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "connector.update_native")
+			ctx = instrument.Start(providedCtx, "connector.update_native")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -336,11 +336,9 @@ func (r *UpdateNative) FilterPath(filterpaths ...string) *UpdateNative {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *UpdateNative) Human(human bool) *UpdateNative {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -348,8 +346,8 @@ func (r *UpdateNative) Human(human bool) *UpdateNative {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *UpdateNative) Pretty(pretty bool) *UpdateNative {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

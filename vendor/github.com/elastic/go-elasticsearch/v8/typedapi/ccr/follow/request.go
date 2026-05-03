@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package follow
 
@@ -33,9 +33,8 @@ import (
 
 // Request holds the request body struct for the package follow
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ccr/follow/CreateFollowIndexRequest.ts#L26-L124
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ccr/follow/CreateFollowIndexRequest.ts#L31-L132
 type Request struct {
-
 	// DataStreamName If the leader index is part of a data stream, the name to which the local
 	// data stream for the followed index should be renamed.
 	DataStreamName *string `json:"data_stream_name,omitempty"`
@@ -51,16 +50,15 @@ type Request struct {
 	// the remote cluster.
 	MaxReadRequestSize types.ByteSize `json:"max_read_request_size,omitempty"`
 	// MaxRetryDelay The maximum time to wait before retrying an operation that failed
-	// exceptionally. An exponential backoff strategy is employed when
-	// retrying.
+	// exceptionally. An exponential backoff strategy is employed when retrying.
 	MaxRetryDelay types.Duration `json:"max_retry_delay,omitempty"`
 	// MaxWriteBufferCount The maximum number of operations that can be queued for writing. When this
-	// limit is reached, reads from the remote cluster will be
-	// deferred until the number of queued operations goes below the limit.
+	// limit is reached, reads from the remote cluster will be deferred until the
+	// number of queued operations goes below the limit.
 	MaxWriteBufferCount *int `json:"max_write_buffer_count,omitempty"`
 	// MaxWriteBufferSize The maximum total bytes of operations that can be queued for writing. When
-	// this limit is reached, reads from the remote cluster will
-	// be deferred until the total bytes of queued operations goes below the limit.
+	// this limit is reached, reads from the remote cluster will be deferred until
+	// the total bytes of queued operations goes below the limit.
 	MaxWriteBufferSize types.ByteSize `json:"max_write_buffer_size,omitempty"`
 	// MaxWriteRequestOperationCount The maximum number of operations per bulk write request executed on the
 	// follower.
@@ -69,10 +67,10 @@ type Request struct {
 	// follower.
 	MaxWriteRequestSize types.ByteSize `json:"max_write_request_size,omitempty"`
 	// ReadPollTimeout The maximum time to wait for new operations on the remote cluster when the
-	// follower index is synchronized with the leader index.
-	// When the timeout has elapsed, the poll for operations will return to the
-	// follower so that it can update some statistics.
-	// Then the follower will immediately attempt to read from the leader again.
+	// follower index is synchronized with the leader index. When the timeout has
+	// elapsed, the poll for operations will return to the follower so that it can
+	// update some statistics. Then the follower will immediately attempt to read
+	// from the leader again.
 	ReadPollTimeout types.Duration `json:"read_poll_timeout,omitempty"`
 	// RemoteCluster The remote cluster containing the leader index.
 	RemoteCluster string `json:"remote_cluster"`

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ClusterIndices type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cluster/stats/types.ts#L100-L147
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/cluster/stats/types.ts#L100-L147
 type ClusterIndices struct {
 	// Analysis Contains statistics about analyzers and analyzer components used in selected
 	// nodes.
@@ -50,9 +50,8 @@ type ClusterIndices struct {
 	Mappings *FieldTypesMappings `json:"mappings,omitempty"`
 	// QueryCache Contains statistics about the query cache of selected nodes.
 	QueryCache QueryCacheStats `json:"query_cache"`
-	// Search Holds a snapshot of the search usage statistics.
-	// Used to hold the stats for a single node that's part of a
-	// ClusterStatsNodeResponse, as well as to
+	// Search Holds a snapshot of the search usage statistics. Used to hold the stats for a
+	// single node that's part of a ClusterStatsNodeResponse, as well as to
 	// accumulate stats for the entire cluster and return them as part of the
 	// ClusterStatsResponse.
 	Search SearchUsageStats `json:"search"`

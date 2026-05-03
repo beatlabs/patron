@@ -16,27 +16,35 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package expandwildcard
 package expandwildcard
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/common.ts#L205-L219
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/common.ts#L201-L215
 type ExpandWildcard struct {
 	Name string
 }
 
 var (
+
+	// All Match any data stream or index, including hidden ones.
 	All = ExpandWildcard{"all"}
 
+	// Open Match open, non-hidden indices. Also matches any non-hidden data stream.
 	Open = ExpandWildcard{"open"}
 
+	// Closed Match closed, non-hidden indices. Also matches any non-hidden data stream.
+	// Data streams cannot be closed.
 	Closed = ExpandWildcard{"closed"}
 
+	// Hidden Match hidden data streams and hidden indices. Must be combined with `open`,
+	// `closed`, or `both`.
 	Hidden = ExpandWildcard{"hidden"}
 
+	// None Wildcard expressions are not accepted.
 	None = ExpandWildcard{"none"}
 )
 

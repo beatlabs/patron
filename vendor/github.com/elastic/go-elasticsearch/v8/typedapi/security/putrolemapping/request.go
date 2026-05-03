@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package putrolemapping
 
@@ -33,9 +33,8 @@ import (
 
 // Request holds the request body struct for the package putrolemapping
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/put_role_mapping/SecurityPutRoleMappingRequest.ts#L25-L103
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/security/put_role_mapping/SecurityPutRoleMappingRequest.ts#L25-L108
 type Request struct {
-
 	// Enabled Mappings that have `enabled` set to `false` are ignored when role mapping is
 	// performed.
 	Enabled *bool `json:"enabled,omitempty"`
@@ -48,11 +47,10 @@ type Request struct {
 	// Exactly one of `roles` or `role_templates` must be specified.
 	RoleTemplates []types.RoleTemplate `json:"role_templates,omitempty"`
 	// Roles A list of role names that are granted to the users that match the role
-	// mapping rules.
-	// Exactly one of `roles` or `role_templates` must be specified.
+	// mapping rules. Exactly one of `roles` or `role_templates` must be specified.
 	Roles []string `json:"roles,omitempty"`
-	// Rules The rules that determine which users should be matched by the mapping.
-	// A rule is a logical condition that is expressed by using a JSON DSL.
+	// Rules The rules that determine which users should be matched by the mapping. A rule
+	// is a logical condition that is expressed by using a JSON DSL.
 	Rules *types.RoleMappingRule `json:"rules,omitempty"`
 	RunAs []string               `json:"run_as,omitempty"`
 }

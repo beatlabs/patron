@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TopHitsAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/metric.ts#L369-L429
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/aggregations/metric.ts#L373-L433
 type TopHitsAggregation struct {
 	// DocvalueFields Fields for which to return doc values.
 	DocvalueFields []FieldAndFormat `json:"docvalue_fields,omitempty"`
@@ -48,8 +48,8 @@ type TopHitsAggregation struct {
 	// Highlight Specifies the highlighter to use for retrieving highlighted snippets from one
 	// or more fields in the search results.
 	Highlight *Highlight `json:"highlight,omitempty"`
-	// Missing The value to apply to documents that do not have a value.
-	// By default, documents without a value are ignored.
+	// Missing The value to apply to documents that do not have a value. By default,
+	// documents without a value are ignored.
 	Missing Missing `json:"missing,omitempty"`
 	Script  *Script `json:"script,omitempty"`
 	// ScriptFields Returns the result of one or more script evaluations for each hit.
@@ -59,8 +59,8 @@ type TopHitsAggregation struct {
 	SeqNoPrimaryTerm *bool `json:"seq_no_primary_term,omitempty"`
 	// Size The maximum number of top matching hits to return per bucket.
 	Size *int `json:"size,omitempty"`
-	// Sort Sort order of the top matching hits.
-	// By default, the hits are sorted by the score of the main query.
+	// Sort Sort order of the top matching hits. By default, the hits are sorted by the
+	// score of the main query.
 	Sort []SortCombinations `json:"sort,omitempty"`
 	// Source_ Selects the fields of the source that are returned.
 	Source_ SourceConfig `json:"_source,omitempty"`

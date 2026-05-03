@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,20 +31,18 @@ import (
 
 // KeepWordsTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/analysis/token_filters.ts#L295-L306
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/analysis/token_filters.ts#L295-L306
 type KeepWordsTokenFilter struct {
 	// KeepWords List of words to keep. Only tokens that match words in this list are included
-	// in the output.
-	// Either this parameter or `keep_words_path` must be specified.
+	// in the output. Either this parameter or `keep_words_path` must be specified.
 	KeepWords []string `json:"keep_words,omitempty"`
 	// KeepWordsCase If `true`, lowercase all keep words. Defaults to `false`.
 	KeepWordsCase *bool `json:"keep_words_case,omitempty"`
 	// KeepWordsPath Path to a file that contains a list of words to keep. Only tokens that match
-	// words in this list are included in the output.
-	// This path must be absolute or relative to the `config` location, and the file
-	// must be UTF-8 encoded. Each word in the file must be separated by a line
-	// break.
-	// Either this parameter or `keep_words` must be specified.
+	// words in this list are included in the output. This path must be absolute or
+	// relative to the `config` location, and the file must be UTF-8 encoded. Each
+	// word in the file must be separated by a line break. Either this parameter or
+	// `keep_words` must be specified.
 	KeepWordsPath *string `json:"keep_words_path,omitempty"`
 	Type          string  `json:"type,omitempty"`
 	Version       *string `json:"version,omitempty"`

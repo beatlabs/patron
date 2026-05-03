@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package status
 
@@ -33,35 +33,32 @@ import (
 
 // Response holds the response body struct for the package status
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/async_search/status/AsyncSearchStatusResponse.ts#L39-L41
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/async_search/status/AsyncSearchStatusResponse.ts#L39-L41
 type Response struct {
-
-	// Clusters_ Metadata about clusters involved in the cross-cluster search.
-	// It is not shown for local-only searches.
+	// Clusters_ Metadata about clusters involved in the cross-cluster search. It is not shown
+	// for local-only searches.
 	Clusters_ *types.ClusterStatistics `json:"_clusters,omitempty"`
 	// CompletionStatus If the async search completed, this field shows the status code of the
-	// search.
-	// For example, `200` indicates that the async search was successfully
-	// completed.
-	// `503` indicates that the async search was completed with an error.
+	// search. For example, `200` indicates that the async search was successfully
+	// completed. `503` indicates that the async search was completed with an error.
 	CompletionStatus *int `json:"completion_status,omitempty"`
-	// CompletionTime Indicates when the async search completed.
-	// It is present only when the search has completed.
-	CompletionTime         types.DateTime `json:"completion_time,omitempty"`
-	CompletionTimeInMillis *int64         `json:"completion_time_in_millis,omitempty"`
+	// CompletionTime Indicates when the async search completed. It is present only when the search
+	// has completed.
+	CompletionTime         types.DateTime    `json:"completion_time,omitempty"`
+	CompletionTimeInMillis *int64            `json:"completion_time_in_millis,omitempty"`
+	Error                  *types.ErrorCause `json:"error,omitempty"`
 	// ExpirationTime Indicates when the async search will expire.
 	ExpirationTime         types.DateTime `json:"expiration_time,omitempty"`
 	ExpirationTimeInMillis int64          `json:"expiration_time_in_millis"`
 	Id                     *string        `json:"id,omitempty"`
 	// IsPartial When the query is no longer running, this property indicates whether the
-	// search failed or was successfully completed on all shards.
-	// While the query is running, `is_partial` is always set to `true`.
+	// search failed or was successfully completed on all shards. While the query is
+	// running, `is_partial` is always set to `true`.
 	IsPartial bool `json:"is_partial"`
 	// IsRunning Indicates whether the search is still running or has completed.
 	//
-	// > info
-	// > If the search failed after some shards returned their results or the node
-	// that is coordinating the async search dies, results may be partial even
+	// > info > If the search failed after some shards returned their results or the
+	// node that is coordinating the async search dies, results may be partial even
 	// though `is_running` is `false`.
 	IsRunning bool `json:"is_running"`
 	// Shards_ The number of shards that have run the query so far.
@@ -119,6 +116,11 @@ func (s *Response) UnmarshalJSON(data []byte) error {
 		case "completion_time_in_millis":
 			if err := dec.Decode(&s.CompletionTimeInMillis); err != nil {
 				return fmt.Errorf("%s | %w", "CompletionTimeInMillis", err)
+			}
+
+		case "error":
+			if err := dec.Decode(&s.Error); err != nil {
+				return fmt.Errorf("%s | %w", "Error", err)
 			}
 
 		case "expiration_time":

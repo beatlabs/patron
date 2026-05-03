@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package mget
 
@@ -32,15 +32,12 @@ import (
 
 // Response holds the response body struct for the package mget
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/mget/MultiGetResponse.ts#L22-L31
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/mget/MultiGetResponse.ts#L22-L31
 type Response struct {
-
 	// Docs The response includes a docs array that contains the documents in the order
-	// specified in the request.
-	// The structure of the returned documents is similar to that returned by the
-	// get API.
-	// If there is a failure getting a particular document, the error is included in
-	// place of the document.
+	// specified in the request. The structure of the returned documents is similar
+	// to that returned by the get API. If there is a failure getting a particular
+	// document, the error is included in place of the document.
 	Docs []types.MgetResponseItem `json:"docs"`
 }
 

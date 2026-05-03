@@ -16,23 +16,35 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package syntheticsourcekeepenum
 package syntheticsourcekeepenum
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/mapping/Property.ts#L100-L118
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/mapping/Property.ts#L100-L118
 type SyntheticSourceKeepEnum struct {
 	Name string
 }
 
 var (
+
+	// None Synthetic source diverges from the original source (default)
 	None = SyntheticSourceKeepEnum{"none"}
 
+	// Arrays Arrays of the corresponding field or object preserve the original element
+	// ordering and duplicate elements. The synthetic source fragment for such
+	// arrays is not guaranteed to match the original source exactly, e.g. array [1,
+	// 2, [5], [[4, [3]]], 5] may appear as-is or in an equivalent format like [1,
+	// 2, 5, 4, 3, 5]. The exact format may change in the future, in an effort to
+	// reduce the storage overhead of this option.
 	Arrays = SyntheticSourceKeepEnum{"arrays"}
 
+	// All The source for both singleton instances and arrays of the corresponding field
+	// or object gets recorded. When applied to objects, the source of all
+	// sub-objects and sub-fields gets captured. Furthermore, the original source of
+	// arrays gets captured and appears in synthetic source with no modifications.
 	All = SyntheticSourceKeepEnum{"all"}
 )
 

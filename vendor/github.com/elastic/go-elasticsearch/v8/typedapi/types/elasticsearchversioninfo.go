@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ElasticsearchVersionInfo type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Base.ts#L76-L118
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/Base.ts#L81-L123
 type ElasticsearchVersionInfo struct {
 	// BuildDate The Elasticsearch Git commit's date.
 	BuildDate DateTime `json:"build_date"`
@@ -41,24 +41,22 @@ type ElasticsearchVersionInfo struct {
 	BuildHash string `json:"build_hash"`
 	// BuildSnapshot Indicates whether the Elasticsearch build was a snapshot.
 	BuildSnapshot bool `json:"build_snapshot"`
-	// BuildType The build type that corresponds to how Elasticsearch was installed.
-	// For example, `docker`, `rpm`, or `tar`.
+	// BuildType The build type that corresponds to how Elasticsearch was installed. For
+	// example, `docker`, `rpm`, or `tar`.
 	BuildType string `json:"build_type"`
 	// Int The Elasticsearch version number.
 	//
 	// ::: IMPORTANT: For Serverless deployments, this static value is always
 	// `8.11.0` and is used solely for backward compatibility with legacy clients.
-	//
-	//	Serverless environments are versionless and automatically upgraded, so this
-	//
+	// Serverless environments are versionless and automatically upgraded, so this
 	// value can be safely ignored.
 	Int string `json:"number"`
 	// LuceneVersion The version number of Elasticsearch's underlying Lucene software.
 	LuceneVersion string `json:"lucene_version"`
 	// MinimumIndexCompatibilityVersion The minimum index version with which the responding node can read from disk.
 	MinimumIndexCompatibilityVersion string `json:"minimum_index_compatibility_version"`
-	// MinimumWireCompatibilityVersion The minimum node version with which the responding node can communicate.
-	// Also the minimum version from which you can perform a rolling upgrade.
+	// MinimumWireCompatibilityVersion The minimum node version with which the responding node can communicate. Also
+	// the minimum version from which you can perform a rolling upgrade.
 	MinimumWireCompatibilityVersion string `json:"minimum_wire_compatibility_version"`
 }
 

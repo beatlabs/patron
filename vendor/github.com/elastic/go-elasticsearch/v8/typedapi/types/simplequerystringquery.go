@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // SimpleQueryStringQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/fulltext.ts#L837-L905
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/fulltext.ts#L837-L905
 type SimpleQueryStringQuery struct {
 	// AnalyzeWildcard If `true`, the query attempts to analyze wildcard terms in the query string.
 	AnalyzeWildcard *bool `json:"analyze_wildcard,omitempty"`
@@ -43,20 +43,17 @@ type SimpleQueryStringQuery struct {
 	// token.
 	AutoGenerateSynonymsPhraseQuery *bool `json:"auto_generate_synonyms_phrase_query,omitempty"`
 	// Boost Floating point number used to decrease or increase the relevance scores of
-	// the query.
-	// Boost values are relative to the default value of 1.0.
-	// A boost value between 0 and 1.0 decreases the relevance score.
-	// A value greater than 1.0 increases the relevance score.
+	// the query. Boost values are relative to the default value of 1.0. A boost
+	// value between 0 and 1.0 decreases the relevance score. A value greater than
+	// 1.0 increases the relevance score.
 	Boost *float32 `json:"boost,omitempty"`
 	// DefaultOperator Default boolean logic used to interpret text in the query string if no
 	// operators are specified.
 	DefaultOperator *operator.Operator `json:"default_operator,omitempty"`
-	// Fields Array of fields you wish to search.
-	// Accepts wildcard expressions.
-	// You also can boost relevance scores for matches to particular fields using a
-	// caret (`^`) notation.
-	// Defaults to the `index.query.default_field index` setting, which has a
-	// default value of `*`.
+	// Fields Array of fields you wish to search. Accepts wildcard expressions. You also
+	// can boost relevance scores for matches to particular fields using a caret
+	// (`^`) notation. Defaults to the `index.query.default_field index` setting,
+	// which has a default value of `*`.
 	Fields []string `json:"fields,omitempty"`
 	// Flags List of enabled operators for the simple query string syntax.
 	Flags PipeSeparatedFlagsSimpleQueryStringFlag `json:"flags,omitempty"`

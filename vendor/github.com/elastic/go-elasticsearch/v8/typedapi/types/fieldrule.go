@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // FieldRule type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/_types/RoleMappingRule.ts#L35-L43
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/security/_types/RoleMappingRule.ts#L35-L43
 type FieldRule struct {
 	AdditionalFieldRuleProperty map[string]json.RawMessage `json:"-"`
 	Dn                          []string                   `json:"dn,omitempty"`
@@ -111,7 +111,9 @@ func (s *FieldRule) UnmarshalJSON(data []byte) error {
 				if err := dec.Decode(&raw); err != nil {
 					return fmt.Errorf("%s | %w", "AdditionalFieldRuleProperty", err)
 				}
-				s.AdditionalFieldRuleProperty[key] = *raw
+				if raw != nil {
+					s.AdditionalFieldRuleProperty[key] = *raw
+				}
 			}
 
 		}
@@ -123,7 +125,7 @@ func (s *FieldRule) UnmarshalJSON(data []byte) error {
 func (s FieldRule) MarshalJSON() ([]byte, error) {
 	type opt FieldRule
 	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
+	tmp := make(map[string]json.RawMessage, 0)
 
 	data, err := json.Marshal(opt(s))
 	if err != nil {

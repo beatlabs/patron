@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ReindexStatus type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/reindex_rethrottle/types.ts#L37-L85
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/reindex_rethrottle/types.ts#L37-L85
 type ReindexStatus struct {
 	// Batches The number of scroll responses pulled back by the reindex.
 	Batches int64 `json:"batches"`
@@ -51,10 +51,10 @@ type ReindexStatus struct {
 	// ThrottledMillis Number of milliseconds the request slept to conform to `requests_per_second`.
 	ThrottledMillis int64    `json:"throttled_millis"`
 	ThrottledUntil  Duration `json:"throttled_until,omitempty"`
-	// ThrottledUntilMillis This field should always be equal to zero in a `_reindex` response.
-	// It only has meaning when using the Task API, where it indicates the next time
-	// (in milliseconds since epoch) a throttled request will be executed again in
-	// order to conform to `requests_per_second`.
+	// ThrottledUntilMillis This field should always be equal to zero in a `_reindex` response. It only
+	// has meaning when using the Task API, where it indicates the next time (in
+	// milliseconds since epoch) a throttled request will be executed again in order
+	// to conform to `requests_per_second`.
 	ThrottledUntilMillis int64 `json:"throttled_until_millis"`
 	// Total The number of documents that were successfully processed.
 	Total int64 `json:"total"`

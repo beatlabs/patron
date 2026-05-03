@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package analyze
 
@@ -33,12 +33,11 @@ import (
 
 // Request holds the request body struct for the package analyze
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/analyze/IndicesAnalyzeRequest.ts#L27-L119
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/indices/analyze/IndicesAnalyzeRequest.ts#L27-L121
 type Request struct {
-
-	// Analyzer The name of the analyzer that should be applied to the provided `text`.
-	// This could be a built-in analyzer, or an analyzer that’s been configured in
-	// the index.
+	// Analyzer The name of the analyzer that should be applied to the provided `text`. This
+	// could be a built-in analyzer, or an analyzer that’s been configured in the
+	// index.
 	Analyzer *string `json:"analyzer,omitempty"`
 	// Attributes Array of token attributes used to filter the output of the `explain`
 	// parameter.
@@ -48,16 +47,15 @@ type Request struct {
 	CharFilter []types.CharFilter `json:"char_filter,omitempty"`
 	// Explain If `true`, the response includes token attributes and additional details.
 	Explain *bool `json:"explain,omitempty"`
-	// Field Field used to derive the analyzer.
-	// To use this parameter, you must specify an index.
-	// If specified, the `analyzer` parameter overrides this value.
+	// Field Field used to derive the analyzer. To use this parameter, you must specify an
+	// index. If specified, the `analyzer` parameter overrides this value.
 	Field *string `json:"field,omitempty"`
 	// Filter Array of token filters used to apply after the tokenizer.
 	Filter []types.TokenFilter `json:"filter,omitempty"`
 	// Normalizer Normalizer to use to convert text into a single token.
 	Normalizer *string `json:"normalizer,omitempty"`
-	// Text Text to analyze.
-	// If an array of strings is provided, it is analyzed as a multi-value field.
+	// Text Text to analyze. If an array of strings is provided, it is analyzed as a
+	// multi-value field.
 	Text []string `json:"text,omitempty"`
 	// Tokenizer Tokenizer to use to convert text into tokens.
 	Tokenizer types.Tokenizer `json:"tokenizer,omitempty"`

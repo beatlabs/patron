@@ -16,25 +16,44 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package accesstokengranttype
 package accesstokengranttype
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/get_token/types.ts#L23-L48
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/security/get_token/types.ts#L23-L48
 type AccessTokenGrantType struct {
 	Name string
 }
 
 var (
+
+	// Password This grant type implements the Resource Owner Password Credentials Grant of
+	// OAuth2. In this grant, a trusted client exchanges the end user's credentials
+	// for an access token and (possibly) a refresh token. The request needs to be
+	// made by an authenticated user but happens on behalf of another authenticated
+	// user (the one whose credentials are passed as request parameters). This grant
+	// type is not suitable or designed for the self-service user creation of
+	// tokens.
 	Password = AccessTokenGrantType{"password"}
 
+	// Clientcredentials This grant type implements the Client Credentials Grant of OAuth2. It is
+	// geared for machine to machine communication and is not suitable or designed
+	// for the self-service user creation of tokens. It generates only access tokens
+	// that cannot be refreshed. The premise is that the entity that uses
+	// `client_credentials` has constant access to a set of (client, not end-user)
+	// credentials and can authenticate itself at will.
 	Clientcredentials = AccessTokenGrantType{"client_credentials"}
 
+	// Kerberos This grant type is supported internally and implements SPNEGO based Kerberos
+	// support. The `_kerberos` grant type may change from version to version.
 	Kerberos = AccessTokenGrantType{"_kerberos"}
 
+	// Refreshtoken This grant type implements the Refresh Token Grant of OAuth2. In this grant a
+	// user exchanges a previously issued refresh token for a new access token and a
+	// new refresh token.
 	Refreshtoken = AccessTokenGrantType{"refresh_token"}
 )
 

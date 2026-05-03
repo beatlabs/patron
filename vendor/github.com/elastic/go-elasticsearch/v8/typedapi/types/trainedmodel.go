@@ -16,23 +16,24 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
 // TrainedModel type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/put_trained_model/types.ts#L60-L72
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/put_trained_model/types.ts#L60-L72
 type TrainedModel struct {
 	// Ensemble The definition for an ensemble model
 	Ensemble *Ensemble `json:"ensemble,omitempty"`
 	// Tree The definition for a binary decision tree.
 	Tree *TrainedModelTree `json:"tree,omitempty"`
-	// TreeNode The definition of a node in a tree.
-	// There are two major types of nodes: leaf nodes and not-leaf nodes.
-	// - Leaf nodes only need node_index and leaf_value defined.
-	// - All other nodes need split_feature, left_child, right_child, threshold,
-	// decision_type, and default_left defined.
+	// TreeNode The definition of a node in a tree. There are two major types of nodes: leaf
+	// nodes and not-leaf nodes.
+	//
+	//   - Leaf nodes only need node_index and leaf_value defined.
+	//   - All other nodes need split_feature, left_child, right_child, threshold,
+	//     decision_type, and default_left defined.
 	TreeNode *TrainedModelTreeNode `json:"tree_node,omitempty"`
 }
 

@@ -16,14 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
-// Stop data frame analytics jobs.
-// A data frame analytics job can be started and stopped multiple times
-// throughout its lifecycle.
+// Stop data frame analytics jobs. A data frame analytics job can be started and
+// stopped multiple times throughout its lifecycle.
 package stopdataframeanalytics
 
 import (
+	gobytes "bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -54,6 +54,10 @@ type StopDataFrameAnalytics struct {
 
 	raw io.Reader
 
+	req      *Request
+	deferred []func(request *Request) error
+	buf      *gobytes.Buffer
+
 	paramSet int
 
 	id string
@@ -78,9 +82,8 @@ func NewStopDataFrameAnalyticsFunc(tp elastictransport.Interface) NewStopDataFra
 	}
 }
 
-// Stop data frame analytics jobs.
-// A data frame analytics job can be started and stopped multiple times
-// throughout its lifecycle.
+// Stop data frame analytics jobs. A data frame analytics job can be started and
+// stopped multiple times throughout its lifecycle.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/stop-dfanalytics.html
 func New(tp elastictransport.Interface) *StopDataFrameAnalytics {
@@ -88,6 +91,8 @@ func New(tp elastictransport.Interface) *StopDataFrameAnalytics {
 		transport: tp,
 		values:    make(url.Values),
 		headers:   make(http.Header),
+
+		buf: gobytes.NewBuffer(nil),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -95,6 +100,21 @@ func New(tp elastictransport.Interface) *StopDataFrameAnalytics {
 			r.instrument = instrument
 		}
 	}
+
+	return r
+}
+
+// Raw takes a json payload as input which is then passed to the http.Request
+// If specified Raw takes precedence on Request method.
+func (r *StopDataFrameAnalytics) Raw(raw io.Reader) *StopDataFrameAnalytics {
+	r.raw = raw
+
+	return r
+}
+
+// Request allows to set the request property with the appropriate payload.
+func (r *StopDataFrameAnalytics) Request(req *Request) *StopDataFrameAnalytics {
+	r.req = req
 
 	return r
 }
@@ -107,6 +127,31 @@ func (r *StopDataFrameAnalytics) HttpRequest(ctx context.Context) (*http.Request
 	var req *http.Request
 
 	var err error
+
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
+	if r.raw == nil && r.req != nil {
+
+		data, err := json.Marshal(r.req)
+
+		if err != nil {
+			return nil, fmt.Errorf("could not serialise request for StopDataFrameAnalytics: %w", err)
+		}
+
+		r.buf.Write(data)
+
+	}
+
+	if r.buf.Len() > 0 {
+		r.raw = r.buf
+	}
 
 	r.path.Scheme = "http"
 
@@ -167,7 +212,7 @@ func (r StopDataFrameAnalytics) Perform(providedCtx context.Context) (*http.Resp
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "ml.stop_data_frame_analytics")
+			ctx = instrument.Start(providedCtx, "ml.stop_data_frame_analytics")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -258,45 +303,6 @@ func (r StopDataFrameAnalytics) Do(providedCtx context.Context) (*Response, erro
 	return nil, errorResponse
 }
 
-// IsSuccess allows to run a query with a context and retrieve the result as a boolean.
-// This only exists for endpoints without a request payload and allows for quick control flow.
-func (r StopDataFrameAnalytics) IsSuccess(providedCtx context.Context) (bool, error) {
-	var ctx context.Context
-	r.spanStarted = true
-	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-		ctx = instrument.Start(providedCtx, "ml.stop_data_frame_analytics")
-		defer instrument.Close(ctx)
-	}
-	if ctx == nil {
-		ctx = providedCtx
-	}
-
-	res, err := r.Perform(ctx)
-
-	if err != nil {
-		return false, err
-	}
-	io.Copy(io.Discard, res.Body)
-	err = res.Body.Close()
-	if err != nil {
-		return false, err
-	}
-
-	if res.StatusCode >= 200 && res.StatusCode < 300 {
-		return true, nil
-	}
-
-	if res.StatusCode != 404 {
-		err := fmt.Errorf("an error happened during the StopDataFrameAnalytics query execution, status code: %d", res.StatusCode)
-		if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-			instrument.RecordError(ctx, err)
-		}
-		return false, err
-	}
-
-	return false, nil
-}
-
 // Header set a key, value pair in the StopDataFrameAnalytics headers map.
 func (r *StopDataFrameAnalytics) Header(key, value string) *StopDataFrameAnalytics {
 	r.headers.Set(key, value)
@@ -305,47 +311,12 @@ func (r *StopDataFrameAnalytics) Header(key, value string) *StopDataFrameAnalyti
 }
 
 // Id Identifier for the data frame analytics job. This identifier can contain
-// lowercase alphanumeric characters (a-z and 0-9), hyphens, and
-// underscores. It must start and end with alphanumeric characters.
+// lowercase alphanumeric characters (a-z and 0-9), hyphens, and underscores. It
+// must start and end with alphanumeric characters.
 // API Name: id
 func (r *StopDataFrameAnalytics) _id(id string) *StopDataFrameAnalytics {
 	r.paramSet |= idMask
 	r.id = id
-
-	return r
-}
-
-// AllowNoMatch Specifies what to do when the request:
-//
-// 1. Contains wildcard expressions and there are no data frame analytics
-// jobs that match.
-// 2. Contains the _all string or no identifiers and there are no matches.
-// 3. Contains wildcard expressions and there are only partial matches.
-//
-// The default value is true, which returns an empty data_frame_analytics
-// array when there are no matches and the subset of results when there are
-// partial matches. If this parameter is false, the request returns a 404
-// status code when there are no matches or only partial matches.
-// API name: allow_no_match
-func (r *StopDataFrameAnalytics) AllowNoMatch(allownomatch bool) *StopDataFrameAnalytics {
-	r.values.Set("allow_no_match", strconv.FormatBool(allownomatch))
-
-	return r
-}
-
-// Force If true, the data frame analytics job is stopped forcefully.
-// API name: force
-func (r *StopDataFrameAnalytics) Force(force bool) *StopDataFrameAnalytics {
-	r.values.Set("force", strconv.FormatBool(force))
-
-	return r
-}
-
-// Timeout Controls the amount of time to wait until the data frame analytics job
-// stops. Defaults to 20 seconds.
-// API name: timeout
-func (r *StopDataFrameAnalytics) Timeout(duration string) *StopDataFrameAnalytics {
-	r.values.Set("timeout", duration)
 
 	return r
 }
@@ -373,11 +344,9 @@ func (r *StopDataFrameAnalytics) FilterPath(filterpaths ...string) *StopDataFram
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *StopDataFrameAnalytics) Human(human bool) *StopDataFrameAnalytics {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -385,11 +354,54 @@ func (r *StopDataFrameAnalytics) Human(human bool) *StopDataFrameAnalytics {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *StopDataFrameAnalytics) Pretty(pretty bool) *StopDataFrameAnalytics {
 	r.values.Set("pretty", strconv.FormatBool(pretty))
+
+	return r
+}
+
+// AllowNoMatch Specifies what to do when the request:
+//
+// 1. Contains wildcard expressions and there are no data frame analytics jobs
+// that match. 2. Contains the _all string or no identifiers and there are no
+// matches. 3. Contains wildcard expressions and there are only partial matches.
+//
+// The default value is true, which returns an empty data_frame_analytics array
+// when there are no matches and the subset of results when there are partial
+// matches. If this parameter is false, the request returns a 404 status code
+// when there are no matches or only partial matches.
+// API name: allow_no_match
+func (r *StopDataFrameAnalytics) AllowNoMatch(allownomatch bool) *StopDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	r.req.AllowNoMatch = &allownomatch
+
+	return r
+}
+
+// Force If true, the data frame analytics job is stopped forcefully.
+// API name: force
+func (r *StopDataFrameAnalytics) Force(force bool) *StopDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	r.req.Force = &force
+
+	return r
+}
+
+// Timeout Controls the amount of time to wait until the data frame analytics job stops.
+// Defaults to 20 seconds.
+// API name: timeout
+func (r *StopDataFrameAnalytics) Timeout(duration types.Duration) *StopDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	r.req.Timeout = duration
 
 	return r
 }

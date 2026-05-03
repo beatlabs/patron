@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,17 +31,16 @@ import (
 
 // GoogleAiStudioServiceSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/_types/CommonTypes.ts#L1305-L1321
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/inference/_types/CommonTypes.ts#L1271-L1287
 type GoogleAiStudioServiceSettings struct {
 	// ApiKey A valid API key of your Google Gemini account.
 	ApiKey string `json:"api_key"`
-	// ModelId The name of the model to use for the inference task.
-	// Refer to the Google documentation for the list of supported models.
+	// ModelId The name of the model to use for the inference task. Refer to the Google
+	// documentation for the list of supported models.
 	ModelId string `json:"model_id"`
 	// RateLimit This setting helps to minimize the number of rate limit errors returned from
-	// Google AI Studio.
-	// By default, the `googleaistudio` service sets the number of requests allowed
-	// per minute to 360.
+	// Google AI Studio. By default, the `googleaistudio` service sets the number of
+	// requests allowed per minute to 360.
 	RateLimit *RateLimitSetting `json:"rate_limit,omitempty"`
 }
 

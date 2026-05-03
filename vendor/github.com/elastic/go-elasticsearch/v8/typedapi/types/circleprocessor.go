@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,10 +33,10 @@ import (
 
 // CircleProcessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Processors.ts#L573-L596
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ingest/_types/Processors.ts#L580-L603
 type CircleProcessor struct {
-	// Description Description of the processor.
-	// Useful for describing the purpose of the processor or its configuration.
+	// Description Description of the processor. Useful for describing the purpose of the
+	// processor or its configuration.
 	Description *string `json:"description,omitempty"`
 	// ErrorDistance The difference between the resulting inscribed distance from center to side
 	// and the circle’s radius (measured in meters for `geo_shape`, unit-less for
@@ -57,11 +57,10 @@ type CircleProcessor struct {
 	// ShapeType Which field mapping type is to be used when processing the circle:
 	// `geo_shape` or `shape`.
 	ShapeType shapetype.ShapeType `json:"shape_type"`
-	// Tag Identifier for the processor.
-	// Useful for debugging and metrics.
+	// Tag Identifier for the processor. Useful for debugging and metrics.
 	Tag *string `json:"tag,omitempty"`
-	// TargetField The field to assign the polygon shape to
-	// By default, the field is updated in-place.
+	// TargetField The field to assign the polygon shape to By default, the field is updated
+	// in-place.
 	TargetField *string `json:"target_field,omitempty"`
 }
 

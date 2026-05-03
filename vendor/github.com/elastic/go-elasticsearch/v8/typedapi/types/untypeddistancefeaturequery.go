@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,33 +31,28 @@ import (
 
 // UntypedDistanceFeatureQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/specialized.ts#L61-L64
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/specialized.ts#L61-L64
 type UntypedDistanceFeatureQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
-	// the query.
-	// Boost values are relative to the default value of 1.0.
-	// A boost value between 0 and 1.0 decreases the relevance score.
-	// A value greater than 1.0 increases the relevance score.
+	// the query. Boost values are relative to the default value of 1.0. A boost
+	// value between 0 and 1.0 decreases the relevance score. A value greater than
+	// 1.0 increases the relevance score.
 	Boost *float32 `json:"boost,omitempty"`
 	// Field Name of the field used to calculate distances. This field must meet the
-	// following criteria:
-	// be a `date`, `date_nanos` or `geo_point` field;
-	// have an `index` mapping parameter value of `true`, which is the default;
-	// have an `doc_values` mapping parameter value of `true`, which is the default.
+	// following criteria: be a `date`, `date_nanos` or `geo_point` field; have an
+	// `index` mapping parameter value of `true`, which is the default; have an
+	// `doc_values` mapping parameter value of `true`, which is the default.
 	Field string `json:"field"`
-	// Origin Date or point of origin used to calculate distances.
-	// If the `field` value is a `date` or `date_nanos` field, the `origin` value
-	// must be a date.
-	// Date Math, such as `now-1h`, is supported.
-	// If the field value is a `geo_point` field, the `origin` value must be a
-	// geopoint.
+	// Origin Date or point of origin used to calculate distances. If the `field` value is
+	// a `date` or `date_nanos` field, the `origin` value must be a date. Date Math,
+	// such as `now-1h`, is supported. If the field value is a `geo_point` field,
+	// the `origin` value must be a geopoint.
 	Origin json.RawMessage `json:"origin,omitempty"`
 	// Pivot Distance from the `origin` at which relevance scores receive half of the
-	// `boost` value.
-	// If the `field` value is a `date` or `date_nanos` field, the `pivot` value
-	// must be a time unit, such as `1h` or `10d`. If the `field` value is a
-	// `geo_point` field, the `pivot` value must be a distance unit, such as `1km`
-	// or `12m`.
+	// `boost` value. If the `field` value is a `date` or `date_nanos` field, the
+	// `pivot` value must be a time unit, such as `1h` or `10d`. If the `field`
+	// value is a `geo_point` field, the `pivot` value must be a distance unit, such
+	// as `1km` or `12m`.
 	Pivot      json.RawMessage `json:"pivot,omitempty"`
 	QueryName_ *string         `json:"_name,omitempty"`
 }

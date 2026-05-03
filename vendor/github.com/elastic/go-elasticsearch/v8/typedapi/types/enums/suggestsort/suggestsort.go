@@ -16,21 +16,25 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package suggestsort
 package suggestsort
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/_types/suggester.ts#L495-L504
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/search/_types/suggester.ts#L491-L500
 type SuggestSort struct {
 	Name string
 }
 
 var (
+
+	// Score Sort by score first, then document frequency and then the term itself.
 	Score = SuggestSort{"score"}
 
+	// Frequency Sort by document frequency first, then similarity score and then the term
+	// itself.
 	Frequency = SuggestSort{"frequency"}
 )
 

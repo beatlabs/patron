@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -27,5 +27,13 @@ package types
 //	[]Float64
 //	string
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Geo.ts#L104-L118
+// A latitude/longitude as a 2 dimensional point. It can be represented in
+// various ways:
+//
+//   - as a `{lat, long}` object
+//   - as a geo hash value
+//   - as a `[lon, lat]` array
+//   - as a string in `"<lat>, <lon>"` or WKT point formats
+//
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/Geo.ts#L98-L112
 type GeoLocation any

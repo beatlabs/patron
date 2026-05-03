@@ -16,27 +16,34 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package stringdistance
 package stringdistance
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/_types/suggester.ts#L472-L493
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/search/_types/suggester.ts#L468-L489
 type StringDistance struct {
 	Name string
 }
 
 var (
+
+	// Internal Based on the Damerau-Levenshtein algorithm, but highly optimized for
+	// comparing string distance for terms inside the index.
 	Internal = StringDistance{"internal"}
 
+	// Dameraulevenshtein String distance algorithm based on Damerau-Levenshtein algorithm.
 	Dameraulevenshtein = StringDistance{"damerau_levenshtein"}
 
+	// Levenshtein String distance algorithm based on the Levenshtein edit distance algorithm.
 	Levenshtein = StringDistance{"levenshtein"}
 
+	// Jarowinkler String distance algorithm based on Jaro-Winkler algorithm.
 	Jarowinkler = StringDistance{"jaro_winkler"}
 
+	// Ngram String distance algorithm based on character n-grams.
 	Ngram = StringDistance{"ngram"}
 )
 

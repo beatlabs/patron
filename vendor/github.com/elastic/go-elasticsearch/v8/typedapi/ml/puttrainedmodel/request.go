@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package puttrainedmodel
 
@@ -30,9 +30,8 @@ import (
 
 // Request holds the request body struct for the package puttrainedmodel
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/put_trained_model/MlPutTrainedModelRequest.ts#L31-L135
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/put_trained_model/MlPutTrainedModelRequest.ts#L31-L139
 type Request struct {
-
 	// CompressedDefinition The compressed (GZipped and Base64 encoded) inference definition of the
 	// model. If compressed_definition is specified, then definition cannot be
 	// specified.
@@ -42,18 +41,18 @@ type Request struct {
 	Definition *types.Definition `json:"definition,omitempty"`
 	// Description A human-readable description of the inference trained model.
 	Description *string `json:"description,omitempty"`
-	// InferenceConfig The default configuration for inference. This can be either a regression
-	// or classification configuration. It must match the underlying
-	// definition.trained_model's target_type. For pre-packaged models such as
-	// ELSER the config is not required.
+	// InferenceConfig The default configuration for inference. This can be either a regression or
+	// classification configuration. It must match the underlying
+	// definition.trained_model's target_type. For pre-packaged models such as ELSER
+	// the config is not required.
 	InferenceConfig *types.InferenceConfigCreateContainer `json:"inference_config,omitempty"`
 	// Input The input field names for the model definition.
 	Input *types.Input `json:"input,omitempty"`
 	// Metadata An object map that contains metadata about the model.
 	Metadata json.RawMessage `json:"metadata,omitempty"`
-	// ModelSizeBytes The estimated memory usage in bytes to keep the trained model in memory.
-	// This property is supported only if defer_definition_decompression is true
-	// or the model definition is not supplied.
+	// ModelSizeBytes The estimated memory usage in bytes to keep the trained model in memory. This
+	// property is supported only if defer_definition_decompression is true or the
+	// model definition is not supplied.
 	ModelSizeBytes *int64 `json:"model_size_bytes,omitempty"`
 	// ModelType The model type.
 	ModelType *trainedmodeltype.TrainedModelType `json:"model_type,omitempty"`
@@ -61,12 +60,10 @@ type Request struct {
 	// only works on one platform, because it is heavily optimized for a particular
 	// processor architecture and OS combination, then this field specifies which.
 	// The format of the string must match the platform identifiers used by
-	// Elasticsearch,
-	// so one of, `linux-x86_64`, `linux-aarch64`, `darwin-x86_64`,
-	// `darwin-aarch64`,
-	// or `windows-x86_64`. For portable models (those that work independent of
-	// processor
-	// architecture or OS features), leave this field unset.
+	// Elasticsearch, so one of, `linux-x86_64`, `linux-aarch64`, `darwin-x86_64`,
+	// `darwin-aarch64`, or `windows-x86_64`. For portable models (those that work
+	// independent of processor architecture or OS features), leave this field
+	// unset.
 	PlatformArchitecture *string `json:"platform_architecture,omitempty"`
 	// PrefixStrings Optional prefix strings applied at inference
 	PrefixStrings *types.TrainedModelPrefixStrings `json:"prefix_strings,omitempty"`

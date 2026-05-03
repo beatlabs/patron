@@ -16,27 +16,34 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package scoremode
 package scoremode
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/_types/rescoring.ts#L64-L86
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/search/_types/rescoring.ts#L64-L86
 type ScoreMode struct {
 	Name string
 }
 
 var (
+
+	// Avg Average the original score and the rescore query score.
 	Avg = ScoreMode{"avg"}
 
+	// Max Take the max of original score and the rescore query score.
 	Max = ScoreMode{"max"}
 
+	// Min Take the min of the original score and the rescore query score.
 	Min = ScoreMode{"min"}
 
+	// Multiply Multiply the original score by the rescore query score. Useful for `function`
+	// query rescores.
 	Multiply = ScoreMode{"multiply"}
 
+	// Total Add the original score and the rescore query score.
 	Total = ScoreMode{"total"}
 )
 

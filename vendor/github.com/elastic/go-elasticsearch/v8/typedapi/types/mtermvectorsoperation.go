@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // MTermVectorsOperation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/mtermvectors/types.ts#L35-L94
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/mtermvectors/types.ts#L35-L94
 type MTermVectorsOperation struct {
 	// Doc An artificial document (a document not present in the index) for which you
 	// want to retrieve term vectors.
@@ -42,9 +42,8 @@ type MTermVectorsOperation struct {
 	// frequencies, and sum of total term frequencies.
 	FieldStatistics *bool `json:"field_statistics,omitempty"`
 	// Fields Comma-separated list or wildcard expressions of fields to include in the
-	// statistics.
-	// Used as the default list unless a specific field list is provided in the
-	// `completion_fields` or `fielddata_fields` parameters.
+	// statistics. Used as the default list unless a specific field list is provided
+	// in the `completion_fields` or `fielddata_fields` parameters.
 	Fields []string `json:"fields,omitempty"`
 	// Filter Filter terms based on their tf-idf scores.
 	Filter *TermVectorsFilter `json:"filter,omitempty"`

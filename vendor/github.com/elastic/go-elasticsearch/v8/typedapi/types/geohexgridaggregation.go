@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,15 +31,15 @@ import (
 
 // GeohexGridAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/bucket.ts#L479-L504
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/aggregations/bucket.ts#L479-L504
 type GeohexGridAggregation struct {
 	// Bounds Bounding box used to filter the geo-points in each bucket.
 	Bounds GeoBounds `json:"bounds,omitempty"`
-	// Field Field containing indexed `geo_point` or `geo_shape` values.
-	// If the field contains an array, `geohex_grid` aggregates all array values.
+	// Field Field containing indexed `geo_point` or `geo_shape` values. If the field
+	// contains an array, `geohex_grid` aggregates all array values.
 	Field string `json:"field"`
-	// Precision Integer zoom of the key used to defined cells or buckets
-	// in the results. Value should be between 0-15.
+	// Precision Integer zoom of the key used to defined cells or buckets in the results.
+	// Value should be between 0-15.
 	Precision *int `json:"precision,omitempty"`
 	// ShardSize Number of buckets returned from each shard.
 	ShardSize *int `json:"shard_size,omitempty"`

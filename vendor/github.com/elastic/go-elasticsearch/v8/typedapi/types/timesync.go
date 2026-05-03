@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -30,15 +30,14 @@ import (
 
 // TimeSync type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/transform/_types/Transform.ts#L177-L189
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/transform/_types/Transform.ts#L199-L211
 type TimeSync struct {
 	// Delay The time delay between the current time and the latest input data time.
 	Delay Duration `json:"delay,omitempty"`
 	// Field The date field that is used to identify new documents in the source. In
-	// general, it’s a good idea to use a field
-	// that contains the ingest timestamp. If you use a different field, you might
-	// need to set the delay such that it
-	// accounts for data transmission delays.
+	// general, it’s a good idea to use a field that contains the ingest
+	// timestamp. If you use a different field, you might need to set the delay such
+	// that it accounts for data transmission delays.
 	Field string `json:"field"`
 }
 

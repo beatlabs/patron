@@ -45,6 +45,8 @@ var (
 	_ ConnectionPool          = (*synchronizedUpdatablePool)(nil)
 	_ CloseableConnectionPool = (*synchronizedUpdatablePool)(nil)
 	_ UpdatableConnectionPool = (*synchronizedUpdatablePool)(nil)
+	_ loggerSettable          = (*synchronizedPool)(nil)
+	_ loggerSettable          = (*synchronizedUpdatablePool)(nil)
 	_ Selector                = (*roundRobinSelector)(nil)
 )
 
@@ -166,6 +168,14 @@ func (sp *synchronizedUpdatablePool) Update(conns []*Connection) error {
 	return up.Update(conns)
 }
 
+func (cp *statusConnectionPool) setLogger(l LeveledLogger) { cp.logger = l }
+
+func (sp *synchronizedPool) setLogger(l LeveledLogger) {
+	if ls, ok := sp.pool.(loggerSettable); ok {
+		ls.setLogger(l)
+	}
+}
+
 // Connection represents a connection to a node.
 type Connection struct {
 	sync.Mutex
@@ -203,11 +213,19 @@ type statusConnectionPool struct {
 	dead     []*Connection // List of dead connections
 	selector Selector
 
+	logger  LeveledLogger
 	metrics *metrics
 
 	resurrectWaitGroup sync.WaitGroup
 	closeC             chan struct{}
 	closeDone          uint32
+}
+
+// loggerSettable is intentionally unexported: only built-in pools (and their
+// synchronized wrappers) receive the transport's LeveledLogger. Custom pools
+// should accept a logger via their own constructor.
+type loggerSettable interface {
+	setLogger(LeveledLogger)
 }
 
 type roundRobinSelector struct {
@@ -303,15 +321,15 @@ func (cp *statusConnectionPool) OnFailure(c *Connection) error {
 	c.Lock()
 
 	if c.IsDead {
-		if debugLogger != nil {
-			_ = debugLogger.Logf("Already removed %s\n", c.URL)
+		if cp.logger != nil {
+			cp.logger.Debug(context.Background(), "connection already removed", "url", c.URL)
 		}
 		c.Unlock()
 		return nil
 	}
 
-	if debugLogger != nil {
-		_ = debugLogger.Logf("Removing %s...\n", c.URL)
+	if cp.logger != nil {
+		cp.logger.Debug(context.Background(), "removing connection", "url", c.URL)
 	}
 	c.markAsDead()
 	cp.scheduleResurrect(c)
@@ -472,8 +490,8 @@ func (cp *statusConnectionPool) connections() []*Connection {
 // When removeDead is true, it also removes it from the dead list.
 // The calling code is responsible for locking.
 func (cp *statusConnectionPool) resurrect(c *Connection, removeDead bool) error {
-	if debugLogger != nil {
-		_ = debugLogger.Logf("Resurrecting %s\n", c.URL)
+	if cp.logger != nil {
+		cp.logger.Debug(context.Background(), "resurrecting connection", "url", c.URL)
 	}
 
 	c.markAsLive()
@@ -498,8 +516,13 @@ func (cp *statusConnectionPool) resurrect(c *Connection, removeDead bool) error 
 func (cp *statusConnectionPool) scheduleResurrect(c *Connection) {
 	factor := math.Min(float64(c.Failures-1), float64(defaultResurrectTimeoutFactorCutoff))
 	timeout := time.Duration(defaultResurrectTimeoutInitial.Seconds() * math.Exp2(factor) * float64(time.Second))
-	if debugLogger != nil {
-		_ = debugLogger.Logf("Resurrect %s (failures=%d, factor=%1.1f, timeout=%s) in %s\n", c.URL, c.Failures, factor, timeout, c.DeadSince.Add(timeout).Sub(time.Now().UTC()).Truncate(time.Second))
+	if cp.logger != nil {
+		cp.logger.Debug(context.Background(), "scheduling resurrect",
+			"url", c.URL,
+			"failures", c.Failures,
+			"factor", factor,
+			"timeout", timeout,
+		)
 	}
 
 	cp.resurrectWaitGroup.Add(1)
@@ -517,8 +540,8 @@ func (cp *statusConnectionPool) scheduleResurrect(c *Connection) {
 			defer c.Unlock()
 
 			if !c.IsDead {
-				if debugLogger != nil {
-					_ = debugLogger.Logf("Already resurrected %s\n", c.URL)
+				if cp.logger != nil {
+					cp.logger.Debug(context.Background(), "connection already resurrected", "url", c.URL)
 				}
 				return
 			}

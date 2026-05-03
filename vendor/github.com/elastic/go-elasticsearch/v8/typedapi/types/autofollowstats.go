@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,13 +31,13 @@ import (
 
 // AutoFollowStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ccr/stats/types.ts.ts#L32-L47
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ccr/stats/types.ts.ts#L32-L47
 type AutoFollowStats struct {
 	AutoFollowedClusters []AutoFollowedCluster `json:"auto_followed_clusters"`
 	// NumberOfFailedFollowIndices The number of indices that the auto-follow coordinator failed to
-	// automatically follow.
-	// The causes of recent failures are captured in the logs of the elected master
-	// node and in the `auto_follow_stats.recent_auto_follow_errors` field.
+	// automatically follow. The causes of recent failures are captured in the logs
+	// of the elected master node and in the
+	// `auto_follow_stats.recent_auto_follow_errors` field.
 	NumberOfFailedFollowIndices int64 `json:"number_of_failed_follow_indices"`
 	// NumberOfFailedRemoteClusterStateRequests The number of times that the auto-follow coordinator failed to retrieve the
 	// cluster state from a remote cluster registered in a collection of auto-follow

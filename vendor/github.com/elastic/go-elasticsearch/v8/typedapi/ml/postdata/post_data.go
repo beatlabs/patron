@@ -16,14 +16,16 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Send data to an anomaly detection job for analysis.
 //
 // IMPORTANT: For each job, data can be accepted from only a single connection
-// at a time.
-// It is not currently possible to post data to multiple jobs using wildcards or
-// a comma-separated list.
+// at a time. It is not currently possible to post data to multiple jobs using
+// wildcards or a comma-separated list.
+//
+// Deprecated: Since 7.11.0. Posting data directly to anomaly detection jobs is
+// deprecated, in a future major version a datafeed will be required.
 package postdata
 
 import (
@@ -89,11 +91,13 @@ func NewPostDataFunc(tp elastictransport.Interface) NewPostData {
 // Send data to an anomaly detection job for analysis.
 //
 // IMPORTANT: For each job, data can be accepted from only a single connection
-// at a time.
-// It is not currently possible to post data to multiple jobs using wildcards or
-// a comma-separated list.
+// at a time. It is not currently possible to post data to multiple jobs using
+// wildcards or a comma-separated list.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/ml-post-data.html
+//
+// Deprecated: Since 7.11.0. Posting data directly to anomaly detection jobs is
+// deprecated, in a future major version a datafeed will be required.
 func New(tp elastictransport.Interface) *PostData {
 	r := &PostData{
 		transport: tp,
@@ -147,13 +151,18 @@ func (r *PostData) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	if r.raw == nil && r.req != nil {
 
-		data, err := json.Marshal(r.req)
+		for _, elem := range *r.req {
+			data, err := json.Marshal(elem)
+			if err != nil {
+				return nil, err
+			}
+			r.buf.Write(data)
+			r.buf.Write([]byte("\n"))
+		}
 
 		if err != nil {
 			return nil, fmt.Errorf("could not serialise request for PostData: %w", err)
 		}
-
-		r.buf.Write(data)
 
 	}
 
@@ -198,7 +207,7 @@ func (r *PostData) HttpRequest(ctx context.Context) (*http.Request, error) {
 
 	if req.Header.Get("Content-Type") == "" {
 		if r.raw != nil {
-			req.Header.Set("Content-Type", "application/vnd.elasticsearch+json;compatible-with=8")
+			req.Header.Set("Content-Type", "application/vnd.elasticsearch+x-ndjson;compatible-with=8")
 		}
 	}
 
@@ -218,7 +227,7 @@ func (r PostData) Perform(providedCtx context.Context) (*http.Response, error) {
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "ml.post_data")
+			ctx = instrument.Start(providedCtx, "ml.post_data")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -365,11 +374,9 @@ func (r *PostData) FilterPath(filterpaths ...string) *PostData {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *PostData) Human(human bool) *PostData {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -377,8 +384,8 @@ func (r *PostData) Human(human bool) *PostData {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *PostData) Pretty(pretty bool) *PostData {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

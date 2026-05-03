@@ -16,25 +16,30 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package multivaluemode
 package multivaluemode
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/compound.ts#L368-L385
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/compound.ts#L368-L385
 type MultiValueMode struct {
 	Name string
 }
 
 var (
+
+	// Min Distance is the minimum distance.
 	Min = MultiValueMode{"min"}
 
+	// Max Distance is the maximum distance.
 	Max = MultiValueMode{"max"}
 
+	// Avg Distance is the average distance.
 	Avg = MultiValueMode{"avg"}
 
+	// Sum Distance is the sum of all distances.
 	Sum = MultiValueMode{"sum"}
 )
 

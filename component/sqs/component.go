@@ -192,7 +192,11 @@ func (c *Component) consume(ctx context.Context, chErr chan error) {
 		})
 		if err != nil {
 			logger.Error("failed to receive messages, sleeping", log.ErrorAttr(err), slog.Duration("wait", c.retry.wait))
-			time.Sleep(c.retry.wait)
+			select {
+			case <-time.After(c.retry.wait):
+			case <-ctx.Done():
+				return
+			}
 			retries--
 			if retries > 0 {
 				continue

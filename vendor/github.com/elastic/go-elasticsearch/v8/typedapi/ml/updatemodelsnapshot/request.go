@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package updatemodelsnapshot
 
@@ -27,14 +27,13 @@ import (
 
 // Request holds the request body struct for the package updatemodelsnapshot
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/update_model_snapshot/MlUpdateModelSnapshotRequest.ts#L23-L63
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/update_model_snapshot/MlUpdateModelSnapshotRequest.ts#L23-L65
 type Request struct {
-
 	// Description A description of the model snapshot.
 	Description *string `json:"description,omitempty"`
 	// Retain If `true`, this snapshot will not be deleted during automatic cleanup of
-	// snapshots older than `model_snapshot_retention_days`. However, this
-	// snapshot will be deleted when the job is deleted.
+	// snapshots older than `model_snapshot_retention_days`. However, this snapshot
+	// will be deleted when the job is deleted.
 	Retain *bool `json:"retain,omitempty"`
 }
 

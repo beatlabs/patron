@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -30,7 +30,7 @@ import (
 
 // SpanQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/span.ts#L158-L200
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/span.ts#L158-L200
 type SpanQuery struct {
 	AdditionalSpanQueryProperty map[string]json.RawMessage `json:"-"`
 	// SpanContaining Accepts a list of span queries, but only returns those spans which also match
@@ -49,7 +49,7 @@ type SpanQuery struct {
 	SpanNear *SpanNearQuery `json:"span_near,omitempty"`
 	// SpanNot Wraps another span query, and excludes any documents which match that query.
 	SpanNot *SpanNotQuery `json:"span_not,omitempty"`
-	// SpanOr Combines multiple span queries and returns documents which match any of the
+	// SpanOr Combines multiple span queries and returns documents which match any of the
 	// specified queries.
 	SpanOr *SpanOrQuery `json:"span_or,omitempty"`
 	// SpanTerm The equivalent of the `term` query but for use with other span queries.
@@ -137,7 +137,9 @@ func (s *SpanQuery) UnmarshalJSON(data []byte) error {
 				if err := dec.Decode(&raw); err != nil {
 					return fmt.Errorf("%s | %w", "AdditionalSpanQueryProperty", err)
 				}
-				s.AdditionalSpanQueryProperty[key] = *raw
+				if raw != nil {
+					s.AdditionalSpanQueryProperty[key] = *raw
+				}
 			}
 
 		}
@@ -149,7 +151,7 @@ func (s *SpanQuery) UnmarshalJSON(data []byte) error {
 func (s SpanQuery) MarshalJSON() ([]byte, error) {
 	type opt SpanQuery
 	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
+	tmp := make(map[string]json.RawMessage, 0)
 
 	data, err := json.Marshal(opt(s))
 	if err != nil {

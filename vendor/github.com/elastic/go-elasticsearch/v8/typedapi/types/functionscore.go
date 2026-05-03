@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,9 +31,8 @@ import (
 
 // FunctionScore type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/compound.ts#L226-L266
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/compound.ts#L226-L266
 type FunctionScore struct {
-	AdditionalFunctionScoreProperty map[string]json.RawMessage `json:"-"`
 	// Exp Function that scores a document with a exponential decay, depending on the
 	// distance of a numeric field value of the document from an origin.
 	Exp DecayFunction `json:"exp,omitempty"`
@@ -49,9 +48,8 @@ type FunctionScore struct {
 	// distance of a numeric field value of the document from an origin.
 	Linear DecayFunction `json:"linear,omitempty"`
 	// RandomScore Generates scores that are uniformly distributed from 0 up to but not
-	// including 1.
-	// In case you want scores to be reproducible, it is possible to provide a
-	// `seed` and `field`.
+	// including 1. In case you want scores to be reproducible, it is possible to
+	// provide a `seed` and `field`.
 	RandomScore *RandomScoreFunction `json:"random_score,omitempty"`
 	// ScriptScore Enables you to wrap another query and customize the scoring of it optionally
 	// with a computation derived from other numeric field values in the doc using a
@@ -153,58 +151,14 @@ func (s *FunctionScore) UnmarshalJSON(data []byte) error {
 				s.Weight = &f
 			}
 
-		default:
-
-			if key, ok := t.(string); ok {
-				if s.AdditionalFunctionScoreProperty == nil {
-					s.AdditionalFunctionScoreProperty = make(map[string]json.RawMessage, 0)
-				}
-				raw := new(json.RawMessage)
-				if err := dec.Decode(&raw); err != nil {
-					return fmt.Errorf("%s | %w", "AdditionalFunctionScoreProperty", err)
-				}
-				s.AdditionalFunctionScoreProperty[key] = *raw
-			}
-
 		}
 	}
 	return nil
 }
 
-// MarhsalJSON overrides marshalling for types with additional properties
-func (s FunctionScore) MarshalJSON() ([]byte, error) {
-	type opt FunctionScore
-	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
-
-	data, err := json.Marshal(opt(s))
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(data, &tmp)
-	if err != nil {
-		return nil, err
-	}
-
-	// We inline the additional fields from the underlying map
-	for key, value := range s.AdditionalFunctionScoreProperty {
-		tmp[fmt.Sprintf("%s", key)] = value
-	}
-	delete(tmp, "AdditionalFunctionScoreProperty")
-
-	data, err = json.Marshal(tmp)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
 // NewFunctionScore returns a FunctionScore.
 func NewFunctionScore() *FunctionScore {
-	r := &FunctionScore{
-		AdditionalFunctionScoreProperty: make(map[string]json.RawMessage),
-	}
+	r := &FunctionScore{}
 
 	return r
 }

@@ -16,14 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Get plugin information.
 //
-// Get a list of plugins running on each node of a cluster.
-// IMPORTANT: cat APIs are only intended for human consumption using the command
-// line or Kibana console. They are not intended for use by applications. For
-// application consumption, use the nodes info API.
+// Get a list of plugins running on each node of a cluster. IMPORTANT: cat APIs
+// are only intended for human consumption using the command line or Kibana
+// console. They are not intended for use by applications. For application
+// consumption, use the nodes info API.
 package plugins
 
 import (
@@ -39,6 +39,8 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/bytes"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/timeunit"
 )
 
 // ErrBuildPath is returned in case of missing parameters within the build of the request.
@@ -75,10 +77,10 @@ func NewPluginsFunc(tp elastictransport.Interface) NewPlugins {
 
 // Get plugin information.
 //
-// Get a list of plugins running on each node of a cluster.
-// IMPORTANT: cat APIs are only intended for human consumption using the command
-// line or Kibana console. They are not intended for use by applications. For
-// application consumption, use the nodes info API.
+// Get a list of plugins running on each node of a cluster. IMPORTANT: cat APIs
+// are only intended for human consumption using the command line or Kibana
+// console. They are not intended for use by applications. For application
+// consumption, use the nodes info API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-plugins.html
 func New(tp elastictransport.Interface) *Plugins {
@@ -149,7 +151,7 @@ func (r Plugins) Perform(providedCtx context.Context) (*http.Response, error) {
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "cat.plugins")
+			ctx = instrument.Start(providedCtx, "cat.plugins")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -294,9 +296,9 @@ func (r *Plugins) H(names ...string) *Plugins {
 	return r
 }
 
-// S List of columns that determine how the table should be sorted.
-// Sorting defaults to ascending and can be changed by setting `:asc`
-// or `:desc` as a suffix to the column name.
+// S List of columns that determine how the table should be sorted. Sorting
+// defaults to ascending and can be changed by setting `:asc` or `:desc` as a
+// suffix to the column name.
 // API name: s
 func (r *Plugins) S(names ...string) *Plugins {
 	r.values.Set("s", strings.Join(names, ","))
@@ -312,10 +314,10 @@ func (r *Plugins) IncludeBootstrap(includebootstrap bool) *Plugins {
 	return r
 }
 
-// Local If `true`, the request computes the list of selected nodes from the
-// local cluster state. If `false` the list of selected nodes are computed
-// from the cluster state of the master node. In both cases the coordinating
-// node will send requests for further information to each selected node.
+// Local If `true`, the request computes the list of selected nodes from the local
+// cluster state. If `false` the list of selected nodes are computed from the
+// cluster state of the master node. In both cases the coordinating node will
+// send requests for further information to each selected node.
 // API name: local
 func (r *Plugins) Local(local bool) *Plugins {
 	r.values.Set("local", strconv.FormatBool(local))
@@ -331,8 +333,23 @@ func (r *Plugins) MasterTimeout(duration string) *Plugins {
 	return r
 }
 
-// Format Specifies the format to return the columnar data in, can be set to
-// `text`, `json`, `cbor`, `yaml`, or `smile`.
+// Bytes Sets the units for columns that contain a byte-size value. Note that
+// byte-size value units work in terms of powers of 1024. For instance `1kb`
+// means 1024 bytes, not 1000 bytes. If omitted, byte-size values are rendered
+// with a suffix such as `kb`, `mb`, or `gb`, chosen such that the numeric value
+// of the column is as small as possible whilst still being at least `1.0`. If
+// given, byte-size values are rendered as an integer with no suffix,
+// representing the value of the column in the chosen unit. Values that are not
+// an exact multiple of the chosen unit are rounded down.
+// API name: bytes
+func (r *Plugins) Bytes(bytes bytes.Bytes) *Plugins {
+	r.values.Set("bytes", bytes.String())
+
+	return r
+}
+
+// Format Specifies the format to return the columnar data in, can be set to `text`,
+// `json`, `cbor`, `yaml`, or `smile`.
 // API name: format
 func (r *Plugins) Format(format string) *Plugins {
 	r.values.Set("format", format)
@@ -340,11 +357,24 @@ func (r *Plugins) Format(format string) *Plugins {
 	return r
 }
 
-// Help When set to `true` will output available columns. This option
-// can't be combined with any other query string option.
+// Help When set to `true` will output available columns. This option can't be
+// combined with any other query string option.
 // API name: help
 func (r *Plugins) Help(help bool) *Plugins {
 	r.values.Set("help", strconv.FormatBool(help))
+
+	return r
+}
+
+// Time Sets the units for columns that contain a time duration. If omitted, time
+// duration values are rendered with a suffix such as `ms`, `s`, `m` or `h`,
+// chosen such that the numeric value of the column is as small as possible
+// whilst still being at least `1.0`. If given, time duration values are
+// rendered as an integer with no suffix. Values that are not an exact multiple
+// of the chosen unit are rounded down.
+// API name: time
+func (r *Plugins) Time(time timeunit.TimeUnit) *Plugins {
+	r.values.Set("time", time.String())
 
 	return r
 }
@@ -380,11 +410,9 @@ func (r *Plugins) FilterPath(filterpaths ...string) *Plugins {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *Plugins) Human(human bool) *Plugins {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -392,8 +420,8 @@ func (r *Plugins) Human(human bool) *Plugins {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *Plugins) Pretty(pretty bool) *Plugins {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package putlifecycle
 
@@ -33,9 +33,8 @@ import (
 
 // Request holds the request body struct for the package putlifecycle
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/slm/put_lifecycle/PutSnapshotLifecycleRequest.ts#L26-L89
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/slm/put_lifecycle/PutSnapshotLifecycleRequest.ts#L26-L91
 type Request struct {
-
 	// Config Configuration for each snapshot created by the policy.
 	Config *types.Configuration `json:"config,omitempty"`
 	// Name Name automatically assigned to each snapshot created by the policy. Date math
@@ -43,8 +42,8 @@ type Request struct {
 	// appended to each snapshot name.
 	Name *string `json:"name,omitempty"`
 	// Repository Repository used to store snapshots created by this policy. This repository
-	// must exist prior to the policy’s creation. You can create a repository using
-	// the snapshot repository API.
+	// must exist prior to the policy’s creation. You can create a repository
+	// using the snapshot repository API.
 	Repository *string `json:"repository,omitempty"`
 	// Retention Retention rules used to retain and delete snapshots created by the policy.
 	Retention *types.Retention `json:"retention,omitempty"`

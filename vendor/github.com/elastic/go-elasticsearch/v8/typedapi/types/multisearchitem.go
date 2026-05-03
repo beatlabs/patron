@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -32,7 +32,7 @@ import (
 
 // MultiSearchItem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/msearch/types.ts#L216-L219
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/msearch/types.ts#L216-L219
 type MultiSearchItem struct {
 	Aggregations map[string]Aggregate       `json:"aggregations,omitempty"`
 	Clusters_    *ClusterStatistics         `json:"_clusters,omitempty"`
@@ -43,11 +43,10 @@ type MultiSearchItem struct {
 	NumReducePhases *int64       `json:"num_reduce_phases,omitempty"`
 	PitId           *string      `json:"pit_id,omitempty"`
 	Profile         *Profile     `json:"profile,omitempty"`
-	// ScrollId_ The identifier for the search and its search context.
-	// You can use this scroll ID with the scroll API to retrieve the next batch of
-	// search results for the request.
-	// This property is returned only if the `scroll` query parameter is specified
-	// in the request.
+	// ScrollId_ The identifier for the search and its search context. You can use this scroll
+	// ID with the scroll API to retrieve the next batch of search results for the
+	// request. This property is returned only if the `scroll` query parameter is
+	// specified in the request.
 	ScrollId_ *string `json:"_scroll_id,omitempty"`
 	// Shards_ A count of shards used for the request.
 	Shards_         ShardStatistics      `json:"_shards"`
@@ -57,21 +56,20 @@ type MultiSearchItem struct {
 	// TimedOut If `true`, the request timed out before completion; returned results may be
 	// partial or empty.
 	TimedOut bool `json:"timed_out"`
-	// Took The number of milliseconds it took Elasticsearch to run the request.
-	// This value is calculated by measuring the time elapsed between receipt of a
+	// Took The number of milliseconds it took Elasticsearch to run the request. This
+	// value is calculated by measuring the time elapsed between receipt of a
 	// request on the coordinating node and the time at which the coordinating node
-	// is ready to send the response.
-	// It includes:
+	// is ready to send the response. It includes:
 	//
-	// * Communication time between the coordinating node and data nodes
-	// * Time the request spends in the search thread pool, queued for execution
-	// * Actual run time
+	//   - Communication time between the coordinating node and data nodes
+	//   - Time the request spends in the search thread pool, queued for execution
+	//   - Actual run time
 	//
 	// It does not include:
 	//
-	// * Time needed to send the request to Elasticsearch
-	// * Time needed to serialize the JSON response
-	// * Time needed to send the response to a client
+	//   - Time needed to send the request to Elasticsearch
+	//   - Time needed to serialize the JSON response
+	//   - Time needed to send the response to a client
 	Took int64 `json:"took"`
 }
 
@@ -224,6 +222,13 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 								}
 								s.Aggregations[elems[1]] = o
 
+							case "change_point":
+								o := NewChangePointAggregate()
+								if err := dec.Decode(&o); err != nil {
+									return fmt.Errorf("%s | %w", "Aggregations", err)
+								}
+								s.Aggregations[elems[1]] = o
+
 							case "stats":
 								o := NewStatsAggregate()
 								if err := dec.Decode(&o); err != nil {
@@ -247,6 +252,20 @@ func (s *MultiSearchItem) UnmarshalJSON(data []byte) error {
 
 							case "extended_stats_bucket":
 								o := NewExtendedStatsBucketAggregate()
+								if err := dec.Decode(&o); err != nil {
+									return fmt.Errorf("%s | %w", "Aggregations", err)
+								}
+								s.Aggregations[elems[1]] = o
+
+							case "cartesian_bounds":
+								o := NewCartesianBoundsAggregate()
+								if err := dec.Decode(&o); err != nil {
+									return fmt.Errorf("%s | %w", "Aggregations", err)
+								}
+								s.Aggregations[elems[1]] = o
+
+							case "cartesian_centroid":
+								o := NewCartesianCentroidAggregate()
 								if err := dec.Decode(&o); err != nil {
 									return fmt.Errorf("%s | %w", "Aggregations", err)
 								}

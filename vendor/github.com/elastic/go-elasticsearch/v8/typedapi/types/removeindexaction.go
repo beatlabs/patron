@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,13 +31,11 @@ import (
 
 // RemoveIndexAction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/update_aliases/types.ts#L124-L139
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/indices/update_aliases/types.ts#L124-L139
 type RemoveIndexAction struct {
-	// Index Data stream or index for the action.
-	// Supports wildcards (`*`).
+	// Index Data stream or index for the action. Supports wildcards (`*`).
 	Index *string `json:"index,omitempty"`
-	// Indices Data streams or indices for the action.
-	// Supports wildcards (`*`).
+	// Indices Data streams or indices for the action. Supports wildcards (`*`).
 	Indices []string `json:"indices,omitempty"`
 	// MustExist If `true`, the alias must exist to perform the action.
 	MustExist *bool `json:"must_exist,omitempty"`

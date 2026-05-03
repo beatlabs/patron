@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,19 +31,19 @@ import (
 
 // IpLocationProcessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Processors.ts#L478-L512
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ingest/_types/Processors.ts#L485-L519
 type IpLocationProcessor struct {
 	// DatabaseFile The database filename referring to a database the module ships with
 	// (GeoLite2-City.mmdb, GeoLite2-Country.mmdb, or GeoLite2-ASN.mmdb) or a custom
 	// database in the ingest-geoip config directory.
 	DatabaseFile *string `json:"database_file,omitempty"`
-	// Description Description of the processor.
-	// Useful for describing the purpose of the processor or its configuration.
+	// Description Description of the processor. Useful for describing the purpose of the
+	// processor or its configuration.
 	Description *string `json:"description,omitempty"`
 	// DownloadDatabaseOnPipelineCreation If `true` (and if `ingest.geoip.downloader.eager.download` is `false`), the
-	// missing database is downloaded when the pipeline is created.
-	// Else, the download is triggered by when the pipeline is used as the
-	// `default_pipeline` or `final_pipeline` in an index.
+	// missing database is downloaded when the pipeline is created. Else, the
+	// download is triggered by when the pipeline is used as the `default_pipeline`
+	// or `final_pipeline` in an index.
 	DownloadDatabaseOnPipelineCreation *bool `json:"download_database_on_pipeline_creation,omitempty"`
 	// Field The field to get the ip address from for the geographical lookup.
 	Field string `json:"field"`
@@ -62,8 +62,7 @@ type IpLocationProcessor struct {
 	// Properties Controls what properties are added to the `target_field` based on the IP
 	// location lookup.
 	Properties []string `json:"properties,omitempty"`
-	// Tag Identifier for the processor.
-	// Useful for debugging and metrics.
+	// Tag Identifier for the processor. Useful for debugging and metrics.
 	Tag *string `json:"tag,omitempty"`
 	// TargetField The field that will hold the geographical information looked up from the
 	// MaxMind database.

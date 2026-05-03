@@ -43,9 +43,9 @@ func newSecuritySuggestUserProfilesFunc(t Transport) SecuritySuggestUserProfiles
 
 // ----- API Definition -------------------------------------------------------
 
-// SecuritySuggestUserProfiles - Get suggestions for user profiles that match specified search criteria.
+// SecuritySuggestUserProfiles - Suggest a user profile
 //
-// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/master/security-api-suggest-user-profile.html.
+// See full documentation at https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-api-suggest-user-profile.html.
 type SecuritySuggestUserProfiles func(o ...func(*SecuritySuggestUserProfilesRequest)) (*Response, error)
 
 // SecuritySuggestUserProfilesRequest configures the Security Suggest User Profiles API request.

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,12 +31,11 @@ import (
 
 // ExtendedMemoryStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/nodes/_types/Stats.ts#L660-L669
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/nodes/_types/Stats.ts#L660-L669
 type ExtendedMemoryStats struct {
 	// AdjustedTotalInBytes If the amount of physical memory has been overridden using the
 	// `es`.`total_memory_bytes` system property then this reports the overridden
-	// value in bytes.
-	// Otherwise it reports the same value as `total_in_bytes`.
+	// value in bytes. Otherwise it reports the same value as `total_in_bytes`.
 	AdjustedTotalInBytes *int64 `json:"adjusted_total_in_bytes,omitempty"`
 	// FreeInBytes Amount of free physical memory in bytes.
 	FreeInBytes *int64 `json:"free_in_bytes,omitempty"`

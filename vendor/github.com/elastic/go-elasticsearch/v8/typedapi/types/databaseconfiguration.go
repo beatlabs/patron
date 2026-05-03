@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -28,13 +28,18 @@ import (
 	"io"
 )
 
-// DatabaseConfiguration type.
+// The configuration necessary to identify which IP geolocation provider to use
+// to download a database, as well as any provider-specific configuration
+// necessary for such downloading. At present, the only supported providers are
+// `maxmind` and `ipinfo`, and the `maxmind` provider requires that an
+// `account_id` (string) is configured. A provider (either `maxmind` or
+// `ipinfo`) must be specified. The web and local providers can be returned as
+// read only configurations.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Database.ts#L22-L37
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ingest/_types/Database.ts#L22-L37
 type DatabaseConfiguration struct {
-	AdditionalDatabaseConfigurationProperty map[string]json.RawMessage `json:"-"`
-	Ipinfo                                  *Ipinfo                    `json:"ipinfo,omitempty"`
-	Maxmind                                 *Maxmind                   `json:"maxmind,omitempty"`
+	Ipinfo  *Ipinfo  `json:"ipinfo,omitempty"`
+	Maxmind *Maxmind `json:"maxmind,omitempty"`
 	// Name The provider-assigned name of the IP geolocation database to download.
 	Name string `json:"name"`
 }
@@ -69,58 +74,14 @@ func (s *DatabaseConfiguration) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("%s | %w", "Name", err)
 			}
 
-		default:
-
-			if key, ok := t.(string); ok {
-				if s.AdditionalDatabaseConfigurationProperty == nil {
-					s.AdditionalDatabaseConfigurationProperty = make(map[string]json.RawMessage, 0)
-				}
-				raw := new(json.RawMessage)
-				if err := dec.Decode(&raw); err != nil {
-					return fmt.Errorf("%s | %w", "AdditionalDatabaseConfigurationProperty", err)
-				}
-				s.AdditionalDatabaseConfigurationProperty[key] = *raw
-			}
-
 		}
 	}
 	return nil
 }
 
-// MarhsalJSON overrides marshalling for types with additional properties
-func (s DatabaseConfiguration) MarshalJSON() ([]byte, error) {
-	type opt DatabaseConfiguration
-	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
-
-	data, err := json.Marshal(opt(s))
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(data, &tmp)
-	if err != nil {
-		return nil, err
-	}
-
-	// We inline the additional fields from the underlying map
-	for key, value := range s.AdditionalDatabaseConfigurationProperty {
-		tmp[fmt.Sprintf("%s", key)] = value
-	}
-	delete(tmp, "AdditionalDatabaseConfigurationProperty")
-
-	data, err = json.Marshal(tmp)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
 // NewDatabaseConfiguration returns a DatabaseConfiguration.
 func NewDatabaseConfiguration() *DatabaseConfiguration {
-	r := &DatabaseConfiguration{
-		AdditionalDatabaseConfigurationProperty: make(map[string]json.RawMessage),
-	}
+	r := &DatabaseConfiguration{}
 
 	return r
 }

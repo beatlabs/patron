@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -34,13 +34,13 @@ import (
 
 // SparseVectorProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/mapping/core.ts#L227-L237
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/mapping/core.ts#L227-L237
 type SparseVectorProperty struct {
 	Dynamic     *dynamicmapping.DynamicMapping `json:"dynamic,omitempty"`
 	Fields      map[string]Property            `json:"fields,omitempty"`
 	IgnoreAbove *int                           `json:"ignore_above,omitempty"`
-	// IndexOptions Additional index options for the sparse vector field that controls the
-	// token pruning behavior of the sparse vector field.
+	// IndexOptions Additional index options for the sparse vector field that controls the token
+	// pruning behavior of the sparse vector field.
 	IndexOptions *SparseVectorIndexOptions `json:"index_options,omitempty"`
 	// Meta Metadata about the field.
 	Meta                map[string]string                                `json:"meta,omitempty"`

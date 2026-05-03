@@ -16,21 +16,26 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package searchtype
 package searchtype
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/common.ts#L281-L286
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/common.ts#L290-L295
 type SearchType struct {
 	Name string
 }
 
 var (
+
+	// Querythenfetch Documents are scored using local term and document frequencies for the shard.
+	// This is usually faster but less accurate.
 	Querythenfetch = SearchType{"query_then_fetch"}
 
+	// Dfsquerythenfetch Documents are scored using global term and document frequencies across all
+	// shards. This is usually slower but more accurate.
 	Dfsquerythenfetch = SearchType{"dfs_query_then_fetch"}
 )
 

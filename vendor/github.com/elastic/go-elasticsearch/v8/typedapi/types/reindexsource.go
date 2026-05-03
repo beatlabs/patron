@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,38 +31,35 @@ import (
 
 // ReindexSource type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/reindex/types.ts#L69-L110
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/reindex/types.ts#L69-L110
 type ReindexSource struct {
-	// Index The name of the data stream, index, or alias you are copying from.
-	// It accepts a comma-separated list to reindex from multiple sources.
+	// Index The name of the data stream, index, or alias you are copying from. It accepts
+	// a comma-separated list to reindex from multiple sources.
 	Index []string `json:"index"`
 	// Query The documents to reindex, which is defined with Query DSL.
 	Query *Query `json:"query,omitempty"`
 	// Remote A remote instance of Elasticsearch that you want to index from.
 	Remote          *RemoteSource `json:"remote,omitempty"`
 	RuntimeMappings RuntimeFields `json:"runtime_mappings,omitempty"`
-	// Size The number of documents to index per batch.
-	// Use it when you are indexing from remote to ensure that the batches fit
-	// within the on-heap buffer, which defaults to a maximum size of 100 MB.
+	// Size The number of documents to index per batch. Use it when you are indexing from
+	// remote to ensure that the batches fit within the on-heap buffer, which
+	// defaults to a maximum size of 100 MB.
 	Size *int `json:"size,omitempty"`
 	// Slice Slice the reindex request manually using the provided slice ID and total
 	// number of slices.
 	Slice *SlicedScroll `json:"slice,omitempty"`
 	// Sort A comma-separated list of `<field>:<direction>` pairs to sort by before
-	// indexing.
-	// Use it in conjunction with `max_docs` to control what documents are
+	// indexing. Use it in conjunction with `max_docs` to control what documents are
 	// reindexed.
 	//
-	// WARNING: Sort in reindex is deprecated.
-	// Sorting in reindex was never guaranteed to index documents in order and
-	// prevents further development of reindex such as resilience and performance
-	// improvements.
-	// If used in combination with `max_docs`, consider using a query filter
-	// instead.
+	// WARNING: Sort in reindex is deprecated. Sorting in reindex was never
+	// guaranteed to index documents in order and prevents further development of
+	// reindex such as resilience and performance improvements. If used in
+	// combination with `max_docs`, consider using a query filter instead.
 	Sort []SortCombinations `json:"sort,omitempty"`
-	// SourceFields_ If `true`, reindex all source fields.
-	// Set it to a list to reindex select fields.
-	SourceFields_ []string `json:"_source,omitempty"`
+	// SourceFields_ If `true`, reindex all source fields. Set it to a list to reindex select
+	// fields.
+	SourceFields_ SourceConfig `json:"_source,omitempty"`
 }
 
 func (s *ReindexSource) UnmarshalJSON(data []byte) error {
@@ -149,17 +146,37 @@ func (s *ReindexSource) UnmarshalJSON(data []byte) error {
 			}
 
 		case "_source":
-			rawMsg := json.RawMessage{}
-			dec.Decode(&rawMsg)
-			if !bytes.HasPrefix(rawMsg, []byte("[")) {
-				o := new(string)
-				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
+			message := json.RawMessage{}
+			if err := dec.Decode(&message); err != nil {
+				return fmt.Errorf("%s | %w", "SourceFields_", err)
+			}
+			keyDec := json.NewDecoder(bytes.NewReader(message))
+		sourcefields__field:
+			for {
+				t, err := keyDec.Token()
+				if err != nil {
+					if errors.Is(err, io.EOF) {
+						break
+					}
 					return fmt.Errorf("%s | %w", "SourceFields_", err)
 				}
 
-				s.SourceFields_ = append(s.SourceFields_, *o)
-			} else {
-				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.SourceFields_); err != nil {
+				switch t {
+
+				case "exclude_vectors", "excludes", "includes":
+					o := NewSourceFilter()
+					localDec := json.NewDecoder(bytes.NewReader(message))
+					if err := localDec.Decode(&o); err != nil {
+						return fmt.Errorf("%s | %w", "SourceFields_", err)
+					}
+					s.SourceFields_ = o
+					break sourcefields__field
+
+				}
+			}
+			if s.SourceFields_ == nil {
+				localDec := json.NewDecoder(bytes.NewReader(message))
+				if err := localDec.Decode(&s.SourceFields_); err != nil {
 					return fmt.Errorf("%s | %w", "SourceFields_", err)
 				}
 			}

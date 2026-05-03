@@ -16,23 +16,28 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package suggestmode
 package suggestmode
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/common.ts#L288-L301
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/common.ts#L297-L310
 type SuggestMode struct {
 	Name string
 }
 
 var (
+
+	// Missing Only generate suggestions for terms that are not in the shard.
 	Missing = SuggestMode{"missing"}
 
+	// Popular Only suggest terms that occur in more docs on the shard than the original
+	// term.
 	Popular = SuggestMode{"popular"}
 
+	// Always Suggest any matching suggestions based on terms in the suggest text.
 	Always = SuggestMode{"always"}
 )
 

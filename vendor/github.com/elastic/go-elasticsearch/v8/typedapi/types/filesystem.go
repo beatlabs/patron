@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,14 +31,14 @@ import (
 
 // FileSystem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/nodes/_types/Stats.ts#L771-L789
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/nodes/_types/Stats.ts#L771-L789
 type FileSystem struct {
 	// Data List of all file stores.
 	Data []DataPathStats `json:"data,omitempty"`
 	// IoStats Contains I/O statistics for the node.
 	IoStats *IoStats `json:"io_stats,omitempty"`
-	// Timestamp Last time the file stores statistics were refreshed.
-	// Recorded in milliseconds since the Unix Epoch.
+	// Timestamp Last time the file stores statistics were refreshed. Recorded in milliseconds
+	// since the Unix Epoch.
 	Timestamp *int64 `json:"timestamp,omitempty"`
 	// Total Contains statistics for all file stores of the node.
 	Total *FileSystemTotal `json:"total,omitempty"`

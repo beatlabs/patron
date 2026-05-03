@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // TrainedModelsRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cat/ml_trained_models/types.ts#L23-L115
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/cat/ml_trained_models/types.ts#L23-L115
 type TrainedModelsRecord struct {
 	// CreateTime The time the model was created.
 	CreateTime DateTime `json:"create_time,omitempty"`
@@ -41,8 +41,8 @@ type TrainedModelsRecord struct {
 	DataFrameAnalysis *string `json:"data_frame.analysis,omitempty"`
 	// DataFrameCreateTime The time the data frame analytics job was created.
 	DataFrameCreateTime *string `json:"data_frame.create_time,omitempty"`
-	// DataFrameId The identifier for the data frame analytics job that created the model.
-	// Only displayed if the job is still available.
+	// DataFrameId The identifier for the data frame analytics job that created the model. Only
+	// displayed if the job is still available.
 	DataFrameId *string `json:"data_frame.id,omitempty"`
 	// DataFrameSourceIndex The source index used to train in the data frame analysis.
 	DataFrameSourceIndex *string `json:"data_frame.source_index,omitempty"`
@@ -64,8 +64,8 @@ type TrainedModelsRecord struct {
 	IngestTime *string `json:"ingest.time,omitempty"`
 	// License The license level of the model.
 	License *string `json:"license,omitempty"`
-	// Operations The estimated number of operations to use the model.
-	// This number helps to measure the computational complexity of the model.
+	// Operations The estimated number of operations to use the model. This number helps to
+	// measure the computational complexity of the model.
 	Operations *string `json:"operations,omitempty"`
 	Type       *string `json:"type,omitempty"`
 	// Version The version of Elasticsearch when the model was created.

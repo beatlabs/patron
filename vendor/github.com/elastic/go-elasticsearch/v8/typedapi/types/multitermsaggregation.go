@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -34,21 +34,21 @@ import (
 
 // MultiTermsAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/bucket.ts#L601-L641
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/aggregations/bucket.ts#L601-L641
 type MultiTermsAggregation struct {
 	// CollectMode Specifies the strategy for data collection.
 	CollectMode *termsaggregationcollectmode.TermsAggregationCollectMode `json:"collect_mode,omitempty"`
 	// MinDocCount The minimum number of documents in a bucket for it to be returned.
 	MinDocCount *int64 `json:"min_doc_count,omitempty"`
-	// Order Specifies the sort order of the buckets.
-	// Defaults to sorting by descending document count.
+	// Order Specifies the sort order of the buckets. Defaults to sorting by descending
+	// document count.
 	Order AggregateOrder `json:"order,omitempty"`
 	// ShardMinDocCount The minimum number of documents in a bucket on each shard for it to be
 	// returned.
 	ShardMinDocCount *int64 `json:"shard_min_doc_count,omitempty"`
-	// ShardSize The number of candidate terms produced by each shard.
-	// By default, `shard_size` will be automatically estimated based on the number
-	// of shards and the `size` parameter.
+	// ShardSize The number of candidate terms produced by each shard. By default,
+	// `shard_size` will be automatically estimated based on the number of shards
+	// and the `size` parameter.
 	ShardSize *int `json:"shard_size,omitempty"`
 	// ShowTermDocCountError Calculates the doc count error on per term basis.
 	ShowTermDocCountError *bool `json:"show_term_doc_count_error,omitempty"`

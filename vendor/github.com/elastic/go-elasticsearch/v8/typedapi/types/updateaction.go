@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // UpdateAction type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/bulk/types.ts#L182-L217
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/bulk/types.ts#L182-L217
 type UpdateAction struct {
 	// DetectNoop If true, the `result` in the response is set to 'noop' when no changes to the
 	// document occur.
@@ -44,13 +44,11 @@ type UpdateAction struct {
 	Script *Script `json:"script,omitempty"`
 	// ScriptedUpsert Set to `true` to run the script whether or not the document exists.
 	ScriptedUpsert *bool `json:"scripted_upsert,omitempty"`
-	// Source_ If `false`, source retrieval is turned off.
-	// You can also specify a comma-separated list of the fields you want to
-	// retrieve.
+	// Source_ If `false`, source retrieval is turned off. You can also specify a
+	// comma-separated list of the fields you want to retrieve.
 	Source_ SourceConfig `json:"_source,omitempty"`
 	// Upsert If the document does not already exist, the contents of `upsert` are inserted
-	// as a new document.
-	// If the document exists, the `script` is run.
+	// as a new document. If the document exists, the `script` is run.
 	Upsert json.RawMessage `json:"upsert,omitempty"`
 }
 

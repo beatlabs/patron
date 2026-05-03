@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -32,7 +32,7 @@ import (
 
 // AsyncSearch type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/async_search/_types/AsyncSearch.ts#L30-L56
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/async_search/_types/AsyncSearch.ts#L30-L56
 type AsyncSearch struct {
 	// Aggregations Partial aggregations results, coming from the shards that have already
 	// completed running the query.
@@ -41,17 +41,16 @@ type AsyncSearch struct {
 	Fields       map[string]json.RawMessage `json:"fields,omitempty"`
 	Hits         HitsMetadata               `json:"hits"`
 	MaxScore     *Float64                   `json:"max_score,omitempty"`
-	// NumReducePhases Indicates how many reductions of the results have been performed.
-	// If this number increases compared to the last retrieved results for a get
-	// asynch search request, you can expect additional results included in the
-	// search response.
+	// NumReducePhases Indicates how many reductions of the results have been performed. If this
+	// number increases compared to the last retrieved results for a get asynch
+	// search request, you can expect additional results included in the search
+	// response.
 	NumReducePhases *int64   `json:"num_reduce_phases,omitempty"`
 	PitId           *string  `json:"pit_id,omitempty"`
 	Profile         *Profile `json:"profile,omitempty"`
 	ScrollId_       *string  `json:"_scroll_id,omitempty"`
-	// Shards_ Indicates how many shards have run the query.
-	// Note that in order for shard results to be included in the search response,
-	// they need to be reduced first.
+	// Shards_ Indicates how many shards have run the query. Note that in order for shard
+	// results to be included in the search response, they need to be reduced first.
 	Shards_         ShardStatistics      `json:"_shards"`
 	Suggest         map[string][]Suggest `json:"suggest,omitempty"`
 	TerminatedEarly *bool                `json:"terminated_early,omitempty"`
@@ -208,6 +207,13 @@ func (s *AsyncSearch) UnmarshalJSON(data []byte) error {
 								}
 								s.Aggregations[elems[1]] = o
 
+							case "change_point":
+								o := NewChangePointAggregate()
+								if err := dec.Decode(&o); err != nil {
+									return fmt.Errorf("%s | %w", "Aggregations", err)
+								}
+								s.Aggregations[elems[1]] = o
+
 							case "stats":
 								o := NewStatsAggregate()
 								if err := dec.Decode(&o); err != nil {
@@ -231,6 +237,20 @@ func (s *AsyncSearch) UnmarshalJSON(data []byte) error {
 
 							case "extended_stats_bucket":
 								o := NewExtendedStatsBucketAggregate()
+								if err := dec.Decode(&o); err != nil {
+									return fmt.Errorf("%s | %w", "Aggregations", err)
+								}
+								s.Aggregations[elems[1]] = o
+
+							case "cartesian_bounds":
+								o := NewCartesianBoundsAggregate()
+								if err := dec.Decode(&o); err != nil {
+									return fmt.Errorf("%s | %w", "Aggregations", err)
+								}
+								s.Aggregations[elems[1]] = o
+
+							case "cartesian_centroid":
+								o := NewCartesianCentroidAggregate()
 								if err := dec.Decode(&o); err != nil {
 									return fmt.Errorf("%s | %w", "Aggregations", err)
 								}

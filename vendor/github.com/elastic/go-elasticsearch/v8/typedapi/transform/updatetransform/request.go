@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package updatetransform
 
@@ -33,17 +33,16 @@ import (
 
 // Request holds the request body struct for the package updatetransform
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/transform/update_transform/UpdateTransformRequest.ts#L31-L113
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/transform/update_transform/UpdateTransformRequest.ts#L31-L115
 type Request struct {
-
 	// Description Free text description of the transform.
 	Description *string `json:"description,omitempty"`
 	// Dest The destination for the transform.
 	Dest *types.TransformDestination `json:"dest,omitempty"`
 	// Frequency The interval between checks for changes in the source indices when the
-	// transform is running continuously. Also determines the retry interval in
-	// the event of transient failures while the transform is searching or
-	// indexing. The minimum value is 1s and the maximum is 1h.
+	// transform is running continuously. Also determines the retry interval in the
+	// event of transient failures while the transform is searching or indexing. The
+	// minimum value is 1s and the maximum is 1h.
 	Frequency types.Duration `json:"frequency,omitempty"`
 	// Meta_ Defines optional transform metadata.
 	Meta_ types.Metadata `json:"_meta,omitempty"`

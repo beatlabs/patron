@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,16 +31,16 @@ import (
 
 // CompletionSuggester type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/_types/suggester.ts#L163-L181
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/search/_types/suggester.ts#L163-L181
 type CompletionSuggester struct {
-	// Analyzer The analyzer to analyze the suggest text with.
-	// Defaults to the search analyzer of the suggest field.
+	// Analyzer The analyzer to analyze the suggest text with. Defaults to the search
+	// analyzer of the suggest field.
 	Analyzer *string `json:"analyzer,omitempty"`
 	// Contexts A value, geo point object, or a geo hash string to filter or boost the
 	// suggestion on.
 	Contexts map[string][]CompletionContext `json:"contexts,omitempty"`
-	// Field The field to fetch the candidate suggestions from.
-	// Needs to be set globally or per suggestion.
+	// Field The field to fetch the candidate suggestions from. Needs to be set globally
+	// or per suggestion.
 	Field string `json:"field"`
 	// Fuzzy Enables fuzziness, meaning you can have a typo in your search and still get
 	// results back.
@@ -87,22 +87,21 @@ func (s *CompletionSuggester) UnmarshalJSON(data []byte) error {
 			rawMsg := make(map[string]json.RawMessage, 0)
 			dec.Decode(&rawMsg)
 			for key, value := range rawMsg {
-				switch {
-				case bytes.HasPrefix(value, []byte("\"")), bytes.HasPrefix(value, []byte("{")):
-					o := NewCompletionContext()
-					err := json.NewDecoder(bytes.NewReader(value)).Decode(&o)
-					if err != nil {
-						return fmt.Errorf("%s | %w", "Contexts", err)
-					}
-					s.Contexts[key] = append(s.Contexts[key], *o)
-				default:
-					o := []CompletionContext{}
-					err := json.NewDecoder(bytes.NewReader(value)).Decode(&o)
-					if err != nil {
+				v := bytes.TrimSpace(value)
+				if len(v) > 0 && v[0] == '[' {
+					var o []CompletionContext
+					if err := json.NewDecoder(bytes.NewReader(v)).Decode(&o); err != nil {
 						return fmt.Errorf("%s | %w", "Contexts", err)
 					}
 					s.Contexts[key] = o
+					continue
 				}
+
+				var o CompletionContext
+				if err := json.NewDecoder(bytes.NewReader(v)).Decode(&o); err != nil {
+					return fmt.Errorf("%s | %w", "Contexts", err)
+				}
+				s.Contexts[key] = append(s.Contexts[key], o)
 			}
 
 		case "field":

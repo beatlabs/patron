@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package delegatepki
 
@@ -27,17 +27,16 @@ import (
 
 // Request holds the request body struct for the package delegatepki
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/delegate_pki/SecurityDelegatePkiRequest.ts#L22-L57
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/security/delegate_pki/SecurityDelegatePkiRequest.ts#L23-L59
 type Request struct {
-
 	// X509CertificateChain The X509Certificate chain, which is represented as an ordered string array.
 	// Each string in the array is a base64-encoded (Section 4 of RFC4648 - not
 	// base64url-encoded) of the certificate's DER encoding.
 	//
 	// The first element is the target certificate that contains the subject
-	// distinguished name that is requesting access.
-	// This may be followed by additional certificates; each subsequent certificate
-	// is used to certify the previous one.
+	// distinguished name that is requesting access. This may be followed by
+	// additional certificates; each subsequent certificate is used to certify the
+	// previous one.
 	X509CertificateChain []string `json:"x509_certificate_chain"`
 }
 

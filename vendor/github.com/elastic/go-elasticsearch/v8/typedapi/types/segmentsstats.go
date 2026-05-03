@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // SegmentsStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Stats.ts#L298-L393
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/Stats.ts#L298-L393
 type SegmentsStats struct {
 	// Count Total number of segments across all shards assigned to selected nodes.
 	Count int `json:"count"`
@@ -41,13 +41,12 @@ type SegmentsStats struct {
 	// DocValuesMemoryInBytes Total amount, in bytes, of memory used for doc values across all shards
 	// assigned to selected nodes.
 	DocValuesMemoryInBytes int64 `json:"doc_values_memory_in_bytes"`
-	// FileSizes This object is not populated by the cluster stats API.
-	// To get information on segment files, use the node stats API.
+	// FileSizes This object is not populated by the cluster stats API. To get information on
+	// segment files, use the node stats API.
 	FileSizes map[string]ShardFileSizeInfo `json:"file_sizes"`
 	// FixedBitSet Total amount of memory used by fixed bit sets across all shards assigned to
-	// selected nodes.
-	// Fixed bit sets are used for nested object field types and type filters for
-	// join fields.
+	// selected nodes. Fixed bit sets are used for nested object field types and
+	// type filters for join fields.
 	FixedBitSet ByteSize `json:"fixed_bit_set,omitempty"`
 	// FixedBitSetMemoryInBytes Total amount of memory, in bytes, used by fixed bit sets across all shards
 	// assigned to selected nodes.

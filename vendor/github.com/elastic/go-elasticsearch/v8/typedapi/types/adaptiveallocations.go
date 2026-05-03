@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,16 +31,15 @@ import (
 
 // AdaptiveAllocations type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/_types/CommonTypes.ts#L99-L116
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/inference/_types/CommonTypes.ts#L99-L116
 type AdaptiveAllocations struct {
 	// Enabled Turn on `adaptive_allocations`.
 	Enabled *bool `json:"enabled,omitempty"`
-	// MaxNumberOfAllocations The maximum number of allocations to scale to.
-	// If set, it must be greater than or equal to `min_number_of_allocations`.
+	// MaxNumberOfAllocations The maximum number of allocations to scale to. If set, it must be greater
+	// than or equal to `min_number_of_allocations`.
 	MaxNumberOfAllocations *int `json:"max_number_of_allocations,omitempty"`
-	// MinNumberOfAllocations The minimum number of allocations to scale to.
-	// If set, it must be greater than or equal to 0.
-	// If not defined, the deployment scales to 0.
+	// MinNumberOfAllocations The minimum number of allocations to scale to. If set, it must be greater
+	// than or equal to 0. If not defined, the deployment scales to 0.
 	MinNumberOfAllocations *int `json:"min_number_of_allocations,omitempty"`
 }
 

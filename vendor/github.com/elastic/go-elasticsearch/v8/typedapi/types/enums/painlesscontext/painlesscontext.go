@@ -16,39 +16,60 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package painlesscontext
 package painlesscontext
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/scripts_painless_execute/types.ts#L57-L80
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/scripts_painless_execute/types.ts#L57-L80
 type PainlessContext struct {
 	Name string
 }
 
 var (
+
+	// Painlesstest The default context if no other context is specified.
 	Painlesstest = PainlessContext{"painless_test"}
 
+	// Filter Treats scripts as if they were run inside a script query.
 	Filter = PainlessContext{"filter"}
 
+	// Score Treats scripts as if they were run inside a `script_score` function in a
+	// `function_score` query.
 	Score = PainlessContext{"score"}
 
+	// Booleanfield The context for boolean fields. The script returns a `true` or `false`
+	// response.
 	Booleanfield = PainlessContext{"boolean_field"}
 
+	// Datefield The context for date fields. `emit` takes a long value and the script returns
+	// a sorted list of dates.
 	Datefield = PainlessContext{"date_field"}
 
+	// Doublefield The context for double numeric fields. The script returns a sorted list of
+	// double values.
 	Doublefield = PainlessContext{"double_field"}
 
+	// Geopointfield The context for geo-point fields. `emit` takes two double parameters, the
+	// latitude and longitude values, and the script returns an object in GeoJSON
+	// format containing the coordinates for the geo point.
 	Geopointfield = PainlessContext{"geo_point_field"}
 
+	// Ipfield The context for `ip` fields. The script returns a sorted list of IP
+	// addresses.
 	Ipfield = PainlessContext{"ip_field"}
 
+	// Keywordfield The context for keyword fields. The script returns a sorted list of string
+	// values.
 	Keywordfield = PainlessContext{"keyword_field"}
 
+	// Longfield The context for long numeric fields. The script returns a sorted list of long
+	// values.
 	Longfield = PainlessContext{"long_field"}
 
+	// Compositefield The context for composite runtime fields. The script returns a map of values.
 	Compositefield = PainlessContext{"composite_field"}
 )
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package termvectors
 
@@ -34,39 +34,35 @@ import (
 
 // Request holds the request body struct for the package termvectors
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/termvectors/TermVectorsRequest.ts#L33-L239
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/termvectors/TermVectorsRequest.ts#L34-L242
 type Request struct {
-
 	// Doc An artificial document (a document not present in the index) for which you
 	// want to retrieve term vectors.
 	Doc json.RawMessage `json:"doc,omitempty"`
 	// FieldStatistics If `true`, the response includes:
 	//
-	// * The document count (how many documents contain this field).
-	// * The sum of document frequencies (the sum of document frequencies for all
-	// terms in this field).
-	// * The sum of total term frequencies (the sum of total term frequencies of
-	// each term in this field).
+	//   - The document count (how many documents contain this field).
+	//   - The sum of document frequencies (the sum of document frequencies for all
+	//     terms in this field).
+	//   - The sum of total term frequencies (the sum of total term frequencies of
+	//     each term in this field).
 	FieldStatistics *bool `json:"field_statistics,omitempty"`
-	// Fields A list of fields to include in the statistics.
-	// It is used as the default list unless a specific field list is provided in
-	// the `completion_fields` or `fielddata_fields` parameters.
+	// Fields A list of fields to include in the statistics. It is used as the default list
+	// unless a specific field list is provided in the `completion_fields` or
+	// `fielddata_fields` parameters.
 	Fields []string `json:"fields,omitempty"`
-	// Filter Filter terms based on their tf-idf scores.
-	// This could be useful in order find out a good characteristic vector of a
-	// document.
-	// This feature works in a similar manner to the second phase of the More Like
-	// This Query.
+	// Filter Filter terms based on their tf-idf scores. This could be useful in order find
+	// out a good characteristic vector of a document. This feature works in a
+	// similar manner to the second phase of the More Like This Query.
 	Filter *types.TermVectorsFilter `json:"filter,omitempty"`
 	// Offsets If `true`, the response includes term offsets.
 	Offsets *bool `json:"offsets,omitempty"`
 	// Payloads If `true`, the response includes term payloads.
 	Payloads *bool `json:"payloads,omitempty"`
-	// PerFieldAnalyzer Override the default per-field analyzer.
-	// This is useful in order to generate term vectors in any fashion, especially
-	// when using artificial documents.
-	// When providing an analyzer for a field that already stores term vectors, the
-	// term vectors will be regenerated.
+	// PerFieldAnalyzer Override the default per-field analyzer. This is useful in order to generate
+	// term vectors in any fashion, especially when using artificial documents. When
+	// providing an analyzer for a field that already stores term vectors, the term
+	// vectors will be regenerated.
 	PerFieldAnalyzer map[string]string `json:"per_field_analyzer,omitempty"`
 	// Positions If `true`, the response includes term positions.
 	Positions *bool `json:"positions,omitempty"`
@@ -74,9 +70,9 @@ type Request struct {
 	Routing *string `json:"routing,omitempty"`
 	// TermStatistics If `true`, the response includes:
 	//
-	// * The total term frequency (how often a term occurs in all documents).
-	// * The document frequency (the number of documents containing the current
-	// term).
+	//   - The total term frequency (how often a term occurs in all documents).
+	//   - The document frequency (the number of documents containing the current
+	//     term).
 	//
 	// By default these values are not returned since term statistics can have a
 	// serious performance impact.
@@ -142,19 +138,8 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 			}
 
 		case "fields":
-			rawMsg := json.RawMessage{}
-			dec.Decode(&rawMsg)
-			if !bytes.HasPrefix(rawMsg, []byte("[")) {
-				o := new(string)
-				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&o); err != nil {
-					return fmt.Errorf("%s | %w", "Fields", err)
-				}
-
-				s.Fields = append(s.Fields, *o)
-			} else {
-				if err := json.NewDecoder(bytes.NewReader(rawMsg)).Decode(&s.Fields); err != nil {
-					return fmt.Errorf("%s | %w", "Fields", err)
-				}
+			if err := dec.Decode(&s.Fields); err != nil {
+				return fmt.Errorf("%s | %w", "Fields", err)
 			}
 
 		case "filter":

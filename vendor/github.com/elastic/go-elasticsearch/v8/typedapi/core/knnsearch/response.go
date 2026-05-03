@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package knnsearch
 
@@ -28,21 +28,20 @@ import (
 
 // Response holds the response body struct for the package knnsearch
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/knn_search/KnnSearchResponse.ts#L26-L54
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/knn_search/KnnSearchResponse.ts#L26-L54
 type Response struct {
-
-	// Fields The field values for the documents. These fields
-	// must be specified in the request using the `fields` parameter.
+	// Fields The field values for the documents. These fields must be specified in the
+	// request using the `fields` parameter.
 	Fields map[string]json.RawMessage `json:"fields,omitempty"`
 	// Hits The returned documents and metadata.
 	Hits types.HitsMetadata `json:"hits"`
-	// MaxScore The highest returned document score. This value is null for requests
-	// that do not sort by score.
+	// MaxScore The highest returned document score. This value is null for requests that do
+	// not sort by score.
 	MaxScore *types.Float64 `json:"max_score,omitempty"`
 	// Shards_ A count of shards used for the request.
 	Shards_ types.ShardStatistics `json:"_shards"`
-	// TimedOut If true, the request timed out before completion;
-	// returned results may be partial or empty.
+	// TimedOut If true, the request timed out before completion; returned results may be
+	// partial or empty.
 	TimedOut bool `json:"timed_out"`
 	// Took The milliseconds it took Elasticsearch to run the request.
 	Took int64 `json:"took"`

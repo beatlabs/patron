@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // NodesRecord type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cat/nodes/types.ts#L23-L542
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/cat/nodes/types.ts#L23-L542
 type NodesRecord struct {
 	// Build The Elasticsearch build hash.
 	Build *string `json:"build,omitempty"`
@@ -121,8 +121,8 @@ type NodesRecord struct {
 	Load1M *string `json:"load_1m,omitempty"`
 	// Load5M The load average for the last five minutes.
 	Load5M *string `json:"load_5m,omitempty"`
-	// Master Indicates whether the node is the elected master node.
-	// Returned values include `*`(elected master) and `-`(not elected master).
+	// Master Indicates whether the node is the elected master node. Returned values
+	// include `*`(elected master) and `-`(not elected master).
 	Master *string `json:"master,omitempty"`
 	// MergesCurrent The number of current merges.
 	MergesCurrent *string `json:"merges.current,omitempty"`
@@ -140,12 +140,11 @@ type NodesRecord struct {
 	MergesTotalTime *string `json:"merges.total_time,omitempty"`
 	// Name The node name.
 	Name *string `json:"name,omitempty"`
-	// NodeRole The roles of the node.
-	// Returned values include `c`(cold node), `d`(data node), `f`(frozen node),
-	// `h`(hot node), `i`(ingest node), `l`(machine learning node), `m` (master
-	// eligible node), `r`(remote cluster client node), `s`(content node),
-	// `t`(transform node), `v`(voting-only node), `w`(warm node),and
-	// `-`(coordinating node only).
+	// NodeRole The roles of the node. Returned values include `c`(cold node), `d`(data
+	// node), `f`(frozen node), `h`(hot node), `i`(ingest node), `l`(machine
+	// learning node), `m` (master eligible node), `r`(remote cluster client node),
+	// `s`(content node), `t`(transform node), `v`(voting-only node), `w`(warm
+	// node),and `-`(coordinating node only).
 	NodeRole *string `json:"node.role,omitempty"`
 	// Pid The process identifier.
 	Pid *string `json:"pid,omitempty"`

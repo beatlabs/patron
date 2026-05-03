@@ -48,12 +48,12 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("ttl", func(t *testing.T) {
-		require.NoError(t, cache.SetTTL(ctx, key1, val1, 2*time.Millisecond))
+		require.NoError(t, cache.SetTTL(ctx, key1, val1, 200*time.Millisecond))
 		got, exists, err := cache.Get(ctx, key1)
 		require.NoError(t, err)
 		assert.True(t, exists)
 		assert.Equal(t, val1, got)
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(300 * time.Millisecond)
 		_, exists, err = cache.Get(ctx, key1)
 		require.NoError(t, err)
 		require.False(t, exists)

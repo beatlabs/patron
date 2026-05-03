@@ -16,29 +16,42 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package textquerytype
 package textquerytype
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/fulltext.ts#L610-L636
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/fulltext.ts#L610-L636
 type TextQueryType struct {
 	Name string
 }
 
 var (
+
+	// Bestfields Finds documents that match any field, but uses the `_score` from the best
+	// field.
 	Bestfields = TextQueryType{"best_fields"}
 
+	// Mostfields Finds documents that match any field and combines the `_score` from each
+	// field.
 	Mostfields = TextQueryType{"most_fields"}
 
+	// Crossfields Treats fields with the same analyzer as though they were one big field. Looks
+	// for each word in any field.
 	Crossfields = TextQueryType{"cross_fields"}
 
+	// Phrase Runs a `match_phrase` query on each field and uses the `_score` from the best
+	// field.
 	Phrase = TextQueryType{"phrase"}
 
+	// Phraseprefix Runs a `match_phrase_prefix` query on each field and uses the `_score` from
+	// the best field.
 	Phraseprefix = TextQueryType{"phrase_prefix"}
 
+	// Boolprefix Creates a `match_bool_prefix` query on each field and combines the `_score`
+	// from each field.
 	Boolprefix = TextQueryType{"bool_prefix"}
 )
 

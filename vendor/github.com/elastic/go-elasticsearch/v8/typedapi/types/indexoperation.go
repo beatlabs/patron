@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,12 +33,11 @@ import (
 
 // IndexOperation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/bulk/types.ts#L142-L142
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/bulk/types.ts#L142-L142
 type IndexOperation struct {
-	// DynamicTemplates A map from the full name of fields to the name of dynamic templates.
-	// It defaults to an empty map.
-	// If a name matches a dynamic template, that template will be applied
-	// regardless of other match predicates defined in the template.
+	// DynamicTemplates A map from the full name of fields to the name of dynamic templates. It
+	// defaults to an empty map. If a name matches a dynamic template, that template
+	// will be applied regardless of other match predicates defined in the template.
 	// If a field is already defined in the mapping, then this parameter won't be
 	// used.
 	DynamicTemplates map[string]string `json:"dynamic_templates,omitempty"`
@@ -48,11 +47,10 @@ type IndexOperation struct {
 	IfSeqNo       *int64  `json:"if_seq_no,omitempty"`
 	// Index_ The name of the index or index alias to perform the action on.
 	Index_ *string `json:"_index,omitempty"`
-	// Pipeline The ID of the pipeline to use to preprocess incoming documents.
-	// If the index has a default ingest pipeline specified, setting the value to
-	// `_none` turns off the default ingest pipeline for this request.
-	// If a final pipeline is configured, it will always run regardless of the value
-	// of this parameter.
+	// Pipeline The ID of the pipeline to use to preprocess incoming documents. If the index
+	// has a default ingest pipeline specified, setting the value to `_none` turns
+	// off the default ingest pipeline for this request. If a final pipeline is
+	// configured, it will always run regardless of the value of this parameter.
 	Pipeline *string `json:"pipeline,omitempty"`
 	// RequireAlias If `true`, the request's actions must target an index alias.
 	RequireAlias *bool `json:"require_alias,omitempty"`

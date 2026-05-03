@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // WordDelimiterGraphTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/analysis/token_filters.ts#L205-L211
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/analysis/token_filters.ts#L205-L211
 type WordDelimiterGraphTokenFilter struct {
 	// AdjustOffsets If `true`, the filter adjusts the offsets of split or catenated tokens to
 	// better reflect their actual position in the token stream. Defaults to `true`.
@@ -62,10 +62,9 @@ type WordDelimiterGraphTokenFilter struct {
 	PreserveOriginal Stringifiedboolean `json:"preserve_original,omitempty"`
 	// ProtectedWords Array of tokens the filter won’t split.
 	ProtectedWords []string `json:"protected_words,omitempty"`
-	// ProtectedWordsPath Path to a file that contains a list of tokens the filter won’t split.
-	// This path must be absolute or relative to the `config` location, and the file
-	// must be UTF-8 encoded. Each token in the file must be separated by a line
-	// break.
+	// ProtectedWordsPath Path to a file that contains a list of tokens the filter won’t split. This
+	// path must be absolute or relative to the `config` location, and the file must
+	// be UTF-8 encoded. Each token in the file must be separated by a line break.
 	ProtectedWordsPath *string `json:"protected_words_path,omitempty"`
 	// SplitOnCaseChange If `true`, the filter splits tokens at letter case transitions. For example:
 	// camelCase -> [ camel, Case ]. Defaults to `true`.

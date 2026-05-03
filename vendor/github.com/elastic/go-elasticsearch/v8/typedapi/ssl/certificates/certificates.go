@@ -16,25 +16,24 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Get SSL certificates.
 //
 // Get information about the X.509 certificates that are used to encrypt
-// communications in the cluster.
-// The API returns a list that includes certificates from all TLS contexts
-// including:
+// communications in the cluster. The API returns a list that includes
+// certificates from all TLS contexts including:
 //
-// - Settings for transport and HTTP interfaces
-// - TLS settings that are used within authentication realms
-// - TLS settings for remote monitoring exporters
+//   - Settings for transport and HTTP interfaces
+//   - TLS settings that are used within authentication realms
+//   - TLS settings for remote monitoring exporters
 //
 // The list includes certificates that are used for configuring trust, such as
 // those configured in the `xpack.security.transport.ssl.truststore` and
-// `xpack.security.transport.ssl.certificate_authorities` settings.
-// It also includes certificates that are used for configuring server identity,
-// such as `xpack.security.http.ssl.keystore` and
-// `xpack.security.http.ssl.certificate settings`.
+// `xpack.security.transport.ssl.certificate_authorities` settings. It also
+// includes certificates that are used for configuring server identity, such as
+// `xpack.security.http.ssl.keystore` and `xpack.security.http.ssl.certificate
+// settings`.
 //
 // The list does not include certificates that are sourced from the default SSL
 // context of the Java Runtime Environment (JRE), even if those certificates are
@@ -100,20 +99,19 @@ func NewCertificatesFunc(tp elastictransport.Interface) NewCertificates {
 // Get SSL certificates.
 //
 // Get information about the X.509 certificates that are used to encrypt
-// communications in the cluster.
-// The API returns a list that includes certificates from all TLS contexts
-// including:
+// communications in the cluster. The API returns a list that includes
+// certificates from all TLS contexts including:
 //
-// - Settings for transport and HTTP interfaces
-// - TLS settings that are used within authentication realms
-// - TLS settings for remote monitoring exporters
+//   - Settings for transport and HTTP interfaces
+//   - TLS settings that are used within authentication realms
+//   - TLS settings for remote monitoring exporters
 //
 // The list includes certificates that are used for configuring trust, such as
 // those configured in the `xpack.security.transport.ssl.truststore` and
-// `xpack.security.transport.ssl.certificate_authorities` settings.
-// It also includes certificates that are used for configuring server identity,
-// such as `xpack.security.http.ssl.keystore` and
-// `xpack.security.http.ssl.certificate settings`.
+// `xpack.security.transport.ssl.certificate_authorities` settings. It also
+// includes certificates that are used for configuring server identity, such as
+// `xpack.security.http.ssl.keystore` and `xpack.security.http.ssl.certificate
+// settings`.
 //
 // The list does not include certificates that are sourced from the default SSL
 // context of the Java Runtime Environment (JRE), even if those certificates are
@@ -197,7 +195,7 @@ func (r Certificates) Perform(providedCtx context.Context) (*http.Response, erro
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "ssl.certificates")
+			ctx = instrument.Start(providedCtx, "ssl.certificates")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -357,11 +355,9 @@ func (r *Certificates) FilterPath(filterpaths ...string) *Certificates {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *Certificates) Human(human bool) *Certificates {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -369,8 +365,8 @@ func (r *Certificates) Human(human bool) *Certificates {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *Certificates) Pretty(pretty bool) *Certificates {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

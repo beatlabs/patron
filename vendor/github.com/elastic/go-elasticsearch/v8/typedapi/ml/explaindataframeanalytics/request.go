@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package explaindataframeanalytics
 
@@ -29,9 +29,8 @@ import (
 
 // Request holds the request body struct for the package explaindataframeanalytics
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/explain_data_frame_analytics/MlExplainDataFrameAnalyticsRequest.ts#L30-L120
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/explain_data_frame_analytics/MlExplainDataFrameAnalyticsRequest.ts#L30-L122
 type Request struct {
-
 	// AllowLazyStart Specifies whether this job can start when there is insufficient machine
 	// learning node capacity for it to be immediately assigned to a node.
 	AllowLazyStart *bool `json:"allow_lazy_start,omitempty"`
@@ -41,19 +40,19 @@ type Request struct {
 	Analysis *types.DataframeAnalysisContainer `json:"analysis,omitempty"`
 	// AnalyzedFields Specify includes and/or excludes patterns to select which fields will be
 	// included in the analysis. The patterns specified in excludes are applied
-	// last, therefore excludes takes precedence. In other words, if the same
-	// field is specified in both includes and excludes, then the field will not
-	// be included in the analysis.
+	// last, therefore excludes takes precedence. In other words, if the same field
+	// is specified in both includes and excludes, then the field will not be
+	// included in the analysis.
 	AnalyzedFields *types.DataframeAnalysisAnalyzedFields `json:"analyzed_fields,omitempty"`
 	// Description A description of the job.
 	Description *string `json:"description,omitempty"`
 	// Dest The destination configuration, consisting of index and optionally
 	// results_field (ml by default).
 	Dest *types.DataframeAnalyticsDestination `json:"dest,omitempty"`
-	// MaxNumThreads The maximum number of threads to be used by the analysis. Using more
-	// threads may decrease the time necessary to complete the analysis at the
-	// cost of using more CPU. Note that the process may use additional threads
-	// for operational functionality other than the analysis itself.
+	// MaxNumThreads The maximum number of threads to be used by the analysis. Using more threads
+	// may decrease the time necessary to complete the analysis at the cost of using
+	// more CPU. Note that the process may use additional threads for operational
+	// functionality other than the analysis itself.
 	MaxNumThreads *int `json:"max_num_threads,omitempty"`
 	// ModelMemoryLimit The approximate maximum amount of memory resources that are permitted for
 	// analytical processing. If your `elasticsearch.yml` file contains an
@@ -61,8 +60,8 @@ type Request struct {
 	// create data frame analytics jobs that have `model_memory_limit` values
 	// greater than that setting.
 	ModelMemoryLimit *string `json:"model_memory_limit,omitempty"`
-	// Source The configuration of how to source the analysis data. It requires an
-	// index. Optionally, query and _source may be specified.
+	// Source The configuration of how to source the analysis data. It requires an index.
+	// Optionally, query and _source may be specified.
 	Source *types.DataframeAnalyticsSource `json:"source,omitempty"`
 }
 

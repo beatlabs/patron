@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -30,27 +30,23 @@ import (
 
 // TranslogRetention type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/_types/IndexSettings.ts#L396-L415
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/indices/_types/IndexSettings.ts#L396-L415
 type TranslogRetention struct {
 	// Age This controls the maximum duration for which translog files are kept by each
-	// shard. Keeping more
-	// translog files increases the chance of performing an operation based sync
-	// when recovering replicas. If
-	// the translog files are not sufficient, replica recovery will fall back to a
-	// file based sync. This setting
-	// is ignored, and should not be set, if soft deletes are enabled. Soft deletes
-	// are enabled by default in
-	// indices created in Elasticsearch versions 7.0.0 and later.
+	// shard. Keeping more translog files increases the chance of performing an
+	// operation based sync when recovering replicas. If the translog files are not
+	// sufficient, replica recovery will fall back to a file based sync. This
+	// setting is ignored, and should not be set, if soft deletes are enabled. Soft
+	// deletes are enabled by default in indices created in Elasticsearch versions
+	// 7.0.0 and later.
 	Age Duration `json:"age,omitempty"`
 	// Size This controls the total size of translog files to keep for each shard.
-	// Keeping more translog files increases
-	// the chance of performing an operation based sync when recovering a replica.
-	// If the translog files are not
+	// Keeping more translog files increases the chance of performing an operation
+	// based sync when recovering a replica. If the translog files are not
 	// sufficient, replica recovery will fall back to a file based sync. This
-	// setting is ignored, and should not be
-	// set, if soft deletes are enabled. Soft deletes are enabled by default in
-	// indices created in Elasticsearch
-	// versions 7.0.0 and later.
+	// setting is ignored, and should not be set, if soft deletes are enabled. Soft
+	// deletes are enabled by default in indices created in Elasticsearch versions
+	// 7.0.0 and later.
 	Size ByteSize `json:"size,omitempty"`
 }
 

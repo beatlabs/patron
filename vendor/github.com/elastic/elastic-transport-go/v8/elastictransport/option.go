@@ -166,10 +166,33 @@ func WithTransport(rt http.RoundTripper) Option {
 }
 
 // WithLogger sets the Logger used to log request and response information.
+// WithLogger sets a round-trip [Logger] for request/response logging.
+//
+// Deprecated: Use [WithLeveledLogger] instead. When both are set,
+// WithLogger takes precedence for round-trip logging.
 func WithLogger(l Logger) Option {
 	return newOption("WithLogger", fmt.Sprintf("WithLogger(%T)", l),
 		func(c *Config) error {
 			c.Logger = l
+			return nil
+		})
+}
+
+// WithLeveledLogger sets a structured, leveled logger for transport-internal
+// events such as node discovery, connection resurrection, and connection
+// removal.
+//
+// The logger is also injected into the request context during [Client.Perform],
+// making it available to [InterceptorFunc] implementations via
+// [LoggerFromContext]. Use [LoggingInterceptor] to add round-trip request/response
+// logging through the same logger.
+//
+// The provided logger must be safe for concurrent use. See [SlogLogger] for a
+// ready-made adapter that wraps [*slog.Logger].
+func WithLeveledLogger(l LeveledLogger) Option {
+	return newOption("WithLeveledLogger", fmt.Sprintf("WithLeveledLogger(%T)", l),
+		func(c *Config) error {
+			c.LeveledLogger = l
 			return nil
 		})
 }
@@ -187,6 +210,10 @@ func WithSelector(s Selector) Option {
 // connection pool. Pools are synchronised by default; implement
 // ConcurrentSafeConnectionPool to opt out when your pool is already safe for
 // concurrent use.
+//
+// Custom pools do not receive the transport's LeveledLogger. Request/response
+// logging via LoggingInterceptor works regardless of pool type, but
+// pool-internal logging (e.g. node health) must be handled by the pool itself.
 //
 // During discovery, if the current pool implements UpdatableConnectionPool,
 // discovery prefers in-place Update() and this function is only called when
@@ -312,7 +339,10 @@ func WithMetrics() Option {
 }
 
 // WithDebugLogger enables a debug logger that writes connection-management
-// information to os.Stdout.
+// information via [slog.Default].
+//
+// Deprecated: Use [WithLeveledLogger] instead for full control over log
+// destination, levels, and structured output.
 func WithDebugLogger() Option {
 	return newOption("WithDebugLogger", "WithDebugLogger()", func(c *Config) error {
 		c.EnableDebugLogger = true

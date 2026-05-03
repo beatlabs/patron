@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,17 +31,16 @@ import (
 
 // HistogramGrouping type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/rollup/_types/Groupings.ts#L84-L97
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/rollup/_types/Groupings.ts#L84-L97
 type HistogramGrouping struct {
-	// Fields The set of fields that you wish to build histograms for.
-	// All fields specified must be some kind of numeric.
-	// Order does not matter.
+	// Fields The set of fields that you wish to build histograms for. All fields specified
+	// must be some kind of numeric. Order does not matter.
 	Fields []string `json:"fields"`
-	// Interval The interval of histogram buckets to be generated when rolling up.
-	// For example, a value of `5` creates buckets that are five units wide (`0-5`,
-	// `5-10`, etc).
-	// Note that only one interval can be specified in the histogram group, meaning
-	// that all fields being grouped via the histogram must share the same interval.
+	// Interval The interval of histogram buckets to be generated when rolling up. For
+	// example, a value of `5` creates buckets that are five units wide (`0-5`,
+	// `5-10`, etc). Note that only one interval can be specified in the histogram
+	// group, meaning that all fields being grouped via the histogram must share the
+	// same interval.
 	Interval int64 `json:"interval"`
 }
 

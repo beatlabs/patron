@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package getrule
 
@@ -27,23 +27,21 @@ import (
 
 // Response holds the response body struct for the package getrule
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/query_rules/get_rule/QueryRuleGetResponse.ts#L22-L24
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/query_rules/get_rule/QueryRuleGetResponse.ts#L22-L24
 type Response struct {
-
-	// Actions The actions to take when the rule is matched.
-	// The format of this action depends on the rule type.
+	// Actions The actions to take when the rule is matched. The format of this action
+	// depends on the rule type.
 	Actions types.QueryRuleActions `json:"actions"`
-	// Criteria The criteria that must be met for the rule to be applied.
-	// If multiple criteria are specified for a rule, all criteria must be met for
-	// the rule to be applied.
+	// Criteria The criteria that must be met for the rule to be applied. If multiple
+	// criteria are specified for a rule, all criteria must be met for the rule to
+	// be applied.
 	Criteria []types.QueryRuleCriteria `json:"criteria"`
 	Priority *int                      `json:"priority,omitempty"`
 	// RuleId A unique identifier for the rule.
 	RuleId string `json:"rule_id"`
-	// Type The type of rule.
-	// `pinned` will identify and pin specific documents to the top of search
+	// Type The type of rule. `pinned` will identify and pin specific documents to the
+	// top of search results. `exclude` will exclude specific documents from search
 	// results.
-	// `exclude` will exclude specific documents from search results.
 	Type queryruletype.QueryRuleType `json:"type"`
 }
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,16 +31,16 @@ import (
 
 // TrainedModelStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/TrainedModel.ts#L42-L60
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/TrainedModel.ts#L42-L60
 type TrainedModelStats struct {
 	// DeploymentStats A collection of deployment stats, which is present when the models are
 	// deployed.
 	DeploymentStats *TrainedModelDeploymentStats `json:"deployment_stats,omitempty"`
 	// InferenceStats A collection of inference stats fields.
 	InferenceStats *TrainedModelInferenceStats `json:"inference_stats,omitempty"`
-	// Ingest A collection of ingest stats for the model across all nodes.
-	// The values are summations of the individual node statistics.
-	// The format matches the ingest section in the nodes stats API.
+	// Ingest A collection of ingest stats for the model across all nodes. The values are
+	// summations of the individual node statistics. The format matches the ingest
+	// section in the nodes stats API.
 	Ingest map[string]json.RawMessage `json:"ingest,omitempty"`
 	// ModelId The unique identifier of the trained model.
 	ModelId string `json:"model_id"`

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package rendersearchtemplate
 
@@ -31,23 +31,20 @@ import (
 
 // Request holds the request body struct for the package rendersearchtemplate
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/render_search_template/RenderSearchTemplateRequest.ts#L25-L76
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/render_search_template/RenderSearchTemplateRequest.ts#L25-L78
 type Request struct {
 	File *string `json:"file,omitempty"`
-	// Id The ID of the search template to render.
-	// If no `source` is specified, this or the `<template-id>` request path
-	// parameter is required.
-	// If you specify both this parameter and the `<template-id>` parameter, the API
-	// uses only `<template-id>`.
+	// Id The ID of the search template to render. If no `source` is specified, this or
+	// the `<template-id>` request path parameter is required. If you specify both
+	// this parameter and the `<template-id>` parameter, the API uses only
+	// `<template-id>`.
 	Id *string `json:"id,omitempty"`
-	// Params Key-value pairs used to replace Mustache variables in the template.
-	// The key is the variable name.
-	// The value is the variable value.
+	// Params Key-value pairs used to replace Mustache variables in the template. The key
+	// is the variable name. The value is the variable value.
 	Params map[string]json.RawMessage `json:"params,omitempty"`
-	// Source An inline search template.
-	// It supports the same parameters as the search API's request body.
-	// These parameters also support Mustache variables.
-	// If no `id` or `<templated-id>` is specified, this parameter is required.
+	// Source An inline search template. It supports the same parameters as the search
+	// API's request body. These parameters also support Mustache variables. If no
+	// `id` or `<templated-id>` is specified, this parameter is required.
 	Source *string `json:"source,omitempty"`
 }
 

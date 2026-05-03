@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -34,7 +34,7 @@ import (
 
 // JoinProperty type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/mapping/core.ts#L104-L108
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/mapping/core.ts#L104-L108
 type JoinProperty struct {
 	Dynamic             *dynamicmapping.DynamicMapping `json:"dynamic,omitempty"`
 	EagerGlobalOrdinals *bool                          `json:"eager_global_ordinals,omitempty"`
@@ -787,22 +787,21 @@ func (s *JoinProperty) UnmarshalJSON(data []byte) error {
 			rawMsg := make(map[string]json.RawMessage, 0)
 			dec.Decode(&rawMsg)
 			for key, value := range rawMsg {
-				switch {
-				case bytes.HasPrefix(value, []byte("\"")), bytes.HasPrefix(value, []byte("{")):
-					o := new(string)
-					err := json.NewDecoder(bytes.NewReader(value)).Decode(&o)
-					if err != nil {
-						return fmt.Errorf("%s | %w", "Relations", err)
-					}
-					s.Relations[key] = append(s.Relations[key], *o)
-				default:
-					o := []string{}
-					err := json.NewDecoder(bytes.NewReader(value)).Decode(&o)
-					if err != nil {
+				v := bytes.TrimSpace(value)
+				if len(v) > 0 && v[0] == '[' {
+					var o []string
+					if err := json.NewDecoder(bytes.NewReader(v)).Decode(&o); err != nil {
 						return fmt.Errorf("%s | %w", "Relations", err)
 					}
 					s.Relations[key] = o
+					continue
 				}
+
+				var o string
+				if err := json.NewDecoder(bytes.NewReader(v)).Decode(&o); err != nil {
+					return fmt.Errorf("%s | %w", "Relations", err)
+				}
+				s.Relations[key] = append(s.Relations[key], o)
 			}
 
 		case "synthetic_source_keep":

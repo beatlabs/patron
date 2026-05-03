@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,11 +31,10 @@ import (
 
 // BucketInfluencer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/Bucket.ts#L79-L127
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/Bucket.ts#L79-L127
 type BucketInfluencer struct {
 	// AnomalyScore A normalized score between 0-100, which is calculated for each bucket
-	// influencer. This score might be updated as
-	// newer data is analyzed.
+	// influencer. This score might be updated as newer data is analyzed.
 	AnomalyScore Float64 `json:"anomaly_score"`
 	// BucketSpan The length of the bucket in seconds. This value matches the bucket span that
 	// is specified in the job.
@@ -43,8 +42,7 @@ type BucketInfluencer struct {
 	// InfluencerFieldName The field name of the influencer.
 	InfluencerFieldName string `json:"influencer_field_name"`
 	// InitialAnomalyScore The score between 0-100 for each bucket influencer. This score is the initial
-	// value that was calculated at the
-	// time the bucket was processed.
+	// value that was calculated at the time the bucket was processed.
 	InitialAnomalyScore Float64 `json:"initial_anomaly_score"`
 	// IsInterim If true, this is an interim result. In other words, the results are
 	// calculated based on partial input data.
@@ -52,10 +50,9 @@ type BucketInfluencer struct {
 	// JobId Identifier for the anomaly detection job.
 	JobId string `json:"job_id"`
 	// Probability The probability that the bucket has this behavior, in the range 0 to 1. This
-	// value can be held to a high precision
-	// of over 300 decimal places, so the `anomaly_score` is provided as a
-	// human-readable and friendly interpretation of
-	// this.
+	// value can be held to a high precision of over 300 decimal places, so the
+	// `anomaly_score` is provided as a human-readable and friendly interpretation
+	// of this.
 	Probability Float64 `json:"probability"`
 	// RawAnomalyScore Internal.
 	RawAnomalyScore Float64 `json:"raw_anomaly_score"`

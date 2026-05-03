@@ -16,21 +16,29 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package ruleaction
 package ruleaction
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/Rule.ts#L41-L50
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/Rule.ts#L41-L50
 type RuleAction struct {
 	Name string
 }
 
 var (
+
+	// Skipresult The result will not be created. Unless you also specify `skip_model_update`,
+	// the model will be updated as usual with the corresponding series value.
 	Skipresult = RuleAction{"skip_result"}
 
+	// Skipmodelupdate The value for that series will not be used to update the model. Unless you
+	// also specify `skip_result`, the results will be created as usual. This action
+	// is suitable when certain values are expected to be consistently anomalous and
+	// they affect the model in a way that negatively impacts the rest of the
+	// results.
 	Skipmodelupdate = RuleAction{"skip_model_update"}
 )
 

@@ -20,19 +20,67 @@ package elastictransport
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
-var debugLogger DebuggingLogger
+// Log key constants used by [LoggingInterceptor]. Custom [slog.Handler]
+// implementations can switch on these keys to format round-trip data.
+const (
+	LogKeyMethod       = "method"
+	LogKeyURL          = "url"
+	LogKeyStatus       = "status"
+	LogKeyDuration     = "duration"
+	LogKeyRequestBody  = "request.body"
+	LogKeyResponseBody = "response.body"
+	LogKeyError        = "error"
+)
+
+type loggerContextKey struct{}
+
+// ContextWithLogger returns a copy of ctx with the given [LeveledLogger]
+// attached. Use this to override the transport's logger on a per-request basis,
+// or to make the logger available to [InterceptorFunc] implementations via
+// [LoggerFromContext].
+func ContextWithLogger(ctx context.Context, l LeveledLogger) context.Context {
+	return context.WithValue(ctx, loggerContextKey{}, l)
+}
+
+// LoggerFromContext returns the [LeveledLogger] attached to ctx by
+// [ContextWithLogger], or nil if none is set.
+//
+// This is primarily useful inside [InterceptorFunc] implementations:
+//
+//	interceptor := func(next elastictransport.RoundTripFunc) elastictransport.RoundTripFunc {
+//	    return func(req *http.Request) (*http.Response, error) {
+//	        if logger := elastictransport.LoggerFromContext(req.Context()); logger != nil {
+//	            logger.Debug(req.Context(), "interceptor called", "method", req.Method, "url", req.URL.String())
+//	        }
+//	        return next(req)
+//	    }
+//	}
+func LoggerFromContext(ctx context.Context) LeveledLogger {
+	if l, ok := ctx.Value(loggerContextKey{}).(LeveledLogger); ok {
+		return l
+	}
+	return nil
+}
 
 // Logger defines an interface for logging request and response.
+//
+// Deprecated: Use [LeveledLogger] and [WithLeveledLogger] instead.
+// When a [LeveledLogger] is configured, round-trip logging is handled
+// automatically.
 type Logger interface {
 	// LogRoundTrip should not modify the request or response, except for consuming and closing the body.
 	// Implementations have to check for nil values in request and response.
@@ -43,13 +91,177 @@ type Logger interface {
 	ResponseBodyEnabled() bool
 }
 
+// LeveledLogger defines a structured, leveled logger for transport-internal
+// events such as connection management and node discovery.
+//
+// Each method accepts a human-readable message and an optional sequence of
+// alternating key-value pairs (the same convention used by [log/slog]).
+//
+// Implementations must be safe for concurrent use.
+//
+// Use [WithLeveledLogger] to configure a leveled logger on the transport client.
+// See [SlogLogger] for a ready-made adapter that wraps [*slog.Logger].
+type LeveledLogger interface {
+	Debug(ctx context.Context, msg string, keysAndValues ...any)
+	Info(ctx context.Context, msg string, keysAndValues ...any)
+	Warn(ctx context.Context, msg string, keysAndValues ...any)
+	Error(ctx context.Context, msg string, keysAndValues ...any)
+}
+
+// SlogLogger is a [LeveledLogger] adapter that delegates to a [*slog.Logger].
+//
+// The optional ContextAttrs function extracts additional key-value pairs from
+// the request context and prepends them to every log entry. This is useful for
+// injecting trace IDs, request IDs, or other context-carried metadata without
+// writing a custom [slog.Handler].
+//
+// Example with OpenTelemetry trace context:
+//
+//	logger := &elastictransport.SlogLogger{
+//	    Logger: slog.Default(),
+//	    ContextAttrs: func(ctx context.Context) []any {
+//	        sc := trace.SpanFromContext(ctx).SpanContext()
+//	        if !sc.IsValid() {
+//	            return nil
+//	        }
+//	        return []any{"trace_id", sc.TraceID().String(), "span_id", sc.SpanID().String()}
+//	    },
+//	}
+type SlogLogger struct {
+	Logger       *slog.Logger
+	ContextAttrs func(ctx context.Context) []any
+}
+
+func (l *SlogLogger) Debug(ctx context.Context, msg string, keysAndValues ...any) {
+	l.Logger.DebugContext(ctx, msg, l.enrich(ctx, keysAndValues)...)
+}
+
+func (l *SlogLogger) Info(ctx context.Context, msg string, keysAndValues ...any) {
+	l.Logger.InfoContext(ctx, msg, l.enrich(ctx, keysAndValues)...)
+}
+
+func (l *SlogLogger) Warn(ctx context.Context, msg string, keysAndValues ...any) {
+	l.Logger.WarnContext(ctx, msg, l.enrich(ctx, keysAndValues)...)
+}
+
+func (l *SlogLogger) Error(ctx context.Context, msg string, keysAndValues ...any) {
+	l.Logger.ErrorContext(ctx, msg, l.enrich(ctx, keysAndValues)...)
+}
+
+func (l *SlogLogger) enrich(ctx context.Context, kv []any) []any {
+	if l.ContextAttrs == nil {
+		return kv
+	}
+	extra := l.ContextAttrs(ctx)
+	if len(extra) == 0 {
+		return kv
+	}
+	return append(extra, kv...)
+}
+
+// OTelContextAttrs extracts the OpenTelemetry trace_id and span_id from ctx
+// and returns them as structured key-value pairs suitable for use as a
+// [SlogLogger.ContextAttrs] function. Returns nil when no valid span context
+// is present.
+//
+//	logger := &elastictransport.SlogLogger{
+//	    Logger:       slog.Default(),
+//	    ContextAttrs: elastictransport.OTelContextAttrs,
+//	}
+func OTelContextAttrs(ctx context.Context) []any {
+	sc := trace.SpanFromContext(ctx).SpanContext()
+	if !sc.IsValid() {
+		return nil
+	}
+	return []any{
+		"trace_id", sc.TraceID().String(),
+		"span_id", sc.SpanID().String(),
+	}
+}
+
+// LoggingInterceptor returns an [InterceptorFunc] that logs each round-trip
+// using the [LeveledLogger] from the request context (set automatically by
+// the transport when [WithLeveledLogger] is configured, or manually via
+// [ContextWithLogger]).
+//
+// Successful requests are logged at Info level; errors at Error level.
+// Set enableRequestBody and/or enableResponseBody to include bodies in the
+// log output.
+//
+// Example:
+//
+//	tp, _ := elastictransport.NewClient(
+//	    elastictransport.WithURLs(u),
+//	    elastictransport.WithLeveledLogger(logger),
+//	    elastictransport.WithInterceptors(
+//	        elastictransport.LoggingInterceptor(false, false),
+//	    ),
+//	)
+func LoggingInterceptor(enableRequestBody, enableResponseBody bool) InterceptorFunc {
+	return func(next RoundTripFunc) RoundTripFunc {
+		return func(req *http.Request) (*http.Response, error) {
+			logger := LoggerFromContext(req.Context())
+			if logger == nil {
+				return next(req)
+			}
+
+			start := time.Now().UTC()
+			res, err := next(req)
+			dur := time.Since(start)
+
+			kvCap := 8 // method, url, duration, status
+			if enableRequestBody {
+				kvCap += 2
+			}
+			if enableResponseBody {
+				kvCap += 2
+			}
+			kv := make([]any, 0, kvCap)
+			kv = append(kv,
+				LogKeyMethod, req.Method,
+				LogKeyURL, req.URL.String(),
+				LogKeyDuration, dur,
+			)
+			if err != nil {
+				logger.Error(req.Context(), "request failed", append(kv, LogKeyError, err)...)
+				return res, err
+			}
+			kv = append(kv, LogKeyStatus, resStatusCode(res))
+			if enableRequestBody && req.Body != nil && req.Body != http.NoBody {
+				if req.GetBody != nil {
+					body, _ := req.GetBody()
+					var buf bytes.Buffer
+					_, _ = io.Copy(&buf, io.LimitReader(body, maxLogBodyBytes))
+					_ = body.Close()
+					kv = append(kv, LogKeyRequestBody, buf.String())
+				}
+			}
+			if enableResponseBody && res != nil && res.Body != nil && res.Body != http.NoBody {
+				b1, b2, dupErr := duplicateBody(res.Body)
+				if dupErr == nil {
+					var buf bytes.Buffer
+					_, _ = io.Copy(&buf, io.LimitReader(b1, maxLogBodyBytes))
+					kv = append(kv, LogKeyResponseBody, buf.String())
+					res.Body = b2
+				}
+			}
+			logger.Info(req.Context(), "request", kv...)
+			return res, err
+		}
+	}
+}
+
 // DebuggingLogger defines the interface for a debugging logger.
+//
+// Deprecated: Use [LeveledLogger] and [WithLeveledLogger] instead.
 type DebuggingLogger interface {
 	Log(a ...interface{}) error
 	Logf(format string, a ...interface{}) error
 }
 
 // TextLogger prints the log message in plain text.
+//
+// Deprecated: Use [LeveledLogger] and [WithLeveledLogger] instead.
 type TextLogger struct {
 	Output             io.Writer
 	EnableRequestBody  bool
@@ -57,6 +269,8 @@ type TextLogger struct {
 }
 
 // ColorLogger prints the log message in a terminal-optimized plain text.
+//
+// Deprecated: Use [LeveledLogger] and [WithLeveledLogger] instead.
 type ColorLogger struct {
 	Output             io.Writer
 	EnableRequestBody  bool
@@ -64,6 +278,8 @@ type ColorLogger struct {
 }
 
 // CurlLogger prints the log message as a runnable curl command.
+//
+// Deprecated: Use [LeveledLogger] and [WithLeveledLogger] instead.
 type CurlLogger struct {
 	Output             io.Writer
 	EnableRequestBody  bool
@@ -71,6 +287,8 @@ type CurlLogger struct {
 }
 
 // JSONLogger prints the log message as JSON.
+//
+// Deprecated: Use [LeveledLogger] and [WithLeveledLogger] instead.
 type JSONLogger struct {
 	Output             io.Writer
 	EnableRequestBody  bool
@@ -414,6 +632,8 @@ func logBodyAsText(dst io.Writer, body io.Reader, prefix string) {
 		}
 	}
 }
+
+const maxLogBodyBytes = 10 * 1024 // 10 KB cap for logged bodies
 
 func duplicateBody(body io.ReadCloser) (io.ReadCloser, io.ReadCloser, error) {
 	var (

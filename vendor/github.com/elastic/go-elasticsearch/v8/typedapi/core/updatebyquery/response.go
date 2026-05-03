@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package updatebyquery
 
@@ -26,18 +26,16 @@ import (
 
 // Response holds the response body struct for the package updatebyquery
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/update_by_query/UpdateByQueryResponse.ts#L26-L67
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/update_by_query/UpdateByQueryResponse.ts#L26-L67
 type Response struct {
-
 	// Batches The number of scroll responses pulled back by the update by query.
 	Batches *int64 `json:"batches,omitempty"`
 	// Deleted The number of documents that were successfully deleted.
 	Deleted *int64 `json:"deleted,omitempty"`
 	// Failures Array of failures if there were any unrecoverable errors during the process.
-	// If this is non-empty then the request ended because of those failures.
-	// Update by query is implemented using batches.
-	// Any failure causes the entire process to end, but all failures in the current
-	// batch are collected into the array.
+	// If this is non-empty then the request ended because of those failures. Update
+	// by query is implemented using batches. Any failure causes the entire process
+	// to end, but all failures in the current batch are collected into the array.
 	// You can use the `conflicts` option to prevent reindex from ending when
 	// version conflicts occur.
 	Failures []types.BulkIndexByScrollFailure `json:"failures,omitempty"`
@@ -46,9 +44,8 @@ type Response struct {
 	Noops *int64 `json:"noops,omitempty"`
 	// RequestsPerSecond The number of requests per second effectively run during the update by query.
 	RequestsPerSecond *float32 `json:"requests_per_second,omitempty"`
-	// Retries The number of retries attempted by update by query.
-	// `bulk` is the number of bulk actions retried.
-	// `search` is the number of search actions retried.
+	// Retries The number of retries attempted by update by query. `bulk` is the number of
+	// bulk actions retried. `search` is the number of search actions retried.
 	Retries   *types.Retries `json:"retries,omitempty"`
 	Task      types.TaskId   `json:"task,omitempty"`
 	Throttled types.Duration `json:"throttled,omitempty"`
@@ -56,8 +53,8 @@ type Response struct {
 	// `requests_per_second`.
 	ThrottledMillis *int64         `json:"throttled_millis,omitempty"`
 	ThrottledUntil  types.Duration `json:"throttled_until,omitempty"`
-	// ThrottledUntilMillis This field should always be equal to zero in an _update_by_query response.
-	// It only has meaning when using the task API, where it indicates the next time
+	// ThrottledUntilMillis This field should always be equal to zero in an _update_by_query response. It
+	// only has meaning when using the task API, where it indicates the next time
 	// (in milliseconds since epoch) a throttled request will be run again in order
 	// to conform to `requests_per_second`.
 	ThrottledUntilMillis *int64 `json:"throttled_until_millis,omitempty"`

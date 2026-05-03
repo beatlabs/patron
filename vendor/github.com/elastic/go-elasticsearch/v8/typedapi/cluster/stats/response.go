@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package stats
 
@@ -27,9 +27,8 @@ import (
 
 // Response holds the response body struct for the package stats
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cluster/stats/ClusterStatsResponse.ts#L71-L73
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/cluster/stats/ClusterStatsResponse.ts#L71-L73
 type Response struct {
-
 	// Ccs Cross-cluster stats
 	Ccs types.CCSStats `json:"ccs"`
 	// ClusterName Name of the cluster, based on the cluster name setting.
@@ -38,8 +37,8 @@ type Response struct {
 	ClusterUuid string `json:"cluster_uuid"`
 	// Indices Contains statistics about indices with shards assigned to selected nodes.
 	Indices types.ClusterIndices `json:"indices"`
-	// NodeStats Contains statistics about the number of nodes selected by the request’s node
-	// filters.
+	// NodeStats Contains statistics about the number of nodes selected by the request’s
+	// node filters.
 	NodeStats *types.NodeStatistics `json:"_nodes,omitempty"`
 	// Nodes Contains statistics about nodes selected by the request’s node filters.
 	Nodes types.ClusterNodes `json:"nodes"`

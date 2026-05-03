@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -32,13 +32,12 @@ import (
 
 // WatchRecordStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/watcher/stats/types.ts#L79-L94
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/watcher/stats/types.ts#L79-L94
 type WatchRecordStats struct {
 	ExecutedActions []string `json:"executed_actions,omitempty"`
 	// ExecutionPhase The current watch execution phase.
 	ExecutionPhase executionphase.ExecutionPhase `json:"execution_phase"`
-	// ExecutionTime The time the watch was run.
-	// This is just before the input is being run.
+	// ExecutionTime The time the watch was run. This is just before the input is being run.
 	ExecutionTime DateTime `json:"execution_time"`
 	// TriggeredTime The time the watch was triggered by the trigger engine.
 	TriggeredTime DateTime `json:"triggered_time"`

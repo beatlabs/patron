@@ -16,15 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
-// Start a trial.
-// Start a 30-day trial, which gives access to all subscription features.
+// Start a trial. Start a 30-day trial, which gives access to all subscription
+// features.
 //
 // NOTE: You are allowed to start a trial only if your cluster has not already
-// activated a trial for the current major product version.
-// For example, if you have already activated a trial for v8.0, you cannot start
-// a new trial until v9.0. You can, however, request an extended trial at
+// activated a trial for the current major product version. For example, if you
+// have already activated a trial for v8.0, you cannot start a new trial until
+// v9.0. You can, however, request an extended trial at
 // https://www.elastic.co/trialextension.
 //
 // To check the status of your trial, use the get trial status API.
@@ -77,13 +77,13 @@ func NewPostStartTrialFunc(tp elastictransport.Interface) NewPostStartTrial {
 	}
 }
 
-// Start a trial.
-// Start a 30-day trial, which gives access to all subscription features.
+// Start a trial. Start a 30-day trial, which gives access to all subscription
+// features.
 //
 // NOTE: You are allowed to start a trial only if your cluster has not already
-// activated a trial for the current major product version.
-// For example, if you have already activated a trial for v8.0, you cannot start
-// a new trial until v9.0. You can, however, request an extended trial at
+// activated a trial for the current major product version. For example, if you
+// have already activated a trial for v8.0, you cannot start a new trial until
+// v9.0. You can, however, request an extended trial at
 // https://www.elastic.co/trialextension.
 //
 // To check the status of your trial, use the get trial status API.
@@ -157,7 +157,7 @@ func (r PostStartTrial) Perform(providedCtx context.Context) (*http.Response, er
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "license.post_start_trial")
+			ctx = instrument.Start(providedCtx, "license.post_start_trial")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -294,7 +294,7 @@ func (r *PostStartTrial) Header(key, value string) *PostStartTrial {
 	return r
 }
 
-// Acknowledge whether the user has acknowledged acknowledge messages (default: false)
+// Acknowledge Whether the user has acknowledged acknowledge messages
 // API name: acknowledge
 func (r *PostStartTrial) Acknowledge(acknowledge bool) *PostStartTrial {
 	r.values.Set("acknowledge", strconv.FormatBool(acknowledge))
@@ -302,7 +302,7 @@ func (r *PostStartTrial) Acknowledge(acknowledge bool) *PostStartTrial {
 	return r
 }
 
-// Type The type of trial license to generate (default: "trial")
+// Type The type of trial license to generate
 // API name: type
 func (r *PostStartTrial) Type(type_ string) *PostStartTrial {
 	r.values.Set("type", type_)
@@ -341,11 +341,9 @@ func (r *PostStartTrial) FilterPath(filterpaths ...string) *PostStartTrial {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *PostStartTrial) Human(human bool) *PostStartTrial {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -353,8 +351,8 @@ func (r *PostStartTrial) Human(human bool) *PostStartTrial {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *PostStartTrial) Pretty(pretty bool) *PostStartTrial {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

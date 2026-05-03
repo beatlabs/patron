@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // FieldSuggester type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/_types/suggester.ts#L109-L142
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/search/_types/suggester.ts#L109-L142
 type FieldSuggester struct {
 	AdditionalFieldSuggesterProperty map[string]json.RawMessage `json:"-"`
 	// Completion Provides auto-complete/search-as-you-type functionality.
@@ -45,8 +45,8 @@ type FieldSuggester struct {
 	Regex *string `json:"regex,omitempty"`
 	// Term Suggests terms based on edit distance.
 	Term *TermSuggester `json:"term,omitempty"`
-	// Text The text to use as input for the suggester.
-	// Needs to be set globally or per suggestion.
+	// Text The text to use as input for the suggester. Needs to be set globally or per
+	// suggestion.
 	Text *string `json:"text,omitempty"`
 }
 
@@ -126,7 +126,9 @@ func (s *FieldSuggester) UnmarshalJSON(data []byte) error {
 				if err := dec.Decode(&raw); err != nil {
 					return fmt.Errorf("%s | %w", "AdditionalFieldSuggesterProperty", err)
 				}
-				s.AdditionalFieldSuggesterProperty[key] = *raw
+				if raw != nil {
+					s.AdditionalFieldSuggesterProperty[key] = *raw
+				}
 			}
 
 		}
@@ -138,7 +140,7 @@ func (s *FieldSuggester) UnmarshalJSON(data []byte) error {
 func (s FieldSuggester) MarshalJSON() ([]byte, error) {
 	type opt FieldSuggester
 	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
+	tmp := make(map[string]json.RawMessage, 0)
 
 	data, err := json.Marshal(opt(s))
 	if err != nil {

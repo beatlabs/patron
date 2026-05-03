@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,19 +33,17 @@ import (
 
 // DenseVectorIndexOptions type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/mapping/DenseVectorProperty.ts#L129-L162
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/mapping/DenseVectorProperty.ts#L129-L162
 type DenseVectorIndexOptions struct {
 	// ConfidenceInterval The confidence interval to use when quantizing the vectors. Can be any value
-	// between and including `0.90` and
-	// `1.0` or exactly `0`. When the value is `0`, this indicates that dynamic
-	// quantiles should be calculated for
-	// optimized quantization. When between `0.90` and `1.0`, this value restricts
-	// the values used when calculating
-	// the quantization thresholds.
+	// between and including `0.90` and `1.0` or exactly `0`. When the value is `0`,
+	// this indicates that dynamic quantiles should be calculated for optimized
+	// quantization. When between `0.90` and `1.0`, this value restricts the values
+	// used when calculating the quantization thresholds.
 	//
 	// For example, a value of `0.95` will only use the middle `95%` of the values
-	// when calculating the quantization
-	// thresholds (e.g. the highest and lowest `2.5%` of values will be ignored).
+	// when calculating the quantization thresholds (e.g. the highest and lowest
+	// `2.5%` of values will be ignored).
 	//
 	// Defaults to `1/(dims + 1)` for `int8` quantized vectors and `0` for `int4`
 	// for dynamic quantile calculation.

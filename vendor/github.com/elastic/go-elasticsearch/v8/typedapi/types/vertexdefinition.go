@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // VertexDefinition type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/graph/_types/Vertex.ts#L30-L59
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/graph/_types/Vertex.ts#L30-L59
 type VertexDefinition struct {
 	// Exclude Prevents the specified terms from being included in the results.
 	Exclude []string `json:"exclude,omitempty"`
@@ -41,8 +41,8 @@ type VertexDefinition struct {
 	// want to spider out.
 	Include []VertexInclude `json:"include,omitempty"`
 	// MinDocCount Specifies how many documents must contain a pair of terms before it is
-	// considered to be a useful connection.
-	// This setting acts as a certainty threshold.
+	// considered to be a useful connection. This setting acts as a certainty
+	// threshold.
 	MinDocCount *int64 `json:"min_doc_count,omitempty"`
 	// ShardMinDocCount Controls how many documents on a particular shard have to contain a pair of
 	// terms before the connection is returned for global consideration.

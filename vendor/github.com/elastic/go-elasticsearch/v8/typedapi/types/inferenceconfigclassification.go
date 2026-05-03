@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,14 +31,14 @@ import (
 
 // InferenceConfigClassification type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Processors.ts#L1093-L1119
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ingest/_types/Processors.ts#L1100-L1126
 type InferenceConfigClassification struct {
 	// NumTopClasses Specifies the number of top class predictions to return.
 	NumTopClasses *int `json:"num_top_classes,omitempty"`
 	// NumTopFeatureImportanceValues Specifies the maximum number of feature importance values per document.
 	NumTopFeatureImportanceValues *int `json:"num_top_feature_importance_values,omitempty"`
-	// PredictionFieldType Specifies the type of the predicted field to write.
-	// Valid values are: `string`, `number`, `boolean`.
+	// PredictionFieldType Specifies the type of the predicted field to write. Valid values are:
+	// `string`, `number`, `boolean`.
 	PredictionFieldType *string `json:"prediction_field_type,omitempty"`
 	// ResultsField The field that is added to incoming documents to contain the inference
 	// prediction.

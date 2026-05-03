@@ -16,23 +16,30 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package gappolicy
 package gappolicy
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/pipeline.ts#L61-L76
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/aggregations/pipeline.ts#L61-L76
 type GapPolicy struct {
 	Name string
 }
 
 var (
+
+	// Skip Treats missing data as if the bucket does not exist. It will skip the bucket
+	// and continue calculating using the next available value.
 	Skip = GapPolicy{"skip"}
 
+	// Insertzeros Replace missing values with a zero (0) and pipeline aggregation computation
+	// will proceed as normal.
 	Insertzeros = GapPolicy{"insert_zeros"}
 
+	// Keepvalues Similar to skip, except if the metric provides a non-null, non-NaN value this
+	// value is used, otherwise the empty bucket is skipped.
 	Keepvalues = GapPolicy{"keep_values"}
 )
 

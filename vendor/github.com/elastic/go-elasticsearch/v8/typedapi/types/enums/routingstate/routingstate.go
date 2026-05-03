@@ -16,27 +16,34 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package routingstate
 package routingstate
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/TrainedModel.ts#L408-L429
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/TrainedModel.ts#L408-L429
 type RoutingState struct {
 	Name string
 }
 
 var (
+
+	// Failed The allocation attempt failed.
 	Failed = RoutingState{"failed"}
 
+	// Started The trained model is allocated and ready to accept inference requests.
 	Started = RoutingState{"started"}
 
+	// Starting The trained model is attempting to allocate on this node; inference requests
+	// are not yet accepted.
 	Starting = RoutingState{"starting"}
 
+	// Stopped The trained model is fully deallocated from this node.
 	Stopped = RoutingState{"stopped"}
 
+	// Stopping The trained model is being deallocated from this node.
 	Stopping = RoutingState{"stopping"}
 )
 

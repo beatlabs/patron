@@ -16,23 +16,27 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package deploymentallocationstate
 package deploymentallocationstate
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/TrainedModel.ts#L331-L344
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/TrainedModel.ts#L331-L344
 type DeploymentAllocationState struct {
 	Name string
 }
 
 var (
+
+	// Started The trained model is started on at least one node.
 	Started = DeploymentAllocationState{"started"}
 
+	// Starting Trained model deployment is starting but it is not yet deployed on any nodes.
 	Starting = DeploymentAllocationState{"starting"}
 
+	// Fullyallocated Trained model deployment has started on all valid nodes.
 	Fullyallocated = DeploymentAllocationState{"fully_allocated"}
 )
 

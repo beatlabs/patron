@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,26 +31,22 @@ import (
 
 // ElisionTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/analysis/token_filters.ts#L245-L258
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/analysis/token_filters.ts#L245-L258
 type ElisionTokenFilter struct {
-	// Articles List of elisions to remove.
-	// To be removed, the elision must be at the beginning of a token and be
-	// immediately followed by an apostrophe. Both the elision and apostrophe are
-	// removed.
-	// For custom `elision` filters, either this parameter or `articles_path` must
-	// be specified.
+	// Articles List of elisions to remove. To be removed, the elision must be at the
+	// beginning of a token and be immediately followed by an apostrophe. Both the
+	// elision and apostrophe are removed. For custom `elision` filters, either this
+	// parameter or `articles_path` must be specified.
 	Articles []string `json:"articles,omitempty"`
 	// ArticlesCase If `true`, elision matching is case insensitive. If `false`, elision matching
 	// is case sensitive. Defaults to `false`.
 	ArticlesCase Stringifiedboolean `json:"articles_case,omitempty"`
-	// ArticlesPath Path to a file that contains a list of elisions to remove.
-	// This path must be absolute or relative to the `config` location, and the file
-	// must be UTF-8 encoded. Each elision in the file must be separated by a line
-	// break.
-	// To be removed, the elision must be at the beginning of a token and be
-	// immediately followed by an apostrophe. Both the elision and apostrophe are
-	// removed.
-	// For custom `elision` filters, either this parameter or `articles` must be
+	// ArticlesPath Path to a file that contains a list of elisions to remove. This path must be
+	// absolute or relative to the `config` location, and the file must be UTF-8
+	// encoded. Each elision in the file must be separated by a line break. To be
+	// removed, the elision must be at the beginning of a token and be immediately
+	// followed by an apostrophe. Both the elision and apostrophe are removed. For
+	// custom `elision` filters, either this parameter or `articles` must be
 	// specified.
 	ArticlesPath *string `json:"articles_path,omitempty"`
 	Type         string  `json:"type,omitempty"`

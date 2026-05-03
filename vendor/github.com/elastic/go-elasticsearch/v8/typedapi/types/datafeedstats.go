@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,21 +33,20 @@ import (
 
 // DatafeedStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/Datafeed.ts#L143-L172
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/Datafeed.ts#L143-L172
 type DatafeedStats struct {
 	// AssignmentExplanation For started datafeeds only, contains messages relating to the selection of a
 	// node.
 	AssignmentExplanation *string `json:"assignment_explanation,omitempty"`
-	// DatafeedId A numerical character string that uniquely identifies the datafeed.
-	// This identifier can contain lowercase alphanumeric characters (a-z and 0-9),
-	// hyphens, and underscores.
-	// It must start and end with alphanumeric characters.
+	// DatafeedId A numerical character string that uniquely identifies the datafeed. This
+	// identifier can contain lowercase alphanumeric characters (a-z and 0-9),
+	// hyphens, and underscores. It must start and end with alphanumeric characters.
 	DatafeedId string `json:"datafeed_id"`
 	// Node For started datafeeds only, this information pertains to the node upon which
 	// the datafeed is started.
 	Node *DiscoveryNodeCompact `json:"node,omitempty"`
-	// RunningState An object containing the running state for this datafeed.
-	// It is only provided if the datafeed is started.
+	// RunningState An object containing the running state for this datafeed. It is only provided
+	// if the datafeed is started.
 	RunningState *DatafeedRunningState `json:"running_state,omitempty"`
 	// State The status of the datafeed, which can be one of the following values:
 	// `starting`, `started`, `stopping`, `stopped`.

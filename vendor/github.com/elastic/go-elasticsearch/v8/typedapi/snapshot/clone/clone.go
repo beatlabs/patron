@@ -16,10 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
-// Clone a snapshot.
-// Clone part of all of a snapshot into another snapshot in the same repository.
+// Clone a snapshot. Clone part of all of a snapshot into another snapshot in
+// the same repository.
 package clone
 
 import (
@@ -92,8 +92,8 @@ func NewCloneFunc(tp elastictransport.Interface) NewClone {
 	}
 }
 
-// Clone a snapshot.
-// Clone part of all of a snapshot into another snapshot in the same repository.
+// Clone a snapshot. Clone part of all of a snapshot into another snapshot in
+// the same repository.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/clone-snapshot-api.html
 func New(tp elastictransport.Interface) *Clone {
@@ -230,7 +230,7 @@ func (r Clone) Perform(providedCtx context.Context) (*http.Response, error) {
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "snapshot.clone")
+			ctx = instrument.Start(providedCtx, "snapshot.clone")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -328,7 +328,8 @@ func (r *Clone) Header(key, value string) *Clone {
 	return r
 }
 
-// Repository A repository name
+// Repository The name of the snapshot repository that both source and target snapshot
+// belong to.
 // API Name: repository
 func (r *Clone) _repository(repository string) *Clone {
 	r.paramSet |= repositoryMask
@@ -337,7 +338,7 @@ func (r *Clone) _repository(repository string) *Clone {
 	return r
 }
 
-// Snapshot The name of the snapshot to clone from
+// Snapshot The source snapshot name.
 // API Name: snapshot
 func (r *Clone) _snapshot(snapshot string) *Clone {
 	r.paramSet |= snapshotMask
@@ -346,7 +347,7 @@ func (r *Clone) _snapshot(snapshot string) *Clone {
 	return r
 }
 
-// TargetSnapshot The name of the cloned snapshot to create
+// TargetSnapshot The target snapshot name.
 // API Name: targetsnapshot
 func (r *Clone) _targetsnapshot(targetsnapshot string) *Clone {
 	r.paramSet |= targetsnapshotMask
@@ -355,7 +356,9 @@ func (r *Clone) _targetsnapshot(targetsnapshot string) *Clone {
 	return r
 }
 
-// MasterTimeout Explicit operation timeout for connection to master node
+// MasterTimeout The period to wait for the master node. If the master node is not available
+// before the timeout expires, the request fails and returns an error. To
+// indicate that the request should never timeout, set it to `-1`.
 // API name: master_timeout
 func (r *Clone) MasterTimeout(duration string) *Clone {
 	r.values.Set("master_timeout", duration)
@@ -386,11 +389,9 @@ func (r *Clone) FilterPath(filterpaths ...string) *Clone {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *Clone) Human(human bool) *Clone {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -398,8 +399,8 @@ func (r *Clone) Human(human bool) *Clone {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *Clone) Pretty(pretty bool) *Clone {
 	r.values.Set("pretty", strconv.FormatBool(pretty))
@@ -407,6 +408,8 @@ func (r *Clone) Pretty(pretty bool) *Clone {
 	return r
 }
 
+// Indices A comma-separated list of indices to include in the snapshot. Multi-target
+// syntax is supported.
 // API name: indices
 func (r *Clone) Indices(indices string) *Clone {
 	if r.req == nil {

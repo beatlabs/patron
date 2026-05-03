@@ -16,21 +16,28 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package granttype
 package granttype
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/_types/GrantType.ts#L20-L30
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/security/_types/GrantType.ts#L20-L30
 type GrantType struct {
 	Name string
 }
 
 var (
+
+	// Password In this type of grant, you must supply the user ID and password for which you
+	// want to create the API key.
 	Password = GrantType{"password"}
 
+	// Accesstoken In this type of grant, you must supply an access token that was created by
+	// the Elasticsearch token service. If you are activating a user profile, you
+	// can alternatively supply a JWT (either a JWT `access_token` or a JWT
+	// `id_token`).
 	Accesstoken = GrantType{"access_token"}
 )
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package fieldcaps
 
@@ -32,9 +32,8 @@ import (
 
 // Request holds the request body struct for the package fieldcaps
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/field_caps/FieldCapabilitiesRequest.ts#L25-L130
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/field_caps/FieldCapabilitiesRequest.ts#L25-L132
 type Request struct {
-
 	// Fields A list of fields to retrieve capabilities for. Wildcard (`*`) expressions are
 	// supported.
 	Fields []string `json:"fields,omitempty"`
@@ -42,17 +41,15 @@ type Request struct {
 	//
 	// IMPORTANT: The filtering is done on a best-effort basis, it uses index
 	// statistics and mappings to rewrite queries to `match_none` instead of fully
-	// running the request.
-	// For instance a range query over a date field can rewrite to `match_none` if
-	// all documents within a shard (including deleted documents) are outside of the
-	// provided range.
-	// However, not all queries can rewrite to `match_none` so this API may return
-	// an index even if the provided filter matches no document.
+	// running the request. For instance a range query over a date field can rewrite
+	// to `match_none` if all documents within a shard (including deleted documents)
+	// are outside of the provided range. However, not all queries can rewrite to
+	// `match_none` so this API may return an index even if the provided filter
+	// matches no document.
 	IndexFilter *types.Query `json:"index_filter,omitempty"`
 	// RuntimeMappings Define ad-hoc runtime fields in the request similar to the way it is done in
-	// search requests.
-	// These fields exist only as part of the query and take precedence over fields
-	// defined with the same name in the index mappings.
+	// search requests. These fields exist only as part of the query and take
+	// precedence over fields defined with the same name in the index mappings.
 	RuntimeMappings types.RuntimeFields `json:"runtime_mappings,omitempty"`
 }
 

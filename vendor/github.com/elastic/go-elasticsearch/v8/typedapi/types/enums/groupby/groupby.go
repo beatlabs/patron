@@ -16,23 +16,27 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package groupby
 package groupby
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/tasks/_types/GroupBy.ts#L20-L27
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/tasks/_types/GroupBy.ts#L20-L27
 type GroupBy struct {
 	Name string
 }
 
 var (
+
+	// Nodes Group tasks by node ID.
 	Nodes = GroupBy{"nodes"}
 
+	// Parents Group tasks by parent task ID.
 	Parents = GroupBy{"parents"}
 
+	// None Do not group tasks.
 	None = GroupBy{"none"}
 )
 

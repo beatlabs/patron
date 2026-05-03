@@ -16,27 +16,38 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package include
 package include
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/Include.ts#L20-L47
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/Include.ts#L20-L47
 type Include struct {
 	Name string
 }
 
 var (
+
+	// Definition Includes the model definition.
 	Definition = Include{"definition"}
 
+	// Featureimportancebaseline Includes the baseline for feature importance values.
 	Featureimportancebaseline = Include{"feature_importance_baseline"}
 
+	// Hyperparameters Includes the information about hyperparameters used to train the model. This
+	// information consists of the value, the absolute and relative importance of
+	// the hyperparameter as well as an indicator of whether it was specified by the
+	// user or tuned during hyperparameter optimization.
 	Hyperparameters = Include{"hyperparameters"}
 
+	// Totalfeatureimportance Includes the total feature importance for the training data set. The baseline
+	// and total feature importance values are returned in the metadata field in the
+	// response body.
 	Totalfeatureimportance = Include{"total_feature_importance"}
 
+	// Definitionstatus Includes the model definition status.
 	Definitionstatus = Include{"definition_status"}
 )
 

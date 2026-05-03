@@ -16,27 +16,42 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package actionexecutionmode
 package actionexecutionmode
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/watcher/_types/Action.ts#L67-L88
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/watcher/_types/Action.ts#L67-L88
 type ActionExecutionMode struct {
 	Name string
 }
 
 var (
+
+	// Simulate The action execution is simulated. Each action type defines its own
+	// simulation operation mode. For example, the email action creates the email
+	// that would have been sent but does not actually send it. In this mode, the
+	// action might be throttled if the current state of the watch indicates it
+	// should be.
 	Simulate = ActionExecutionMode{"simulate"}
 
+	// Forcesimulate Similar to the `simulate` mode, except the action is not throttled even if
+	// the current state of the watch indicates it should be.
 	Forcesimulate = ActionExecutionMode{"force_simulate"}
 
+	// Execute Executes the action as it would have been executed if the watch had been
+	// triggered by its own trigger. The execution might be throttled if the current
+	// state of the watch indicates it should be.
 	Execute = ActionExecutionMode{"execute"}
 
+	// Forceexecute Similar to the `execute` mode, except the action is not throttled even if the
+	// current state of the watch indicates it should be.
 	Forceexecute = ActionExecutionMode{"force_execute"}
 
+	// Skip The action is skipped and is not executed or simulated. Effectively forces
+	// the action to be throttled.
 	Skip = ActionExecutionMode{"skip"}
 )
 

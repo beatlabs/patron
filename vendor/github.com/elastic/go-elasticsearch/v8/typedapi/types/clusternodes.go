@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
 // ClusterNodes type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cluster/stats/types.ts#L480-L513
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/cluster/stats/types.ts#L480-L513
 type ClusterNodes struct {
 	// Count Contains counts for nodes selected by the request’s node filters.
 	Count ClusterNodeCount `json:"count"`
@@ -43,8 +43,8 @@ type ClusterNodes struct {
 	// PackagingTypes Contains statistics about Elasticsearch distributions installed on selected
 	// nodes.
 	PackagingTypes []NodePackagingType `json:"packaging_types"`
-	// Plugins Contains statistics about installed plugins and modules by selected nodes.
-	// If no plugins or modules are installed, this array is empty.
+	// Plugins Contains statistics about installed plugins and modules by selected nodes. If
+	// no plugins or modules are installed, this array is empty.
 	Plugins []PluginStats `json:"plugins"`
 	// Process Contains statistics about processes used by selected nodes.
 	Process ClusterProcess `json:"process"`

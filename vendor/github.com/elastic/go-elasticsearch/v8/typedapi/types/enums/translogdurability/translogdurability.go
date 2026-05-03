@@ -16,21 +16,27 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package translogdurability
 package translogdurability
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/_types/IndexSettings.ts#L379-L394
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/indices/_types/IndexSettings.ts#L379-L394
 type TranslogDurability struct {
 	Name string
 }
 
 var (
+
+	// Request (default) fsync and commit after every request. In the event of hardware
+	// failure, all acknowledged writes will already have been committed to disk.
 	Request = TranslogDurability{"request"}
 
+	// Async fsync and commit in the background every sync_interval. In the event of a
+	// failure, all acknowledged writes since the last automatic commit will be
+	// discarded.
 	Async = TranslogDurability{"async"}
 )
 

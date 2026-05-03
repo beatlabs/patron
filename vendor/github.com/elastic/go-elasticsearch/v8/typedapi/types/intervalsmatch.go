@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,23 +31,22 @@ import (
 
 // IntervalsMatch type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/fulltext.ts#L188-L218
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/fulltext.ts#L188-L218
 type IntervalsMatch struct {
 	// Analyzer Analyzer used to analyze terms in the query.
 	Analyzer *string `json:"analyzer,omitempty"`
 	// Filter An optional interval filter.
 	Filter *IntervalsFilter `json:"filter,omitempty"`
-	// MaxGaps Maximum number of positions between the matching terms.
-	// Terms further apart than this are not considered matches.
+	// MaxGaps Maximum number of positions between the matching terms. Terms further apart
+	// than this are not considered matches.
 	MaxGaps *int `json:"max_gaps,omitempty"`
 	// Ordered If `true`, matching terms must appear in their specified order.
 	Ordered *bool `json:"ordered,omitempty"`
 	// Query Text you wish to find in the provided field.
 	Query string `json:"query"`
 	// UseField If specified, match intervals from this field rather than the top-level
-	// field.
-	// The `term` is normalized using the search analyzer from this field, unless
-	// `analyzer` is specified separately.
+	// field. The `term` is normalized using the search analyzer from this field,
+	// unless `analyzer` is specified separately.
 	UseField *string `json:"use_field,omitempty"`
 }
 

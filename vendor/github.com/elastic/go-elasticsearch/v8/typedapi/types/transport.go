@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // Transport type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/nodes/_types/Stats.ts#L1125-L1168
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/nodes/_types/Stats.ts#L1125-L1168
 type Transport struct {
 	// InboundHandlingTimeHistogram The distribution of the time spent handling each inbound message on a
 	// transport thread, represented as a histogram.
@@ -52,11 +52,10 @@ type Transport struct {
 	// between nodes.
 	ServerOpen *int `json:"server_open,omitempty"`
 	// TotalOutboundConnections The cumulative number of outbound transport connections that this node has
-	// opened since it started.
-	// Each transport connection may comprise multiple TCP connections but is only
-	// counted once in this statistic.
-	// Transport connections are typically long-lived so this statistic should
-	// remain constant in a stable cluster.
+	// opened since it started. Each transport connection may comprise multiple TCP
+	// connections but is only counted once in this statistic. Transport connections
+	// are typically long-lived so this statistic should remain constant in a stable
+	// cluster.
 	TotalOutboundConnections *int64 `json:"total_outbound_connections,omitempty"`
 	// TxCount Total number of TX (transmit) packets sent by the node during internal
 	// cluster communication.

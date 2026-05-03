@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // StopTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/analysis/token_filters.ts#L125-L136
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/analysis/token_filters.ts#L125-L136
 type StopTokenFilter struct {
 	// IgnoreCase If `true`, stop word matching is case insensitive. For example, if `true`, a
 	// stop word of the matches and removes `The`, `THE`, or `the`. Defaults to
@@ -42,10 +42,9 @@ type StopTokenFilter struct {
 	RemoveTrailing *bool `json:"remove_trailing,omitempty"`
 	// Stopwords Language value, such as `_arabic_` or `_thai_`. Defaults to `_english_`.
 	Stopwords StopWords `json:"stopwords,omitempty"`
-	// StopwordsPath Path to a file that contains a list of stop words to remove.
-	// This path must be absolute or relative to the `config` location, and the file
-	// must be UTF-8 encoded. Each stop word in the file must be separated by a line
-	// break.
+	// StopwordsPath Path to a file that contains a list of stop words to remove. This path must
+	// be absolute or relative to the `config` location, and the file must be UTF-8
+	// encoded. Each stop word in the file must be separated by a line break.
 	StopwordsPath *string `json:"stopwords_path,omitempty"`
 	Type          string  `json:"type,omitempty"`
 	Version       *string `json:"version,omitempty"`

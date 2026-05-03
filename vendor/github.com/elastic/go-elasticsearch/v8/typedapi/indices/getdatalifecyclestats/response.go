@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package getdatalifecyclestats
 
@@ -26,9 +26,8 @@ import (
 
 // Response holds the response body struct for the package getdatalifecyclestats
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/get_data_lifecycle_stats/IndicesGetDataLifecycleStatsResponse.ts#L24-L44
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/indices/get_data_lifecycle_stats/IndicesGetDataLifecycleStatsResponse.ts#L24-L44
 type Response struct {
-
 	// DataStreamCount The count of data streams currently being managed by the data stream
 	// lifecycle.
 	DataStreamCount int `json:"data_stream_count"`
@@ -38,8 +37,7 @@ type Response struct {
 	// LastRunDurationInMillis The duration of the last data stream lifecycle execution.
 	LastRunDurationInMillis *int64 `json:"last_run_duration_in_millis,omitempty"`
 	// TimeBetweenStartsInMillis The time that passed between the start of the last two data stream lifecycle
-	// executions.
-	// This value should amount approximately to
+	// executions. This value should amount approximately to
 	// `data_streams.lifecycle.poll_interval`.
 	TimeBetweenStartsInMillis *int64 `json:"time_between_starts_in_millis,omitempty"`
 }

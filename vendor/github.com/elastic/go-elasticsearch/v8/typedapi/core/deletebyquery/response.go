@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package deletebyquery
 
@@ -26,32 +26,27 @@ import (
 
 // Response holds the response body struct for the package deletebyquery
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/delete_by_query/DeleteByQueryResponse.ts#L26-L88
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/delete_by_query/DeleteByQueryResponse.ts#L26-L88
 type Response struct {
-
 	// Batches The number of scroll responses pulled back by the delete by query.
 	Batches *int64 `json:"batches,omitempty"`
 	// Deleted The number of documents that were successfully deleted.
 	Deleted *int64 `json:"deleted,omitempty"`
 	// Failures An array of failures if there were any unrecoverable errors during the
-	// process.
-	// If this array is not empty, the request ended abnormally because of those
-	// failures.
-	// Delete by query is implemented using batches and any failures cause the
-	// entire process to end but all failures in the current batch are collected
-	// into the array.
-	// You can use the `conflicts` option to prevent reindex from ending on version
-	// conflicts.
+	// process. If this array is not empty, the request ended abnormally because of
+	// those failures. Delete by query is implemented using batches and any failures
+	// cause the entire process to end but all failures in the current batch are
+	// collected into the array. You can use the `conflicts` option to prevent
+	// reindex from ending on version conflicts.
 	Failures []types.BulkIndexByScrollFailure `json:"failures,omitempty"`
-	// Noops This field is always equal to zero for delete by query.
-	// It exists only so that delete by query, update by query, and reindex APIs
-	// return responses with the same structure.
+	// Noops This field is always equal to zero for delete by query. It exists only so
+	// that delete by query, update by query, and reindex APIs return responses with
+	// the same structure.
 	Noops *int64 `json:"noops,omitempty"`
 	// RequestsPerSecond The number of requests per second effectively run during the delete by query.
 	RequestsPerSecond *float32 `json:"requests_per_second,omitempty"`
-	// Retries The number of retries attempted by delete by query.
-	// `bulk` is the number of bulk actions retried.
-	// `search` is the number of search actions retried.
+	// Retries The number of retries attempted by delete by query. `bulk` is the number of
+	// bulk actions retried. `search` is the number of search actions retried.
 	Retries   *types.Retries `json:"retries,omitempty"`
 	SliceId   *int           `json:"slice_id,omitempty"`
 	Task      types.TaskId   `json:"task,omitempty"`

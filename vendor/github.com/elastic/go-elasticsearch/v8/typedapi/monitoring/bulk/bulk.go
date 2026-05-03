@@ -16,10 +16,10 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
-// Send monitoring data.
-// This API is used by the monitoring features to send monitoring data.
+// Send monitoring data. This API is used by the monitoring features to send
+// monitoring data.
 package bulk
 
 import (
@@ -36,10 +36,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-)
-
-const (
-	type_Mask = iota + 1
 )
 
 // ErrBuildPath is returned in case of missing parameters within the build of the request.
@@ -60,8 +56,6 @@ type Bulk struct {
 
 	paramSet int
 
-	type_ string
-
 	spanStarted bool
 
 	instrument elastictransport.Instrumentation
@@ -80,8 +74,8 @@ func NewBulkFunc(tp elastictransport.Interface) NewBulk {
 	}
 }
 
-// Send monitoring data.
-// This API is used by the monitoring features to send monitoring data.
+// Send monitoring data. This API is used by the monitoring features to send
+// monitoring data.
 //
 // https://www.elastic.co/docs/api/doc/elasticsearch/v8
 func New(tp elastictransport.Interface) *Bulk {
@@ -166,19 +160,6 @@ func (r *Bulk) HttpRequest(ctx context.Context) (*http.Request, error) {
 		path.WriteString("bulk")
 
 		method = http.MethodPost
-	case r.paramSet == type_Mask:
-		path.WriteString("/")
-		path.WriteString("_monitoring")
-		path.WriteString("/")
-
-		if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-			instrument.RecordPathPart(ctx, "type_", r.type_)
-		}
-		path.WriteString(r.type_)
-		path.WriteString("/")
-		path.WriteString("bulk")
-
-		method = http.MethodPost
 	}
 
 	r.path.Path = path.String()
@@ -218,7 +199,7 @@ func (r Bulk) Perform(providedCtx context.Context) (*http.Response, error) {
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "monitoring.bulk")
+			ctx = instrument.Start(providedCtx, "monitoring.bulk")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -316,15 +297,6 @@ func (r *Bulk) Header(key, value string) *Bulk {
 	return r
 }
 
-// Type Default document type for items which don't provide one
-// API Name: type_
-func (r *Bulk) Type(type_ string) *Bulk {
-	r.paramSet |= type_Mask
-	r.type_ = type_
-
-	return r
-}
-
 // SystemId Identifier of the monitored system
 // API name: system_id
 func (r *Bulk) SystemId(systemid string) *Bulk {
@@ -371,11 +343,9 @@ func (r *Bulk) FilterPath(filterpaths ...string) *Bulk {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *Bulk) Human(human bool) *Bulk {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -383,8 +353,8 @@ func (r *Bulk) Human(human bool) *Bulk {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *Bulk) Pretty(pretty bool) *Bulk {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

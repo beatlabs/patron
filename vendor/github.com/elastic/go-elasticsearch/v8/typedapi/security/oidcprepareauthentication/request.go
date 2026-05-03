@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package oidcprepareauthentication
 
@@ -27,32 +27,31 @@ import (
 
 // Request holds the request body struct for the package oidcprepareauthentication
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/oidc_prepare_authentication/Request.ts#L22-L71
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/security/oidc_prepare_authentication/Request.ts#L23-L74
 type Request struct {
-
 	// Iss In the case of a third party initiated single sign on, this is the issuer
 	// identifier for the OP that the RP is to send the authentication request to.
-	// It cannot be specified when *realm* is specified.
-	// One of *realm* or *iss* is required.
+	// It cannot be specified when *realm* is specified. One of *realm* or *iss* is
+	// required.
 	Iss *string `json:"iss,omitempty"`
 	// LoginHint In the case of a third party initiated single sign on, it is a string value
 	// that is included in the authentication request as the *login_hint* parameter.
 	// This parameter is not valid when *realm* is specified.
 	LoginHint *string `json:"login_hint,omitempty"`
 	// Nonce The value used to associate a client session with an ID token and to mitigate
-	// replay attacks.
-	// If the caller of the API does not provide a value, Elasticsearch will
-	// generate one with sufficient entropy and return it in the response.
+	// replay attacks. If the caller of the API does not provide a value,
+	// Elasticsearch will generate one with sufficient entropy and return it in the
+	// response.
 	Nonce *string `json:"nonce,omitempty"`
 	// Realm The name of the OpenID Connect realm in Elasticsearch the configuration of
-	// which should be used in order to generate the authentication request.
-	// It cannot be specified when *iss* is specified.
-	// One of *realm* or *iss* is required.
+	// which should be used in order to generate the authentication request. It
+	// cannot be specified when *iss* is specified. One of *realm* or *iss* is
+	// required.
 	Realm *string `json:"realm,omitempty"`
 	// State The value used to maintain state between the authentication request and the
-	// response, typically used as a Cross-Site Request Forgery mitigation.
-	// If the caller of the API does not provide a value, Elasticsearch will
-	// generate one with sufficient entropy and return it in the response.
+	// response, typically used as a Cross-Site Request Forgery mitigation. If the
+	// caller of the API does not provide a value, Elasticsearch will generate one
+	// with sufficient entropy and return it in the response.
 	State *string `json:"state,omitempty"`
 }
 

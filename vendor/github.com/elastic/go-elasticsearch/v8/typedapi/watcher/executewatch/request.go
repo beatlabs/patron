@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package executewatch
 
@@ -30,9 +30,8 @@ import (
 
 // Request holds the request body struct for the package executewatch
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/watcher/execute_watch/WatcherExecuteWatchRequest.ts#L28-L105
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/watcher/execute_watch/WatcherExecuteWatchRequest.ts#L28-L107
 type Request struct {
-
 	// ActionModes Determines how to handle the watch actions as part of the watch execution.
 	ActionModes map[string]actionexecutionmode.ActionExecutionMode `json:"action_modes,omitempty"`
 	// AlternativeInput When present, the watch uses this object as a payload instead of executing
@@ -42,10 +41,9 @@ type Request struct {
 	// also be specified as an HTTP parameter.
 	IgnoreCondition *bool `json:"ignore_condition,omitempty"`
 	// RecordExecution When set to `true`, the watch record representing the watch execution result
-	// is persisted to the `.watcher-history` index for the current time.
-	// In addition, the status of the watch is updated, possibly throttling
-	// subsequent runs.
-	// This can also be specified as an HTTP parameter.
+	// is persisted to the `.watcher-history` index for the current time. In
+	// addition, the status of the watch is updated, possibly throttling subsequent
+	// runs. This can also be specified as an HTTP parameter.
 	RecordExecution  *bool                   `json:"record_execution,omitempty"`
 	SimulatedActions *types.SimulatedActions `json:"simulated_actions,omitempty"`
 	// TriggerData This structure is parsed as the data of the trigger event that will be used

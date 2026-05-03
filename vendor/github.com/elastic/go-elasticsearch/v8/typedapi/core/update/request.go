@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package update
 
@@ -33,29 +33,26 @@ import (
 
 // Request holds the request body struct for the package update
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/update/UpdateRequest.ts#L38-L194
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/update/UpdateRequest.ts#L39-L197
 type Request struct {
-
 	// DetectNoop If `true`, the `result` in the response is set to `noop` (no operation) when
 	// there are no changes to the document.
 	DetectNoop *bool `json:"detect_noop,omitempty"`
-	// Doc A partial update to an existing document.
-	// If both `doc` and `script` are specified, `doc` is ignored.
+	// Doc A partial update to an existing document. If both `doc` and `script` are
+	// specified, `doc` is ignored.
 	Doc json.RawMessage `json:"doc,omitempty"`
-	// DocAsUpsert If `true`, use the contents of 'doc' as the value of 'upsert'.
-	// NOTE: Using ingest pipelines with `doc_as_upsert` is not supported.
+	// DocAsUpsert If `true`, use the contents of 'doc' as the value of 'upsert'. NOTE: Using
+	// ingest pipelines with `doc_as_upsert` is not supported.
 	DocAsUpsert *bool `json:"doc_as_upsert,omitempty"`
 	// Script The script to run to update the document.
 	Script *types.Script `json:"script,omitempty"`
 	// ScriptedUpsert If `true`, run the script whether or not the document exists.
 	ScriptedUpsert *bool `json:"scripted_upsert,omitempty"`
-	// Source_ If `false`, turn off source retrieval.
-	// You can also specify a comma-separated list of the fields you want to
-	// retrieve.
+	// Source_ If `false`, turn off source retrieval. You can also specify a comma-separated
+	// list of the fields you want to retrieve.
 	Source_ types.SourceConfig `json:"_source,omitempty"`
 	// Upsert If the document does not already exist, the contents of 'upsert' are inserted
-	// as a new document.
-	// If the document exists, the 'script' is run.
+	// as a new document. If the document exists, the 'script' is run.
 	Upsert json.RawMessage `json:"upsert,omitempty"`
 }
 

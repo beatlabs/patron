@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,30 +33,28 @@ import (
 
 // JobStats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/Job.ts#L284-L330
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/Job.ts#L286-L332
 type JobStats struct {
 	// AssignmentExplanation For open anomaly detection jobs only, contains messages relating to the
 	// selection of a node to run the job.
 	AssignmentExplanation *string `json:"assignment_explanation,omitempty"`
 	// DataCounts An object that describes the quantity of input to the job and any related
-	// error counts.
-	// The `data_count` values are cumulative for the lifetime of a job.
-	// If a model snapshot is reverted or old results are deleted, the job counts
-	// are not reset.
+	// error counts. The `data_count` values are cumulative for the lifetime of a
+	// job. If a model snapshot is reverted or old results are deleted, the job
+	// counts are not reset.
 	DataCounts DataCounts `json:"data_counts"`
 	// Deleting Indicates that the process of deleting the job is in progress but not yet
 	// completed. It is only reported when `true`.
 	Deleting *bool `json:"deleting,omitempty"`
 	// ForecastsStats An object that provides statistical information about forecasts belonging to
-	// this job.
-	// Some statistics are omitted if no forecasts have been made.
+	// this job. Some statistics are omitted if no forecasts have been made.
 	ForecastsStats JobForecastStatistics `json:"forecasts_stats"`
 	// JobId Identifier for the anomaly detection job.
 	JobId string `json:"job_id"`
 	// ModelSizeStats An object that provides information about the size and contents of the model.
 	ModelSizeStats ModelSizeStats `json:"model_size_stats"`
-	// Node Contains properties for the node that runs the job.
-	// This information is available only for open jobs.
+	// Node Contains properties for the node that runs the job. This information is
+	// available only for open jobs.
 	Node *DiscoveryNodeCompact `json:"node,omitempty"`
 	// OpenTime For open jobs only, the elapsed time for which the job has been open.
 	OpenTime DateTime `json:"open_time,omitempty"`

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,7 +33,7 @@ import (
 
 // Stats type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/nodes/_types/Stats.ts#L30-L114
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/nodes/_types/Stats.ts#L30-L114
 type Stats struct {
 	// AdaptiveSelection Statistics about adaptive replica selection.
 	AdaptiveSelection map[string]AdaptiveSelection `json:"adaptive_selection,omitempty"`
@@ -61,8 +61,7 @@ type Stats struct {
 	// Jvm JVM stats, memory pool information, garbage collection, buffer pools, number
 	// of loaded/unloaded classes.
 	Jvm *Jvm `json:"jvm,omitempty"`
-	// Name Human-readable identifier for the node.
-	// Based on the node name setting.
+	// Name Human-readable identifier for the node. Based on the node name setting.
 	Name *string `json:"name,omitempty"`
 	// Os Operating system stats, load average, mem, swap.
 	Os *OperatingSystem `json:"os,omitempty"`
@@ -211,22 +210,21 @@ func (s *Stats) UnmarshalJSON(data []byte) error {
 			rawMsg := make(map[string]json.RawMessage, 0)
 			dec.Decode(&rawMsg)
 			for key, value := range rawMsg {
-				switch {
-				case bytes.HasPrefix(value, []byte("\"")), bytes.HasPrefix(value, []byte("{")):
-					o := NewScriptCache()
-					err := json.NewDecoder(bytes.NewReader(value)).Decode(&o)
-					if err != nil {
-						return fmt.Errorf("%s | %w", "ScriptCache", err)
-					}
-					s.ScriptCache[key] = append(s.ScriptCache[key], *o)
-				default:
-					o := []ScriptCache{}
-					err := json.NewDecoder(bytes.NewReader(value)).Decode(&o)
-					if err != nil {
+				v := bytes.TrimSpace(value)
+				if len(v) > 0 && v[0] == '[' {
+					var o []ScriptCache
+					if err := json.NewDecoder(bytes.NewReader(v)).Decode(&o); err != nil {
 						return fmt.Errorf("%s | %w", "ScriptCache", err)
 					}
 					s.ScriptCache[key] = o
+					continue
 				}
+
+				var o ScriptCache
+				if err := json.NewDecoder(bytes.NewReader(v)).Decode(&o); err != nil {
+					return fmt.Errorf("%s | %w", "ScriptCache", err)
+				}
+				s.ScriptCache[key] = append(s.ScriptCache[key], o)
 			}
 
 		case "thread_pool":

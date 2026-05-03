@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -34,16 +34,16 @@ import (
 
 // GeoGridProcessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Processors.ts#L388-L429
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ingest/_types/Processors.ts#L395-L436
 type GeoGridProcessor struct {
 	// ChildrenField If specified and children tiles exist, save those tile addresses to this
 	// field as an array of strings.
 	ChildrenField *string `json:"children_field,omitempty"`
-	// Description Description of the processor.
-	// Useful for describing the purpose of the processor or its configuration.
+	// Description Description of the processor. Useful for describing the purpose of the
+	// processor or its configuration.
 	Description *string `json:"description,omitempty"`
-	// Field The field to interpret as a geo-tile.=
-	// The field format is determined by the `tile_type`.
+	// Field The field to interpret as a geo-tile.= The field format is determined by the
+	// `tile_type`.
 	Field string `json:"field"`
 	// If Conditionally execute the processor.
 	If *string `json:"if,omitempty"`
@@ -61,8 +61,7 @@ type GeoGridProcessor struct {
 	ParentField *string `json:"parent_field,omitempty"`
 	// PrecisionField If specified, save the tile precision (zoom) as an integer to this field.
 	PrecisionField *string `json:"precision_field,omitempty"`
-	// Tag Identifier for the processor.
-	// Useful for debugging and metrics.
+	// Tag Identifier for the processor. Useful for debugging and metrics.
 	Tag *string `json:"tag,omitempty"`
 	// TargetField The field to assign the polygon shape to, by default, the `field` is updated
 	// in-place.

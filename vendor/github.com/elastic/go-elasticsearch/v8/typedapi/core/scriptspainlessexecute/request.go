@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package scriptspainlessexecute
 
@@ -30,15 +30,14 @@ import (
 
 // Request holds the request body struct for the package scriptspainlessexecute
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/scripts_painless_execute/ExecutePainlessScriptRequest.ts#L24-L64
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/scripts_painless_execute/ExecutePainlessScriptRequest.ts#L25-L67
 type Request struct {
-
-	// Context The context that the script should run in.
-	// NOTE: Result ordering in the field contexts is not guaranteed.
+	// Context The context that the script should run in. NOTE: Result ordering in the field
+	// contexts is not guaranteed.
 	Context *painlesscontext.PainlessContext `json:"context,omitempty"`
-	// ContextSetup Additional parameters for the `context`.
-	// NOTE: This parameter is required for all contexts except `painless_test`,
-	// which is the default if no value is provided for `context`.
+	// ContextSetup Additional parameters for the `context`. NOTE: This parameter is required for
+	// all contexts except `painless_test`, which is the default if no value is
+	// provided for `context`.
 	ContextSetup *types.PainlessContextSetup `json:"context_setup,omitempty"`
 	// Script The Painless script to run.
 	Script *types.Script `json:"script,omitempty"`

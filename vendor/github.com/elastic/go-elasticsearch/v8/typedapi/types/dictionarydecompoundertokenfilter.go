@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // DictionaryDecompounderTokenFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/analysis/token_filters.ts#L63-L65
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/analysis/token_filters.ts#L63-L65
 type DictionaryDecompounderTokenFilter struct {
 	// MaxSubwordSize Maximum subword character length. Longer subword tokens are excluded from the
 	// output. Defaults to `15`.
@@ -47,15 +47,14 @@ type DictionaryDecompounderTokenFilter struct {
 	Type             string  `json:"type,omitempty"`
 	Version          *string `json:"version,omitempty"`
 	// WordList A list of subwords to look for in the token stream. If found, the subword is
-	// included in the token output.
-	// Either this parameter or `word_list_path` must be specified.
+	// included in the token output. Either this parameter or `word_list_path` must
+	// be specified.
 	WordList []string `json:"word_list,omitempty"`
 	// WordListPath Path to a file that contains a list of subwords to find in the token stream.
-	// If found, the subword is included in the token output.
-	// This path must be absolute or relative to the config location, and the file
-	// must be UTF-8 encoded. Each token in the file must be separated by a line
-	// break.
-	// Either this parameter or `word_list` must be specified.
+	// If found, the subword is included in the token output. This path must be
+	// absolute or relative to the config location, and the file must be UTF-8
+	// encoded. Each token in the file must be separated by a line break. Either
+	// this parameter or `word_list` must be specified.
 	WordListPath *string `json:"word_list_path,omitempty"`
 }
 

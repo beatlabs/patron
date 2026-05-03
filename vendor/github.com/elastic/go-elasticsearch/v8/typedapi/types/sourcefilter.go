@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,12 +31,12 @@ import (
 
 // SourceFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/_types/SourceFilter.ts#L23-L48
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/search/_types/SourceFilter.ts#L23-L48
 type SourceFilter struct {
 	// ExcludeVectors If `true`, vector fields are excluded from the returned source.
 	//
-	// This option takes precedence over `includes`: any vector field will
-	// remain excluded even if it matches an `includes` rule.
+	// This option takes precedence over `includes`: any vector field will remain
+	// excluded even if it matches an `includes` rule.
 	ExcludeVectors *bool `json:"exclude_vectors,omitempty"`
 	// Excludes A list of fields to exclude from the returned source.
 	Excludes []string `json:"excludes,omitempty"`

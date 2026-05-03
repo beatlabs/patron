@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,10 +31,10 @@ import (
 
 // JoinProcessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Processors.ts#L1121-L1136
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ingest/_types/Processors.ts#L1128-L1143
 type JoinProcessor struct {
-	// Description Description of the processor.
-	// Useful for describing the purpose of the processor or its configuration.
+	// Description Description of the processor. Useful for describing the purpose of the
+	// processor or its configuration.
 	Description *string `json:"description,omitempty"`
 	// Field Field containing array values to join.
 	Field string `json:"field"`
@@ -46,11 +46,10 @@ type JoinProcessor struct {
 	OnFailure []ProcessorContainer `json:"on_failure,omitempty"`
 	// Separator The separator character.
 	Separator string `json:"separator"`
-	// Tag Identifier for the processor.
-	// Useful for debugging and metrics.
+	// Tag Identifier for the processor. Useful for debugging and metrics.
 	Tag *string `json:"tag,omitempty"`
-	// TargetField The field to assign the joined value to.
-	// By default, the field is updated in-place.
+	// TargetField The field to assign the joined value to. By default, the field is updated
+	// in-place.
 	TargetField *string `json:"target_field,omitempty"`
 }
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -34,24 +34,22 @@ import (
 
 // GeoBoundingBoxQuery type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/geo.ts#L35-L57
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/geo.ts#L35-L57
 type GeoBoundingBoxQuery struct {
 	// Boost Floating point number used to decrease or increase the relevance scores of
-	// the query.
-	// Boost values are relative to the default value of 1.0.
-	// A boost value between 0 and 1.0 decreases the relevance score.
-	// A value greater than 1.0 increases the relevance score.
+	// the query. Boost values are relative to the default value of 1.0. A boost
+	// value between 0 and 1.0 decreases the relevance score. A value greater than
+	// 1.0 increases the relevance score.
 	Boost               *float32             `json:"boost,omitempty"`
 	GeoBoundingBoxQuery map[string]GeoBounds `json:"-"`
 	// IgnoreUnmapped Set to `true` to ignore an unmapped field and not match any documents for
-	// this query.
-	// Set to `false` to throw an exception if the field is not mapped.
+	// this query. Set to `false` to throw an exception if the field is not mapped.
 	IgnoreUnmapped *bool                      `json:"ignore_unmapped,omitempty"`
 	QueryName_     *string                    `json:"_name,omitempty"`
 	Type           *geoexecution.GeoExecution `json:"type,omitempty"`
 	// ValidationMethod Set to `IGNORE_MALFORMED` to accept geo points with invalid latitude or
+	// longitude. Set to `COERCE` to also try to infer correct latitude or
 	// longitude.
-	// Set to `COERCE` to also try to infer correct latitude or longitude.
 	ValidationMethod *geovalidationmethod.GeoValidationMethod `json:"validation_method,omitempty"`
 }
 
@@ -132,7 +130,9 @@ func (s *GeoBoundingBoxQuery) UnmarshalJSON(data []byte) error {
 				if err := dec.Decode(&raw); err != nil {
 					return fmt.Errorf("%s | %w", "GeoBoundingBoxQuery", err)
 				}
-				s.GeoBoundingBoxQuery[key] = *raw
+				if raw != nil {
+					s.GeoBoundingBoxQuery[key] = *raw
+				}
 			}
 
 		}
@@ -144,7 +144,7 @@ func (s *GeoBoundingBoxQuery) UnmarshalJSON(data []byte) error {
 func (s GeoBoundingBoxQuery) MarshalJSON() ([]byte, error) {
 	type opt GeoBoundingBoxQuery
 	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
+	tmp := make(map[string]json.RawMessage, 0)
 
 	data, err := json.Marshal(opt(s))
 	if err != nil {
@@ -157,7 +157,11 @@ func (s GeoBoundingBoxQuery) MarshalJSON() ([]byte, error) {
 
 	// We inline the additional fields from the underlying map
 	for key, value := range s.GeoBoundingBoxQuery {
-		tmp[fmt.Sprintf("%s", key)] = value
+		marshaled, err := json.Marshal(value)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal additional property %q: %w", key, err)
+		}
+		tmp[fmt.Sprintf("%s", key)] = marshaled
 	}
 	delete(tmp, "GeoBoundingBoxQuery")
 

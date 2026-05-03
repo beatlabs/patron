@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,21 +31,17 @@ import (
 
 // ClusterFileSystem type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cluster/stats/types.ts#L35-L75
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/cluster/stats/types.ts#L35-L75
 type ClusterFileSystem struct {
 	// Available Total number of bytes available to JVM in file stores across all selected
-	// nodes.
-	// Depending on operating system or process-level restrictions, this number may
-	// be less than `nodes.fs.free_in_byes`.
-	// This is the actual amount of free disk space the selected Elasticsearch nodes
-	// can use.
+	// nodes. Depending on operating system or process-level restrictions, this
+	// number may be less than `nodes.fs.free_in_byes`. This is the actual amount of
+	// free disk space the selected Elasticsearch nodes can use.
 	Available ByteSize `json:"available,omitempty"`
 	// AvailableInBytes Total number of bytes available to JVM in file stores across all selected
-	// nodes.
-	// Depending on operating system or process-level restrictions, this number may
-	// be less than `nodes.fs.free_in_byes`.
-	// This is the actual amount of free disk space the selected Elasticsearch nodes
-	// can use.
+	// nodes. Depending on operating system or process-level restrictions, this
+	// number may be less than `nodes.fs.free_in_byes`. This is the actual amount of
+	// free disk space the selected Elasticsearch nodes can use.
 	AvailableInBytes           *int64   `json:"available_in_bytes,omitempty"`
 	FloodStageFreeSpace        ByteSize `json:"flood_stage_free_space,omitempty"`
 	FloodStageFreeSpaceInBytes *int64   `json:"flood_stage_free_space_in_bytes,omitempty"`

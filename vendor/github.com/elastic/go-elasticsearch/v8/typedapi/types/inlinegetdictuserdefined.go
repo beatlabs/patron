@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // InlineGetDictUserDefined type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/common.ts#L326-L339
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/common.ts#L335-L348
 type InlineGetDictUserDefined struct {
 	Fields                   map[string]json.RawMessage `json:"fields,omitempty"`
 	Found                    bool                       `json:"found"`
@@ -122,7 +122,9 @@ func (s *InlineGetDictUserDefined) UnmarshalJSON(data []byte) error {
 				if err := dec.Decode(&raw); err != nil {
 					return fmt.Errorf("%s | %w", "InlineGetDictUserDefined", err)
 				}
-				s.InlineGetDictUserDefined[key] = *raw
+				if raw != nil {
+					s.InlineGetDictUserDefined[key] = *raw
+				}
 			}
 
 		}
@@ -134,7 +136,7 @@ func (s *InlineGetDictUserDefined) UnmarshalJSON(data []byte) error {
 func (s InlineGetDictUserDefined) MarshalJSON() ([]byte, error) {
 	type opt InlineGetDictUserDefined
 	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
+	tmp := make(map[string]json.RawMessage, 0)
 
 	data, err := json.Marshal(opt(s))
 	if err != nil {

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package get
 
@@ -26,9 +26,8 @@ import (
 
 // Response holds the response body struct for the package get
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/get/GetResponse.ts#L23-L34
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/get/GetResponse.ts#L23-L34
 type Response struct {
-
 	// Fields If the `stored_fields` parameter is set to `true` and `found` is `true`, it
 	// contains the document fields stored in the index.
 	Fields map[string]json.RawMessage `json:"fields,omitempty"`
@@ -47,9 +46,9 @@ type Response struct {
 	// Sequence numbers are used to ensure an older version of a document doesn't
 	// overwrite a newer version.
 	SeqNo_ *int64 `json:"_seq_no,omitempty"`
-	// Source_ If `found` is `true`, it contains the document data formatted in JSON.
-	// If the `_source` parameter is set to `false` or the `stored_fields` parameter
-	// is set to `true`, it is excluded.
+	// Source_ If `found` is `true`, it contains the document data formatted in JSON. If the
+	// `_source` parameter is set to `false` or the `stored_fields` parameter is set
+	// to `true`, it is excluded.
 	Source_ json.RawMessage `json:"_source,omitempty"`
 	// Version_ The document version, which is ncremented each time the document is updated.
 	Version_ *int64 `json:"_version,omitempty"`

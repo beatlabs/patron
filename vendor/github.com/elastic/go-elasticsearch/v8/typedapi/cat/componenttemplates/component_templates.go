@@ -16,18 +16,17 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Get component templates.
 //
-// Get information about component templates in a cluster.
-// Component templates are building blocks for constructing index templates that
-// specify index mappings, settings, and aliases.
+// Get information about component templates in a cluster. Component templates
+// are building blocks for constructing index templates that specify index
+// mappings, settings, and aliases.
 //
 // IMPORTANT: CAT APIs are only intended for human consumption using the command
-// line or Kibana console.
-// They are not intended for use by applications. For application consumption,
-// use the get component template API.
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the get component template API.
 package componenttemplates
 
 import (
@@ -43,6 +42,9 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/bytes"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/catcomponentcolumn"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/timeunit"
 )
 
 const (
@@ -85,14 +87,13 @@ func NewComponentTemplatesFunc(tp elastictransport.Interface) NewComponentTempla
 
 // Get component templates.
 //
-// Get information about component templates in a cluster.
-// Component templates are building blocks for constructing index templates that
-// specify index mappings, settings, and aliases.
+// Get information about component templates in a cluster. Component templates
+// are building blocks for constructing index templates that specify index
+// mappings, settings, and aliases.
 //
 // IMPORTANT: CAT APIs are only intended for human consumption using the command
-// line or Kibana console.
-// They are not intended for use by applications. For application consumption,
-// use the get component template API.
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the get component template API.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/cat-component-templates.html
 func New(tp elastictransport.Interface) *ComponentTemplates {
@@ -176,7 +177,7 @@ func (r ComponentTemplates) Perform(providedCtx context.Context) (*http.Response
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "cat.component_templates")
+			ctx = instrument.Start(providedCtx, "cat.component_templates")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -313,9 +314,8 @@ func (r *ComponentTemplates) Header(key, value string) *ComponentTemplates {
 	return r
 }
 
-// Name The name of the component template.
-// It accepts wildcard expressions.
-// If it is omitted, all component templates are returned.
+// Name The name of the component template. It accepts wildcard expressions. If it is
+// omitted, all component templates are returned.
 // API Name: name
 func (r *ComponentTemplates) Name(name string) *ComponentTemplates {
 	r.paramSet |= nameMask
@@ -324,17 +324,22 @@ func (r *ComponentTemplates) Name(name string) *ComponentTemplates {
 	return r
 }
 
-// H List of columns to appear in the response. Supports simple wildcards.
+// H A comma-separated list of columns names to display. It supports simple
+// wildcards.
 // API name: h
-func (r *ComponentTemplates) H(names ...string) *ComponentTemplates {
-	r.values.Set("h", strings.Join(names, ","))
+func (r *ComponentTemplates) H(catcomponentcolumns ...catcomponentcolumn.CatComponentColumn) *ComponentTemplates {
+	tmp := []string{}
+	for _, item := range catcomponentcolumns {
+		tmp = append(tmp, item.String())
+	}
+	r.values.Set("expand_wildcards", strings.Join(tmp, ","))
 
 	return r
 }
 
-// S List of columns that determine how the table should be sorted.
-// Sorting defaults to ascending and can be changed by setting `:asc`
-// or `:desc` as a suffix to the column name.
+// S List of columns that determine how the table should be sorted. Sorting
+// defaults to ascending and can be changed by setting `:asc` or `:desc` as a
+// suffix to the column name.
 // API name: s
 func (r *ComponentTemplates) S(names ...string) *ComponentTemplates {
 	r.values.Set("s", strings.Join(names, ","))
@@ -342,10 +347,10 @@ func (r *ComponentTemplates) S(names ...string) *ComponentTemplates {
 	return r
 }
 
-// Local If `true`, the request computes the list of selected nodes from the
-// local cluster state. If `false` the list of selected nodes are computed
-// from the cluster state of the master node. In both cases the coordinating
-// node will send requests for further information to each selected node.
+// Local If `true`, the request computes the list of selected nodes from the local
+// cluster state. If `false` the list of selected nodes are computed from the
+// cluster state of the master node. In both cases the coordinating node will
+// send requests for further information to each selected node.
 // API name: local
 func (r *ComponentTemplates) Local(local bool) *ComponentTemplates {
 	r.values.Set("local", strconv.FormatBool(local))
@@ -361,8 +366,23 @@ func (r *ComponentTemplates) MasterTimeout(duration string) *ComponentTemplates 
 	return r
 }
 
-// Format Specifies the format to return the columnar data in, can be set to
-// `text`, `json`, `cbor`, `yaml`, or `smile`.
+// Bytes Sets the units for columns that contain a byte-size value. Note that
+// byte-size value units work in terms of powers of 1024. For instance `1kb`
+// means 1024 bytes, not 1000 bytes. If omitted, byte-size values are rendered
+// with a suffix such as `kb`, `mb`, or `gb`, chosen such that the numeric value
+// of the column is as small as possible whilst still being at least `1.0`. If
+// given, byte-size values are rendered as an integer with no suffix,
+// representing the value of the column in the chosen unit. Values that are not
+// an exact multiple of the chosen unit are rounded down.
+// API name: bytes
+func (r *ComponentTemplates) Bytes(bytes bytes.Bytes) *ComponentTemplates {
+	r.values.Set("bytes", bytes.String())
+
+	return r
+}
+
+// Format Specifies the format to return the columnar data in, can be set to `text`,
+// `json`, `cbor`, `yaml`, or `smile`.
 // API name: format
 func (r *ComponentTemplates) Format(format string) *ComponentTemplates {
 	r.values.Set("format", format)
@@ -370,11 +390,24 @@ func (r *ComponentTemplates) Format(format string) *ComponentTemplates {
 	return r
 }
 
-// Help When set to `true` will output available columns. This option
-// can't be combined with any other query string option.
+// Help When set to `true` will output available columns. This option can't be
+// combined with any other query string option.
 // API name: help
 func (r *ComponentTemplates) Help(help bool) *ComponentTemplates {
 	r.values.Set("help", strconv.FormatBool(help))
+
+	return r
+}
+
+// Time Sets the units for columns that contain a time duration. If omitted, time
+// duration values are rendered with a suffix such as `ms`, `s`, `m` or `h`,
+// chosen such that the numeric value of the column is as small as possible
+// whilst still being at least `1.0`. If given, time duration values are
+// rendered as an integer with no suffix. Values that are not an exact multiple
+// of the chosen unit are rounded down.
+// API name: time
+func (r *ComponentTemplates) Time(time timeunit.TimeUnit) *ComponentTemplates {
+	r.values.Set("time", time.String())
 
 	return r
 }
@@ -410,11 +443,9 @@ func (r *ComponentTemplates) FilterPath(filterpaths ...string) *ComponentTemplat
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *ComponentTemplates) Human(human bool) *ComponentTemplates {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -422,8 +453,8 @@ func (r *ComponentTemplates) Human(human bool) *ComponentTemplates {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *ComponentTemplates) Pretty(pretty bool) *ComponentTemplates {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

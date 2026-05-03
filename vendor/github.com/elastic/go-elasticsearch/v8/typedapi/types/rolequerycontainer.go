@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -30,18 +30,18 @@ import (
 
 // RoleQueryContainer type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/query_role/types.ts#L37-L101
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/security/query_role/types.ts#L37-L101
 type RoleQueryContainer struct {
 	AdditionalRoleQueryContainerProperty map[string]json.RawMessage `json:"-"`
 	// Bool matches roles matching boolean combinations of other queries.
 	Bool *BoolQuery `json:"bool,omitempty"`
 	// Exists Returns roles that contain an indexed value for a field.
 	Exists *ExistsQuery `json:"exists,omitempty"`
-	// Ids Returns roles based on their IDs.
-	// This query uses role document IDs stored in the `_id` field.
+	// Ids Returns roles based on their IDs. This query uses role document IDs stored in
+	// the `_id` field.
 	Ids *IdsQuery `json:"ids,omitempty"`
-	// Match Returns roles that match a provided text, number, date or boolean value.
-	// The provided text is analyzed before matching.
+	// Match Returns roles that match a provided text, number, date or boolean value. The
+	// provided text is analyzed before matching.
 	Match map[string]MatchQuery `json:"match,omitempty"`
 	// MatchAll Matches all roles, giving them all a `_score` of 1.0.
 	MatchAll *MatchAllQuery `json:"match_all,omitempty"`
@@ -52,12 +52,12 @@ type RoleQueryContainer struct {
 	// SimpleQueryString Returns roles based on a provided query string, using a parser with a limited
 	// but fault-tolerant syntax.
 	SimpleQueryString *SimpleQueryStringQuery `json:"simple_query_string,omitempty"`
-	// Term Returns roles that contain an exact term in a provided field.
-	// To return a document, the query term must exactly match the queried field's
-	// value, including whitespace and capitalization.
+	// Term Returns roles that contain an exact term in a provided field. To return a
+	// document, the query term must exactly match the queried field's value,
+	// including whitespace and capitalization.
 	Term map[string]TermQuery `json:"term,omitempty"`
-	// Terms Returns roles that contain one or more exact terms in a provided field.
-	// To return a document, one or more terms must exactly match a field value,
+	// Terms Returns roles that contain one or more exact terms in a provided field. To
+	// return a document, one or more terms must exactly match a field value,
 	// including whitespace and capitalization.
 	Terms *TermsQuery `json:"terms,omitempty"`
 	// Wildcard Returns roles that contain terms matching a wildcard pattern.
@@ -170,7 +170,9 @@ func (s *RoleQueryContainer) UnmarshalJSON(data []byte) error {
 				if err := dec.Decode(&raw); err != nil {
 					return fmt.Errorf("%s | %w", "AdditionalRoleQueryContainerProperty", err)
 				}
-				s.AdditionalRoleQueryContainerProperty[key] = *raw
+				if raw != nil {
+					s.AdditionalRoleQueryContainerProperty[key] = *raw
+				}
 			}
 
 		}
@@ -182,7 +184,7 @@ func (s *RoleQueryContainer) UnmarshalJSON(data []byte) error {
 func (s RoleQueryContainer) MarshalJSON() ([]byte, error) {
 	type opt RoleQueryContainer
 	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
+	tmp := make(map[string]json.RawMessage, 0)
 
 	data, err := json.Marshal(opt(s))
 	if err != nil {

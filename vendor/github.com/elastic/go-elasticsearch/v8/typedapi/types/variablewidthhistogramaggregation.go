@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,20 +31,19 @@ import (
 
 // VariableWidthHistogramAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/bucket.ts#L1091-L1115
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/aggregations/bucket.ts#L1127-L1151
 type VariableWidthHistogramAggregation struct {
 	// Buckets The target number of buckets.
 	Buckets *int `json:"buckets,omitempty"`
 	// Field The name of the field.
 	Field *string `json:"field,omitempty"`
 	// InitialBuffer Specifies the number of individual documents that will be stored in memory on
-	// a shard before the initial bucketing algorithm is run.
-	// Defaults to `min(10 * shard_size, 50000)`.
+	// a shard before the initial bucketing algorithm is run. Defaults to `min(10 *
+	// shard_size, 50000)`.
 	InitialBuffer *int    `json:"initial_buffer,omitempty"`
 	Script        *Script `json:"script,omitempty"`
 	// ShardSize The number of buckets that the coordinating node will request from each
-	// shard.
-	// Defaults to `buckets * 50`.
+	// shard. Defaults to `buckets * 50`.
 	ShardSize *int `json:"shard_size,omitempty"`
 }
 

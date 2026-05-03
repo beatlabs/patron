@@ -16,23 +16,23 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
-// Start a data frame analytics job.
-// A data frame analytics job can be started and stopped multiple times
-// throughout its lifecycle.
-// If the destination index does not exist, it is created automatically the
-// first time you start the data frame analytics job. The
-// `index.number_of_shards` and `index.number_of_replicas` settings for the
-// destination index are copied from the source index. If there are multiple
-// source indices, the destination index copies the highest setting values. The
-// mappings for the destination index are also copied from the source indices.
-// If there are any mapping conflicts, the job fails to start.
-// If the destination index exists, it is used as is. You can therefore set up
-// the destination index in advance with custom settings and mappings.
+// Start a data frame analytics job. A data frame analytics job can be started
+// and stopped multiple times throughout its lifecycle. If the destination index
+// does not exist, it is created automatically the first time you start the data
+// frame analytics job. The `index.number_of_shards` and
+// `index.number_of_replicas` settings for the destination index are copied from
+// the source index. If there are multiple source indices, the destination index
+// copies the highest setting values. The mappings for the destination index are
+// also copied from the source indices. If there are any mapping conflicts, the
+// job fails to start. If the destination index exists, it is used as is. You
+// can therefore set up the destination index in advance with custom settings
+// and mappings.
 package startdataframeanalytics
 
 import (
+	gobytes "bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -63,6 +63,10 @@ type StartDataFrameAnalytics struct {
 
 	raw io.Reader
 
+	req      *Request
+	deferred []func(request *Request) error
+	buf      *gobytes.Buffer
+
 	paramSet int
 
 	id string
@@ -87,18 +91,17 @@ func NewStartDataFrameAnalyticsFunc(tp elastictransport.Interface) NewStartDataF
 	}
 }
 
-// Start a data frame analytics job.
-// A data frame analytics job can be started and stopped multiple times
-// throughout its lifecycle.
-// If the destination index does not exist, it is created automatically the
-// first time you start the data frame analytics job. The
-// `index.number_of_shards` and `index.number_of_replicas` settings for the
-// destination index are copied from the source index. If there are multiple
-// source indices, the destination index copies the highest setting values. The
-// mappings for the destination index are also copied from the source indices.
-// If there are any mapping conflicts, the job fails to start.
-// If the destination index exists, it is used as is. You can therefore set up
-// the destination index in advance with custom settings and mappings.
+// Start a data frame analytics job. A data frame analytics job can be started
+// and stopped multiple times throughout its lifecycle. If the destination index
+// does not exist, it is created automatically the first time you start the data
+// frame analytics job. The `index.number_of_shards` and
+// `index.number_of_replicas` settings for the destination index are copied from
+// the source index. If there are multiple source indices, the destination index
+// copies the highest setting values. The mappings for the destination index are
+// also copied from the source indices. If there are any mapping conflicts, the
+// job fails to start. If the destination index exists, it is used as is. You
+// can therefore set up the destination index in advance with custom settings
+// and mappings.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/start-dfanalytics.html
 func New(tp elastictransport.Interface) *StartDataFrameAnalytics {
@@ -106,6 +109,8 @@ func New(tp elastictransport.Interface) *StartDataFrameAnalytics {
 		transport: tp,
 		values:    make(url.Values),
 		headers:   make(http.Header),
+
+		buf: gobytes.NewBuffer(nil),
 	}
 
 	if instrumented, ok := r.transport.(elastictransport.Instrumented); ok {
@@ -113,6 +118,21 @@ func New(tp elastictransport.Interface) *StartDataFrameAnalytics {
 			r.instrument = instrument
 		}
 	}
+
+	return r
+}
+
+// Raw takes a json payload as input which is then passed to the http.Request
+// If specified Raw takes precedence on Request method.
+func (r *StartDataFrameAnalytics) Raw(raw io.Reader) *StartDataFrameAnalytics {
+	r.raw = raw
+
+	return r
+}
+
+// Request allows to set the request property with the appropriate payload.
+func (r *StartDataFrameAnalytics) Request(req *Request) *StartDataFrameAnalytics {
+	r.req = req
 
 	return r
 }
@@ -125,6 +145,31 @@ func (r *StartDataFrameAnalytics) HttpRequest(ctx context.Context) (*http.Reques
 	var req *http.Request
 
 	var err error
+
+	if len(r.deferred) > 0 {
+		for _, f := range r.deferred {
+			deferredErr := f(r.req)
+			if deferredErr != nil {
+				return nil, deferredErr
+			}
+		}
+	}
+
+	if r.raw == nil && r.req != nil {
+
+		data, err := json.Marshal(r.req)
+
+		if err != nil {
+			return nil, fmt.Errorf("could not serialise request for StartDataFrameAnalytics: %w", err)
+		}
+
+		r.buf.Write(data)
+
+	}
+
+	if r.buf.Len() > 0 {
+		r.raw = r.buf
+	}
 
 	r.path.Scheme = "http"
 
@@ -185,7 +230,7 @@ func (r StartDataFrameAnalytics) Perform(providedCtx context.Context) (*http.Res
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "ml.start_data_frame_analytics")
+			ctx = instrument.Start(providedCtx, "ml.start_data_frame_analytics")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -276,45 +321,6 @@ func (r StartDataFrameAnalytics) Do(providedCtx context.Context) (*Response, err
 	return nil, errorResponse
 }
 
-// IsSuccess allows to run a query with a context and retrieve the result as a boolean.
-// This only exists for endpoints without a request payload and allows for quick control flow.
-func (r StartDataFrameAnalytics) IsSuccess(providedCtx context.Context) (bool, error) {
-	var ctx context.Context
-	r.spanStarted = true
-	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-		ctx = instrument.Start(providedCtx, "ml.start_data_frame_analytics")
-		defer instrument.Close(ctx)
-	}
-	if ctx == nil {
-		ctx = providedCtx
-	}
-
-	res, err := r.Perform(ctx)
-
-	if err != nil {
-		return false, err
-	}
-	io.Copy(io.Discard, res.Body)
-	err = res.Body.Close()
-	if err != nil {
-		return false, err
-	}
-
-	if res.StatusCode >= 200 && res.StatusCode < 300 {
-		return true, nil
-	}
-
-	if res.StatusCode != 404 {
-		err := fmt.Errorf("an error happened during the StartDataFrameAnalytics query execution, status code: %d", res.StatusCode)
-		if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
-			instrument.RecordError(ctx, err)
-		}
-		return false, err
-	}
-
-	return false, nil
-}
-
 // Header set a key, value pair in the StartDataFrameAnalytics headers map.
 func (r *StartDataFrameAnalytics) Header(key, value string) *StartDataFrameAnalytics {
 	r.headers.Set(key, value)
@@ -323,21 +329,12 @@ func (r *StartDataFrameAnalytics) Header(key, value string) *StartDataFrameAnaly
 }
 
 // Id Identifier for the data frame analytics job. This identifier can contain
-// lowercase alphanumeric characters (a-z and 0-9), hyphens, and
-// underscores. It must start and end with alphanumeric characters.
+// lowercase alphanumeric characters (a-z and 0-9), hyphens, and underscores. It
+// must start and end with alphanumeric characters.
 // API Name: id
 func (r *StartDataFrameAnalytics) _id(id string) *StartDataFrameAnalytics {
 	r.paramSet |= idMask
 	r.id = id
-
-	return r
-}
-
-// Timeout Controls the amount of time to wait until the data frame analytics job
-// starts.
-// API name: timeout
-func (r *StartDataFrameAnalytics) Timeout(duration string) *StartDataFrameAnalytics {
-	r.values.Set("timeout", duration)
 
 	return r
 }
@@ -365,11 +362,9 @@ func (r *StartDataFrameAnalytics) FilterPath(filterpaths ...string) *StartDataFr
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *StartDataFrameAnalytics) Human(human bool) *StartDataFrameAnalytics {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -377,11 +372,23 @@ func (r *StartDataFrameAnalytics) Human(human bool) *StartDataFrameAnalytics {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *StartDataFrameAnalytics) Pretty(pretty bool) *StartDataFrameAnalytics {
 	r.values.Set("pretty", strconv.FormatBool(pretty))
+
+	return r
+}
+
+// Timeout Controls the amount of time to wait until the data frame analytics job
+// starts.
+// API name: timeout
+func (r *StartDataFrameAnalytics) Timeout(duration types.Duration) *StartDataFrameAnalytics {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+	r.req.Timeout = duration
 
 	return r
 }

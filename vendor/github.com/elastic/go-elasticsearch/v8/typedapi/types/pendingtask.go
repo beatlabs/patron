@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,16 +31,15 @@ import (
 
 // PendingTask type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cluster/pending_tasks/types.ts#L23-L47
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/cluster/pending_tasks/types.ts#L23-L47
 type PendingTask struct {
 	// Executing Indicates whether the pending tasks are currently executing or not.
 	Executing bool `json:"executing"`
 	// InsertOrder The number that represents when the task has been inserted into the task
 	// queue.
 	InsertOrder int `json:"insert_order"`
-	// Priority The priority of the pending task.
-	// The valid priorities in descending priority order are: `IMMEDIATE` > `URGENT`
-	// > `HIGH` > `NORMAL` > `LOW` > `LANGUID`.
+	// Priority The priority of the pending task. The valid priorities in descending priority
+	// order are: `IMMEDIATE` > `URGENT` > `HIGH` > `NORMAL` > `LOW` > `LANGUID`.
 	Priority string `json:"priority"`
 	// Source A general description of the cluster task that may include a reason and
 	// origin.

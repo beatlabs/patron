@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -34,38 +34,37 @@ import (
 
 // CohereTaskSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/_types/CommonTypes.ts#L870-L902
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/inference/_types/CommonTypes.ts#L864-L896
 type CohereTaskSettings struct {
-	// InputType For a `text_embedding` task, the type of input passed to the model.
-	// Valid values are:
+	// InputType For a `text_embedding` task, the type of input passed to the model. Valid
+	// values are:
 	//
-	// * `classification`: Use it for embeddings passed through a text classifier.
-	// * `clustering`: Use it for the embeddings run through a clustering algorithm.
-	// * `ingest`: Use it for storing document embeddings in a vector database.
-	// * `search`: Use it for storing embeddings of search queries run against a
-	// vector database to find relevant documents.
+	//   - `classification`: Use it for embeddings passed through a text classifier.
+	//   - `clustering`: Use it for the embeddings run through a clustering
+	//     algorithm.
+	//   - `ingest`: Use it for storing document embeddings in a vector database.
+	//   - `search`: Use it for storing embeddings of search queries run against a
+	//     vector database to find relevant documents.
 	//
 	// IMPORTANT: The `input_type` field is required when using embedding models
 	// `v3` and higher.
 	InputType *cohereinputtype.CohereInputType `json:"input_type,omitempty"`
 	// ReturnDocuments For a `rerank` task, return doc text within the results.
 	ReturnDocuments *bool `json:"return_documents,omitempty"`
-	// TopN For a `rerank` task, the number of most relevant documents to return.
-	// It defaults to the number of the documents.
-	// If this inference endpoint is used in a `text_similarity_reranker` retriever
-	// query and `top_n` is set, it must be greater than or equal to
-	// `rank_window_size` in the query.
+	// TopN For a `rerank` task, the number of most relevant documents to return. It
+	// defaults to the number of the documents. If this inference endpoint is used
+	// in a `text_similarity_reranker` retriever query and `top_n` is set, it must
+	// be greater than or equal to `rank_window_size` in the query.
 	TopN *int `json:"top_n,omitempty"`
 	// Truncate For a `text_embedding` task, the method to handle inputs longer than the
-	// maximum token length.
-	// Valid values are:
+	// maximum token length. Valid values are:
 	//
-	// * `END`: When the input exceeds the maximum input token length, the end of
-	// the input is discarded.
-	// * `NONE`: When the input exceeds the maximum input token length, an error is
-	// returned.
-	// * `START`: When the input exceeds the maximum input token length, the start
-	// of the input is discarded.
+	//   - `END`: When the input exceeds the maximum input token length, the end of
+	//     the input is discarded.
+	//   - `NONE`: When the input exceeds the maximum input token length, an error
+	//     is returned.
+	//   - `START`: When the input exceeds the maximum input token length, the start
+	//     of the input is discarded.
 	Truncate *coheretruncatetype.CohereTruncateType `json:"truncate,omitempty"`
 }
 

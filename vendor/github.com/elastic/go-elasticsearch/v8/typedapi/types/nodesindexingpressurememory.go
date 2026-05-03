@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,15 +31,15 @@ import (
 
 // NodesIndexingPressureMemory type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/nodes/_types/Stats.ts#L123-L142
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/nodes/_types/Stats.ts#L123-L142
 type NodesIndexingPressureMemory struct {
 	// Current Contains statistics for current indexing load.
 	Current *PressureMemory `json:"current,omitempty"`
-	// Limit Configured memory limit for the indexing requests.
-	// Replica requests have an automatic limit that is 1.5x this value.
+	// Limit Configured memory limit for the indexing requests. Replica requests have an
+	// automatic limit that is 1.5x this value.
 	Limit ByteSize `json:"limit,omitempty"`
-	// LimitInBytes Configured memory limit, in bytes, for the indexing requests.
-	// Replica requests have an automatic limit that is 1.5x this value.
+	// LimitInBytes Configured memory limit, in bytes, for the indexing requests. Replica
+	// requests have an automatic limit that is 1.5x this value.
 	LimitInBytes *int64 `json:"limit_in_bytes,omitempty"`
 	// Total Contains statistics for the cumulative indexing load since the node started.
 	Total *PressureMemory `json:"total,omitempty"`

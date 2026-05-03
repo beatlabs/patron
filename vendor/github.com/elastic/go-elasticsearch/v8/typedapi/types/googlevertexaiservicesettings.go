@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,20 +31,19 @@ import (
 
 // GoogleVertexAIServiceSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/_types/CommonTypes.ts#L1332-L1358
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/inference/_types/CommonTypes.ts#L1298-L1324
 type GoogleVertexAIServiceSettings struct {
-	// Location The name of the location to use for the inference task.
-	// Refer to the Google documentation for the list of supported locations.
+	// Location The name of the location to use for the inference task. Refer to the Google
+	// documentation for the list of supported locations.
 	Location string `json:"location"`
-	// ModelId The name of the model to use for the inference task.
-	// Refer to the Google documentation for the list of supported models.
+	// ModelId The name of the model to use for the inference task. Refer to the Google
+	// documentation for the list of supported models.
 	ModelId string `json:"model_id"`
 	// ProjectId The name of the project to use for the inference task.
 	ProjectId string `json:"project_id"`
 	// RateLimit This setting helps to minimize the number of rate limit errors returned from
-	// Google Vertex AI.
-	// By default, the `googlevertexai` service sets the number of requests allowed
-	// per minute to 30.000.
+	// Google Vertex AI. By default, the `googlevertexai` service sets the number of
+	// requests allowed per minute to 30.000.
 	RateLimit *RateLimitSetting `json:"rate_limit,omitempty"`
 	// ServiceAccountJson A valid service account in JSON format for the Google Vertex AI API.
 	ServiceAccountJson string `json:"service_account_json"`

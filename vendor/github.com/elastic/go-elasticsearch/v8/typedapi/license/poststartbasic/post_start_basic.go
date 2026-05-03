@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Start a basic license.
 //
@@ -27,9 +27,9 @@
 // license.
 //
 // If the basic license does not support all of the features that are available
-// with your current license, however, you are notified in the response.
-// You must then re-submit the API request with the `acknowledge` parameter set
-// to `true`.
+// with your current license, however, you are notified in the response. You
+// must then re-submit the API request with the `acknowledge` parameter set to
+// `true`.
 //
 // To check the status of your basic license, use the get basic license API.
 package poststartbasic
@@ -90,9 +90,9 @@ func NewPostStartBasicFunc(tp elastictransport.Interface) NewPostStartBasic {
 // license.
 //
 // If the basic license does not support all of the features that are available
-// with your current license, however, you are notified in the response.
-// You must then re-submit the API request with the `acknowledge` parameter set
-// to `true`.
+// with your current license, however, you are notified in the response. You
+// must then re-submit the API request with the `acknowledge` parameter set to
+// `true`.
 //
 // To check the status of your basic license, use the get basic license API.
 //
@@ -165,7 +165,7 @@ func (r PostStartBasic) Perform(providedCtx context.Context) (*http.Response, er
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "license.post_start_basic")
+			ctx = instrument.Start(providedCtx, "license.post_start_basic")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -302,7 +302,7 @@ func (r *PostStartBasic) Header(key, value string) *PostStartBasic {
 	return r
 }
 
-// Acknowledge whether the user has acknowledged acknowledge messages (default: false)
+// Acknowledge Whether the user has acknowledged acknowledge messages
 // API name: acknowledge
 func (r *PostStartBasic) Acknowledge(acknowledge bool) *PostStartBasic {
 	r.values.Set("acknowledge", strconv.FormatBool(acknowledge))
@@ -350,11 +350,9 @@ func (r *PostStartBasic) FilterPath(filterpaths ...string) *PostStartBasic {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *PostStartBasic) Human(human bool) *PostStartBasic {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -362,8 +360,8 @@ func (r *PostStartBasic) Human(human bool) *PostStartBasic {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *PostStartBasic) Pretty(pretty bool) *PostStartBasic {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package samlprepareauthentication
 
@@ -27,22 +27,19 @@ import (
 
 // Request holds the request body struct for the package samlprepareauthentication
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/saml_prepare_authentication/Request.ts#L22-L67
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/security/saml_prepare_authentication/Request.ts#L23-L70
 type Request struct {
-
 	// Acs The Assertion Consumer Service URL that matches the one of the SAML realms in
-	// Elasticsearch.
-	// The realm is used to generate the authentication request. You must specify
-	// either this parameter or the `realm` parameter.
+	// Elasticsearch. The realm is used to generate the authentication request. You
+	// must specify either this parameter or the `realm` parameter.
 	Acs *string `json:"acs,omitempty"`
 	// Realm The name of the SAML realm in Elasticsearch for which the configuration is
-	// used to generate the authentication request.
-	// You must specify either this parameter or the `acs` parameter.
+	// used to generate the authentication request. You must specify either this
+	// parameter or the `acs` parameter.
 	Realm *string `json:"realm,omitempty"`
 	// RelayState A string that will be included in the redirect URL that this API returns as
-	// the `RelayState` query parameter.
-	// If the Authentication Request is signed, this value is used as part of the
-	// signature computation.
+	// the `RelayState` query parameter. If the Authentication Request is signed,
+	// this value is used as part of the signature computation.
 	RelayState *string `json:"relay_state,omitempty"`
 }
 

@@ -16,15 +16,15 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Create a service account token.
 //
 // Create a service accounts token for access without requiring basic
 // authentication.
 //
-// NOTE: Service account tokens never expire.
-// You must actively delete them if they are no longer needed.
+// NOTE: Service account tokens never expire. You must actively delete them if
+// they are no longer needed.
 package createservicetoken
 
 import (
@@ -96,8 +96,8 @@ func NewCreateServiceTokenFunc(tp elastictransport.Interface) NewCreateServiceTo
 // Create a service accounts token for access without requiring basic
 // authentication.
 //
-// NOTE: Service account tokens never expire.
-// You must actively delete them if they are no longer needed.
+// NOTE: Service account tokens never expire. You must actively delete them if
+// they are no longer needed.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-service-token.html
 func New(tp elastictransport.Interface) *CreateServiceToken {
@@ -213,7 +213,7 @@ func (r CreateServiceToken) Perform(providedCtx context.Context) (*http.Response
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "security.create_service_token")
+			ctx = instrument.Start(providedCtx, "security.create_service_token")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -368,17 +368,16 @@ func (r *CreateServiceToken) _service(service string) *CreateServiceToken {
 	return r
 }
 
-// Name The name for the service account token.
-// If omitted, a random name will be generated.
+// Name The name for the service account token. If omitted, a random name will be
+// generated.
 //
-// Token names must be at least one and no more than 256 characters.
-// They can contain alphanumeric characters (a-z, A-Z, 0-9), dashes (`-`), and
+// Token names must be at least one and no more than 256 characters. They can
+// contain alphanumeric characters (a-z, A-Z, 0-9), dashes (`-`), and
 // underscores (`_`), but cannot begin with an underscore.
 //
 // NOTE: Token names must be unique in the context of the associated service
-// account.
-// They must also be globally unique with their fully qualified names, which are
-// comprised of the service account principal and token name, such as
+// account. They must also be globally unique with their fully qualified names,
+// which are comprised of the service account principal and token name, such as
 // `<namespace>/<service>/<token-name>`.
 // API Name: name
 func (r *CreateServiceToken) Name(name string) *CreateServiceToken {
@@ -388,9 +387,9 @@ func (r *CreateServiceToken) Name(name string) *CreateServiceToken {
 	return r
 }
 
-// Refresh If `true` then refresh the affected shards to make this operation visible to
-// search, if `wait_for` (the default) then wait for a refresh to make this
-// operation visible to search, if `false` then do nothing with refreshes.
+// Refresh If `true` (the default) then refresh the affected shards to make this
+// operation visible to search, if `wait_for` then wait for a refresh to make
+// this operation visible to search, if `false` then do nothing with refreshes.
 // API name: refresh
 func (r *CreateServiceToken) Refresh(refresh refresh.Refresh) *CreateServiceToken {
 	r.values.Set("refresh", refresh.String())
@@ -421,11 +420,9 @@ func (r *CreateServiceToken) FilterPath(filterpaths ...string) *CreateServiceTok
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *CreateServiceToken) Human(human bool) *CreateServiceToken {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -433,8 +430,8 @@ func (r *CreateServiceToken) Human(human bool) *CreateServiceToken {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *CreateServiceToken) Pretty(pretty bool) *CreateServiceToken {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

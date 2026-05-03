@@ -16,13 +16,13 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Get the shutdown status.
 //
 // Get information about nodes that are ready to be shut down, have shut down
-// preparations still in progress, or have stalled.
-// The API returns status information for each part of the shut down process.
+// preparations still in progress, or have stalled. The API returns status
+// information for each part of the shut down process.
 //
 // NOTE: This feature is designed for indirect use by Elasticsearch Service,
 // Elastic Cloud Enterprise, and Elastic Cloud on Kubernetes. Direct use is not
@@ -45,7 +45,6 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/timeunit"
 )
 
 const (
@@ -89,8 +88,8 @@ func NewGetNodeFunc(tp elastictransport.Interface) NewGetNode {
 // Get the shutdown status.
 //
 // Get information about nodes that are ready to be shut down, have shut down
-// preparations still in progress, or have stalled.
-// The API returns status information for each part of the shut down process.
+// preparations still in progress, or have stalled. The API returns status
+// information for each part of the shut down process.
 //
 // NOTE: This feature is designed for indirect use by Elasticsearch Service,
 // Elastic Cloud Enterprise, and Elastic Cloud on Kubernetes. Direct use is not
@@ -187,7 +186,7 @@ func (r GetNode) Perform(providedCtx context.Context) (*http.Response, error) {
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "shutdown.get_node")
+			ctx = instrument.Start(providedCtx, "shutdown.get_node")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -324,7 +323,7 @@ func (r *GetNode) Header(key, value string) *GetNode {
 	return r
 }
 
-// NodeId Which node for which to retrieve the shutdown status
+// NodeId Comma-separated list of nodes for which to retrieve the shutdown status
 // API Name: nodeid
 func (r *GetNode) NodeId(nodeid string) *GetNode {
 	r.paramSet |= nodeidMask
@@ -336,8 +335,8 @@ func (r *GetNode) NodeId(nodeid string) *GetNode {
 // MasterTimeout Period to wait for a connection to the master node. If no response is
 // received before the timeout expires, the request fails and returns an error.
 // API name: master_timeout
-func (r *GetNode) MasterTimeout(mastertimeout timeunit.TimeUnit) *GetNode {
-	r.values.Set("master_timeout", mastertimeout.String())
+func (r *GetNode) MasterTimeout(duration string) *GetNode {
+	r.values.Set("master_timeout", duration)
 
 	return r
 }
@@ -365,11 +364,9 @@ func (r *GetNode) FilterPath(filterpaths ...string) *GetNode {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *GetNode) Human(human bool) *GetNode {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -377,8 +374,8 @@ func (r *GetNode) Human(human bool) *GetNode {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *GetNode) Pretty(pretty bool) *GetNode {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,17 +31,16 @@ import (
 
 // IntervalsWildcard type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/fulltext.ts#L319-L334
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/fulltext.ts#L319-L334
 type IntervalsWildcard struct {
-	// Analyzer Analyzer used to analyze the `pattern`.
-	// Defaults to the top-level field's analyzer.
+	// Analyzer Analyzer used to analyze the `pattern`. Defaults to the top-level field's
+	// analyzer.
 	Analyzer *string `json:"analyzer,omitempty"`
 	// Pattern Wildcard pattern used to find matching terms.
 	Pattern string `json:"pattern"`
 	// UseField If specified, match intervals from this field rather than the top-level
-	// field.
-	// The `pattern` is normalized using the search analyzer from this field, unless
-	// `analyzer` is specified separately.
+	// field. The `pattern` is normalized using the search analyzer from this field,
+	// unless `analyzer` is specified separately.
 	UseField *string `json:"use_field,omitempty"`
 }
 

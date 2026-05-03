@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package putamazonsagemaker
 
@@ -30,21 +30,18 @@ import (
 
 // Request holds the request body struct for the package putamazonsagemaker
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/put_amazonsagemaker/PutAmazonSageMakerRequest.ts#L31-L86
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/inference/put_amazonsagemaker/PutAmazonSageMakerRequest.ts#L31-L88
 type Request struct {
-
 	// ChunkingSettings The chunking configuration object.
 	ChunkingSettings *types.InferenceChunkingSettings `json:"chunking_settings,omitempty"`
 	// Service The type of service supported for the specified task type. In this case,
 	// `amazon_sagemaker`.
 	Service amazonsagemakerservicetype.AmazonSageMakerServiceType `json:"service"`
-	// ServiceSettings Settings used to install the inference model.
-	// These settings are specific to the `amazon_sagemaker` service and
-	// `service_settings.api` you specified.
+	// ServiceSettings Settings used to install the inference model. These settings are specific to
+	// the `amazon_sagemaker` service and `service_settings.api` you specified.
 	ServiceSettings types.AmazonSageMakerServiceSettings `json:"service_settings"`
-	// TaskSettings Settings to configure the inference task.
-	// These settings are specific to the task type and `service_settings.api` you
-	// specified.
+	// TaskSettings Settings to configure the inference task. These settings are specific to the
+	// task type and `service_settings.api` you specified.
 	TaskSettings *types.AmazonSageMakerTaskSettings `json:"task_settings,omitempty"`
 }
 

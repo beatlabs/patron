@@ -16,13 +16,12 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
-// Get the status for a data stream lifecycle.
-// Get information about an index or data stream's current data stream lifecycle
-// status, such as time since index creation, time since rollover, the lifecycle
-// configuration managing the index, or any errors encountered during lifecycle
-// execution.
+// Get the status for a data stream lifecycle. Get information about an index or
+// data stream's current data stream lifecycle status, such as time since index
+// creation, time since rollover, the lifecycle configuration managing the
+// index, or any errors encountered during lifecycle execution.
 package explaindatalifecycle
 
 import (
@@ -80,11 +79,10 @@ func NewExplainDataLifecycleFunc(tp elastictransport.Interface) NewExplainDataLi
 	}
 }
 
-// Get the status for a data stream lifecycle.
-// Get information about an index or data stream's current data stream lifecycle
-// status, such as time since index creation, time since rollover, the lifecycle
-// configuration managing the index, or any errors encountered during lifecycle
-// execution.
+// Get the status for a data stream lifecycle. Get information about an index or
+// data stream's current data stream lifecycle status, such as time since index
+// creation, time since rollover, the lifecycle configuration managing the
+// index, or any errors encountered during lifecycle execution.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/data-streams-explain-lifecycle.html
 func New(tp elastictransport.Interface) *ExplainDataLifecycle {
@@ -161,7 +159,7 @@ func (r ExplainDataLifecycle) Perform(providedCtx context.Context) (*http.Respon
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "indices.explain_data_lifecycle")
+			ctx = instrument.Start(providedCtx, "indices.explain_data_lifecycle")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -298,7 +296,7 @@ func (r *ExplainDataLifecycle) Header(key, value string) *ExplainDataLifecycle {
 	return r
 }
 
-// Index The name of the index to explain
+// Index Comma-separated list of index names to explain
 // API Name: index
 func (r *ExplainDataLifecycle) _index(index string) *ExplainDataLifecycle {
 	r.paramSet |= indexMask
@@ -307,7 +305,7 @@ func (r *ExplainDataLifecycle) _index(index string) *ExplainDataLifecycle {
 	return r
 }
 
-// IncludeDefaults indicates if the API should return the default values the system uses for the
+// IncludeDefaults Indicates if the API should return the default values the system uses for the
 // index's lifecycle
 // API name: include_defaults
 func (r *ExplainDataLifecycle) IncludeDefaults(includedefaults bool) *ExplainDataLifecycle {
@@ -316,7 +314,7 @@ func (r *ExplainDataLifecycle) IncludeDefaults(includedefaults bool) *ExplainDat
 	return r
 }
 
-// MasterTimeout Specify timeout for connection to master
+// MasterTimeout The period to wait for a connection to the master node.
 // API name: master_timeout
 func (r *ExplainDataLifecycle) MasterTimeout(duration string) *ExplainDataLifecycle {
 	r.values.Set("master_timeout", duration)
@@ -347,11 +345,9 @@ func (r *ExplainDataLifecycle) FilterPath(filterpaths ...string) *ExplainDataLif
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *ExplainDataLifecycle) Human(human bool) *ExplainDataLifecycle {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -359,8 +355,8 @@ func (r *ExplainDataLifecycle) Human(human bool) *ExplainDataLifecycle {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *ExplainDataLifecycle) Pretty(pretty bool) *ExplainDataLifecycle {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

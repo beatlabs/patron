@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package previewdatafeed
 
@@ -29,19 +29,16 @@ import (
 
 // Request holds the request body struct for the package previewdatafeed
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/preview_datafeed/MlPreviewDatafeedRequest.ts#L26-L81
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/preview_datafeed/MlPreviewDatafeedRequest.ts#L26-L85
 type Request struct {
-
 	// DatafeedConfig The datafeed definition to preview.
 	DatafeedConfig *types.DatafeedConfig `json:"datafeed_config,omitempty"`
 	// JobConfig The configuration details for the anomaly detection job that is associated
-	// with the datafeed. If the
-	// `datafeed_config` object does not include a `job_id` that references an
-	// existing anomaly detection job, you must
-	// supply this `job_config` object. If you include both a `job_id` and a
-	// `job_config`, the latter information is
-	// used. You cannot specify a `job_config` object unless you also supply a
-	// `datafeed_config` object.
+	// with the datafeed. If the `datafeed_config` object does not include a
+	// `job_id` that references an existing anomaly detection job, you must supply
+	// this `job_config` object. If you include both a `job_id` and a `job_config`,
+	// the latter information is used. You cannot specify a `job_config` object
+	// unless you also supply a `datafeed_config` object.
 	JobConfig *types.JobConfig `json:"job_config,omitempty"`
 }
 

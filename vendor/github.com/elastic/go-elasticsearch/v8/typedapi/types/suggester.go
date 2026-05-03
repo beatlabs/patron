@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // Suggester type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/_types/suggester.ts#L101-L107
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/search/_types/suggester.ts#L101-L107
 type Suggester struct {
 	Suggesters map[string]FieldSuggester `json:"-"`
 	// Text Global suggest text, to avoid repetition when the same text is used in
@@ -76,7 +76,9 @@ func (s *Suggester) UnmarshalJSON(data []byte) error {
 				if err := dec.Decode(&raw); err != nil {
 					return fmt.Errorf("%s | %w", "Suggesters", err)
 				}
-				s.Suggesters[key] = *raw
+				if raw != nil {
+					s.Suggesters[key] = *raw
+				}
 			}
 
 		}
@@ -88,7 +90,7 @@ func (s *Suggester) UnmarshalJSON(data []byte) error {
 func (s Suggester) MarshalJSON() ([]byte, error) {
 	type opt Suggester
 	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
+	tmp := make(map[string]json.RawMessage, 0)
 
 	data, err := json.Marshal(opt(s))
 	if err != nil {
@@ -101,7 +103,11 @@ func (s Suggester) MarshalJSON() ([]byte, error) {
 
 	// We inline the additional fields from the underlying map
 	for key, value := range s.Suggesters {
-		tmp[fmt.Sprintf("%s", key)] = value
+		marshaled, err := json.Marshal(value)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal additional property %q: %w", key, err)
+		}
+		tmp[fmt.Sprintf("%s", key)] = marshaled
 	}
 	delete(tmp, "Suggesters")
 

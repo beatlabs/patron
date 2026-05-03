@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -34,7 +34,7 @@ import (
 
 // ReindexDestination type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/reindex/types.ts#L39-L67
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/reindex/types.ts#L39-L67
 type ReindexDestination struct {
 	// Index The name of the data stream, index, or index alias you are copying to.
 	Index string `json:"index"`
@@ -47,13 +47,11 @@ type ReindexDestination struct {
 	// Pipeline The name of the pipeline to use.
 	Pipeline *string `json:"pipeline,omitempty"`
 	// Routing By default, a document's routing is preserved unless it's changed by the
-	// script.
-	// If it is `keep`, the routing on the bulk request sent for each match is set
-	// to the routing on the match.
-	// If it is `discard`, the routing on the bulk request sent for each match is
-	// set to `null`.
-	// If it is `=value`, the routing on the bulk request sent for each match is set
-	// to all value specified after the equals sign (`=`).
+	// script. If it is `keep`, the routing on the bulk request sent for each match
+	// is set to the routing on the match. If it is `discard`, the routing on the
+	// bulk request sent for each match is set to `null`. If it is `=value`, the
+	// routing on the bulk request sent for each match is set to all value specified
+	// after the equals sign (`=`).
 	Routing *string `json:"routing,omitempty"`
 	// VersionType The versioning to use for the indexing operation.
 	VersionType *versiontype.VersionType `json:"version_type,omitempty"`

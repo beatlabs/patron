@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,21 +31,20 @@ import (
 
 // CgroupMemory type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/nodes/_types/Stats.ts#L559-L575
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/nodes/_types/Stats.ts#L559-L575
 type CgroupMemory struct {
 	// ControlGroup The `memory` control group to which the Elasticsearch process belongs.
 	ControlGroup *string `json:"control_group,omitempty"`
 	// LimitInBytes The maximum amount of user memory (including file cache) allowed for all
-	// tasks in the same cgroup as the Elasticsearch process.
-	// This value can be too big to store in a `long`, so is returned as a string so
-	// that the value returned can exactly match what the underlying operating
-	// system interface returns.
-	// Any value that is too large to parse into a `long` almost certainly means no
-	// limit has been set for the cgroup.
+	// tasks in the same cgroup as the Elasticsearch process. This value can be too
+	// big to store in a `long`, so is returned as a string so that the value
+	// returned can exactly match what the underlying operating system interface
+	// returns. Any value that is too large to parse into a `long` almost certainly
+	// means no limit has been set for the cgroup.
 	LimitInBytes *string `json:"limit_in_bytes,omitempty"`
 	// UsageInBytes The total current memory usage by processes in the cgroup, in bytes, by all
-	// tasks in the same cgroup as the Elasticsearch process.
-	// This value is stored as a string for consistency with `limit_in_bytes`.
+	// tasks in the same cgroup as the Elasticsearch process. This value is stored
+	// as a string for consistency with `limit_in_bytes`.
 	UsageInBytes *string `json:"usage_in_bytes,omitempty"`
 }
 

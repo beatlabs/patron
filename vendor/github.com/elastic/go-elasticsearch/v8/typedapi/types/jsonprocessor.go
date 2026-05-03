@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,23 +33,21 @@ import (
 
 // JsonProcessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Processors.ts#L1138-L1167
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ingest/_types/Processors.ts#L1145-L1174
 type JsonProcessor struct {
 	// AddToRoot Flag that forces the parsed JSON to be added at the top level of the
-	// document.
-	// `target_field` must not be set when this option is chosen.
+	// document. `target_field` must not be set when this option is chosen.
 	AddToRoot *bool `json:"add_to_root,omitempty"`
 	// AddToRootConflictStrategy When set to `replace`, root fields that conflict with fields from the parsed
-	// JSON will be overridden.
-	// When set to `merge`, conflicting fields will be merged.
-	// Only applicable `if add_to_root` is set to true.
+	// JSON will be overridden. When set to `merge`, conflicting fields will be
+	// merged. Only applicable `if add_to_root` is set to true.
 	AddToRootConflictStrategy *jsonprocessorconflictstrategy.JsonProcessorConflictStrategy `json:"add_to_root_conflict_strategy,omitempty"`
 	// AllowDuplicateKeys When set to `true`, the JSON parser will not fail if the JSON contains
-	// duplicate keys.
-	// Instead, the last encountered value for any duplicate key wins.
+	// duplicate keys. Instead, the last encountered value for any duplicate key
+	// wins.
 	AllowDuplicateKeys *bool `json:"allow_duplicate_keys,omitempty"`
-	// Description Description of the processor.
-	// Useful for describing the purpose of the processor or its configuration.
+	// Description Description of the processor. Useful for describing the purpose of the
+	// processor or its configuration.
 	Description *string `json:"description,omitempty"`
 	// Field The field to be parsed.
 	Field string `json:"field"`
@@ -59,11 +57,10 @@ type JsonProcessor struct {
 	IgnoreFailure *bool `json:"ignore_failure,omitempty"`
 	// OnFailure Handle failures for the processor.
 	OnFailure []ProcessorContainer `json:"on_failure,omitempty"`
-	// Tag Identifier for the processor.
-	// Useful for debugging and metrics.
+	// Tag Identifier for the processor. Useful for debugging and metrics.
 	Tag *string `json:"tag,omitempty"`
-	// TargetField The field that the converted structured object will be written into.
-	// Any existing content in this field will be overwritten.
+	// TargetField The field that the converted structured object will be written into. Any
+	// existing content in this field will be overwritten.
 	TargetField *string `json:"target_field,omitempty"`
 }
 

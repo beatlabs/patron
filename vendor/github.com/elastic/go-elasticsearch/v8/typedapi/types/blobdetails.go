@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,14 +31,12 @@ import (
 
 // BlobDetails type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/snapshot/repository_analyze/SnapshotAnalyzeRepositoryResponse.ts#L250-L284
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/snapshot/repository_analyze/SnapshotAnalyzeRepositoryResponse.ts#L250-L284
 type BlobDetails struct {
 	// Name The name of the blob.
 	Name string `json:"name"`
 	// Overwritten Indicates whether the blob was overwritten while the read operations were
-	// ongoing.
-	//
-	//	/**
+	// ongoing. /**
 	Overwritten bool `json:"overwritten"`
 	ReadEarly   bool `json:"read_early"`
 	// ReadEnd The position, in bytes, at which read operations completed.

@@ -16,22 +16,19 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Get the cluster health status.
 //
 // IMPORTANT: CAT APIs are only intended for human consumption using the command
-// line or Kibana console.
-// They are not intended for use by applications. For application consumption,
-// use the cluster health API.
-// This API is often used to check malfunctioning clusters.
-// To help you track cluster health alongside log files and alerting systems,
-// the API returns timestamps in two formats:
-// `HH:MM:SS`, which is human-readable but includes no date information;
-// `Unix epoch time`, which is machine-sortable and includes date information.
-// The latter format is useful for cluster recoveries that take multiple days.
-// You can use the cat health API to verify cluster health across multiple
-// nodes.
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the cluster health API. This API is often used
+// to check malfunctioning clusters. To help you track cluster health alongside
+// log files and alerting systems, the API returns timestamps in two formats:
+// `HH:MM:SS`, which is human-readable but includes no date information; `Unix
+// epoch time`, which is machine-sortable and includes date information. The
+// latter format is useful for cluster recoveries that take multiple days. You
+// can use the cat health API to verify cluster health across multiple nodes.
 // You also can use the API to track the recovery of a large cluster over a
 // longer period of time.
 package health
@@ -49,6 +46,7 @@ import (
 
 	"github.com/elastic/elastic-transport-go/v8/elastictransport"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/bytes"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/timeunit"
 )
 
@@ -87,17 +85,14 @@ func NewHealthFunc(tp elastictransport.Interface) NewHealth {
 // Get the cluster health status.
 //
 // IMPORTANT: CAT APIs are only intended for human consumption using the command
-// line or Kibana console.
-// They are not intended for use by applications. For application consumption,
-// use the cluster health API.
-// This API is often used to check malfunctioning clusters.
-// To help you track cluster health alongside log files and alerting systems,
-// the API returns timestamps in two formats:
-// `HH:MM:SS`, which is human-readable but includes no date information;
-// `Unix epoch time`, which is machine-sortable and includes date information.
-// The latter format is useful for cluster recoveries that take multiple days.
-// You can use the cat health API to verify cluster health across multiple
-// nodes.
+// line or Kibana console. They are not intended for use by applications. For
+// application consumption, use the cluster health API. This API is often used
+// to check malfunctioning clusters. To help you track cluster health alongside
+// log files and alerting systems, the API returns timestamps in two formats:
+// `HH:MM:SS`, which is human-readable but includes no date information; `Unix
+// epoch time`, which is machine-sortable and includes date information. The
+// latter format is useful for cluster recoveries that take multiple days. You
+// can use the cat health API to verify cluster health across multiple nodes.
 // You also can use the API to track the recovery of a large cluster over a
 // longer period of time.
 //
@@ -170,7 +165,7 @@ func (r Health) Perform(providedCtx context.Context) (*http.Response, error) {
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "cat.health")
+			ctx = instrument.Start(providedCtx, "cat.health")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -307,14 +302,6 @@ func (r *Health) Header(key, value string) *Health {
 	return r
 }
 
-// Time The unit used to display time values.
-// API name: time
-func (r *Health) Time(time timeunit.TimeUnit) *Health {
-	r.values.Set("time", time.String())
-
-	return r
-}
-
 // Ts If true, returns `HH:MM:SS` and Unix epoch timestamps.
 // API name: ts
 func (r *Health) Ts(ts bool) *Health {
@@ -331,9 +318,9 @@ func (r *Health) H(names ...string) *Health {
 	return r
 }
 
-// S List of columns that determine how the table should be sorted.
-// Sorting defaults to ascending and can be changed by setting `:asc`
-// or `:desc` as a suffix to the column name.
+// S List of columns that determine how the table should be sorted. Sorting
+// defaults to ascending and can be changed by setting `:asc` or `:desc` as a
+// suffix to the column name.
 // API name: s
 func (r *Health) S(names ...string) *Health {
 	r.values.Set("s", strings.Join(names, ","))
@@ -341,8 +328,23 @@ func (r *Health) S(names ...string) *Health {
 	return r
 }
 
-// Format Specifies the format to return the columnar data in, can be set to
-// `text`, `json`, `cbor`, `yaml`, or `smile`.
+// Bytes Sets the units for columns that contain a byte-size value. Note that
+// byte-size value units work in terms of powers of 1024. For instance `1kb`
+// means 1024 bytes, not 1000 bytes. If omitted, byte-size values are rendered
+// with a suffix such as `kb`, `mb`, or `gb`, chosen such that the numeric value
+// of the column is as small as possible whilst still being at least `1.0`. If
+// given, byte-size values are rendered as an integer with no suffix,
+// representing the value of the column in the chosen unit. Values that are not
+// an exact multiple of the chosen unit are rounded down.
+// API name: bytes
+func (r *Health) Bytes(bytes bytes.Bytes) *Health {
+	r.values.Set("bytes", bytes.String())
+
+	return r
+}
+
+// Format Specifies the format to return the columnar data in, can be set to `text`,
+// `json`, `cbor`, `yaml`, or `smile`.
 // API name: format
 func (r *Health) Format(format string) *Health {
 	r.values.Set("format", format)
@@ -350,11 +352,24 @@ func (r *Health) Format(format string) *Health {
 	return r
 }
 
-// Help When set to `true` will output available columns. This option
-// can't be combined with any other query string option.
+// Help When set to `true` will output available columns. This option can't be
+// combined with any other query string option.
 // API name: help
 func (r *Health) Help(help bool) *Health {
 	r.values.Set("help", strconv.FormatBool(help))
+
+	return r
+}
+
+// Time Sets the units for columns that contain a time duration. If omitted, time
+// duration values are rendered with a suffix such as `ms`, `s`, `m` or `h`,
+// chosen such that the numeric value of the column is as small as possible
+// whilst still being at least `1.0`. If given, time duration values are
+// rendered as an integer with no suffix. Values that are not an exact multiple
+// of the chosen unit are rounded down.
+// API name: time
+func (r *Health) Time(time timeunit.TimeUnit) *Health {
+	r.values.Set("time", time.String())
 
 	return r
 }
@@ -390,11 +405,9 @@ func (r *Health) FilterPath(filterpaths ...string) *Health {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *Health) Human(human bool) *Health {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -402,8 +415,8 @@ func (r *Health) Human(human bool) *Health {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *Health) Pretty(pretty bool) *Health {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

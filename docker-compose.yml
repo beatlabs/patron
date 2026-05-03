@@ -99,7 +99,7 @@ services:
       retries: 5
       start_period: 15s
   moto:
-    image: motoserver/moto:5.1.2
+    image: motoserver/moto:5.1.22
     restart: always
     ports:
       - "127.0.0.1:4566:5000"
@@ -112,7 +112,7 @@ services:
       retries: 5
       start_period: 10s
   hivemq:
-    image: hivemq/hivemq4:4.50.0
+    image: hivemq/hivemq4:4.51.0
     restart: always
     ports:
       - target: 1883
@@ -160,7 +160,7 @@ services:
       retries: 5
       start_period: 15s
   otelcol:
-    image: otel/opentelemetry-collector-contrib:0.149.0
+    image: otel/opentelemetry-collector-contrib:0.151.0
     restart: always
     command: ["--config=/etc/otelcol-config.yaml"]
     volumes:

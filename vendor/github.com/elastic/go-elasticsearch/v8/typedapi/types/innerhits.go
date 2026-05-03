@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // InnerHits type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/_types/hits.ts#L108-L142
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/search/_types/hits.ts#L108-L142
 type InnerHits struct {
 	Collapse       *FieldCollapse   `json:"collapse,omitempty"`
 	DocvalueFields []FieldAndFormat `json:"docvalue_fields,omitempty"`
@@ -41,15 +41,15 @@ type InnerHits struct {
 	From           *int       `json:"from,omitempty"`
 	Highlight      *Highlight `json:"highlight,omitempty"`
 	IgnoreUnmapped *bool      `json:"ignore_unmapped,omitempty"`
-	// Name The name for the particular inner hit definition in the response.
-	// Useful when a search request contains multiple inner hits.
+	// Name The name for the particular inner hit definition in the response. Useful when
+	// a search request contains multiple inner hits.
 	Name             *string                `json:"name,omitempty"`
 	ScriptFields     map[string]ScriptField `json:"script_fields,omitempty"`
 	SeqNoPrimaryTerm *bool                  `json:"seq_no_primary_term,omitempty"`
 	// Size The maximum number of hits to return per `inner_hits`.
 	Size *int `json:"size,omitempty"`
-	// Sort How the inner hits should be sorted per `inner_hits`.
-	// By default, inner hits are sorted by score.
+	// Sort How the inner hits should be sorted per `inner_hits`. By default, inner hits
+	// are sorted by score.
 	Sort         []SortCombinations `json:"sort,omitempty"`
 	Source_      SourceConfig       `json:"_source,omitempty"`
 	StoredFields []string           `json:"stored_fields,omitempty"`

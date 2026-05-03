@@ -74,7 +74,10 @@ func Test_SQS_Consume(t *testing.T) {
 		WithPollWaitSeconds(20), WithVisibilityTimeout(30), WithQueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 
-	go func() { assert.NoError(t, cmp.Run(context.Background())) }()
+	runCtx, runCancel := context.WithCancel(context.Background())
+	defer runCancel()
+
+	go func() { assert.NoError(t, cmp.Run(runCtx)) }()
 
 	got := <-chReceived
 
@@ -98,6 +101,8 @@ func Test_SQS_Consume(t *testing.T) {
 	collectedMetrics := collectMetrics(2)
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.message.counter")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.queue.size")
+
+	runCancel()
 }
 
 func sendMessage(t *testing.T, client *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -32,26 +32,22 @@ import (
 
 // Translog type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/_types/IndexSettings.ts#L355-L377
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/indices/_types/IndexSettings.ts#L355-L377
 type Translog struct {
 	// Durability Whether or not to `fsync` and commit the translog after every index, delete,
 	// update, or bulk request.
 	Durability *translogdurability.TranslogDurability `json:"durability,omitempty"`
 	// FlushThresholdSize The translog stores all operations that are not yet safely persisted in
-	// Lucene (i.e., are not
-	// part of a Lucene commit point). Although these operations are available for
-	// reads, they will need
-	// to be replayed if the shard was stopped and had to be recovered. This setting
-	// controls the
-	// maximum total size of these operations, to prevent recoveries from taking too
-	// long. Once the
-	// maximum size has been reached a flush will happen, generating a new Lucene
-	// commit point.
+	// Lucene (i.e., are not part of a Lucene commit point). Although these
+	// operations are available for reads, they will need to be replayed if the
+	// shard was stopped and had to be recovered. This setting controls the maximum
+	// total size of these operations, to prevent recoveries from taking too long.
+	// Once the maximum size has been reached a flush will happen, generating a new
+	// Lucene commit point.
 	FlushThresholdSize ByteSize           `json:"flush_threshold_size,omitempty"`
 	Retention          *TranslogRetention `json:"retention,omitempty"`
 	// SyncInterval How often the translog is fsynced to disk and committed, regardless of write
-	// operations.
-	// Values less than 100ms are not allowed.
+	// operations. Values less than 100ms are not allowed.
 	SyncInterval Duration `json:"sync_interval,omitempty"`
 }
 

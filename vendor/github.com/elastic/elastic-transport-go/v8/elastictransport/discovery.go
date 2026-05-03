@@ -71,8 +71,8 @@ func (c *Client) DiscoverNodesContext(ctx context.Context) error {
 
 	nodes, err := c.getNodesInfo(ctx)
 	if err != nil {
-		if debugLogger != nil {
-			_ = debugLogger.Logf("Error getting nodes info: %s\n", err)
+		if c.leveledLogger != nil {
+			c.leveledLogger.Error(ctx, "failed to get nodes info", "error", err)
 		}
 		return fmt.Errorf("discovery: get nodes: %w", err)
 	}
@@ -89,12 +89,13 @@ func (c *Client) DiscoverNodesContext(ctx context.Context) error {
 			isMasterOnlyNode = true
 		}
 
-		if debugLogger != nil {
-			var skip string
-			if isMasterOnlyNode {
-				skip = "; [SKIP]"
-			}
-			_ = debugLogger.Logf("Discovered node [%s]; %s; roles=%s%s\n", node.Name, node.URL, node.Roles, skip)
+		if c.leveledLogger != nil {
+			c.leveledLogger.Debug(ctx, "discovered node",
+				"name", node.Name,
+				"url", node.URL,
+				"roles", node.Roles,
+				"skip", isMasterOnlyNode,
+			)
 		}
 
 		// Skip master only nodes
@@ -120,8 +121,8 @@ func (c *Client) DiscoverNodesContext(ctx context.Context) error {
 	}
 
 	if len(conns) == 0 {
-		if debugLogger != nil {
-			_ = debugLogger.Logf("No eligible nodes discovered; pool left untouched\n")
+		if c.leveledLogger != nil {
+			c.leveledLogger.Debug(ctx, "no eligible nodes discovered, pool unchanged")
 		}
 		return nil
 	}
@@ -137,6 +138,10 @@ func (c *Client) DiscoverNodesContext(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if ls, ok := c.pool.(loggerSettable); ok {
+		ls.setLogger(c.leveledLogger)
 	}
 
 	return nil
@@ -181,10 +186,8 @@ func (c *Client) getNodesInfo(ctx context.Context) ([]nodeInfo, error) {
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
-		if err != nil {
-			if debugLogger != nil {
-				_ = debugLogger.Logf("Error closing response body: %s\n", err)
-			}
+		if err != nil && c.leveledLogger != nil {
+			c.leveledLogger.Warn(ctx, "error closing response body", "error", err)
 		}
 	}(res.Body)
 
@@ -259,8 +262,8 @@ func (c *Client) scheduleDiscoverNodes(d time.Duration) {
 					ctx, cancel := context.WithTimeout(ctx, d)
 					defer cancel()
 					if err := c.DiscoverNodesContext(ctx); err != nil {
-						if debugLogger != nil {
-							_ = debugLogger.Logf("Error discovering nodes: %s\n", err)
+						if c.leveledLogger != nil {
+							c.leveledLogger.Error(ctx, "scheduled discovery failed", "error", err)
 						}
 					}
 				}()

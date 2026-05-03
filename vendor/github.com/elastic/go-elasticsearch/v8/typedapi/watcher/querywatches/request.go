@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package querywatches
 
@@ -33,19 +33,16 @@ import (
 
 // Request holds the request body struct for the package querywatches
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/watcher/query_watches/WatcherQueryWatchesRequest.ts#L25-L70
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/watcher/query_watches/WatcherQueryWatchesRequest.ts#L26-L73
 type Request struct {
-
-	// From The offset from the first result to fetch.
-	// It must be non-negative.
+	// From The offset from the first result to fetch. It must be non-negative.
 	From *int `json:"from,omitempty"`
 	// Query A query that filters the watches to be returned.
 	Query *types.Query `json:"query,omitempty"`
 	// SearchAfter Retrieve the next page of hits using a set of sort values from the previous
 	// page.
 	SearchAfter []types.FieldValue `json:"search_after,omitempty"`
-	// Size The number of hits to return.
-	// It must be non-negative.
+	// Size The number of hits to return. It must be non-negative.
 	Size *int `json:"size,omitempty"`
 	// Sort One or more fields used to sort the search results.
 	Sort []types.SortCombinations `json:"sort,omitempty"`
@@ -145,4 +142,21 @@ func (s *Request) UnmarshalJSON(data []byte) error {
 		}
 	}
 	return nil
+}
+
+func (r Request) MarshalJSON() ([]byte, error) {
+	if len(r.SearchAfter) > 0 {
+		allNil := true
+		for _, v := range r.SearchAfter {
+			if v != nil {
+				allNil = false
+				break
+			}
+		}
+		if allNil {
+			r.SearchAfter = nil
+		}
+	}
+	type plain Request
+	return json.Marshal(plain(r))
 }

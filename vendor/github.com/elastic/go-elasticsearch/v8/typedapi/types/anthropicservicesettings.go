@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,17 +31,16 @@ import (
 
 // AnthropicServiceSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/_types/CommonTypes.ts#L588-L604
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/inference/_types/CommonTypes.ts#L588-L604
 type AnthropicServiceSettings struct {
 	// ApiKey A valid API key for the Anthropic API.
 	ApiKey string `json:"api_key"`
-	// ModelId The name of the model to use for the inference task.
-	// Refer to the Anthropic documentation for the list of supported models.
+	// ModelId The name of the model to use for the inference task. Refer to the Anthropic
+	// documentation for the list of supported models.
 	ModelId string `json:"model_id"`
 	// RateLimit This setting helps to minimize the number of rate limit errors returned from
-	// Anthropic.
-	// By default, the `anthropic` service sets the number of requests allowed per
-	// minute to 50.
+	// Anthropic. By default, the `anthropic` service sets the number of requests
+	// allowed per minute to 50.
 	RateLimit *RateLimitSetting `json:"rate_limit,omitempty"`
 }
 

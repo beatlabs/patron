@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // RareTermsAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/bucket.ts#L706-L739
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/aggregations/bucket.ts#L716-L749
 type RareTermsAggregation struct {
 	// Exclude Terms that should be excluded from the aggregation.
 	Exclude []string `json:"exclude,omitempty"`
@@ -41,11 +41,11 @@ type RareTermsAggregation struct {
 	Include TermsInclude `json:"include,omitempty"`
 	// MaxDocCount The maximum number of documents a term should appear in.
 	MaxDocCount *int64 `json:"max_doc_count,omitempty"`
-	// Missing The value to apply to documents that do not have a value.
-	// By default, documents without a value are ignored.
+	// Missing The value to apply to documents that do not have a value. By default,
+	// documents without a value are ignored.
 	Missing Missing `json:"missing,omitempty"`
-	// Precision The precision of the internal CuckooFilters.
-	// Smaller precision leads to better approximation, but higher memory usage.
+	// Precision The precision of the internal CuckooFilters. Smaller precision leads to
+	// better approximation, but higher memory usage.
 	Precision *Float64 `json:"precision,omitempty"`
 	ValueType *string  `json:"value_type,omitempty"`
 }

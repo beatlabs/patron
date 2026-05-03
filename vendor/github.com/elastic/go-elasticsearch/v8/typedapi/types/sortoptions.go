@@ -16,18 +16,21 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 )
 
 // SortOptions type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/sort.ts#L86-L96
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/sort.ts#L86-L96
 type SortOptions struct {
 	Doc_         *ScoreSort           `json:"_doc,omitempty"`
 	GeoDistance_ *GeoDistanceSort     `json:"_geo_distance,omitempty"`
@@ -36,11 +39,66 @@ type SortOptions struct {
 	SortOptions  map[string]FieldSort `json:"-"`
 }
 
+func (s *SortOptions) UnmarshalJSON(data []byte) error {
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+
+	for {
+		t, err := dec.Token()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+
+		switch t {
+
+		case "_doc":
+			if err := dec.Decode(&s.Doc_); err != nil {
+				return fmt.Errorf("%s | %w", "Doc_", err)
+			}
+
+		case "_geo_distance":
+			if err := dec.Decode(&s.GeoDistance_); err != nil {
+				return fmt.Errorf("%s | %w", "GeoDistance_", err)
+			}
+
+		case "_score":
+			if err := dec.Decode(&s.Score_); err != nil {
+				return fmt.Errorf("%s | %w", "Score_", err)
+			}
+
+		case "_script":
+			if err := dec.Decode(&s.Script_); err != nil {
+				return fmt.Errorf("%s | %w", "Script_", err)
+			}
+
+		default:
+
+			if key, ok := t.(string); ok {
+				if s.SortOptions == nil {
+					s.SortOptions = make(map[string]FieldSort, 0)
+				}
+				raw := NewFieldSort()
+				if err := dec.Decode(&raw); err != nil {
+					return fmt.Errorf("%s | %w", "SortOptions", err)
+				}
+				if raw != nil {
+					s.SortOptions[key] = *raw
+				}
+			}
+
+		}
+	}
+	return nil
+}
+
 // MarhsalJSON overrides marshalling for types with additional properties
 func (s SortOptions) MarshalJSON() ([]byte, error) {
 	type opt SortOptions
 	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
+	tmp := make(map[string]json.RawMessage, 0)
 
 	data, err := json.Marshal(opt(s))
 	if err != nil {
@@ -53,7 +111,11 @@ func (s SortOptions) MarshalJSON() ([]byte, error) {
 
 	// We inline the additional fields from the underlying map
 	for key, value := range s.SortOptions {
-		tmp[fmt.Sprintf("%s", key)] = value
+		marshaled, err := json.Marshal(value)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal additional property %q: %w", key, err)
+		}
+		tmp[fmt.Sprintf("%s", key)] = marshaled
 	}
 	delete(tmp, "SortOptions")
 

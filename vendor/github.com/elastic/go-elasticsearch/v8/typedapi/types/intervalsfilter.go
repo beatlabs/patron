@@ -16,20 +16,14 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
-import (
-	"encoding/json"
-	"fmt"
-)
-
 // IntervalsFilter type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/fulltext.ts#L114-L154
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/fulltext.ts#L114-L154
 type IntervalsFilter struct {
-	AdditionalIntervalsFilterProperty map[string]json.RawMessage `json:"-"`
 	// After Query used to return intervals that follow an interval from the `filter`
 	// rule.
 	After *Intervals `json:"after,omitempty"`
@@ -42,57 +36,26 @@ type IntervalsFilter struct {
 	// Containing Query used to return intervals that contain an interval from the `filter`
 	// rule.
 	Containing *Intervals `json:"containing,omitempty"`
-	// NotContainedBy Query used to return intervals that are **not** contained by an interval from
-	// the `filter` rule.
+	// NotContainedBy Query used to return intervals that are not contained by an interval from the
+	// `filter` rule.
 	NotContainedBy *Intervals `json:"not_contained_by,omitempty"`
-	// NotContaining Query used to return intervals that do **not** contain an interval from the
+	// NotContaining Query used to return intervals that do not contain an interval from the
 	// `filter` rule.
 	NotContaining *Intervals `json:"not_containing,omitempty"`
-	// NotOverlapping Query used to return intervals that do **not** overlap with an interval from
-	// the `filter` rule.
+	// NotOverlapping Query used to return intervals that do not overlap with an interval from the
+	// `filter` rule.
 	NotOverlapping *Intervals `json:"not_overlapping,omitempty"`
 	// Overlapping Query used to return intervals that overlap with an interval from the
 	// `filter` rule.
 	Overlapping *Intervals `json:"overlapping,omitempty"`
-	// Script Script used to return matching documents.
-	// This script must return a boolean value: `true` or `false`.
+	// Script Script used to return matching documents. This script must return a boolean
+	// value: `true` or `false`.
 	Script *Script `json:"script,omitempty"`
-}
-
-// MarhsalJSON overrides marshalling for types with additional properties
-func (s IntervalsFilter) MarshalJSON() ([]byte, error) {
-	type opt IntervalsFilter
-	// We transform the struct to a map without the embedded additional properties map
-	tmp := make(map[string]any, 0)
-
-	data, err := json.Marshal(opt(s))
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(data, &tmp)
-	if err != nil {
-		return nil, err
-	}
-
-	// We inline the additional fields from the underlying map
-	for key, value := range s.AdditionalIntervalsFilterProperty {
-		tmp[fmt.Sprintf("%s", key)] = value
-	}
-	delete(tmp, "AdditionalIntervalsFilterProperty")
-
-	data, err = json.Marshal(tmp)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
 }
 
 // NewIntervalsFilter returns a IntervalsFilter.
 func NewIntervalsFilter() *IntervalsFilter {
-	r := &IntervalsFilter{
-		AdditionalIntervalsFilterProperty: make(map[string]json.RawMessage),
-	}
+	r := &IntervalsFilter{}
 
 	return r
 }

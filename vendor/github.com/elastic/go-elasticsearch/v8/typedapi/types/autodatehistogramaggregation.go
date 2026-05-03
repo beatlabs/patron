@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,22 +33,22 @@ import (
 
 // AutoDateHistogramAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/bucket.ts#L72-L110
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/aggregations/bucket.ts#L72-L110
 type AutoDateHistogramAggregation struct {
 	// Buckets The target number of buckets.
 	Buckets *int `json:"buckets,omitempty"`
 	// Field The field on which to run the aggregation.
 	Field *string `json:"field,omitempty"`
-	// Format The date format used to format `key_as_string` in the response.
-	// If no `format` is specified, the first date format specified in the field
-	// mapping is used.
+	// Format The date format used to format `key_as_string` in the response. If no
+	// `format` is specified, the first date format specified in the field mapping
+	// is used.
 	Format *string `json:"format,omitempty"`
-	// MinimumInterval The minimum rounding interval.
-	// This can make the collection process more efficient, as the aggregation will
-	// not attempt to round at any interval lower than `minimum_interval`.
+	// MinimumInterval The minimum rounding interval. This can make the collection process more
+	// efficient, as the aggregation will not attempt to round at any interval lower
+	// than `minimum_interval`.
 	MinimumInterval *minimuminterval.MinimumInterval `json:"minimum_interval,omitempty"`
-	// Missing The value to apply to documents that do not have a value.
-	// By default, documents without a value are ignored.
+	// Missing The value to apply to documents that do not have a value. By default,
+	// documents without a value are ignored.
 	Missing DateTime `json:"missing,omitempty"`
 	// Offset Time zone specified as a ISO 8601 UTC offset.
 	Offset *string                    `json:"offset,omitempty"`

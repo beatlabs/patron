@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // DataframeAnalysisClassification type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/DataframeAnalytics.ts#L227-L236
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/DataframeAnalytics.ts#L227-L236
 type DataframeAnalysisClassification struct {
 	// Alpha Advanced configuration option. Machine learning uses loss guided tree
 	// growing, which means that the decision trees grow where the regularized loss
@@ -45,11 +45,11 @@ type DataframeAnalysisClassification struct {
 	// the fields in the index being used to train. If this field is missing from a
 	// document, then that document will not be used for training, but a prediction
 	// with the trained model will be generated for it. It is also known as
-	// continuous target variable.
-	// For classification analysis, the data type of the field must be numeric
-	// (`integer`, `short`, `long`, `byte`), categorical (`ip` or `keyword`), or
-	// `boolean`. There must be no more than 30 different values in this field.
-	// For regression analysis, the data type of the field must be numeric.
+	// continuous target variable. For classification analysis, the data type of the
+	// field must be numeric (`integer`, `short`, `long`, `byte`), categorical (`ip`
+	// or `keyword`), or `boolean`. There must be no more than 30 different values
+	// in this field. For regression analysis, the data type of the field must be
+	// numeric.
 	DependentVariable string `json:"dependent_variable"`
 	// DownsampleFactor Advanced configuration option. Controls the fraction of data that is used to
 	// compute the derivatives of the loss function for tree training. A small value
@@ -152,8 +152,8 @@ type DataframeAnalysisClassification struct {
 	SoftTreeDepthTolerance *Float64 `json:"soft_tree_depth_tolerance,omitempty"`
 	// TrainingPercent Defines what percentage of the eligible documents that will be used for
 	// training. Documents that are ignored by the analysis (for example those that
-	// contain arrays with more than one value) won’t be included in the calculation
-	// for used percentage.
+	// contain arrays with more than one value) won’t be included in the
+	// calculation for used percentage.
 	TrainingPercent Percentage `json:"training_percent,omitempty"`
 }
 

@@ -16,25 +16,32 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package deploymentassignmentstate
 package deploymentassignmentstate
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/TrainedModel.ts#L346-L363
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/TrainedModel.ts#L346-L363
 type DeploymentAssignmentState struct {
 	Name string
 }
 
 var (
+
+	// Started The deployment is usable; at least one node has the model allocated.
 	Started = DeploymentAssignmentState{"started"}
 
+	// Starting The deployment has recently started but is not yet usable; the model is not
+	// allocated on any nodes.
 	Starting = DeploymentAssignmentState{"starting"}
 
+	// Stopping The deployment is preparing to stop and deallocate the model from the
+	// relevant nodes.
 	Stopping = DeploymentAssignmentState{"stopping"}
 
+	// Failed The deployment is on a failed state and must be re-deployed.
 	Failed = DeploymentAssignmentState{"failed"}
 )
 

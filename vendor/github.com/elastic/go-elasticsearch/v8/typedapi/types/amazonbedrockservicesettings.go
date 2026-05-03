@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,39 +31,37 @@ import (
 
 // AmazonBedrockServiceSettings type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/inference/_types/CommonTypes.ts#L366-L408
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/inference/_types/CommonTypes.ts#L366-L408
 type AmazonBedrockServiceSettings struct {
 	// AccessKey A valid AWS access key that has permissions to use Amazon Bedrock and access
 	// to models for inference requests.
 	AccessKey string `json:"access_key"`
 	// Model The base model ID or an ARN to a custom model based on a foundational model.
-	// The base model IDs can be found in the Amazon Bedrock documentation.
-	// Note that the model ID must be available for the provider chosen and your IAM
-	// user must have access to the model.
+	// The base model IDs can be found in the Amazon Bedrock documentation. Note
+	// that the model ID must be available for the provider chosen and your IAM user
+	// must have access to the model.
 	Model string `json:"model"`
-	// Provider The model provider for your deployment.
-	// Note that some providers may support only certain task types.
-	// Supported providers include:
+	// Provider The model provider for your deployment. Note that some providers may support
+	// only certain task types. Supported providers include:
 	//
-	// * `amazontitan` - available for `text_embedding` and `completion` task types
-	// * `anthropic` - available for `completion` task type only
-	// * `ai21labs` - available for `completion` task type only
-	// * `cohere` - available for `text_embedding` and `completion` task types
-	// * `meta` - available for `completion` task type only
-	// * `mistral` - available for `completion` task type only
+	//   - `amazontitan` - available for `text_embedding` and `completion` task
+	//     types
+	//   - `anthropic` - available for `completion` task type only
+	//   - `ai21labs` - available for `completion` task type only
+	//   - `cohere` - available for `text_embedding` and `completion` task types
+	//   - `meta` - available for `completion` task type only
+	//   - `mistral` - available for `completion` task type only
 	Provider *string `json:"provider,omitempty"`
 	// RateLimit This setting helps to minimize the number of rate limit errors returned from
-	// Watsonx.
-	// By default, the `watsonxai` service sets the number of requests allowed per
-	// minute to 120.
+	// Amazon Bedrock. By default, the `amazonbedrock` service sets the number of
+	// requests allowed per minute to 240.
 	RateLimit *RateLimitSetting `json:"rate_limit,omitempty"`
-	// Region The region that your model or ARN is deployed in.
-	// The list of available regions per model can be found in the Amazon Bedrock
-	// documentation.
+	// Region The region that your model or ARN is deployed in. The list of available
+	// regions per model can be found in the Amazon Bedrock documentation.
 	Region string `json:"region"`
-	// SecretKey A valid AWS secret key that is paired with the `access_key`.
-	// For informationg about creating and managing access and secret keys, refer to
-	// the AWS documentation.
+	// SecretKey A valid AWS secret key that is paired with the `access_key`. For informationg
+	// about creating and managing access and secret keys, refer to the AWS
+	// documentation.
 	SecretKey string `json:"secret_key"`
 }
 

@@ -16,29 +16,36 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package functionscoremode
 package functionscoremode
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/query_dsl/compound.ts#L268-L293
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/query_dsl/compound.ts#L268-L293
 type FunctionScoreMode struct {
 	Name string
 }
 
 var (
+
+	// Multiply Scores are multiplied.
 	Multiply = FunctionScoreMode{"multiply"}
 
+	// Sum Scores are summed.
 	Sum = FunctionScoreMode{"sum"}
 
+	// Avg Scores are averaged.
 	Avg = FunctionScoreMode{"avg"}
 
+	// First The first function that has a matching filter is applied.
 	First = FunctionScoreMode{"first"}
 
+	// Max Maximum score is used.
 	Max = FunctionScoreMode{"max"}
 
+	// Min Minimum score is used.
 	Min = FunctionScoreMode{"min"}
 )
 

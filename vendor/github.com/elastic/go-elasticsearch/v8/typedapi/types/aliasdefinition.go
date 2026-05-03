@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,22 +31,22 @@ import (
 
 // AliasDefinition type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/_types/AliasDefinition.ts#L22-L54
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/indices/_types/AliasDefinition.ts#L22-L54
 type AliasDefinition struct {
 	// Filter Query used to limit documents the alias can access.
 	Filter *Query `json:"filter,omitempty"`
-	// IndexRouting Value used to route indexing operations to a specific shard.
-	// If specified, this overwrites the `routing` value for indexing operations.
+	// IndexRouting Value used to route indexing operations to a specific shard. If specified,
+	// this overwrites the `routing` value for indexing operations.
 	IndexRouting *string `json:"index_routing,omitempty"`
-	// IsHidden If `true`, the alias is hidden.
-	// All indices for the alias must have the same `is_hidden` value.
+	// IsHidden If `true`, the alias is hidden. All indices for the alias must have the same
+	// `is_hidden` value.
 	IsHidden *bool `json:"is_hidden,omitempty"`
 	// IsWriteIndex If `true`, the index is the write index for the alias.
 	IsWriteIndex *bool `json:"is_write_index,omitempty"`
 	// Routing Value used to route indexing and search operations to a specific shard.
 	Routing *string `json:"routing,omitempty"`
-	// SearchRouting Value used to route search operations to a specific shard.
-	// If specified, this overwrites the `routing` value for search operations.
+	// SearchRouting Value used to route search operations to a specific shard. If specified, this
+	// overwrites the `routing` value for search operations.
 	SearchRouting *string `json:"search_routing,omitempty"`
 }
 

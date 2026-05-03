@@ -16,23 +16,36 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package boundaryscanner
 package boundaryscanner
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_global/search/_types/highlighting.ts#L26-L45
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_global/search/_types/highlighting.ts#L26-L45
 type BoundaryScanner struct {
 	Name string
 }
 
 var (
+
+	// Chars Use the characters specified by `boundary_chars` as highlighting boundaries.
+	// The `boundary_max_scan` setting controls how far to scan for boundary
+	// characters. Only valid for the `fvh` highlighter.
 	Chars = BoundaryScanner{"chars"}
 
+	// Sentence Break highlighted fragments at the next sentence boundary, as determined by
+	// Java’s `BreakIterator`. You can specify the locale to use with
+	// `boundary_scanner_locale`. When used with the `unified` highlighter, the
+	// `sentence` scanner splits sentences bigger than `fragment_size` at the first
+	// word boundary next to fragment_size. You can set `fragment_size` to `0` to
+	// never split any sentence.
 	Sentence = BoundaryScanner{"sentence"}
 
+	// Word Break highlighted fragments at the next word boundary, as determined by
+	// Java’s `BreakIterator`. You can specify the locale to use with
+	// `boundary_scanner_locale`.
 	Word = BoundaryScanner{"word"}
 )
 

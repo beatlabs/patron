@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -34,7 +34,7 @@ import (
 
 // DataStream type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/_types/DataStream.ts#L45-L127
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/indices/_types/DataStream.ts#L46-L133
 type DataStream struct {
 	// AllowCustomRouting If `true`, the data stream allows custom routing on write request.
 	AllowCustomRouting *bool `json:"allow_custom_routing,omitempty"`
@@ -46,24 +46,21 @@ type DataStream struct {
 	// Hidden If `true`, the data stream is hidden.
 	Hidden bool `json:"hidden"`
 	// IlmPolicy Name of the current ILM lifecycle policy in the stream’s matching index
-	// template.
-	// This lifecycle policy is set in the `index.lifecycle.name` setting.
+	// template. This lifecycle policy is set in the `index.lifecycle.name` setting.
 	// If the template does not include a lifecycle policy, this property is not
-	// included in the response.
-	// NOTE: A data stream’s backing indices may be assigned different lifecycle
-	// policies. To retrieve the lifecycle policy for individual backing indices,
-	// use the get index settings API.
+	// included in the response. NOTE: A data stream’s backing indices may be
+	// assigned different lifecycle policies. To retrieve the lifecycle policy for
+	// individual backing indices, use the get index settings API.
 	IlmPolicy *string `json:"ilm_policy,omitempty"`
 	// Indices Array of objects containing information about the data stream’s backing
-	// indices.
-	// The last item in this array contains information about the stream’s current
-	// write index.
+	// indices. The last item in this array contains information about the
+	// stream’s current write index.
 	Indices []DataStreamIndex `json:"indices"`
 	// Lifecycle Contains the configuration for the data stream lifecycle of this data stream.
 	Lifecycle *DataStreamLifecycleWithRollover `json:"lifecycle,omitempty"`
 	// Meta_ Custom metadata for the stream, copied from the `_meta` object of the
-	// stream’s matching index template.
-	// If empty, the response omits this property.
+	// stream’s matching index template. If empty, the response omits this
+	// property.
 	Meta_ Metadata `json:"_meta,omitempty"`
 	// Name Name of the data stream.
 	Name string `json:"name"`
@@ -81,15 +78,18 @@ type DataStream struct {
 	// and the document will be indexed in the new backing index. If the rollover
 	// fails the indexing request will fail too.
 	RolloverOnWrite bool `json:"rollover_on_write"`
-	// Status Health status of the data stream.
-	// This health status is based on the state of the primary and replica shards of
-	// the stream’s backing indices.
+	// Settings The settings specific to this data stream that will take precedence over the
+	// settings in the matching index template.
+	Settings IndexSettings `json:"settings"`
+	// Status Health status of the data stream. This health status is based on the state of
+	// the primary and replica shards of the stream’s backing indices.
 	Status healthstatus.HealthStatus `json:"status"`
 	// System If `true`, the data stream is created and managed by an Elastic stack
 	// component and cannot be modified through normal user interaction.
 	System *bool `json:"system,omitempty"`
-	// Template Name of the index template used to create the data stream’s backing indices.
-	// The template’s index pattern must match the name of this data stream.
+	// Template Name of the index template used to create the data stream’s backing
+	// indices. The template’s index pattern must match the name of this data
+	// stream.
 	Template string `json:"template"`
 	// TimestampField Information about the `@timestamp` field in the data stream.
 	TimestampField DataStreamTimestampField `json:"timestamp_field"`
@@ -229,6 +229,11 @@ func (s *DataStream) UnmarshalJSON(data []byte) error {
 				s.RolloverOnWrite = value
 			case bool:
 				s.RolloverOnWrite = v
+			}
+
+		case "settings":
+			if err := dec.Decode(&s.Settings); err != nil {
+				return fmt.Errorf("%s | %w", "Settings", err)
 			}
 
 		case "status":

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Get snapshot repository information.
 package getrepository
@@ -154,7 +154,7 @@ func (r GetRepository) Perform(providedCtx context.Context) (*http.Response, err
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "snapshot.get_repository")
+			ctx = instrument.Start(providedCtx, "snapshot.get_repository")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -291,7 +291,12 @@ func (r *GetRepository) Header(key, value string) *GetRepository {
 	return r
 }
 
-// Repository A comma-separated list of repository names
+// Repository A comma-separated list of snapshot repository names used to limit the
+// request. Wildcard (`*`) expressions are supported including combining
+// wildcards with exclude patterns starting with `-`.
+//
+// To get information about all snapshot repositories registered in the cluster,
+// omit this parameter or use `*` or `_all`.
 // API Name: repository
 func (r *GetRepository) Repository(repository string) *GetRepository {
 	r.paramSet |= repositoryMask
@@ -300,8 +305,8 @@ func (r *GetRepository) Repository(repository string) *GetRepository {
 	return r
 }
 
-// Local Return local information, do not retrieve the state from master node
-// (default: false)
+// Local If `true`, the request gets information from the local node only. If `false`,
+// the request gets information from the master node.
 // API name: local
 func (r *GetRepository) Local(local bool) *GetRepository {
 	r.values.Set("local", strconv.FormatBool(local))
@@ -309,7 +314,9 @@ func (r *GetRepository) Local(local bool) *GetRepository {
 	return r
 }
 
-// MasterTimeout Explicit operation timeout for connection to master node
+// MasterTimeout The period to wait for the master node. If the master node is not available
+// before the timeout expires, the request fails and returns an error. To
+// indicate that the request should never timeout, set it to `-1`.
 // API name: master_timeout
 func (r *GetRepository) MasterTimeout(duration string) *GetRepository {
 	r.values.Set("master_timeout", duration)
@@ -340,11 +347,9 @@ func (r *GetRepository) FilterPath(filterpaths ...string) *GetRepository {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *GetRepository) Human(human bool) *GetRepository {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -352,8 +357,8 @@ func (r *GetRepository) Human(human bool) *GetRepository {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *GetRepository) Pretty(pretty bool) *GetRepository {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

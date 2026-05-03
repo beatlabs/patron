@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package ingest
 
@@ -29,9 +29,8 @@ import (
 
 // Request holds the request body struct for the package ingest
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/simulate/ingest/SimulateIngestRequest.ts#L29-L100
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/simulate/ingest/SimulateIngestRequest.ts#L29-L102
 type Request struct {
-
 	// ComponentTemplateSubstitutions A map of component template names to substitute component template definition
 	// objects.
 	ComponentTemplateSubstitutions map[string]types.ComponentTemplateNode `json:"component_template_substitutions,omitempty"`
@@ -41,11 +40,9 @@ type Request struct {
 	// objects.
 	IndexTemplateSubstitutions map[string]types.IndexTemplate `json:"index_template_substitutions,omitempty"`
 	MappingAddition            *types.TypeMapping             `json:"mapping_addition,omitempty"`
-	// PipelineSubstitutions Pipelines to test.
-	// If you don’t specify the `pipeline` request path parameter, this parameter is
-	// required.
-	// If you specify both this and the request path parameter, the API only uses
-	// the request path parameter.
+	// PipelineSubstitutions Pipelines to test. If you don’t specify the `pipeline` request path
+	// parameter, this parameter is required. If you specify both this and the
+	// request path parameter, the API only uses the request path parameter.
 	PipelineSubstitutions map[string]types.IngestPipeline `json:"pipeline_substitutions,omitempty"`
 }
 

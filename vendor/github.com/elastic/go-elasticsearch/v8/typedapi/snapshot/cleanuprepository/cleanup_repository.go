@@ -16,11 +16,11 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
-// Clean up the snapshot repository.
-// Trigger the review of the contents of a snapshot repository and delete any
-// stale data not referenced by existing snapshots.
+// Clean up the snapshot repository. Trigger the review of the contents of a
+// snapshot repository and delete any stale data not referenced by existing
+// snapshots.
 package cleanuprepository
 
 import (
@@ -78,9 +78,9 @@ func NewCleanupRepositoryFunc(tp elastictransport.Interface) NewCleanupRepositor
 	}
 }
 
-// Clean up the snapshot repository.
-// Trigger the review of the contents of a snapshot repository and delete any
-// stale data not referenced by existing snapshots.
+// Clean up the snapshot repository. Trigger the review of the contents of a
+// snapshot repository and delete any stale data not referenced by existing
+// snapshots.
 //
 // https://www.elastic.co/guide/en/elasticsearch/reference/current/clean-up-snapshot-repo-api.html
 func New(tp elastictransport.Interface) *CleanupRepository {
@@ -157,7 +157,7 @@ func (r CleanupRepository) Perform(providedCtx context.Context) (*http.Response,
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "snapshot.cleanup_repository")
+			ctx = instrument.Start(providedCtx, "snapshot.cleanup_repository")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -294,7 +294,7 @@ func (r *CleanupRepository) Header(key, value string) *CleanupRepository {
 	return r
 }
 
-// Repository Snapshot repository to clean up.
+// Repository The name of the snapshot repository to clean up.
 // API Name: repository
 func (r *CleanupRepository) _repository(repository string) *CleanupRepository {
 	r.paramSet |= repositoryMask
@@ -303,7 +303,9 @@ func (r *CleanupRepository) _repository(repository string) *CleanupRepository {
 	return r
 }
 
-// MasterTimeout Period to wait for a connection to the master node.
+// MasterTimeout The period to wait for a connection to the master node. If the master node is
+// not available before the timeout expires, the request fails and returns an
+// error. To indicate that the request should never timeout, set it to `-1`
 // API name: master_timeout
 func (r *CleanupRepository) MasterTimeout(duration string) *CleanupRepository {
 	r.values.Set("master_timeout", duration)
@@ -311,7 +313,11 @@ func (r *CleanupRepository) MasterTimeout(duration string) *CleanupRepository {
 	return r
 }
 
-// Timeout Period to wait for a response.
+// Timeout The period to wait for a response from all relevant nodes in the cluster
+// after updating the cluster metadata. If no response is received before the
+// timeout expires, the cluster metadata update still applies but the response
+// will indicate that it was not completely acknowledged. To indicate that the
+// request should never timeout, set it to `-1`.
 // API name: timeout
 func (r *CleanupRepository) Timeout(duration string) *CleanupRepository {
 	r.values.Set("timeout", duration)
@@ -342,11 +348,9 @@ func (r *CleanupRepository) FilterPath(filterpaths ...string) *CleanupRepository
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *CleanupRepository) Human(human bool) *CleanupRepository {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -354,8 +358,8 @@ func (r *CleanupRepository) Human(human bool) *CleanupRepository {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *CleanupRepository) Pretty(pretty bool) *CleanupRepository {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

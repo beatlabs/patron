@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,15 +31,14 @@ import (
 
 // RandomSamplerAggregation type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/bucket.ts#L749-L769
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/aggregations/bucket.ts#L759-L779
 type RandomSamplerAggregation struct {
-	// Probability The probability that a document will be included in the aggregated data.
-	// Must be greater than 0, less than 0.5, or exactly 1.
-	// The lower the probability, the fewer documents are matched.
+	// Probability The probability that a document will be included in the aggregated data. Must
+	// be greater than 0, less than 0.5, or exactly 1. The lower the probability,
+	// the fewer documents are matched.
 	Probability Float64 `json:"probability"`
-	// Seed The seed to generate the random sampling of documents.
-	// When a seed is provided, the random subset of documents is the same between
-	// calls.
+	// Seed The seed to generate the random sampling of documents. When a seed is
+	// provided, the random subset of documents is the same between calls.
 	Seed *int `json:"seed,omitempty"`
 	// ShardSeed When combined with seed, setting shard_seed ensures 100% consistent sampling
 	// over shards where data is exactly the same.

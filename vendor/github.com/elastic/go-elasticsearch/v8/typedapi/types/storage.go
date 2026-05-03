@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -33,15 +33,14 @@ import (
 
 // Storage type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/indices/_types/IndexSettings.ts#L534-L545
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/indices/_types/IndexSettings.ts#L534-L545
 type Storage struct {
 	// AllowMmap You can restrict the use of the mmapfs and the related hybridfs store type
-	// via the setting node.store.allow_mmap.
-	// This is a boolean setting indicating whether or not memory-mapping is
-	// allowed. The default is to allow it. This
+	// via the setting node.store.allow_mmap. This is a boolean setting indicating
+	// whether or not memory-mapping is allowed. The default is to allow it. This
 	// setting is useful, for example, if you are in an environment where you can
-	// not control the ability to create a lot
-	// of memory maps so you need disable the ability to use memory-mapping.
+	// not control the ability to create a lot of memory maps so you need disable
+	// the ability to use memory-mapping.
 	AllowMmap *bool `json:"allow_mmap,omitempty"`
 	// StatsRefreshInterval How often store statistics are refreshed
 	StatsRefreshInterval Duration                `json:"stats_refresh_interval,omitempty"`

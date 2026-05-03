@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // Process type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/nodes/_types/Stats.ts#L1031-L1053
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/nodes/_types/Stats.ts#L1031-L1053
 type Process struct {
 	// Cpu Contains CPU statistics for the node.
 	Cpu *Cpu `json:"cpu,omitempty"`
@@ -43,8 +43,8 @@ type Process struct {
 	// OpenFileDescriptors Number of opened file descriptors associated with the current or `-1` if not
 	// supported.
 	OpenFileDescriptors *int `json:"open_file_descriptors,omitempty"`
-	// Timestamp Last time the statistics were refreshed.
-	// Recorded in milliseconds since the Unix Epoch.
+	// Timestamp Last time the statistics were refreshed. Recorded in milliseconds since the
+	// Unix Epoch.
 	Timestamp *int64 `json:"timestamp,omitempty"`
 }
 

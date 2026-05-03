@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,7 +31,7 @@ import (
 
 // ClusterJvmVersion type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/cluster/stats/types.ts#L414-L444
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/cluster/stats/types.ts#L414-L444
 type ClusterJvmVersion struct {
 	// BundledJdk Always `true`. All distributions come with a bundled Java Development Kit
 	// (JDK).
@@ -46,9 +46,8 @@ type ClusterJvmVersion struct {
 	VmName string `json:"vm_name"`
 	// VmVendor Vendor of the JVM.
 	VmVendor string `json:"vm_vendor"`
-	// VmVersion Full version number of JVM.
-	// The full version number includes a plus sign (+) followed by the build
-	// number.
+	// VmVersion Full version number of JVM. The full version number includes a plus sign (+)
+	// followed by the build number.
 	VmVersion string `json:"vm_version"`
 }
 

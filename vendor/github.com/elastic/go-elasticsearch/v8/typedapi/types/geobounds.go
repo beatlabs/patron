@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -27,5 +27,12 @@ package types
 //	TopRightBottomLeftGeoBounds
 //	WktGeoBounds
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/Geo.ts#L135-L148
+// A geo bounding box. It can be represented in various ways:
+//
+//   - as 4 top/bottom/left/right coordinates
+//   - as 2 top_left / bottom_right points
+//   - as 2 top_right / bottom_left points
+//   - as a WKT bounding box
+//
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/Geo.ts#L134-L147
 type GeoBounds any

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Get CAT help.
 //
@@ -140,7 +140,7 @@ func (r Help) Perform(providedCtx context.Context) (*http.Response, error) {
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "cat.help")
+			ctx = instrument.Start(providedCtx, "cat.help")
 			defer instrument.Close(ctx)
 		}
 	}

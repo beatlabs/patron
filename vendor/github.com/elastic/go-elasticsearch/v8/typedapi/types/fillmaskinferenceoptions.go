@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -29,19 +29,17 @@ import (
 	"strconv"
 )
 
-// FillMaskInferenceOptions type.
+// Fill mask inference options
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/inference.ts#L284-L299
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/inference.ts#L284-L299
 type FillMaskInferenceOptions struct {
 	// MaskToken The string/token which will be removed from incoming documents and replaced
-	// with the inference prediction(s).
-	// In a response, this field contains the mask token for the specified
-	// model/tokenizer. Each model and tokenizer
-	// has a predefined mask token which cannot be changed. Thus, it is recommended
-	// not to set this value in requests.
-	// However, if this field is present in a request, its value must match the
-	// predefined value for that model/tokenizer,
-	// otherwise the request will fail.
+	// with the inference prediction(s). In a response, this field contains the mask
+	// token for the specified model/tokenizer. Each model and tokenizer has a
+	// predefined mask token which cannot be changed. Thus, it is recommended not to
+	// set this value in requests. However, if this field is present in a request,
+	// its value must match the predefined value for that model/tokenizer, otherwise
+	// the request will fail.
 	MaskToken *string `json:"mask_token,omitempty"`
 	// NumTopClasses Specifies the number of top class predictions to return. Defaults to 0.
 	NumTopClasses *int `json:"num_top_classes,omitempty"`
@@ -50,7 +48,7 @@ type FillMaskInferenceOptions struct {
 	ResultsField *string `json:"results_field,omitempty"`
 	// Tokenization The tokenization options to update when inferring
 	Tokenization *TokenizationConfigContainer `json:"tokenization,omitempty"`
-	Vocabulary   Vocabulary                   `json:"vocabulary"`
+	Vocabulary   *Vocabulary                  `json:"vocabulary,omitempty"`
 }
 
 func (s *FillMaskInferenceOptions) UnmarshalJSON(data []byte) error {

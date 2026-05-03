@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Perform text embedding inference on the service
 package textembedding
@@ -206,7 +206,7 @@ func (r TextEmbedding) Perform(providedCtx context.Context) (*http.Response, err
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "inference.text_embedding")
+			ctx = instrument.Start(providedCtx, "inference.text_embedding")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -344,11 +344,9 @@ func (r *TextEmbedding) FilterPath(filterpaths ...string) *TextEmbedding {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *TextEmbedding) Human(human bool) *TextEmbedding {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -356,8 +354,8 @@ func (r *TextEmbedding) Human(human bool) *TextEmbedding {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *TextEmbedding) Pretty(pretty bool) *TextEmbedding {
 	r.values.Set("pretty", strconv.FormatBool(pretty))
@@ -365,14 +363,37 @@ func (r *TextEmbedding) Pretty(pretty bool) *TextEmbedding {
 	return r
 }
 
-// Input Inference input.
-// Either a string or an array of strings.
+// Input Inference input. Either a string or an array of strings.
 // API name: input
 func (r *TextEmbedding) Input(inputs ...string) *TextEmbedding {
 	if r.req == nil {
 		r.req = NewRequest()
 	}
 	r.req.Input = inputs
+
+	return r
+}
+
+// InputType The input data type for the text embedding model. Possible values include:
+//
+//   - `SEARCH`
+//   - `INGEST`
+//   - `CLASSIFICATION`
+//   - `CLUSTERING` Not all services support all values. Unsupported values will
+//     trigger a validation exception. Accepted values depend on the configured
+//     inference service, refer to the relevant service-specific documentation
+//     for more info.
+//
+// > info > The `input_type` parameter specified on the root level of the
+// request body will take precedence over the `input_type` parameter specified
+// in `task_settings`.
+// API name: input_type
+func (r *TextEmbedding) InputType(inputtype string) *TextEmbedding {
+	if r.req == nil {
+		r.req = NewRequest()
+	}
+
+	r.req.InputType = &inputtype
 
 	return r
 }

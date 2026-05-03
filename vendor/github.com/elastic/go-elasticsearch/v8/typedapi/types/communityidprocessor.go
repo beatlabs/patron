@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package types
 
@@ -31,10 +31,10 @@ import (
 
 // CommunityIDProcessor type.
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ingest/_types/Processors.ts#L598-L659
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ingest/_types/Processors.ts#L605-L666
 type CommunityIDProcessor struct {
-	// Description Description of the processor.
-	// Useful for describing the purpose of the processor or its configuration.
+	// Description Description of the processor. Useful for describing the purpose of the
+	// processor or its configuration.
 	Description *string `json:"description,omitempty"`
 	// DestinationIp Field containing the destination IP address.
 	DestinationIp *string `json:"destination_ip,omitempty"`
@@ -63,8 +63,7 @@ type CommunityIDProcessor struct {
 	SourceIp *string `json:"source_ip,omitempty"`
 	// SourcePort Field containing the source port.
 	SourcePort *string `json:"source_port,omitempty"`
-	// Tag Identifier for the processor.
-	// Useful for debugging and metrics.
+	// Tag Identifier for the processor. Useful for debugging and metrics.
 	Tag *string `json:"tag,omitempty"`
 	// TargetField Output field for the community ID.
 	TargetField *string `json:"target_field,omitempty"`

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 package invalidatetoken
 
@@ -31,22 +31,19 @@ import (
 
 // Request holds the request body struct for the package invalidatetoken
 //
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/security/invalidate_token/SecurityInvalidateTokenRequest.ts#L23-L71
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/security/invalidate_token/SecurityInvalidateTokenRequest.ts#L23-L73
 type Request struct {
-
-	// RealmName The name of an authentication realm.
-	// This parameter cannot be used with either `refresh_token` or `token`.
+	// RealmName The name of an authentication realm. This parameter cannot be used with
+	// either `refresh_token` or `token`.
 	RealmName *string `json:"realm_name,omitempty"`
-	// RefreshToken A refresh token.
-	// This parameter cannot be used if any of `refresh_token`, `realm_name`, or
-	// `username` are used.
+	// RefreshToken A refresh token. This parameter cannot be used if any of `refresh_token`,
+	// `realm_name`, or `username` are used.
 	RefreshToken *string `json:"refresh_token,omitempty"`
-	// Token An access token.
-	// This parameter cannot be used if any of `refresh_token`, `realm_name`, or
-	// `username` are used.
+	// Token An access token. This parameter cannot be used if any of `refresh_token`,
+	// `realm_name`, or `username` are used.
 	Token *string `json:"token,omitempty"`
-	// Username The username of a user.
-	// This parameter cannot be used with either `refresh_token` or `token`.
+	// Username The username of a user. This parameter cannot be used with either
+	// `refresh_token` or `token`.
 	Username *string `json:"username,omitempty"`
 }
 

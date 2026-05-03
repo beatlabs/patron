@@ -16,23 +16,28 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package trainedmodeltype
 package trainedmodeltype
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/ml/_types/TrainedModel.ts#L315-L329
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/ml/_types/TrainedModel.ts#L315-L329
 type TrainedModelType struct {
 	Name string
 }
 
 var (
+
+	// Treeensemble The model definition is an ensemble model of decision trees.
 	Treeensemble = TrainedModelType{"tree_ensemble"}
 
+	// Langident A special type reserved for language identification models.
 	Langident = TrainedModelType{"lang_ident"}
 
+	// Pytorch The stored definition is a PyTorch (specifically a TorchScript) model.
+	// Currently only NLP models are supported.
 	Pytorch = TrainedModelType{"pytorch"}
 )
 

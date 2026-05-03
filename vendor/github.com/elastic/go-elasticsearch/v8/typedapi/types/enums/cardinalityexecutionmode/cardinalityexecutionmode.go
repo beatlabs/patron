@@ -16,27 +16,35 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Package cardinalityexecutionmode
 package cardinalityexecutionmode
 
 import "strings"
 
-// https://github.com/elastic/elasticsearch-specification/blob/470b4b9aaaa25cae633ec690e54b725c6fc939c7/specification/_types/aggregations/metric.ts#L70-L91
+// https://github.com/elastic/elasticsearch-specification/blob/6ee016a765be615b0205fc209d3d3c515044689d/specification/_types/aggregations/metric.ts#L70-L91
 type CardinalityExecutionMode struct {
 	Name string
 }
 
 var (
+
+	// Globalordinals Run the aggregation by using global ordinals of the field and resolving those
+	// values after finishing a shard.
 	Globalordinals = CardinalityExecutionMode{"global_ordinals"}
 
+	// Segmentordinals Run the aggregation by using segment ordinal values and resolving those
+	// values after each segment.
 	Segmentordinals = CardinalityExecutionMode{"segment_ordinals"}
 
+	// Direct Run the aggregation by using field values directly.
 	Direct = CardinalityExecutionMode{"direct"}
 
+	// Savememoryheuristic Heuristic-based mode, default in Elasticsearch 8.3 and earlier.
 	Savememoryheuristic = CardinalityExecutionMode{"save_memory_heuristic"}
 
+	// Savetimeheuristic Heuristic-based mode, default in Elasticsearch 8.4 and later.
 	Savetimeheuristic = CardinalityExecutionMode{"save_time_heuristic"}
 )
 

@@ -16,7 +16,7 @@
 // under the License.
 
 // Code generated from the elasticsearch-specification DO NOT EDIT.
-// https://github.com/elastic/elasticsearch-specification/tree/470b4b9aaaa25cae633ec690e54b725c6fc939c7
+// https://github.com/elastic/elasticsearch-specification/tree/6ee016a765be615b0205fc209d3d3c515044689d
 
 // Get an inference endpoint
 package get
@@ -141,6 +141,19 @@ func (r *Get) HttpRequest(ctx context.Context) (*http.Request, error) {
 		path.WriteString(r.inferenceid)
 
 		method = http.MethodGet
+	case r.paramSet == tasktypeMask:
+		path.WriteString("/")
+		path.WriteString("_inference")
+		path.WriteString("/")
+
+		if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
+			instrument.RecordPathPart(ctx, "tasktype", r.tasktype)
+		}
+		path.WriteString(r.tasktype)
+		path.WriteString("/")
+		path.WriteString("_all")
+
+		method = http.MethodGet
 	}
 
 	r.path.Path = path.String()
@@ -174,7 +187,7 @@ func (r Get) Perform(providedCtx context.Context) (*http.Response, error) {
 	var ctx context.Context
 	if instrument, ok := r.instrument.(elastictransport.Instrumentation); ok {
 		if r.spanStarted == false {
-			ctx := instrument.Start(providedCtx, "inference.get")
+			ctx = instrument.Start(providedCtx, "inference.get")
 			defer instrument.Close(ctx)
 		}
 	}
@@ -311,7 +324,7 @@ func (r *Get) Header(key, value string) *Get {
 	return r
 }
 
-// TaskType The task type
+// TaskType The task type of the endpoint to return
 // API Name: tasktype
 func (r *Get) TaskType(tasktype string) *Get {
 	r.paramSet |= tasktypeMask
@@ -320,7 +333,9 @@ func (r *Get) TaskType(tasktype string) *Get {
 	return r
 }
 
-// InferenceId The inference Id
+// InferenceId The inference Id of the endpoint to return. Using `_all` or `*` will return
+// all endpoints with the specified `task_type` if one is specified, or all
+// endpoints for all task types if no `task_type` is specified
 // API Name: inferenceid
 func (r *Get) InferenceId(inferenceid string) *Get {
 	r.paramSet |= inferenceidMask
@@ -352,11 +367,9 @@ func (r *Get) FilterPath(filterpaths ...string) *Get {
 }
 
 // Human When set to `true` will return statistics in a format suitable for humans.
-// For example `"exists_time": "1h"` for humans and
-// `"eixsts_time_in_millis": 3600000` for computers. When disabled the human
-// readable values will be omitted. This makes sense for responses being
-// consumed
-// only by machines.
+// For example `"exists_time": "1h"` for humans and `"eixsts_time_in_millis":
+// 3600000` for computers. When disabled the human readable values will be
+// omitted. This makes sense for responses being consumed only by machines.
 // API name: human
 func (r *Get) Human(human bool) *Get {
 	r.values.Set("human", strconv.FormatBool(human))
@@ -364,8 +377,8 @@ func (r *Get) Human(human bool) *Get {
 	return r
 }
 
-// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use
-// this option for debugging only.
+// Pretty If set to `true` the returned JSON will be "pretty-formatted". Only use this
+// option for debugging only.
 // API name: pretty
 func (r *Get) Pretty(pretty bool) *Get {
 	r.values.Set("pretty", strconv.FormatBool(pretty))

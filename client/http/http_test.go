@@ -144,6 +144,7 @@ func TestDecompress(t *testing.T) {
 		if err != nil {
 			return
 		}
+		w.Header().Set("Content-Encoding", "gzip")
 		_, err = fmt.Fprint(w, b.String())
 		if err != nil {
 			return
@@ -162,6 +163,7 @@ func TestDecompress(t *testing.T) {
 		if err != nil {
 			return
 		}
+		w.Header().Set("Content-Encoding", "deflate")
 		_, err = fmt.Fprint(w, b.String())
 		if err != nil {
 			return
@@ -186,14 +188,12 @@ func TestDecompress(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, tt.url, nil)
 			require.NoError(t, err)
-			req.Header.Add(encoding.AcceptEncodingHeader, tt.hdr)
 			rsp, err := c.Do(req)
 			require.NoError(t, err)
 
 			b, err := io.ReadAll(rsp.Body)
 			require.NoError(t, err)
-			body := string(b)
-			require.Equal(t, msg, body)
+			require.Equal(t, msg, string(b))
 			require.NoError(t, rsp.Body.Close())
 		})
 	}

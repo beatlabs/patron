@@ -1,7 +1,6 @@
 package router
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -62,21 +61,21 @@ func TestFileServerRouteHandler(t *testing.T) {
 	handler, err := NewFileServerRoute("GET /frontend/*path", "testdata/", "testdata/index.html")
 	require.NoError(t, err)
 
-	type args struct {
-		path string
-	}
 	tests := map[string]struct {
-		args         args
+		urlPath      string // request URL (must be clean so http.ServeFile accepts it)
+		pathValue    string // value PathValue("path") returns, as set by the router
 		expectedCode int
-		expectedErr  string
 	}{
-		"fallback": {args: args{path: "frontend"}, expectedCode: 200},
-		"index":    {args: args{path: "frontend/index"}, expectedCode: 200},
+		"fallback":          {urlPath: "/frontend/", pathValue: "", expectedCode: 200},
+		// urlPath must not end in /index.html — http.ServeFile redirects that to ./
+		"index": {urlPath: "/frontend/app", pathValue: "index.html", expectedCode: 200},
+		"traversal attempt": {urlPath: "/frontend/x", pathValue: "../../etc/passwd", expectedCode: 200},
+		"traversal nested":  {urlPath: "/frontend/x", pathValue: "sub/../../etc/passwd", expectedCode: 200},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, tt.args.path, nil)
-			require.NoError(t, err)
+			req := httptest.NewRequest(http.MethodGet, tt.urlPath, nil)
+			req.SetPathValue("path", tt.pathValue)
 			rc := httptest.NewRecorder()
 			handler.Handler().ServeHTTP(rc, req)
 			assert.Equal(t, tt.expectedCode, rc.Code)

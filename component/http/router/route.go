@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	patronhttp "github.com/beatlabs/patron/component/http"
 )
@@ -37,25 +39,39 @@ func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*pa
 		return nil, fmt.Errorf("error while checking fallback file: %w", err)
 	}
 
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		// get the absolute path to prevent directory traversal
-		path := assetsDir + r.PathValue("path")
+	absAssetsDir, err := filepath.Abs(assetsDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve assets dir: %w", err)
+	}
 
-		// check whether a file exists at the given path
-		info, err := os.Stat(path)
-		if os.IsNotExist(err) || info.IsDir() {
-			// file does not exist, serve index.html
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		filePath := filepath.Join(absAssetsDir, r.PathValue("path"))
+
+		// Prevent directory traversal: filepath.Join resolves ".." so a path
+		// escaping absAssetsDir will no longer share its prefix. Adding a
+		// separator to filePath before the check handles the edge case where
+		// filePath equals absAssetsDir exactly (empty path value).
+		if !strings.HasPrefix(filePath+string(filepath.Separator), absAssetsDir+string(filepath.Separator)) {
 			http.ServeFile(w, r, fallbackPath)
 			return
-		} else if err != nil {
-			// if we got an error (that wasn't that the file doesn't exist) stating the
-			// file, return a 500 internal server error and stop
+		}
+
+		info, err := os.Stat(filePath) //nolint:gosec // filePath is validated by the HasPrefix check above
+		if err != nil {
+			if os.IsNotExist(err) {
+				http.ServeFile(w, r, fallbackPath)
+				return
+			}
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
-		// otherwise, use server the specific file directly from the filesystem.
-		http.ServeFile(w, r, path)
+		if info.IsDir() {
+			http.ServeFile(w, r, fallbackPath)
+			return
+		}
+
+		http.ServeFile(w, r, filePath) //nolint:gosec // filePath is validated by the HasPrefix check above
 	}
 
 	return patronhttp.NewRoute(path, handler)

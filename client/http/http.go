@@ -55,14 +55,14 @@ func (tc *TracedClient) Do(req *http.Request) (*http.Response, error) {
 		return rsp, err
 	}
 
-	if hdr := req.Header.Get(encoding.AcceptEncodingHeader); hdr != "" {
-		rsp.Body, err = decompress(hdr, rsp)
+	if hdr := rsp.Header.Get(encoding.ContentEncodingHeader); hdr != "" {
+		rsp.Body, err = decompress(hdr, rsp.Body)
 		if err != nil {
-			return rsp, err
+			return nil, err
 		}
 	}
 
-	return rsp, err
+	return rsp, nil
 }
 
 func (tc *TracedClient) do(req *http.Request) (*http.Response, error) {
@@ -89,13 +89,36 @@ func opName(method, scheme, host string) string {
 	return method + " " + scheme + "://" + host
 }
 
-func decompress(hdr string, rsp *http.Response) (io.ReadCloser, error) {
+const (
+	encodingGzip    = "gzip"
+	encodingDeflate = "deflate"
+)
+
+// joinedReadCloser closes both the decompressor and the underlying body so the
+// TCP connection is returned to the pool when the caller closes the response body.
+type joinedReadCloser struct {
+	io.Reader
+	decompressor io.Closer
+	body         io.Closer
+}
+
+func (j *joinedReadCloser) Close() error {
+	return errors.Join(j.decompressor.Close(), j.body.Close())
+}
+
+func decompress(hdr string, body io.ReadCloser) (io.ReadCloser, error) {
 	switch hdr {
-	case "gzip":
-		return gzip.NewReader(rsp.Body)
-	case "deflate":
-		return flate.NewReader(rsp.Body), nil
+	case encodingGzip:
+		gr, err := gzip.NewReader(body)
+		if err != nil {
+			_ = body.Close()
+			return nil, err
+		}
+		return &joinedReadCloser{Reader: gr, decompressor: gr, body: body}, nil
+	case encodingDeflate:
+		fr := flate.NewReader(body)
+		return &joinedReadCloser{Reader: fr, decompressor: fr, body: body}, nil
 	default:
-		return rsp.Body, nil
+		return body, nil
 	}
 }

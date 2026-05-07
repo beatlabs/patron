@@ -39,6 +39,16 @@ func TestNewFileServerRoute(t *testing.T) {
 			assetsDir:    "123",
 			fallbackPath: "",
 		}, expectedErr: "fallback path is empty"},
+		"nonexistent assets dir": {args: args{
+			path:         "GET /frontend/*path",
+			assetsDir:    "nonexistent_dir",
+			fallbackPath: "testdata/index.html",
+		}, expectedErr: "assets directory [GET /frontend/*path] doesn't exist"},
+		"nonexistent fallback file": {args: args{
+			path:         "GET /frontend/*path",
+			assetsDir:    "testdata/",
+			fallbackPath: "nonexistent.html",
+		}, expectedErr: "fallback file [nonexistent.html] doesn't exist"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -69,6 +79,7 @@ func TestFileServerRouteHandler(t *testing.T) {
 		"fallback": {urlPath: "/frontend/", pathValue: "", expectedCode: 200},
 		// urlPath must not end in /index.html — http.ServeFile redirects that to ./
 		"index":             {urlPath: "/frontend/app", pathValue: "index.html", expectedCode: 200},
+		"file not found":    {urlPath: "/frontend/x", pathValue: "nonexistent.html", expectedCode: 200},
 		"traversal attempt": {urlPath: "/frontend/x", pathValue: "../../etc/passwd", expectedCode: 200},
 		"traversal nested":  {urlPath: "/frontend/x", pathValue: "sub/../../etc/passwd", expectedCode: 200},
 	}

@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -197,4 +198,57 @@ func TestDecompress(t *testing.T) {
 			require.NoError(t, rsp.Body.Close())
 		})
 	}
+}
+
+func TestTracedClient_Do_DecompressError(t *testing.T) {
+	// Server claims gzip but sends garbage — transport auto-decompression is
+	// disabled so our decompress() call in Do() sees the invalid body.
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Encoding", "gzip")
+		_, _ = w.Write([]byte("not valid gzip"))
+	}))
+	defer ts.Close()
+
+	c, err := New(WithTransport(&http.Transport{DisableCompression: true}))
+	require.NoError(t, err)
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, ts.URL, nil)
+	require.NoError(t, err)
+
+	rsp, err := c.Do(req)
+	require.Error(t, err)
+	assert.Nil(t, rsp)
+}
+
+func TestDecompressUnit(t *testing.T) {
+	const msg = "hello, patron!"
+
+	t.Run("gzip success", func(t *testing.T) {
+		var b bytes.Buffer
+		w := gzip.NewWriter(&b)
+		_, err := w.Write([]byte(msg))
+		require.NoError(t, err)
+		require.NoError(t, w.Close())
+
+		rc, err := decompress("gzip", io.NopCloser(&b))
+		require.NoError(t, err)
+		data, err := io.ReadAll(rc)
+		require.NoError(t, err)
+		assert.Equal(t, msg, string(data))
+		require.NoError(t, rc.Close())
+	})
+
+	t.Run("gzip invalid data", func(t *testing.T) {
+		rc, err := decompress("gzip", io.NopCloser(strings.NewReader("not gzip")))
+		require.Error(t, err)
+		assert.Nil(t, rc)
+	})
+
+	t.Run("unknown encoding passthrough", func(t *testing.T) {
+		rc, err := decompress("br", io.NopCloser(strings.NewReader(msg)))
+		require.NoError(t, err)
+		data, err := io.ReadAll(rc)
+		require.NoError(t, err)
+		assert.Equal(t, msg, string(data))
+	})
 }

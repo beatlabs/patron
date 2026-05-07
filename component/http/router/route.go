@@ -56,7 +56,7 @@ func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*pa
 			return
 		}
 
-		info, err := os.Stat(filePath)
+		info, err := os.Stat(filePath) //nolint:gosec // filePath is validated by the HasPrefix check above
 		if err != nil {
 			if os.IsNotExist(err) {
 				http.ServeFile(w, r, fallbackPath)
@@ -71,7 +71,7 @@ func NewFileServerRoute(path string, assetsDir string, fallbackPath string) (*pa
 			return
 		}
 
-		http.ServeFile(w, r, filePath)
+		http.ServeFile(w, r, filePath) //nolint:gosec // filePath is validated by the HasPrefix check above
 	}
 
 	return patronhttp.NewRoute(path, handler)

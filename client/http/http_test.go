@@ -177,12 +177,11 @@ func TestDecompress(t *testing.T) {
 
 	tests := []struct {
 		name string
-		hdr  string
 		url  string
 	}{
-		{"no compression", "", ts1.URL},
-		{"gzip", "gzip", ts2.URL},
-		{"deflate", "deflate", ts3.URL},
+		{"no compression", ts1.URL},
+		{encodingGzip, ts2.URL},
+		{encodingDeflate, ts3.URL},
 	}
 
 	for _, tt := range tests {
@@ -217,6 +216,9 @@ func TestTracedClient_Do_DecompressError(t *testing.T) {
 
 	rsp, err := c.Do(req)
 	require.Error(t, err)
+	if rsp != nil {
+		_ = rsp.Body.Close()
+	}
 	assert.Nil(t, rsp)
 }
 

@@ -89,6 +89,11 @@ func opName(method, scheme, host string) string {
 	return method + " " + scheme + "://" + host
 }
 
+const (
+	encodingGzip    = "gzip"
+	encodingDeflate = "deflate"
+)
+
 // joinedReadCloser closes both the decompressor and the underlying body so the
 // TCP connection is returned to the pool when the caller closes the response body.
 type joinedReadCloser struct {
@@ -103,14 +108,14 @@ func (j *joinedReadCloser) Close() error {
 
 func decompress(hdr string, body io.ReadCloser) (io.ReadCloser, error) {
 	switch hdr {
-	case "gzip":
+	case encodingGzip:
 		gr, err := gzip.NewReader(body)
 		if err != nil {
 			_ = body.Close()
 			return nil, err
 		}
 		return &joinedReadCloser{Reader: gr, decompressor: gr, body: body}, nil
-	case "deflate":
+	case encodingDeflate:
 		fr := flate.NewReader(body)
 		return &joinedReadCloser{Reader: fr, decompressor: fr, body: body}, nil
 	default:

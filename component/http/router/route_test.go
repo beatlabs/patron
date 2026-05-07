@@ -1,12 +1,20 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	testRoutePath    = "GET /frontend/*path"
+	testAssetsDir    = "testdata/"
+	testFallbackPath = "testdata/index.html"
+	testURLPath      = "/frontend/x"
 )
 
 func TestNewFileServerRoute(t *testing.T) {
@@ -20,9 +28,9 @@ func TestNewFileServerRoute(t *testing.T) {
 		expectedErr string
 	}{
 		"success": {args: args{
-			path:         "GET /frontend/*path",
-			assetsDir:    "testdata/",
-			fallbackPath: "testdata/index.html",
+			path:         testRoutePath,
+			assetsDir:    testAssetsDir,
+			fallbackPath: testFallbackPath,
 		}},
 		"missing path": {args: args{
 			path:         "",
@@ -40,13 +48,13 @@ func TestNewFileServerRoute(t *testing.T) {
 			fallbackPath: "",
 		}, expectedErr: "fallback path is empty"},
 		"nonexistent assets dir": {args: args{
-			path:         "GET /frontend/*path",
+			path:         testRoutePath,
 			assetsDir:    "nonexistent_dir",
-			fallbackPath: "testdata/index.html",
+			fallbackPath: testFallbackPath,
 		}, expectedErr: "assets directory [GET /frontend/*path] doesn't exist"},
 		"nonexistent fallback file": {args: args{
-			path:         "GET /frontend/*path",
-			assetsDir:    "testdata/",
+			path:         testRoutePath,
+			assetsDir:    testAssetsDir,
 			fallbackPath: "nonexistent.html",
 		}, expectedErr: "fallback file [nonexistent.html] doesn't exist"},
 	}
@@ -59,7 +67,7 @@ func TestNewFileServerRoute(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.NotNil(t, got)
-				assert.Equal(t, "GET /frontend/*path", got.Path())
+				assert.Equal(t, testRoutePath, got.Path())
 				assert.NotNil(t, got.Handler())
 				assert.Empty(t, got.Middlewares())
 			}
@@ -68,7 +76,7 @@ func TestNewFileServerRoute(t *testing.T) {
 }
 
 func TestFileServerRouteHandler(t *testing.T) {
-	handler, err := NewFileServerRoute("GET /frontend/*path", "testdata/", "testdata/index.html")
+	handler, err := NewFileServerRoute(testRoutePath, testAssetsDir, testFallbackPath)
 	require.NoError(t, err)
 
 	tests := map[string]struct {
@@ -79,13 +87,13 @@ func TestFileServerRouteHandler(t *testing.T) {
 		"fallback": {urlPath: "/frontend/", pathValue: "", expectedCode: 200},
 		// urlPath must not end in /index.html — http.ServeFile redirects that to ./
 		"index":             {urlPath: "/frontend/app", pathValue: "index.html", expectedCode: 200},
-		"file not found":    {urlPath: "/frontend/x", pathValue: "nonexistent.html", expectedCode: 200},
-		"traversal attempt": {urlPath: "/frontend/x", pathValue: "../../etc/passwd", expectedCode: 200},
-		"traversal nested":  {urlPath: "/frontend/x", pathValue: "sub/../../etc/passwd", expectedCode: 200},
+		"file not found":    {urlPath: testURLPath, pathValue: "nonexistent.html", expectedCode: 200},
+		"traversal attempt": {urlPath: testURLPath, pathValue: "../../etc/passwd", expectedCode: 200},
+		"traversal nested":  {urlPath: testURLPath, pathValue: "sub/../../etc/passwd", expectedCode: 200},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, tt.urlPath, nil)
+			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, tt.urlPath, nil)
 			req.SetPathValue("path", tt.pathValue)
 			rc := httptest.NewRecorder()
 			handler.Handler().ServeHTTP(rc, req)

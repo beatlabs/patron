@@ -296,7 +296,7 @@ func getAttributeFloat64(attr map[string]string, key string) (float64, error) {
 	}
 	value, err := strconv.ParseFloat(valueString, 64)
 	if err != nil {
-		return 0.0, fmt.Errorf("could not convert %s to float64", valueString)
+		return 0.0, fmt.Errorf("could not convert %s to float64: %w", valueString, err)
 	}
 	return value, nil
 }

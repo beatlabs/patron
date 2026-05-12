@@ -166,7 +166,7 @@ func get(ctx context.Context, key string, rc *RouteCache) *response {
 		r := &response{}
 		err := r.decode(b)
 		if err != nil {
-			return &response{Err: fmt.Errorf("could not decode cached bytes as response %v for key %s", resp, key)}
+			return &response{Err: fmt.Errorf("could not decode cached bytes as response %v for key %s: %w", resp, key, err)}
 		}
 		r.FromCache = true
 		return r
@@ -176,7 +176,7 @@ func get(ctx context.Context, key string, rc *RouteCache) *response {
 		r := &response{}
 		err := r.decode([]byte(b))
 		if err != nil {
-			return &response{Err: fmt.Errorf("could not decode cached string as response %v for key %s", resp, key)}
+			return &response{Err: fmt.Errorf("could not decode cached string as response %v for key %s: %w", resp, key, err)}
 		}
 		r.FromCache = true
 		return r

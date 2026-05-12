@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -258,6 +259,13 @@ func TestComponent_Run_Error(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	cnl()
 	wg.Wait()
+}
+
+func TestGetAttributeFloat64_WrapsParseError(t *testing.T) {
+	_, err := getAttributeFloat64(map[string]string{"k": "not-a-number"}, "k")
+	require.Error(t, err)
+	var numErr *strconv.NumError
+	require.True(t, errors.As(err, &numErr), "underlying *strconv.NumError must be reachable via errors.As")
 }
 
 type stubProcessor struct {

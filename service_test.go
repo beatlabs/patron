@@ -1,6 +1,7 @@
 package patron
 
 import (
+	"context"
 	"log/slog"
 	"testing"
 
@@ -8,6 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 )
+
+type stubComponent struct{}
+
+func (stubComponent) Run(ctx context.Context) error {
+	<-ctx.Done()
+	return nil
+}
 
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m,
@@ -65,6 +73,29 @@ func TestNew(t *testing.T) {
 				assert.NotNil(t, gotService.termSig)
 				assert.NotNil(t, gotService.sighupHandler)
 			}
+		})
+	}
+}
+
+func TestService_Run_RejectsNilComponentAtAnyIndex(t *testing.T) {
+	svc, err := New("test", "1.0", WithJSONLogger())
+	require.NoError(t, err)
+
+	tests := map[string]struct {
+		components []Component
+		wantErr    string
+	}{
+		"empty":           {components: nil, wantErr: "components are empty or nil"},
+		"nil at index 0":  {components: []Component{nil}, wantErr: "component at index 0 is nil"},
+		"nil at index 1":  {components: []Component{stubComponent{}, nil}, wantErr: "component at index 1 is nil"},
+		"nil at index 2":  {components: []Component{stubComponent{}, stubComponent{}, nil}, wantErr: "component at index 2 is nil"},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := svc.Run(context.Background(), tt.components...)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
 }

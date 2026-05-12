@@ -3,6 +3,7 @@ package patron
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -87,8 +88,13 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 
 // Run starts the provided components and blocks until termination or a component error.
 func (s *Service) Run(ctx context.Context, components ...Component) error {
-	if len(components) == 0 || components[0] == nil {
+	if len(components) == 0 {
 		return errors.New("components are empty or nil")
+	}
+	for i, c := range components {
+		if c == nil {
+			return fmt.Errorf("component at index %d is nil", i)
+		}
 	}
 
 	defer func() {

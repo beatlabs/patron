@@ -161,6 +161,60 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestGetAttributeFloat64(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		attrs       map[string]string
+		key         string
+		expected    float64
+		expectedErr string
+	}{
+		"success": {
+			attrs: map[string]string{
+				sqsAttributeApproximateNumberOfMessages: "12",
+			},
+			key:      sqsAttributeApproximateNumberOfMessages,
+			expected: 12,
+		},
+		"missing key defaults to zero": {
+			attrs:    map[string]string{},
+			key:      sqsAttributeApproximateNumberOfMessagesDelayed,
+			expected: 0,
+		},
+		"empty value defaults to zero": {
+			attrs: map[string]string{
+				sqsAttributeApproximateNumberOfMessagesDelayed: "   ",
+			},
+			key:      sqsAttributeApproximateNumberOfMessagesDelayed,
+			expected: 0,
+		},
+		"invalid value returns error": {
+			attrs: map[string]string{
+				sqsAttributeApproximateNumberOfMessagesNotVisible: "oops",
+			},
+			key:         sqsAttributeApproximateNumberOfMessagesNotVisible,
+			expectedErr: "could not convert oops to float64",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := getAttributeFloat64(tt.attrs, tt.key)
+
+			if tt.expectedErr != "" {
+				require.EqualError(t, err, tt.expectedErr)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.InDelta(t, tt.expected, got, 0)
+		})
+	}
+}
+
 func TestComponent_Run_Success(t *testing.T) {
 	t.Cleanup(func() { traceExporter.Reset() })
 

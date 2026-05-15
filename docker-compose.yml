@@ -98,19 +98,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
-  moto:
-    image: motoserver/moto:5.1.22
+  floci:
+    image: floci/floci:1.5.16
     restart: always
     ports:
-      - "127.0.0.1:4566:5000"
-    environment:
-      - MOTO_PORT=5000
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/moto-api/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      - "127.0.0.1:4566:4566"
   hivemq:
     image: hivemq/hivemq4:4.51.0
     restart: always

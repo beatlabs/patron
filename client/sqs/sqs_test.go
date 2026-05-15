@@ -157,13 +157,13 @@ func TestNewFromConfig_WithRetryConfig(t *testing.T) {
 	})
 }
 
-func TestNewFromConfig_LocalStack(t *testing.T) {
+func TestNewFromConfig_LocalEmulator(t *testing.T) {
 	t.Parallel()
 
-	t.Run("creates client for LocalStack", func(t *testing.T) {
+	t.Run("creates client for local AWS emulator", func(t *testing.T) {
 		t.Parallel()
 
-		localStackEndpoint := "http://localhost:4566"
+		localEndpoint := "http://localhost:4566"
 		cfg := aws.Config{
 			Region: "us-east-1",
 			Credentials: aws.CredentialsProviderFunc(func(_ context.Context) (aws.Credentials, error) {
@@ -175,11 +175,11 @@ func TestNewFromConfig_LocalStack(t *testing.T) {
 		}
 
 		client := NewFromConfig(cfg, func(o *sqs.Options) {
-			o.BaseEndpoint = &localStackEndpoint
+			o.BaseEndpoint = &localEndpoint
 		})
 
 		require.NotNil(t, client)
 		assert.NotNil(t, client.Options().BaseEndpoint)
-		assert.Equal(t, localStackEndpoint, *client.Options().BaseEndpoint)
+		assert.Equal(t, localEndpoint, *client.Options().BaseEndpoint)
 	})
 }

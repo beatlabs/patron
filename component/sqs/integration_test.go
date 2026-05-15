@@ -161,7 +161,12 @@ type SQSAPI interface {
 }
 
 func createSQSAPI(region, endpoint string) (*sqs.Client, func(), error) {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return nil, nil, fmt.Errorf("default transport is %T, expected *http.Transport", http.DefaultTransport)
+	}
+
+	transport = transport.Clone()
 	transport.DisableKeepAlives = true
 	transport.ForceAttemptHTTP2 = false
 	closeIdleConnections := transport.CloseIdleConnections

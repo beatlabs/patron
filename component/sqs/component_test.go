@@ -210,7 +210,7 @@ func TestGetAttributeFloat64(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, got)
+			assert.InDelta(t, tt.expected, got, 0)
 		})
 	}
 }

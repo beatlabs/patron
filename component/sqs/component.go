@@ -147,17 +147,23 @@ func New(name, queueName string, sqsAPI API, proc ProcessorFunc, oo ...OptionFun
 // Run starts the consumer processing loop messages.
 func (c *Component) Run(ctx context.Context) error {
 	chErr := make(chan error)
+	consumeDone := make(chan struct{})
 
-	go c.consume(ctx, chErr)
+	go func() {
+		defer close(consumeDone)
+		c.consume(ctx, chErr)
+	}()
 
 	tickerStats := time.NewTicker(c.stats.interval)
 	defer tickerStats.Stop()
 	for {
 		select {
 		case err := <-chErr:
+			<-consumeDone
 			return err
 		case <-ctx.Done():
 			log.FromContext(ctx).Info("context cancellation received. exiting...")
+			<-consumeDone
 			return nil
 		case <-tickerStats.C:
 			err := c.report(ctx, c.api, c.queue.url)
@@ -277,22 +283,42 @@ func (c *Component) report(ctx context.Context, sqsAPI API, queueURL string) err
 
 	size, err = getAttributeFloat64(rsp.Attributes, sqsAttributeApproximateNumberOfMessagesDelayed)
 	if err != nil {
-		return err
+		size, err = getOptionalAttributeFloat64(rsp.Attributes, sqsAttributeApproximateNumberOfMessagesDelayed)
+		if err != nil {
+			return err
+		}
 	}
 	observeQueueSize(ctx, c.queue.name, "delayed", size)
 
 	size, err = getAttributeFloat64(rsp.Attributes, sqsAttributeApproximateNumberOfMessagesNotVisible)
 	if err != nil {
-		return err
+		size, err = getOptionalAttributeFloat64(rsp.Attributes, sqsAttributeApproximateNumberOfMessagesNotVisible)
+		if err != nil {
+			return err
+		}
 	}
 	observeQueueSize(ctx, c.queue.name, "invisible", size)
 	return nil
 }
 
 func getAttributeFloat64(attr map[string]string, key string) (float64, error) {
+	valueString := strings.TrimSpace(attr[key])
+	if valueString == "" {
+		// Some local AWS emulators omit queue attribute values when the count is zero.
+		// Stats reporting is best effort, so treat missing values as zero instead of failing the entire report tick.
+		return 0.0, nil
+	}
+	value, err := strconv.ParseFloat(valueString, 64)
+	if err != nil {
+		return 0.0, fmt.Errorf("could not convert %s to float64", valueString)
+	}
+	return value, nil
+}
+
+func getOptionalAttributeFloat64(attr map[string]string, key string) (float64, error) {
 	valueString := attr[key]
 	if len(strings.TrimSpace(valueString)) == 0 {
-		return 0.0, fmt.Errorf("value of %s is empty", key)
+		return 0.0, nil
 	}
 	value, err := strconv.ParseFloat(valueString, 64)
 	if err != nil {

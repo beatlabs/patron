@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -40,8 +42,9 @@ func Test_SQS_Consume(t *testing.T) {
 	const queueName = "test-sqs-consume"
 	const correlationID = "123"
 
-	api, err := createSQSAPI(region, endpoint)
+	api, closeAPI, err := createSQSAPI(region, endpoint)
 	require.NoError(t, err)
+	t.Cleanup(closeAPI)
 	queue, err := createSQSQueue(api, queueName)
 	require.NoError(t, err)
 
@@ -77,7 +80,13 @@ func Test_SQS_Consume(t *testing.T) {
 	runCtx, runCancel := context.WithCancel(context.Background())
 	defer runCancel()
 
-	go func() { assert.NoError(t, cmp.Run(runCtx)) }()
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		assert.NoError(t, cmp.Run(runCtx))
+	}()
 
 	got := <-chReceived
 
@@ -103,6 +112,8 @@ func Test_SQS_Consume(t *testing.T) {
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "sqs.queue.size")
 
 	runCancel()
+	wg.Wait()
+	closeAPI()
 }
 
 func sendMessage(t *testing.T, client *sqs.Client, correlationID, queue string, ids ...string) []*testMessage {
@@ -149,13 +160,20 @@ type SQSAPI interface {
 	ReceiveMessage(ctx context.Context, params *sqs.ReceiveMessageInput, optFns ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error)
 }
 
-func createSQSAPI(region, endpoint string) (*sqs.Client, error) {
+func createSQSAPI(region, endpoint string) (*sqs.Client, func(), error) {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DisableKeepAlives = true
+	transport.ForceAttemptHTTP2 = false
+	closeIdleConnections := transport.CloseIdleConnections
+	httpClient := &http.Client{Transport: transport}
+
 	cfg, err := awsConfig.LoadDefaultConfig(context.Background(),
 		awsConfig.WithRegion(region),
+		awsConfig.WithHTTPClient(httpClient),
 		awsConfig.WithCredentialsProvider(aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider("test", "test", ""))),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create AWS config: %w", err)
+		return nil, nil, fmt.Errorf("failed to create AWS config: %w", err)
 	}
 
 	api := sqs.NewFromConfig(cfg, func(o *sqs.Options) {
@@ -163,5 +181,5 @@ func createSQSAPI(region, endpoint string) (*sqs.Client, error) {
 		o.Region = region
 	})
 
-	return api, nil
+	return api, closeIdleConnections, nil
 }

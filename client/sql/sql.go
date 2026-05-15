@@ -70,7 +70,7 @@ func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 		return nil, err
 	}
 
-	return &Tx{tx: tx}, nil
+	return &Tx{tx: tx, connInfo: c.connInfo}, nil
 }
 
 // Close returns the connection to the connection pool.
@@ -117,7 +117,7 @@ func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Stmt{stmt: stmt}, nil
+	return &Stmt{stmt: stmt, connInfo: c.connInfo, query: query}, nil
 }
 
 // Query executes a query that returns rows.
@@ -433,7 +433,7 @@ func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 		return nil, err
 	}
 
-	return &Stmt{stmt: stmt}, nil
+	return &Stmt{stmt: stmt, connInfo: tx.connInfo, query: query}, nil
 }
 
 // Query executes a query that returns rows.

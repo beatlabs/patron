@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/url"
 	"time"
 
 	"github.com/beatlabs/patron/correlation"
@@ -219,7 +220,7 @@ func (s *subscription) close() error {
 func (c *Component) subscribe() (subscription, error) {
 	conn, err := amqp.DialConfig(c.queueCfg.url, c.cfg)
 	if err != nil {
-		return subscription{}, fmt.Errorf("failed to dial @ %s: %w", c.queueCfg.url, err)
+		return subscription{}, fmt.Errorf("failed to dial @ %s: %w", sanitizeURL(c.queueCfg.url), err)
 	}
 	sub := subscription{conn: conn}
 
@@ -288,6 +289,15 @@ func (c *Component) stats(ctx context.Context, sub subscription) error {
 
 	observeQueueSize(ctx, c.queueCfg.queue, q.Messages)
 	return nil
+}
+
+func sanitizeURL(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return "[unparseable url]"
+	}
+	u.User = nil
+	return u.String()
 }
 
 func getCorrelationID(hh amqp.Table) string {

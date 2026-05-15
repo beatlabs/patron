@@ -35,3 +35,4 @@ docker-compose/tempo-data/
 # Local GitHub Actions runner (act) artifacts
 .github/aw/
 .gitnexus
+.claude-flow/

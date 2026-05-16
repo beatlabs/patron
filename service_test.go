@@ -1,13 +1,27 @@
 package patron
 
 import (
+	"context"
 	"log/slog"
+	"os"
+	"sync/atomic"
 	"testing"
 
+	"github.com/beatlabs/patron/observability"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 )
+
+type testRunComponent struct {
+	ran atomic.Bool
+	err error
+}
+
+func (c *testRunComponent) Run(_ context.Context) error {
+	c.ran.Store(true)
+	return c.err
+}
 
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m,
@@ -67,4 +81,34 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunRejectsNilComponentBeforeStartingAny(t *testing.T) {
+	t.Parallel()
+
+	service := &Service{
+		name:                  "test-service",
+		termSig:               make(chan os.Signal, 1),
+		observabilityProvider: &observability.Provider{},
+	}
+	component := &testRunComponent{}
+
+	err := service.Run(context.Background(), component, nil)
+
+	require.EqualError(t, err, "components are empty or nil")
+	assert.False(t, component.ran.Load())
+}
+
+func TestRunRejectsEmptyComponents(t *testing.T) {
+	t.Parallel()
+
+	service := &Service{
+		name:                  "test-service",
+		termSig:               make(chan os.Signal, 1),
+		observabilityProvider: &observability.Provider{},
+	}
+
+	err := service.Run(context.Background())
+
+	require.EqualError(t, err, "components are empty or nil")
 }

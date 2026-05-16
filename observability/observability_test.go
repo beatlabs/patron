@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.40.0"
 )
 
@@ -217,24 +219,35 @@ func TestProvider_Structure(t *testing.T) {
 }
 
 func TestProvider_Shutdown_WithNilProviders(t *testing.T) {
-	provider := &Provider{
-		mp: nil,
-		tp: nil,
-	}
+	provider := &Provider{}
 
-	ctx := context.Background()
+	assert.NotPanics(t, func() {
+		require.NoError(t, provider.Shutdown(context.Background()))
+	})
+}
 
-	// This should handle nil providers gracefully or panic - let's see
-	// In actual implementation, this would likely panic or error
-	// We're documenting the behavior
-	defer func() {
-		if r := recover(); r != nil {
-			// Expected to panic with nil providers
-			assert.NotNil(t, r)
-		}
-	}()
+func TestProvider_Shutdown_WithNilReceiver(t *testing.T) {
+	var provider *Provider
 
-	_ = provider.Shutdown(ctx)
+	assert.NotPanics(t, func() {
+		require.NoError(t, provider.Shutdown(context.Background()))
+	})
+}
+
+func TestProvider_Shutdown_WithOnlyMeterProvider(t *testing.T) {
+	provider := &Provider{mp: &sdkmetric.MeterProvider{}}
+
+	assert.NotPanics(t, func() {
+		require.NoError(t, provider.Shutdown(context.Background()))
+	})
+}
+
+func TestProvider_Shutdown_WithOnlyTraceProvider(t *testing.T) {
+	provider := &Provider{tp: sdktrace.NewTracerProvider()}
+
+	assert.NotPanics(t, func() {
+		require.NoError(t, provider.Shutdown(context.Background()))
+	})
 }
 
 func TestSetup_ValidConfig(t *testing.T) {

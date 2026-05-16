@@ -29,13 +29,13 @@ func (r Retry) Execute(act Action) (any, error) {
 	var err error
 	var res any
 
-	for range r.attempts {
+	for attempt := 0; attempt < r.attempts; attempt++ {
 		res, err = act()
 		if err == nil {
 			return res, nil
 		}
 
-		if r.delay > 0 {
+		if attempt < r.attempts-1 && r.delay > 0 {
 			time.Sleep(r.delay)
 		}
 	}

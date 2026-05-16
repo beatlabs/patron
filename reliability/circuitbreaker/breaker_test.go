@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	internaltest "github.com/beatlabs/patron/internal/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -271,6 +272,38 @@ func TestCircuitBreaker_ConcurrentHalfOpenSuccessesIgnoreStaleCallers(t *testing
 		assert.Equal(t, uint(0), cb.retries)
 		assert.Equal(t, tsFuture, cb.nextRetry)
 	}
+}
+
+func TestCircuitBreaker_Execute_OpenCircuitEmitsMetric(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	shutdownMetrics, collectMetrics := internaltest.SetupMetrics(ctx, t)
+	t.Cleanup(shutdownMetrics)
+
+	cb, err := New("test", Setting{
+		FailureThreshold:           1,
+		RetryTimeout:               time.Second,
+		RetrySuccessThreshold:      1,
+		MaxRetryExecutionThreshold: 1,
+	})
+	require.NoError(t, err)
+
+	cb.status = opened
+	cb.nextRetry = time.Now().Add(time.Second).UnixNano()
+
+	actionCalled := false
+	_, err = cb.Execute(ctx, func() (any, error) {
+		actionCalled = true
+		return "unexpected", nil
+	})
+
+	require.ErrorIs(t, err, errOpen)
+	assert.False(t, actionCalled)
+
+	collectedMetrics := collectMetrics(1)
+	allMetrics := internaltest.AllMetrics(collectedMetrics)
+	internaltest.AssertMetric(t, allMetrics, "circuit-breaker.status")
 }
 
 func BenchmarkCircuitBreaker_Execute(b *testing.B) {

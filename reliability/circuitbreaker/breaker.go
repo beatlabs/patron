@@ -142,12 +142,14 @@ func (cb *CircuitBreaker) Execute(ctx context.Context, act Action) (any, error) 
 }
 
 func (cb *CircuitBreaker) incFailure(ctx context.Context) {
-	// allow closed and half open to transition to open
-	if cb.isOpen() {
-		return
-	}
 	cb.Lock()
 	defer cb.Unlock()
+	now := time.Now().UnixNano()
+
+	// allow only closed and half open to transition to open
+	if cb.status == opened && cb.nextRetry > now {
+		return
+	}
 
 	cb.failures++
 
@@ -166,12 +168,14 @@ func (cb *CircuitBreaker) incFailure(ctx context.Context) {
 }
 
 func (cb *CircuitBreaker) incSuccess(ctx context.Context) {
-	// allow only half open in order to transition to closed
-	if !cb.isHalfOpen() {
-		return
-	}
 	cb.Lock()
 	defer cb.Unlock()
+	now := time.Now().UnixNano()
+
+	// allow only half open in order to transition to closed
+	if cb.status != opened || cb.nextRetry > now {
+		return
+	}
 
 	cb.retries++
 	cb.executions++

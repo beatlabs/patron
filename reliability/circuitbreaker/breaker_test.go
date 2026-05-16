@@ -3,6 +3,7 @@ package circuitbreaker
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -190,6 +191,86 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, uint(0), cb.retries)
 	assert.True(t, cb.isClose())
 	assert.Equal(t, tsFuture, cb.nextRetry)
+}
+
+func TestCircuitBreaker_ConcurrentHalfOpenFailuresIgnoreStaleCallers(t *testing.T) {
+	t.Parallel()
+
+	cb, err := New("test", Setting{
+		FailureThreshold:           10,
+		RetryTimeout:               time.Second,
+		RetrySuccessThreshold:      2,
+		MaxRetryExecutionThreshold: 2,
+	})
+	require.NoError(t, err)
+
+	for range 50 {
+		cb.status = opened
+		cb.failures = 0
+		cb.executions = 0
+		cb.retries = 0
+		cb.nextRetry = time.Now().Add(-time.Second).UnixNano()
+
+		start := make(chan struct{})
+		var wg sync.WaitGroup
+		for range 3 {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				<-start
+				cb.incFailure(context.Background())
+			}()
+		}
+
+		close(start)
+		wg.Wait()
+
+		assert.Equal(t, opened, cb.status)
+		assert.Equal(t, uint(0), cb.failures)
+		assert.Equal(t, uint(0), cb.executions)
+		assert.Equal(t, uint(0), cb.retries)
+		assert.Greater(t, cb.nextRetry, time.Now().UnixNano())
+	}
+}
+
+func TestCircuitBreaker_ConcurrentHalfOpenSuccessesIgnoreStaleCallers(t *testing.T) {
+	t.Parallel()
+
+	cb, err := New("test", Setting{
+		FailureThreshold:           1,
+		RetryTimeout:               time.Second,
+		RetrySuccessThreshold:      2,
+		MaxRetryExecutionThreshold: 3,
+	})
+	require.NoError(t, err)
+
+	for range 50 {
+		cb.status = opened
+		cb.failures = 0
+		cb.executions = 0
+		cb.retries = 0
+		cb.nextRetry = time.Now().Add(-time.Second).UnixNano()
+
+		start := make(chan struct{})
+		var wg sync.WaitGroup
+		for range 3 {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				<-start
+				cb.incSuccess(context.Background())
+			}()
+		}
+
+		close(start)
+		wg.Wait()
+
+		assert.Equal(t, closed, cb.status)
+		assert.Equal(t, uint(0), cb.failures)
+		assert.Equal(t, uint(0), cb.executions)
+		assert.Equal(t, uint(0), cb.retries)
+		assert.Equal(t, tsFuture, cb.nextRetry)
+	}
 }
 
 func BenchmarkCircuitBreaker_Execute(b *testing.B) {

@@ -87,8 +87,14 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 
 // Run starts the provided components and blocks until termination or a component error.
 func (s *Service) Run(ctx context.Context, components ...Component) error {
-	if len(components) == 0 || components[0] == nil {
+	if len(components) == 0 {
 		return errors.New("components are empty or nil")
+	}
+
+	for _, component := range components {
+		if component == nil {
+			return errors.New("components are empty or nil")
+		}
 	}
 
 	defer func() {

@@ -98,3 +98,17 @@ func TestRunRejectsNilComponentBeforeStartingAny(t *testing.T) {
 	require.EqualError(t, err, "components are empty or nil")
 	assert.False(t, component.ran.Load())
 }
+
+func TestRunRejectsEmptyComponents(t *testing.T) {
+	t.Parallel()
+
+	service := &Service{
+		name:                  "test-service",
+		termSig:               make(chan os.Signal, 1),
+		observabilityProvider: &observability.Provider{},
+	}
+
+	err := service.Run(context.Background())
+
+	require.EqualError(t, err, "components are empty or nil")
+}

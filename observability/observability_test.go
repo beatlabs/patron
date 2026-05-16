@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.40.0"
 )
 
@@ -226,6 +228,22 @@ func TestProvider_Shutdown_WithNilProviders(t *testing.T) {
 
 func TestProvider_Shutdown_WithNilReceiver(t *testing.T) {
 	var provider *Provider
+
+	assert.NotPanics(t, func() {
+		require.NoError(t, provider.Shutdown(context.Background()))
+	})
+}
+
+func TestProvider_Shutdown_WithOnlyMeterProvider(t *testing.T) {
+	provider := &Provider{mp: &sdkmetric.MeterProvider{}}
+
+	assert.NotPanics(t, func() {
+		require.NoError(t, provider.Shutdown(context.Background()))
+	})
+}
+
+func TestProvider_Shutdown_WithOnlyTraceProvider(t *testing.T) {
+	provider := &Provider{tp: sdktrace.NewTracerProvider()}
 
 	assert.NotPanics(t, func() {
 		require.NoError(t, provider.Shutdown(context.Background()))

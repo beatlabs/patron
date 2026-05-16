@@ -7,6 +7,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/noop"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
@@ -48,7 +49,11 @@ func Float64Histogram(pkg, name, description, unit string) metric.Float64Histogr
 		metric.WithUnit(unit),
 	)
 	if err != nil {
-		panic(err)
+		noopHistogram, _ := noop.NewMeterProvider().Meter(pkg).Float64Histogram(name,
+			metric.WithDescription(description),
+			metric.WithUnit(unit),
+		)
+		return noopHistogram
 	}
 
 	return histogram
@@ -61,7 +66,11 @@ func Int64Histogram(pkg, name, description, unit string) metric.Int64Histogram {
 		metric.WithUnit(unit),
 	)
 	if err != nil {
-		panic(err)
+		noopHistogram, _ := noop.NewMeterProvider().Meter(pkg).Int64Histogram(name,
+			metric.WithDescription(description),
+			metric.WithUnit(unit),
+		)
+		return noopHistogram
 	}
 
 	return histogram
@@ -74,7 +83,11 @@ func Int64Counter(pkg, name, description, unit string) metric.Int64Counter {
 		metric.WithUnit(unit),
 	)
 	if err != nil {
-		panic(err)
+		noopCounter, _ := noop.NewMeterProvider().Meter(pkg).Int64Counter(name,
+			metric.WithDescription(description),
+			metric.WithUnit(unit),
+		)
+		return noopCounter
 	}
 
 	return counter
@@ -87,7 +100,11 @@ func Float64Gauge(pkg, name, description, unit string) metric.Float64Gauge {
 		metric.WithUnit(unit),
 	)
 	if err != nil {
-		panic(err)
+		noopGauge, _ := noop.NewMeterProvider().Meter(pkg).Float64Gauge(name,
+			metric.WithDescription(description),
+			metric.WithUnit(unit),
+		)
+		return noopGauge
 	}
 
 	return gauge
@@ -100,7 +117,11 @@ func Int64Gauge(pkg, name, description, unit string) metric.Int64Gauge {
 		metric.WithUnit(unit),
 	)
 	if err != nil {
-		panic(err)
+		noopGauge, _ := noop.NewMeterProvider().Meter(pkg).Int64Gauge(name,
+			metric.WithDescription(description),
+			metric.WithUnit(unit),
+		)
+		return noopGauge
 	}
 
 	return gauge

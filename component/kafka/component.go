@@ -191,30 +191,39 @@ func (c *Component) processing(ctx context.Context) error {
 
 		consumerErrorsInc(ctx, c.name)
 
-		if c.retries > 0 {
-			if handler.processedMessages {
-				i = 0
-			}
+		componentError, shouldRetry := shouldRetryProcessingAttempt(componentError, handler.getErr(), i, retries)
+		if componentError == nil {
+			return nil
+		}
 
-			if componentError == nil {
-				componentError = handler.getErr()
-			}
-
+		if shouldRetry {
 			slog.Error("failed run", slog.Uint64("current", uint64(i)), slog.Uint64("retries", uint64(c.retries)),
 				slog.Duration("wait", c.retryWait), log.ErrorAttr(componentError))
 			time.Sleep(c.retryWait)
-
-			if i < retries {
-				componentError = nil
-			}
+			continue
 		}
 
-		if i == retries && componentError == nil && handler.getErr() != nil {
-			componentError = fmt.Errorf("message processing failure exhausted %d retries: %w", i, handler.getErr())
-		}
+		return componentError
 	}
 
-	return componentError
+	return nil
+}
+
+func resolveRetryError(componentError, handlerError error) error {
+	if componentError != nil {
+		return componentError
+	}
+
+	return handlerError
+}
+
+func shouldRetryProcessingAttempt(componentError, handlerError error, current, retries uint32) (error, bool) {
+	err := resolveRetryError(componentError, handlerError)
+	if err == nil {
+		return nil, false
+	}
+
+	return err, current < retries
 }
 
 type consumerHandler struct {

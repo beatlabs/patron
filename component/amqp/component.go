@@ -189,7 +189,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 		case <-tickerStats.C:
 			err := c.stats(ctx, sub)
 			if err != nil {
-				slog.Error("failed to report sqsAPI stats: %v", log.ErrorAttr(err))
+				slog.Error("failed to report sqsAPI stats", log.ErrorAttr(err))
 			}
 		}
 	}

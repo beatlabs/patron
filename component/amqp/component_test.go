@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testURL   = "url"
+	testQueue = "queue"
+)
+
 func TestNew(t *testing.T) {
 	t.Parallel()
 	proc := func(_ context.Context, b Batch) {
@@ -30,8 +35,8 @@ func TestNew(t *testing.T) {
 	}{
 		"success": {
 			args: args{
-				url:   "url",
-				queue: "queue",
+				url:   testURL,
+				queue: testQueue,
 				proc:  proc,
 				oo:    []OptionFunc{WithBatching(5, 5*time.Millisecond)},
 			},
@@ -39,7 +44,7 @@ func TestNew(t *testing.T) {
 		"missing url": {
 			args: args{
 				url:   "",
-				queue: "queue",
+				queue: testQueue,
 				proc:  proc,
 				oo:    []OptionFunc{WithBatching(5, 5*time.Millisecond)},
 			},
@@ -47,7 +52,7 @@ func TestNew(t *testing.T) {
 		},
 		"missing queue": {
 			args: args{
-				url:   "url",
+				url:   testURL,
 				queue: "",
 				proc:  proc,
 				oo:    []OptionFunc{WithBatching(5, 5*time.Millisecond)},
@@ -56,8 +61,8 @@ func TestNew(t *testing.T) {
 		},
 		"missing process function": {
 			args: args{
-				url:   "url",
-				queue: "queue",
+				url:   testURL,
+				queue: testQueue,
 				proc:  nil,
 				oo:    []OptionFunc{WithBatching(5, 5*time.Millisecond)},
 			},
@@ -65,8 +70,8 @@ func TestNew(t *testing.T) {
 		},
 		"batching option fails": {
 			args: args{
-				url:   "url",
-				queue: "queue",
+				url:   testURL,
+				queue: testQueue,
 				proc:  proc,
 				oo:    []OptionFunc{WithBatching(0, 5*time.Millisecond)},
 			},
@@ -88,7 +93,6 @@ func TestNew(t *testing.T) {
 		})
 	}
 }
-
 
 func TestLogStatsError(t *testing.T) {
 	errOutput := captureAMQPLogOutput(t, func() {

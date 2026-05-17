@@ -191,7 +191,7 @@ func (c *Component) processing(ctx context.Context) error {
 
 		consumerErrorsInc(ctx, c.name)
 
-		componentError, shouldRetry := shouldRetryProcessingAttempt(componentError, handler.getErr(), i, retries)
+		shouldRetry, componentError := shouldRetryProcessingAttempt(componentError, handler.getErr(), i, retries)
 		if componentError == nil {
 			return nil
 		}
@@ -217,13 +217,13 @@ func resolveRetryError(componentError, handlerError error) error {
 	return handlerError
 }
 
-func shouldRetryProcessingAttempt(componentError, handlerError error, current, retries uint32) (error, bool) {
+func shouldRetryProcessingAttempt(componentError, handlerError error, current, retries uint32) (bool, error) {
 	err := resolveRetryError(componentError, handlerError)
 	if err == nil {
-		return nil, false
+		return false, nil
 	}
 
-	return err, current < retries
+	return current < retries, err
 }
 
 type consumerHandler struct {

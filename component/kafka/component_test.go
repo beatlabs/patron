@@ -399,7 +399,7 @@ func TestShouldRetryProcessingAttempt(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err, retry := shouldRetryProcessingAttempt(tt.componentError, tt.handlerError, tt.current, tt.retries)
+			retry, err := shouldRetryProcessingAttempt(tt.componentError, tt.handlerError, tt.current, tt.retries)
 
 			assert.ErrorIs(t, err, tt.expectedErr)
 			assert.Equal(t, tt.expectedRetry, retry)

@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const successCase = "success"
+
 func TestAMQPConfig(t *testing.T) {
 	cfg := amqp.Config{Locale: "123"}
 	c := &Component{}
@@ -26,7 +28,7 @@ func TestBatching(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":         {args: args{count: 2, timeout: 2 * time.Millisecond}},
+		successCase:       {args: args{count: 2, timeout: 2 * time.Millisecond}},
 		"invalid count":   {args: args{count: 1, timeout: 2 * time.Millisecond}, expectedErr: "count should be larger than 1 message"},
 		"invalid timeout": {args: args{count: 2, timeout: -3}, expectedErr: "timeout should be a positive number"},
 	}
@@ -70,7 +72,7 @@ func TestStatsInterval(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":          {args: args{interval: 2 * time.Millisecond}},
+		successCase:        {args: args{interval: 2 * time.Millisecond}},
 		"invalid interval": {args: args{interval: -3}, expectedErr: "stats interval should be a positive number"},
 	}
 	for name, tt := range tests {

@@ -1,12 +1,20 @@
 package amqp
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	testURL   = "url"
+	testQueue = "queue"
 )
 
 func TestNew(t *testing.T) {
@@ -27,8 +35,8 @@ func TestNew(t *testing.T) {
 	}{
 		"success": {
 			args: args{
-				url:   "url",
-				queue: "queue",
+				url:   testURL,
+				queue: testQueue,
 				proc:  proc,
 				oo:    []OptionFunc{WithBatching(5, 5*time.Millisecond)},
 			},
@@ -36,7 +44,7 @@ func TestNew(t *testing.T) {
 		"missing url": {
 			args: args{
 				url:   "",
-				queue: "queue",
+				queue: testQueue,
 				proc:  proc,
 				oo:    []OptionFunc{WithBatching(5, 5*time.Millisecond)},
 			},
@@ -44,7 +52,7 @@ func TestNew(t *testing.T) {
 		},
 		"missing queue": {
 			args: args{
-				url:   "url",
+				url:   testURL,
 				queue: "",
 				proc:  proc,
 				oo:    []OptionFunc{WithBatching(5, 5*time.Millisecond)},
@@ -53,8 +61,8 @@ func TestNew(t *testing.T) {
 		},
 		"missing process function": {
 			args: args{
-				url:   "url",
-				queue: "queue",
+				url:   testURL,
+				queue: testQueue,
 				proc:  nil,
 				oo:    []OptionFunc{WithBatching(5, 5*time.Millisecond)},
 			},
@@ -62,8 +70,8 @@ func TestNew(t *testing.T) {
 		},
 		"batching option fails": {
 			args: args{
-				url:   "url",
-				queue: "queue",
+				url:   testURL,
+				queue: testQueue,
 				proc:  proc,
 				oo:    []OptionFunc{WithBatching(0, 5*time.Millisecond)},
 			},
@@ -84,4 +92,30 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLogStatsError(t *testing.T) {
+	errOutput := captureAMQPLogOutput(t, func() {
+		logStatsError(errors.New("stats failed"))
+	})
+
+	assert.Contains(t, errOutput, "failed to report sqsAPI stats")
+	assert.NotContains(t, errOutput, "%v")
+	assert.Contains(t, errOutput, "stats failed")
+}
+
+func captureAMQPLogOutput(t *testing.T, fn func()) string {
+	t.Helper()
+
+	originalLogger := slog.Default()
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, nil))
+	defer func() {
+		slog.SetDefault(originalLogger)
+	}()
+
+	slog.SetDefault(logger)
+	fn()
+
+	return buf.String()
 }

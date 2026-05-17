@@ -3,7 +3,9 @@
 package amqp
 
 import (
+	"bytes"
 	"context"
+	"log/slog"
 	"os"
 	"testing"
 	"time"
@@ -46,6 +48,7 @@ func init() {
 const (
 	endpoint      = "amqp://bitnami:bitnami@localhost:5672/" //nolint:gosec
 	rabbitMQQueue = "rmq-test-queue"
+	missingQueue  = "rmq-missing-queue"
 )
 
 func TestRun(t *testing.T) {
@@ -137,6 +140,51 @@ func TestRun(t *testing.T) {
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.publish.duration")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.message.age")
 	test.AssertMetric(t, collectedMetrics.ScopeMetrics[0].Metrics, "amqp.message.counter")
+}
+
+func TestProcessLoop_LogsStatsError(t *testing.T) {
+	require.NoError(t, createQueue())
+
+	cmp, err := New(endpoint, rabbitMQQueue, func(_ context.Context, _ Batch) {},
+		WithStatsInterval(10*time.Millisecond),
+		WithRetry(1, time.Millisecond),
+	)
+	require.NoError(t, err)
+
+	sub, err := cmp.subscribe()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = sub.close()
+	})
+
+	cmp.queueCfg.queue = missingQueue
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	errOutput := captureAMQPIntegrationLogOutput(t, func() {
+		err = cmp.processLoop(ctx, sub)
+	})
+
+	require.Error(t, err)
+	assert.Contains(t, errOutput, "failed to report sqsAPI stats")
+	assert.NotContains(t, errOutput, "%v")
+}
+
+func captureAMQPIntegrationLogOutput(t *testing.T, fn func()) string {
+	t.Helper()
+
+	originalLogger := slog.Default()
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, nil))
+	defer func() {
+		slog.SetDefault(originalLogger)
+	}()
+
+	slog.SetDefault(logger)
+	fn()
+
+	return buf.String()
 }
 
 func createQueue() error {

@@ -16,6 +16,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
+const indexMappingsBody = `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}`
+
 func TestNew(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracePublisher := trace.Setup("test", nil, exp)
@@ -52,11 +54,9 @@ func TestNew(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, client)
 
-	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}` //nolint: goconst
-
 	rsp, err := client.Indices.Create(
 		indexName,
-		client.Indices.Create.WithBody(strings.NewReader(queryBody)),
+		client.Indices.Create.WithBody(strings.NewReader(indexMappingsBody)),
 		client.Indices.Create.WithContext(ctx),
 	)
 	require.NoError(t, err)
@@ -104,10 +104,9 @@ func TestNew_FailureMetrics(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make a typed API request (uses instrumentation Start/Close) that will return 500
-	queryBody := `{"mappings": {"_doc": {"properties": {"field1": {"type": "integer"}}}}}`
 	rsp, err := client.Indices.Create(
 		"failed_index",
-		client.Indices.Create.WithBody(strings.NewReader(queryBody)),
+		client.Indices.Create.WithBody(strings.NewReader(indexMappingsBody)),
 		client.Indices.Create.WithContext(ctx),
 	)
 	require.NoError(t, err)

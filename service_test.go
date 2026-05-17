@@ -1,7 +1,9 @@
 package patron
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"sync/atomic"
@@ -111,4 +113,71 @@ func TestRunRejectsEmptyComponents(t *testing.T) {
 	err := service.Run(context.Background())
 
 	require.EqualError(t, err, "components are empty or nil")
+}
+
+func TestNew_WithJSONLogger_ConfiguresDefaultLogger(t *testing.T) {
+	output := captureStderr(t, func() {
+		svc, err := New("name", "1.0", WithJSONLogger())
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		slog.Info("json logger configured")
+	})
+
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal(output, &payload))
+	assert.Equal(t, "json logger configured", payload["msg"])
+}
+
+func TestNew_WithLogFields_ConfiguresDefaultLoggerAttributes(t *testing.T) {
+	output := captureStderr(t, func() {
+		svc, err := New("name", "1.0", WithLogFields(slog.String("env", "dev")))
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		slog.Info("log fields configured")
+	})
+
+	assert.Contains(t, string(output), "env=dev")
+	assert.Contains(t, string(output), "msg=\"log fields configured\"")
+}
+
+func TestNew_WithJSONLoggerAndLogFields_ConfiguresDefaultLogger(t *testing.T) {
+	output := captureStderr(t, func() {
+		svc, err := New("name", "1.0", WithJSONLogger(), WithLogFields(slog.String("env", "dev")))
+		require.NoError(t, err)
+		require.NotNil(t, svc)
+
+		slog.Info("json logger with fields configured")
+	})
+
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal(output, &payload))
+	assert.Equal(t, "json logger with fields configured", payload["msg"])
+	assert.Equal(t, "dev", payload["env"])
+}
+
+func captureStderr(t *testing.T, fn func()) []byte {
+	t.Helper()
+
+	originalStderr := os.Stderr
+	originalLogger := slog.Default()
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
+	defer func() {
+		os.Stderr = originalStderr
+		slog.SetDefault(originalLogger)
+	}()
+
+	os.Stderr = w
+
+	fn()
+	require.NoError(t, w.Close())
+
+	var buf bytes.Buffer
+	_, err = buf.ReadFrom(r)
+	require.NoError(t, err)
+	require.NoError(t, r.Close())
+
+	return bytes.TrimSpace(buf.Bytes())
 }

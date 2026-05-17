@@ -345,18 +345,30 @@ type consumerMessageCarrier struct {
 
 // Get retrieves a single value for a given key.
 func (c consumerMessageCarrier) Get(key string) string {
-	return c.msg.Attributes[key]
+	attribute, ok := c.msg.MessageAttributes[key]
+	if !ok || attribute.StringValue == nil {
+		return ""
+	}
+
+	return *attribute.StringValue
 }
 
 // Set sets a header.
 func (c consumerMessageCarrier) Set(key, val string) {
-	c.msg.Attributes[key] = val
+	if c.msg.MessageAttributes == nil {
+		c.msg.MessageAttributes = make(map[string]types.MessageAttributeValue)
+	}
+
+	c.msg.MessageAttributes[key] = types.MessageAttributeValue{
+		DataType:    aws.String("String"),
+		StringValue: aws.String(val),
+	}
 }
 
 // Keys returns a slice of all key identifiers in the carrier.
 func (c consumerMessageCarrier) Keys() []string {
-	keys := make([]string, 0, len(c.msg.Attributes))
-	for key := range c.msg.Attributes {
+	keys := make([]string, 0, len(c.msg.MessageAttributes))
+	for key := range c.msg.MessageAttributes {
 		keys = append(keys, key)
 	}
 	return keys

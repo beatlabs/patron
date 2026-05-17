@@ -49,13 +49,6 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	var err error
 	ctx := context.Background()
 
-	cfg := observabilityConfig(name, version)
-
-	observabilityProvider, err := observability.Setup(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-
 	s := &Service{
 		name:    name,
 		version: version,
@@ -63,8 +56,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		sighupHandler: func() {
 			slog.Debug("sighup received: nothing setup")
 		},
-		observabilityCfg:      cfg,
-		observabilityProvider: observabilityProvider,
+		observabilityCfg: observabilityConfig(name, version),
 	}
 
 	optionErrors := make([]error, 0)
@@ -79,6 +71,12 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	if len(optionErrors) > 0 {
 		return nil, errors.Join(optionErrors...)
 	}
+
+	observabilityProvider, err := observability.Setup(ctx, s.observabilityCfg)
+	if err != nil {
+		return nil, err
+	}
+	s.observabilityProvider = observabilityProvider
 
 	s.setupOSSignal()
 

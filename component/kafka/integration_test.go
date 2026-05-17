@@ -23,6 +23,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -165,6 +166,17 @@ func TestKafkaComponent_Success(t *testing.T) {
 	test.AssertMetric(t, allMetrics, "kafka.consumer.offset.diff")
 	test.AssertMetric(t, allMetrics, "kafka.publish.count")
 	test.AssertMetric(t, allMetrics, "kafka.message.status")
+	assertMetricAbsent(t, allMetrics, "kafka.consumer.errors")
+}
+
+func assertMetricAbsent(t *testing.T, metrics []metricdata.Metrics, expectedName string) {
+	t.Helper()
+	for _, metric := range metrics {
+		if metric.Name == expectedName {
+			assert.Fail(t, "unexpected metric found", "metric %s should not be present", expectedName)
+			return
+		}
+	}
 }
 
 func TestKafkaComponent_FailAllRetries(t *testing.T) {

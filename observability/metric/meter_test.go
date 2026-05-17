@@ -2,6 +2,7 @@ package metric
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +12,66 @@ import (
 	"go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
+
+var errInstrumentCreation = errors.New("instrument creation failed")
+
+type failingMeterProvider struct{ noop.MeterProvider }
+
+func (f failingMeterProvider) Meter(string, ...metric.MeterOption) metric.Meter {
+	return failingMeter{}
+}
+
+type failingMeter struct{ noop.Meter }
+
+func (f failingMeter) Float64Histogram(string, ...metric.Float64HistogramOption) (metric.Float64Histogram, error) {
+	return panicFloat64Histogram{}, errInstrumentCreation
+}
+
+func (f failingMeter) Int64Histogram(string, ...metric.Int64HistogramOption) (metric.Int64Histogram, error) {
+	return panicInt64Histogram{}, errInstrumentCreation
+}
+
+func (f failingMeter) Int64Counter(string, ...metric.Int64CounterOption) (metric.Int64Counter, error) {
+	return panicInt64Counter{}, errInstrumentCreation
+}
+
+func (f failingMeter) Float64Gauge(string, ...metric.Float64GaugeOption) (metric.Float64Gauge, error) {
+	return panicFloat64Gauge{}, errInstrumentCreation
+}
+
+func (f failingMeter) Int64Gauge(string, ...metric.Int64GaugeOption) (metric.Int64Gauge, error) {
+	return panicInt64Gauge{}, errInstrumentCreation
+}
+
+type panicFloat64Histogram struct{ noop.Float64Histogram }
+
+func (p panicFloat64Histogram) Record(context.Context, float64, ...metric.RecordOption) {
+	panic("unexpected float64 histogram use")
+}
+
+type panicInt64Histogram struct{ noop.Int64Histogram }
+
+func (p panicInt64Histogram) Record(context.Context, int64, ...metric.RecordOption) {
+	panic("unexpected int64 histogram use")
+}
+
+type panicInt64Counter struct{ noop.Int64Counter }
+
+func (p panicInt64Counter) Add(context.Context, int64, ...metric.AddOption) {
+	panic("unexpected int64 counter use")
+}
+
+type panicFloat64Gauge struct{ noop.Float64Gauge }
+
+func (p panicFloat64Gauge) Record(context.Context, float64, ...metric.RecordOption) {
+	panic("unexpected float64 gauge use")
+}
+
+type panicInt64Gauge struct{ noop.Int64Gauge }
+
+func (p panicInt64Gauge) Record(context.Context, int64, ...metric.RecordOption) {
+	panic("unexpected int64 gauge use")
+}
 
 func TestSetupWithMeterProvider(t *testing.T) {
 	// Create a noop meter provider for testing
@@ -186,6 +247,32 @@ func TestMultipleMetersFromSamePackage(t *testing.T) {
 	counter2.Add(ctx, 2)
 	histogram.Record(ctx, 100.0)
 	gauge.Record(ctx, 50)
+}
+
+func TestMetricFactoriesFallbackToNoopOnInstrumentCreationError(t *testing.T) {
+	originalProvider := otel.GetMeterProvider()
+	SetupWithMeterProvider(failingMeterProvider{})
+	t.Cleanup(func() {
+		SetupWithMeterProvider(originalProvider)
+	})
+
+	ctx := context.Background()
+
+	assert.NotPanics(t, func() {
+		Float64Histogram("test-pkg", "test.histogram", "Test histogram", "ms").Record(ctx, 1.5)
+	})
+	assert.NotPanics(t, func() {
+		Int64Histogram("test-pkg", "test.int.histogram", "Test int histogram", "ms").Record(ctx, 1)
+	})
+	assert.NotPanics(t, func() {
+		Int64Counter("test-pkg", "test.counter", "Test counter", "1").Add(ctx, 1)
+	})
+	assert.NotPanics(t, func() {
+		Float64Gauge("test-pkg", "test.gauge", "Test gauge", "celsius").Record(ctx, 2.5)
+	})
+	assert.NotPanics(t, func() {
+		Int64Gauge("test-pkg", "test.int.gauge", "Test int gauge", "count").Record(ctx, 2)
+	})
 }
 
 func TestSetup_WithCustomResource(t *testing.T) {

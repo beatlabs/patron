@@ -93,16 +93,26 @@ func Setup(ctx context.Context, cfg Config) (*Provider, error) {
 // It forces a flush of metrics and traces, logs any errors encountered during flushing,
 // and shuts down the metric and trace providers.
 func (p *Provider) Shutdown(ctx context.Context) error {
-	err := p.mp.ForceFlush(ctx)
-	if err != nil {
-		slog.Error("failed to flush metrics", log.ErrorAttr(err))
-	}
-	err = p.mp.Shutdown(ctx)
-	if err != nil {
-		return err
+	if p == nil {
+		return nil
 	}
 
-	err = p.tp.ForceFlush(ctx)
+	if p.mp != nil {
+		err := p.mp.ForceFlush(ctx)
+		if err != nil {
+			slog.Error("failed to flush metrics", log.ErrorAttr(err))
+		}
+		err = p.mp.Shutdown(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	if p.tp == nil {
+		return nil
+	}
+
+	err := p.tp.ForceFlush(ctx)
 	if err != nil {
 		slog.Error("failed to flush traces", log.ErrorAttr(err))
 	}

@@ -189,10 +189,14 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 		case <-tickerStats.C:
 			err := c.stats(ctx, sub)
 			if err != nil {
-				slog.Error("failed to report sqsAPI stats", log.ErrorAttr(err))
+				logStatsError(err)
 			}
 		}
 	}
+}
+
+func logStatsError(err error) {
+	slog.Error("failed to report sqsAPI stats", log.ErrorAttr(err))
 }
 
 type subscription struct {

@@ -1,7 +1,10 @@
 package amqp
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -84,4 +87,31 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+
+func TestLogStatsError(t *testing.T) {
+	errOutput := captureAMQPLogOutput(t, func() {
+		logStatsError(errors.New("stats failed"))
+	})
+
+	assert.Contains(t, errOutput, "failed to report sqsAPI stats")
+	assert.NotContains(t, errOutput, "%v")
+	assert.Contains(t, errOutput, "stats failed")
+}
+
+func captureAMQPLogOutput(t *testing.T, fn func()) string {
+	t.Helper()
+
+	originalLogger := slog.Default()
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, nil))
+	defer func() {
+		slog.SetDefault(originalLogger)
+	}()
+
+	slog.SetDefault(logger)
+	fn()
+
+	return buf.String()
 }

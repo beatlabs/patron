@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const optionSuccessCase = "success"
+
 func TestFailureStrategy(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -59,7 +61,7 @@ func TestRetryWait(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionSuccessCase: {
 			args: args{retryWait: 5 * time.Second},
 		},
 		"negative retry wait": {
@@ -91,7 +93,7 @@ func TestBatchSize(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionSuccessCase: {
 			args: args{batchSize: 1},
 		},
 		"zero batch size": {
@@ -123,7 +125,7 @@ func TestBatchTimeout(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionSuccessCase: {
 			args: args{batchTimeout: 5 * time.Second},
 		},
 		"negative batch timeout": {
@@ -155,7 +157,7 @@ func TestNewSessionCallback(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionSuccessCase: {
 			args: args{sessionCallback: func() error {
 				return nil
 			}},

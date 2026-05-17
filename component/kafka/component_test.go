@@ -326,6 +326,87 @@ func TestConsumerHandler_BatchTimeoutFlush(t *testing.T) {
 	handler.ticker.Stop()
 }
 
+func TestResolveRetryError(t *testing.T) {
+	t.Parallel()
+
+	componentErr := errors.New("component error")
+	handlerErr := errors.New("handler error")
+
+	tests := map[string]struct {
+		componentError error
+		handlerError   error
+		expected       error
+	}{
+		"prefers component error": {
+			componentError: componentErr,
+			handlerError:   handlerErr,
+			expected:       componentErr,
+		},
+		"falls back to handler error": {
+			handlerError: handlerErr,
+			expected:     handlerErr,
+		},
+		"returns nil on success": {},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			assert.ErrorIs(t, resolveRetryError(tt.componentError, tt.handlerError), tt.expected)
+		})
+	}
+}
+
+func TestShouldRetryProcessingAttempt(t *testing.T) {
+	t.Parallel()
+
+	componentErr := errors.New("component error")
+	handlerErr := errors.New("handler error")
+
+	tests := map[string]struct {
+		componentError error
+		handlerError   error
+		current        uint32
+		retries        uint32
+		expectedErr    error
+		expectedRetry  bool
+	}{
+		"success does not retry": {},
+		"retries on component error before budget exhausted": {
+			componentError: componentErr,
+			current:        0,
+			retries:        1,
+			expectedErr:    componentErr,
+			expectedRetry:  true,
+		},
+		"retries on handler error before budget exhausted": {
+			handlerError:  handlerErr,
+			current:       0,
+			retries:       1,
+			expectedErr:   handlerErr,
+			expectedRetry: true,
+		},
+		"stops retrying when budget exhausted": {
+			handlerError:  handlerErr,
+			current:       1,
+			retries:       1,
+			expectedErr:   handlerErr,
+			expectedRetry: false,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			retry, err := shouldRetryProcessingAttempt(tt.componentError, tt.handlerError, tt.current, tt.retries)
+
+			assert.ErrorIs(t, err, tt.expectedErr)
+			assert.Equal(t, tt.expectedRetry, retry)
+		})
+	}
+}
+
 func TestExecuteFailureStrategy_Unknown(t *testing.T) {
 	ctx := context.Background()
 	tracer := kotel.NewTracer()

@@ -189,7 +189,9 @@ func (c *Component) processing(ctx context.Context) error {
 			cl.Close()
 		}
 
-		consumerErrorsInc(ctx, c.name)
+		if componentError != nil {
+			consumerErrorsInc(ctx, c.name)
+		}
 
 		shouldRetry, componentError := shouldRetryProcessingAttempt(componentError, handler.getErr(), i, retries)
 		if componentError == nil {

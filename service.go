@@ -49,13 +49,6 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 	var err error
 	ctx := context.Background()
 
-	cfg := observabilityConfig(name, version)
-
-	observabilityProvider, err := observability.Setup(ctx, cfg)
-	if err != nil {
-		return nil, err
-	}
-
 	s := &Service{
 		name:    name,
 		version: version,
@@ -63,8 +56,7 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		sighupHandler: func() {
 			slog.Debug("sighup received: nothing setup")
 		},
-		observabilityCfg:      cfg,
-		observabilityProvider: observabilityProvider,
+		observabilityCfg: observabilityConfig(name, version),
 	}
 
 	optionErrors := make([]error, 0)
@@ -80,6 +72,12 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 		return nil, errors.Join(optionErrors...)
 	}
 
+	observabilityProvider, err := observability.Setup(ctx, s.observabilityCfg)
+	if err != nil {
+		return nil, err
+	}
+	s.observabilityProvider = observabilityProvider
+
 	s.setupOSSignal()
 
 	return s, nil
@@ -87,8 +85,14 @@ func New(name, version string, options ...OptionFunc) (*Service, error) {
 
 // Run starts the provided components and blocks until termination or a component error.
 func (s *Service) Run(ctx context.Context, components ...Component) error {
-	if len(components) == 0 || components[0] == nil {
+	if len(components) == 0 {
 		return errors.New("components are empty or nil")
+	}
+
+	for _, component := range components {
+		if component == nil {
+			return errors.New("components are empty or nil")
+		}
 	}
 
 	defer func() {

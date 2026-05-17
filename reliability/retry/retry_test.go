@@ -113,6 +113,27 @@ func Test_Retry_Execute(t *testing.T) {
 	}
 }
 
+func Test_Retry_Execute_DoesNotSleepAfterLastFailure(t *testing.T) {
+	t.Parallel()
+
+	r, err := New(2, 300*time.Millisecond)
+	require.NoError(t, err)
+
+	action := &mockAction{errors: 2}
+
+	start := time.Now()
+	res, err := r.Execute(func() (any, error) {
+		return action.Execute()
+	})
+	elapsed := time.Since(start)
+
+	require.ErrorIs(t, err, errTest)
+	assert.Nil(t, res)
+	assert.Equal(t, 2, action.executions)
+	assert.GreaterOrEqual(t, elapsed, 300*time.Millisecond)
+	assert.Less(t, elapsed, 500*time.Millisecond)
+}
+
 type mockAction struct {
 	errors     int
 	executions int

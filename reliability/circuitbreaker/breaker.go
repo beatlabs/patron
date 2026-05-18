@@ -127,6 +127,9 @@ func (cb *CircuitBreaker) isClose() bool {
 
 // Execute the provided action.
 func (cb *CircuitBreaker) Execute(ctx context.Context, act Action) (any, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if cb.isOpen() {
 		breakerCounterInc(ctx, cb.name, opened)
 		return nil, errOpen

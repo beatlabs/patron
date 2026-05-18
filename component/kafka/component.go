@@ -201,7 +201,11 @@ func (c *Component) processing(ctx context.Context) error {
 		if shouldRetry {
 			slog.Error("failed run", slog.Uint64("current", uint64(i)), slog.Uint64("retries", uint64(c.retries)),
 				slog.Duration("wait", c.retryWait), log.ErrorAttr(componentError))
-			time.Sleep(c.retryWait)
+			select {
+			case <-time.After(c.retryWait):
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 			continue
 		}
 
@@ -291,10 +295,7 @@ func (c *consumerHandler) consume(ctx context.Context, cl *kgo.Client) error {
 				slog.Info("closing consumer", log.ErrorAttr(ctx.Err()))
 			}
 
-			c.mu.Lock()
-			err := c.flush(cl)
-			c.mu.Unlock()
-			if err != nil {
+			if err := c.flush(cl); err != nil {
 				return err
 			}
 
@@ -325,17 +326,16 @@ func (c *consumerHandler) consume(ctx context.Context, cl *kgo.Client) error {
 					c.mu.Unlock()
 					return
 				}
-
 				c.recBuf = append(c.recBuf, rec)
-				if uint(len(c.recBuf)) >= c.batchSize {
-					err := c.flush(cl)
-					if err != nil {
-						c.err = err
-						c.mu.Unlock()
+				shouldFlush := uint(len(c.recBuf)) >= c.batchSize
+				c.mu.Unlock()
+
+				if shouldFlush {
+					if err := c.flush(cl); err != nil {
+						c.setErr(err)
 						return
 					}
 				}
-				c.mu.Unlock()
 			}
 		})
 
@@ -345,10 +345,7 @@ func (c *consumerHandler) consume(ctx context.Context, cl *kgo.Client) error {
 
 		select {
 		case <-c.ticker.C:
-			c.mu.Lock()
-			err := c.flush(cl)
-			c.mu.Unlock()
-			if err != nil {
+			if err := c.flush(cl); err != nil {
 				return err
 			}
 		default:
@@ -357,19 +354,25 @@ func (c *consumerHandler) consume(ctx context.Context, cl *kgo.Client) error {
 }
 
 func (c *consumerHandler) flush(cl *kgo.Client) error {
+	// Snapshot and clear recBuf under the lock so proc and commit run outside it,
+	// preventing a deadlock when OnPartitionsAssigned fires during proc execution.
+	c.mu.Lock()
 	if len(c.recBuf) == 0 {
+		c.mu.Unlock()
 		return nil
 	}
+	records := c.recBuf
+	c.recBuf = make([]*kgo.Record, 0, cap(c.recBuf))
+	c.mu.Unlock()
 
-	recordSpans := make([]recordSpan, 0, len(c.recBuf))
-	for _, rec := range c.recBuf {
+	recordSpans := make([]recordSpan, 0, len(records))
+	for _, rec := range records {
 		ctx, sp := c.getContextWithCorrelation(rec)
 		messageStatusCountInc(ctx, messageProcessed, c.group, rec.Topic)
 		rec.Context = ctx
 		recordSpans = append(recordSpans, recordSpan{record: rec, span: sp})
 	}
 
-	records := c.recBuf
 	if c.batchMessageDeduplication {
 		records = deduplicateRecords(records)
 	}
@@ -408,8 +411,6 @@ func (c *consumerHandler) flush(cl *kgo.Client) error {
 		}
 	}
 
-	c.recBuf = c.recBuf[:0]
-
 	return nil
 }
 
@@ -422,7 +423,7 @@ func (c *consumerHandler) executeFailureStrategy(recordSpans []recordSpan, err e
 			messageStatusCountInc(rs.record.Context, messageErrored, c.group, rs.record.Topic)
 		}
 		slog.Error("could not process message(s)")
-		c.err = err
+		c.setErr(err)
 		return err
 	case SkipStrategy:
 		for _, rs := range recordSpans {

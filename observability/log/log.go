@@ -3,8 +3,10 @@ package log
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
+	"sync"
 )
 
 // Config represents the configuration for setting up the logger.
@@ -16,16 +18,26 @@ type Config struct {
 
 type ctxKey struct{}
 
-var logCfg *Config
+var (
+	logCfg   *Config
+	logCfgMu sync.Mutex
+)
 
 // Setup sets up the logger with the given configuration.
 func Setup(cfg *Config) error {
+	logCfgMu.Lock()
 	logCfg = cfg
+	logCfgMu.Unlock()
 	return setDefaultLogger(cfg)
 }
 
 // SetLevel sets the logger level.
 func SetLevel(lvl string) error {
+	logCfgMu.Lock()
+	defer logCfgMu.Unlock()
+	if logCfg == nil {
+		return errors.New("logger not configured, call Setup first")
+	}
 	logCfg.Level = lvl
 	return setDefaultLogger(logCfg)
 }

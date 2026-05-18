@@ -311,9 +311,7 @@ func TestConsumerHandler_BatchTimeoutFlush(t *testing.T) {
 
 	select {
 	case <-handler.ticker.C:
-		handler.mu.Lock()
 		err := handler.flush(nil)
-		handler.mu.Unlock()
 		require.NoError(t, err)
 	case <-time.After(50 * time.Millisecond):
 		t.Fatal("ticker did not fire within expected time")

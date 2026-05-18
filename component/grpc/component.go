@@ -67,9 +67,15 @@ func (c *Component) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
 
+	stopCtx, stopCancel := context.WithCancel(context.Background())
+	defer stopCancel()
+
 	go func() {
-		<-ctx.Done()
-		c.srv.GracefulStop()
+		select {
+		case <-ctx.Done():
+			c.srv.GracefulStop()
+		case <-stopCtx.Done():
+		}
 	}()
 
 	slog.Debug("gRPC component listening", slog.Int("port", c.port))

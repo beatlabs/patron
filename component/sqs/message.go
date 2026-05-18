@@ -63,7 +63,7 @@ func (m message) ID() string {
 }
 
 func (m message) Body() []byte {
-	return []byte(*m.msg.Body)
+	return []byte(aws.ToString(m.msg.Body))
 }
 
 func (m message) Span() trace.Span {

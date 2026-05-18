@@ -167,7 +167,7 @@ func TestProcessLoop_LogsStatsError(t *testing.T) {
 	})
 
 	require.Error(t, err)
-	assert.Contains(t, errOutput, "failed to report sqsAPI stats")
+	assert.Contains(t, errOutput, "failed to report amqp stats")
 	assert.NotContains(t, errOutput, "%v")
 }
 

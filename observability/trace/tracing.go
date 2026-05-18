@@ -2,6 +2,7 @@ package trace
 
 import (
 	"context"
+	"sync"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -12,11 +13,20 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var tracer trace.Tracer
+var (
+	globalTracer   trace.Tracer
+	globalTracerMu sync.RWMutex
+)
 
 // StartSpan starts a span with the given name and context.
 func StartSpan(ctx context.Context, name string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	return tracer.Start(ctx, name, opts...) //nolint:spancheck
+	globalTracerMu.RLock()
+	t := globalTracer
+	globalTracerMu.RUnlock()
+	if t == nil {
+		return ctx, trace.SpanFromContext(ctx)
+	}
+	return t.Start(ctx, name, opts...) //nolint:spancheck
 }
 
 // SetupGRPC configures the global tracer with the OTLP gRPC exporter.
@@ -40,7 +50,9 @@ func Setup(name string, res *resource.Resource, exp sdktrace.SpanExporter) *sdkt
 	)
 	otel.SetTextMapPropagator(prop)
 
-	tracer = tp.Tracer(name)
+	globalTracerMu.Lock()
+	globalTracer = tp.Tracer(name)
+	globalTracerMu.Unlock()
 
 	return tp
 }

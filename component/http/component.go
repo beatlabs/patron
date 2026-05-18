@@ -123,7 +123,7 @@ func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 // Run starts the HTTP server and blocks until the context is canceled or the server fails.
 func (c *Component) Run(ctx context.Context) error {
 	c.mu.Lock()
-	chFail := make(chan error)
+	chFail := make(chan error, 1)
 	srv := c.createHTTPServer()
 	go c.listenAndServe(srv, chFail)
 	c.mu.Unlock()

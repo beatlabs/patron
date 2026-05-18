@@ -146,7 +146,7 @@ func New(name, queueName string, sqsAPI API, proc ProcessorFunc, oo ...OptionFun
 
 // Run starts the consumer processing loop messages.
 func (c *Component) Run(ctx context.Context) error {
-	chErr := make(chan error)
+	chErr := make(chan error, 1)
 	consumeDone := make(chan struct{})
 
 	go func() {

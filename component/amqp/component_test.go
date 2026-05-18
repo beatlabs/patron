@@ -99,7 +99,7 @@ func TestLogStatsError(t *testing.T) {
 		logStatsError(errors.New("stats failed"))
 	})
 
-	assert.Contains(t, errOutput, "failed to report sqsAPI stats")
+	assert.Contains(t, errOutput, "failed to report amqp stats")
 	assert.NotContains(t, errOutput, "%v")
 	assert.Contains(t, errOutput, "stats failed")
 }

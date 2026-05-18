@@ -196,7 +196,7 @@ func (c *Component) processLoop(ctx context.Context, sub subscription) error {
 }
 
 func logStatsError(err error) {
-	slog.Error("failed to report sqsAPI stats", log.ErrorAttr(err))
+	slog.Error("failed to report amqp stats", log.ErrorAttr(err))
 }
 
 type subscription struct {

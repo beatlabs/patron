@@ -4,14 +4,13 @@ package observability
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"github.com/beatlabs/patron/observability/log"
 	patronmetric "github.com/beatlabs/patron/observability/metric"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -72,14 +71,13 @@ func Setup(ctx context.Context, cfg Config) (*Provider, error) {
 		return nil, err
 	}
 
-	otel.SetTextMapPropagator(propagation.TraceContext{})
-
 	metricProvider, err := patronmetric.Setup(ctx, res)
 	if err != nil {
 		return nil, err
 	}
 	traceProvider, err := patrontrace.SetupGRPC(ctx, cfg.Name, res)
 	if err != nil {
+		_ = metricProvider.Shutdown(ctx)
 		return nil, err
 	}
 
@@ -97,27 +95,27 @@ func (p *Provider) Shutdown(ctx context.Context) error {
 		return nil
 	}
 
+	var errs []error
+
 	if p.mp != nil {
-		err := p.mp.ForceFlush(ctx)
-		if err != nil {
+		if err := p.mp.ForceFlush(ctx); err != nil {
 			slog.Error("failed to flush metrics", log.ErrorAttr(err))
 		}
-		err = p.mp.Shutdown(ctx)
-		if err != nil {
-			return err
+		if err := p.mp.Shutdown(ctx); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
-	if p.tp == nil {
-		return nil
+	if p.tp != nil {
+		if err := p.tp.ForceFlush(ctx); err != nil {
+			slog.Error("failed to flush traces", log.ErrorAttr(err))
+		}
+		if err := p.tp.Shutdown(ctx); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	err := p.tp.ForceFlush(ctx)
-	if err != nil {
-		slog.Error("failed to flush traces", log.ErrorAttr(err))
-	}
-
-	return p.tp.Shutdown(ctx)
+	return errors.Join(errs...)
 }
 
 func createResource(name, version string) (*resource.Resource, error) {

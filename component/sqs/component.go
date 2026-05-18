@@ -146,7 +146,7 @@ func New(name, queueName string, sqsAPI API, proc ProcessorFunc, oo ...OptionFun
 
 // Run starts the consumer processing loop messages.
 func (c *Component) Run(ctx context.Context) error {
-	chErr := make(chan error)
+	chErr := make(chan error, 1)
 	consumeDone := make(chan struct{})
 
 	go func() {
@@ -310,7 +310,7 @@ func getAttributeFloat64(attr map[string]string, key string) (float64, error) {
 	}
 	value, err := strconv.ParseFloat(valueString, 64)
 	if err != nil {
-		return 0.0, fmt.Errorf("could not convert %s to float64", valueString)
+		return 0.0, fmt.Errorf("could not convert %s to float64: %w", valueString, err)
 	}
 	return value, nil
 }
@@ -322,7 +322,7 @@ func getOptionalAttributeFloat64(attr map[string]string, key string) (float64, e
 	}
 	value, err := strconv.ParseFloat(valueString, 64)
 	if err != nil {
-		return 0.0, fmt.Errorf("could not convert %s to float64", valueString)
+		return 0.0, fmt.Errorf("could not convert %s to float64: %w", valueString, err)
 	}
 	return value, nil
 }

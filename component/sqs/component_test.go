@@ -205,7 +205,7 @@ func TestGetAttributeFloat64(t *testing.T) {
 			got, err := getAttributeFloat64(tt.attrs, tt.key)
 
 			if tt.expectedErr != "" {
-				require.EqualError(t, err, tt.expectedErr)
+				require.ErrorContains(t, err, tt.expectedErr)
 				return
 			}
 

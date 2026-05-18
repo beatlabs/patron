@@ -67,6 +67,7 @@ func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	tx, err := c.conn.BeginTx(ctx, opts)
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -81,6 +82,9 @@ func (c *Conn) Close(ctx context.Context) error {
 	start := time.Now()
 	err := c.conn.Close()
 	observeDuration(ctx, start, op, err)
+	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
+	}
 	return err
 }
 
@@ -92,6 +96,9 @@ func (c *Conn) Exec(ctx context.Context, query string, args ...any) (sql.Result,
 	start := time.Now()
 	res, err := c.conn.ExecContext(ctx, query, args...)
 	observeDuration(ctx, start, op, err)
+	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
+	}
 	return res, err
 }
 
@@ -103,6 +110,9 @@ func (c *Conn) Ping(ctx context.Context) error {
 	start := time.Now()
 	err := c.conn.PingContext(ctx)
 	observeDuration(ctx, start, op, err)
+	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
+	}
 	return err
 }
 
@@ -115,6 +125,7 @@ func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	stmt, err := c.conn.PrepareContext(ctx, query)
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 	return &Stmt{stmt: stmt, connInfo: c.connInfo, query: query}, nil
@@ -129,6 +140,7 @@ func (c *Conn) Query(ctx context.Context, query string, args ...any) (*sql.Rows,
 	rows, err := c.conn.QueryContext(ctx, query, args...) // nolint:sqlclosecheck
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -195,6 +207,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	tx, err := db.db.BeginTx(ctx, opts)
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 	return &Tx{tx: tx, connInfo: db.connInfo}, nil
@@ -208,6 +221,9 @@ func (db *DB) Close(ctx context.Context) error {
 	start := time.Now()
 	err := db.db.Close()
 	observeDuration(ctx, start, op, err)
+	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
+	}
 	return err
 }
 
@@ -220,6 +236,7 @@ func (db *DB) Conn(ctx context.Context) (*Conn, error) {
 	conn, err := db.db.Conn(ctx)
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -246,6 +263,7 @@ func (db *DB) Exec(ctx context.Context, query string, args ...any) (sql.Result, 
 	res, err := db.db.ExecContext(ctx, query, args...)
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -260,6 +278,9 @@ func (db *DB) Ping(ctx context.Context) error {
 	start := time.Now()
 	err := db.db.PingContext(ctx)
 	observeDuration(ctx, start, op, err)
+	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
+	}
 	return err
 }
 
@@ -272,6 +293,7 @@ func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	stmt, err := db.db.PrepareContext(ctx, query)
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -287,6 +309,7 @@ func (db *DB) Query(ctx context.Context, query string, args ...any) (*sql.Rows, 
 	rows, err := db.db.QueryContext(ctx, query, args...) // nolint:sqlclosecheck
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -345,6 +368,9 @@ func (s *Stmt) Close(ctx context.Context) error {
 	start := time.Now()
 	err := s.stmt.Close()
 	observeDuration(ctx, start, op, err)
+	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
+	}
 	return err
 }
 
@@ -357,6 +383,7 @@ func (s *Stmt) Exec(ctx context.Context, args ...any) (sql.Result, error) {
 	res, err := s.stmt.ExecContext(ctx, args...)
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -372,6 +399,7 @@ func (s *Stmt) Query(ctx context.Context, args ...any) (*sql.Rows, error) {
 	rows, err := s.stmt.QueryContext(ctx, args...) // nolint:sqlclosecheck
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -403,6 +431,9 @@ func (tx *Tx) Commit(ctx context.Context) error {
 	start := time.Now()
 	err := tx.tx.Commit()
 	observeDuration(ctx, start, op, err)
+	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
+	}
 	return err
 }
 
@@ -415,6 +446,7 @@ func (tx *Tx) Exec(ctx context.Context, query string, args ...any) (sql.Result, 
 	res, err := tx.tx.ExecContext(ctx, query, args...)
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -430,6 +462,7 @@ func (tx *Tx) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	stmt, err := tx.tx.PrepareContext(ctx, query)
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 
@@ -445,6 +478,7 @@ func (tx *Tx) Query(ctx context.Context, query string, args ...any) (*sql.Rows, 
 	rows, err := tx.tx.QueryContext(ctx, query, args...) // nolint:sqlclosecheck
 	observeDuration(ctx, start, op, err)
 	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
 		return nil, err
 	}
 	return rows, nil
@@ -469,6 +503,9 @@ func (tx *Tx) Rollback(ctx context.Context) error {
 	start := time.Now()
 	err := tx.tx.Rollback()
 	observeDuration(ctx, start, op, err)
+	if err != nil {
+		patrontrace.SetSpanError(sp, op, err)
+	}
 	return err
 }
 

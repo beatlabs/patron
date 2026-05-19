@@ -123,8 +123,13 @@ type producerMessageCarrier struct {
 }
 
 // Get retrieves a single value for a given key.
-func (c producerMessageCarrier) Get(_ string) string {
-	return ""
+func (c producerMessageCarrier) Get(key string) string {
+	val, ok := c.msg.Headers[key]
+	if !ok {
+		return ""
+	}
+	s, _ := val.(string)
+	return s
 }
 
 // Set sets a header.

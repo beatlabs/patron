@@ -40,16 +40,16 @@ func FromResponse(ctx context.Context, rsp *http.Response, payload any) error {
 		return err
 	}
 
+	defer func() {
+		if err := rsp.Body.Close(); err != nil {
+			log.FromContext(ctx).Error("failed to close response body", log.ErrorAttr(err))
+		}
+	}()
+
 	buf, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		err := rsp.Body.Close()
-		if err != nil {
-			log.FromContext(ctx).Error("failed to close response body", log.ErrorAttr(err))
-		}
-	}()
 
 	return json.DecodeRaw(buf, payload)
 }

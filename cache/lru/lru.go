@@ -9,11 +9,11 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-const cacheTypeAttrbute = "cache.type"
+const cacheTypeAttribute = "cache.type"
 
 var (
-	lruAttribute      = attribute.String(cacheTypeAttrbute, "lru")
-	lruEvictAttribute = attribute.String(cacheTypeAttrbute, "lru-evict")
+	lruAttribute      = attribute.String(cacheTypeAttribute, "lru")
+	lruEvictAttribute = attribute.String(cacheTypeAttribute, "lru-evict")
 )
 
 // Cache encapsulates a thread-safe fixed size LRU cache.
@@ -63,10 +63,10 @@ func newFunction[k comparable, v any](chc *lru.Cache[k, v], typeAttr attribute.K
 func (c *Cache[k, v]) Get(ctx context.Context, key k) (any, bool, error) {
 	value, ok := c.cache.Get(key)
 	if !ok {
-		cache.ObserveMiss(ctx, lruAttribute, c.useCaseAttribute, c.typeAttribute)
+		cache.ObserveMiss(ctx, c.typeAttribute, c.useCaseAttribute)
 		return nil, false, nil
 	}
-	cache.ObserveHit(ctx, lruAttribute, c.useCaseAttribute, c.typeAttribute)
+	cache.ObserveHit(ctx, c.typeAttribute, c.useCaseAttribute)
 	return value, true, nil
 }
 

@@ -36,3 +36,6 @@ docker-compose/tempo-data/
 .github/aw/
 .gitnexus
 .claude-flow/
+
+# omo
+.omo

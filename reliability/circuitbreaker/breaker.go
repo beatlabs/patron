@@ -91,13 +91,10 @@ func New(name string, s Setting) (*CircuitBreaker, error) {
 	}
 
 	return &CircuitBreaker{
-		name:       name,
-		set:        s,
-		status:     closed,
-		executions: 0,
-		failures:   0,
-		retries:    0,
-		nextRetry:  tsFuture,
+		name:      name,
+		set:       s,
+		status:    closed,
+		nextRetry: tsFuture,
 	}, nil
 }
 
@@ -119,7 +116,7 @@ func (cb *CircuitBreaker) isOpen() bool {
 	return false
 }
 
-func (cb *CircuitBreaker) isClose() bool {
+func (cb *CircuitBreaker) isClosed() bool {
 	cb.RLock()
 	defer cb.RUnlock()
 	return cb.status == closed

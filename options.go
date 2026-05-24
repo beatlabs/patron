@@ -31,7 +31,7 @@ func WithLogFields(attrs ...slog.Attr) OptionFunc {
 
 		for _, attr := range attrs {
 			if attr.Key == srv || attr.Key == ver || attr.Key == host {
-				// don't override
+				slog.Warn("ignoring reserved log field", slog.String("key", attr.Key))
 				continue
 			}
 

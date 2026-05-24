@@ -1,6 +1,7 @@
 package patron
 
 import (
+	"bytes"
 	"errors"
 	"log/slog"
 	"testing"
@@ -50,6 +51,24 @@ func TestLogFields(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLogFields_ReservedKeysWarnAndIgnore(t *testing.T) {
+	var buf bytes.Buffer
+	originalLogger := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, nil)))
+	defer slog.SetDefault(originalLogger)
+
+	svc := &Service{
+		observabilityCfg: observability.Config{},
+	}
+
+	err := WithLogFields(slog.String("srv", "override"), slog.String("env", "dev"))(svc)
+	require.NoError(t, err)
+
+	assert.Contains(t, buf.String(), "ignoring reserved log field")
+	assert.Contains(t, buf.String(), "key=srv")
+	assert.Equal(t, []slog.Attr{slog.String("env", "dev")}, svc.observabilityCfg.LogConfig.Attributes)
 }
 
 func TestSIGHUP(t *testing.T) {

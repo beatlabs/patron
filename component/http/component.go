@@ -64,7 +64,6 @@ func writeTimeout() (time.Duration, error) {
 	return timeout, nil
 }
 
-// Component implementation of an HTTP router.
 // Component implements an HTTP server with sane defaults and graceful shutdown.
 type Component struct {
 	port                int
@@ -78,7 +77,6 @@ type Component struct {
 	keyFile             string
 }
 
-// New creates an HTTP component configurable by functional options.
 // New creates an HTTP Component configurable by functional options.
 func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 	if handler == nil {
@@ -119,7 +117,6 @@ func New(handler http.Handler, oo ...OptionFunc) (*Component, error) {
 	return cmp, nil
 }
 
-// Run starts the HTTP server and returns only if listening and/or serving failed, or if the context was canceled.
 // Run starts the HTTP server and blocks until the context is canceled or the server fails.
 func (c *Component) Run(ctx context.Context) error {
 	c.mu.Lock()

@@ -66,7 +66,7 @@ func WithCache(cache cache.TTLCache, ageBounds httpcache.Age) RouteOptionFunc {
 		}
 		m, err := patronhttp.NewCaching(rc)
 		if err != nil {
-			return errors.Join(err)
+			return err
 		}
 		r.middlewares = append(r.middlewares, m)
 		return nil

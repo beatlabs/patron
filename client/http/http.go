@@ -85,10 +85,6 @@ func (tc *TracedClient) do(req *http.Request) (*http.Response, error) {
 	return rsp, nil
 }
 
-func opName(method, scheme, host string) string {
-	return method + " " + scheme + "://" + host
-}
-
 const (
 	encodingGzip    = "gzip"
 	encodingDeflate = "deflate"

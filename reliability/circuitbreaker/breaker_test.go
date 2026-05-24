@@ -101,7 +101,7 @@ func TestCircuitBreaker_isOpen(t *testing.T) {
 	}
 }
 
-func TestCircuitBreaker_isClose(t *testing.T) {
+func TestCircuitBreaker_isClosed(t *testing.T) {
 	t.Parallel()
 
 	type fields struct {
@@ -124,7 +124,7 @@ func TestCircuitBreaker_isClose(t *testing.T) {
 				status:    tt.fields.status,
 				nextRetry: tt.fields.nextRetry,
 			}
-			assert.Equal(t, tt.want, cb.isClose())
+			assert.Equal(t, tt.want, cb.isClosed())
 		})
 	}
 }
@@ -141,7 +141,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
-	assert.True(t, cb.isClose())
+	assert.True(t, cb.isClosed())
 	assert.Equal(t, tsFuture, cb.nextRetry)
 	// will transition to open
 	_, err = cb.Execute(context.Background(), testFailureAction)
@@ -190,7 +190,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	assert.Equal(t, uint(0), cb.failures)
 	assert.Equal(t, uint(0), cb.executions)
 	assert.Equal(t, uint(0), cb.retries)
-	assert.True(t, cb.isClose())
+	assert.True(t, cb.isClosed())
 	assert.Equal(t, tsFuture, cb.nextRetry)
 }
 

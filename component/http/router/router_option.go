@@ -63,9 +63,31 @@ func WithMiddlewares(mm ...middleware.Func) OptionFunc {
 	}
 }
 
+// WithProfiling enables the profiling routes.
+func WithProfiling(mm ...middleware.Func) OptionFunc {
+	return func(cfg *Config) error {
+		cfg.enableProfiling = true
+		cfg.profilingMiddlewares = append(cfg.profilingMiddlewares, mm...)
+		return nil
+	}
+}
+
+// WithProfilingMiddlewares applies middlewares to the profiling routes.
+func WithProfilingMiddlewares(mm ...middleware.Func) OptionFunc {
+	return func(cfg *Config) error {
+		if len(mm) == 0 {
+			return errors.New("middlewares are empty")
+		}
+		cfg.enableProfiling = true
+		cfg.profilingMiddlewares = mm
+		return nil
+	}
+}
+
 // WithExpVarProfiling option for enabling expVar in profiling endpoints.
 func WithExpVarProfiling() OptionFunc {
 	return func(cfg *Config) error {
+		cfg.enableProfiling = true
 		cfg.enableProfilingExpVar = true
 		return nil
 	}

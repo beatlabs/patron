@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	patronhttp "github.com/beatlabs/patron/component/http/middleware"
 	"github.com/beatlabs/patron/observability/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -54,10 +55,10 @@ func TestProfilingRoutes(t *testing.T) {
 func createServer(enableExpVar bool) *httptest.Server {
 	mux := http.NewServeMux()
 	for _, route := range ProfilingRoutes(enableExpVar) {
-		mux.HandleFunc(route.path, route.handler)
+		mux.Handle(route.path, patronhttp.Chain(route.handler, route.middlewares...))
 	}
 	for _, route := range LoggingRoutes() {
-		mux.HandleFunc(route.path, route.handler)
+		mux.Handle(route.path, patronhttp.Chain(route.handler, route.middlewares...))
 	}
 
 	return httptest.NewServer(mux)
@@ -119,4 +120,48 @@ func TestLoggingRoutes(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 		require.NoError(t, resp.Body.Close())
 	})
+}
+
+func TestProfilingRoutesWithMiddleware(t *testing.T) {
+	middleware := func(_ http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusUnauthorized)
+		})
+	}
+
+	mux := http.NewServeMux()
+	for _, route := range ProfilingRoutes(false, middleware) {
+		mux.Handle(route.path, patronhttp.Chain(route.handler, route.middlewares...))
+	}
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL+"/debug/pprof/", nil)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	require.NoError(t, resp.Body.Close())
+}
+
+func TestLoggingRoutesWithMiddleware(t *testing.T) {
+	middleware := func(_ http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusUnauthorized)
+		})
+	}
+
+	mux := http.NewServeMux()
+	for _, route := range LoggingRoutes(middleware) {
+		mux.Handle(route.path, patronhttp.Chain(route.handler, route.middlewares...))
+	}
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, server.URL+"/debug/log/debug", nil)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	require.NoError(t, resp.Body.Close())
 }

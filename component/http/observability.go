@@ -6,14 +6,16 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	patronhttp "github.com/beatlabs/patron/component/http/middleware"
 	"github.com/beatlabs/patron/observability/log"
 )
 
-func ProfilingRoutes(enableExpVar bool) []*Route {
+func ProfilingRoutes(enableExpVar bool, middlewares ...patronhttp.Func) []*Route {
 	var routes []*Route
 
 	routeFunc := func(path string, handler http.HandlerFunc) *Route {
 		route, _ := NewRoute(path, handler)
+		route.middlewares = append(route.middlewares, middlewares...)
 		return route
 	}
 
@@ -51,7 +53,7 @@ func expVars(w http.ResponseWriter, _ *http.Request) {
 }
 
 // LoggingRoutes returns a routes relates to logs.
-func LoggingRoutes() []*Route {
+func LoggingRoutes(middlewares ...patronhttp.Func) []*Route {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		lvl := r.PathValue("level")
 		if lvl == "" {
@@ -68,5 +70,6 @@ func LoggingRoutes() []*Route {
 	}
 
 	route, _ := NewRoute("POST /debug/log/{level}", handler)
+	route.middlewares = append(route.middlewares, middlewares...)
 	return []*Route{route}
 }

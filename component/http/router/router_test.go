@@ -91,7 +91,7 @@ func TestVerifyRouter(t *testing.T) {
 		require.NoError(t, err)
 		rsp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
-		assertResponse(t, rsp)
+		assert.Equal(t, http.StatusNotFound, rsp.StatusCode)
 		require.NoError(t, rsp.Body.Close())
 	})
 
@@ -103,4 +103,62 @@ func TestVerifyRouter(t *testing.T) {
 		assertResponse(t, rsp)
 		require.NoError(t, rsp.Body.Close())
 	})
+}
+
+func TestProfiling(t *testing.T) {
+	router, err := New(WithProfiling())
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, srv.URL+"/debug/pprof", nil)
+	require.NoError(t, err)
+	rsp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rsp.StatusCode)
+	require.NoError(t, rsp.Body.Close())
+}
+
+func TestProfilingMiddlewares(t *testing.T) {
+	deny := func(_ http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusUnauthorized)
+		})
+	}
+
+	router, err := New(WithProfilingMiddlewares(deny))
+	require.NoError(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	t.Run("protects pprof endpoint", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, srv.URL+"/debug/pprof", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+		require.NoError(t, rsp.Body.Close())
+	})
+
+	t.Run("does not protect alive endpoint", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, srv.URL+"/alive", nil)
+		require.NoError(t, err)
+		rsp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rsp.StatusCode)
+		require.NoError(t, rsp.Body.Close())
+	})
+}
+
+func TestProfilingMiddlewaresOption(t *testing.T) {
+	cfg := &Config{}
+	err := WithProfilingMiddlewares(func(next http.Handler) http.Handler { return next })(cfg)
+	require.NoError(t, err)
+	assert.True(t, cfg.enableProfiling)
+	assert.Len(t, cfg.profilingMiddlewares, 1)
+
+	err = WithProfilingMiddlewares()(cfg)
+	assert.EqualError(t, err, "middlewares are empty")
 }

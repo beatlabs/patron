@@ -39,7 +39,9 @@ func TestOpen(t *testing.T) {
 			got, err := Open(tt.args.driverName, dsn)
 
 			if tt.expectedErr != "" {
-				require.EqualError(t, err, tt.expectedErr)
+				require.Error(t, err)
+				require.ErrorContains(t, err, "db.Open")
+				require.ErrorContains(t, err, tt.expectedErr)
 				assert.Nil(t, got)
 			} else {
 				require.NoError(t, err)

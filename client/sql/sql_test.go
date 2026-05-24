@@ -125,6 +125,168 @@ func (m *mockTx) Rollback() error {
 	return nil
 }
 
+type failingDriver struct {
+	conn *failingConn
+}
+
+func (d *failingDriver) Open(_ string) (driver.Conn, error) {
+	return d.conn, nil
+}
+
+type failingConn struct {
+	beginTxErr error
+	closeErr   error
+	execErr    error
+	pingErr    error
+	prepareErr error
+	queryErr   error
+	tx         *failingTx
+	stmt       *failingStmt
+}
+
+func (c *failingConn) Prepare(_ string) (driver.Stmt, error) {
+	if c.prepareErr != nil {
+		return nil, c.prepareErr
+	}
+
+	if c.stmt != nil {
+		return c.stmt, nil
+	}
+
+	return &failingStmt{}, nil
+}
+
+func (c *failingConn) Close() error {
+	return c.closeErr
+}
+
+func (c *failingConn) Begin() (driver.Tx, error) {
+	if c.beginTxErr != nil {
+		return nil, c.beginTxErr
+	}
+
+	if c.tx != nil {
+		return c.tx, nil
+	}
+
+	return &failingTx{}, nil
+}
+
+func (c *failingConn) BeginTx(_ context.Context, _ driver.TxOptions) (driver.Tx, error) {
+	return c.Begin()
+}
+
+func (c *failingConn) Ping(_ context.Context) error {
+	return c.pingErr
+}
+
+func (c *failingConn) ExecContext(_ context.Context, _ string, _ []driver.NamedValue) (driver.Result, error) {
+	if c.execErr != nil {
+		return nil, c.execErr
+	}
+
+	return &mockResult{}, nil
+}
+
+func (c *failingConn) QueryContext(_ context.Context, _ string, _ []driver.NamedValue) (driver.Rows, error) {
+	if c.queryErr != nil {
+		return nil, c.queryErr
+	}
+
+	return &mockRows{}, nil
+}
+
+type failingStmt struct {
+	closeErr error
+	execErr  error
+	queryErr error
+}
+
+func (s *failingStmt) Close() error {
+	return s.closeErr
+}
+
+func (s *failingStmt) NumInput() int {
+	return -1
+}
+
+func (s *failingStmt) Exec(_ []driver.Value) (driver.Result, error) {
+	if s.execErr != nil {
+		return nil, s.execErr
+	}
+
+	return &mockResult{}, nil
+}
+
+func (s *failingStmt) Query(_ []driver.Value) (driver.Rows, error) {
+	if s.queryErr != nil {
+		return nil, s.queryErr
+	}
+
+	return &mockRows{}, nil
+}
+
+func (s *failingStmt) ExecContext(_ context.Context, _ []driver.NamedValue) (driver.Result, error) {
+	if s.execErr != nil {
+		return nil, s.execErr
+	}
+
+	return &mockResult{}, nil
+}
+
+func (s *failingStmt) QueryContext(_ context.Context, _ []driver.NamedValue) (driver.Rows, error) {
+	if s.queryErr != nil {
+		return nil, s.queryErr
+	}
+
+	return &mockRows{}, nil
+}
+
+type failingTx struct {
+	commitErr   error
+	rollbackErr error
+	execErr     error
+	prepareErr  error
+	queryErr    error
+	stmt        *failingStmt
+}
+
+func (tx *failingTx) Commit() error {
+	return tx.commitErr
+}
+
+func (tx *failingTx) Rollback() error {
+	return tx.rollbackErr
+}
+
+func (tx *failingTx) ExecContext(_ context.Context, _ string, _ []driver.NamedValue) (driver.Result, error) {
+	if tx.execErr != nil {
+		return nil, tx.execErr
+	}
+
+	return &mockResult{}, nil
+}
+
+func (tx *failingTx) QueryContext(_ context.Context, _ string, _ []driver.NamedValue) (driver.Rows, error) {
+	if tx.queryErr != nil {
+		return nil, tx.queryErr
+	}
+
+	return &mockRows{}, nil
+}
+
+func (tx *failingTx) PrepareContext(_ context.Context, _ string) (driver.Stmt, error) {
+	if tx.prepareErr != nil {
+		return nil, tx.prepareErr
+	}
+
+	if tx.stmt != nil {
+		return tx.stmt, nil
+	}
+
+	return &failingStmt{}, nil
+}
+
 func TestDSNInfo(t *testing.T) {
 	info := DSNInfo{
 		Driver:   "mysql://",
@@ -313,6 +475,7 @@ func TestOpen_InvalidDriver(t *testing.T) {
 	// Should return error for unknown driver
 	require.Error(t, err)
 	assert.Nil(t, db)
+	assert.ErrorContains(t, err, "db.Open")
 }
 
 func TestOpen_Success(t *testing.T) {
@@ -343,4 +506,123 @@ func TestPackageNameConstant(t *testing.T) {
 
 func TestDurationHistogramInitialized(t *testing.T) {
 	assert.NotNil(t, durationHistogram)
+}
+
+func TestWrapError(t *testing.T) {
+	err := errors.New("boom")
+
+	wrapped := wrapError("db.Exec", err)
+
+	require.Error(t, wrapped)
+	require.ErrorContains(t, wrapped, "db.Exec")
+	require.ErrorIs(t, wrapped, err)
+	assert.NoError(t, wrapError("db.Exec", nil))
+}
+
+func TestDBExec_WrapsError(t *testing.T) {
+	t.Parallel()
+
+	baseErr := errors.New("exec failed")
+	driverName := "failing-driver-db-exec"
+	sql.Register(driverName, &failingDriver{conn: &failingConn{execErr: baseErr}})
+	stdDB, err := sql.Open(driverName, "")
+	require.NoError(t, err)
+	defer stdDB.Close()
+
+	db := FromDB(stdDB)
+	res, err := db.Exec(context.Background(), "INSERT INTO test VALUES (?)", 1)
+
+	assert.Nil(t, res)
+	require.Error(t, err)
+	require.ErrorContains(t, err, "db.Exec")
+	require.ErrorIs(t, err, baseErr)
+}
+
+func TestConnPrepare_WrapsError(t *testing.T) {
+	t.Parallel()
+
+	baseErr := errors.New("prepare failed")
+	driverName := "failing-driver-conn-prepare"
+	sql.Register(driverName, &failingDriver{conn: &failingConn{prepareErr: baseErr}})
+	stdDB, err := sql.Open(driverName, "")
+	require.NoError(t, err)
+	defer stdDB.Close()
+
+	db := FromDB(stdDB)
+	conn, err := db.Conn(context.Background())
+	require.NoError(t, err)
+	defer func() {
+		require.NoError(t, conn.Close(context.Background()))
+	}()
+
+	stmt, err := conn.Prepare(context.Background(), "SELECT 1")
+
+	assert.Nil(t, stmt)
+	require.Error(t, err)
+	require.ErrorContains(t, err, "conn.Prepare")
+	require.ErrorIs(t, err, baseErr)
+}
+
+func TestStmtExec_WrapsError(t *testing.T) {
+	t.Parallel()
+
+	baseErr := errors.New("stmt exec failed")
+	driverName := "failing-driver-stmt-exec"
+	sql.Register(driverName, &failingDriver{conn: &failingConn{stmt: &failingStmt{execErr: baseErr}}})
+	stdDB, err := sql.Open(driverName, "")
+	require.NoError(t, err)
+	defer stdDB.Close()
+
+	db := FromDB(stdDB)
+	stmt, err := db.Prepare(context.Background(), "UPDATE test SET value = 1")
+	require.NoError(t, err)
+	defer func() {
+		require.NoError(t, stmt.Close(context.Background()))
+	}()
+
+	res, err := stmt.Exec(context.Background())
+
+	assert.Nil(t, res)
+	require.Error(t, err)
+	require.ErrorContains(t, err, "stmt.Exec")
+	require.ErrorIs(t, err, baseErr)
+}
+
+func TestTxCommit_WrapsError(t *testing.T) {
+	t.Parallel()
+
+	baseErr := errors.New("commit failed")
+	driverName := "failing-driver-tx-commit"
+	sql.Register(driverName, &failingDriver{conn: &failingConn{tx: &failingTx{commitErr: baseErr}}})
+	stdDB, err := sql.Open(driverName, "")
+	require.NoError(t, err)
+	defer stdDB.Close()
+
+	db := FromDB(stdDB)
+	tx, err := db.BeginTx(context.Background(), nil)
+	require.NoError(t, err)
+
+	err = tx.Commit(context.Background())
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "tx.Commit")
+	require.ErrorIs(t, err, baseErr)
+}
+
+func TestDBQueryRow_PreservesErrNoRows(t *testing.T) {
+	t.Parallel()
+
+	driverName := "failing-driver-query-row"
+	sql.Register(driverName, &failingDriver{conn: &failingConn{queryErr: sql.ErrNoRows}})
+	stdDB, err := sql.Open(driverName, "")
+	require.NoError(t, err)
+	defer stdDB.Close()
+
+	db := FromDB(stdDB)
+	row := db.QueryRow(context.Background(), "SELECT 1")
+
+	err = row.Scan(new(int))
+
+	require.Error(t, err)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -68,7 +69,7 @@ func (c *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return &Tx{tx: tx, connInfo: c.connInfo}, nil
@@ -85,7 +86,7 @@ func (c *Conn) Close(ctx context.Context) error {
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
 	}
-	return err
+	return wrapError(op, err)
 }
 
 // Exec executes a query without returning any rows.
@@ -99,7 +100,7 @@ func (c *Conn) Exec(ctx context.Context, query string, args ...any) (sql.Result,
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
 	}
-	return res, err
+	return res, wrapError(op, err)
 }
 
 // Ping verifies the connection to the database is still alive.
@@ -113,7 +114,7 @@ func (c *Conn) Ping(ctx context.Context) error {
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
 	}
-	return err
+	return wrapError(op, err)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -126,7 +127,7 @@ func (c *Conn) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return &Stmt{stmt: stmt, connInfo: c.connInfo, query: query}, nil
 }
@@ -141,7 +142,7 @@ func (c *Conn) Query(ctx context.Context, query string, args ...any) (*sql.Rows,
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return rows, nil
@@ -168,7 +169,7 @@ type DB struct {
 func Open(driverName, dataSourceName string) (*DB, error) {
 	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db.Open: %w", err)
 	}
 	info := parseDSN(dataSourceName)
 	connInfo := connInfo{
@@ -208,7 +209,7 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return &Tx{tx: tx, connInfo: db.connInfo}, nil
 }
@@ -224,7 +225,7 @@ func (db *DB) Close(ctx context.Context) error {
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
 	}
-	return err
+	return wrapError(op, err)
 }
 
 // Conn returns a connection.
@@ -237,7 +238,7 @@ func (db *DB) Conn(ctx context.Context) (*Conn, error) {
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return &Conn{conn: conn, connInfo: db.connInfo}, nil
@@ -264,7 +265,7 @@ func (db *DB) Exec(ctx context.Context, query string, args ...any) (sql.Result, 
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return res, nil
@@ -281,7 +282,7 @@ func (db *DB) Ping(ctx context.Context) error {
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
 	}
-	return err
+	return wrapError(op, err)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -294,7 +295,7 @@ func (db *DB) Prepare(ctx context.Context, query string) (*Stmt, error) {
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return &Stmt{stmt: stmt, connInfo: db.connInfo, query: query}, nil
@@ -310,7 +311,7 @@ func (db *DB) Query(ctx context.Context, query string, args ...any) (*sql.Rows, 
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return rows, err
@@ -371,7 +372,7 @@ func (s *Stmt) Close(ctx context.Context) error {
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
 	}
-	return err
+	return wrapError(op, err)
 }
 
 // Exec executes a prepared statement.
@@ -384,7 +385,7 @@ func (s *Stmt) Exec(ctx context.Context, args ...any) (sql.Result, error) {
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return res, nil
@@ -400,7 +401,7 @@ func (s *Stmt) Query(ctx context.Context, args ...any) (*sql.Rows, error) {
 	observeDuration(ctx, start, op, err)
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return rows, nil
@@ -434,7 +435,7 @@ func (tx *Tx) Commit(ctx context.Context) error {
 	if err != nil {
 		patrontrace.SetSpanError(sp, op, err)
 	}
-	return err
+	return wrapError(op, err)
 }
 
 // Exec executes a query that doesn't return rows.
@@ -552,4 +553,12 @@ func observeDuration(ctx context.Context, start time.Time, op string, err error)
 
 func operationAttr(op string) attribute.KeyValue {
 	return attribute.String("op", op)
+}
+
+func wrapError(op string, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("%s: %w", op, err)
 }

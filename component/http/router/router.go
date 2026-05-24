@@ -22,7 +22,9 @@ type Config struct {
 	deflateLevel             int
 	middlewares              []middleware.Func
 	routes                   []*patronhttp.Route
+	enableProfiling          bool
 	enableProfilingExpVar    bool
+	profilingMiddlewares     []middleware.Func
 	appNameVersionMiddleware middleware.Func
 }
 
@@ -44,7 +46,9 @@ func New(oo ...OptionFunc) (*http.ServeMux, error) {
 	var stdRoutes []*patronhttp.Route
 
 	mux := http.NewServeMux()
-	stdRoutes = append(stdRoutes, patronhttp.ProfilingRoutes(cfg.enableProfilingExpVar)...)
+	if cfg.enableProfiling {
+		stdRoutes = append(stdRoutes, patronhttp.ProfilingRoutes(cfg.enableProfilingExpVar, cfg.profilingMiddlewares...)...)
+	}
 
 	route, err := patronhttp.LivenessCheckRoute(cfg.aliveCheckFunc)
 	if err != nil {
@@ -64,7 +68,10 @@ func New(oo ...OptionFunc) (*http.ServeMux, error) {
 	}
 
 	for _, route := range stdRoutes {
-		handler := middleware.Chain(route.Handler(), stdMiddlewares...)
+		var middlewares []middleware.Func
+		middlewares = append(middlewares, stdMiddlewares...)
+		middlewares = append(middlewares, route.Middlewares()...)
+		handler := middleware.Chain(route.Handler(), middlewares...)
 		mux.Handle(route.Path(), handler)
 		slog.Debug("added route", slog.Any("route", route))
 	}

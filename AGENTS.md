@@ -85,7 +85,23 @@ task --list           # List all available tasks
 - goleak in `TestMain` for goroutine leak detection; testify `assert`/`require` for assertions.
 - CI: `.github/workflows/ci.yml` — validates Taskfile, lint, format check, integration tests (excludes `examples` and `encoding/protobuf/test`), e2e example tests. Codecov enabled.
 - Prerequisites: golangci-lint v2.6.1. Install: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.6.1`.
-- Git worktrees: `wt <branch-name>` for parallel development.
+- Before pushing: run `task test`, `task lint`, and `task fmtcheck`. If the change touches integration-backed packages, infrastructure clients/components, examples/e2e behavior, Docker/dependency setup, or public runtime behavior, also run `task deps-start && task testint && task deps-stop`.
+- If `task deps-start` or integration tests fail because Docker or external services are unavailable, report the exact failure and do not claim the push is fully verified.
+
+## Documentation and public API changes
+
+- Update `docs/api/...` whenever exported APIs, defaults, environment variables, route behavior, middleware behavior, observability behavior, or client/component setup changes.
+- Update examples when the recommended usage changes, especially for constructor options, router setup, auth/middleware, observability, or lifecycle handling.
+- Update `BREAKING.md` for breaking behavior or API changes, including security fixes that intentionally change defaults. Include the old behavior, new behavior, and migration path.
+- Keep exported Go doc comments accurate when exported names, options, or route helpers are added or changed.
+
+## GitHub and Worktrunk workflow
+
+- Use GitHub CLI for issue and PR work: `gh issue view <number>`, `gh issue list`, `gh pr view`, `gh pr create`, and `gh pr checks` as appropriate.
+- When fixing a GitHub issue, read the issue body before editing, reference the issue in the PR/commit text, and call out verification performed.
+- Use Worktrunk (`wt`) for parallel development. Create or switch worktrees with `wt switch --create <branch>` for new work and `wt switch <branch>` for existing work; inspect with `wt list`; merge with `wt merge`; remove completed worktrees with `wt remove`.
+- Do not create a new worktree if the user explicitly wants changes in the current worktree, or if the current worktree already contains the relevant uncommitted work.
+- Before committing or pushing, run `git status --short` and make sure only intended files are staged. Never discard unrelated user changes.
 
 ## Lint configuration
 

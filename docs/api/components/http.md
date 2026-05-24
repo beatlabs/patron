@@ -1,6 +1,6 @@
 # HTTP component (server)
 
-Serve HTTP endpoints with built-in profiling, health checks, middleware, and tracing/logging.
+Serve HTTP endpoints with health checks, optional profiling, middleware, and tracing/logging.
 
 - Component: `github.com/beatlabs/patron/component/http`
 - Router: `github.com/beatlabs/patron/component/http/router`
@@ -49,10 +49,13 @@ Env overrides: `PATRON_HTTP_DEFAULT_PORT`, `PATRON_HTTP_READ_TIMEOUT`, `PATRON_H
 - `WithReadyCheck(func() ReadyStatus)` (defaults to Ready)
 - `WithDeflateLevel(level int)` (compression)
 - `WithMiddlewares(mm ...)`
-- `WithExpVarProfiling()` (adds `/debug/vars`)
+- `WithProfiling(mm ...)` (adds `/debug/pprof/*`)
+- `WithProfilingMiddlewares(mm ...)` (adds `/debug/pprof/*` and applies middleware)
+- `WithExpVarProfiling()` (adds `/debug/pprof/*` and `/debug/vars`)
 - `WithAppNameHeaders(name, version)` (adds X-App-Name/X-App-Version)
 
-Management routes: `/debug/pprof/*`, `/alive`, `/ready`.
+Management routes: `/alive`, `/ready`; `/debug/pprof/*` is opt-in.
+Protect profiling routes with `WithProfiling` or `WithProfilingMiddlewares`, for example by passing an auth middleware.
 
 ## Route helpers
 
@@ -66,4 +69,4 @@ Management routes: `/debug/pprof/*`, `/alive`, `/ready`.
 
 - Logging/tracing middleware is applied to user routes.
 - Configure error-status logging via `PATRON_HTTP_STATUS_ERROR_LOGGING` (comma-separated status codes).
-- Change log level at runtime: `POST /debug/log/{level}`.
+- Change log level at runtime: `POST /debug/log/{level}`. If registering `LoggingRoutes` directly, pass auth or equivalent middleware.

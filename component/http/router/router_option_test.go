@@ -144,11 +144,22 @@ func TestMiddlewares(t *testing.T) {
 	}
 }
 
+func TestWithProfiling(t *testing.T) {
+	t.Parallel()
+	mw := func(next http.Handler) http.Handler { return next }
+	cfg := &Config{}
+	err := WithProfiling(mw)(cfg)
+	require.NoError(t, err)
+	assert.True(t, cfg.enableProfiling)
+	assert.Len(t, cfg.profilingMiddlewares, 1)
+}
+
 func TestDisableProfiling(t *testing.T) {
 	t.Parallel()
 	cfg := &Config{}
 	err := WithExpVarProfiling()(cfg)
 	require.NoError(t, err)
+	assert.True(t, cfg.enableProfiling)
 	assert.True(t, cfg.enableProfilingExpVar)
 }
 

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"errors"
-	"io"
 	"testing"
 	"time"
 
@@ -241,26 +240,6 @@ func (s *failingStmt) QueryContext(_ context.Context, _ []driver.NamedValue) (dr
 	}
 
 	return &mockRows{}, nil
-}
-
-type failingRows struct {
-	err error
-}
-
-func (r *failingRows) Columns() []string {
-	return []string{"id"}
-}
-
-func (r *failingRows) Close() error {
-	return nil
-}
-
-func (r *failingRows) Next(_ []driver.Value) error {
-	if r.err != nil {
-		return r.err
-	}
-
-	return io.EOF
 }
 
 type failingTx struct {
@@ -535,8 +514,8 @@ func TestWrapError(t *testing.T) {
 	wrapped := wrapError("db.Exec", err)
 
 	require.Error(t, wrapped)
-	assert.ErrorContains(t, wrapped, "db.Exec")
-	assert.ErrorIs(t, wrapped, err)
+	require.ErrorContains(t, wrapped, "db.Exec")
+	require.ErrorIs(t, wrapped, err)
 	assert.NoError(t, wrapError("db.Exec", nil))
 }
 
@@ -555,8 +534,8 @@ func TestDBExec_WrapsError(t *testing.T) {
 
 	assert.Nil(t, res)
 	require.Error(t, err)
-	assert.ErrorContains(t, err, "db.Exec")
-	assert.ErrorIs(t, err, baseErr)
+	require.ErrorContains(t, err, "db.Exec")
+	require.ErrorIs(t, err, baseErr)
 }
 
 func TestConnPrepare_WrapsError(t *testing.T) {
@@ -580,8 +559,8 @@ func TestConnPrepare_WrapsError(t *testing.T) {
 
 	assert.Nil(t, stmt)
 	require.Error(t, err)
-	assert.ErrorContains(t, err, "conn.Prepare")
-	assert.ErrorIs(t, err, baseErr)
+	require.ErrorContains(t, err, "conn.Prepare")
+	require.ErrorIs(t, err, baseErr)
 }
 
 func TestStmtExec_WrapsError(t *testing.T) {
@@ -605,8 +584,8 @@ func TestStmtExec_WrapsError(t *testing.T) {
 
 	assert.Nil(t, res)
 	require.Error(t, err)
-	assert.ErrorContains(t, err, "stmt.Exec")
-	assert.ErrorIs(t, err, baseErr)
+	require.ErrorContains(t, err, "stmt.Exec")
+	require.ErrorIs(t, err, baseErr)
 }
 
 func TestTxCommit_WrapsError(t *testing.T) {
@@ -626,8 +605,8 @@ func TestTxCommit_WrapsError(t *testing.T) {
 	err = tx.Commit(context.Background())
 
 	require.Error(t, err)
-	assert.ErrorContains(t, err, "tx.Commit")
-	assert.ErrorIs(t, err, baseErr)
+	require.ErrorContains(t, err, "tx.Commit")
+	require.ErrorIs(t, err, baseErr)
 }
 
 func TestDBQueryRow_PreservesErrNoRows(t *testing.T) {

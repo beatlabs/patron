@@ -7,11 +7,9 @@ import (
 	patronhttp "github.com/beatlabs/patron/component/http/middleware"
 )
 
-// RouteOptionFunc definition for configuring the route in a functional way.
 // RouteOptionFunc configures a Route in a functional way.
 type RouteOptionFunc func(route *Route) error
 
-// Route definition of an HTTP route.
 // Route describes an HTTP route with optional middleware.
 type Route struct {
 	path        string
@@ -35,7 +33,6 @@ func (r Route) String() string {
 	return r.path
 }
 
-// NewRoute creates a new raw route with functional configuration.
 // NewRoute creates a new route with functional configuration.
 func NewRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Route, error) {
 	if path == "" {
@@ -61,14 +58,12 @@ func NewRoute(path string, handler http.HandlerFunc, oo ...RouteOptionFunc) (*Ro
 	return route, nil
 }
 
-// Routes definition.
 // Routes aggregates route creation results and errors.
 type Routes struct {
 	routes []*Route
 	ee     []error
 }
 
-// Append route.
 // Append adds a route or records an error.
 func (r *Routes) Append(route *Route, err error) {
 	if err != nil {
@@ -82,7 +77,6 @@ func (r *Routes) Append(route *Route, err error) {
 	r.routes = append(r.routes, route)
 }
 
-// Result of the route aggregation.
 // Result returns the accumulated routes and a joined error, if any.
 func (r *Routes) Result() ([]*Route, error) {
 	return r.routes, errors.Join(r.ee...)

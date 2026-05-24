@@ -38,7 +38,7 @@ func TestTracedClient_Do(t *testing.T) {
 	reqErr.Header.Set(encoding.AcceptEncodingHeader, "gzip")
 	u, err := req.URL.Parse(ts.URL)
 	require.NoError(t, err)
-	opName := opName(http.MethodGet, u.Scheme, u.Host)
+	opName := http.MethodGet + " " + u.Scheme + "://" + u.Host
 	opNameError := "HTTP GET"
 
 	type args struct {

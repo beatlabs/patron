@@ -104,7 +104,7 @@ services:
     ports:
       - "127.0.0.1:4566:4566"
   hivemq:
-    image: hivemq/hivemq4:4.51.0
+    image: hivemq/hivemq4:4.52.0
     restart: always
     ports:
       - target: 1883

@@ -99,7 +99,7 @@ services:
       retries: 5
       start_period: 15s
   floci:
-    image: floci/floci:1.5.16
+    image: floci/floci:1.5.21
     restart: always
     ports:
       - "127.0.0.1:4566:4566"

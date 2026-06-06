@@ -65,6 +65,12 @@ jobs:
         run: |
           task ci
 
+      - name: Install Codecov dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg
+          gpg --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys 806BB28AED779869
+
       - name: Codecov
         uses: codecov/codecov-action@v6
         with:

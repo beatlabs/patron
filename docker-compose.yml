@@ -1,6 +1,6 @@
 services:
   kafka:
-    image: confluentinc/cp-kafka:8.2.0
+    image: confluentinc/cp-kafka:8.2.1
     restart: always
     hostname: broker
     ports:
@@ -85,7 +85,7 @@ services:
       retries: 5
       start_period: 15s
   valkey:
-    image: valkey/valkey:9.0
+    image: valkey/valkey:9.1
     restart: always
     command: ["valkey-server", "--bind", "0.0.0.0"]
     ports:
@@ -99,12 +99,12 @@ services:
       retries: 5
       start_period: 15s
   floci:
-    image: floci/floci:1.5.16
+    image: floci/floci:1.5.21
     restart: always
     ports:
       - "127.0.0.1:4566:4566"
   hivemq:
-    image: hivemq/hivemq4:4.51.0
+    image: hivemq/hivemq4:4.52.0
     restart: always
     ports:
       - target: 1883
@@ -152,7 +152,7 @@ services:
       retries: 5
       start_period: 15s
   otelcol:
-    image: otel/opentelemetry-collector-contrib:0.151.0
+    image: otel/opentelemetry-collector-contrib:0.153.0
     restart: always
     command: ["--config=/etc/otelcol-config.yaml"]
     volumes:

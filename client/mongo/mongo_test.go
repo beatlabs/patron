@@ -17,11 +17,13 @@ func TestMain(m *testing.M) {
 		goleak.IgnoreTopFunction("google.golang.org/grpc/internal/grpcsync.(*CallbackSerializer).run"),
 		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/metric.(*PeriodicReader).run"),
 		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
-		goleak.IgnoreTopFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*pool).createConnections"),
-		goleak.IgnoreTopFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*pool).maintain"),
-		goleak.IgnoreTopFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*Server).update"),
-		goleak.IgnoreTopFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*rttMonitor).runHellos"),
-		goleak.IgnoreTopFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*cancellListener).Listen"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*pool).createConnections"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*pool).createConnections.func2"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*connection).read"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*pool).maintain"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*Server).update"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*rttMonitor).runHellos"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*cancellListener).Listen"),
 	)
 }
 

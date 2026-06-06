@@ -8,7 +8,24 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m,
+		goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"),
+		goleak.IgnoreTopFunction("google.golang.org/grpc/internal/grpcsync.(*CallbackSerializer).run"),
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/metric.(*PeriodicReader).run"),
+		goleak.IgnoreTopFunction("go.opentelemetry.io/otel/sdk/trace.(*batchSpanProcessor).processQueue"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*pool).createConnections"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*pool).createConnections.func2"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*connection).read"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*pool).maintain"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*Server).update"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*rttMonitor).runHellos"),
+		goleak.IgnoreAnyFunction("go.mongodb.org/mongo-driver/x/mongo/driver/topology.(*cancellListener).Listen"),
+	)
+}
 
 func TestConnect_ValidationErrors(t *testing.T) {
 	t.Parallel()

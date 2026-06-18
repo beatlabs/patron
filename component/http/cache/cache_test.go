@@ -116,6 +116,57 @@ func TestExtractCacheHeaders(t *testing.T) {
 	}
 }
 
+func TestGet(t *testing.T) {
+	tc := newTestingCache()
+	tc.instant = func() int64 { return 1 }
+	rc := &RouteCache{cache: tc}
+
+	assert.Nil(t, get(context.Background(), "missing", rc))
+
+	rsp := &response{Response: handlerResponse{Bytes: []byte("payload"), Header: http.Header{"X-Test": []string{"value"}}}}
+	encoded, err := rsp.encode()
+	require.NoError(t, err)
+
+	require.NoError(t, tc.SetTTL(context.Background(), "bytes", encoded, time.Second))
+	got := get(context.Background(), "bytes", rc)
+	require.NoError(t, got.Err)
+	assert.True(t, got.FromCache)
+	assert.Equal(t, []byte("payload"), got.Response.Bytes)
+
+	require.NoError(t, tc.SetTTL(context.Background(), "string", string(encoded), time.Second))
+	got = get(context.Background(), "string", rc)
+	require.NoError(t, got.Err)
+	assert.True(t, got.FromCache)
+
+	require.NoError(t, tc.SetTTL(context.Background(), "invalid-type", 123, time.Second))
+	got = get(context.Background(), "invalid-type", rc)
+	require.ErrorContains(t, got.Err, "could not parse cached response")
+
+	require.NoError(t, tc.SetTTL(context.Background(), "invalid-bytes", []byte("{"), time.Second))
+	got = get(context.Background(), "invalid-bytes", rc)
+	require.ErrorContains(t, got.Err, "could not decode cached bytes")
+}
+
+func TestSave(t *testing.T) {
+	tc := newTestingCache()
+	tc.instant = func() int64 { return 1 }
+	ctx := context.Background()
+
+	save(ctx, "/path", "key", &response{Response: handlerResponse{Bytes: []byte("payload")}}, tc, time.Second)
+	assert.Equal(t, 1, tc.setCount)
+	assert.NotNil(t, get(ctx, "key", &RouteCache{cache: tc}))
+
+	save(ctx, "/path", "from-cache", &response{FromCache: true}, tc, time.Second)
+	assert.Equal(t, 1, tc.setCount)
+
+	save(ctx, "/path", "with-error", &response{Err: errors.New("response error")}, tc, time.Second)
+	assert.Equal(t, 1, tc.setCount)
+
+	tc.setErr = errors.New("set error")
+	save(ctx, "/path", "set-error", &response{Response: handlerResponse{Bytes: []byte("payload")}}, tc, time.Second)
+	assert.Equal(t, 2, tc.setCount)
+}
+
 type routeConfig struct {
 	path string
 	hnd  executor

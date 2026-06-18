@@ -45,4 +45,11 @@ func TestSetupAndUseMetrics(t *testing.T) {
 	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
 
 	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
+
+	ObserveEviction(context.Background(), attribute.String("test", "test"))
+
+	collectedMetrics = &metricdata.ResourceMetrics{}
+	require.NoError(t, read.Collect(context.Background(), collectedMetrics))
+
+	assert.Len(t, collectedMetrics.ScopeMetrics, 1)
 }

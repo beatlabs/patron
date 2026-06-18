@@ -3,8 +3,11 @@ package json
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/beatlabs/patron/encoding"
@@ -73,6 +76,47 @@ func TestFromResponse(t *testing.T) {
 	}
 }
 
+func TestFromResponseErrors(t *testing.T) {
+	t.Parallel()
+
+	t.Run("missing content type header", func(t *testing.T) {
+		t.Parallel()
+
+		err := FromResponse(context.Background(), &http.Response{Header: http.Header{}, Body: io.NopCloser(strings.NewReader("{}"))}, &customer{})
+		require.EqualError(t, err, "response content type header key is missing")
+	})
+
+	t.Run("empty content type header", func(t *testing.T) {
+		t.Parallel()
+
+		err := FromResponse(context.Background(), &http.Response{
+			Header: http.Header{encoding.ContentTypeHeader: []string{}},
+			Body:   io.NopCloser(strings.NewReader("{}")),
+		}, &customer{})
+		require.EqualError(t, err, "response content type header value is missing")
+	})
+
+	t.Run("read body error", func(t *testing.T) {
+		t.Parallel()
+
+		err := FromResponse(context.Background(), &http.Response{
+			Header: http.Header{encoding.ContentTypeHeader: []string{json.Type}},
+			Body:   failingReadCloser{},
+		}, &customer{})
+		require.EqualError(t, err, "read failed")
+	})
+}
+
 func stringPointer(val string) *string {
 	return &val
+}
+
+type failingReadCloser struct{}
+
+func (failingReadCloser) Read(_ []byte) (int, error) {
+	return 0, errors.New("read failed")
+}
+
+func (failingReadCloser) Close() error {
+	return nil
 }

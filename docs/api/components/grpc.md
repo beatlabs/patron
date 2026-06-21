@@ -62,13 +62,13 @@ A standard gRPC health service is registered by default (`grpc.health.v1.Health`
 - Start the example service (includes HTTP, Kafka, etc., but also gRPC):
 
 ```sh
-task example-service
+make example-service
 ```
 
 - From the example client, run only the gRPC path:
 
 ```sh
-task example-client
+make example-client
 ```
 
 The client calls `SayHello` on the example Greeter service defined in `examples/greeter.proto`.

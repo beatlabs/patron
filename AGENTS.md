@@ -63,19 +63,17 @@ patron/
 ## Commands
 
 ```bash
-task                  # Run tests (default)
-task test             # go test ./... -cover -race -timeout 60s
-task testint          # Integration tests (-tags=integration), needs `task deps-start`
-task lint             # golangci-lint (requires v2.6.1 installed)
-task deeplint         # Deep lint analysis
-task fmt              # go fmt
-task fmtcheck         # Check formatting (CI uses this)
-task deps-start       # Docker Compose up (Kafka, RabbitMQ, MySQL, etc.)
-task deps-stop        # Docker Compose down
-task example-service  # Run example service
-task example-client   # Run example client
-task validate         # Validate Taskfile.yml
-task --list           # List all available tasks
+make                  # Run tests (default)
+make test             # go test ./... -cover -race -timeout 60s
+make testint          # Integration tests (-tags=integration), needs `make deps-start`
+make lint             # golangci-lint (requires v2.6.1 installed)
+make fmt              # go fmt
+make fmtcheck         # Check formatting (CI uses this)
+make deps-start       # Docker Compose up (Kafka, RabbitMQ, MySQL, etc.)
+make deps-stop        # Docker Compose down
+make example-service  # Run example service
+make example-client   # Run example client
+make help             # List all available targets
 ```
 
 ## Build, test, and development workflows
@@ -83,10 +81,10 @@ task --list           # List all available tasks
 - Single test: `go test ./path/to/pkg -run ^TestName$ -v -race`. Integration: add `-tags=integration`.
 - Test files: `*_test.go` (unit), `*_integration_test.go` (integration with `//go:build integration`).
 - goleak in `TestMain` for goroutine leak detection; testify `assert`/`require` for assertions.
-- CI: `.github/workflows/ci.yml` — validates Taskfile, lint, format check, integration tests (excludes `examples` and `encoding/protobuf/test`), e2e example tests. Codecov enabled.
+- CI: `.github/workflows/ci.yml` — lint, format check, integration tests (excludes `examples` and `encoding/protobuf/test`), e2e example tests. Codecov enabled.
 - Prerequisites: golangci-lint v2.6.1. Install: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.6.1`.
-- Before pushing: run `task test`, `task lint`, and `task fmtcheck`. If the change touches integration-backed packages, infrastructure clients/components, examples/e2e behavior, Docker/dependency setup, or public runtime behavior, also run `task deps-start && task testint && task deps-stop`.
-- If `task deps-start` or integration tests fail because Docker or external services are unavailable, report the exact failure and do not claim the push is fully verified.
+- Before pushing: run `make test`, `make lint`, and `make fmtcheck`. If the change touches integration-backed packages, infrastructure clients/components, examples/e2e behavior, Docker/dependency setup, or public runtime behavior, also run `make deps-start && make testint && make deps-stop`.
+- If `make deps-start` or integration tests fail because Docker or external services are unavailable, report the exact failure and do not claim the push is fully verified.
 
 ## Documentation and public API changes
 

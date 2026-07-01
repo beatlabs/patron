@@ -36,8 +36,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.2 h1:hc+lBYiiTr8Zk4MTzIsQ92Me
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.2/go.mod h1:hU6fqB3OJA6/ePheD47LQnxvjYk6br6PtQxs+Q9ojvk=
 github.com/aws/aws-sdk-go-v2/service/sts v1.42.3 h1:ErklX/7uhSbkAAeyQD/Y1OoQ9hO3SJXQNEgksORW3Js=
 github.com/aws/aws-sdk-go-v2/service/sts v1.42.3/go.mod h1:ULe4HCzfKPiR6R3HEurE3b1upEkuk8AkMrOKtaOxKO8=
-github.com/aws/smithy-go v1.27.1 h1:4T340VFndXtADGF52gYa1POyL7s9E4Z1OeZ1hCscIw8=
-github.com/aws/smithy-go v1.27.1/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
+github.com/aws/smithy-go v1.27.3 h1:F3Zb497UhhskkfpJmfkXswyo+t0sh9OTBnIHjogWbVY=
+github.com/aws/smithy-go v1.27.3/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
 github.com/bsm/ginkgo/v2 v2.12.0/go.mod h1:SwYbGRRDovPVboqFv0tPTcG1sN61LM1Z4ARdbAV9g4c=
 github.com/bsm/gomega v1.27.10 h1:yeMWxP2pV2fG3FgAODIY8EiRE3dy0aeFYt4l7wh6yKA=

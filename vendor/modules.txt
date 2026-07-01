@@ -1075,7 +1075,7 @@ github.com/pierrec/lz4/v4/internal/xxh32
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/rabbitmq/amqp091-go v1.11.0
+# github.com/rabbitmq/amqp091-go v1.12.0
 ## explicit; go 1.20
 github.com/rabbitmq/amqp091-go
 # github.com/redis/go-redis/extra/rediscmd/v9 v9.19.0

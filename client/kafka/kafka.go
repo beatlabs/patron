@@ -44,20 +44,25 @@ type Producer struct {
 	client *kgo.Client
 }
 
-// New creates a new Kafka producer with the specified brokers and franz-go options.
+// New creates a new Kafka producer with the specified brokers and options.
 // Kotel hooks for OpenTelemetry tracing and metrics are automatically configured.
-func New(brokers []string, opts ...kgo.Opt) (*Producer, error) {
+func New(brokers []string, opts ...OptionFunc) (*Producer, error) {
 	if validation.IsStringSliceEmpty(brokers) {
 		return nil, errors.New("brokers are empty or have an empty value")
+	}
+
+	cfg := config{}
+	for _, opt := range opts {
+		opt(&cfg)
 	}
 
 	tracer := kotel.NewTracer(kotel.TracerProvider(otel.GetTracerProvider()))
 	meter := kotel.NewMeter(kotel.MeterProvider(otel.GetMeterProvider()))
 	kotelService := kotel.NewKotel(kotel.WithTracer(tracer), kotel.WithMeter(meter))
 
-	allOpts := make([]kgo.Opt, 0, 3+len(opts))
+	allOpts := make([]kgo.Opt, 0, 3+len(cfg.kgoOpts))
 	allOpts = append(allOpts, kgo.SeedBrokers(brokers...), kgo.WithHooks(kotelService.Hooks()...), kgo.WithLogger(kslog.New(slog.Default())))
-	allOpts = append(allOpts, opts...)
+	allOpts = append(allOpts, cfg.kgoOpts...)
 
 	cl, err := kgo.NewClient(allOpts...)
 	if err != nil {

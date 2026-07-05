@@ -33,6 +33,7 @@ client/
 ## Conventions
 
 - **Constructor**: `New(required, opts...) (*Client, error)` — always functional options, always returns error.
+- **Kafka options**: `client/kafka` uses Patron `OptionFunc`; pass raw franz-go options through `WithKafkaOptions(...kgo.Opt)`.
 - **OTel instrumentation**: every client wraps operations with spans; attributes follow `observability.ClientAttribute`.
 - **Correlation**: clients propagate `X-Correlation-Id` header via context (see `correlation/` package).
 - **Circuit breaker**: HTTP client supports optional `circuitbreaker.CircuitBreaker` via options.

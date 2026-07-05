@@ -1,59 +1,95 @@
 # Kafka client (producer)
 
-Instrumented producers for Kafka using Sarama, with OpenTelemetry tracing, correlation propagation, and metrics.
+Instrumented producer for Kafka using franz-go, with OpenTelemetry hooks, correlation propagation, and publish metrics.
 
 - Package: `github.com/beatlabs/patron/client/kafka`
-- Producers: synchronous (`SyncProducer`) and asynchronous (`AsyncProducer`)
+- Producer: `Producer` with synchronous (`Send`) and asynchronous (`SendAsync`) sends
 
-## Default Sarama config
-
-```go
-cfg, err := clientkafka.DefaultProducerSaramaConfig("my-producer", true /* idempotent */)
-// Sets ClientID = "<hostname>-my-producer", RequiredAcks = WaitForAll.
-// When idempotent is true: Net.MaxOpenRequests = 1, Producer.Idempotent = true.
-```
-
-## Sync producer example
+## Create a producer
 
 ```go
-builder := clientkafka.New([]string{"localhost:9092"}, cfg)
-prod, err := builder.Create()
-if err != nil { /* handle */ }
-
-defer prod.Close()
-
-msg := &sarama.ProducerMessage{Topic: "orders", Value: sarama.StringEncoder("payload")}
-partition, offset, err := prod.Send(ctx, msg)
-```
-
-### Batch send
-
-```go
-messages := []*sarama.ProducerMessage{
-  {Topic: "orders", Value: sarama.StringEncoder("one")},
-  {Topic: "orders", Value: sarama.StringEncoder("two")},
+producer, err := clientkafka.New([]string{"localhost:9092"})
+if err != nil {
+    // handle error
 }
-err := prod.SendBatch(ctx, messages)
+defer producer.Close()
 ```
 
-## Async producer example
+`New` validates broker addresses and automatically configures:
+
+- franz-go seed brokers
+- OpenTelemetry tracing and metrics hooks
+- slog-backed franz-go logging
+
+## Passing franz-go options
+
+Use `WithKafkaOptions` to pass raw franz-go `kgo.Opt` values.
 
 ```go
-prod, chErr, err := clientkafka.New([]string{"localhost:9092"}, cfg).CreateAsync()
-if err != nil { /* handle */ }
+producer, err := clientkafka.New(
+    []string{"localhost:9092"},
+    clientkafka.WithKafkaOptions(
+        kgo.ClientID("orders-producer"),
+        kgo.RequiredAcks(kgo.AllISRAcks()),
+    ),
+)
+if err != nil {
+    // handle error
+}
+defer producer.Close()
+```
 
-go func() { for err := range chErr { /* handle */ } }()
+This keeps the Patron client constructor on the functional-options pattern while preserving access to franz-go's full option surface.
 
-defer prod.Close()
+## Sync send
 
-_ = prod.Send(ctx, &sarama.ProducerMessage{Topic: "orders", Value: sarama.StringEncoder("payload")})
+```go
+records, err := producer.Send(ctx, &kgo.Record{
+    Topic: "orders",
+    Value: []byte("payload"),
+})
+if err != nil {
+    // handle error
+}
+
+_ = records
+```
+
+## Batch send
+
+```go
+records, err := producer.Send(ctx,
+    &kgo.Record{Topic: "orders", Value: []byte("one")},
+    &kgo.Record{Topic: "orders", Value: []byte("two")},
+)
+if err != nil {
+    // handle error
+}
+
+_ = records
+```
+
+## Async send
+
+```go
+chErr := make(chan error, 1)
+
+producer.SendAsync(ctx, &kgo.Record{
+    Topic: "orders",
+    Value: []byte("payload"),
+}, chErr)
+
+select {
+case err := <-chErr:
+    // handle producer error
+default:
+}
 ```
 
 ## Common methods
 
-Both `SyncProducer` and `AsyncProducer` expose:
+- `Send(ctx context.Context, records ...*kgo.Record) ([]*kgo.Record, error)` sends one or more records synchronously.
+- `SendAsync(ctx context.Context, record *kgo.Record, chErr chan<- error)` sends one record asynchronously and reports producer errors on `chErr`.
+- `Close()` flushes buffered records and shuts down the producer.
 
-- `ActiveBrokers() []string` — returns addresses of active brokers.
-- `Close() error` — shuts down the producer and flushes buffered messages. Must be called before the producer goes out of scope to avoid leaking memory.
-
-See `client/kafka` package and `examples/client/main.go` for more details.
+See `client/kafka` and `examples/client/main.go` for more details.

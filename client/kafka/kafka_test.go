@@ -42,6 +42,28 @@ func TestNew(t *testing.T) {
 		require.NotNil(t, got)
 		got.Close()
 	})
+
+	t.Run("success with kafka options", func(t *testing.T) {
+		t.Parallel()
+		got, err := New([]string{"localhost:9092"}, WithKafkaOptions(kgo.ClientID("patron-test")))
+		require.NoError(t, err)
+		require.NotNil(t, got)
+		got.Close()
+	})
+}
+
+func TestWithKafkaOptions(t *testing.T) {
+	t.Parallel()
+
+	optOne := kgo.ClientID("patron-test")
+	optTwo := kgo.RequiredAcks(kgo.AllISRAcks())
+	cfg := config{}
+
+	WithKafkaOptions(optOne, optTwo)(&cfg)
+
+	require.Len(t, cfg.kgoOpts, 2)
+	assert.IsType(t, optOne, cfg.kgoOpts[0])
+	assert.IsType(t, optTwo, cfg.kgoOpts[1])
 }
 
 func TestSendAsync_Failure(t *testing.T) {

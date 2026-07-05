@@ -84,7 +84,7 @@ func TestKafkaComponent_Success(t *testing.T) {
 	for i := 1; i <= numOfMessagesToSend; i++ {
 		messages = append(messages, &kgo.Record{Topic: successTopic1, Value: []byte(strconv.Itoa(i))})
 	}
-	client, err := kafkaclient.New([]string{broker}, kgo.RequiredAcks(kgo.AllISRAcks()))
+	client, err := kafkaclient.New([]string{broker}, kafkaclient.WithKafkaOptions(kgo.RequiredAcks(kgo.AllISRAcks())))
 	require.NoError(t, err)
 	_, err = client.Send(ctx, messages...)
 	require.NoError(t, err)
@@ -210,7 +210,7 @@ func TestKafkaComponent_FailAllRetries(t *testing.T) {
 	batchSize := uint(1)
 	component := newComponent(t, failAllRetriesTopic2, uniqueGroup(failAllRetriesTopic2), numOfRetries, batchSize, processorFunc)
 
-	producer, err := kafkaclient.New([]string{broker}, kgo.DisableIdempotentWrite())
+	producer, err := kafkaclient.New([]string{broker}, kafkaclient.WithKafkaOptions(kgo.DisableIdempotentWrite()))
 	require.NoError(t, err)
 	defer producer.Close()
 
@@ -277,7 +277,7 @@ func TestKafkaComponent_FailOnceAndRetry(t *testing.T) {
 	var producerWG sync.WaitGroup
 	producerWG.Add(1)
 	go func() {
-		producer, err := kafkaclient.New([]string{broker}, kgo.DisableIdempotentWrite())
+		producer, err := kafkaclient.New([]string{broker}, kafkaclient.WithKafkaOptions(kgo.DisableIdempotentWrite()))
 		assert.NoError(t, err)
 		defer producer.Close()
 

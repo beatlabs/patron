@@ -180,7 +180,7 @@ func sendKafkaMessage(ctx context.Context) error {
 		return fmt.Errorf("failed to ensure topic exists: %w", err)
 	}
 
-	producer, err := patronkafka.New([]string{examples.KafkaBroker}, kgo.RequiredAcks(kgo.AllISRAcks()))
+	producer, err := patronkafka.New([]string{examples.KafkaBroker}, patronkafka.WithKafkaOptions(kgo.RequiredAcks(kgo.AllISRAcks())))
 	if err != nil {
 		return err
 	}

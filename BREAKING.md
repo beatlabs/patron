@@ -1,5 +1,25 @@
 # Breaking Changes Migration Guide
 
+## v0.78.0
+
+### Kafka client constructor uses functional options
+
+The Kafka client constructor now follows the Patron client functional-options pattern. Raw franz-go options must be wrapped with `WithKafkaOptions`.
+
+```go
+// Before
+producer, err := patronkafka.New(
+    []string{"localhost:9092"},
+    kgo.RequiredAcks(kgo.AllISRAcks()),
+)
+
+// After
+producer, err := patronkafka.New(
+    []string{"localhost:9092"},
+    patronkafka.WithKafkaOptions(kgo.RequiredAcks(kgo.AllISRAcks())),
+)
+```
+
 ## v0.77.0
 
 ### Rename `OptionFunction` to `OptionFunc` in `component/grpc`

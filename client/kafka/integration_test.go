@@ -36,7 +36,7 @@ func TestNewProducer_Success(t *testing.T) {
 	host, err := os.Hostname()
 	require.NoError(t, err)
 
-	p, err := New(brokers, kgo.ClientID(fmt.Sprintf("%s-%s", host, "test-producer")), kgo.RequiredAcks(kgo.AllISRAcks()))
+	p, err := New(brokers, WithKafkaOptions(kgo.ClientID(fmt.Sprintf("%s-%s", host, "test-producer")), kgo.RequiredAcks(kgo.AllISRAcks())))
 	require.NoError(t, err)
 	assert.NotNil(t, p)
 	p.Close()
@@ -50,7 +50,7 @@ func TestProducer_SendAsync_Close(t *testing.T) {
 	shutdownProvider, assertCollectMetrics := test.SetupMetrics(ctx, t)
 	defer shutdownProvider()
 
-	p, err := New(brokers, kgo.DisableIdempotentWrite())
+	p, err := New(brokers, WithKafkaOptions(kgo.DisableIdempotentWrite()))
 	require.NoError(t, err)
 	assert.NotNil(t, p)
 	msg := &kgo.Record{
@@ -75,7 +75,7 @@ func TestProducer_SendAsync_Close(t *testing.T) {
 func TestProducer_Send_Close(t *testing.T) {
 	require.NoError(t, createTopics(brokers[0], clientTopic))
 
-	p, err := New(brokers, kgo.RequiredAcks(kgo.AllISRAcks()))
+	p, err := New(brokers, WithKafkaOptions(kgo.RequiredAcks(kgo.AllISRAcks())))
 	require.NoError(t, err)
 	assert.NotNil(t, p)
 
@@ -92,7 +92,7 @@ func TestProducer_Send_Close(t *testing.T) {
 }
 
 func TestProducer_Send_Failure(t *testing.T) {
-	p, err := New(brokers, kgo.RequiredAcks(kgo.AllISRAcks()))
+	p, err := New(brokers, WithKafkaOptions(kgo.RequiredAcks(kgo.AllISRAcks())))
 	require.NoError(t, err)
 	assert.NotNil(t, p)
 	defer p.Close()
@@ -111,7 +111,7 @@ func TestProducer_Send_Failure(t *testing.T) {
 func TestProducer_SendBatch_Close(t *testing.T) {
 	require.NoError(t, createTopics(brokers[0], clientTopic))
 
-	p, err := New(brokers, kgo.RequiredAcks(kgo.AllISRAcks()))
+	p, err := New(brokers, WithKafkaOptions(kgo.RequiredAcks(kgo.AllISRAcks())))
 	require.NoError(t, err)
 	assert.NotNil(t, p)
 

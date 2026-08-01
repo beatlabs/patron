@@ -54,7 +54,7 @@ services:
       retries: 5
       start_period: 15s
   mysql:
-    image: mysql:9
+    image: mysql:26
     restart: always
     environment:
       MYSQL_DATABASE: "patrondb"

@@ -3,12 +3,12 @@ module github.com/beatlabs/patron
 go 1.25.0
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.42.0
+	github.com/aws/aws-sdk-go-v2 v1.43.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.26
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.25
-	github.com/aws/aws-sdk-go-v2/service/sns v1.39.19
+	github.com/aws/aws-sdk-go-v2/service/sns v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.29
-	github.com/aws/smithy-go v1.27.3
+	github.com/aws/smithy-go v1.27.5
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/elastic/elastic-transport-go/v8 v8.11.0
 	github.com/elastic/go-elasticsearch/v8 v8.19.5
@@ -45,8 +45,8 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.32 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.32 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.30 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.12 // indirect

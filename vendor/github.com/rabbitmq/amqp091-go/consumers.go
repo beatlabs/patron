@@ -160,6 +160,44 @@ func (subs *consumers) cancel(tag string) (found bool) {
 	return found
 }
 
+// queueForTag returns the queue name for the given consumer tag without removing the consumer.
+func (subs *consumers) queueForTag(tag string) (string, bool) {
+	subs.Lock()
+	defer subs.Unlock()
+	if cfg, ok := subs.configs[tag]; ok {
+		return cfg.Queue, true
+	}
+	return "", false
+}
+
+// hasConsumerForQueue reports whether any consumer is registered on the given queue.
+func (subs *consumers) hasConsumerForQueue(queue string) bool {
+	subs.Lock()
+	defer subs.Unlock()
+	for _, cfg := range subs.configs {
+		if cfg.Queue == queue {
+			return true
+		}
+	}
+	return false
+}
+
+// cancelByQueue untracks and terminates all consumers registered on the given queue.
+func (subs *consumers) cancelByQueue(queue string) {
+	subs.Lock()
+	var tags []string
+	for tag, config := range subs.configs {
+		if config.Queue == queue {
+			tags = append(tags, tag)
+		}
+	}
+	subs.Unlock()
+
+	for _, tag := range tags {
+		subs.cancel(tag)
+	}
+}
+
 func (subs *consumers) close() {
 	subs.Lock()
 	defer subs.Unlock()

@@ -4,10 +4,10 @@ package sqs
 
 import (
 	"testing"
+	"uuid"
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/beatlabs/patron/correlation"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -12,7 +12,6 @@ import (
 
 	"github.com/beatlabs/patron/correlation"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/twmb/franz-go/pkg/kgo"
@@ -20,6 +19,7 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.uber.org/goleak"
+	"uuid"
 )
 
 var (

@@ -6,10 +6,10 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"uuid"
 
 	"github.com/beatlabs/patron/correlation"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

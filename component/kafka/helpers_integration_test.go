@@ -4,9 +4,9 @@ package kafka
 
 import (
 	"testing"
+	"uuid"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/twmb/franz-go/pkg/kgo"

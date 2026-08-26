@@ -1,5 +1,13 @@
 # Breaking Changes Migration Guide
 
+## Next release
+
+### Go 1.27 is now required
+
+Patron now requires Go 1.27 or newer. Upgrade your Go toolchain before updating Patron.
+
+Go 1.27 uses the `encoding/json` v2 implementation behind the existing API, so exact JSON error text may differ. It may also produce different, interoperable gzip and DEFLATE bytes.
+
 ## v0.78.0
 
 ### Kafka client constructor uses functional options

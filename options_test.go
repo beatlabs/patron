@@ -12,6 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	optionsTestSuccess = "success"
+)
+
 func TestLogFields(t *testing.T) {
 	attrs := []slog.Attr{slog.String("key", "value")}
 	attrs1 := []slog.Attr{slog.String("name1", "version1")}
@@ -32,7 +36,7 @@ func TestLogFields(t *testing.T) {
 		expectedErr string
 	}{
 		"empty attributes": {args: args{fields: nil}, expectedErr: "attributes are empty"},
-		"success":          {args: args{fields: attrs}, want: expectedSuccess},
+		optionsTestSuccess: {args: args{fields: attrs}, want: expectedSuccess},
 		"no overwrite":     {args: args{fields: attrs1}, want: expectedNoOverwrite},
 	}
 	for name, tt := range tests {

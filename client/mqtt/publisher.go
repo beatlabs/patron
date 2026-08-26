@@ -30,10 +30,10 @@ func DefaultConfig(brokerURLs []*url.URL, clientID string) (autopaho.ClientConfi
 	}
 
 	return autopaho.ClientConfig{
-		BrokerUrls:        brokerURLs,
-		KeepAlive:         30,
-		ConnectRetryDelay: 5 * time.Second,
-		ConnectTimeout:    1 * time.Second,
+		BrokerUrls:       brokerURLs,
+		KeepAlive:        30,
+		ReconnectBackoff: autopaho.NewConstantBackoff(5 * time.Second),
+		ConnectTimeout:   1 * time.Second,
 		OnConnectionUp: func(_ *autopaho.ConnectionManager, conAck *paho.Connack) {
 			slog.Info("connection is up", slog.Int64("reason", int64(conAck.ReasonCode)))
 		},

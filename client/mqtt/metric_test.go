@@ -19,8 +19,8 @@ func TestTopicAttr(t *testing.T) {
 		expected string
 	}{
 		"simple topic": {
-			topic:    "test/topic",
-			expected: "test/topic",
+			topic:    mqttTestTopic,
+			expected: mqttTestTopic,
 		},
 		"nested topic": {
 			topic:    "devices/sensor/temperature",

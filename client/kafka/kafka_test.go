@@ -11,6 +11,10 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
+const (
+	testTopic = "test-topic"
+)
+
 func TestNew(t *testing.T) {
 	t.Parallel()
 
@@ -74,7 +78,7 @@ func TestSendAsync_Failure(t *testing.T) {
 	p.client.Close()
 
 	chErr := make(chan error, 1)
-	rec := &kgo.Record{Topic: "test-topic", Value: []byte("test")}
+	rec := &kgo.Record{Topic: testTopic, Value: []byte("test")}
 	p.SendAsync(context.Background(), rec, chErr)
 
 	select {
@@ -170,7 +174,7 @@ func TestTopicAttribute(t *testing.T) {
 		topic    string
 		expected string
 	}{
-		"simple topic":       {topic: "test-topic", expected: "test-topic"},
+		"simple topic":       {topic: testTopic, expected: testTopic},
 		"dotted topic":       {topic: "test.topic.name", expected: "test.topic.name"},
 		"empty topic":        {topic: "", expected: ""},
 		"special characters": {topic: "test_topic-123", expected: "test_topic-123"},
@@ -195,7 +199,7 @@ func TestPublishCountAdd(t *testing.T) {
 		t.Parallel()
 
 		assert.NotPanics(t, func() {
-			publishCountAdd(context.Background(), topicAttribute("test-topic"))
+			publishCountAdd(context.Background(), topicAttribute(testTopic))
 		})
 	})
 
@@ -206,7 +210,7 @@ func TestPublishCountAdd(t *testing.T) {
 		cancel()
 
 		assert.NotPanics(t, func() {
-			publishCountAdd(ctx, topicAttribute("test-topic"))
+			publishCountAdd(ctx, topicAttribute(testTopic))
 		})
 	})
 }

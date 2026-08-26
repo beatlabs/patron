@@ -12,6 +12,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	circuitBreakerName = "test"
+	closedTestCase     = "closed"
+	openTestCase       = "open"
+	halfOpenTestCase   = "half open"
+)
+
 func TestNew(t *testing.T) {
 	t.Parallel()
 
@@ -25,9 +32,9 @@ func TestNew(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		"success":          {args: args{name: "test", s: validSetting}, wantErr: false},
+		"success":          {args: args{name: circuitBreakerName, s: validSetting}, wantErr: false},
 		"missing name":     {args: args{name: "", s: validSetting}, wantErr: true},
-		"invalid settings": {args: args{name: "test", s: invalidSetting}, wantErr: true},
+		"invalid settings": {args: args{name: circuitBreakerName, s: invalidSetting}, wantErr: true},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -56,9 +63,9 @@ func TestCircuitBreaker_isHalfOpen(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		"closed":    {fields: fields{status: closed, nextRetry: tsFuture}, want: false},
-		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
-		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: true},
+		closedTestCase:   {fields: fields{status: closed, nextRetry: tsFuture}, want: false},
+		openTestCase:     {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
+		halfOpenTestCase: {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: true},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -84,9 +91,9 @@ func TestCircuitBreaker_isOpen(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		"closed":    {fields: fields{status: closed, nextRetry: tsFuture}, want: false},
-		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
-		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: true},
+		closedTestCase:   {fields: fields{status: closed, nextRetry: tsFuture}, want: false},
+		halfOpenTestCase: {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
+		openTestCase:     {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: true},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -112,9 +119,9 @@ func TestCircuitBreaker_isClosed(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		"closed":    {fields: fields{status: closed, nextRetry: tsFuture}, want: true},
-		"half open": {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
-		"open":      {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
+		closedTestCase:   {fields: fields{status: closed, nextRetry: tsFuture}, want: true},
+		halfOpenTestCase: {fields: fields{status: opened, nextRetry: time.Now().Add(-1 * time.Minute).UnixNano()}, want: false},
+		openTestCase:     {fields: fields{status: opened, nextRetry: time.Now().Add(1 * time.Hour).UnixNano()}, want: false},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -134,7 +141,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 	waitRetryTimeout := 7 * time.Millisecond
 
 	set := Setting{FailureThreshold: uint(1), RetryTimeout: retryTimeout, RetrySuccessThreshold: 2, MaxRetryExecutionThreshold: 2}
-	cb, err := New("test", set)
+	cb, err := New(circuitBreakerName, set)
 	require.NoError(t, err)
 	_, err = cb.Execute(context.Background(), testSuccessAction)
 	require.NoError(t, err)
@@ -197,7 +204,7 @@ func TestCircuitBreaker_Close_Open_HalfOpen_Open_HalfOpen_Close(t *testing.T) {
 func TestCircuitBreaker_ConcurrentHalfOpenFailuresIgnoreStaleCallers(t *testing.T) {
 	t.Parallel()
 
-	cb, err := New("test", Setting{
+	cb, err := New(circuitBreakerName, Setting{
 		FailureThreshold:           10,
 		RetryTimeout:               time.Second,
 		RetrySuccessThreshold:      2,
@@ -237,7 +244,7 @@ func TestCircuitBreaker_ConcurrentHalfOpenFailuresIgnoreStaleCallers(t *testing.
 func TestCircuitBreaker_ConcurrentHalfOpenSuccessesIgnoreStaleCallers(t *testing.T) {
 	t.Parallel()
 
-	cb, err := New("test", Setting{
+	cb, err := New(circuitBreakerName, Setting{
 		FailureThreshold:           1,
 		RetryTimeout:               time.Second,
 		RetrySuccessThreshold:      2,
@@ -281,7 +288,7 @@ func TestCircuitBreaker_Execute_OpenCircuitEmitsMetric(t *testing.T) {
 	shutdownMetrics, collectMetrics := internaltest.SetupMetrics(ctx, t)
 	t.Cleanup(shutdownMetrics)
 
-	cb, err := New("test", Setting{
+	cb, err := New(circuitBreakerName, Setting{
 		FailureThreshold:           1,
 		RetryTimeout:               time.Second,
 		RetrySuccessThreshold:      1,
@@ -313,7 +320,7 @@ func BenchmarkCircuitBreaker_Execute(b *testing.B) {
 		RetrySuccessThreshold:      uint(1),
 		MaxRetryExecutionThreshold: 1,
 	}
-	cb, _ := New("test", set)
+	cb, _ := New(circuitBreakerName, set)
 
 	for b.Loop() {
 		cb.Execute(context.Background(), testFailureAction) // nolint:errcheck
@@ -321,7 +328,7 @@ func BenchmarkCircuitBreaker_Execute(b *testing.B) {
 }
 
 func testSuccessAction() (any, error) {
-	return "test", nil
+	return circuitBreakerName, nil
 }
 
 func testFailureAction() (any, error) {

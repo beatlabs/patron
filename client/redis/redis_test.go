@@ -9,6 +9,8 @@ import (
 	"go.uber.org/goleak"
 )
 
+const redisAddress = "localhost:6379"
+
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m,
 		goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"),
@@ -25,7 +27,7 @@ func TestNew(t *testing.T) {
 		t.Parallel()
 
 		opt := &redis.Options{
-			Addr: "localhost:6379",
+			Addr: redisAddress,
 		}
 
 		client, err := New(opt)
@@ -33,7 +35,7 @@ func TestNew(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, client)
 		assert.NotNil(t, client.Options())
-		assert.Equal(t, "localhost:6379", client.Options().Addr)
+		assert.Equal(t, redisAddress, client.Options().Addr)
 
 		// Clean up
 		err = client.Close()
@@ -66,7 +68,7 @@ func TestNew(t *testing.T) {
 		t.Parallel()
 
 		opt := &redis.Options{
-			Addr: "localhost:6379",
+			Addr: redisAddress,
 		}
 
 		client, err := New(opt)
@@ -98,7 +100,7 @@ func TestNew_WithMultipleAddresses(t *testing.T) {
 	t.Parallel()
 
 	opt := &redis.Options{
-		Addr:       "localhost:6379",
+		Addr:       redisAddress,
 		MaxRetries: 3,
 		PoolSize:   10,
 	}

@@ -11,13 +11,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	integrationTestSuccess = "success"
+)
+
 func TestServer_Run_Shutdown(t *testing.T) {
 	tests := map[string]struct {
 		cp      Component
 		wantErr bool
 	}{
-		"success":       {cp: &testComponent{}, wantErr: false},
-		"failed to run": {cp: &testComponent{errorRunning: true}, wantErr: true},
+		integrationTestSuccess: {cp: &testComponent{}, wantErr: false},
+		"failed to run":        {cp: &testComponent{errorRunning: true}, wantErr: true},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

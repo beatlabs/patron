@@ -10,6 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	routerOptionTestSuccess = "success"
+	testFailure             = "fail"
+)
+
 func TestRoutes(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -19,8 +24,8 @@ func TestRoutes(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{routes: []*patronhttp.Route{{}, {}}}},
-		"fail":    {args: args{routes: nil}, expectedErr: "routes are empty"},
+		routerOptionTestSuccess: {args: args{routes: []*patronhttp.Route{{}, {}}}},
+		testFailure:             {args: args{routes: nil}, expectedErr: "routes are empty"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -45,8 +50,8 @@ func TestAliveCheck(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{acf: func() patronhttp.AliveStatus { return patronhttp.Alive }}},
-		"fail":    {args: args{acf: nil}, expectedErr: "alive check function is nil"},
+		routerOptionTestSuccess: {args: args{acf: func() patronhttp.AliveStatus { return patronhttp.Alive }}},
+		testFailure:             {args: args{acf: nil}, expectedErr: "alive check function is nil"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -71,8 +76,8 @@ func TestReadyCheck(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{rcf: func() patronhttp.ReadyStatus { return patronhttp.Ready }}},
-		"fail":    {args: args{rcf: nil}, expectedErr: "ready check function is nil"},
+		routerOptionTestSuccess: {args: args{rcf: func() patronhttp.ReadyStatus { return patronhttp.Ready }}},
+		testFailure:             {args: args{rcf: nil}, expectedErr: "ready check function is nil"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -127,8 +132,8 @@ func TestMiddlewares(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{mm: []middleware.Func{func(next http.Handler) http.Handler { return next }}}},
-		"fail":    {args: args{mm: nil}, expectedErr: "middlewares are empty"},
+		routerOptionTestSuccess: {args: args{mm: []middleware.Func{func(next http.Handler) http.Handler { return next }}}},
+		testFailure:             {args: args{mm: nil}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -172,9 +177,9 @@ func TestEnableAppNameHeaders(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":         {args: args{name: "name", version: "version"}},
-		"missing name":    {args: args{name: "", version: "version"}, expectedErr: "app name cannot be empty"},
-		"missing version": {args: args{name: "name", version: ""}, expectedErr: "app version cannot be empty"},
+		routerOptionTestSuccess: {args: args{name: "name", version: "version"}},
+		"missing name":          {args: args{name: "", version: "version"}, expectedErr: "app name cannot be empty"},
+		"missing version":       {args: args{name: "name", version: ""}, expectedErr: "app version cannot be empty"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

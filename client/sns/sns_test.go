@@ -10,6 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	region = "us-east-1"
+)
+
 func TestNewFromConfig_Unit(t *testing.T) {
 	t.Parallel()
 
@@ -17,7 +21,7 @@ func TestNewFromConfig_Unit(t *testing.T) {
 		t.Parallel()
 
 		cfg := aws.Config{
-			Region: "us-east-1",
+			Region: region,
 		}
 
 		client := NewFromConfig(cfg)
@@ -61,7 +65,7 @@ func TestNewFromConfig_Unit(t *testing.T) {
 		t.Parallel()
 
 		cfg := aws.Config{
-			Region: "us-east-1",
+			Region: region,
 		}
 
 		optFn1 := func(o *sns.Options) {
@@ -85,7 +89,7 @@ func TestNewFromConfig_Unit(t *testing.T) {
 		t.Parallel()
 
 		cfg := aws.Config{
-			Region: "us-east-1",
+			Region: region,
 		}
 
 		client := NewFromConfig(cfg)
@@ -104,7 +108,7 @@ func TestNewFromConfig_WithCredentials(t *testing.T) {
 		t.Parallel()
 
 		cfg := aws.Config{
-			Region: "us-east-1",
+			Region: region,
 			Credentials: aws.CredentialsProviderFunc(func(_ context.Context) (aws.Credentials, error) {
 				return aws.Credentials{
 					AccessKeyID:     "test-key",
@@ -144,7 +148,7 @@ func TestNewFromConfig_WithRetryConfig(t *testing.T) {
 		t.Parallel()
 
 		cfg := aws.Config{
-			Region:           "us-east-1",
+			Region:           region,
 			RetryMaxAttempts: 5,
 			RetryMode:        aws.RetryModeStandard,
 		}

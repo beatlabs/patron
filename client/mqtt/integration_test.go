@@ -99,10 +99,10 @@ func TestPublish(t *testing.T) {
 
 func createSubscriber(t *testing.T, u *url.URL, router paho.Router) (*autopaho.ConnectionManager, error) {
 	cfg := autopaho.ClientConfig{
-		BrokerUrls:        []*url.URL{u},
-		KeepAlive:         30,
-		ConnectRetryDelay: 5 * time.Second,
-		ConnectTimeout:    1 * time.Second,
+		BrokerUrls:       []*url.URL{u},
+		KeepAlive:        30,
+		ReconnectBackoff: autopaho.NewConstantBackoff(5 * time.Second),
+		ConnectTimeout:   1 * time.Second,
 		ClientConfig: paho.ClientConfig{
 			ClientID: "test-subscriber",
 			Router:   router,

@@ -8,12 +8,12 @@ import (
 	"log/slog"
 	"sync"
 	"time"
+	"uuid"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/observability/log"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"github.com/google/uuid"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/plugin/kotel"
 	"github.com/twmb/franz-go/plugin/kslog"

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
@@ -16,7 +17,6 @@ import (
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/observability/log"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )

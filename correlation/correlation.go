@@ -3,8 +3,7 @@ package correlation
 
 import (
 	"context"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 const (

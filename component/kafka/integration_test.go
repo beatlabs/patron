@@ -12,12 +12,12 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+	"uuid"
 
 	kafkaclient "github.com/beatlabs/patron/client/kafka"
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/internal/test"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/twmb/franz-go/pkg/kadm"

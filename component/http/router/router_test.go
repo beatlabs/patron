@@ -11,6 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	routerTestSuccess = "success"
+)
+
 func TestNew(t *testing.T) {
 	t.Parallel()
 	route, err := patronhttp.NewRoute("GET /api/", func(writer http.ResponseWriter, _ *http.Request) {
@@ -24,7 +28,7 @@ func TestNew(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":            {args: args{oo: []OptionFunc{WithRoutes(route)}}},
+		routerTestSuccess:    {args: args{oo: []OptionFunc{WithRoutes(route)}}},
 		"option func failed": {args: args{oo: []OptionFunc{WithAliveCheck(nil)}}, expectedErr: "alive check function is nil"},
 	}
 	for name, tt := range tests {

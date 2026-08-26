@@ -21,6 +21,10 @@ import (
 )
 
 const (
+	messageTestSuccess = "success"
+)
+
+const (
 	queueName = "queueName"
 	queueURL  = "queueURL"
 )
@@ -67,8 +71,8 @@ func Test_message_ACK(t *testing.T) {
 		fields      fields
 		expectedErr string
 	}{
-		"success": {fields: fields{sqsAPI: &stubSQSAPI{}}},
-		"failure": {fields: fields{sqsAPI: &stubSQSAPI{deleteMessageWithContextErr: errors.New("TEST")}}, expectedErr: "TEST"},
+		messageTestSuccess: {fields: fields{sqsAPI: &stubSQSAPI{}}},
+		"failure":          {fields: fields{sqsAPI: &stubSQSAPI{deleteMessageWithContextErr: errors.New("TEST")}}, expectedErr: "TEST"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -198,7 +202,7 @@ func Test_batch_ACK(t *testing.T) {
 		fields      fields
 		expectedErr string
 	}{
-		"success": {
+		messageTestSuccess: {
 			fields: fields{sqsAPI: sqsAPI},
 		},
 		// "AWS failure": {

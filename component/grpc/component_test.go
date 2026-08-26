@@ -23,6 +23,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+const (
+	testSuccess      = "success"
+	errorRequestName = "ERROR"
+)
+
 var (
 	tracePublisher *tracesdk.TracerProvider
 	traceExporter  = tracetest.NewInMemoryExporter()
@@ -52,7 +57,7 @@ func TestCreate(t *testing.T) {
 		args   args
 		expErr string
 	}{
-		"success":      {args: args{port: 60000}},
+		testSuccess:    {args: args{port: 60000}},
 		"invalid port": {args: args{port: -1}, expErr: "port is invalid: -1"},
 	}
 	for name, tt := range tests {
@@ -96,8 +101,8 @@ func TestComponent_Run_Unary(t *testing.T) {
 		args   args
 		expErr string
 	}{
-		"success": {args: args{requestName: "TEST"}},
-		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
+		testSuccess: {args: args{requestName: "TEST"}},
+		"error":     {args: args{requestName: errorRequestName}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -121,7 +126,7 @@ func TestComponent_Run_Unary(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Status: tracesdk.Status{
 						Code:        codes.Error,
-						Description: "ERROR",
+						Description: errorRequestName,
 					},
 				}
 
@@ -183,8 +188,8 @@ func TestComponent_Run_Stream(t *testing.T) {
 		args   args
 		expErr string
 	}{
-		"success": {args: args{requestName: "TEST"}},
-		"error":   {args: args{requestName: "ERROR"}, expErr: "rpc error: code = Unknown desc = ERROR"},
+		testSuccess: {args: args{requestName: "TEST"}},
+		"error":     {args: args{requestName: errorRequestName}, expErr: "rpc error: code = Unknown desc = ERROR"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -210,7 +215,7 @@ func TestComponent_Run_Stream(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Status: tracesdk.Status{
 						Code:        codes.Error,
-						Description: "ERROR",
+						Description: errorRequestName,
 					},
 				}
 
@@ -249,15 +254,15 @@ type server struct {
 }
 
 func (s *server) SayHello(_ context.Context, in *examples.HelloRequest) (*examples.HelloReply, error) {
-	if in.GetFirstName() == "ERROR" {
-		return nil, errors.New("ERROR")
+	if in.GetFirstName() == errorRequestName {
+		return nil, errors.New(errorRequestName)
 	}
 	return &examples.HelloReply{Message: "Hello " + in.GetFirstName()}, nil
 }
 
 func (s *server) SayHelloStream(req *examples.HelloRequest, srv examples.Greeter_SayHelloStreamServer) error {
-	if req.GetFirstName() == "ERROR" {
-		return errors.New("ERROR")
+	if req.GetFirstName() == errorRequestName {
+		return errors.New(errorRequestName)
 	}
 
 	return srv.Send(&examples.HelloReply{Message: "Hello " + req.GetFirstName()})

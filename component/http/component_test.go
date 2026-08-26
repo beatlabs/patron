@@ -13,6 +13,11 @@ import (
 	"go.uber.org/goleak"
 )
 
+const (
+	componentTestSuccess    = "success"
+	invalidEnvironmentValue = "aaa"
+)
+
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m,
 		goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"),
@@ -43,7 +48,7 @@ func TestNew(t *testing.T) {
 		expected    *Component
 		expectedErr string
 	}{
-		"success": {
+		componentTestSuccess: {
 			args: args{handler: hnd},
 			expected: &Component{
 				port:                defaultPort,
@@ -73,21 +78,21 @@ func TestNew(t *testing.T) {
 		"failure, port env vars": {
 			args: args{
 				handler: hnd,
-				port:    "aaa",
+				port:    invalidEnvironmentValue,
 			},
 			expectedErr: `env var for HTTP default port is not valid: strconv.ParseInt: parsing "aaa": invalid syntax`,
 		},
 		"failure, read timeout env vars": {
 			args: args{
 				handler:     hnd,
-				readTimeout: "aaa",
+				readTimeout: invalidEnvironmentValue,
 			},
 			expectedErr: `env var for HTTP read timeout is not valid: time: invalid duration "aaa"`,
 		},
 		"failure, write timeout env vars": {
 			args: args{
 				handler:      hnd,
-				writeTimeout: "aaa",
+				writeTimeout: invalidEnvironmentValue,
 			},
 			expectedErr: `env var for HTTP write timeout is not valid: time: invalid duration "aaa"`,
 		},

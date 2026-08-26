@@ -15,6 +15,7 @@ import (
 	internalauth "github.com/aws/aws-sdk-go-v2/internal/auth"
 	internalauthsmithy "github.com/aws/aws-sdk-go-v2/internal/auth/smithy"
 	internalConfig "github.com/aws/aws-sdk-go-v2/internal/configsources"
+	internalcontext "github.com/aws/aws-sdk-go-v2/internal/context"
 	smithy "github.com/aws/smithy-go"
 	smithydocument "github.com/aws/smithy-go/document"
 	"github.com/aws/smithy-go/logging"
@@ -24,6 +25,7 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"net"
 	"net/http"
+	"os"
 	"sync/atomic"
 	"time"
 )
@@ -260,6 +262,10 @@ func (c *Client) invokeOperation(
 
 	finalizeClientEndpointResolverOptions(&options)
 
+	if err := c.addCommonMiddlewares(stack, options, opID); err != nil {
+		return nil, metadata, err
+	}
+
 	for _, fn := range stackFns {
 		if err := fn(stack, options); err != nil {
 			return nil, metadata, err
@@ -364,6 +370,49 @@ func addProtocolFinalizerMiddlewares(stack *middleware.Stack, options Options, o
 	}
 	return nil
 }
+
+func (c *Client) addCommonMiddlewares(stack *middleware.Stack, options Options, operation string) error {
+	if err := stack.Serialize.Add(&setOperationInputMiddleware{}, middleware.After); err != nil {
+		return err
+	}
+	if err := addProtocolFinalizerMiddlewares(stack, options, operation); err != nil {
+		return fmt.Errorf("add protocol finalizers: %v", err)
+	}
+	if err := addSetLoggerMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err := addClientRequestID(stack); err != nil {
+		return err
+	}
+	if err := addRetry(stack, options, c); err != nil {
+		return err
+	}
+	if err := addRawResponseToMetadata(stack); err != nil {
+		return err
+	}
+	if err := addSpanRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err := addClientUserAgent(stack, options); err != nil {
+		return err
+	}
+	if err := addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
+		return err
+	}
+	if err := addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
+	if err := addRecursionDetection(stack); err != nil {
+		return err
+	}
+	if err := addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err := addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	return nil
+}
 func resolveAuthSchemeResolver(options *Options) {
 	if options.AuthSchemeResolver == nil {
 		options.AuthSchemeResolver = &defaultAuthSchemeResolver{}
@@ -437,16 +486,17 @@ func setResolvedDefaultsMode(o *Options) {
 // NewFromConfig returns a new client from the provided config.
 func NewFromConfig(cfg aws.Config, optFns ...func(*Options)) *Client {
 	opts := Options{
-		Region:               cfg.Region,
-		DefaultsMode:         cfg.DefaultsMode,
-		RuntimeEnvironment:   cfg.RuntimeEnvironment,
-		HTTPClient:           cfg.HTTPClient,
-		Credentials:          cfg.Credentials,
-		APIOptions:           cfg.APIOptions,
-		Logger:               cfg.Logger,
-		ClientLogMode:        cfg.ClientLogMode,
-		AppID:                cfg.AppID,
-		AuthSchemePreference: cfg.AuthSchemePreference,
+		Region:                     cfg.Region,
+		DefaultsMode:               cfg.DefaultsMode,
+		RuntimeEnvironment:         cfg.RuntimeEnvironment,
+		HTTPClient:                 cfg.HTTPClient,
+		Credentials:                cfg.Credentials,
+		APIOptions:                 cfg.APIOptions,
+		Logger:                     cfg.Logger,
+		ClientLogMode:              cfg.ClientLogMode,
+		AppID:                      cfg.AppID,
+		DisableClockSkewCorrection: cfg.DisableClockSkewCorrection,
+		AuthSchemePreference:       cfg.AuthSchemePreference,
 	}
 	resolveAWSRetryerProvider(cfg, &opts)
 	resolveAWSRetryMaxAttempts(cfg, &opts)
@@ -636,15 +686,17 @@ func addClientRequestID(stack *middleware.Stack) error {
 }
 
 func addComputeContentLength(stack *middleware.Stack) error {
-	return stack.Build.Add(&smithyhttp.ComputeContentLength{}, middleware.After)
+	return stack.Build.Insert(&smithyhttp.ComputeContentLength{}, "ClientRequestID", middleware.After)
 }
 
 func addRawResponseToMetadata(stack *middleware.Stack) error {
 	return stack.Deserialize.Add(&awsmiddleware.AddRawResponse{}, middleware.Before)
 }
 
-func addRecordResponseTiming(stack *middleware.Stack) error {
-	return stack.Deserialize.Add(&awsmiddleware.RecordResponseTiming{}, middleware.After)
+func addRecordResponseTiming(stack *middleware.Stack, options Options) error {
+	return stack.Deserialize.Add(&awsmiddleware.RecordResponseTiming{
+		DisableClockSkewCorrection: options.DisableClockSkewCorrection,
+	}, middleware.After)
 }
 
 func addSpanRetryLoop(stack *middleware.Stack, options Options) error {
@@ -715,6 +767,7 @@ func addRetry(stack *middleware.Stack, o Options, c *Client) error {
 		m.LogAttempts = o.ClientLogMode.IsRetries()
 		m.OperationMeter = o.MeterProvider.Meter("github.com/aws/aws-sdk-go-v2/service/sqs")
 		m.ClientSkew = c.timeOffset
+		m.DisableClockSkewCorrection = o.DisableClockSkewCorrection
 	})
 	if err := stack.Finalize.Insert(attempt, "ResolveAuthScheme", middleware.Before); err != nil {
 		return err
@@ -723,6 +776,24 @@ func addRetry(stack *middleware.Stack, o Options, c *Client) error {
 		return err
 	}
 	return nil
+}
+
+func addSetLongPollingContext(stack *middleware.Stack, options Options) error {
+	if os.Getenv("AWS_NEW_RETRIES_2026") != "true" {
+		return nil
+	}
+	return stack.Initialize.Add(&setLongPollingContextMiddleware{}, middleware.Before)
+}
+
+type setLongPollingContextMiddleware struct{}
+
+func (*setLongPollingContextMiddleware) ID() string { return "SetLongPollingContext" }
+
+func (*setLongPollingContextMiddleware) HandleInitialize(
+	ctx context.Context, in middleware.InitializeInput, next middleware.InitializeHandler,
+) (middleware.InitializeOutput, middleware.Metadata, error) {
+	ctx = internalcontext.SetIsLongPolling(ctx, true)
+	return next.HandleInitialize(ctx, in)
 }
 
 // resolves dual-stack endpoint configuration
@@ -814,6 +885,14 @@ func resolveTracerProvider(options *Options) {
 func resolveMeterProvider(options *Options) {
 	if options.MeterProvider == nil {
 		options.MeterProvider = metrics.NopMeterProvider{}
+	}
+}
+
+func newServiceMetadataMiddleware(region, operation string) *awsmiddleware.RegisterServiceMetadata {
+	return &awsmiddleware.RegisterServiceMetadata{
+		Region:        region,
+		ServiceID:     ServiceID,
+		OperationName: operation,
 	}
 }
 

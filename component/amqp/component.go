@@ -9,11 +9,11 @@ import (
 	"net"
 	"net/url"
 	"time"
+	"uuid"
 
 	"github.com/beatlabs/patron/correlation"
 	"github.com/beatlabs/patron/observability/log"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
-	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"

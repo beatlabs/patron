@@ -17,6 +17,12 @@ import (
 	"golang.org/x/time/rate"
 )
 
+const (
+	internalServerError     = "Internal Server Error\n"
+	testURL                 = "http://foo/bar"
+	middlewareEmptyTestCase = "empty"
+)
+
 type stubAuthenticator struct {
 	success bool
 	err     error
@@ -122,13 +128,13 @@ func TestMiddlewares(t *testing.T) {
 	}{
 		{"auth middleware success", args{next: handler, mws: []Func{NewAuth(&stubAuthenticator{success: true})}}, 202, ""},
 		{"auth middleware false", args{next: handler, mws: []Func{NewAuth(&stubAuthenticator{success: false})}}, 401, "Unauthorized\n"},
-		{"auth middleware error", args{next: handler, mws: []Func{NewAuth(&stubAuthenticator{err: errors.New("auth error")})}}, 500, "Internal Server Error\n"},
+		{"auth middleware error", args{next: handler, mws: []Func{NewAuth(&stubAuthenticator{err: errors.New("auth error")})}}, 500, internalServerError},
 		{"tracing middleware", args{next: handler, mws: []Func{loggingTracingMiddleware}}, 202, ""},
 		{"rate limiting middleware", args{next: handler, mws: []Func{rateLimitingWithLimitMiddleware}}, 202, ""},
 		{"rate limiting middleware error", args{next: handler, mws: []Func{rateLimitingWithoutLimitMiddlware}}, 429, "Requests greater than limit\n"},
-		{"recovery middleware from panic 1", args{next: handler, mws: []Func{NewRecovery(), panicMiddleware("error")}}, 500, "Internal Server Error\n"},
-		{"recovery middleware from panic 2", args{next: handler, mws: []Func{NewRecovery(), panicMiddleware(errors.New("error"))}}, 500, "Internal Server Error\n"},
-		{"recovery middleware from panic 3", args{next: handler, mws: []Func{NewRecovery(), panicMiddleware(-1)}}, 500, "Internal Server Error\n"},
+		{"recovery middleware from panic 1", args{next: handler, mws: []Func{NewRecovery(), panicMiddleware("error")}}, 500, internalServerError},
+		{"recovery middleware from panic 2", args{next: handler, mws: []Func{NewRecovery(), panicMiddleware(errors.New("error"))}}, 500, internalServerError},
+		{"recovery middleware from panic 3", args{next: handler, mws: []Func{NewRecovery(), panicMiddleware(-1)}}, 500, internalServerError},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -270,15 +276,15 @@ func TestStripQueryString(t *testing.T) {
 			args: args{
 				path: "http://foo/bar?baz=value1",
 			},
-			expectedPath: "http://foo/bar",
+			expectedPath: testURL,
 		},
 		"no query string": {
 			args: args{
-				path: "http://foo/bar",
+				path: testURL,
 			},
-			expectedPath: "http://foo/bar",
+			expectedPath: testURL,
 		},
-		"empty": {
+		middlewareEmptyTestCase: {
 			args: args{
 				path: "",
 			},
@@ -355,62 +361,62 @@ func TestNewCompressionMiddlewareServer(t *testing.T) {
 	}{
 		{
 			status:           200,
-			acceptEncoding:   "gzip",
-			expectedEncoding: "gzip",
+			acceptEncoding:   gzipHeader,
+			expectedEncoding: gzipHeader,
 			cm:               compressionMiddleware,
 		},
 		{
 			status:           201,
-			acceptEncoding:   "gzip",
-			expectedEncoding: "gzip",
+			acceptEncoding:   gzipHeader,
+			expectedEncoding: gzipHeader,
 			cm:               compressionMiddleware,
 		},
 		{
 			status:           204,
-			acceptEncoding:   "gzip",
+			acceptEncoding:   gzipHeader,
 			expectedEncoding: "",
 			cm:               compressionMiddleware,
 		},
 		{
 			status:           304,
-			acceptEncoding:   "gzip",
+			acceptEncoding:   gzipHeader,
 			expectedEncoding: "",
 			cm:               compressionMiddleware,
 		},
 		{
 			status:           404,
-			acceptEncoding:   "gzip",
-			expectedEncoding: "gzip",
+			acceptEncoding:   gzipHeader,
+			expectedEncoding: gzipHeader,
 			cm:               compressionMiddleware,
 		},
 		{
 			status:           200,
-			acceptEncoding:   "deflate",
-			expectedEncoding: "deflate",
+			acceptEncoding:   deflateHeader,
+			expectedEncoding: deflateHeader,
 			cm:               compressionMiddleware,
 		},
 		{
 			status:           201,
-			acceptEncoding:   "deflate",
-			expectedEncoding: "deflate",
+			acceptEncoding:   deflateHeader,
+			expectedEncoding: deflateHeader,
 			cm:               compressionMiddleware,
 		},
 		{
 			status:           204,
-			acceptEncoding:   "deflate",
+			acceptEncoding:   deflateHeader,
 			expectedEncoding: "",
 			cm:               compressionMiddleware,
 		},
 		{
 			status:           304,
-			acceptEncoding:   "deflate",
+			acceptEncoding:   deflateHeader,
 			expectedEncoding: "",
 			cm:               compressionMiddleware,
 		},
 		{
 			status:           404,
-			acceptEncoding:   "deflate",
-			expectedEncoding: "deflate",
+			acceptEncoding:   deflateHeader,
+			expectedEncoding: deflateHeader,
 			cm:               compressionMiddleware,
 		},
 	}
@@ -449,7 +455,7 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	// check if the route actually ignored
 	req1, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/metrics", nil)
 	require.NoError(t, err)
-	req1.Header.Set("Accept-Encoding", "gzip")
+	req1.Header.Set("Accept-Encoding", gzipHeader)
 
 	rc1 := httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rc1, req1)
@@ -461,14 +467,14 @@ func TestNewCompressionMiddleware_Ignore(t *testing.T) {
 	// check if other routes remains untouched
 	req2, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/alive", nil)
 	require.NoError(t, err)
-	req2.Header.Set("Accept-Encoding", "gzip")
+	req2.Header.Set("Accept-Encoding", gzipHeader)
 
 	rc2 := httptest.NewRecorder()
 	middleware(handler).ServeHTTP(rc2, req2)
 
 	ceh = rc2.Header().Get("Content-Encoding")
 	assert.NotNil(t, ceh)
-	assert.Equal(t, "gzip", ceh)
+	assert.Equal(t, gzipHeader, ceh)
 }
 
 func TestNewCompressionMiddleware_Headers(t *testing.T) {
@@ -481,8 +487,8 @@ func TestNewCompressionMiddleware_Headers(t *testing.T) {
 		statusCode       int
 		encodingExpected string
 	}{
-		"gzip":                {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
-		"deflate":             {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
+		gzipHeader:            {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
+		deflateHeader:         {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
 		"gzip, *":             {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
 		"deflate, *":          {cm: middleware, statusCode: http.StatusOK, encodingExpected: deflateHeader},
 		"invalid, gzip, *":    {cm: middleware, statusCode: http.StatusOK, encodingExpected: gzipHeader},
@@ -530,54 +536,54 @@ func TestSelectEncoding(t *testing.T) {
 		{given: "", expected: "identity", optionalName: "is empty but present, only identity"},
 
 		{given: "*", expected: "*"},
-		{given: "gzip", expected: "gzip"},
-		{given: "deflate", expected: "deflate"},
+		{given: gzipHeader, expected: gzipHeader},
+		{given: deflateHeader, expected: deflateHeader},
 
 		{given: "whatever", expected: "", isErr: true, optionalName: "whatever, not supported"},
 		{given: "whatever, *", expected: "*", optionalName: "whatever, but also a star"},
 
-		{given: "gzip, deflate", expected: "gzip"},
-		{given: "whatever, gzip, deflate", expected: "gzip"},
-		{given: "gzip, whatever, deflate", expected: "gzip"},
-		{given: "gzip, deflate, whatever", expected: "gzip"},
+		{given: "gzip, deflate", expected: gzipHeader},
+		{given: "whatever, gzip, deflate", expected: gzipHeader},
+		{given: "gzip, whatever, deflate", expected: gzipHeader},
+		{given: "gzip, deflate, whatever", expected: gzipHeader},
 
-		{given: "gzip,deflate", expected: "gzip"},
-		{given: "gzip,whatever,deflate", expected: "gzip"},
-		{given: "whatever,gzip,deflate", expected: "gzip"},
-		{given: "gzip,deflate,whatever", expected: "gzip"},
+		{given: "gzip,deflate", expected: gzipHeader},
+		{given: "gzip,whatever,deflate", expected: gzipHeader},
+		{given: "whatever,gzip,deflate", expected: gzipHeader},
+		{given: "gzip,deflate,whatever", expected: gzipHeader},
 
-		{given: "deflate, gzip", expected: "deflate"},
-		{given: "whatever, deflate, gzip", expected: "deflate"},
-		{given: "deflate, whatever, gzip", expected: "deflate"},
-		{given: "deflate, gzip, whatever", expected: "deflate"},
+		{given: "deflate, gzip", expected: deflateHeader},
+		{given: "whatever, deflate, gzip", expected: deflateHeader},
+		{given: "deflate, whatever, gzip", expected: deflateHeader},
+		{given: "deflate, gzip, whatever", expected: deflateHeader},
 
-		{given: "deflate, gzip", expected: "deflate"},
-		{given: "whatever,deflate,gzip", expected: "deflate"},
-		{given: "deflate,whatever,gzip", expected: "deflate"},
-		{given: "deflate,gzip,whatever", expected: "deflate"},
+		{given: "deflate, gzip", expected: deflateHeader},
+		{given: "whatever,deflate,gzip", expected: deflateHeader},
+		{given: "deflate,whatever,gzip", expected: deflateHeader},
+		{given: "deflate,gzip,whatever", expected: deflateHeader},
 
-		{given: "gzip;q=1.0, deflate;q=1.0", expected: "gzip", optionalName: "equal weights"},
-		{given: "deflate;q=1.0, gzip;q=1.0", expected: "deflate", optionalName: "equal weights 2"},
+		{given: "gzip;q=1.0, deflate;q=1.0", expected: gzipHeader, optionalName: "equal weights"},
+		{given: "deflate;q=1.0, gzip;q=1.0", expected: deflateHeader, optionalName: "equal weights 2"},
 
-		{given: "gzip;q=1.0, deflate;q=0.5", expected: "gzip"},
-		{given: "gzip;q=1.0, deflate;q=0.5, *;q=0.2", expected: "gzip"},
-		{given: "deflate;q=1.0, gzip;q=0.5", expected: "deflate"},
-		{given: "deflate;q=1.0, gzip;q=0.5, *;q=0.2", expected: "deflate"},
+		{given: "gzip;q=1.0, deflate;q=0.5", expected: gzipHeader},
+		{given: "gzip;q=1.0, deflate;q=0.5, *;q=0.2", expected: gzipHeader},
+		{given: "deflate;q=1.0, gzip;q=0.5", expected: deflateHeader},
+		{given: "deflate;q=1.0, gzip;q=0.5, *;q=0.2", expected: deflateHeader},
 
-		{given: "gzip;q=0.5, deflate;q=1.0", expected: "deflate"},
-		{given: "gzip;q=0.5, deflate;q=1.0, *;q=0.2", expected: "deflate"},
-		{given: "deflate;q=0.5, gzip;q=1.0", expected: "gzip"},
-		{given: "deflate;q=0.5, gzip;q=1.0, *;q=0.2", expected: "gzip"},
+		{given: "gzip;q=0.5, deflate;q=1.0", expected: deflateHeader},
+		{given: "gzip;q=0.5, deflate;q=1.0, *;q=0.2", expected: deflateHeader},
+		{given: "deflate;q=0.5, gzip;q=1.0", expected: gzipHeader},
+		{given: "deflate;q=0.5, gzip;q=1.0, *;q=0.2", expected: gzipHeader},
 
 		{given: "whatever;q=1.0, *;q=0.2", expected: "*"},
 
-		{given: "deflate, gzip;q=1.0", expected: "deflate"},
-		{given: "deflate, gzip;q=0.5", expected: "deflate"},
+		{given: "deflate, gzip;q=1.0", expected: deflateHeader},
+		{given: "deflate, gzip;q=0.5", expected: deflateHeader},
 
-		{given: "deflate;q=0.5, gzip", expected: "gzip"},
+		{given: "deflate;q=0.5, gzip", expected: gzipHeader},
 
-		{given: "deflate;q=0.5, gzip;q=-0.5", expected: "deflate"},
-		{given: "deflate;q=0.5, gzip;q=1.5", expected: "gzip"},
+		{given: "deflate;q=0.5, gzip;q=-0.5", expected: deflateHeader},
+		{given: "deflate;q=0.5, gzip;q=1.5", expected: gzipHeader},
 	}
 
 	for _, tt := range tests {
@@ -597,8 +603,8 @@ func TestSupported(t *testing.T) {
 		algorithm   string
 		isSupported bool
 	}{
-		{algorithm: "gzip", isSupported: true},
-		{algorithm: "deflate", isSupported: true},
+		{algorithm: gzipHeader, isSupported: true},
+		{algorithm: deflateHeader, isSupported: true},
 		{algorithm: "*", isSupported: true},
 		{algorithm: "something else", isSupported: false},
 	}
@@ -647,13 +653,13 @@ func TestSelectByWeight(t *testing.T) {
 	}{
 		{
 			name:     "sorted map",
-			given:    map[float64]string{1.0: "gzip", 0.5: "deflate"},
-			expected: "gzip",
+			given:    map[float64]string{1.0: gzipHeader, 0.5: deflateHeader},
+			expected: gzipHeader,
 		},
 		{
 			name:     "not sorted map",
-			given:    map[float64]string{0.5: "gzip", 1.0: "deflate"},
-			expected: "deflate",
+			given:    map[float64]string{0.5: gzipHeader, 1.0: deflateHeader},
+			expected: deflateHeader,
 		},
 		{
 			name:     "empty weights map",
@@ -684,25 +690,25 @@ func TestAddWithWeight(t *testing.T) {
 		expected    map[float64]string
 	}{
 		{
-			name:        "empty",
+			name:        middlewareEmptyTestCase,
 			weightedMap: map[float64]string{},
 			weight:      1.0,
-			algorithm:   "gzip",
-			expected:    map[float64]string{1.0: "gzip"},
+			algorithm:   gzipHeader,
+			expected:    map[float64]string{1.0: gzipHeader},
 		},
 		{
 			name:        "new",
-			weightedMap: map[float64]string{1.0: "gzip"},
+			weightedMap: map[float64]string{1.0: gzipHeader},
 			weight:      0.5,
-			algorithm:   "deflate",
-			expected:    map[float64]string{1.0: "gzip", 0.5: "deflate"},
+			algorithm:   deflateHeader,
+			expected:    map[float64]string{1.0: gzipHeader, 0.5: deflateHeader},
 		},
 		{
 			name:        "already exists",
-			weightedMap: map[float64]string{1.0: "gzip"},
+			weightedMap: map[float64]string{1.0: gzipHeader},
 			weight:      1.0,
-			algorithm:   "deflate",
-			expected:    map[float64]string{1.0: "gzip"},
+			algorithm:   deflateHeader,
+			expected:    map[float64]string{1.0: gzipHeader},
 		},
 	}
 

@@ -18,6 +18,11 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
 
+const (
+	maxAgeFive = "max-age=5"
+	queryValue = "VALUE=1"
+)
+
 func TestExtractCacheHeaders(t *testing.T) {
 	type cacheRequestCondition struct {
 		noCache         bool
@@ -62,7 +67,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 				forceCache: false,
 				validators: 1,
 			},
-			wrn: "max-age=5",
+			wrn: maxAgeFive,
 		},
 		// Header resets to maxFresh e.g. maxAge - minAge
 		{
@@ -92,7 +97,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 				forceCache: false,
 				validators: 1,
 			},
-			wrn: "max-age=5",
+			wrn: maxAgeFive,
 		},
 		{
 			headers: map[string]string{HeaderCacheControl: "no-store"},
@@ -101,7 +106,7 @@ func TestExtractCacheHeaders(t *testing.T) {
 				forceCache: false,
 				validators: 1,
 			},
-			wrn: "max-age=5",
+			wrn: maxAgeFive,
 		},
 	}
 
@@ -189,7 +194,7 @@ type responseStruct struct {
 
 func newRequestAt(timeInstant int64, controlHeaders ...string) requestParams {
 	params := requestParams{
-		query:        "VALUE=1",
+		query:        queryValue,
 		timeInstance: timeInstant,
 		header:       make(map[string]string),
 	}
@@ -680,7 +685,7 @@ func TestMinAgeCache_WithMaxAgeHeaders(t *testing.T) {
 			{
 				requestParams: newRequestAt(4, maxAgeHeader("2")),
 				routeConfig:   rc,
-				response:      &responseStruct{Payload: 0, Header: testHeaderWithWarning(26, "max-age=5")},
+				response:      &responseStruct{Payload: 0, Header: testHeaderWithWarning(26, maxAgeFive)},
 				metrics: testMetrics{
 					map[string]*metricState{
 						"/": {
@@ -1207,7 +1212,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 			// initial request
 			{
 				requestParams: requestParams{
-					query:        "VALUE=1",
+					query:        queryValue,
 					timeInstance: 0,
 					path:         "/1",
 				},
@@ -1226,7 +1231,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 			// cached Response for the same path
 			{
 				requestParams: requestParams{
-					query:        "VALUE=1",
+					query:        queryValue,
 					timeInstance: 1,
 					path:         "/1",
 				},
@@ -1246,7 +1251,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 			// initial request for second path
 			{
 				requestParams: requestParams{
-					query:        "VALUE=1",
+					query:        queryValue,
 					timeInstance: 1,
 					path:         "/2",
 				},
@@ -1270,7 +1275,7 @@ func TestCache_WithMixedPaths(t *testing.T) {
 			// cached Response for second path
 			{
 				requestParams: requestParams{
-					query:        "VALUE=1",
+					query:        queryValue,
 					timeInstance: 2,
 					path:         "/2",
 				},
@@ -1323,7 +1328,7 @@ func TestCache_WithMixedRequestParameters(t *testing.T) {
 			// cached Response for same request parameter
 			{
 				requestParams: requestParams{
-					query:        "VALUE=1",
+					query:        queryValue,
 					timeInstance: 1,
 				},
 				routeConfig: rc,

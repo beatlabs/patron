@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	optionTestSuccess = "success"
+)
+
 func TestMaxMessages(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -17,7 +21,7 @@ func TestMaxMessages(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionTestSuccess: {
 			args: args{maxMessages: 5},
 		},
 		"zero message size": {
@@ -53,7 +57,7 @@ func TestPollWaitSeconds(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionTestSuccess: {
 			args: args{waitSeconds: 5},
 		},
 		"negative message size": {
@@ -89,7 +93,7 @@ func TestVisibilityTimeout(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionTestSuccess: {
 			args: args{timeout: 5},
 		},
 		"negative message size": {
@@ -125,7 +129,7 @@ func TestQueueStatsInterval(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionTestSuccess: {
 			args: args{interval: 5 * time.Second},
 		},
 		"zero interval duration": {
@@ -164,7 +168,7 @@ func TestRetryWait(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionTestSuccess: {
 			args: args{retryWait: 5 * time.Second},
 		},
 		"negative retry wait": {
@@ -196,7 +200,7 @@ func TestQueueOwner(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		optionTestSuccess: {
 			args: args{queueOwner: "10201020"},
 		},
 		"empty queue owner": {

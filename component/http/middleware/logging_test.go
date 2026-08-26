@@ -7,6 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	loggingEmptyTestCase = "empty"
+)
+
 const complexConfig = "200;(210,212);(220,222];[230,232);[240,242]"
 
 func TestStatusCode(t *testing.T) {
@@ -20,7 +24,7 @@ func TestStatusCode(t *testing.T) {
 		expectedResult     bool
 		expectedParsingErr bool
 	}{
-		"empty":                                    {args: args{cfg: "", statusCode: 400}, expectedResult: false},
+		loggingEmptyTestCase:                       {args: args{cfg: "", statusCode: 400}, expectedResult: false},
 		"single element - true":                    {args: args{cfg: "400", statusCode: 400}, expectedResult: true},
 		"single element - false":                   {args: args{cfg: "400", statusCode: 401}, expectedResult: false},
 		"complex config - single element - true":   {args: args{cfg: complexConfig, statusCode: 200}, expectedResult: true},

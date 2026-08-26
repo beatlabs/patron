@@ -11,6 +11,10 @@ import (
 )
 
 const (
+	routerRouteTestSuccess = "success"
+)
+
+const (
 	testRoutePath    = "GET /frontend/*path"
 	testAssetsDir    = "testdata/"
 	testFallbackPath = "testdata/index.html"
@@ -27,7 +31,7 @@ func TestNewFileServerRoute(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{
+		routerRouteTestSuccess: {args: args{
 			path:         testRoutePath,
 			assetsDir:    testAssetsDir,
 			fallbackPath: testFallbackPath,

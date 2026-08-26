@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -65,7 +66,7 @@ func TestHandler(t *testing.T) {
 	rc, errs := NewRouteCache(tc, Age{Min: time.Second, Max: 10 * time.Second})
 	require.Empty(t, errs)
 
-	req := httptest.NewRequest(http.MethodGet, "/cached?key=value", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/cached?key=value", nil)
 	rec := httptest.NewRecorder()
 
 	err := Handler(rec, req, rc, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -80,7 +81,7 @@ func TestHandler(t *testing.T) {
 }
 
 func TestHTTPExecutor(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/cached", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/cached", nil)
 	exec := httpExecutor(httptest.NewRecorder(), req, func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("X-Test", "value")
 		_, err := w.Write([]byte("payload"))

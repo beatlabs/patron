@@ -9,6 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	routeTestSuccess    = "success"
+	routeTestGetAPIPath = "GET /api"
+)
+
 func TestNewRoute(t *testing.T) {
 	t.Parallel()
 
@@ -26,8 +31,8 @@ func TestNewRoute(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{
-			path:        "GET /api",
+		routeTestSuccess: {args: args{
+			path:        routeTestGetAPIPath,
 			handler:     handler,
 			optionFuncs: []RouteOptionFunc{rateLimiting},
 		}},
@@ -37,12 +42,12 @@ func TestNewRoute(t *testing.T) {
 			optionFuncs: []RouteOptionFunc{rateLimiting},
 		}, expectedErr: "path is empty"},
 		"missing handler": {args: args{
-			path:        "GET /api",
+			path:        routeTestGetAPIPath,
 			handler:     nil,
 			optionFuncs: []RouteOptionFunc{rateLimiting},
 		}, expectedErr: "handler is nil"},
 		"missing middlewares": {args: args{
-			path:        "GET /api",
+			path:        routeTestGetAPIPath,
 			handler:     handler,
 			optionFuncs: []RouteOptionFunc{WithMiddlewares()},
 		}, expectedErr: "middlewares are empty"},
@@ -57,7 +62,7 @@ func TestNewRoute(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assertRoute(t, tt.args.path, got)
-				assert.Equal(t, "GET /api", got.String())
+				assert.Equal(t, routeTestGetAPIPath, got.String())
 			}
 		})
 	}
@@ -79,9 +84,9 @@ func TestRoutes_Append(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":      {args: args{route: &Route{}, err: nil}},
-		"error exist":  {args: args{route: &Route{}, err: errors.New("TEST")}, expectedErr: "TEST"},
-		"route is nil": {args: args{route: nil, err: nil}, expectedErr: "route is nil"},
+		routeTestSuccess: {args: args{route: &Route{}, err: nil}},
+		"error exist":    {args: args{route: &Route{}, err: errors.New("TEST")}, expectedErr: "TEST"},
+		"route is nil":   {args: args{route: nil, err: nil}, expectedErr: "route is nil"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

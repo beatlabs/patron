@@ -10,6 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/event"
 )
 
+const (
+	findCommand = "find"
+)
+
 func TestObservabilityMonitor_Started(t *testing.T) {
 	t.Parallel()
 
@@ -24,7 +28,7 @@ func TestObservabilityMonitor_Started(t *testing.T) {
 	ctx := context.Background()
 
 	evt := &event.CommandStartedEvent{
-		CommandName:  "find",
+		CommandName:  findCommand,
 		DatabaseName: "test",
 	}
 
@@ -90,8 +94,8 @@ func TestCommandAttr(t *testing.T) {
 		expected string
 	}{
 		"find command": {
-			cmdName:  "find",
-			expected: "find",
+			cmdName:  findCommand,
+			expected: findCommand,
 		},
 		"insert command": {
 			cmdName:  "insert",
@@ -151,7 +155,7 @@ func TestObservabilityMonitor_Integration(t *testing.T) {
 
 		// Simulate a command lifecycle
 		startEvt := &event.CommandStartedEvent{
-			CommandName: "find",
+			CommandName: findCommand,
 		}
 		monitor.Started(ctx, startEvt)
 
@@ -187,7 +191,7 @@ func TestObservabilityMonitor_Integration(t *testing.T) {
 
 		// Simulate a failed command
 		startEvt := &event.CommandStartedEvent{
-			CommandName: "find",
+			CommandName: findCommand,
 		}
 		monitor.Started(ctx, startEvt)
 

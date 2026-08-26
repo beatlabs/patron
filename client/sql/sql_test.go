@@ -14,6 +14,12 @@ import (
 	"go.uber.org/goleak"
 )
 
+const (
+	dbName      = "dbname"
+	userName    = "user"
+	tcpProtocol = "tcp"
+)
+
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m,
 		goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"),
@@ -30,18 +36,18 @@ func TestParseDSN(t *testing.T) {
 		dsn  string
 		want DSNInfo
 	}{
-		"generic case":          {"username:password@protocol(address)/dbname?param=value", DSNInfo{"", "dbname", "address", "username", "protocol"}},
+		"generic case":          {"username:password@protocol(address)/dbname?param=value", DSNInfo{"", dbName, "address", "username", "protocol"}},
 		"empty DSN":             {"/", DSNInfo{"", "", "", "", ""}},
-		"dbname only":           {"/dbname", DSNInfo{"", "dbname", "", "", ""}},
-		"multiple @":            {"user:p@/ssword@/", DSNInfo{"", "", "", "user", ""}},
-		"driver and multiple @": {"postgresql://user:p@/ssword@/", DSNInfo{"postgresql://", "", "", "user", ""}},
-		"unix socket":           {"user@unix(/path/to/socket)/dbname?charset=utf8", DSNInfo{"", "dbname", "/path/to/socket", "user", "unix"}},
-		"params added":          {"user:password@/dbname?param1=val1&param2=val2&param3=val3", DSNInfo{"", "dbname", "", "user", ""}},
-		"IP as address":         {"bruce:hunter2@tcp(127.0.0.1)/arkhamdb?param=value", DSNInfo{"", "arkhamdb", "127.0.0.1", "bruce", "tcp"}},
-		"@ in path to socker":   {"user@unix(/path/to/mydir@/socket)/dbname?charset=utf8", DSNInfo{"", "dbname", "/path/to/mydir@/socket", "user", "unix"}},
-		"port in address":       {"user:password@tcp(localhost:5555)/dbname?charset=utf8&tls=true", DSNInfo{"", "dbname", "localhost:5555", "user", "tcp"}},
-		"multiple ':'":          {"us:er:name:password@memory(localhost:5555)/dbname?charset=utf8&tls=true", DSNInfo{"", "dbname", "localhost:5555", "us", "memory"}},
-		"IPv6 provided":         {"user:p@ss(word)@tcp([c023:9350:225b:671a:2cdd:3d83:7c19:ca42]:80)/dbname?loc=Local", DSNInfo{"", "dbname", "[c023:9350:225b:671a:2cdd:3d83:7c19:ca42]:80", "user", "tcp"}},
+		"dbname only":           {"/dbname", DSNInfo{"", dbName, "", "", ""}},
+		"multiple @":            {"user:p@/ssword@/", DSNInfo{"", "", "", userName, ""}},
+		"driver and multiple @": {"postgresql://user:p@/ssword@/", DSNInfo{"postgresql://", "", "", userName, ""}},
+		"unix socket":           {"user@unix(/path/to/socket)/dbname?charset=utf8", DSNInfo{"", dbName, "/path/to/socket", userName, "unix"}},
+		"params added":          {"user:password@/dbname?param1=val1&param2=val2&param3=val3", DSNInfo{"", dbName, "", userName, ""}},
+		"IP as address":         {"bruce:hunter2@tcp(127.0.0.1)/arkhamdb?param=value", DSNInfo{"", "arkhamdb", "127.0.0.1", "bruce", tcpProtocol}},
+		"@ in path to socker":   {"user@unix(/path/to/mydir@/socket)/dbname?charset=utf8", DSNInfo{"", dbName, "/path/to/mydir@/socket", userName, "unix"}},
+		"port in address":       {"user:password@tcp(localhost:5555)/dbname?charset=utf8&tls=true", DSNInfo{"", dbName, "localhost:5555", userName, tcpProtocol}},
+		"multiple ':'":          {"us:er:name:password@memory(localhost:5555)/dbname?charset=utf8&tls=true", DSNInfo{"", dbName, "localhost:5555", "us", "memory"}},
+		"IPv6 provided":         {"user:p@ss(word)@tcp([c023:9350:225b:671a:2cdd:3d83:7c19:ca42]:80)/dbname?loc=Local", DSNInfo{"", dbName, "[c023:9350:225b:671a:2cdd:3d83:7c19:ca42]:80", userName, tcpProtocol}},
 		"empty string":          {"", DSNInfo{"", "", "", "", ""}},
 		"non-matching string":   {"rosebud", DSNInfo{"", "", "", "", ""}},
 	}
@@ -305,14 +311,14 @@ func TestDSNInfo(t *testing.T) {
 		DBName:   "testdb",
 		Address:  "localhost:3306",
 		User:     "testuser",
-		Protocol: "tcp",
+		Protocol: tcpProtocol,
 	}
 
 	assert.Equal(t, "mysql://", info.Driver)
 	assert.Equal(t, "testdb", info.DBName)
 	assert.Equal(t, "localhost:3306", info.Address)
 	assert.Equal(t, "testuser", info.User)
-	assert.Equal(t, "tcp", info.Protocol)
+	assert.Equal(t, tcpProtocol, info.Protocol)
 }
 
 func TestConnInfo_Attributes(t *testing.T) {
@@ -437,7 +443,7 @@ func TestParseDSN_EdgeCases(t *testing.T) {
 			dsn: "user@/verylongdatabasenamewithnospaces",
 			want: DSNInfo{
 				DBName: "verylongdatabasenamewithnospaces",
-				User:   "user",
+				User:   userName,
 			},
 		},
 		"special chars in password": {
@@ -445,22 +451,22 @@ func TestParseDSN_EdgeCases(t *testing.T) {
 			want: DSNInfo{
 				DBName:   "db",
 				Address:  "localhost",
-				User:     "user",
-				Protocol: "tcp",
+				User:     userName,
+				Protocol: tcpProtocol,
 			},
 		},
 		"no protocol": {
 			dsn: "user:password@/dbname",
 			want: DSNInfo{
-				DBName: "dbname",
-				User:   "user",
+				DBName: dbName,
+				User:   userName,
 			},
 		},
 		"driver only": {
 			dsn: "postgres:///dbname",
 			want: DSNInfo{
 				Driver: "postgres://",
-				DBName: "dbname",
+				DBName: dbName,
 			},
 		},
 	}

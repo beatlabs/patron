@@ -8,14 +8,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	invalidSizeMessage = "must provide a positive size"
+)
+
 func TestNew(t *testing.T) {
 	tests := map[string]struct {
 		err     string
 		size    int
 		wantErr bool
 	}{
-		"negative size": {size: -1, wantErr: true, err: "must provide a positive size"},
-		"zero size":     {size: 0, wantErr: true, err: "must provide a positive size"},
+		"negative size": {size: -1, wantErr: true, err: invalidSizeMessage},
+		"zero size":     {size: 0, wantErr: true, err: invalidSizeMessage},
 		"positive size": {size: 1024, wantErr: false},
 	}
 
@@ -39,8 +43,8 @@ func TestNewWithEvict(t *testing.T) {
 		size    int
 		wantErr bool
 	}{
-		"negative size": {size: -1, wantErr: true, err: "must provide a positive size"},
-		"zero size":     {size: 0, wantErr: true, err: "must provide a positive size"},
+		"negative size": {size: -1, wantErr: true, err: invalidSizeMessage},
+		"zero size":     {size: 0, wantErr: true, err: invalidSizeMessage},
 		"positive size": {size: 1024, wantErr: false},
 	}
 

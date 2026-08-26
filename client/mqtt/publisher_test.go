@@ -97,7 +97,7 @@ func TestInjectObservabilityHeaders(t *testing.T) {
 
 		ctx := correlation.ContextWithID(context.Background(), "test-correlation-123")
 		pub := &paho.Publish{
-			Topic: "test/topic",
+			Topic: mqttTestTopic,
 		}
 
 		injectObservabilityHeaders(ctx, pub)
@@ -114,7 +114,7 @@ func TestInjectObservabilityHeaders(t *testing.T) {
 
 		ctx := context.Background()
 		pub := &paho.Publish{
-			Topic: "test/topic",
+			Topic: mqttTestTopic,
 		}
 
 		injectObservabilityHeaders(ctx, pub)
@@ -132,7 +132,7 @@ func TestInjectObservabilityHeaders(t *testing.T) {
 
 		ctx := correlation.ContextWithID(context.Background(), "test-id")
 		pub := &paho.Publish{
-			Topic: "test/topic",
+			Topic: mqttTestTopic,
 			Properties: &paho.PublishProperties{
 				User: paho.UserProperties{},
 			},

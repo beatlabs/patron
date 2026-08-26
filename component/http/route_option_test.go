@@ -13,6 +13,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	routeOptionTestSuccess = "success"
+	routeOptionGetAPIPath  = "GET /api"
+)
+
 type mockAuthenticator struct {
 	success bool
 	err     error
@@ -63,8 +68,8 @@ func TestRouteMiddlewares(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{mm: []patronhttp.Func{patronhttp.NewRecovery()}}},
-		"fail":    {args: args{mm: nil}, expectedErr: "middlewares are empty"},
+		routeOptionTestSuccess: {args: args{mm: []patronhttp.Func{patronhttp.NewRecovery()}}},
+		"fail":                 {args: args{mm: nil}, expectedErr: "middlewares are empty"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -89,8 +94,8 @@ func TestAuth(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {args: args{auth: &mockAuthenticator{}}},
-		"fail":    {args: args{auth: nil}, expectedErr: "authenticator is nil"},
+		routeOptionTestSuccess: {args: args{auth: &mockAuthenticator{}}},
+		"fail":                 {args: args{auth: nil}, expectedErr: "authenticator is nil"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -120,8 +125,8 @@ func TestCache(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
-			fields:      fields{path: "GET /api"},
+		routeOptionTestSuccess: {
+			fields:      fields{path: routeOptionGetAPIPath},
 			args:        args{cache: &redis.Cache{}, ageBounds: httpcache.Age{}},
 			expectedErr: "",
 		},
@@ -131,7 +136,7 @@ func TestCache(t *testing.T) {
 			expectedErr: "cannot apply cache to a route with any method other than GET",
 		},
 		"fail with args": {
-			fields:      fields{path: "GET /api"},
+			fields:      fields{path: routeOptionGetAPIPath},
 			args:        args{cache: nil, ageBounds: httpcache.Age{}},
 			expectedErr: "route cache is nil",
 		},

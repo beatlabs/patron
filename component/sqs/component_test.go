@@ -17,6 +17,11 @@ import (
 	"go.uber.org/goleak"
 )
 
+const (
+	sqsComponentTestSuccess = "success"
+	componentName           = "name"
+)
+
 var (
 	tracePublisher *tracesdk.TracerProvider
 	traceExporter  = tracetest.NewInMemoryExporter()
@@ -54,10 +59,10 @@ func TestNew(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success": {
+		sqsComponentTestSuccess: {
 			args: args{
-				name:      "name",
-				queueName: "queueName",
+				name:      componentName,
+				queueName: queueName,
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
 				oo:        []OptionFunc{WithRetries(5)},
@@ -66,7 +71,7 @@ func TestNew(t *testing.T) {
 		"missing name": {
 			args: args{
 				name:      "",
-				queueName: "queueName",
+				queueName: queueName,
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
 				oo:        []OptionFunc{WithRetries(5)},
@@ -75,7 +80,7 @@ func TestNew(t *testing.T) {
 		},
 		"missing queue name": {
 			args: args{
-				name:      "name",
+				name:      componentName,
 				queueName: "",
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
@@ -85,8 +90,8 @@ func TestNew(t *testing.T) {
 		},
 		"missing queue URL": {
 			args: args{
-				name:      "name",
-				queueName: "queueName",
+				name:      componentName,
+				queueName: queueName,
 				sqsAPI: &stubSQSAPI{
 					getQueueUrlWithContextErr: errors.New("QUEUE URL ERROR"),
 				},
@@ -97,8 +102,8 @@ func TestNew(t *testing.T) {
 		},
 		"missing queue SQS API": {
 			args: args{
-				name:      "name",
-				queueName: "queueName",
+				name:      componentName,
+				queueName: queueName,
 				sqsAPI:    nil,
 				proc:      sp.process,
 				oo:        []OptionFunc{WithRetries(5)},
@@ -107,8 +112,8 @@ func TestNew(t *testing.T) {
 		},
 		"missing process function": {
 			args: args{
-				name:      "name",
-				queueName: "queueName",
+				name:      componentName,
+				queueName: queueName,
 				sqsAPI:    &stubSQSAPI{},
 				proc:      nil,
 				oo:        []OptionFunc{WithRetries(5)},
@@ -117,8 +122,8 @@ func TestNew(t *testing.T) {
 		},
 		"retry option fails": {
 			args: args{
-				name:      "name",
-				queueName: "queueName",
+				name:      componentName,
+				queueName: queueName,
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
 				oo:        []OptionFunc{WithRetryWait(-1 * time.Second)},
@@ -127,8 +132,8 @@ func TestNew(t *testing.T) {
 		},
 		"success queue owner": {
 			args: args{
-				name:      "name",
-				queueName: "queueName",
+				name:      componentName,
+				queueName: queueName,
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
 				oo:        []OptionFunc{WithQueueOwner("10201020")},
@@ -136,8 +141,8 @@ func TestNew(t *testing.T) {
 		},
 		"queue owner fails": {
 			args: args{
-				name:      "name",
-				queueName: "queueName",
+				name:      componentName,
+				queueName: queueName,
 				sqsAPI:    &stubSQSAPI{},
 				proc:      sp.process,
 				oo:        []OptionFunc{WithQueueOwner("")},
@@ -170,7 +175,7 @@ func TestGetAttributeFloat64(t *testing.T) {
 		expected    float64
 		expectedErr string
 	}{
-		"success": {
+		sqsComponentTestSuccess: {
 			attrs: map[string]string{
 				sqsAttributeApproximateNumberOfMessages: "12",
 			},
@@ -224,7 +229,7 @@ func TestComponent_Run_Success(t *testing.T) {
 	sqsAPI.succeededMessage = createMessage(nil, "1")
 	sqsAPI.failedMessage = createMessage(nil, "2")
 
-	cmp, err := New("name", queueName, sqsAPI, sp.process, WithQueueStatsInterval(10*time.Millisecond))
+	cmp, err := New(componentName, queueName, sqsAPI, sp.process, WithQueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
@@ -261,7 +266,7 @@ func TestComponent_RunEvenIfStatsFail_Success(t *testing.T) {
 	sqsAPI.failedMessage = createMessage(nil, "2")
 	sqsAPI.getQueueAttributesWithContextErr = errors.New("STATS FAIL")
 
-	cmp, err := New("name", queueName, sqsAPI, sp.process, WithQueueStatsInterval(10*time.Millisecond))
+	cmp, err := New(componentName, queueName, sqsAPI, sp.process, WithQueueStatsInterval(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
@@ -298,7 +303,7 @@ func TestComponent_Run_Error(t *testing.T) {
 		succeededMessage:             createMessage(nil, "1"),
 		failedMessage:                createMessage(nil, "2"),
 	}
-	cmp, err := New("name", queueName, sqsAPI, sp.process, WithRetries(2), WithRetryWait(10*time.Millisecond))
+	cmp, err := New(componentName, queueName, sqsAPI, sp.process, WithRetries(2), WithRetryWait(10*time.Millisecond))
 	require.NoError(t, err)
 	ctx, cnl := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}

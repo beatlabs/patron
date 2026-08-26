@@ -15,6 +15,11 @@ import (
 	"go.uber.org/goleak"
 )
 
+const (
+	serviceTestSuccess = "success"
+	serviceName        = "name"
+)
+
 type testRunComponent struct {
 	ran atomic.Bool
 	err error
@@ -45,8 +50,8 @@ func TestNew(t *testing.T) {
 		uncompressedPaths []string
 		wantErr           string
 	}{
-		"success": {
-			name:              "name",
+		serviceTestSuccess: {
+			name:              serviceName,
 			fields:            []slog.Attr{slog.String("env", "dev")},
 			sighupHandler:     func() { slog.Info("WithSIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
@@ -56,11 +61,11 @@ func TestNew(t *testing.T) {
 			wantErr: "name is required",
 		},
 		"nil inputs steps": {
-			name:    "name",
+			name:    serviceName,
 			wantErr: httpBuilderAllErrors,
 		},
 		"error in all builder steps": {
-			name:              "name",
+			name:              serviceName,
 			uncompressedPaths: []string{},
 			wantErr:           httpBuilderAllErrors,
 		},
@@ -117,7 +122,7 @@ func TestRunRejectsEmptyComponents(t *testing.T) {
 
 func TestNew_WithJSONLogger_ConfiguresDefaultLogger(t *testing.T) {
 	output := captureStderr(t, func() {
-		svc, err := New("name", "1.0", WithJSONLogger())
+		svc, err := New(serviceName, "1.0", WithJSONLogger())
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
@@ -131,7 +136,7 @@ func TestNew_WithJSONLogger_ConfiguresDefaultLogger(t *testing.T) {
 
 func TestNew_WithLogFields_ConfiguresDefaultLoggerAttributes(t *testing.T) {
 	output := captureStderr(t, func() {
-		svc, err := New("name", "1.0", WithLogFields(slog.String("env", "dev")))
+		svc, err := New(serviceName, "1.0", WithLogFields(slog.String("env", "dev")))
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 
@@ -144,7 +149,7 @@ func TestNew_WithLogFields_ConfiguresDefaultLoggerAttributes(t *testing.T) {
 
 func TestNew_WithJSONLoggerAndLogFields_ConfiguresDefaultLogger(t *testing.T) {
 	output := captureStderr(t, func() {
-		svc, err := New("name", "1.0", WithJSONLogger(), WithLogFields(slog.String("env", "dev")))
+		svc, err := New(serviceName, "1.0", WithJSONLogger(), WithLogFields(slog.String("env", "dev")))
 		require.NoError(t, err)
 		require.NotNil(t, svc)
 

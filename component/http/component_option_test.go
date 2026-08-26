@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	componentOptionTestSuccess = "success"
+	missingCert                = "missing cert"
+)
+
 func TestTLS(t *testing.T) {
 	t.Parallel()
 	type args struct {
@@ -18,9 +23,9 @@ func TestTLS(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":      {args: args{cert: "cert", key: "key"}},
-		"missing cert": {args: args{cert: "", key: "key"}, expectedErr: "cert file or key file was empty"},
-		"missing key":  {args: args{cert: "cert", key: ""}, expectedErr: "cert file or key file was empty"},
+		componentOptionTestSuccess: {args: args{cert: "cert", key: "key"}},
+		missingCert:                {args: args{cert: "", key: "key"}, expectedErr: "cert file or key file was empty"},
+		"missing key":              {args: args{cert: "cert", key: ""}, expectedErr: "cert file or key file was empty"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -48,8 +53,8 @@ func TestReadTimeout(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":      {args: args{rt: time.Second}},
-		"missing cert": {args: args{rt: -1 * time.Second}, expectedErr: "negative or zero read timeout provided"},
+		componentOptionTestSuccess: {args: args{rt: time.Second}},
+		missingCert:                {args: args{rt: -1 * time.Second}, expectedErr: "negative or zero read timeout provided"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -76,8 +81,8 @@ func TestWriteTimeout(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":      {args: args{wt: time.Second}},
-		"missing cert": {args: args{wt: -1 * time.Second}, expectedErr: "negative or zero write timeout provided"},
+		componentOptionTestSuccess: {args: args{wt: time.Second}},
+		missingCert:                {args: args{wt: -1 * time.Second}, expectedErr: "negative or zero write timeout provided"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -104,8 +109,8 @@ func TestHandlerTimeout(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":      {args: args{wt: time.Second}},
-		"missing cert": {args: args{wt: -1 * time.Second}, expectedErr: "negative or zero handler timeout provided"},
+		componentOptionTestSuccess: {args: args{wt: time.Second}},
+		missingCert:                {args: args{wt: -1 * time.Second}, expectedErr: "negative or zero handler timeout provided"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -132,8 +137,8 @@ func TestShutdownGracePeriod(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":      {args: args{gp: time.Second}},
-		"missing cert": {args: args{gp: -1 * time.Second}, expectedErr: "negative or zero shutdown grace period timeout provided"},
+		componentOptionTestSuccess: {args: args{gp: time.Second}},
+		missingCert:                {args: args{gp: -1 * time.Second}, expectedErr: "negative or zero shutdown grace period timeout provided"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -160,8 +165,8 @@ func TestPort(t *testing.T) {
 		args        args
 		expectedErr string
 	}{
-		"success":      {args: args{port: 50000}},
-		"missing cert": {args: args{port: 120000}, expectedErr: "invalid HTTP Port provided"},
+		componentOptionTestSuccess: {args: args{port: 50000}},
+		missingCert:                {args: args{port: 120000}, expectedErr: "invalid HTTP Port provided"},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

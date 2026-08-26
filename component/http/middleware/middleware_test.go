@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	internalServerError     = "Internal Server Error\\n"
+	internalServerError     = "Internal Server Error\n"
 	testURL                 = "http://foo/bar"
 	middlewareEmptyTestCase = "empty"
 )

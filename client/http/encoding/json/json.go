@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/beatlabs/patron/encoding"
 	"github.com/beatlabs/patron/encoding/json"
@@ -28,7 +27,6 @@ func NewRequest(ctx context.Context, method string, url string, payload any) (*h
 	}
 
 	req.Header.Set(encoding.ContentTypeHeader, json.Type)
-	req.Header.Set(encoding.ContentLengthHeader, strconv.FormatInt(int64(len(buf)), 10))
 
 	return req, nil
 }

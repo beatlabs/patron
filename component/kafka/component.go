@@ -6,12 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 	"uuid"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/observability/log"
 	patrontrace "github.com/beatlabs/patron/observability/trace"
 	"github.com/twmb/franz-go/pkg/kgo"
@@ -64,11 +65,11 @@ func New(name, group string, brokers, topics []string, proc ProcessorFunc, opts 
 		errs = append(errs, errors.New("consumer group is required"))
 	}
 
-	if validation.IsStringSliceEmpty(brokers) {
+	if len(brokers) == 0 || slices.ContainsFunc(brokers, func(b string) bool { return strings.TrimSpace(b) == "" }) {
 		errs = append(errs, errors.New("brokers are empty or have an empty value"))
 	}
 
-	if validation.IsStringSliceEmpty(topics) {
+	if len(topics) == 0 || slices.ContainsFunc(topics, func(t string) bool { return strings.TrimSpace(t) == "" }) {
 		errs = append(errs, errors.New("topics are empty or have an empty value"))
 	}
 

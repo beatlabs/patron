@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
+	"strings"
 
 	"github.com/beatlabs/patron/correlation"
-	"github.com/beatlabs/patron/internal/validation"
 	"github.com/beatlabs/patron/observability"
 	patronmetric "github.com/beatlabs/patron/observability/metric"
 	"github.com/twmb/franz-go/pkg/kgo"
@@ -47,7 +48,7 @@ type Producer struct {
 // New creates a new Kafka producer with the specified brokers and options.
 // Kotel hooks for OpenTelemetry tracing and metrics are automatically configured.
 func New(brokers []string, opts ...OptionFunc) (*Producer, error) {
-	if validation.IsStringSliceEmpty(brokers) {
+	if len(brokers) == 0 || slices.ContainsFunc(brokers, func(b string) bool { return strings.TrimSpace(b) == "" }) {
 		return nil, errors.New("brokers are empty or have an empty value")
 	}
 

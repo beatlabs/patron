@@ -34,19 +34,22 @@ func UseCaseAttribute(useCase string) attribute.KeyValue {
 	return attribute.String("cache.use_case", useCase)
 }
 
+func observe(ctx context.Context, status attribute.KeyValue, attrs ...attribute.KeyValue) {
+	attrs = append(attrs, status)
+	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
+}
+
 // ObserveHit increments the cache hit counter.
 func ObserveHit(ctx context.Context, attrs ...attribute.KeyValue) {
-	attrs = append(attrs, cacheHitAttribute)
-	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
+	observe(ctx, cacheHitAttribute, attrs...)
 }
 
 // ObserveMiss increments the cache miss counter.
 func ObserveMiss(ctx context.Context, attrs ...attribute.KeyValue) {
-	attrs = append(attrs, cacheMissAttribute)
-	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
+	observe(ctx, cacheMissAttribute, attrs...)
 }
 
+// ObserveEviction increments the cache eviction counter.
 func ObserveEviction(ctx context.Context, attrs ...attribute.KeyValue) {
-	attrs = append(attrs, cacheEvictAttribute)
-	cacheCounter.Add(ctx, 1, metric.WithAttributes(attrs...))
+	observe(ctx, cacheEvictAttribute, attrs...)
 }

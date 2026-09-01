@@ -1122,8 +1122,8 @@ github.com/twmb/franz-go/pkg/kadm
 ## explicit; go 1.24.0
 github.com/twmb/franz-go/pkg/kmsg
 github.com/twmb/franz-go/pkg/kmsg/internal/kbin
-# github.com/twmb/franz-go/plugin/kotel v1.6.0
-## explicit; go 1.22.0
+# github.com/twmb/franz-go/plugin/kotel v1.7.0
+## explicit; go 1.25.0
 github.com/twmb/franz-go/plugin/kotel
 # github.com/twmb/franz-go/plugin/kslog v1.0.0
 ## explicit; go 1.21.0

@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Patron Framework Architecture",
+    "output": "architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/beatlabs/patron",
+      "revision": "0052252693e74c6fb01c29248c581b1647454d16"
+    },
+    "views": [
+      {
+        "id": "framework-core",
+        "label": "Framework core",
+        "focus": ["service-core", "inbound-components", "shared-runtime"],
+        "note": "Follow service lifecycle orchestration into protocol components and shared runtime behavior."
+      },
+      {
+        "id": "integration-surface",
+        "label": "Integration surface",
+        "focus": ["outbound-clients", "external-services", "message-brokers", "data-stores"],
+        "note": "See how client wrappers connect applications to external services and infrastructure."
+      },
+      {
+        "id": "cross-cutting",
+        "label": "Cross-cutting concerns",
+        "focus": ["shared-runtime", "observability"],
+        "note": "Isolate encoding, correlation, cache, reliability, and telemetry support."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "application",
+      "type": "external",
+      "label": "Application",
+      "sublabel": "Service composition + handlers",
+      "pos": [40, 340],
+      "size": [170, 72],
+      "sources": [{ "path": "examples/service/main.go" }]
+    },
+    {
+      "id": "service-core",
+      "type": "backend",
+      "label": "Service Core",
+      "sublabel": "Lifecycle orchestration",
+      "tag": "Service + Component",
+      "pos": [280, 340],
+      "size": [190, 80],
+      "sources": [
+        { "path": "service.go", "line": 25, "label": "Component.Run" },
+        { "path": "options.go", "label": "functional options" }
+      ]
+    },
+    {
+      "id": "inbound-components",
+      "type": "backend",
+      "label": "Inbound Components",
+      "sublabel": "HTTP · Kafka · AMQP · gRPC · SQS",
+      "tag": "Servers + consumers",
+      "pos": [540, 155],
+      "size": [250, 92],
+      "sources": [
+        { "path": "component/http/component.go" },
+        { "path": "component/kafka/component.go" },
+        { "path": "component/sqs/component.go" }
+      ]
+    },
+    {
+      "id": "shared-runtime",
+      "type": "backend",
+      "label": "Shared Runtime",
+      "sublabel": "Encoding · correlation · cache · reliability",
+      "tag": "Reusable primitives",
+      "pos": [280, 540],
+      "size": [250, 92],
+      "sources": [
+        { "path": "encoding/encoding.go" },
+        { "path": "cache/cache.go" },
+        { "path": "reliability/retry/retry.go" }
+      ]
+    },
+    {
+      "id": "outbound-clients",
+      "type": "backend",
+      "label": "Outbound Clients",
+      "sublabel": "HTTP · messaging · AWS · data stores",
+      "tag": "Instrumented wrappers",
+      "pos": [540, 525],
+      "size": [250, 92],
+      "sources": [
+        { "path": "client/http/http.go" },
+        { "path": "client/kafka/kafka.go" },
+        { "path": "client/sql/sql.go" }
+      ]
+    },
+    {
+      "id": "observability",
+      "type": "backend",
+      "label": "Observability",
+      "sublabel": "Logs · traces · metrics",
+      "tag": "OpenTelemetry",
+      "pos": [900, 155],
+      "size": [205, 82],
+      "sources": [
+        { "path": "observability/observability.go" },
+        { "path": "observability/log/log.go" },
+        { "path": "observability/trace/tracing.go" }
+      ]
+    },
+    {
+      "id": "external-services",
+      "type": "external",
+      "label": "External Services",
+      "sublabel": "HTTP / gRPC APIs",
+      "pos": [850, 650],
+      "size": [205, 82]
+    },
+    {
+      "id": "message-brokers",
+      "type": "messagebus",
+      "label": "Message Brokers",
+      "sublabel": "Kafka · AMQP · MQTT · SNS/SQS",
+      "pos": [1115, 260],
+      "size": [225, 82]
+    },
+    {
+      "id": "data-stores",
+      "type": "database",
+      "label": "Data Stores",
+      "sublabel": "SQL · Redis · MongoDB · Elasticsearch",
+      "pos": [1115, 505],
+      "size": [225, 82]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Patron framework",
+      "wraps": ["service-core", "inbound-components", "shared-runtime", "outbound-clients", "observability"],
+      "pad": 34
+    }
+  ],
+  "connections": [
+    { "id": "compose-service", "from": "application", "to": "service-core", "label": "constructs + runs", "variant": "emphasis", "labelDy": -30 },
+    { "id": "starts-components", "from": "service-core", "to": "inbound-components", "label": "starts components", "fromSide": "right", "toSide": "left" },
+    { "id": "core-shared-runtime", "from": "service-core", "to": "shared-runtime", "label": "provides shared runtime", "fromSide": "bottom", "toSide": "top" },
+    { "id": "handlers-to-clients", "from": "inbound-components", "to": "outbound-clients", "label": "handlers call clients", "labelDx": 120, "labelDy": 120 },
+    { "id": "component-observability", "from": "inbound-components", "to": "observability", "label": "emits telemetry", "fromSide": "right", "toSide": "left", "labelDy": 62 },
+    { "id": "client-services", "from": "outbound-clients", "to": "external-services", "label": "HTTP / gRPC", "fromSide": "right", "toSide": "left" },
+    { "id": "client-brokers", "from": "outbound-clients", "to": "message-brokers", "label": "publish / consume", "fromSide": "right", "toSide": "bottom" },
+    { "id": "client-stores", "from": "outbound-clients", "to": "data-stores", "label": "query / cache", "fromSide": "right", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Core model", "items": ["Service owns lifecycle and termination", "All protocol components implement Component.Run"] },
+    { "dot": "emerald", "title": "Integration surface", "items": ["Inbound components receive work", "Outbound clients connect to services, brokers, and stores"] },
+    { "dot": "violet", "title": "Cross-cutting", "items": ["OpenTelemetry-backed logs, traces, and metrics", "Encoding, correlation, cache, retry, and circuit-breaker support"] }
+  ]
+}

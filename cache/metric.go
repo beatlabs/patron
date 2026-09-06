@@ -19,14 +19,14 @@ var (
 	cacheMissAttribute  = attribute.String(cacheStatusAttribute, "miss")
 	cacheEvictAttribute = attribute.String(cacheStatusAttribute, "evict")
 	cacheCounter        metric.Int64Counter
-	cacheOnce           sync.Once
+	cacheOnce           = sync.OnceFunc(func() {
+		cacheCounter = patronmetric.Int64Counter(packageName, "cache.counter", "Number of cache calls.", "1")
+	})
 )
 
 // SetupMetricsOnce initializes the cache counter.
 func SetupMetricsOnce() {
-	cacheOnce.Do(func() {
-		cacheCounter = patronmetric.Int64Counter(packageName, "cache.counter", "Number of cache calls.", "1")
-	})
+	cacheOnce()
 }
 
 // UseCaseAttribute returns an attribute.KeyValue with the use case.

@@ -107,12 +107,10 @@ func (s *Service) Run(ctx context.Context, components ...Component) error {
 	ctx, cnl := context.WithCancel(ctx)
 	chErr := make(chan error, len(components))
 	wg := sync.WaitGroup{}
-	wg.Add(len(components))
 	for _, cp := range components {
-		go func(c Component) {
-			defer wg.Done()
-			chErr <- c.Run(ctx)
-		}(cp)
+		wg.Go(func() {
+			chErr <- cp.Run(ctx)
+		})
 	}
 
 	log.FromContext(ctx).Info("service started", slog.String("name", s.name))

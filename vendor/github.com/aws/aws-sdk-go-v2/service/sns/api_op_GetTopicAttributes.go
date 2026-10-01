@@ -5,7 +5,6 @@ package sns
 import (
 	"context"
 	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 // Returns all of the properties of a topic. Topic properties returned might
@@ -44,10 +43,17 @@ type GetTopicAttributesOutput struct {
 	//   - DeliveryPolicy – The JSON serialization of the topic's delivery policy.
 	//
 	//   - DisplayName – The human-readable name used in the From field for
-	//   notifications to email and email-json endpoints.
+	//   notifications to email and email-json endpoints. For subscription confirmation
+	//   and unsubscribe confirmation emails, the sender name is always "Amazon Web
+	//   Services Notifications" regardless of this attribute.
 	//
 	//   - EffectiveDeliveryPolicy – The JSON serialization of the effective delivery
 	//   policy, taking system defaults into account.
+	//
+	//   - MaximumMessageSize – The maximum size, in bytes, of a message that can be
+	//   published to the topic. Amazon SNS returns this attribute only if you explicitly
+	//   set it. If Amazon SNS doesn't return it, the topic uses the default of 262144
+	//   (256 KiB).
 	//
 	//   - Owner – The Amazon Web Services account ID of the topic's owner.
 	//
@@ -136,12 +142,6 @@ func (c *Client) addOperationGetTopicAttributesMiddlewares(stack *middleware.Sta
 		return err
 	}
 
-	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
-		return err
-	}
-	if err = addComputeContentLength(stack); err != nil {
-		return err
-	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
@@ -151,19 +151,10 @@ func (c *Client) addOperationGetTopicAttributesMiddlewares(stack *middleware.Sta
 	if err = addRecordResponseTiming(stack, options); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
-	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpGetTopicAttributesValidationMiddleware(stack); err != nil {
-		return err
-	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware(options.Region, "GetTopicAttributes"), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

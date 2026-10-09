@@ -51,7 +51,6 @@ type (
 	// This type is compatible with `http.Transport.Proxy` and can be used to set a custom proxy function to the OTLP HTTP client.
 	HTTPTransportProxyFunc func(*http.Request) (*url.URL, error)
 
-	// SignalConfig holds the configuration for exporting a single signal.
 	SignalConfig struct {
 		Endpoint       string
 		Insecure       bool
@@ -73,7 +72,6 @@ type (
 		HTTPClient *http.Client
 	}
 
-	// Config holds the configuration for an otlpmetric exporter.
 	Config struct {
 		// Signal specific configurations
 		Metrics SignalConfig
@@ -146,36 +144,30 @@ func NewGRPCConfig(opts ...GRPCOption) Config {
 		cfg = opt.ApplyGRPCOption(cfg)
 	}
 
-	// dialOptsPrefix holds the internally computed defaults. It is prepended
-	// to cfg.DialOptions so that a raw grpc.DialOption supplied via WithDialOption
-	// always takes precedence: grpc.DialOption values are opaque closures, so this code has no way to
-	// detect a conflicting user-supplied option and defer to it instead.
-	var dialOptsPrefix []grpc.DialOption
 	if cfg.ServiceConfig != "" {
-		dialOptsPrefix = append(dialOptsPrefix, grpc.WithDefaultServiceConfig(cfg.ServiceConfig))
+		cfg.DialOptions = append(cfg.DialOptions, grpc.WithDefaultServiceConfig(cfg.ServiceConfig))
 	}
 	// Prioritize GRPCCredentials over Insecure (passing both is an error).
 	if cfg.Metrics.GRPCCredentials != nil { //nolint:gocritic // if-else is clearer than switch
-		dialOptsPrefix = append(dialOptsPrefix, grpc.WithTransportCredentials(cfg.Metrics.GRPCCredentials))
+		cfg.DialOptions = append(cfg.DialOptions, grpc.WithTransportCredentials(cfg.Metrics.GRPCCredentials))
 	} else if cfg.Metrics.Insecure {
-		dialOptsPrefix = append(dialOptsPrefix, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		cfg.DialOptions = append(cfg.DialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		// Default to using the host's root CA.
 		creds := credentials.NewTLS(nil)
 		cfg.Metrics.GRPCCredentials = creds
-		dialOptsPrefix = append(dialOptsPrefix, grpc.WithTransportCredentials(creds))
+		cfg.DialOptions = append(cfg.DialOptions, grpc.WithTransportCredentials(creds))
 	}
 	if cfg.Metrics.Compression == GzipCompression {
-		dialOptsPrefix = append(dialOptsPrefix, grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)))
+		cfg.DialOptions = append(cfg.DialOptions, grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)))
 	}
 	if cfg.ReconnectionPeriod != 0 {
 		p := grpc.ConnectParams{
 			Backoff:           backoff.DefaultConfig,
 			MinConnectTimeout: cfg.ReconnectionPeriod,
 		}
-		dialOptsPrefix = append(dialOptsPrefix, grpc.WithConnectParams(p))
+		cfg.DialOptions = append(cfg.DialOptions, grpc.WithConnectParams(p))
 	}
-	cfg.DialOptions = append(dialOptsPrefix, cfg.DialOptions...)
 
 	return cfg
 }
@@ -265,7 +257,6 @@ func (h *httpOption) ApplyHTTPOption(cfg Config) Config {
 
 func (httpOption) private() {}
 
-// NewHTTPOption creates an option that is only applied to the HTTP driver.
 func NewHTTPOption(fn func(cfg Config) Config) HTTPOption {
 	return &httpOption{fn: fn}
 }
@@ -281,16 +272,12 @@ func (h *grpcOption) ApplyGRPCOption(cfg Config) Config {
 
 func (grpcOption) private() {}
 
-// NewGRPCOption creates an option that is only applied to the gRPC driver.
 func NewGRPCOption(fn func(cfg Config) Config) GRPCOption {
 	return &grpcOption{fn: fn}
 }
 
 // Generic Options
 
-// WithEndpoint configures the metrics host and port only; endpoint should
-// resemble "example.com" or "localhost:4317". To configure the scheme and
-// path, use WithEndpointURL.
 func WithEndpoint(endpoint string) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.Endpoint = endpoint
@@ -298,8 +285,6 @@ func WithEndpoint(endpoint string) GenericOption {
 	})
 }
 
-// WithEndpointURL configures the metrics scheme, host, port, and path; the
-// provided value should resemble "https://example.com:4318/v1/metrics".
 func WithEndpointURL(v string) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		u, err := url.Parse(v)
@@ -321,7 +306,6 @@ func WithEndpointURL(v string) GenericOption {
 	})
 }
 
-// WithCompression configures the compression used for exports.
 func WithCompression(compression Compression) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.Compression = compression
@@ -329,7 +313,6 @@ func WithCompression(compression Compression) GenericOption {
 	})
 }
 
-// WithURLPath configures the URL path the exporter sends requests to.
 func WithURLPath(urlPath string) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.URLPath = urlPath
@@ -337,7 +320,6 @@ func WithURLPath(urlPath string) GenericOption {
 	})
 }
 
-// WithRetry configures the retry policy used on failed exports.
 func WithRetry(rc retry.Config) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.RetryConfig = rc
@@ -345,8 +327,6 @@ func WithRetry(rc retry.Config) GenericOption {
 	})
 }
 
-// WithTLSClientConfig configures the TLS configuration used by the
-// exporter's client.
 func WithTLSClientConfig(tlsCfg *tls.Config) GenericOption {
 	return newSplitOption(func(cfg Config) Config {
 		cfg.Metrics.TLSCfg = tlsCfg.Clone()
@@ -357,8 +337,6 @@ func WithTLSClientConfig(tlsCfg *tls.Config) GenericOption {
 	})
 }
 
-// WithInsecure disables client transport security for the exporter's
-// connection.
 func WithInsecure() GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.Insecure = true
@@ -366,8 +344,6 @@ func WithInsecure() GenericOption {
 	})
 }
 
-// WithSecure enables client transport security for the exporter's
-// connection.
 func WithSecure() GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.Insecure = false
@@ -375,7 +351,6 @@ func WithSecure() GenericOption {
 	})
 }
 
-// WithHeaders configures headers sent with every export request.
 func WithHeaders(headers map[string]string) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.Headers = headers
@@ -383,8 +358,6 @@ func WithHeaders(headers map[string]string) GenericOption {
 	})
 }
 
-// WithTimeout configures the max waiting time for the backend to process
-// each export batch.
 func WithTimeout(duration time.Duration) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.Timeout = duration
@@ -392,8 +365,6 @@ func WithTimeout(duration time.Duration) GenericOption {
 	})
 }
 
-// WithMaxRequestSize configures the maximum size, in bytes, of a serialized
-// export request, before compression.
 func WithMaxRequestSize(size int) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.MaxRequestSize = size
@@ -401,8 +372,6 @@ func WithMaxRequestSize(size int) GenericOption {
 	})
 }
 
-// WithTemporalitySelector configures the TemporalitySelector used to
-// determine the temporality of exported metrics.
 func WithTemporalitySelector(selector metric.TemporalitySelector) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.TemporalitySelector = selector
@@ -410,8 +379,6 @@ func WithTemporalitySelector(selector metric.TemporalitySelector) GenericOption 
 	})
 }
 
-// WithAggregationSelector configures the AggregationSelector used to
-// determine the aggregation of exported metrics.
 func WithAggregationSelector(selector metric.AggregationSelector) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.AggregationSelector = selector
@@ -419,8 +386,6 @@ func WithAggregationSelector(selector metric.AggregationSelector) GenericOption 
 	})
 }
 
-// WithProxy configures the proxy function used by the exporter's HTTP
-// client.
 func WithProxy(pf HTTPTransportProxyFunc) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.Proxy = pf
@@ -428,7 +393,6 @@ func WithProxy(pf HTTPTransportProxyFunc) GenericOption {
 	})
 }
 
-// WithHTTPClient configures the HTTP client used to make requests.
 func WithHTTPClient(c *http.Client) GenericOption {
 	return newGenericOption(func(cfg Config) Config {
 		cfg.Metrics.HTTPClient = c

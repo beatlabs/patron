@@ -121,19 +121,8 @@ func withEndpointForGRPC(u *url.URL) func(cfg Config) Config {
 	return func(cfg Config) Config {
 		// For OTLP/gRPC endpoints, this is the target to which the
 		// exporter is going to send telemetry.
-		cfg.Metrics.Endpoint = grpcEndpoint(u)
+		cfg.Metrics.Endpoint = path.Join(u.Host, u.Path)
 		return cfg
-	}
-}
-
-func grpcEndpoint(u *url.URL) string {
-	switch strings.ToLower(u.Scheme) {
-	case "http", "https":
-		return u.Host
-	case "":
-		return path.Join(u.Host, u.Path)
-	default:
-		return u.String()
 	}
 }
 
@@ -153,7 +142,7 @@ func WithEnvCompression(n string, fn func(Compression)) func(e *envconfig.EnvOpt
 
 func withEndpointScheme(u *url.URL) GenericOption {
 	switch strings.ToLower(u.Scheme) {
-	case "http", "unix", "unix-abstract":
+	case "http", "unix":
 		return WithInsecure()
 	default:
 		return WithSecure()

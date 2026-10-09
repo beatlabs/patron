@@ -14,7 +14,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.41.0"
 )
 
 const statusAttribute = "status"
@@ -119,9 +118,12 @@ func (p *Provider) Shutdown(ctx context.Context) error {
 }
 
 func createResource(name, version string) (*resource.Resource, error) {
+	// Use resource.Default()'s schema URL (via NewSchemaless merging into the
+	// default) so semconv version drift in the OTel SDK can never cause a
+	// conflicting-schema-URL error on upgrade.
 	return resource.Merge(resource.Default(),
-		resource.NewWithAttributes(semconv.SchemaURL,
-			semconv.ServiceName(name),
-			semconv.ServiceVersion(version),
+		resource.NewSchemaless(
+			attribute.Key("service.name").String(name),
+			attribute.Key("service.version").String(version),
 		))
 }

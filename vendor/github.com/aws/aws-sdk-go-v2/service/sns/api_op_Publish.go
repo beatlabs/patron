@@ -6,7 +6,6 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 // Sends a message to an Amazon SNS topic, a text message (SMS message) directly
@@ -59,8 +58,17 @@ type PublishInput struct {
 	//
 	// Constraints:
 	//
-	//   - With the exception of SMS, messages must be UTF-8 encoded strings and at
-	//   most 256 KB in size (262,144 bytes, not 262,144 characters).
+	//   - With the exception of SMS, messages must be UTF-8 encoded strings. By
+	//   default, a message can be at most 256 KiB in size (262,144 bytes, not 262,144
+	//   characters).
+	//
+	// When you publish to a topic, the maximum size is determined by the topic's
+	//   MaximumMessageSize attribute, which supports values up to 1 MiB (1,048,576
+	//   bytes). Amazon SNS validates the combined size of the message body and message
+	//   attributes against this value and returns an InvalidParameter error if the
+	//   limit is exceeded.
+	//
+	// For more information, see [Large message payloads]in the Amazon SNS Developer Guide.
 	//
 	//   - For SMS, each message can contain up to 140 characters. This character
 	//   limit depends on the encoding schema. For example, an SMS message can contain
@@ -96,6 +104,8 @@ type PublishInput struct {
 	//
 	//   - Failure to parse or validate any key or value in the message will cause the
 	//   Publish call to return an error (no partial delivery).
+	//
+	// [Large message payloads]: https://docs.aws.amazon.com/sns/latest/dg/large-message-payloads.html
 	//
 	// This member is required.
 	Message *string
@@ -237,12 +247,6 @@ func (c *Client) addOperationPublishMiddlewares(stack *middleware.Stack, options
 		return err
 	}
 
-	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
-		return err
-	}
-	if err = addComputeContentLength(stack); err != nil {
-		return err
-	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
@@ -252,19 +256,10 @@ func (c *Client) addOperationPublishMiddlewares(stack *middleware.Stack, options
 	if err = addRecordResponseTiming(stack, options); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
-	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
-		return err
-	}
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpPublishValidationMiddleware(stack); err != nil {
-		return err
-	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware(options.Region, "Publish"), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

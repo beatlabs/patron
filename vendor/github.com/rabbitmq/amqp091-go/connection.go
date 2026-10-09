@@ -29,7 +29,7 @@ const (
 	defaultHeartbeat         = 10 * time.Second
 	defaultConnectionTimeout = 30 * time.Second
 	defaultProduct           = "AMQP 0.9.1 Client"
-	buildVersion             = "1.13.0"
+	buildVersion             = "1.15.0"
 	platform                 = "golang"
 	// Safer default that makes channel leaks a lot easier to spot
 	// before they create operational headaches. See https://github.com/rabbitmq/rabbitmq-server/issues/1593.
@@ -173,6 +173,14 @@ type Connection struct {
 	close chan struct{}
 
 	Config Config // The negotiated Config after connection.open
+
+	// originalSASL is a clone of the caller-provided Config.SASL candidates,
+	// captured once at initial Open, before openStart narrows Config.SASL
+	// down to the single chosen (and cloned) mechanism and before
+	// openComplete zeroes its credentials. Reconnect() restores Config.SASL
+	// from this instead of re-deriving credentials from the URL, so it
+	// honors whatever Authentication the caller actually configured.
+	originalSASL []Authentication
 
 	url string // Connection URL stored for recovery
 
@@ -381,9 +389,13 @@ func Open(conn io.ReadWriteCloser, config Config) (*Connection, error) {
 		errors:                make(chan *Error, 1),
 		close:                 make(chan struct{}),
 		deadlines:             make(chan readDeadliner, 1),
-		Config:                config,
-		lifeCycle:             newLifeCycle(),
+		// TODO: Connection has Config and also an atomic int for MaxFrameSize. Duplication to simplify.
+		Config:    config,
+		lifeCycle: newLifeCycle(),
 	}
+	// Before max frame size is negotiated in Tune, the spec sets a ceiling of 4096 bytes
+	c.maxFrameSize.Store(frameMinSize)
+	c.originalSASL = cloneAuthentications(config.SASL)
 	go c.reader(conn)
 	err := c.open(config)
 	if err == nil {
@@ -536,6 +548,52 @@ func (c *Connection) NotifyBlocked(receiver chan Blocking) chan Blocking {
 	return receiver
 }
 
+// beginClose marks close-intent, waits out any in-flight Reconnect(), transitions
+// the lifecycle to StateClosing, and reports whether the caller should proceed.
+// Shared prologue for Close()/CloseDeadline()/closeWith().
+//
+// On a non-nil error (always ErrClosed), the caller must return it
+// immediately — a concurrent close already won the race, or the connection
+// was already closed. On success, the caller must defer the returned unlock
+// func to release c.reconnecting.
+func (c *Connection) beginClose() (unlock func(), err error) {
+	c.closeRecovery() // Stop any active recovery process
+
+	// Mark close-intent before racing for c.reconnecting below. If Reconnect()
+	// hasn't started yet (e.g. it hasn't reached c.reconnecting.Lock() and so
+	// closeRecovery() above found no cancel channel to close), it has no other
+	// way to learn a close was requested. Reconnect() re-checks closeInit
+	// immediately after acquiring c.reconnecting, so setting this first
+	// guarantees it aborts instead of resurrecting the connection after this
+	// call has already returned ErrClosed to the caller.
+	c.closeM.Lock()
+	initiated := !c.closeInit
+	c.closeInit = true
+	c.closeM.Unlock()
+
+	if !initiated {
+		return nil, ErrClosed
+	}
+
+	// Wait for any in-flight Reconnect() to fully settle (succeed or exhaust
+	// retries) before inspecting/tearing down state. Reconnect() holds this
+	// mutex for its entire duration, so without this, the caller could race
+	// past a stale IsClosed() snapshot while Reconnect() is still redialing
+	// and reopening channels, tearing down state that Reconnect() then
+	// rebuilds on top of, orphaning the newly spawned reader/heartbeater
+	// goroutines.
+	c.reconnecting.Lock()
+
+	if c.IsClosed() {
+		c.reconnecting.Unlock()
+		return nil, ErrClosed
+	}
+
+	c.lifeCycle.SetState(StateClosing, nil)
+
+	return c.reconnecting.Unlock, nil
+}
+
 /*
 Close requests and waits for the response to close the AMQP connection.
 
@@ -550,38 +608,20 @@ including the underlying io, Channels, Notify listeners and Channel consumers
 will also be closed.
 */
 func (c *Connection) Close() error {
-	c.closeRecovery() // Stop any active recovery process
-
-	if c.IsClosed() {
-		return ErrClosed
+	unlock, err := c.beginClose()
+	if err != nil {
+		return err
 	}
+	defer unlock()
 
-	c.lifeCycle.SetState(StateClosing, nil)
-
-	var handshakeErr error
-	var initiated bool
-
-	c.closeM.Lock()
-	if !c.closeInit {
-		c.closeInit = true
-		initiated = true
-	}
-	c.closeM.Unlock()
-
-	if initiated {
-		defer c.shutdown(nil)
-		handshakeErr = c.call(
-			&connectionClose{
-				ReplyCode: replySuccess,
-				ReplyText: "kthxbai",
-			},
-			&connectionCloseOk{},
-		)
-	}
-	if !initiated {
-		return ErrClosed
-	}
-	return handshakeErr
+	defer c.shutdown(nil)
+	return c.call(
+		&connectionClose{
+			ReplyCode: replySuccess,
+			ReplyText: "kthxbai",
+		},
+		&connectionCloseOk{},
+	)
 }
 
 // CloseDeadline requests and waits for the response to close this AMQP connection.
@@ -597,71 +637,46 @@ func (c *Connection) Close() error {
 // After returning from this call, all resources associated with this connection,
 // including the underlying io, Channels, Notify listeners and Channel consumers
 // will also be closed.
+//
+// Note: deadline only bounds the close handshake itself (setDeadline() below and
+// the subsequent connection.close call). If an in-flight Reconnect() is holding
+// c.reconnecting, this call blocks behind it first — that wait is not covered by
+// deadline and can run for the duration of Reconnect()'s full retry loop.
 func (c *Connection) CloseDeadline(deadline time.Time) error {
-	c.closeRecovery() // Stop any active recovery process
-
-	if c.IsClosed() {
-		return ErrClosed
+	unlock, err := c.beginClose()
+	if err != nil {
+		return err
 	}
+	defer unlock()
 
-	var handshakeErr error
-	var initiated bool
-
-	c.closeM.Lock()
-	if !c.closeInit {
-		c.closeInit = true
-		initiated = true
+	defer c.shutdown(nil)
+	if err := c.setDeadline(deadline); err != nil {
+		return err
 	}
-	c.closeM.Unlock()
-
-	if initiated {
-		defer c.shutdown(nil)
-		if err := c.setDeadline(deadline); err != nil {
-			return err
-		}
-		handshakeErr = c.call(
-			&connectionClose{
-				ReplyCode: replySuccess,
-				ReplyText: "kthxbai",
-			},
-			&connectionCloseOk{},
-		)
-	}
-	if !initiated {
-		return ErrClosed
-	}
-	return handshakeErr
+	return c.call(
+		&connectionClose{
+			ReplyCode: replySuccess,
+			ReplyText: "kthxbai",
+		},
+		&connectionCloseOk{},
+	)
 }
 
 func (c *Connection) closeWith(err *Error) error {
-	if c.IsClosed() {
-		return ErrClosed
+	unlock, beginErr := c.beginClose()
+	if beginErr != nil {
+		return beginErr
 	}
+	defer unlock()
 
-	var handshakeErr error
-	var initiated bool
-
-	c.closeM.Lock()
-	if !c.closeInit {
-		c.closeInit = true
-		initiated = true
-	}
-	c.closeM.Unlock()
-
-	if initiated {
-		defer c.shutdown(err)
-		handshakeErr = c.call(
-			&connectionClose{
-				ReplyCode: uint16(err.Code),
-				ReplyText: err.Reason,
-			},
-			&connectionCloseOk{},
-		)
-	}
-	if !initiated {
-		return ErrClosed
-	}
-	return handshakeErr
+	defer c.shutdown(err)
+	return c.call(
+		&connectionClose{
+			ReplyCode: uint16(err.Code),
+			ReplyText: err.Reason,
+		},
+		&connectionCloseOk{},
+	)
 }
 
 // IsClosed returns true if the connection is marked as closed, otherwise false
@@ -825,16 +840,6 @@ func (c *Connection) shutdown(err *Error) {
 	// Shutdown handler goroutine can still receive the result.
 	close(c.errors)
 
-	if err == nil || !c.IsRecoveryEnabled() {
-		for _, listener := range c.closes {
-			close(listener)
-		}
-		for _, block := range c.blocks {
-			close(block)
-		}
-		c.closes, c.blocks = nil, nil // nil to prevent double-close
-	}
-
 	// Shutdown the channel, but do not use closeChannel() as it calls
 	// releaseChannel() which requires the connection lock.
 	//
@@ -849,15 +854,11 @@ func (c *Connection) shutdown(err *Error) {
 	close(c.close)
 
 	if err == nil || !c.IsRecoveryEnabled() {
-		c.channels = nil
-		c.allocator = nil
-		c.noNotify = true
-
 		var e error
 		if err != nil {
 			e = fmt.Errorf("connection shutdown error: %w", err) // errors.As(e, &target) still unwraps to *Error
 		}
-		c.lifeCycle.SetState(StateClosed, e)
+		c.closeResources(e)
 	}
 }
 
@@ -1237,7 +1238,11 @@ func (c *Connection) openStart(config Config) error {
 		return ErrSASL
 	}
 
-	// Save this mechanism off as the one we chose
+	// Save this mechanism off as the one we chose. Clone it so that the
+	// credential zeroing in openComplete does not mutate the caller-owned
+	// Authentication stored in the original Config.SASL, which callers may
+	// reuse across DialConfig calls (e.g. on reconnect).
+	auth = cloneAuthentication(auth)
 	c.Config.SASL = []Authentication{auth}
 
 	// Set the connection locale to client locale
@@ -1298,7 +1303,7 @@ func (c *Connection) openTune(config Config, auth Authentication) error {
 	// minimum floor of frameMinSize (4096 bytes) to prevent malicious servers
 	// from forcing extreme fragmentation and CPU overhead.
 	c.Config.FrameSize = negotiateFrameSize(config.FrameSize, int(tune.FrameMax))
-	// This is the only place maxFrameSize is written. reader.ReadFrame relies on
+	// reader.ReadFrame relies on
 	// any nonzero value here being >= frameMinSize (negotiateFrameSize's floor)
 	// to safely subtract frameHeaderSize without underflow — keep it that way if
 	// another write path is ever added.
@@ -1457,6 +1462,39 @@ func negotiateFrameSize(client, server int) int {
 	return size
 }
 
+// closeResources closes and clears the Connection's close/block/recovery-cancel
+// notification listeners, tears down the channel registry, and transitions the
+// lifecycle to StateClosed with the given (already-wrapped) error. Shared by
+// shutdown() and cleanup() — callers must hold c.m and c.notifyM. It's fine
+// for this to run more than once (e.g. both callers reaching it for the same
+// Connection): every field it touches is nilled out before returning, so a
+// repeat call just ranges over nil slices/maps and re-sets the same state.
+func (c *Connection) closeResources(err error) {
+	for _, listener := range c.closes {
+		close(listener)
+	}
+	for _, block := range c.blocks {
+		close(block)
+	}
+	for _, listener := range c.recoveryCancels {
+		close(listener)
+	}
+	// nil to prevent double-close
+	c.closes = nil
+	c.blocks = nil
+	c.recoveryCancels = nil
+	c.channels = nil
+	c.allocator = nil
+
+	c.noNotify = true
+
+	c.topologyM.Lock()
+	c.topologyConfiguration = nil
+	c.topologyM.Unlock()
+
+	c.lifeCycle.SetState(StateClosed, err)
+}
+
 // cleanup releases registered resources and performs final teardown of the connection.
 func (c *Connection) cleanup(err error) {
 	c.m.Lock()
@@ -1465,37 +1503,16 @@ func (c *Connection) cleanup(err error) {
 	c.notifyM.Lock()
 	defer c.notifyM.Unlock()
 
-	for _, listener := range c.closes {
-		close(listener)
-	}
-	for _, block := range c.blocks {
-		close(block)
-	}
-	c.closes, c.blocks = nil, nil // nil to prevent double-close
-
 	for _, ch := range c.channels {
 		ch.cleanup(err)
 	}
-
-	for _, listener := range c.recoveryCancels {
-		close(listener)
-	}
-
-	c.recoveryCancels = nil
-	c.channels = nil
-	c.allocator = nil
-	c.noNotify = true
-
-	c.topologyM.Lock()
-	c.topologyConfiguration = nil
-	c.topologyM.Unlock()
 
 	var e error
 	if err != nil {
 		e = fmt.Errorf("connection cleanup error: %w", err)
 	}
 
-	c.lifeCycle.SetState(StateClosed, e)
+	c.closeResources(e)
 }
 
 // watchConnection watches the connection for close events and triggers recovery if needed.
@@ -1517,7 +1534,16 @@ func (c *Connection) watchConnection() {
 // and recovers both connection and channel states.
 // It performs a retry loop to dial the broker, negotiate the AMQP handshake, and recover all
 // active channels and their registered consumers sequentially.
-func (c *Connection) Reconnect() error {
+//
+// Applications must coordinate with in-progress recovery rather than calling into the
+// Connection unconditionally: register NotifyStateChange and hold off on new connection-level
+// calls (e.g. Channel(), UpdateSecret()) until state is StateOpen again. In order to initiate
+// the AMQP handshake below, IsClosed() will momentarily return false before c.open actually
+// completes it — a connection-level call made in that window, without waiting for StateOpen,
+// can interleave a frame with the handshake and cause the broker to reject it as a protocol
+// violation. Waiting for StateOpen via NotifyStateChange before issuing new connection-level
+// calls avoids this entirely.
+func (c *Connection) Reconnect() (err error) {
 	if !c.IsRecoveryEnabled() {
 		return ErrClosed
 	}
@@ -1525,15 +1551,39 @@ func (c *Connection) Reconnect() error {
 	c.reconnecting.Lock()
 	defer c.reconnecting.Unlock()
 
+	// Re-check: Close()/CloseDeadline() may have marked closeInit and be
+	// racing us for c.reconnecting between our IsRecoveryEnabled() check above
+	// and this point. Without this, we could resurrect a connection whose
+	// Close() call already returned ErrClosed to the caller, leaving it with
+	// no way to ever close the connection we're about to rebuild.
+	if !c.IsRecoveryEnabled() {
+		return ErrClosed
+	}
+
 	if !c.IsClosed() {
 		return nil
 	}
+
+	// resetState() below flips c.closed to false mid-attempt so open() and
+	// channel recovery can send frames on the new connection. If this attempt
+	// then fails or is aborted, leaving c.closed false would let a
+	// concurrently-blocked Close() (which waits on c.reconnecting for us to
+	// settle) mistake the dead connection for a live one once we return.
+	// Guarantee the invariant here instead of at every failure/abort return
+	// site below: any non-nil return means the connection is closed. Registered
+	// only past the guard clauses above, so it can't fire for a connection
+	// that was never actually touched by this attempt (already open, or
+	// recovery disabled/closing).
+	defer func() {
+		if err != nil {
+			c.closed.Store(true)
+		}
+	}()
 
 	c.lifeCycle.SetState(StateReconnecting, nil)
 
 	cancelCh := c.NotifyRecoveryCancel(make(chan struct{}))
 
-	var err error
 	for i := 0; i < c.MaxRetryCount(); i++ {
 		Logger.Printf("Connection recovery attempt %d of %d", i+1, c.MaxRetryCount())
 		jitter := time.Duration(rand.Intn(500)) * time.Millisecond // Random 500ms jitter to avoid thundering herd
@@ -1561,11 +1611,26 @@ func (c *Connection) Reconnect() error {
 			return err
 		}
 
-		// Reset SASL to recover from zeroed out credentials
-		c.Config.SASL = nil
-		if err = c.Config.setSASL(uri); err != nil {
-			Logger.Printf("Connection recovery failed to set SASL: %v", err)
-			return err
+		// Restore SASL from the clone captured at initial Open, before the
+		// caller-provided credentials were narrowed/zeroed out, so recovery
+		// honors whatever Authentication the caller actually configured.
+		// Only fall back to deriving credentials from the URL if none was
+		// ever configured, matching setSASL's own "if not already set"
+		// contract.
+		if len(c.originalSASL) > 0 {
+			// Clone again rather than aliasing c.originalSASL directly:
+			// Config.SASL is a public field, so external code (or a future
+			// change here) could read/mutate conn.Config.SASL in place. If
+			// that slice were originalSASL itself, such a mutation would
+			// permanently corrupt the retained original and break every
+			// later reconnect, not just this attempt.
+			c.Config.SASL = cloneAuthentications(c.originalSASL)
+		} else {
+			c.Config.SASL = nil
+			if err = c.Config.setSASL(uri); err != nil {
+				Logger.Printf("Connection recovery failed to set SASL: %v", err)
+				return err
+			}
 		}
 
 		addr := net.JoinHostPort(uri.Host, strconv.FormatInt(int64(uri.Port), 10))
@@ -1593,6 +1658,22 @@ func (c *Connection) Reconnect() error {
 		c.destructorM.Lock()
 		c.closeM.Lock()
 		c.m.Lock()
+
+		// Re-check closeInit: Close()/CloseDeadline()/closeWith() may have set
+		// it while we were dialing/handshaking above, before we grabbed these
+		// locks. Bail out here rather than swapping in the new connection and
+		// starting a reader for it — otherwise Phase 1 below would reject the
+		// channel reconnects anyway (IsRecoveryEnabled() is false once closeInit
+		// is set), leaving us to tear down the connection we just built for
+		// nothing: the open() handshake wasted, and the reader goroutine we just
+		// started immediately killed by closing the socket out from under it.
+		if c.closeInit {
+			c.m.Unlock()
+			c.closeM.Unlock()
+			c.destructorM.Unlock()
+			conn.Close()
+			return ErrClosed
+		}
 
 		// Swap the connection
 		c.conn = conn
@@ -1657,18 +1738,16 @@ func (c *Connection) Reconnect() error {
 	if c.conn != nil {
 		c.conn.Close()
 	}
-	c.closed.Store(true)
 
 	return err
 }
 
-// resetState clears the shutdown and close flags and re-initializes the internal
-// channels so the connection can be reused after a successful reconnection.
-// The caller must hold c.destructorM, c.closeM and c.m.
+// resetState clears the shutdown flag and re-initializes the internal channels
+// so the connection can be reused after a successful reconnection.
+// The caller must hold c.destructorM and c.m.
 func (c *Connection) resetState() {
 	c.closed.Store(false)
 	c.destructed = false
-	c.closeInit = false
 
 	c.errors = make(chan *Error, 1)
 	c.close = make(chan struct{})
@@ -2452,6 +2531,38 @@ func (c *Connection) recoverConnectionTopology(channels []*Channel) ([]TopologyR
 					return skipped, fatal
 				}
 				ch.reopenIfClosed()
+
+				// Deliberately keep ch.consumers.configs[tag] and the caller's
+				// delivery channel intact, so a later recovery attempt can
+				// re-subscribe this consumer.
+				//
+				// configs is the only record this client has of a consumer (there
+				// is no recordConsumer counterpart to recordExchange/recordQueue/
+				// recordBinding) and it is the map this loop iterates, so cancelling
+				// here would erase the consumer from the client's own topology and no
+				// later attempt could retry it. One transient failure on one
+				// basic.consume would lose the consumer for the life of the
+				// connection while recovery reports success and the channel stays
+				// open. Keeping the record matches how steps 1-4 treat a failed
+				// entity: log, skip, keep the record, retry on the next attempt.
+				//
+				// It also matches the reference clients. Neither the Java nor the
+				// .NET client removes a recorded consumer when the recovery-time
+				// basic.consume fails: both report the failure through their topology
+				// recovery exception handler and leave the record in place, and the
+				// Java client has explicit retry machinery for exactly this case
+				// (TopologyRecoveryRetryLogic.RECOVER_CONSUMER). In both, the record
+				// is removed only on a client-initiated basic.cancel or on channel
+				// teardown. A broker-sent basic.cancel is a different event and is
+				// still handled as a cancellation, in dispatch().
+				//
+				// The leak that motivated the earlier cleanup here stays bounded:
+				// closeResources -> consumers.close() closes every remaining buffer
+				// channel and waits on the WaitGroup at channel teardown, and a
+				// successful re-subscribe on a later attempt reuses this same entry
+				// rather than creating a second one. The failure is reported to
+				// applications through SkippedTopologyEntities on the
+				// StateReconnecting -> StateOpen transition.
 			}
 		}
 	}

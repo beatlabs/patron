@@ -13,7 +13,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.41.0"
 )
 
 func TestComponentAttribute(t *testing.T) {
@@ -162,10 +161,10 @@ func TestCreateResource(t *testing.T) {
 
 	var foundName, foundVersion bool
 	for _, attr := range attrs {
-		if attr.Key == semconv.ServiceNameKey && attr.Value.AsString() == name {
+		if attr.Key == attribute.Key("service.name") && attr.Value.AsString() == name {
 			foundName = true
 		}
-		if attr.Key == semconv.ServiceVersionKey && attr.Value.AsString() == version {
+		if attr.Key == attribute.Key("service.version") && attr.Value.AsString() == version {
 			foundVersion = true
 		}
 	}

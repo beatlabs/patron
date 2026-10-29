@@ -50,7 +50,7 @@ example-client:
 	OTEL_EXPORTER_OTLP_INSECURE=$(OTEL_INSECURE) go run examples/client/main.go
 
 deps-start:
-	docker compose up -d --wait
+	docker compose up -d --wait || { docker compose ps -a; docker compose logs --no-color; exit 1; }
 
 deps-stop:
 	docker compose down

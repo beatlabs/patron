@@ -150,7 +150,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 60s
   otelcol:
     image: otel/opentelemetry-collector-contrib:0.161.0
     restart: always

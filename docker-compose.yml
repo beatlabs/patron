@@ -138,7 +138,7 @@ services:
       timeout: 10s
       retries: 3
   mongo:
-    image: mongo:8
+    image: mongo:9
     restart: always
     ports:
       - "27017:27017"
